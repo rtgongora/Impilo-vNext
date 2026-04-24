@@ -13,7 +13,7 @@ export default function VitoDashboardPage() {
     async function loadRecent() {
       try {
         const data = await vitoApi.listClients(0, 10);
-        setRecentClients(data.content);
+        setRecentClients(data.items);
         setTotalClients(data.totalElements);
       } catch {
         // Dashboard is non-critical; silently fail

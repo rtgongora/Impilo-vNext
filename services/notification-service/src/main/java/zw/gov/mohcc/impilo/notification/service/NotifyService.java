@@ -57,7 +57,7 @@ public class NotifyService {
         outbox.setTenantId(ctx.tenantId());
         outbox.setPodId(ctx.podId());
         outbox.setCorrelationId(ctx.correlationId());
-        outbox.setEventType("impilo.notify.enqueued.v1");
+        outbox.setEventType("impilo.notify.notification.enqueued.v1");
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
 

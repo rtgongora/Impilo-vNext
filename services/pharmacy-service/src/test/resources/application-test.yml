@@ -44,6 +44,8 @@ spring:
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
 
 pharmacy:
+  hmac:
+    pepper: test-pharmacy-hmac-pepper-not-for-production
   outbox:
     poll-interval-ms: 60000
   pickup:
@@ -55,3 +57,6 @@ pharmacy:
     fefo-enabled: true
   elmis:
     mode: INTERNAL
+impilo:
+  security:
+    disable-oauth-for-tests: true

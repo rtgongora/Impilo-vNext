@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { listArticles, createArticle, updateArticle, getArticle } from "@/lib/supportApi";
+import { listArticles, createArticle, updateArticle } from "@/lib/supportApi";
 import { useSupportSession } from "@/stores/sessionStore";
 import type { KnowledgeArticle, ArticleStatus } from "@/types/support";
 
@@ -13,7 +13,6 @@ export default function KnowledgePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
 
   // Detail/edit state
@@ -32,17 +31,14 @@ export default function KnowledgePage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await listArticles(
-        categoryFilter || undefined,
-        statusFilter || undefined,
-      );
+      const data = await listArticles(undefined, statusFilter || undefined);
       setArticles(data.items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load articles");
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, categoryFilter]);
+  }, [statusFilter]);
 
   useEffect(() => { load(); }, [load]);
 

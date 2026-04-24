@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,8 @@ import java.util.*;
 @RequestMapping("/internal/v1/omnichannel")
 public class OmnichannelController {
 
+    private static final Logger log = LoggerFactory.getLogger(OmnichannelController.class);
+
     private final CommunityServiceClient communityClient;
 
     public OmnichannelController(CommunityServiceClient communityClient) {
@@ -31,9 +35,13 @@ public class OmnichannelController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestParam(required = false) String status) {
 
-        JsonNode result = communityClient.listVisits(tenantId);
-
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listVisits(tenantId);
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            log.warn("Community omnichannel callbacks unavailable: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of("data", List.of(), "meta", Map.of("request_id", requestId)));
+        }
     }
 
     @PostMapping("/callbacks")

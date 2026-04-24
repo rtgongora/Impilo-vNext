@@ -8,8 +8,7 @@ import {
   listCertifications,
 } from "@/lib/developerApi";
 import type { DeveloperClient, ApiKey, Certification } from "@/types/developer";
-import { ClientStatusBadge, KeyStatusBadge, CertResultBadge } from "@/components/StatusBadge";
-import { useDeveloperSession } from "@/stores/sessionStore";
+import { KeyStatusBadge, CertResultBadge } from "@/components/StatusBadge";
 
 interface SandboxPayload {
   method: string;
@@ -48,8 +47,6 @@ export default function SandboxPage() {
   const [loading, setLoading] = useState(true);
   const [configuring, setConfiguring] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const environment = useDeveloperSession((s) => s.environment);
 
   useEffect(() => {
     async function load() {

@@ -2,3 +2,6 @@
 spring:
   flyway:
     enabled: true
+impilo:
+  security:
+    disable-oauth-for-tests: true

@@ -154,6 +154,7 @@ public class OfflineEdgeService {
                         actionRepository.save(action);
 
                         ConflictReviewEntity conflict = new ConflictReviewEntity();
+                        conflict.setConflictId(UUID.randomUUID());
                         conflict.setActionId(action.getActionId());
                         conflict.setBatchId(batchId);
                         conflict.setTenantId(tenantId);
@@ -258,8 +259,9 @@ public class OfflineEdgeService {
         outbox.setAggregateType("OfflineAction");
         outbox.setAggregateId(aggregateId);
         outbox.setEventType(eventType);
-        outbox.setCorrelationId(correlationId != null ? UUID.fromString(correlationId) : null);
-        outbox.setCausationId(correlationId != null ? UUID.fromString(correlationId) : null);
+        UUID correlationUuid = correlationUuidOrDerived(correlationId);
+        outbox.setCorrelationId(correlationUuid);
+        outbox.setCausationId(correlationUuid);
         outbox.setIdempotencyKey(idempotencyKey);
         outbox.setTenantId(tenantId);
         outbox.setPodId(podId != null ? podId : "national-spine");
@@ -275,6 +277,18 @@ public class OfflineEdgeService {
         if (obj == null) return null;
         try { return objectMapper.writeValueAsString(obj); }
         catch (JsonProcessingException e) { throw new RuntimeException("JSON serialization failed", e); }
+    }
+
+    /** Accept RFC UUID or any opaque correlation string (deterministic UUID for storage). */
+    private static UUID correlationUuidOrDerived(String correlationId) {
+        if (correlationId == null || correlationId.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(correlationId);
+        } catch (IllegalArgumentException e) {
+            return UUID.nameUUIDFromBytes(correlationId.getBytes(StandardCharsets.UTF_8));
+        }
     }
 
     public static class InvalidEntitlementException extends RuntimeException {

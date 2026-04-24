@@ -52,8 +52,20 @@ public class TimeoutEnforcementFilter implements Filter {
             return;
         }
 
-        if (timeoutMs <= 0) {
+        if (timeoutMs < 0) {
             chain.doFilter(request, response);
+            return;
+        }
+
+        // Zero budget: client indicates no time remains — fail before work (same wall-clock ms
+        // as "deadline <= now" after addition, which is unreliable for timeoutMs == 1).
+        if (timeoutMs == 0) {
+            String requestId = httpReq.getHeader(CompanionHeaders.REQUEST_ID);
+            String correlationId = httpReq.getHeader(CompanionHeaders.CORRELATION_ID);
+            ErrorEnvelopeWriter.write(httpRes, 504,
+                    ErrorCodes.CLIENT_TIMEOUT_EXCEEDED,
+                    "Client timeout budget is zero (already expired before processing)",
+                    requestId, correlationId);
             return;
         }
 

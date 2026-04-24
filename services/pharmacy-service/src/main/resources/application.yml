@@ -63,6 +63,8 @@ springdoc:
 
 # --- Pharmacy-specific ---
 pharmacy:
+  hmac:
+    pepper: ${PHARMACY_HMAC_PEPPER:changeme-pharmacy-hmac-not-for-production}
   outbox:
     poll-interval-ms: 2000
   pickup:

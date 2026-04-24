@@ -123,6 +123,12 @@
         <!-- Testcontainers PostgreSQL REMOVED — BFF has no database -->
         <dependency>
             <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>1.21.4</version>
             <scope>test</scope>
@@ -146,6 +152,18 @@
 
     <build>
         <plugins>
+            <!-- Align with parent Byte Buddy flag; disable JVM system proxies so docker-java
+                 talks to Docker Desktop engine API without corporate HTTP(S)_PROXY interference. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true -Djava.net.useSystemProxies=false</argLine>
+                    <environmentVariables>
+                        <NO_PROXY>localhost,127.0.0.1,::1,*.docker.internal,docker.for.win.localhost,docker.for.mac.localhost</NO_PROXY>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

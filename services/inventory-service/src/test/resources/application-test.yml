@@ -5,7 +5,7 @@ spring:
   application:
     name: inventory-service-test
   datasource:
-    url: jdbc:h2:mem:inventorytest;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:mem:inventorytest;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -15,7 +15,7 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   flyway:
     enabled: false
   kafka:
@@ -50,3 +50,6 @@ inventory:
   integration:
     pharmacy-base-url: http://localhost:8096
     elmis-adapter-base-url: http://localhost:8099
+impilo:
+  security:
+    disable-oauth-for-tests: true

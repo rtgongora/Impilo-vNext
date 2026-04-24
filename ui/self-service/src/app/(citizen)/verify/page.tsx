@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle } from "shared-ui";
+import { Card } from "shared-ui";
 
 interface VerifyResult {
   status: string;

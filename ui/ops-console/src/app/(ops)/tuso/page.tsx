@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
-interface FacilityStat {
-  total: number;
-  active: number;
-  closed: number;
+interface FacilityRow {
+  id: string;
+  facilityCode: string;
+  name: string;
+  facilityType?: string;
+  district?: string;
+  province?: string;
+  status?: string;
 }
 
 export default function TusoDashboardPage() {
   const [query, setQuery] = useState("");
-  const [facilities, setFacilities] = useState<any[]>([]);
+  const [facilities, setFacilities] = useState<FacilityRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async () => {
@@ -24,8 +28,9 @@ export default function TusoDashboardPage() {
         body: JSON.stringify({ query, page: 0, size: 20 }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setFacilities(data.content || data || []);
+        const data = (await res.json()) as { items?: unknown[]; content?: unknown[] };
+        const list = data.items ?? data.content ?? [];
+        setFacilities(Array.isArray(list) ? (list as FacilityRow[]) : []);
       }
     } catch {
       // handle gracefully
@@ -115,7 +120,7 @@ export default function TusoDashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {facilities.map((f: any) => (
+                {facilities.map((f) => (
                   <tr key={f.id} className="border-b border-neutral-50 hover:bg-neutral-25">
                     <td className="py-3 px-2 font-mono text-xs">{f.facilityCode}</td>
                     <td className="py-3 px-2 font-medium">{f.name}</td>

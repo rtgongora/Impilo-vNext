@@ -13,5 +13,7 @@ spring:
     enabled: false
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true

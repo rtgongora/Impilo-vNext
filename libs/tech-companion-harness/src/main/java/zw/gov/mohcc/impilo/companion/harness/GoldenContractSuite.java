@@ -446,7 +446,7 @@ public abstract class GoldenContractSuite {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-1")
                             .header("X-Correlation-ID", "corr-timeout-1")
-                            .header("X-Client-Timeout-MS", "1"))
+                            .header("X-Client-Timeout-MS", "0"))
                     .andExpect(status().is(504))
                     .andReturn();
 
@@ -466,7 +466,7 @@ public abstract class GoldenContractSuite {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-2")
                             .header("X-Correlation-ID", "corr-timeout-2")
-                            .header("X-Client-Timeout-MS", "1"))
+                            .header("X-Client-Timeout-MS", "0"))
                     .andExpect(status().is(504))
                     .andReturn();
 

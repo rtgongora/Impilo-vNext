@@ -120,6 +120,7 @@ public class AlertRuleEngine {
         }
 
         AlertEntity alert = new AlertEntity();
+        alert.setId(UUID.randomUUID());
         alert.setFacility(facility);
         alert.setTenantId(tenantId);
         alert.setAlertType(alertType);

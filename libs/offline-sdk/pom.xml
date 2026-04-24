@@ -46,6 +46,13 @@
             <version>${nimbus-jose.version}</version>
         </dependency>
 
+        <!-- Google Tink (optional in Nimbus; required for Ed25519 OKP keygen/signing) -->
+        <dependency>
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

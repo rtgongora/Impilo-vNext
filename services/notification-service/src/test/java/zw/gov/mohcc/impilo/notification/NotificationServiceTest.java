@@ -131,7 +131,7 @@ class NotificationServiceTest {
     // ─── Test 4: Notification enqueue ───
 
     @Test
-    @DisplayName("POST /internal/v1/notify enqueues notification with PENDING status and emits impilo.notify.enqueued.v1")
+    @DisplayName("POST /internal/v1/notify enqueues notification with PENDING status and emits impilo.notify.notification.enqueued.v1")
     void enqueueNotification() throws Exception {
         MvcResult result = mockMvc.perform(post("/internal/v1/notify")
                         .header("X-Tenant-ID", TENANT_ID)
@@ -158,13 +158,13 @@ class NotificationServiceTest {
         assertThat(root.get("to").asText()).isEqualTo("+263771234567");
 
         List<OutboxEventEntity> events = outboxEventRepository.findAll();
-        assertThat(events).anyMatch(e -> "impilo.notify.enqueued.v1".equals(e.getEventType()));
+        assertThat(events).anyMatch(e -> "impilo.notify.notification.enqueued.v1".equals(e.getEventType()));
     }
 
     // ─── Test 5: Worker processes PENDING → SENT ───
 
     @Test
-    @DisplayName("POST /internal/v1/worker/run transitions PENDING notifications to SENT and emits impilo.notify.sent.v1")
+    @DisplayName("POST /internal/v1/worker/run transitions PENDING notifications to SENT and emits impilo.notify.notification.sent.v1")
     void workerProcessesPendingToSent() throws Exception {
         enqueueOne("SMS", "+263770000001", null, null);
 
@@ -189,7 +189,7 @@ class NotificationServiceTest {
         assertThat(all.get(0).getAttempts()).isEqualTo(1);
 
         List<OutboxEventEntity> events = outboxEventRepository.findAll();
-        assertThat(events).anyMatch(e -> "impilo.notify.sent.v1".equals(e.getEventType()));
+        assertThat(events).anyMatch(e -> "impilo.notify.notification.sent.v1".equals(e.getEventType()));
     }
 
     // ─── Test 6: Worker with template variable substitution ───
@@ -244,7 +244,7 @@ class NotificationServiceTest {
         assertThat(notification.getLastError()).contains("Template not found");
 
         List<OutboxEventEntity> events = outboxEventRepository.findAll();
-        assertThat(events).anyMatch(e -> "impilo.notify.failed.v1".equals(e.getEventType()));
+        assertThat(events).anyMatch(e -> "impilo.notify.notification.failed.v1".equals(e.getEventType()));
     }
 
     // ─── Test 8: GET /notifications returns paged results ───

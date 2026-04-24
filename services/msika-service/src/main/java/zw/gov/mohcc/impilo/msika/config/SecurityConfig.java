@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.msika.config;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,8 +33,56 @@ public class SecurityConfig {
         return new TrustContextFilter(objectMapper);
     }
 
+    /**
+
+
+     * JVM tests (MockMvc, @ActiveProfiles("test")) do not send Bearer tokens; open the chain
+
+
+     * while keeping TrustContextFilter so v1.1 header / idempotency behaviour stays testable.
+
+
+     */
+
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+
+
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+
+
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+
+
+            http
+
+
+                    .csrf(csrf -> csrf.disable())
+
+
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+
+                    .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+
+
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+
+            return http.build();
+
+
+        }
+
+
+
+        @Bean
+
+
+        @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "false", matchIfMissing = true)
+
+
+        public SecurityFilterChain productionFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
@@ -57,9 +107,7 @@ public class SecurityConfig {
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
-    }
-
-    @Value("${impilo.security.allow-anonymous:false}")
+    }@Value("${impilo.security.allow-anonymous:false}")
     boolean allowAnonymous;
 
     // Spring injects impilo.security.allow-anonymous; used only for test/dev.
@@ -71,8 +119,8 @@ public class SecurityConfig {
         return converter;
     }
 
-    private Collection<SimpleGrantedAuthority> extractAuthorities(Map<String, Object> claims) {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+    private Collection<GrantedAuthority> extractAuthorities(Map<String, Object> claims) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
 
         // Keycloak realm roles: realm_access.roles[]
         Object realmAccess = claims.get("realm_access");

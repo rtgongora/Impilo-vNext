@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import zw.gov.mohcc.impilo.mushex.api.dto.CreateIntentRequest;
@@ -17,6 +19,8 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.service.UlidGenerator;
+import zw.gov.mohcc.impilo.shared.auth.AccessMode;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
@@ -32,8 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * Uses {@code @SpringBootTest} with an H2 in-memory database, Flyway disabled,
  * and Kafka/Redis auto-configuration excluded. Security filters are bypassed
- * via {@code addFilters = false}. Trust headers are sent on every request
- * to populate the TrustContext via the TrustContextFilter.
+ * via {@code addFilters = false}; {@link TrustContextHolder} is seeded in
+ * {@code @BeforeEach} so controllers see the same context the trust headers represent.
  *
  * Response format is the {@code ApiResponse} envelope:
  * {@code {"success": true, "data": {...}, "correlationId": "...", "timestamp": "..."}}
@@ -45,6 +49,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
 class PaymentIntentIntegrationTest {
+
+    @MockBean
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
@@ -59,6 +66,19 @@ class PaymentIntentIntegrationTest {
     void setUp() {
         outboxRepository.deleteAll();
         intentRepository.deleteAll();
+
+        TrustContext ctx = new TrustContext(
+                tenantId,
+                "test-actor",
+                "FACILITY_FINANCE",
+                "BILLING",
+                "test-device",
+                correlationId,
+                facilityId,
+                null,
+                null,
+                AccessMode.INTERNAL);
+        TrustContextHolder.set(ctx);
     }
 
     @AfterEach

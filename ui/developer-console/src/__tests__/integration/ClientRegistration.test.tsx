@@ -8,8 +8,6 @@
 
 import { TRUST_HEADERS } from "shared-ui";
 
-const BASE = "/internal/v1/developer";
-
 describe("Client Registration", () => {
   let capturedHeaders: Record<string, string>;
   let capturedBody: Record<string, unknown>;

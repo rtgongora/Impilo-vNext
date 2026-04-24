@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/apiClient";
+import { useState, useEffect, useCallback } from "react";
+import { apiClient, type PagedList } from "@/lib/apiClient";
 import { useSearchParams } from "next/navigation";
 
 interface CatalogItem {
@@ -23,22 +23,24 @@ export default function ItemsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ kind: "PRODUCT", canonicalCode: "", displayName: "", description: "" });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!catalogId) return;
     setLoading(true);
     try {
       const params = new URLSearchParams({ size: "50" });
       if (kind) params.set("kind", kind);
-      const data = await apiClient.get<any>(`/v1/catalogs/${catalogId}/items?${params}`);
+      const data = await apiClient.get<PagedList<CatalogItem>>(`/v1/catalogs/${catalogId}/items?${params}`);
       setItems(data?.items || []);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  };
+  }, [catalogId, kind]);
 
-  useEffect(() => { load(); }, [catalogId, kind]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const addItem = async () => {
     try {

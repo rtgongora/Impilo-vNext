@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.offlineedge.repository.CapturedActionRepository;
 import zw.gov.mohcc.impilo.offlineedge.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.offlineedge.repository.ReconciliationBatchRepository;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -188,11 +189,13 @@ public class OfflineSyncService {
     }
 
     private UUID parseUuid(String value) {
-        if (value == null || value.isBlank()) return null;
+        if (value == null || value.isBlank()) {
+            return null;
+        }
         try {
             return UUID.fromString(value);
         } catch (IllegalArgumentException e) {
-            return null;
+            return UUID.nameUUIDFromBytes(value.getBytes(StandardCharsets.UTF_8));
         }
     }
 

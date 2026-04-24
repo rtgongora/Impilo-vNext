@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { getDashboardStats, listTickets } from "@/lib/supportApi";
-import type { DashboardStats, Ticket, PagedResult } from "@/types/support";
+import type { DashboardStats, Ticket } from "@/types/support";
 
 const STAT_CARDS: { key: keyof DashboardStats; label: string; color: string }[] = [
   { key: "openCount", label: "Open", color: "bg-info" },

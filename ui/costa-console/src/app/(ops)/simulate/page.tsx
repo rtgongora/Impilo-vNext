@@ -32,7 +32,7 @@ const EMPTY_LINE: EstimateLineInput = {
 
 export default function SimulatePage() {
   const [items, setItems] = useState<EstimateLineInput[]>([{ ...EMPTY_LINE }]);
-  const [exemptionCategory, setExemptionCategory] = useState<string>("");
+  const [exemptionCategory, setExemptionCategory] = useState<ExemptionCategory | "">("");
   const [insurancePlanId, setInsurancePlanId] = useState<string>("");
   const [result, setResult] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +63,8 @@ export default function SimulatePage() {
     try {
       const request: EstimateRequest = {
         items: items.filter((i) => i.msikaCode.trim()),
-        exemptionCategory: exemptionCategory || undefined,
+        exemptionCategory:
+          exemptionCategory === "" ? undefined : exemptionCategory,
         insurancePlanId: insurancePlanId ? parseInt(insurancePlanId, 10) : undefined,
       };
 
@@ -161,7 +162,11 @@ export default function SimulatePage() {
             </label>
             <select
               value={exemptionCategory}
-              onChange={(e) => setExemptionCategory(e.target.value)}
+              onChange={(e) =>
+                setExemptionCategory(
+                  e.target.value === "" ? "" : (e.target.value as ExemptionCategory)
+                )
+              }
               className="select-field"
             >
               <option value="">None</option>
@@ -192,7 +197,7 @@ export default function SimulatePage() {
       </div>
 
       {/* Results */}
-      {result && (
+      {result !== null && (
         <div className="card p-6">
           <h2 className="text-lg font-semibold text-neutral-900 mb-4">Simulation Result</h2>
           <pre className="text-xs text-neutral-800 font-mono whitespace-pre-wrap bg-neutral-50 rounded-lg p-4 border border-neutral-200 max-h-96 overflow-y-auto">

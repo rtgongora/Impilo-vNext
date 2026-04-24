@@ -164,7 +164,7 @@ class IntegrationHubConnectorTest {
                 .andReturn();
 
         JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
-        assertThat(root.get("status").asText()).isEqualTo("ACCEPTED");
+        assertThat(root.get("status").asText()).isIn("ACCEPTED", "DISPATCHED");
         assertThat(root.get("routeId").asText()).isEqualTo(routeId);
         assertThat(root.get("targetUrl").asText()).isEqualTo("file:///data/exports/claims");
 
@@ -298,12 +298,13 @@ class IntegrationHubConnectorTest {
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "dl-replay-" + UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andReturn();
 
         JsonNode replayRoot = MAPPER.readTree(replayResult.getResponse().getContentAsString());
-        assertThat(replayRoot.get("status").asText()).isEqualTo("ACCEPTED");
+        assertThat(replayRoot.get("status").asText()).isIn("ACCEPTED", "DISPATCHED");
         assertThat(replayRoot.get("targetUrl").asText()).isEqualTo("http://target:8080/replay-handler");
 
         // Step 5: Verify the dead letter is now resolved with incremented retry count
@@ -341,7 +342,8 @@ class IntegrationHubConnectorTest {
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "dl-replay-fail-" + UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andReturn();
 

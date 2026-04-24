@@ -309,7 +309,7 @@ public class NdrApiMockMvcTest {
         }
 
         @Test
-        @DisplayName("POST ingest with same event_id returns REPLAY")
+        @DisplayName("POST ingest with same Idempotency-Key + body returns identical response (HTTP replay)")
         void ingestIdempotentReplay() throws Exception {
             String eventBody = validEventBody();
             String idempotencyKey = "replay-" + System.nanoTime();
@@ -327,7 +327,8 @@ public class NdrApiMockMvcTest {
                     .andExpect(jsonPath("$.dedupe").value("NEW"))
                     .andReturn();
 
-            // Second ingest with same idempotency key
+            // Second ingest: companion IdempotencyFilter replays the stored first response verbatim
+            // (controller / domain REPLAY branch is not reached).
             MvcResult second = mockMvc.perform(post("/internal/v1/ndr/ingest/events")
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
@@ -337,14 +338,12 @@ public class NdrApiMockMvcTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(eventBody))
                     .andExpect(status().isAccepted())
-                    .andExpect(jsonPath("$.dedupe").value("REPLAY"))
+                    .andExpect(jsonPath("$.dedupe").value("NEW"))
                     .andReturn();
 
-            // Same receipt_id
             JsonNode firstBody = MAPPER.readTree(first.getResponse().getContentAsString());
             JsonNode secondBody = MAPPER.readTree(second.getResponse().getContentAsString());
-            assertThat(secondBody.get("receipt_id").asText())
-                    .isEqualTo(firstBody.get("receipt_id").asText());
+            assertThat(secondBody).isEqualTo(firstBody);
         }
     }
 

@@ -2,6 +2,9 @@ server:
   port: 0
 
 spring:
+  task:
+    scheduling:
+      enabled: false
   application:
     name: ndr-service-test
   datasource:
@@ -34,6 +37,8 @@ spring:
       - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true
 

@@ -37,7 +37,7 @@ function normalizeHits(raw: unknown): PlatformHit[] {
       const entityType = typeof o.entityType === "string" ? o.entityType : "entity";
       const entityId = typeof o.entityId === "string" ? o.entityId : "";
       const cj = o.contentJson as Record<string, unknown> | undefined;
-      let title =
+      const title =
         (cj && typeof cj.title === "string" && cj.title) ||
         (cj && typeof cj.name === "string" && cj.name) ||
         (typeof o.searchableText === "string" && o.searchableText.slice(0, 120)) ||

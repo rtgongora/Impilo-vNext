@@ -1,7 +1,5 @@
 package zw.gov.mohcc.impilo.mushex.service;
 
-import org.springframework.stereotype.Service;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -11,8 +9,9 @@ import java.util.HexFormat;
 /**
  * HMAC-SHA256 hashing service used for remittance token/OTP hashing
  * and webhook signature verification.
+ *
+ * <p>Registered as a Spring bean from {@link zw.gov.mohcc.impilo.mushex.config.MushexCryptoConfig}.</p>
  */
-@Service
 public class HmacService {
 
     private static final String ALGORITHM = "HmacSHA256";

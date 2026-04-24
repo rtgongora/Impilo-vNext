@@ -32,9 +32,7 @@ public class ReportScheduleEntity {
     private String cronExpression;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "parameters", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "parameters", nullable = false)
     private String parameters = "{}";
 
     @Enumerated(EnumType.STRING)

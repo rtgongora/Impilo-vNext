@@ -25,9 +25,7 @@ public class MaterializedViewEntity {
     private String viewName;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "row_data", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "row_data", nullable = false)
     private String rowData = "{}";
 
     @Column(name = "refreshed_at", nullable = false)

@@ -66,8 +66,8 @@ public class ReportJobController {
             body.put("parameters", request.parameters());
             body.put("requestedBy", request.requested_by());
             JsonNode data = reportingClient.createReport(body);
-            return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
-                    "data", data != null ? data : Map.of("status", "accepted"),
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", data != null ? data : Map.of("type", "ReportJob", "attributes", Map.of("status", "QUEUED")),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Report generation failed: {}", e.getMessage());

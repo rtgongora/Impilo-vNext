@@ -19,6 +19,8 @@ spring:
     bootstrap-servers: localhost:9092
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true
 

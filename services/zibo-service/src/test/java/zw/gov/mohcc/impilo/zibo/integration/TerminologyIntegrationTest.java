@@ -301,9 +301,6 @@ class TerminologyIntegrationTest {
             when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
                     eq(TENANT_ID), eq(ScopeType.FACILITY), eq(FACILITY_ID)))
                     .thenReturn(List.of(facilityAssignment));
-            when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
-                    eq(TENANT_ID), eq(ScopeType.TENANT), any()))
-                    .thenReturn(Collections.emptyList());
 
             // Step 3: Validate a known code
             when(artifactRepository.findByTenantIdAndCanonicalUrl(

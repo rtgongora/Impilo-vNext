@@ -11,6 +11,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.ia.core.AttestationOutcome;
@@ -38,9 +40,7 @@ public class AttestationEntity {
     private String deviceFingerprint;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "evidence", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "evidence", nullable = false)
     private String evidence = "{}";
 
     @Enumerated(EnumType.STRING)

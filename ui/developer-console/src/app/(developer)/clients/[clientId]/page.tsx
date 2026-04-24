@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   getClient,
@@ -17,7 +17,6 @@ import { ClientStatusBadge, KeyStatusBadge } from "@/components/StatusBadge";
 
 export default function ClientDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const clientId = params.clientId as string;
 
   const [client, setClient] = useState<DeveloperClient | null>(null);

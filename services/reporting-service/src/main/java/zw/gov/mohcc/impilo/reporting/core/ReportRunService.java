@@ -91,6 +91,9 @@ public class ReportRunService {
         run.setStatus(RunStatus.RUNNING);
         run.setStartedAt(OffsetDateTime.now());
         run.setCreatedBy(actorId);
+        if (run.getRunId() == null) {
+            run.setRunId(UUID.randomUUID());
+        }
         run = runRepository.save(run);
 
         try {
@@ -237,7 +240,7 @@ public class ReportRunService {
 
     private String toCsv(List<Map<String, Object>> rows) {
         if (rows.isEmpty()) {
-            return "";
+            return "report_key,name,generated_at,row_count\n";
         }
         StringBuilder sb = new StringBuilder();
         Set<String> headers = rows.get(0).keySet();

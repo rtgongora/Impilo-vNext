@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -49,15 +51,11 @@ public class ProviderContractEntity {
     private LocalDate effectiveTo;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "rate_schedule_json", columnDefinition = "jsonb")
+    @Column(name = "rate_schedule_json")
     private String rateScheduleJson = "{}";
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "terms_json", columnDefinition = "jsonb")
+    @Column(name = "terms_json")
     private String termsJson = "{}";
 
     @Column(name = "status", nullable = false, length = 16)

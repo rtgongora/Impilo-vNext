@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -68,6 +69,9 @@ class ConsentCrudServiceTest {
 
     @Mock
     private ConsentProperties properties;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private ConsentCrudService crudService;
@@ -171,7 +175,6 @@ class ConsentCrudServiceTest {
             when(fhirMapper.toEntity(request, fhirConsent)).thenReturn(newEntity);
             when(consentRepo.save(any(ConsentDirectiveEntity.class))).thenReturn(newEntity);
             when(fhirMapper.toDto(newEntity)).thenReturn(expectedDto);
-            when(properties.getDefaultTtlDays()).thenReturn(365);
 
             ConsentDirectiveDto result = crudService.create(request, ACTOR_ID);
 
@@ -203,7 +206,6 @@ class ConsentCrudServiceTest {
             when(fhirMapper.toEntity(request, fhirConsent)).thenReturn(newEntity);
             when(consentRepo.save(any(ConsentDirectiveEntity.class))).thenReturn(newEntity);
             when(fhirMapper.toDto(newEntity)).thenReturn(expectedDto);
-            when(properties.getDefaultTtlDays()).thenReturn(365);
 
             crudService.create(request, ACTOR_ID);
 
@@ -228,7 +230,6 @@ class ConsentCrudServiceTest {
             when(fhirMapper.toEntity(request, fhirConsent)).thenReturn(newEntity);
             when(consentRepo.save(any(ConsentDirectiveEntity.class))).thenReturn(newEntity);
             when(fhirMapper.toDto(newEntity)).thenReturn(expectedDto);
-            when(properties.getDefaultTtlDays()).thenReturn(365);
 
             crudService.create(request, ACTOR_ID);
 
@@ -253,7 +254,6 @@ class ConsentCrudServiceTest {
             when(fhirMapper.toEntity(request, fhirConsent)).thenReturn(newEntity);
             when(consentRepo.save(any(ConsentDirectiveEntity.class))).thenReturn(newEntity);
             when(fhirMapper.toDto(newEntity)).thenReturn(expectedDto);
-            when(properties.getDefaultTtlDays()).thenReturn(365);
 
             crudService.create(request, ACTOR_ID);
 

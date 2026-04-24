@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.dags.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -109,8 +110,8 @@ class PolicyServiceTest {
             policyService.createPolicy(tenantId, "admin", correlationId,
                     "Audit Test", null, "IMAGING", null, PolicyEffect.ALLOW);
 
-            verify(auditService).log(tenantId, "POLICY_CREATED", "admin",
-                    "POLICY", "2", any(), correlationId);
+            verify(auditService).log(eq(tenantId), eq("POLICY_CREATED"), eq("admin"),
+                    eq("POLICY"), eq("2"), any(), eq(correlationId));
         }
 
         @Test

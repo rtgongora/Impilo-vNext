@@ -2,8 +2,11 @@ server:
   port: 0
 
 spring:
+  task:
+    scheduling:
+      enabled: false
   datasource:
-    url: jdbc:h2:mem:dags_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    url: jdbc:h2:mem:dags_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS dags
     driver-class-name: org.h2.Driver
     username: sa
     password:
@@ -19,6 +22,8 @@ spring:
     bootstrap-servers: localhost:9092
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true
 

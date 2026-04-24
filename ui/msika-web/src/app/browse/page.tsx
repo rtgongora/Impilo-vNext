@@ -1,6 +1,18 @@
 "use client";
 import { useState } from "react";
-import { apiClient } from "@/lib/apiClient";
+import { apiClient, type PagedList } from "@/lib/apiClient";
+
+interface CatalogItemProduct {
+  form?: string;
+  strength?: string;
+  route?: string;
+  barcode?: string;
+}
+
+interface CatalogItemService {
+  serviceCategory?: string;
+  durationMinutes?: number;
+}
 
 interface CatalogItem {
   itemId: string;
@@ -8,9 +20,9 @@ interface CatalogItem {
   canonicalCode: string;
   displayName: string;
   description: string;
-  restrictions: any;
-  product: any;
-  service: any;
+  restrictions: Record<string, unknown> | null;
+  product?: CatalogItemProduct | null;
+  service?: CatalogItemService | null;
 }
 
 export default function BrowsePage() {
@@ -27,7 +39,7 @@ export default function BrowsePage() {
       const params = new URLSearchParams({ size: "50" });
       if (query) params.set("q", query);
       if (kind) params.set("kind", kind);
-      const data = await apiClient.get<any>(`/v1/search?${params}`);
+      const data = await apiClient.get<PagedList<CatalogItem>>(`/v1/search?${params}`);
       setResults(data?.items || []);
     } catch (e) {
       console.error(e);

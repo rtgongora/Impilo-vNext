@@ -11,6 +11,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.secharden.core.PackStatus;
 import zw.gov.mohcc.impilo.secharden.core.PackType;
@@ -37,9 +39,7 @@ public class PolicyPackEntity {
     private PackType packType = PackType.BASELINE;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "rules", nullable = false)
     private String rules = "[]";
 
     @Enumerated(EnumType.STRING)

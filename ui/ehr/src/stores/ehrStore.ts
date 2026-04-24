@@ -56,7 +56,7 @@ interface EhrState {
   startEncounter: (patientCpid: string, type: Encounter["encounterType"]) => void;
 }
 
-export const useEhrStore = create<EhrState>((set, get) => ({
+export const useEhrStore = create<EhrState>((set) => ({
   activePatient: null,
   activeEncounter: null,
   recentPatients: [],

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { mushexApi, type PagedResponse, type FraudFlag, type OpsReview } from "@/lib/mushexApi";
+import { mushexApi } from "@/lib/mushexApi";
 
 export default function DashboardPage() {
   const [fraudCount, setFraudCount] = useState<number | null>(null);

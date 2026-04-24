@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
@@ -37,58 +39,38 @@ class FormsServiceTest {
     private static final String TENANT_ID = "moh-zw";
     private static final String POD_ID = "national";
 
-    // ── Helpers ──────────────────────────────────────────────────────
+    /** Minimal JSON Schema (draft-07) embedded in request JSON. */
+    private static final String SCHEMA_V1 =
+            "{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"systolic\\\":{\\\"type\\\":\\\"number\\\"},"
+                    + "\\\"diastolic\\\":{\\\"type\\\":\\\"number\\\"}}}";
 
-    private static String formBody() {
+    private static final String SCHEMA_V2 =
+            "{\\\"type\\\":\\\"object\\\",\\\"properties\\\":{\\\"pulse\\\":{\\\"type\\\":\\\"integer\\\"}}}";
+
+    private static String formBody(String formKey, String name) {
         return """
                 {
-                  "code": "vitals-form",
-                  "name": "Vital Signs Form",
-                  "description": "Standard vitals capture form",
-                  "category": "clinical"
-                }
-                """;
-    }
-
-    private static String formBody(String code, String name) {
-        return """
-                {
-                  "code": "%s",
+                  "formKey": "%s",
                   "name": "%s",
                   "description": "Test form",
-                  "category": "clinical"
+                  "schemaJson": "%s"
                 }
-                """.formatted(code, name);
+                """
+                .formatted(formKey, name, SCHEMA_V1);
     }
 
-    private static String updateBody(String name) {
+    private static String versionBody(String escapedSchemaJson) {
         return """
                 {
-                  "name": "%s",
-                  "description": "Updated description",
-                  "category": "admin"
+                  "schemaJson": "%s",
+                  "changelog": "test version"
                 }
-                """.formatted(name);
-    }
-
-    private static String versionBody() {
-        return """
-                {
-                  "contentJson": "{\\"fields\\": [{\\"name\\": \\"systolic\\", \\"type\\": \\"number\\"}, {\\"name\\": \\"diastolic\\", \\"type\\": \\"number\\"}]}"
-                }
-                """;
-    }
-
-    private static String invalidVersionBody() {
-        return """
-                {
-                  "contentJson": "{\\"noFieldsHere\\": true}"
-                }
-                """;
+                """
+                .formatted(escapedSchemaJson);
     }
 
     private String createForm() throws Exception {
-        String code = "form-" + UUID.randomUUID().toString().substring(0, 8);
+        String formKey = "form-" + UUID.randomUUID().toString().substring(0, 8);
         MvcResult result = mockMvc.perform(post("/internal/v1/forms")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
@@ -96,7 +78,7 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "form-create-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(formBody(code, "Test Form")))
+                        .content(formBody(formKey, "Test Form")))
                 .andExpect(status().isCreated())
                 .andReturn();
         JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
@@ -111,19 +93,17 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "ver-create-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(versionBody()))
+                        .content(versionBody(SCHEMA_V2)))
                 .andExpect(status().isCreated())
                 .andReturn();
         JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
         return root.get("id").asText();
     }
 
-    // ── Test 1: Create and retrieve a form ──────────────────────────
-
     @Test
     @DisplayName("POST /internal/v1/forms creates form and GET retrieves it")
     void createAndGetForm() throws Exception {
-        String code = "crud-" + UUID.randomUUID().toString().substring(0, 8);
+        String formKey = "crud-" + UUID.randomUUID().toString().substring(0, 8);
         MvcResult createResult = mockMvc.perform(post("/internal/v1/forms")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
@@ -131,15 +111,16 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "form-crud-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(formBody(code, "CRUD Test Form")))
+                        .content(formBody(formKey, "CRUD Test Form")))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         JsonNode created = MAPPER.readTree(createResult.getResponse().getContentAsString());
         String formId = created.get("id").asText();
         assertThat(formId).isNotBlank();
-        assertThat(created.get("code").asText()).isEqualTo(code);
+        assertThat(created.get("formKey").asText()).isEqualTo(formKey);
         assertThat(created.get("status").asText()).isEqualTo("DRAFT");
+        assertThat(created.get("currentVersion").asInt()).isEqualTo(1);
 
         MvcResult getResult = mockMvc.perform(get("/internal/v1/forms/" + formId)
                         .header("X-Tenant-ID", TENANT_ID)
@@ -154,33 +135,44 @@ class FormsServiceTest {
         assertThat(fetched.get("name").asText()).isEqualTo("CRUD Test Form");
     }
 
-    // ── Test 2: Update a form ───────────────────────────────────────
-
     @Test
-    @DisplayName("PUT /internal/v1/forms/{id} updates form name and description")
-    void updateForm() throws Exception {
-        String formId = createForm();
-
-        MvcResult result = mockMvc.perform(put("/internal/v1/forms/" + formId)
+    @DisplayName("GET /internal/v1/forms lists schemas for tenant")
+    void listSchemasIncludesCreated() throws Exception {
+        String formKey = "list-" + UUID.randomUUID().toString().substring(0, 8);
+        MvcResult createResult = mockMvc.perform(post("/internal/v1/forms")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
-                        .header("Idempotency-Key", "form-update-" + UUID.randomUUID())
+                        .header("Idempotency-Key", "form-list-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateBody("Updated Name")))
+                        .content(formBody(formKey, "List Test Form")))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String formId = MAPPER.readTree(createResult.getResponse().getContentAsString()).get("id").asText();
+
+        MvcResult listResult = mockMvc.perform(get("/internal/v1/forms")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        JsonNode updated = MAPPER.readTree(result.getResponse().getContentAsString());
-        assertThat(updated.get("name").asText()).isEqualTo("Updated Name");
-        assertThat(updated.get("description").asText()).isEqualTo("Updated description");
+        JsonNode arr = MAPPER.readTree(listResult.getResponse().getContentAsString());
+        assertThat(arr.isArray()).isTrue();
+        boolean found = false;
+        for (JsonNode n : arr) {
+            if (formId.equals(n.get("id").asText()) && formKey.equals(n.get("formKey").asText())) {
+                found = true;
+                break;
+            }
+        }
+        assertThat(found).isTrue();
     }
 
-    // ── Test 3: Create version with valid content ───────────────────
-
     @Test
-    @DisplayName("POST /internal/v1/forms/{id}/versions creates version with valid fields JSON")
+    @DisplayName("POST /internal/v1/forms/{id}/versions creates additional schema version")
     void createVersionWithValidContent() throws Exception {
         String formId = createForm();
 
@@ -191,20 +183,18 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "ver-valid-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(versionBody()))
+                        .content(versionBody(SCHEMA_V2)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         JsonNode version = MAPPER.readTree(result.getResponse().getContentAsString());
-        assertThat(version.get("versionNumber").asInt()).isEqualTo(1);
-        assertThat(version.get("formId").asText()).isEqualTo(formId);
+        assertThat(version.get("version").asInt()).isEqualTo(2);
+        assertThat(version.get("formSchemaId").asText()).isEqualTo(formId);
     }
 
-    // ── Test 4: Reject version without "fields" array ───────────────
-
     @Test
-    @DisplayName("POST /internal/v1/forms/{id}/versions rejects content without fields array")
-    void rejectVersionWithoutFieldsArray() throws Exception {
+    @DisplayName("POST /internal/v1/forms/{id}/versions rejects blank schemaJson")
+    void rejectVersionWithBlankSchemaJson() throws Exception {
         String formId = createForm();
 
         mockMvc.perform(post("/internal/v1/forms/" + formId + "/versions")
@@ -214,14 +204,14 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "ver-invalid-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidVersionBody()))
+                        .content("""
+                                {"schemaJson": "", "changelog": "x"}
+                                """))
                 .andExpect(status().isBadRequest());
     }
 
-    // ── Test 5: Publish latest version transitions form to PUBLISHED ─
-
     @Test
-    @DisplayName("POST /internal/v1/forms/{id}/publish publishes latest version and sets status to PUBLISHED")
+    @DisplayName("POST /internal/v1/forms/{id}/publish publishes schema and sets status to PUBLISHED")
     void publishLatestVersion() throws Exception {
         String formId = createForm();
         createVersion(formId);
@@ -237,10 +227,10 @@ class FormsServiceTest {
                 .andReturn();
 
         JsonNode pub = MAPPER.readTree(pubResult.getResponse().getContentAsString());
-        assertThat(pub.get("formId").asText()).isEqualTo(formId);
-        assertThat(pub.get("versionNumber").asInt()).isEqualTo(1);
+        assertThat(pub.get("id").asText()).isEqualTo(formId);
+        assertThat(pub.get("currentVersion").asInt()).isEqualTo(2);
+        assertThat(pub.get("status").asText()).isEqualTo("PUBLISHED");
 
-        // Verify form status is now PUBLISHED
         MvcResult getResult = mockMvc.perform(get("/internal/v1/forms/" + formId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
@@ -253,11 +243,9 @@ class FormsServiceTest {
         assertThat(form.get("status").asText()).isEqualTo("PUBLISHED");
     }
 
-    // ── Test 6: Publish without versions returns 409 ─────────────────
-
     @Test
-    @DisplayName("POST /internal/v1/forms/{id}/publish without versions returns 409")
-    void publishWithoutVersionsReturns409() throws Exception {
+    @DisplayName("POST /internal/v1/forms/{id}/publish when not DRAFT fails")
+    void publishWhenNotDraftFails() throws Exception {
         String formId = createForm();
 
         mockMvc.perform(post("/internal/v1/forms/" + formId + "/publish")
@@ -265,15 +253,25 @@ class FormsServiceTest {
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
-                        .header("Idempotency-Key", "form-nover-pub-" + UUID.randomUUID())
+                        .header("Idempotency-Key", "form-pub-1-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk());
+
+        assertThatThrownBy(() -> mockMvc.perform(post("/internal/v1/forms/" + formId + "/publish")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "form-pub-2-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn())
+                .hasRootCauseInstanceOf(IllegalStateException.class)
+                .rootCause()
+                .hasMessageContaining("Cannot publish schema in status PUBLISHED");
     }
 
-    // ── Test 7: Outbox events are persisted on form create ──────────
-
     @Test
-    @DisplayName("Form create persists outbox event with type impilo.forms.form.created.v1")
+    @DisplayName("Form create persists outbox event impilo.forms.schema.created.v1")
     void formCreatePersistsOutboxEvent() throws Exception {
         long outboxCountBefore = outboxEventRepository.count();
 
@@ -283,13 +281,11 @@ class FormsServiceTest {
         assertThat(allEvents.size()).isGreaterThan((int) outboxCountBefore);
 
         boolean hasCreatedEvent = allEvents.stream()
-                .anyMatch(e -> "impilo.forms.form.created.v1".equals(e.getEventType()));
+                .anyMatch(e -> "impilo.forms.schema.created.v1".equals(e.getEventType()));
         assertThat(hasCreatedEvent)
-                .as("Outbox should contain 'impilo.forms.form.created.v1'")
+                .as("Outbox should contain schema created event")
                 .isTrue();
     }
-
-    // ── Test 8: Outbox events for version create and publish ────────
 
     @Test
     @DisplayName("Version create and publish persist corresponding outbox events")
@@ -309,26 +305,19 @@ class FormsServiceTest {
         List<OutboxEventEntity> allEvents = outboxEventRepository.findAll();
 
         boolean hasVersionEvent = allEvents.stream()
-                .anyMatch(e -> "impilo.forms.version.created.v1".equals(e.getEventType()));
-        assertThat(hasVersionEvent)
-                .as("Outbox should contain 'impilo.forms.version.created.v1'")
-                .isTrue();
+                .anyMatch(e -> "impilo.forms.schema.version_created.v1".equals(e.getEventType()));
+        assertThat(hasVersionEvent).as("Outbox should contain version created event").isTrue();
 
         boolean hasPublishEvent = allEvents.stream()
-                .anyMatch(e -> "impilo.forms.form.published.v1".equals(e.getEventType()));
-        assertThat(hasPublishEvent)
-                .as("Outbox should contain 'impilo.forms.form.published.v1'")
-                .isTrue();
+                .anyMatch(e -> "impilo.forms.schema.published.v1".equals(e.getEventType()));
+        assertThat(hasPublishEvent).as("Outbox should contain schema published event").isTrue();
     }
-
-    // ── Test 9: Version numbers auto-increment ──────────────────────
 
     @Test
     @DisplayName("Multiple versions auto-increment version numbers")
     void versionNumbersAutoIncrement() throws Exception {
         String formId = createForm();
 
-        // Create first version
         MvcResult v1 = mockMvc.perform(post("/internal/v1/forms/" + formId + "/versions")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
@@ -336,11 +325,10 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "ver-inc-1-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(versionBody()))
+                        .content(versionBody(SCHEMA_V2)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        // Create second version
         MvcResult v2 = mockMvc.perform(post("/internal/v1/forms/" + formId + "/versions")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
@@ -348,18 +336,17 @@ class FormsServiceTest {
                         .header("X-Correlation-ID", UUID.randomUUID().toString())
                         .header("Idempotency-Key", "ver-inc-2-" + UUID.randomUUID())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(versionBody()))
+                        .content(versionBody(SCHEMA_V2)))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         JsonNode ver1 = MAPPER.readTree(v1.getResponse().getContentAsString());
         JsonNode ver2 = MAPPER.readTree(v2.getResponse().getContentAsString());
 
-        assertThat(ver1.get("versionNumber").asInt()).isEqualTo(1);
-        assertThat(ver2.get("versionNumber").asInt()).isEqualTo(2);
+        assertThat(ver1.get("version").asInt()).isEqualTo(2);
+        assertThat(ver2.get("version").asInt()).isEqualTo(3);
 
-        // List versions
-        MvcResult listResult = mockMvc.perform(get("/internal/v1/forms/" + formId + "/versions")
+        MvcResult getResult = mockMvc.perform(get("/internal/v1/forms/" + formId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
@@ -367,8 +354,7 @@ class FormsServiceTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        JsonNode versions = MAPPER.readTree(listResult.getResponse().getContentAsString());
-        assertThat(versions.isArray()).isTrue();
-        assertThat(versions.size()).isEqualTo(2);
+        assertThat(MAPPER.readTree(getResult.getResponse().getContentAsString()).get("currentVersion").asInt())
+                .isEqualTo(3);
     }
 }

@@ -21,17 +21,32 @@ final class DockerOrExternalPostgresCondition implements ExecutionCondition {
                     + ExperienceBffTestRedisSupport.REDIS_PORT_ENV
                     + ").";
 
-    static ConditionEvaluationResult evaluate(Map<String, String> env, BooleanSupplier dockerAvailable) {
+    static ConditionEvaluationResult evaluate(Map<String, String> env, BooleanSupplier dockerFactoryAvailable) {
+        return evaluate(env, dockerFactoryAvailable, DockerCliProbe::dockerInfoSucceeds);
+    }
+
+    /**
+     * Package-visible for tests: {@code cliDockerUp} can be stubbed so unit tests stay deterministic.
+     */
+    static ConditionEvaluationResult evaluate(
+            Map<String, String> env,
+            BooleanSupplier dockerFactoryAvailable,
+            BooleanSupplier cliDockerUp) {
         if (ExperienceBffTestRedisSupport.hasExternalRedis(env)) {
             return ConditionEvaluationResult.enabled("External Redis configured for experience-bff integration tests.");
         }
 
         try {
-            if (dockerAvailable.getAsBoolean()) {
+            if (dockerFactoryAvailable.getAsBoolean()) {
                 return ConditionEvaluationResult.enabled("Docker/Testcontainers is available for experience-bff integration tests.");
             }
         } catch (RuntimeException ignored) {
-            // Fall through to a disabled result with explicit operator guidance.
+            // Fall through — try CLI probe (Docker Desktop 29.x + proxy issues).
+        }
+
+        if (cliDockerUp.getAsBoolean()) {
+            return ConditionEvaluationResult.enabled(
+                    "Docker CLI reports a healthy engine; integration tests will start Testcontainers Redis.");
         }
 
         return ConditionEvaluationResult.disabled(REASON);
@@ -39,6 +54,7 @@ final class DockerOrExternalPostgresCondition implements ExecutionCondition {
 
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        return evaluate(System.getenv(), () -> DockerClientFactory.instance().isDockerAvailable());
+        return evaluate(System.getenv(), () -> DockerClientFactory.instance().isDockerAvailable(), DockerCliProbe::dockerInfoSucceeds);
     }
 }
+

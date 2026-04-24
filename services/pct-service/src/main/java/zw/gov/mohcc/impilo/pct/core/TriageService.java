@@ -101,14 +101,21 @@ public class TriageService {
         journeyStateMachine.transition(journey, JourneyState.TRIAGED);
 
         // Outbox event for downstream consumers (e.g. BUTANO SHR, analytics)
+        OffsetDateTime recordedAt = record.getCreatedAt() != null
+                ? record.getCreatedAt()
+                : OffsetDateTime.now();
+        String aggregateId = record.getId() != null
+                ? record.getId().toString()
+                : UUID.randomUUID().toString();
+
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("journeyId", journeyId);
         payload.put("patientCpid", journey.getPatientCpid());
         payload.put("acuity", acuity);
         payload.put("triagedBy", ctx.actorId());
         payload.put("facilityId", journey.getFacilityId().toString());
-        payload.put("recordedAt", record.getCreatedAt().toString());
-        writeOutbox("TRIAGE", record.getId().toString(), "TRIAGE_RECORDED", toJson(payload));
+        payload.put("recordedAt", recordedAt.toString());
+        writeOutbox("TRIAGE", aggregateId, "TRIAGE_RECORDED", toJson(payload));
 
         log.info("Triage recorded: journey={}, acuity={}, by={}",
                 journeyId, acuity, ctx.actorId());

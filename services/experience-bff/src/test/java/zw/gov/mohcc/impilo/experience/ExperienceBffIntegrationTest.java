@@ -31,6 +31,7 @@ class ExperienceBffIntegrationTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         REDIS.configure(registry);
+        ExperienceBffReportingWireMockSupport.register(registry);
     }
 
     @AfterAll

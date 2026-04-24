@@ -119,6 +119,7 @@ public class NdrIngestService {
         bronze.setPartitionKey(partitionKey);
         bronze.setEnvelopeJson(rawJson);
         bronzeRepository.save(bronze);
+        bronzeRepository.flush();
 
         appendOutboxEvent(bronze, tenantId, podId, correlationId, idempotencyKey, partitionKey);
 

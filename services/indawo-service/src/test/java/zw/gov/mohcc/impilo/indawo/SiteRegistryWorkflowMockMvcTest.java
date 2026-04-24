@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser(roles = "DEVELOPER")
 public class SiteRegistryWorkflowMockMvcTest {
 
     @Autowired
@@ -66,6 +68,7 @@ public class SiteRegistryWorkflowMockMvcTest {
                         .header("X-Request-ID", "req-1")
                         .header("X-Correlation-ID", corr)
                         .header("X-Actor-ID", "tester")
+                        .header("Idempotency-Key", "wf-app-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody))
                 .andExpect(status().isCreated())
@@ -86,6 +89,7 @@ public class SiteRegistryWorkflowMockMvcTest {
                         .header("X-Request-ID", "req-2")
                         .header("X-Correlation-ID", corr)
                         .header("X-Actor-ID", "tester")
+                        .header("Idempotency-Key", "wf-submit-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk());
@@ -107,6 +111,7 @@ public class SiteRegistryWorkflowMockMvcTest {
                         .header("X-Request-ID", "req-3")
                         .header("X-Correlation-ID", corr)
                         .header("X-Actor-ID", "inspector")
+                        .header("Idempotency-Key", "wf-insp-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(scheduleBody))
                 .andExpect(status().isCreated())
@@ -141,6 +146,7 @@ public class SiteRegistryWorkflowMockMvcTest {
                         .header("X-Request-ID", "req-4")
                         .header("X-Correlation-ID", corr)
                         .header("X-Actor-ID", "inspector")
+                        .header("Idempotency-Key", "wf-record-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(recordBody))
                 .andExpect(status().isOk());

@@ -22,7 +22,11 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class DeveloperPortalServiceTest {
 
@@ -41,9 +45,7 @@ class DeveloperPortalServiceTest {
         certRepo = mock(CertificationRepository.class);
         outboxRepo = mock(OutboxEventRepository.class);
 
-        when(clientRepo.save(any(ClientEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(keyRepo.save(any(ApiKeyEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(outboxRepo.save(any(OutboxEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        DeveloperPortalRepositoryMocks.stubPersistence(clientRepo, keyRepo, outboxRepo);
 
         service = new DeveloperPortalService(clientRepo, keyRepo, certRepo, outboxRepo, new ObjectMapper());
     }

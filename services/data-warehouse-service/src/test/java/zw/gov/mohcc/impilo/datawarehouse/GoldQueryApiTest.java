@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.datawarehouse;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GoldQueryApiTest {
 
     @Autowired
@@ -24,6 +28,7 @@ class GoldQueryApiTest {
     private static final String TENANT = "00000000-0000-0000-0000-000000000001";
 
     @Test
+    @Order(1)
     @DisplayName("GET /external/v1/gold/datasets returns dataset listing")
     void listDatasetsReturnsListing() throws Exception {
         mockMvc.perform(get("/external/v1/gold/datasets")
@@ -38,6 +43,7 @@ class GoldQueryApiTest {
     }
 
     @Test
+    @Order(2)
     @DisplayName("GET /internal/v1/gold/query with unknown dataset returns 400")
     void queryUnknownDatasetReturns400() throws Exception {
         mockMvc.perform(get("/internal/v1/gold/query")
@@ -51,6 +57,7 @@ class GoldQueryApiTest {
     }
 
     @Test
+    @Order(3)
     @DisplayName("GET /internal/v1/gold/query with encounters returns empty page")
     void queryEncountersReturnsEmptyPage() throws Exception {
         mockMvc.perform(get("/internal/v1/gold/query")
@@ -64,6 +71,7 @@ class GoldQueryApiTest {
     }
 
     @Test
+    @Order(4)
     @DisplayName("GET /internal/v1/gold/stats returns materializer stats")
     void statsReturnsStats() throws Exception {
         mockMvc.perform(get("/internal/v1/gold/stats")
@@ -76,6 +84,7 @@ class GoldQueryApiTest {
     }
 
     @Test
+    @Order(5)
     @DisplayName("POST /internal/v1/gold/materialize processes encounter event")
     void materializeEncounterEvent() throws Exception {
         String body = """

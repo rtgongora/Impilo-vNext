@@ -131,11 +131,14 @@ public class PatientController {
                 }
             }
             long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", mapped);
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                    "page", Map.of("number", page, "size", size, "total_elements", total)));
-            return ResponseEntity.ok(response);
+            if (!mapped.isEmpty()) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", mapped);
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", Map.of("number", page, "size", size, "total_elements", total)));
+                return ResponseEntity.ok(response);
+            }
+            log.debug("VITO returned no client rows — using local seeded directory");
         } catch (Exception e) {
             log.warn("VITO client registry list failed, using seed: {}", e.getMessage());
         }

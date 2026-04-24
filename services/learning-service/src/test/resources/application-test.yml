@@ -21,5 +21,7 @@ learning:
     orchestration-internal-key: test-orch-key
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: false

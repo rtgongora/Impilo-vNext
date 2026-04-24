@@ -4,15 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { msikaFlowApi } from "@/lib/msikaFlowApi";
 
-interface CartLine {
-  msikaCoreCode: string;
-  displayName: string;
-  kind: string;
-  qty: number;
-  unitPrice: number;
-  currency: string;
-}
-
 export default function CartPage() {
   const [orderId, setOrderId] = useState("");
   const [orderIdInput, setOrderIdInput] = useState("");

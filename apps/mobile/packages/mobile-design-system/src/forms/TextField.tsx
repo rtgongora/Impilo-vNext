@@ -3,6 +3,7 @@
  */
 
 import React from "react";
+import type { NativeSyntheticEvent, TextInputFocusEventData } from "react-native";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 
 export interface TextFieldProps {
@@ -28,6 +29,8 @@ export interface TextFieldProps {
   autoComplete?: string;
   testID?: string;
   accessibilityLabel?: string;
+  onFocus?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
+  onBlur?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
 }
 
 export function TextField({
@@ -48,6 +51,8 @@ export function TextField({
   autoCapitalize = "sentences",
   testID,
   accessibilityLabel,
+  onFocus,
+  onBlur,
 }: TextFieldProps) {
   const resolvedOnChangeText = onChangeText ?? onChange ?? (() => {});
   const resolvedLabel = label ?? "";
@@ -62,6 +67,8 @@ export function TextField({
       <TextInput
         value={value}
         onChangeText={resolvedOnChangeText}
+        onFocus={onFocus}
+        onBlur={onBlur}
         placeholder={placeholder}
         editable={!disabled}
         secureTextEntry={secureTextEntry}

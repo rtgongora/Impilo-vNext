@@ -31,9 +31,9 @@ class RepoEventTypeContractTest {
         return Stream.of(
                 // notification-service (wave 10)
                 Arguments.of("notification", "impilo.notify.receipt.recorded.v1"),
-                Arguments.of("notification", "impilo.notify.enqueued.v1"),
-                Arguments.of("notification", "impilo.notify.sent.v1"),
-                Arguments.of("notification", "impilo.notify.failed.v1"),
+                Arguments.of("notification", "impilo.notify.notification.enqueued.v1"),
+                Arguments.of("notification", "impilo.notify.notification.sent.v1"),
+                Arguments.of("notification", "impilo.notify.notification.failed.v1"),
                 Arguments.of("notification", "impilo.notify.template.created.v1"),
                 Arguments.of("notification", "impilo.notify.template.published.v1"),
                 Arguments.of("notification", "impilo.notify.template.retired.v1"),

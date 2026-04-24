@@ -1,7 +1,11 @@
 package zw.gov.mohcc.impilo.inventory.v11;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import zw.gov.mohcc.impilo.inventory.config.InventoryTestSecurityBeans;
 import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 
 /**
@@ -12,7 +16,12 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
+@Import(InventoryTestSecurityBeans.class)
 public class InventoryGoldenContractIT extends GoldenContractSuite {
+
+    @MockBean
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     // All tests inherited from GoldenContractSuite.
     // Endpoints are auto-discovered at test time.
 }

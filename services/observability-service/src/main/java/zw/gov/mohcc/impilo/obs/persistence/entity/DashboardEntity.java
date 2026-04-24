@@ -11,6 +11,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.obs.core.DashboardType;
 
@@ -36,9 +38,7 @@ public class DashboardEntity {
     private DashboardType dashboardType = DashboardType.GRAFANA;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "config", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "config", nullable = false)
     private String config = "{}";
 
     @Column(name = "status", nullable = false)

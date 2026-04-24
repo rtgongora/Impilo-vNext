@@ -191,17 +191,17 @@ class IntegrationHubServiceTest {
         assertThat(foundRoute).as("Should find the route with matching path regex").isTrue();
     }
 
-    // ── Test 3: Dispatch matches route and returns ACCEPTED ──────────
+    // ── Test 3: Dispatch matches route and returns DISPATCHED ─────────
 
     @Test
-    @DisplayName("POST /internal/v1/dispatch with matching route returns ACCEPTED with routeId")
+    @DisplayName("POST /internal/v1/dispatch with matching route returns DISPATCHED with routeId")
     void dispatchMatchesRouteReturnsAccepted() throws Exception {
         // Create a route that matches POST /orders/.*
         String routeId = createRouteAndGetId("POST", "/orders/.*",
                 "http://oros:8089/internal/v1/orders", 5000,
                 null, null);
 
-        String body = dispatchBody("POST", "/orders/create", "{\\\"orderId\\\":\\\"123\\\"}");
+        String body = dispatchBody("POST", "/orders/create", "{\"orderId\":\"123\"}");
 
         MvcResult result = mockMvc.perform(post("/internal/v1/dispatch")
                         .header("X-Tenant-ID", TENANT_ID)
@@ -215,7 +215,7 @@ class IntegrationHubServiceTest {
                 .andReturn();
 
         JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
-        assertThat(root.get("status").asText()).isEqualTo("ACCEPTED");
+        assertThat(root.get("status").asText()).isEqualTo("DISPATCHED");
         assertThat(root.get("routeId").asText()).isEqualTo(routeId);
         assertThat(root.get("targetUrl").asText()).isEqualTo("http://oros:8089/internal/v1/orders");
     }
@@ -251,13 +251,13 @@ class IntegrationHubServiceTest {
                 .andReturn();
 
         JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
-        assertThat(root.get("status").asText()).isEqualTo("ACCEPTED");
+        assertThat(root.get("status").asText()).isEqualTo("DISPATCHED");
 
         // Verify the dispatch attempt was recorded
         String dispatchId = root.get("id").asText();
         DispatchAttemptEntity attempt = dispatchAttemptRepository.findById(dispatchId).orElseThrow();
         assertThat(attempt.isMatched()).isTrue();
-        assertThat(attempt.getStatus()).isEqualTo("ACCEPTED");
+        assertThat(attempt.getStatus()).isEqualTo("DISPATCHED");
     }
 
     // ── Test 5: Dispatch applies JSON field renames ──────────────────
@@ -308,7 +308,7 @@ class IntegrationHubServiceTest {
     // ── Test 6: Dispatch writes outbox event ─────────────────────────
 
     @Test
-    @DisplayName("Dispatch records outbox event with dispatch.accepted event type")
+    @DisplayName("Dispatch records outbox event with dispatch.completed event type")
     void dispatchWritesOutboxEvent() throws Exception {
         createRouteAndGetId("*", "/outbox-test/.*",
                 "http://target:8080/outbox", 3000, null, null);
@@ -330,10 +330,10 @@ class IntegrationHubServiceTest {
         List<OutboxEventEntity> allOutbox = outboxEventRepository.findAll();
         assertThat(allOutbox.size()).isGreaterThan((int) outboxCountBefore);
 
-        boolean hasAcceptedEvent = allOutbox.stream()
-                .anyMatch(e -> "impilo.integration.dispatch.accepted.v1".equals(e.getEventType()));
-        assertThat(hasAcceptedEvent)
-                .as("Outbox should contain dispatch.accepted.v1 event")
+        boolean hasCompletedEvent = allOutbox.stream()
+                .anyMatch(e -> "impilo.integration.dispatch.completed.v1".equals(e.getEventType()));
+        assertThat(hasCompletedEvent)
+                .as("Outbox should contain dispatch.completed.v1 event")
                 .isTrue();
     }
 
@@ -471,7 +471,7 @@ class IntegrationHubServiceTest {
                 .andReturn();
 
         JsonNode correctRoot = MAPPER.readTree(correctResult.getResponse().getContentAsString());
-        assertThat(correctRoot.get("status").asText()).isEqualTo("ACCEPTED");
+        assertThat(correctRoot.get("status").asText()).isEqualTo("DISPATCHED");
         assertThat(correctRoot.get("targetUrl").asText()).isEqualTo("http://target:8080/update");
     }
 }

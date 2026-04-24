@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.oros.persistence.entity.OrderItemEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.OrderItemRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.OrderRepository;
+import zw.gov.mohcc.impilo.oros.testsupport.OrosTestObjectMapper;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -60,7 +61,7 @@ class OrderStateMachineTest {
 
     @BeforeEach
     void setUp() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = OrosTestObjectMapper.create();
         stateMachine = new OrderStateMachine(
                 orderRepository, orderItemRepository, outboxRepository, objectMapper);
     }

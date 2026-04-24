@@ -49,6 +49,9 @@ export class StepUpRequiredError extends Error {
   }
 }
 
+/** List payloads returned in `data` from paginated Msika Admin APIs */
+export type PagedList<T> = { items?: T[] };
+
 export const apiClient = {
   get: <T>(path: string) => request<T>("GET", path),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),

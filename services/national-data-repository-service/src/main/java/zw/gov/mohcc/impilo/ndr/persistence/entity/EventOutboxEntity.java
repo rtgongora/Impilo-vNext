@@ -26,9 +26,7 @@ public class EventOutboxEntity {
     private String eventType;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "payload", nullable = false)
     private String payload;
 
     @Column(name = "tenant_id", nullable = false)

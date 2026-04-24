@@ -17,12 +17,9 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
 
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
-
 impilo:
   security:
+    disable-oauth-for-tests: true
     mode: permit-all
   companion:
     enabled: true

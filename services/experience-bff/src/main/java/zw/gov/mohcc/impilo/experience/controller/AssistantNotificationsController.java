@@ -2,8 +2,10 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.intelligence.HealthIntelligenceService;
 
@@ -52,7 +54,10 @@ public class AssistantNotificationsController {
             return ResponseEntity.ok(Map.of("data", notifications));
         } catch (Exception e) {
             log.warn("Assistant notifications aggregation failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of()));
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Assistant notifications aggregation failed",
+                    e);
         }
     }
 

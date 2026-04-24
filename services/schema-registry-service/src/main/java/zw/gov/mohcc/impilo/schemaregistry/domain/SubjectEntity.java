@@ -16,6 +16,7 @@ public class SubjectEntity {
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt = OffsetDateTime.now();
 
     public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getSubjectName() { return subjectName; }
     public void setSubjectName(String v) { this.subjectName = v; }
     public String getCompatibility() { return compatibility; }

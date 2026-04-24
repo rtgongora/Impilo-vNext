@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { mushexApi, type Claim, type ClaimDetail, type ClaimStatus } from "@/lib/mushexApi";
+import { mushexApi, type ClaimDetail, type ClaimStatus } from "@/lib/mushexApi";
 
 const STATUS_BADGE: Record<ClaimStatus, string> = {
   DRAFT: "badge-draft",

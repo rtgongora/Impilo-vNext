@@ -14,7 +14,7 @@ import zw.gov.mohcc.impilo.mushex.api.dto.WebhookPayload;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentAttemptEntity;
 import zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType;
 import zw.gov.mohcc.impilo.mushex.domain.enums.AttemptStatus;
-import zw.gov.mohcc.impilo.mushex.persistence.PaymentAttemptRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentAttemptRepository;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.adapter.AdapterRegistry;
 import zw.gov.mohcc.impilo.mushex.service.adapter.PaymentRailAdapter;

@@ -5,8 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import zw.gov.mohcc.impilo.ndr.config.NdrTestSecurityBeans;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -15,7 +20,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(NdrTestSecurityBeans.class)
 class QueryControllerTest {
+
+    @MockBean
+    @SuppressWarnings("unused")
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
     private MockMvc mockMvc;
@@ -23,12 +33,15 @@ class QueryControllerTest {
     private static final String TENANT_ID = "00000000-0000-0000-0000-000000000001";
     private static final String POD_ID = "national";
 
+    private static final String TEST_BEARER = "Bearer ndr-test-token";
+
     @Test
     @DisplayName("POST /internal/v1/query returns 200 with results")
     void queryReturns200() throws Exception {
         String idempotencyKey = "query-1-" + System.nanoTime();
 
         mockMvc.perform(post("/internal/v1/query")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_BEARER)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", "req-q1")
@@ -48,6 +61,7 @@ class QueryControllerTest {
         String idempotencyKey = "query-2-" + System.nanoTime();
 
         mockMvc.perform(post("/internal/v1/query")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_BEARER)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", "req-q2")

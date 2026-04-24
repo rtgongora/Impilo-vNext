@@ -13,7 +13,7 @@ public class RuleEntity {
     @Column(name = "id", length = 36, nullable = false)
     private String id;
 
-    @Column(name = "key", length = 128)
+    @Column(name = "rule_key", length = 128)
     private String key;
 
     @Column(name = "name", length = 256)

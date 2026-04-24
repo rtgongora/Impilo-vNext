@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser(roles = "DEVELOPER")
 public class SiteRegistryAssignmentsTest {
 
     @Autowired
@@ -48,6 +50,7 @@ public class SiteRegistryAssignmentsTest {
                         .header("X-Pod-ID", "national")
                         .header("X-Request-ID", "req-1")
                         .header("X-Correlation-ID", corr)
+                        .header("Idempotency-Key", "assign-app-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createBody))
                 .andExpect(status().isCreated())
@@ -73,6 +76,7 @@ public class SiteRegistryAssignmentsTest {
                         .header("X-Pod-ID", "national")
                         .header("X-Request-ID", "req-2")
                         .header("X-Correlation-ID", corr)
+                        .header("Idempotency-Key", "assign-asg-" + System.nanoTime())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(assignmentBody))
                 .andExpect(status().isCreated());

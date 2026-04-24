@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.oros.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ReconcileQueueEntity;
 import zw.gov.mohcc.impilo.oros.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.oros.persistence.repository.ReconcileQueueRepository;
+import zw.gov.mohcc.impilo.oros.testsupport.OrosTestObjectMapper;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -50,7 +51,7 @@ class ReconciliationServiceTest {
 
     @BeforeEach
     void setUp() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = OrosTestObjectMapper.create();
         reconciliationService = new ReconciliationService(
                 reconcileRepository, outboxRepository, objectMapper);
     }
