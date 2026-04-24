@@ -45,6 +45,9 @@ public class RefundEntity {
     @Column(name = "processed_at")
     private OffsetDateTime processedAt;
 
+    @Column(name = "allocation_reversed", nullable = false)
+    private boolean allocationReversed;
+
     @PrePersist
     protected void onCreate() { if (createdAt == null) createdAt = OffsetDateTime.now(); }
 
@@ -69,4 +72,6 @@ public class RefundEntity {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getProcessedAt() { return processedAt; }
     public void setProcessedAt(OffsetDateTime processedAt) { this.processedAt = processedAt; }
+    public boolean isAllocationReversed() { return allocationReversed; }
+    public void setAllocationReversed(boolean allocationReversed) { this.allocationReversed = allocationReversed; }
 }

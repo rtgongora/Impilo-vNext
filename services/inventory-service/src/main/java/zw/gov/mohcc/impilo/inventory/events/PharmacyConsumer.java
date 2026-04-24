@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ import java.util.UUID;
  * }</pre>
  */
 @Service
+@ConditionalOnProperty(prefix = "inventory.supply", name = "kafka-listeners-enabled", havingValue = "true", matchIfMissing = true)
 public class PharmacyConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(PharmacyConsumer.class);

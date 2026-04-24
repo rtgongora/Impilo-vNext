@@ -49,3 +49,23 @@ impilo:
   ops:
     enabled: true
     outbox-table: ss_event_outbox
+  search:
+    embeddings:
+      # off | hash (local deterministic) | http (OpenAI-compatible /v1/embeddings)
+      provider: off
+      hash-dimension: 128
+      max-input-chars: 8192
+      http:
+        base-url: ${IMPILO_SEARCH_EMBEDDINGS_BASE_URL:}
+        api-key: ${IMPILO_SEARCH_EMBEDDINGS_API_KEY:}
+        path: /v1/embeddings
+        model: text-embedding-3-small
+    ranking:
+      hybrid-cosine-weight: 0.55
+    pgvector:
+      # Corpus-wide ANN recall on PostgreSQL (requires Flyway V003 + CREATE EXTENSION vector).
+      enabled: false
+      dimensions: 1536
+      ann-candidate-limit: 500
+      merge-lexical-candidates: true
+      merge-lexical-cap: 80

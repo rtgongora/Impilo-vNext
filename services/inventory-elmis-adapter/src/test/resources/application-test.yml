@@ -35,4 +35,5 @@ spring:
 
 impilo:
   security:
+    disable-oauth-for-tests: true
     oauth2-enabled: false

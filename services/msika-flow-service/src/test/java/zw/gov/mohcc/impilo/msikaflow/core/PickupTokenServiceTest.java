@@ -6,18 +6,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import zw.gov.mohcc.impilo.msikaflow.api.dto.PickupClaimTrust;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.repository.*;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PickupTokenServiceTest {
@@ -25,13 +28,16 @@ class PickupTokenServiceTest {
     @Mock private PickupTokenRepository tokenRepository;
     @Mock private OrderStateMachine stateMachine;
     @Mock private EventOutboxRepository outboxRepository;
+    @Mock private MsikaPickupBiometricPolicyClient pickupBiometricPolicyClient;
 
     private PickupTokenService service;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        service = new PickupTokenService(tokenRepository, stateMachine, outboxRepository, objectMapper);
+        service = new PickupTokenService(
+                tokenRepository, stateMachine, outboxRepository, objectMapper, pickupBiometricPolicyClient);
+        lenient().doNothing().when(pickupBiometricPolicyClient).assertPickupClaimAllowed(any());
     }
 
     @Test
@@ -99,8 +105,9 @@ class PickupTokenServiceTest {
         // Make MAX_CLAIM_ATTEMPTS_PER_HOUR (5) rapid attempts
         for (int i = 0; i < 5; i++) {
             try {
-                service.claimPickup("invalid-token-" + i, "rate-limited-actor",
-                        "PATIENT", "fingerprint", UUID.randomUUID());
+                service.claimPickup(
+                        "invalid-token-" + i,
+                        trust("rate-limited-actor", "PATIENT", UUID.randomUUID()));
             } catch (Exception ignored) {
                 // Expected to fail on token lookup, but rate counter increments
             }
@@ -108,7 +115,10 @@ class PickupTokenServiceTest {
 
         // 6th attempt should be rate limited
         assertThrows(IllegalStateException.class, () ->
-                service.claimPickup("any-token", "rate-limited-actor",
-                        "PATIENT", "fingerprint", UUID.randomUUID()));
+                service.claimPickup("any-token", trust("rate-limited-actor", "PATIENT", UUID.randomUUID())));
+    }
+
+    private static PickupClaimTrust trust(String actorId, String actorType, UUID tenantId) {
+        return new PickupClaimTrust(tenantId, UUID.randomUUID().toString(), actorId, actorType, null, "fp");
     }
 }

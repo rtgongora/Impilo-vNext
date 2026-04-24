@@ -102,7 +102,7 @@ public class ShiftController {
         attrs.put("tenantId", tenantId);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", shiftId, "type", "shift", "attributes", attrs));
+        response.put("data", Map.of("id", shiftId, "type", "Shift", "attributes", attrs));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -136,7 +136,7 @@ public class ShiftController {
         attrs.put("endedAt", OffsetDateTime.now().toString());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "shift", "attributes", attrs));
+        response.put("data", Map.of("id", id, "type", "Shift", "attributes", attrs));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

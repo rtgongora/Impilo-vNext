@@ -55,6 +55,13 @@ public class AuditPublisher {
     @Transactional
     public void queueAuditEvent(AuthzInternalRequest request, String verdict,
                                  int riskScore, String denyReason) {
+        queueAuditEvent(request, verdict, riskScore, denyReason, null);
+    }
+
+    @Transactional
+    public void queueAuditEvent(AuthzInternalRequest request, String verdict,
+                                 int riskScore, String denyReason,
+                                 zw.gov.mohcc.impilo.tshepo.contracts.dto.Obligations obligations) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("eventType", "AUTHZ_DECISION");
         payload.put("tenantId", request.tenantId() != null ? request.tenantId().toString() : null);
@@ -72,6 +79,13 @@ public class AuditPublisher {
         payload.put("workspaceId", request.workspaceId() != null ? request.workspaceId().toString() : null);
         payload.put("deviceFingerprint", request.deviceFingerprint());
         payload.put("timestamp", Instant.now().toString());
+        if (obligations != null && obligations.visibilityProfile() != null) {
+            payload.put("visibilityTier", obligations.visibilityProfile().visibilityTier());
+            payload.put("piiAccess", obligations.visibilityProfile().piiAccess());
+            payload.put("clinicalAccess", obligations.visibilityProfile().clinicalAccess());
+            payload.put("aggregateOnly", obligations.visibilityProfile().aggregateOnly());
+            payload.put("escalationGrantId", obligations.visibilityProfile().escalationGrantId());
+        }
 
         String payloadJson;
         try {
@@ -130,5 +144,30 @@ public class AuditPublisher {
         if (published > 0) {
             log.info("Published {} audit events to Kafka topic '{}'", published, topic);
         }
+    }
+
+    /**
+     * Governance / visibility escalation events (same Kafka topic as authz audit stream).
+     */
+    @Transactional
+    public void queueGovernanceEvent(String eventType, String aggregateId, Map<String, Object> payload) {
+        Map<String, Object> body = new HashMap<>(payload);
+        body.put("eventType", eventType);
+        body.put("timestamp", Instant.now().toString());
+
+        String payloadJson;
+        try {
+            payloadJson = objectMapper.writeValueAsString(body);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize governance event: {}", e.getMessage());
+            payloadJson = "{}";
+        }
+
+        EventOutboxEntity entry = new EventOutboxEntity();
+        entry.setAggregateType("Governance");
+        entry.setAggregateId(aggregateId != null ? aggregateId : "unknown");
+        entry.setEventType(eventType);
+        entry.setPayload(payloadJson);
+        outboxRepository.save(entry);
     }
 }

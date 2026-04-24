@@ -18,7 +18,11 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class SchemaRegistryServiceTest {
 
@@ -35,9 +39,7 @@ class SchemaRegistryServiceTest {
         versionRepo = mock(SchemaVersionRepository.class);
         outboxRepo = mock(OutboxEventRepository.class);
 
-        when(subjectRepo.save(any(SubjectEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(versionRepo.save(any(SchemaVersionEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(outboxRepo.save(any(OutboxEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        SchemaRegistryRepositoryMocks.stubPersistence(subjectRepo, versionRepo, outboxRepo);
 
         service = new SchemaRegistryService(subjectRepo, versionRepo, outboxRepo, new ObjectMapper());
     }

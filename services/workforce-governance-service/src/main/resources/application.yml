@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8165}
+
+spring:
+  application:
+    name: workforce-governance-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_workforce_governance
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+impilo:
+  companion:
+    enabled: true
+  governance:
+    kafka-events-enabled: ${GOVERNANCE_KAFKA_EVENTS_ENABLED:false}
+    outbox-topic: ${GOVERNANCE_OUTBOX_TOPIC:impilo.governance.events}
+    outbox-publish-interval-ms: ${GOVERNANCE_OUTBOX_PUBLISH_INTERVAL_MS:2000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: workforce-governance-service

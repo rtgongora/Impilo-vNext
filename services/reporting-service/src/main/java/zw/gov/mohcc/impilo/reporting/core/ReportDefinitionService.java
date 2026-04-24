@@ -54,6 +54,9 @@ public class ReportDefinitionService {
         entity.setOutputFormat(parseExportFormat(request.outputFormat()));
         entity.setStatus(ReportStatus.ACTIVE);
         entity.setCreatedBy(actorId);
+        if (entity.getDefinitionId() == null) {
+            entity.setDefinitionId(UUID.randomUUID());
+        }
         entity = definitionRepository.save(entity);
 
         Map<String, Object> payload = new LinkedHashMap<>();

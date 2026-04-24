@@ -82,6 +82,8 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
             String programmeId = headers.getOrDefault(TrustHeaders.PROGRAMME_ID, "");
             String subjectId = headers.getOrDefault(TrustHeaders.SUBJECT_ID, "");
             String assuranceLevel = headers.getOrDefault(TrustHeaders.ASSURANCE_LEVEL, "");
+            String escalationGrantId = headers.getOrDefault(TrustHeaders.ESCALATION_GRANT_ID, "");
+            String workflowContext = headers.getOrDefault(TrustHeaders.WORKFLOW_STATE, "");
             String authorization = headers.getOrDefault("authorization", "");
 
             // Parse UUIDs
@@ -134,7 +136,8 @@ public class ExtAuthzGrpcService extends AuthorizationGrpc.AuthorizationImplBase
                     loaLevel, sessionId, authorization,
                     emptyToNull(providerId), emptyToNull(departmentId),
                     emptyToNull(wardId), emptyToNull(programmeId),
-                    emptyToNull(subjectId), emptyToNull(assuranceLevel)
+                    emptyToNull(subjectId), emptyToNull(assuranceLevel),
+                    emptyToNull(escalationGrantId), emptyToNull(workflowContext)
             );
 
             // Validate mandatory headers

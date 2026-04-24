@@ -55,8 +55,7 @@ public class ComplianceService {
         log.info("Creating compliance action: providerId={}, type={}, actor={}",
                 providerId, actionType, ctx.actorId());
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         ProviderComplianceActionEntity action = new ProviderComplianceActionEntity();
         action.setProvider(provider);
@@ -90,8 +89,7 @@ public class ComplianceService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Resolving compliance action: id={}, actor={}", actionId, ctx.actorId());
 
-        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
-                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+        ProviderComplianceActionEntity action = requireAction(actionId, ctx.tenantId());
 
         if (!"OPEN".equals(action.getStatus())) {
             throw new IllegalStateException("Can only resolve open actions");
@@ -118,7 +116,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getOpenActions(Long providerId) {
-        return complianceRepository.findByProviderIdAndStatus(providerId, "OPEN");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return complianceRepository.findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "OPEN");
     }
 
     /**
@@ -126,7 +126,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getActionsByProvider(Long providerId) {
-        return complianceRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return complianceRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -134,7 +136,8 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getOverdueActions() {
-        return complianceRepository.findByStatusAndDueDateBefore("OPEN", LocalDate.now());
+        TrustContext ctx = TrustContextHolder.require();
+        return complianceRepository.findByTenantIdAndStatusAndDueDateBefore(ctx.tenantId(), "OPEN", LocalDate.now());
     }
 
     /**
@@ -151,7 +154,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public boolean hasOpenComplianceIssues(Long providerId) {
-        List<ProviderComplianceActionEntity> open = complianceRepository.findByProviderIdAndStatus(providerId, "OPEN");
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderComplianceActionEntity> open = complianceRepository
+                .findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "OPEN");
         return !open.isEmpty();
     }
 
@@ -160,7 +165,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public int getOpenIssueCount(Long providerId) {
-        List<ProviderComplianceActionEntity> open = complianceRepository.findByProviderIdAndStatus(providerId, "OPEN");
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderComplianceActionEntity> open = complianceRepository
+                .findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "OPEN");
         return open.size();
     }
 
@@ -178,8 +185,7 @@ public class ComplianceService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Creating compliance action: providerId={}, type={}", providerId, complianceActionType);
 
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         ProviderComplianceActionEntity action = new ProviderComplianceActionEntity();
         action.setProvider(provider);
@@ -210,8 +216,7 @@ public class ComplianceService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Fulfilling compliance action: id={}", actionId);
 
-        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
-                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+        ProviderComplianceActionEntity action = requireAction(actionId, ctx.tenantId());
 
         if (!"OPEN".equals(action.getStatus())) {
             throw new IllegalStateException("Can only fulfill open actions");
@@ -236,8 +241,7 @@ public class ComplianceService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Exempting compliance action: id={}", actionId);
 
-        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
-                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+        ProviderComplianceActionEntity action = requireAction(actionId, ctx.tenantId());
 
         action.setStatus("EXEMPTED");
         action.setCompletionNotes(exemptionReason + " | " + notes);
@@ -261,8 +265,7 @@ public class ComplianceService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Escalating compliance action: id={}, newDueDate={}", actionId, newDueDate);
 
-        ProviderComplianceActionEntity action = complianceRepository.findById(actionId)
-                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+        ProviderComplianceActionEntity action = requireAction(actionId, ctx.tenantId());
 
         action.setDueDate(newDueDate);
         action.setCompletionNotes("Escalated: " + reason + " | " + notes);
@@ -278,8 +281,8 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public ProviderComplianceActionEntity getComplianceAction(Long actionId) {
-        return complianceRepository.findById(actionId)
-                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireAction(actionId, ctx.tenantId());
     }
 
     /**
@@ -287,7 +290,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getComplianceActionsByProvider(Long providerId) {
-        return complianceRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return complianceRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -295,7 +300,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getOutstandingActions(Long providerId) {
-        return complianceRepository.findByProviderIdAndStatus(providerId, "OPEN");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return complianceRepository.findByTenantIdAndProviderIdAndStatus(ctx.tenantId(), providerId, "OPEN");
     }
 
     /**
@@ -303,7 +310,13 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getOverdueActions(Long providerId) {
-        return complianceRepository.findByProviderIdAndStatusAndDueDateBefore(providerId, "OPEN", LocalDate.now());
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return complianceRepository.findByTenantIdAndProviderIdAndStatusAndDueDateBefore(
+                ctx.tenantId(),
+                providerId,
+                "OPEN",
+                LocalDate.now());
     }
 
     /**
@@ -311,8 +324,9 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getActionsDueWithin(int days) {
+        TrustContext ctx = TrustContextHolder.require();
         LocalDate targetDate = LocalDate.now().plusDays(days);
-        return complianceRepository.findByStatusAndDueDateBefore("OPEN", targetDate);
+        return complianceRepository.findByTenantIdAndStatusAndDueDateBefore(ctx.tenantId(), "OPEN", targetDate);
     }
 
     /**
@@ -320,7 +334,18 @@ public class ComplianceService {
      */
     @Transactional(readOnly = true)
     public List<ProviderComplianceActionEntity> getAllOverdueActions() {
-        return complianceRepository.findByStatusAndDueDateBefore("OPEN", LocalDate.now());
+        TrustContext ctx = TrustContextHolder.require();
+        return complianceRepository.findByTenantIdAndStatusAndDueDateBefore(ctx.tenantId(), "OPEN", LocalDate.now());
+    }
+
+    private ProviderEntity requireProvider(Long providerId, UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private ProviderComplianceActionEntity requireAction(Long actionId, UUID tenantId) {
+        return complianceRepository.findByIdAndTenantId(actionId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Action not found: " + actionId));
     }
 
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {

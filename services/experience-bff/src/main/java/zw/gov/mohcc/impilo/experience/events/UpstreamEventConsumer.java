@@ -28,7 +28,7 @@ public class UpstreamEventConsumer {
 
     // ── PCT Events: encounter lifecycle ─────────────────────────────
 
-    @KafkaListener(topics = "pct.encounter.started", groupId = "experience-bff")
+    @KafkaListener(topics = {"pct.encounter.started", "impilo.pct.encounter"}, groupId = "experience-bff")
     public void onEncounterStarted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -41,7 +41,7 @@ public class UpstreamEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "pct.encounter.completed", groupId = "experience-bff")
+    @KafkaListener(topics = {"pct.encounter.completed", "impilo.pct.encounter"}, groupId = "experience-bff")
     public void onEncounterCompleted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -55,7 +55,7 @@ public class UpstreamEventConsumer {
 
     // ── OROS Events: order/result lifecycle ──────────────────────────
 
-    @KafkaListener(topics = "oros.order.status_changed", groupId = "experience-bff")
+    @KafkaListener(topics = {"oros.order.status_changed", "impilo.oros.order"}, groupId = "experience-bff")
     public void onOrderStatusChanged(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -67,7 +67,7 @@ public class UpstreamEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "oros.result.available", groupId = "experience-bff")
+    @KafkaListener(topics = {"oros.result.available", "impilo.oros.result"}, groupId = "experience-bff")
     public void onResultAvailable(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -82,7 +82,7 @@ public class UpstreamEventConsumer {
     // ── Pharmacy Events: dispense lifecycle ─────────────────────────
 
     /** Matches pharmacy-service {@code OutboxPublisher} ({@code DISPENSE_COMPLETED} → {@code pharmacy.dispense.complete}). */
-    @KafkaListener(topics = "pharmacy.dispense.complete", groupId = "experience-bff")
+    @KafkaListener(topics = {"pharmacy.dispense.complete", "impilo.pharmacy.dispense"}, groupId = "experience-bff")
     public void onDispenseCompleted(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -94,7 +94,7 @@ public class UpstreamEventConsumer {
 
     // ── COSTA/Mushex Events: billing/payment lifecycle ──────────────
 
-    @KafkaListener(topics = "costa.bill.finalized", groupId = "experience-bff")
+    @KafkaListener(topics = {"costa.bill.finalized", "impilo.costa.bill"}, groupId = "experience-bff")
     public void onBillFinalized(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -107,7 +107,7 @@ public class UpstreamEventConsumer {
     }
 
     /** Matches mushex-service {@code OutboxPublisher} ({@code STATUS_CHANGED} → {@code mushex.payment.status.changed}). */
-    @KafkaListener(topics = "mushex.payment.status.changed", groupId = "experience-bff")
+    @KafkaListener(topics = {"mushex.payment.status.changed", "impilo.mushex.payment"}, groupId = "experience-bff")
     public void onPaymentStatusChanged(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -119,7 +119,7 @@ public class UpstreamEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "mushex.refund.status.changed", groupId = "experience-bff")
+    @KafkaListener(topics = {"mushex.refund.status.changed", "impilo.mushex.refund"}, groupId = "experience-bff")
     public void onRefundStatusChanged(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -133,7 +133,7 @@ public class UpstreamEventConsumer {
 
     // ── TUSO Events: facility/workspace updates ─────────────────────
 
-    @KafkaListener(topics = "tuso.workspace.updated", groupId = "experience-bff")
+    @KafkaListener(topics = {"tuso.workspace.updated", "impilo.tuso.workspace"}, groupId = "experience-bff")
     public void onWorkspaceUpdated(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);
@@ -143,7 +143,7 @@ public class UpstreamEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "tuso.facility.profile.updated", groupId = "experience-bff")
+    @KafkaListener(topics = {"tuso.facility.profile.updated", "impilo.tuso.facility"}, groupId = "experience-bff")
     public void onFacilityProfileUpdated(String payload) {
         try {
             JsonNode node = objectMapper.readTree(payload);

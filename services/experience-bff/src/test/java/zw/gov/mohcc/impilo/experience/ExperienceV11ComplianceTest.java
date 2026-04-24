@@ -44,6 +44,7 @@ class ExperienceV11ComplianceTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         REDIS.configure(registry);
+        ExperienceBffReportingWireMockSupport.register(registry);
     }
 
     @AfterAll

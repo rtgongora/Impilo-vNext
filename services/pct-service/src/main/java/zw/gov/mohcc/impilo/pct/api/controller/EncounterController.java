@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.pct.api.controller;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.api.dto.StartEncounterRequest;
@@ -14,6 +15,9 @@ import zw.gov.mohcc.impilo.pct.persistence.repository.JourneyRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.visibility.ClinicalVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.util.*;
 
@@ -85,6 +89,13 @@ public class EncounterController {
     public ResponseEntity<ApiResponse<EncounterEntity>> getEncounter(@PathVariable Long id) {
         TrustContext ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (ClinicalVisibilityGuard.deniesClinicalRead(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_CLINICAL_DENIED",
+                            "Encounter detail is not permitted for the current visibility profile.",
+                            HttpStatus.FORBIDDEN.value(), correlationId));
+        }
 
         EncounterEntity encounter = encounterRepository
                 .findByTenantIdAndId(ctx.tenantId(), id)
@@ -113,6 +124,13 @@ public class EncounterController {
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getTimeline(@PathVariable String cpid) {
         TrustContext ctx = TrustContextHolder.require();
         String correlationId = ctx.correlationId().toString();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (ClinicalVisibilityGuard.deniesClinicalRead(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_CLINICAL_DENIED",
+                            "Patient timeline is not permitted for the current visibility profile.",
+                            HttpStatus.FORBIDDEN.value(), correlationId));
+        }
 
         List<JourneyEntity> journeys = journeyRepository
                 .findByTenantIdAndPatientCpid(ctx.tenantId(), cpid);

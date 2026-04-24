@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createTicket } from "@/lib/supportApi";
-import { useSupportSession } from "@/stores/sessionStore";
 import type { TicketCategory, TicketPriority } from "@/types/support";
 
 const CATEGORY_OPTIONS: TicketCategory[] = ["GENERAL", "INCIDENT", "BUG", "FEATURE_REQUEST", "ACCESS", "CONFIGURATION", "DATA"];
@@ -11,7 +10,6 @@ const PRIORITY_OPTIONS: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
 export default function CreateTicketPage() {
   const router = useRouter();
-  const session = useSupportSession((s) => s.session);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");

@@ -167,7 +167,8 @@ export function ProactiveAssistant() {
       {/* Floating assistant button */}
       <button
         onClick={() => setState(prev => ({ ...prev, isOpen: !prev.isOpen }))}
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+        className="fixed right-6 z-40 h-14 w-14 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
+        style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 1.5rem)" }}
       >
         <Sparkles className="h-6 w-6" />
         {state.unreadCount > 0 && (
@@ -179,7 +180,10 @@ export function ProactiveAssistant() {
 
       {/* Notification panel */}
       {state.isOpen && (
-        <div className="fixed bottom-24 right-6 z-40 w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+        <div
+          className="fixed right-6 z-40 w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+          style={{ bottom: "calc(var(--shell-taskbar-height, 0px) + 6.5rem)" }}
+        >
           {/* Header */}
           <div className="px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-700 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">

@@ -34,8 +34,6 @@ import {
   useWellnessChallenges,
 } from "@/hooks/queries/useSimba";
 
-const DEMO_CPID = "00000000-0000-0000-0000-000000000001";
-
 function unwrapList(res: unknown): Record<string, unknown>[] {
   if (!res) return [];
   if (Array.isArray(res)) return res as Record<string, unknown>[];
@@ -145,7 +143,7 @@ function SectionCard({
 
 export default function WellnessDashboardPage() {
   const authId = useAuthStore((s) => s.user?.id);
-  const cpid = authId || DEMO_CPID;
+  const cpid = authId ?? null;
 
   const profileQ = useWellnessProfile(cpid);
   const activitiesQ = useActivities(cpid);
@@ -235,7 +233,7 @@ export default function WellnessDashboardPage() {
 
         {!authId && (
           <p className="mb-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-            Not signed in — showing demo CPID. Sign in to load your profile.
+            Sign in to load your person-linked wellness profile and activity history.
           </p>
         )}
 

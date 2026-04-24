@@ -91,6 +91,19 @@ public class TshepoAuditServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Append an immutable audit event (POST /v1/audit/events). Failures are logged and swallowed
+     * so clinical flows are not blocked when the audit plane is unavailable.
+     */
+    public void ingestAuditEvent(Map<String, Object> request) {
+        String url = baseUrl + "/v1/audit/events";
+        try {
+            restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        } catch (Exception e) {
+            log.warn("TSHEPO-AUDIT: ingest failed: {}", e.getMessage());
+        }
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

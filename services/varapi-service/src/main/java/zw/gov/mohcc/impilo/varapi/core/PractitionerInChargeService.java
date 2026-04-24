@@ -1,11 +1,14 @@
 package zw.gov.mohcc.impilo.varapi.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+import zw.gov.mohcc.impilo.sharedkernel.events.EventTopicRegistry;
 import zw.gov.mohcc.impilo.varapi.integration.TusoClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.LicenseEntity;
@@ -17,6 +20,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.PractitionerInChargeAss
 import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderRepository;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,18 +39,22 @@ public class PractitionerInChargeService {
     private final LicenseRepository licenseRepository;
     private final TusoClient tusoClient;
     private final EventOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
+    private final EventTopicRegistry topics = new EventTopicRegistry("varapi");
 
     public PractitionerInChargeService(
             PractitionerInChargeAssignmentRepository picRepository,
             ProviderRepository providerRepository,
             LicenseRepository licenseRepository,
             TusoClient tusoClient,
-            EventOutboxRepository outboxRepository) {
+            EventOutboxRepository outboxRepository,
+            ObjectMapper objectMapper) {
         this.picRepository = picRepository;
         this.providerRepository = providerRepository;
         this.licenseRepository = licenseRepository;
         this.tusoClient = tusoClient;
         this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -66,8 +74,7 @@ public class PractitionerInChargeService {
                 providerId, facilityId, assignmentType, ctx.actorId());
 
         // Validate provider exists
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         // Validate facility exists in TUSO
         if (!tusoClient.validateFacilityExists(facilityId)) {
@@ -79,7 +86,7 @@ public class PractitionerInChargeService {
 
         // Check if facility already has an active PIC
         Optional<PractitionerInChargeAssignmentEntity> existingPic = picRepository
-                .findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE");
+                .findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE");
         if (existingPic.isPresent()) {
             log.warn("Facility {} already has an active PIC: {}", facilityId, existingPic.get().getId());
         }
@@ -104,10 +111,15 @@ public class PractitionerInChargeService {
         log.info("PIC assignment created: id={}, providerId={}, facilityId={}",
                 assignment.getId(), providerId, facilityId);
 
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.created",
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d}",
-                        assignment.getId(), providerId, facilityId));
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "created"),
+                picPayloadJson(Map.of(
+                        "assignmentId", assignment.getId(),
+                        "providerId", providerId,
+                        "providerPublicId", provider.getProviderPublicId(),
+                        "impiloHealthId", provider.getImpiloHealthId().toString(),
+                        "facilityId", facilityId,
+                        "approvalState", "PENDING")));
 
         return assignment;
     }
@@ -123,8 +135,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Approving PIC assignment: id={}, actor={}", assignmentId, ctx.actorId());
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         if (!"PENDING".equals(assignment.getApprovalState())) {
             throw new IllegalStateException("Can only approve pending assignments");
@@ -139,10 +150,16 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment approved: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.approved",
-                String.format("{\"assignmentId\":%d,\"providerId\":%d,\"facilityId\":%d}",
-                        assignmentId, assignment.getProvider().getId(), assignment.getFacilityId()));
+        ProviderEntity p = assignment.getProvider();
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "approved"),
+                picPayloadJson(Map.of(
+                        "assignmentId", assignmentId,
+                        "providerId", p.getId(),
+                        "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
+                        "facilityId", assignment.getFacilityId(),
+                        "approvalState", "APPROVED")));
 
         return assignment;
     }
@@ -155,8 +172,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Rejecting PIC assignment: id={}, actor={}", assignmentId, ctx.actorId());
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         assignment.setApprovalState("REJECTED");
         assignment.setStatus("TERMINATED");
@@ -167,9 +183,18 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment rejected: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.rejected",
-                String.format("{\"assignmentId\":%d}", assignmentId));
+        ProviderEntity p = assignment.getProvider();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("assignmentId", assignmentId);
+        m.put("providerId", p.getId());
+        m.put("providerPublicId", p.getProviderPublicId());
+        m.put("impiloHealthId", p.getImpiloHealthId().toString());
+        m.put("facilityId", assignment.getFacilityId());
+        m.put("approvalState", "REJECTED");
+        m.put("reason", reason);
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "rejected"),
+                picPayloadJson(m));
 
         return assignment;
     }
@@ -185,8 +210,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Terminating PIC assignment: id={}", assignmentId);
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         if (!"ACTIVE".equals(assignment.getStatus())) {
             throw new IllegalStateException("Can only terminate active assignments");
@@ -201,9 +225,16 @@ public class PractitionerInChargeService {
         assignment = picRepository.save(assignment);
 
         log.info("PIC assignment terminated: id={}", assignmentId);
-        publishEvent("PIC_ASSIGNMENT", assignment.getId().toString(),
-                "varapi.pic.assignment.terminated",
-                String.format("{\"assignmentId\":%d}", assignmentId));
+        ProviderEntity p = assignment.getProvider();
+        publishEvent(ctx, "PIC_ASSIGNMENT", assignment.getId().toString(),
+                topics.eventType("pic_assignment", "terminated"),
+                picPayloadJson(Map.of(
+                        "assignmentId", assignmentId,
+                        "providerId", p.getId(),
+                        "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
+                        "facilityId", assignment.getFacilityId(),
+                        "status", "TERMINATED")));
 
         return assignment;
     }
@@ -213,8 +244,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public boolean isProviderEligibleForPic(Long providerId) {
-        ProviderEntity provider = providerRepository.findById(providerId)
-                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderEntity provider = requireProvider(providerId, ctx.tenantId());
 
         return validateProviderEligibility(provider) == null;
     }
@@ -224,7 +255,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public Optional<PractitionerInChargeAssignmentEntity> getCurrentPicForFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -232,7 +264,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentsByProvider(Long providerId) {
-        return picRepository.findByProviderId(providerId);
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return picRepository.findByTenantIdAndProviderId(ctx.tenantId(), providerId);
     }
 
     /**
@@ -240,7 +274,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentsByFacility(Long facilityId) {
-        return picRepository.findByFacilityId(facilityId);
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityId(ctx.tenantId(), facilityId);
     }
 
     /**
@@ -248,7 +283,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getActiveAssignmentsByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatus(ctx.tenantId(), facilityId, "ACTIVE");
     }
 
     /**
@@ -256,8 +292,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getAssignment(Long assignmentId) {
-        return picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        TrustContext ctx = TrustContextHolder.require();
+        return requireAssignment(assignmentId, ctx.tenantId());
     }
 
     /**
@@ -272,8 +308,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Revoking PIC assignment: id={}", assignmentId);
 
-        PractitionerInChargeAssignmentEntity assignment = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity assignment = requireAssignment(assignmentId, ctx.tenantId());
 
         assignment.setStatus("REVOKED");
         assignment.setEndDate(revocationDate != null ? revocationDate : LocalDate.now());
@@ -294,8 +329,7 @@ public class PractitionerInChargeService {
         TrustContext ctx = TrustContextHolder.require();
         log.info("Transferring PIC assignment: id={} to facilityId={}", assignmentId, newFacilityId);
 
-        PractitionerInChargeAssignmentEntity existing = picRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
+        PractitionerInChargeAssignmentEntity existing = requireAssignment(assignmentId, ctx.tenantId());
 
         // Terminate existing
         existing.setStatus("TRANSFERRED");
@@ -328,7 +362,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getActiveAssignmentByProvider(Long providerId) {
-        List<PractitionerInChargeAssignmentEntity> active = picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        List<PractitionerInChargeAssignmentEntity> active = picRepository
+                .findByTenantIdAndProviderIdAndStatusOrderByStartDateDescIdDesc(ctx.tenantId(), providerId, "ACTIVE");
         return active.isEmpty() ? null : active.get(0);
     }
 
@@ -337,7 +373,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public PractitionerInChargeAssignmentEntity getActiveAssignmentByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatusAndEndDateIsNull(facilityId, "ACTIVE").orElse(null);
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdAndStatusAndEndDateIsNull(ctx.tenantId(), facilityId, "ACTIVE")
+                .orElse(null);
     }
 
     /**
@@ -345,7 +383,8 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByFacility(Long facilityId) {
-        return picRepository.findByFacilityIdAndStatus(facilityId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        return picRepository.findByTenantIdAndFacilityIdOrderByStartDateDescIdDesc(ctx.tenantId(), facilityId);
     }
 
     /**
@@ -353,7 +392,9 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<PractitionerInChargeAssignmentEntity> getAssignmentHistoryByProvider(Long providerId) {
-        return picRepository.findByProviderIdAndStatus(providerId, "ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        requireProvider(providerId, ctx.tenantId());
+        return picRepository.findByTenantIdAndProviderIdOrderByStartDateDescIdDesc(ctx.tenantId(), providerId);
     }
 
     /**
@@ -361,14 +402,26 @@ public class PractitionerInChargeService {
      */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getEligibleProvidersForFacility(Long facilityId) {
-        List<ProviderEntity> activeProviders = providerRepository.findByStatus("ACTIVE");
+        TrustContext ctx = TrustContextHolder.require();
+        List<ProviderEntity> activeProviders = providerRepository.findByTenantIdAndStatus(ctx.tenantId(), "ACTIVE");
         return activeProviders.stream()
                 .filter(p -> validateProviderEligibility(p) == null)
                 .map(p -> Map.<String, Object>of(
                         "providerId", p.getId(),
                         "providerPublicId", p.getProviderPublicId(),
+                        "impiloHealthId", p.getImpiloHealthId().toString(),
                         "status", p.getStatus()))
                 .toList();
+    }
+
+    private ProviderEntity requireProvider(Long providerId, java.util.UUID tenantId) {
+        return providerRepository.findByIdAndTenantId(providerId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found: " + providerId));
+    }
+
+    private PractitionerInChargeAssignmentEntity requireAssignment(Long assignmentId, java.util.UUID tenantId) {
+        return picRepository.findByIdAndTenantId(assignmentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Assignment not found: " + assignmentId));
     }
 
     private String validateProviderEligibility(ProviderEntity provider) {
@@ -401,12 +454,25 @@ public class PractitionerInChargeService {
         return null;
     }
 
-    private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
+    private String picPayloadJson(Map<String, ?> fields) {
+        try {
+            return objectMapper.writeValueAsString(fields);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("PIC event payload serialization failed", e);
+        }
+    }
+
+    private void publishEvent(TrustContext ctx, String aggregateType, String aggregateId, String eventType, String payload) {
         EventOutboxEntity event = new EventOutboxEntity();
         event.setAggregateType(aggregateType);
         event.setAggregateId(aggregateId);
         event.setEventType(eventType);
         event.setPayload(payload);
+        event.setTenantId(ctx.tenantId() != null ? ctx.tenantId().toString() : null);
+        event.setCorrelationId(ctx.correlationId() != null ? ctx.correlationId().toString() : null);
+        event.setSubjectType(aggregateType);
+        event.setSubjectId(aggregateId);
+        event.setPartitionKey(aggregateId);
         outboxRepository.save(event);
     }
 }

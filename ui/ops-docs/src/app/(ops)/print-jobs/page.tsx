@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardHeader, CardTitle } from "shared-ui";
+import { useState, useEffect, useCallback } from "react";
+import { Card } from "shared-ui";
 
 interface PrintJob {
   jobId: string;
@@ -18,7 +18,7 @@ export default function PrintQueuePage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function loadJobs() {
+  const loadJobs = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -31,9 +31,11 @@ export default function PrintQueuePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
 
-  useEffect(() => { loadJobs(); }, [statusFilter]);
+  useEffect(() => {
+    void loadJobs();
+  }, [loadJobs]);
 
   return (
     <div>

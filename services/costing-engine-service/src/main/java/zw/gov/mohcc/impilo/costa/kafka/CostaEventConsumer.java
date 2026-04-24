@@ -16,7 +16,9 @@ import zw.gov.mohcc.impilo.costa.domain.repository.RefundRepository;
 
 import java.util.List;
 import zw.gov.mohcc.impilo.costa.service.BillService;
+import zw.gov.mohcc.impilo.costa.service.ChargeRecordService;
 import zw.gov.mohcc.impilo.costa.service.InpatientCostingService;
+import zw.gov.mohcc.impilo.costa.service.PaymentAllocationService;
 import zw.gov.mohcc.impilo.costa.service.PaymentIntegrationService;
 
 import java.math.BigDecimal;
@@ -35,6 +37,8 @@ public class CostaEventConsumer {
     private final EncounterRepository encounterRepository;
     private final RefundRepository refundRepository;
     private final IdempotencyRepository idempotencyRepository;
+    private final PaymentAllocationService paymentAllocationService;
+    private final ChargeRecordService chargeRecordService;
     private final ObjectMapper objectMapper;
 
     public CostaEventConsumer(BillService billService,
@@ -43,6 +47,8 @@ public class CostaEventConsumer {
                               EncounterRepository encounterRepository,
                               RefundRepository refundRepository,
                               IdempotencyRepository idempotencyRepository,
+                              PaymentAllocationService paymentAllocationService,
+                              ChargeRecordService chargeRecordService,
                               ObjectMapper objectMapper) {
         this.billService = billService;
         this.inpatientCostingService = inpatientCostingService;
@@ -50,10 +56,12 @@ public class CostaEventConsumer {
         this.encounterRepository = encounterRepository;
         this.refundRepository = refundRepository;
         this.idempotencyRepository = idempotencyRepository;
+        this.paymentAllocationService = paymentAllocationService;
+        this.chargeRecordService = chargeRecordService;
         this.objectMapper = objectMapper;
     }
 
-    @KafkaListener(topics = "pct.encounter.started", groupId = "costa-costing-engine")
+    @KafkaListener(topics = {"pct.encounter.started", "impilo.pct.encounter"}, groupId = "costa-costing-engine")
     @Transactional
     public void onEncounterStarted(String message, Acknowledgment ack) {
         try {
@@ -98,7 +106,7 @@ public class CostaEventConsumer {
         }
     }
 
-    @KafkaListener(topics = "pct.encounter.completed", groupId = "costa-costing-engine")
+    @KafkaListener(topics = {"pct.encounter.completed", "impilo.pct.encounter"}, groupId = "costa-costing-engine")
     @Transactional
     public void onEncounterCompleted(String message, Acknowledgment ack) {
         try {
@@ -310,19 +318,41 @@ public class CostaEventConsumer {
     public void onPaymentStatusChanged(String message, Acknowledgment ack) {
         try {
             JsonNode event = objectMapper.readTree(message);
+            String intentId = text(event, "intentId");
+            if (intentId == null) {
+                intentId = text(event, "paymentIntentId");
+            }
+            String toStatus = text(event, "toStatus");
+            if (toStatus == null) {
+                toStatus = text(event, "status");
+            }
+            BigDecimal paidAmount = null;
+            if (event.has("amountPaid") && !event.get("amountPaid").isNull()) {
+                paidAmount = new BigDecimal(event.get("amountPaid").asText());
+            } else if (event.has("paidAmount") && !event.get("paidAmount").isNull()) {
+                paidAmount = new BigDecimal(event.get("paidAmount").asText());
+            }
+
             String eventId = text(event, "eventId");
-            if (isProcessed(eventId, "MUSHEX")) { ack.acknowledge(); return; }
+            if (eventId == null && intentId != null && toStatus != null) {
+                eventId = intentId + ":" + toStatus;
+            }
+            if (eventId != null && isProcessed(eventId, "MUSHEX")) {
+                ack.acknowledge();
+                return;
+            }
 
-            String paymentIntentId = text(event, "paymentIntentId");
-            String status = text(event, "status");
-            BigDecimal paidAmount = event.has("paidAmount")
-                    ? new BigDecimal(event.get("paidAmount").asText()) : null;
+            if (intentId == null || toStatus == null) {
+                log.warn("mushex.payment.status.changed missing intentId or status: {}", message);
+                ack.acknowledge();
+                return;
+            }
 
-            paymentService.handlePaymentStatusUpdate(paymentIntentId, status, paidAmount);
+            paymentService.handlePaymentStatusUpdate(intentId, toStatus, paidAmount);
 
             markProcessed(eventId, "MUSHEX");
             ack.acknowledge();
-            log.info("MUSHEX payment {} -> {}", paymentIntentId, status);
+            log.info("MUSHEX payment {} -> {}", intentId, toStatus);
         } catch (Exception e) {
             log.error("Failed to process mushex.payment.status.changed", e);
             ack.acknowledge();
@@ -381,6 +411,17 @@ public class CostaEventConsumer {
                     target.setMushexRefundId(mushexRefundId);
 
                     if ("COMPLETED".equals(status)) {
+                        if (!target.isAllocationReversed()) {
+                            BigDecimal reverseAmt = eventAmount != null ? eventAmount : target.getAmount();
+                            try {
+                                paymentAllocationService.reverseInvoiceForRefund(
+                                        target.getBillId(), reverseAmt, target.getId());
+                                target.setAllocationReversed(true);
+                            } catch (Exception revEx) {
+                                log.warn("Could not reverse invoice allocations for refund {}: {}",
+                                        target.getId(), revEx.getMessage());
+                            }
+                        }
                         target.setStatus(RefundStatus.PROCESSED);
                         target.setProcessedAt(OffsetDateTime.now());
                         log.info("COSTA refund {} marked PROCESSED (MusheX refund {})",
@@ -403,6 +444,32 @@ public class CostaEventConsumer {
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Failed to process mushex.refund.status.changed", e);
+            ack.acknowledge();
+        }
+    }
+
+    @KafkaListener(topics = "msika.flow.order.priced", groupId = "costa-costing-engine")
+    @Transactional
+    public void onMsikaFlowOrderPriced(String message, Acknowledgment ack) {
+        try {
+            JsonNode event = objectMapper.readTree(message);
+            String eventId = text(event, "eventId");
+            if (eventId == null) {
+                String oid = text(event, "orderId");
+                String tid = text(event, "tenantId");
+                if (oid != null && tid != null) {
+                    eventId = tid + ":" + oid + ":ORDER_PRICED";
+                }
+            }
+            if (isProcessed(eventId, "MSIKA_FLOW_PRICED")) {
+                ack.acknowledge();
+                return;
+            }
+            chargeRecordService.ingestMsikaFlowOrderPriced(event);
+            markProcessed(eventId, "MSIKA_FLOW_PRICED");
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process msika.flow.order.priced", e);
             ack.acknowledge();
         }
     }

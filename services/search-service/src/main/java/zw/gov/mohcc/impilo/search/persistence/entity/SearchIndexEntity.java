@@ -47,6 +47,10 @@ public class SearchIndexEntity {
     @Column(name = "source_event", length = 255)
     private String sourceEvent;
 
+    /** JSON array of floats (same dimension for all rows with embeddings). */
+    @Column(name = "embedding_json", columnDefinition = "TEXT")
+    private String embeddingJson;
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -77,4 +81,6 @@ public class SearchIndexEntity {
     public void setIndexedAt(OffsetDateTime indexedAt) { this.indexedAt = indexedAt; }
     public String getSourceEvent() { return sourceEvent; }
     public void setSourceEvent(String sourceEvent) { this.sourceEvent = sourceEvent; }
+    public String getEmbeddingJson() { return embeddingJson; }
+    public void setEmbeddingJson(String embeddingJson) { this.embeddingJson = embeddingJson; }
 }

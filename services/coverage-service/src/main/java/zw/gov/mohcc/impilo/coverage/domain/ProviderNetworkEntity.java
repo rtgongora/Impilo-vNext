@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -35,9 +37,7 @@ public class ProviderNetworkEntity {
     private String networkType = "PREFERRED";
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "service_area", columnDefinition = "jsonb")
+    @Column(name = "service_area")
     private String serviceArea = "[]";
 
     @Column(name = "status", nullable = false, length = 16)

@@ -6,7 +6,6 @@ import {
   type Requisition,
   type RequisitionStatus,
   type RequisitionPriority,
-  type CreateRequisitionRequest,
 } from "@/lib/inventoryApi";
 
 const STATUS_BADGE: Record<RequisitionStatus, string> = {
@@ -36,7 +35,6 @@ interface ReqLineInput {
 export default function RequisitionsPage() {
   const [requisition, setRequisition] = useState<Requisition | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("LIST");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -59,10 +57,12 @@ export default function RequisitionsPage() {
   const [showReject, setShowReject] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
-  const loadRequisition = async (id: string) => {
+  const loadRequisition = async () => {
     // Requisitions use the same get pattern but the API is createRequisition-based
     // For now, we'll create and manage requisitions through actions
-    setError("Load by ID: use the create/action flow to manage requisitions.");
+    setError(
+      `Load by ID (${reqIdInput}): use the create/action flow to manage requisitions.`,
+    );
   };
 
   const handleCreate = async () => {
@@ -217,8 +217,8 @@ export default function RequisitionsPage() {
               className="input-field flex-1"
             />
             <button
-              onClick={() => reqIdInput && loadRequisition(reqIdInput)}
-              disabled={loading || !reqIdInput}
+              onClick={() => reqIdInput && void loadRequisition()}
+              disabled={!reqIdInput}
               className="btn-primary"
             >
               Load

@@ -27,6 +27,7 @@ import zw.gov.mohcc.impilo.datagovernance.repository.GrantRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.OutboxEventRepository;
 import zw.gov.mohcc.impilo.datagovernance.repository.PolicyRepository;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -340,6 +341,18 @@ public class GovernanceService {
 
     // ── Outbox helper ──
 
+    /** Outbox stores correlation as UUID; derive a stable UUID when the header is not RFC-4122. */
+    private static UUID correlationUuidOrDerived(String correlationId) {
+        if (correlationId == null || correlationId.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(correlationId);
+        } catch (IllegalArgumentException ignored) {
+            return UUID.nameUUIDFromBytes(correlationId.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
     private void appendOutboxEvent(String eventType, String aggregateType, String aggregateId,
                                     UUID tenantId, String podId, String correlationId,
                                     String idempotencyKey, Map<String, Object> payload,
@@ -349,8 +362,9 @@ public class GovernanceService {
         outbox.setAggregateId(aggregateId);
         outbox.setEventType(eventType);
         outbox.setSchemaVersion("1");
-        outbox.setCorrelationId(correlationId != null ? UUID.fromString(correlationId) : null);
-        outbox.setCausationId(correlationId != null ? UUID.fromString(correlationId) : null);
+        UUID correlationUuid = correlationUuidOrDerived(correlationId);
+        outbox.setCorrelationId(correlationUuid);
+        outbox.setCausationId(correlationUuid);
         outbox.setIdempotencyKey(idempotencyKey);
         outbox.setProducer(PRODUCER);
         outbox.setTenantId(tenantId);

@@ -3,6 +3,10 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -32,11 +36,21 @@ public class VitoServiceClient {
         this.baseUrl = endpoints.vitoBaseUrl();
     }
 
-    /** Register a new patient identity and get a CPID. */
+    /** Register a new patient identity (INTERNAL) — issues Health ID / provisional client. */
     public JsonNode registerIdentity(Map<String, Object> patientData) {
         String url = baseUrl + "/v1/identity/register";
         log.info("VITO: Registering new patient identity");
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, patientData, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Masked client search (INTERNAL) — search-before-create for operators.
+     */
+    public JsonNode searchInternalClients(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/clients/search";
+        log.info("VITO: Internal masked client search");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
@@ -110,20 +124,25 @@ public class VitoServiceClient {
         return extractData(response);
     }
 
-    /** Get a single patient by ID. */
-    public JsonNode getPatient(String id) {
-        String url = baseUrl + "/v1/internal/clients/" + id;
-        log.info("VITO: Getting patient id={}", id);
+    /** Get a single client by Health ID (canonical read path on {@code /v1/clients}). */
+    public JsonNode getPatient(String healthId) {
+        String url = baseUrl + "/v1/clients/" + healthId;
+        log.info("VITO: Getting client healthId={}", healthId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 
-    /** Register a new patient. */
+    /**
+     * Walk-in / Experience patient registration — delegates to {@link #registerIdentity(Map)}
+     * ({@code POST /v1/identity/register}) so Health ID anchoring stays on the golden issuance path.
+     */
     public JsonNode registerPatient(Map<String, Object> patientData) {
-        String url = baseUrl + "/v1/internal/clients";
-        log.info("VITO: Registering new patient");
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, patientData, JsonNode.class);
-        return extractData(response);
+        Map<String, Object> issuance = new LinkedHashMap<>();
+        issuance.put("givenName", patientData.get("given_name"));
+        issuance.put("familyName", patientData.get("family_name"));
+        issuance.put("dateOfBirth", patientData.get("date_of_birth"));
+        issuance.put("sex", patientData.get("sex"));
+        return registerIdentity(issuance);
     }
 
     /**
@@ -235,5 +254,28 @@ public class VitoServiceClient {
     private JsonNode postJson(String url, Map<String, Object> body) {
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
+    }
+
+    /** Raw JSON string response for BFF biometric proxying (preserves VITO {@code ApiResponse} envelope). */
+    public ResponseEntity<String> rawGet(String path) {
+        return restTemplate.getForEntity(baseUrl + path, String.class);
+    }
+
+    public ResponseEntity<String> rawPost(String path, Object body) {
+        return restTemplate.postForEntity(baseUrl + path, body, String.class);
+    }
+
+    public ResponseEntity<String> rawPostWithHeader(String path, Object body, String headerName, String headerValue) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(headerName, headerValue);
+        return restTemplate.exchange(
+                baseUrl + path, HttpMethod.POST, new HttpEntity<>(body, headers), String.class);
+    }
+
+    public ResponseEntity<String> rawGetWithHeader(String path, String headerName, String headerValue) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(headerName, headerValue);
+        return restTemplate.exchange(baseUrl + path, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
 }

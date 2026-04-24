@@ -279,6 +279,31 @@ services:
   # Operations Layer
   # ===========================================================================
 
+  learning-service:
+    <<: *service-defaults
+    build:
+      context: ../../services/learning-service
+      dockerfile: Dockerfile
+    container_name: impilo-learning-service
+    environment:
+      <<: *java-env
+      SERVER_PORT: 8235
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impilo_learning
+      FUNDO_PUBLIC_BASE_URL: ${FUNDO_PUBLIC_BASE_URL:-https://fundo.impilo.local}
+      FUNDO_WANTSURL_LOGIN_ENABLED: ${FUNDO_WANTSURL_LOGIN_ENABLED:-false}
+      VARAPI_TO_LEARNING_INTERNAL_KEY: ${VARAPI_TO_LEARNING_INTERNAL_KEY:-}
+      LEARNING_ORCHESTRATION_INTERNAL_KEY: ${LEARNING_ORCHESTRATION_INTERNAL_KEY:-}
+      MOODLE_WS_TOKEN: ${MOODLE_WS_TOKEN:-}
+      MOODLE_WS_ENDPOINT_URL: ${MOODLE_WS_ENDPOINT_URL:-}
+      LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+    ports:
+      - "8235:8235"
+    depends_on:
+      <<: *java-depends
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8235/actuator/health || exit 1"]
+
   experience-bff:
     <<: *service-defaults
     build:
@@ -303,6 +328,7 @@ services:
       VITO_BASE_URL: http://vito:8082
       TUSO_BASE_URL: http://tuso:8084
       VARAPI_BASE_URL: http://varapi:8083
+      LEARNING_SERVICE_BASE_URL: http://learning-service:8235
       DOCUMENT_STORE_BASE_URL: http://document-service:8093
       COSTA_BASE_URL: http://costing-engine:8101
       COVERAGE_BASE_URL: ${COVERAGE_BASE_URL:-http://localhost:8140}

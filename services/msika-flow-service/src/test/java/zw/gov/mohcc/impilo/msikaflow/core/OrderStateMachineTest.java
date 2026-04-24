@@ -44,7 +44,7 @@ class OrderStateMachineTest {
         UUID tenantId = UUID.randomUUID();
         OrderEntity order = stateMachine.createOrder(
                 tenantId, "actor-1", ActorType.PATIENT, "cpid-123",
-                OrderType.OTC_PRODUCT_ORDER, null, null, null);
+                OrderType.OTC_PRODUCT_ORDER, null, null, null, null, null, null);
 
         assertNotNull(order.getOrderId());
         assertEquals(26, order.getOrderId().length());
@@ -68,7 +68,7 @@ class OrderStateMachineTest {
 
         OrderEntity result = stateMachine.createOrder(
                 UUID.randomUUID(), "actor-1", ActorType.PATIENT, "cpid-123",
-                OrderType.OTC_PRODUCT_ORDER, null, null, "key-1");
+                OrderType.OTC_PRODUCT_ORDER, null, null, null, null, null, "key-1");
 
         assertEquals("EXISTING123456789012345", result.getOrderId());
         verify(orderRepository, never()).save(any());

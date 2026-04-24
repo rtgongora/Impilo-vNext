@@ -103,6 +103,13 @@
             <version>${nimbus-jose-jwt.version}</version>
         </dependency>
 
+        <!-- Tink — Nimbus Ed25519Signer / Ed25519Verifier load Tink's subtle Ed25519 at runtime -->
+        <dependency>
+            <groupId>com.google.crypto.tink</groupId>
+            <artifactId>tink</artifactId>
+            <version>1.14.1</version>
+        </dependency>
+
         <!-- Observability -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

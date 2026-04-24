@@ -25,6 +25,9 @@ public class AuthzProperties {
     private String keysServiceUrl = "http://localhost:8184";
     private ESignet esignet = new ESignet();
     private Cache cache = new Cache();
+    private int visibilityEscalationGrantTtlHours = 4;
+    private List<String> visibilityEscalationApproverRoles = List.of(
+            "SYSTEM_ADMIN", "DEVELOPER", "REGULATORY_REVIEWER");
 
     // ── Inner configuration classes ────────────────────────────────────
 
@@ -119,4 +122,20 @@ public class AuthzProperties {
     public void setEsignet(ESignet esignet) { this.esignet = esignet; }
     public Cache getCache() { return cache; }
     public void setCache(Cache cache) { this.cache = cache; }
+
+    public int getVisibilityEscalationGrantTtlHours() {
+        return visibilityEscalationGrantTtlHours;
+    }
+
+    public void setVisibilityEscalationGrantTtlHours(int visibilityEscalationGrantTtlHours) {
+        this.visibilityEscalationGrantTtlHours = visibilityEscalationGrantTtlHours;
+    }
+
+    public List<String> getVisibilityEscalationApproverRoles() {
+        return visibilityEscalationApproverRoles;
+    }
+
+    public void setVisibilityEscalationApproverRoles(List<String> visibilityEscalationApproverRoles) {
+        this.visibilityEscalationApproverRoles = visibilityEscalationApproverRoles;
+    }
 }

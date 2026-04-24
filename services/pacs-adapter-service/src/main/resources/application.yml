@@ -57,6 +57,12 @@ pacs:
   outbox:
     poll-interval-ms: 2000
 
+impilo:
+  orthanc:
+    base-url: ${ORTHANC_BASE_URL:http://localhost:8042}
+    # When true and Orthanc has no study for StudyInstanceUID, forwardStudy assigns a random orthanc_id (legacy dev).
+    allow-placeholder-forward: ${ORTHANC_PLACEHOLDER_FORWARD:false}
+
 # --- Actuator & Metrics ---
 management:
   endpoints:

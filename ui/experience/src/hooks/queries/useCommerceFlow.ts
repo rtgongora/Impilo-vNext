@@ -19,6 +19,8 @@ export type CommerceJson = unknown;
 export type CommerceCartValidatePayload = {
   items: Array<{ msikaCoreCode: string; qty: number }>;
   channel?: string;
+  facilityRef?: string;
+  providerRef?: string;
 };
 
 export function useCommerceValidateCart() {
@@ -31,7 +33,10 @@ export type CommerceCreateOrderPayload = {
   orderType: string;
   patientCpid?: string;
   facilityId?: string;
+  facilityRef?: string;
   vendorId?: string;
+  vendorRef?: string;
+  providerRef?: string;
   idempotencyKey?: string;
   lines: Array<{
     msikaCoreCode: string;
@@ -77,21 +82,30 @@ export function useCommerceOrderAction() {
 // ── Cart operations (absorbs msika-flow-portal:/cart) ────────────────
 
 export function useCommerceCart() {
-  return useQuery({
+  return useQuery<CommerceJson>({
     queryKey: ["commerce-cart"],
-    queryFn: () => apiClient.get<{ data: Array<{ id: string; name: string; quantity: number; unitPrice: number }> }>("/internal/v1/commerce/cart"),
+    queryFn: () => apiClient.get<CommerceJson>("/internal/v1/commerce/cart?channel=WEB"),
   });
 }
 
 export function useValidateCart() {
   return useMutation({
-    mutationFn: () => apiClient.post<CommerceJson>("/internal/v1/commerce/cart/validate"),
+    mutationFn: (payload?: CommerceCartValidatePayload) =>
+      apiClient.post<CommerceJson>("/internal/v1/commerce/cart/validate", payload ?? { items: [], channel: "WEB" }),
   });
 }
 
 export function useCheckoutCart() {
   return useMutation({
-    mutationFn: () => apiClient.post<CommerceJson>("/internal/v1/commerce/orders"),
+    mutationFn: (args?: { cartId: string; orderType?: string; facilityId?: string; vendorId?: string; idempotencyKey?: string }) => {
+      if (!args?.cartId) throw new Error("cartId required");
+      return apiClient.post<CommerceJson>(`/internal/v1/commerce/cart/${encodeURIComponent(args.cartId)}/checkout`, {
+        orderType: args.orderType ?? "OTC_PRODUCT_ORDER",
+        facilityId: args.facilityId,
+        vendorId: args.vendorId,
+        idempotencyKey: args.idempotencyKey,
+      });
+    },
   });
 }
 

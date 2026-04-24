@@ -5,6 +5,7 @@ import ca.uhn.fhir.jpa.api.dao.IFhirResourceDao;
 import ca.uhn.fhir.jpa.searchparam.SearchParameterMap;
 import ca.uhn.fhir.rest.api.server.IBundleProvider;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
+import ca.uhn.fhir.rest.server.SimpleBundleProvider;
 import org.hl7.fhir.instance.model.api.IBaseResource;
 import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.AfterEach;
@@ -105,15 +106,11 @@ class IpsBundleGeneratorTest {
     }
 
     /**
-     * Creates a mock IBundleProvider that returns the specified resources.
+     * Bundle provider backed by HAPI's {@link SimpleBundleProvider} (avoids Mockito stubbing of
+     * {@link IBundleProvider} default methods such as {@code isEmpty()} / {@code sizeOrThrowNpe()}).
      */
     private IBundleProvider mockBundleProvider(List<? extends IBaseResource> resources) {
-        IBundleProvider provider = mock(IBundleProvider.class);
-        lenient().when(provider.isEmpty()).thenReturn(resources.isEmpty());
-        lenient().when(provider.sizeOrThrowNpe()).thenReturn(resources.size());
-        lenient().when(provider.getResources(anyInt(), anyInt()))
-                .thenReturn(new ArrayList<>(resources));
-        return provider;
+        return new SimpleBundleProvider(new ArrayList<>(resources));
     }
 
     /**

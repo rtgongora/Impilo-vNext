@@ -162,9 +162,6 @@ class PatientJourneyIntegrationTest {
                     .thenReturn(Optional.of(journey));
 
             // ======== Step 3: Triage ========
-            when(triageRecordRepository.findTopByJourneyIdOrderByCreatedAtDesc(journeyId))
-                    .thenReturn(Optional.empty()); // Will be populated after triage
-
             TriageRecordEntity triageRecord = triageService.recordTriage(
                     journeyId, 2, "{\"bp\":\"120/80\",\"temp\":37.2}", "Moderate fever");
             assertThat(triageRecord.getAcuity()).isEqualTo(2);

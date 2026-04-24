@@ -4,7 +4,18 @@ spring:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
       - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
       - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      # Integration tests use MockMvc without Bearer tokens; disable OAuth2 RS auto-config
+      # so no JwtDecoder bean is registered and SecurityConfig opens the app (see impilo.security.allow-anonymous).
+      - org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:127.0.0.1:9092}
     listener:
       auto-startup: false
+
+impilo:
+  security:
+    allow-anonymous: true
+  auth:
+    # Keycloak is not expected in unit/integration JVM tests; allow dev session fallback
+    # when ROPC fails or the realm is unreachable (GoldenPath / RBAC ITs).
+    fallback-enabled: true

@@ -98,7 +98,6 @@ class Ed25519SigningServiceTest {
         // Arrange: produce a key entity with real key material
         SigningKeyEntity entity = createRealKeyEntity();
         when(signingKeyRepository.findActiveKeysByTenant(TENANT_ID)).thenReturn(List.of(entity));
-        when(signingKeyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(signingKeyRepository.findByKeyId(entity.getKeyId())).thenReturn(Optional.of(entity));
 
         byte[] payload = "verify-me".getBytes();
@@ -118,7 +117,6 @@ class Ed25519SigningServiceTest {
         // Arrange
         SigningKeyEntity entity = createRealKeyEntity();
         when(signingKeyRepository.findActiveKeysByTenant(TENANT_ID)).thenReturn(List.of(entity));
-        when(signingKeyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(signingKeyRepository.findByKeyId(entity.getKeyId())).thenReturn(Optional.of(entity));
 
         byte[] originalPayload = "original-data".getBytes();
@@ -144,7 +142,6 @@ class Ed25519SigningServiceTest {
         // Arrange
         SigningKeyEntity entity = createRealKeyEntity();
         when(signingKeyRepository.findActiveKeysByTenant(TENANT_ID)).thenReturn(List.of(entity));
-        when(signingKeyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(signingKeyRepository.findByKeyId(entity.getKeyId())).thenReturn(Optional.of(entity));
 
         String payload = "{\"sub\":\"user-1\",\"aud\":\"test\"}";

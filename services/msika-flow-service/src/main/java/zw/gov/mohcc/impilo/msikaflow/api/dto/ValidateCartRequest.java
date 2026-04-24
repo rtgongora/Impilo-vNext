@@ -5,7 +5,9 @@ import java.util.List;
 
 public record ValidateCartRequest(
         @NotEmpty List<CartItemDto> items,
-        String channel
+        String channel,
+        String facilityRef,
+        String providerRef
 ) {
     public record CartItemDto(String msikaCoreCode, int qty) {}
 }

@@ -8,9 +8,12 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.inventory.config.InventoryTestSecurityBeans;
 import zw.gov.mohcc.impilo.inventory.core.*;
 import zw.gov.mohcc.impilo.inventory.integration.ElmisAdapterIntegration;
 import zw.gov.mohcc.impilo.inventory.integration.PharmacyIntegration;
@@ -85,6 +88,9 @@ class InventoryIntegrationTest {
 
     @MockBean
     private PharmacyIntegration pharmacyIntegration;
+
+    @MockBean
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final UUID TENANT_ID = UUID.randomUUID();
     private static final UUID FACILITY_ID = UUID.randomUUID();

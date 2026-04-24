@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.oros.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import zw.gov.mohcc.impilo.oros.testsupport.OrosTestObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +69,7 @@ class OrosIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
+        objectMapper = OrosTestObjectMapper.create();
 
         stateMachine = new OrderStateMachine(
                 orderRepository, orderItemRepository, outboxRepository, objectMapper);

@@ -66,6 +66,9 @@ public class OutboxPublisher {
             case "INVOICE_ISSUED" -> "costa.invoice.issued";
             case "PAYMENT_INTENT_CREATED" -> "costa.payment.intent.created";
             case "PAYMENT_STATUS_CHANGED" -> "costa.payment.status_changed";
+            case "PAYMENT_ALLOCATED" -> "costa.payment.allocated";
+            case "CHARGE_CREATED" -> "costa.charge.created";
+            case "INVOICE_REFUND_APPLIED" -> "costa.invoice.refund_applied";
             case "REFUND_CREATED" -> "costa.refund.issued";
             case "CLAIM_PACK_CREATED" -> "costa.claim.pack.created";
             case "ESTIMATE_CREATED" -> "costa.estimate.created";

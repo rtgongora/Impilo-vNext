@@ -99,7 +99,7 @@ public class WorkerService {
         notification.setLastError(null);
         notificationRepository.save(notification);
 
-        emitOutboxEvent(notification, "impilo.notify.sent.v1");
+        emitOutboxEvent(notification, "impilo.notify.notification.sent.v1");
     }
 
     private void markFailed(NotificationEntity notification, String error) {
@@ -107,7 +107,7 @@ public class WorkerService {
         notification.setLastError(error);
         notificationRepository.save(notification);
 
-        emitOutboxEvent(notification, "impilo.notify.failed.v1");
+        emitOutboxEvent(notification, "impilo.notify.notification.failed.v1");
     }
 
     private void emitOutboxEvent(NotificationEntity notification, String eventType) {

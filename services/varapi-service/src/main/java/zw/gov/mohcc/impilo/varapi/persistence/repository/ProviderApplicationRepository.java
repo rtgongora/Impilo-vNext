@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderApplicationEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -12,9 +13,18 @@ public interface ProviderApplicationRepository extends JpaRepository<ProviderApp
 
     List<ProviderApplicationEntity> findByProviderId(Long providerId);
 
+    Optional<ProviderApplicationEntity> findByIdAndTenantId(Long id, UUID tenantId);
+
+    List<ProviderApplicationEntity> findByTenantIdAndProviderId(UUID tenantId, Long providerId);
+
     List<ProviderApplicationEntity> findByTenantIdAndWorkflowState(UUID tenantId, String workflowState);
+
+    List<ProviderApplicationEntity> findByTenantIdAndWorkflowStateIn(UUID tenantId, List<String> workflowStates);
 
     List<ProviderApplicationEntity> findByTenantIdAndApplicationType(UUID tenantId, String applicationType);
 
     int countByProviderIdAndWorkflowState(Long providerId, String workflowState);
+
+    List<ProviderApplicationEntity> findByTenantIdAndCouncil_IdAndWorkflowStateIn(
+            UUID tenantId, Long councilId, List<String> workflowStates);
 }

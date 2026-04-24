@@ -61,13 +61,22 @@ export default function VitoOpsPage() {
                 Use this workspace to resolve verification uncertainty, confirm duplicates, and advance registry quality.
               </p>
             </div>
-            <Link
-              href="/registry/clients"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-slate-400 hover:text-slate-900"
-            >
-              Client registry
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/operations/vito/biometrics"
+                className="inline-flex items-center gap-2 rounded-xl border border-impilo-200 bg-impilo-50 px-4 py-2 text-sm font-medium text-impilo-900 hover:border-impilo-300"
+              >
+                Biometric governance
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/registry/clients"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:border-slate-400 hover:text-slate-900"
+              >
+                Client registry
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -245,7 +245,7 @@ class NotificationV11ComplianceTest {
                     .findFirst()
                     .orElseThrow(() -> new AssertionError("No outbox event for notify"));
 
-            assertThat(event.getEventType()).isEqualTo("impilo.notify.enqueued.v1");
+            assertThat(event.getEventType()).isEqualTo("impilo.notify.notification.enqueued.v1");
             assertThat(event.getSchemaVersion()).isGreaterThanOrEqualTo(1);
         }
     }

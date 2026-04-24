@@ -17,8 +17,14 @@ spring:
     enabled: false
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true
+  search:
+    embeddings:
+      provider: hash
+      hash-dimension: 128
 
 search:
   security:

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,6 +54,19 @@ public class BffGlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(
             Exception e, HttpServletRequest request) {
+
+        if (e instanceof ResponseStatusException rse) {
+            HttpStatus status = HttpStatus.resolve(rse.getStatusCode().value());
+            if (status == null) {
+                status = HttpStatus.BAD_REQUEST;
+            }
+            Map<String, Object> error = new LinkedHashMap<>();
+            error.put("code", "HTTP_ERROR");
+            error.put("message", rse.getReason() != null ? rse.getReason() : status.getReasonPhrase());
+            error.put("request_id", request.getHeader("X-Request-ID"));
+            error.put("correlation_id", request.getHeader("X-Correlation-ID"));
+            return ResponseEntity.status(status).body(Map.of("error", error));
+        }
 
         log.error("500 — unhandled exception: {}", e.getMessage(), e);
 

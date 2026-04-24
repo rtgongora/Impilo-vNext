@@ -2,9 +2,11 @@ package zw.gov.mohcc.impilo.tshepo.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.api.AuthorizationRequest;
+import zw.gov.mohcc.impilo.tshepo.integration.GovernanceScopeClient;
 import zw.gov.mohcc.impilo.tshepo.persistence.*;
 
 import java.nio.charset.StandardCharsets;
@@ -47,6 +49,7 @@ public class PolicyEngine {
     private final AuditChainHeadRepository chainHeadRepo;
     private final ConsentDirectiveRepository consentRepo;
     private final WorkspaceValidationService workspaceValidationService;
+    private final ObjectProvider<GovernanceScopeClient> governanceScopeClient;
 
     public PolicyEngine(
             RiskScoring riskScoring,
@@ -54,13 +57,15 @@ public class PolicyEngine {
             AuditEventRepository auditEventRepo,
             AuditChainHeadRepository chainHeadRepo,
             ConsentDirectiveRepository consentRepo,
-            WorkspaceValidationService workspaceValidationService) {
+            WorkspaceValidationService workspaceValidationService,
+            ObjectProvider<GovernanceScopeClient> governanceScopeClient) {
         this.riskScoring = riskScoring;
         this.decisionLogRepo = decisionLogRepo;
         this.auditEventRepo = auditEventRepo;
         this.chainHeadRepo = chainHeadRepo;
         this.consentRepo = consentRepo;
         this.workspaceValidationService = workspaceValidationService;
+        this.governanceScopeClient = governanceScopeClient;
     }
 
     /**
@@ -120,7 +125,8 @@ public class PolicyEngine {
 
         // --- Step 4: RBAC/ABAC policy evaluation ---
         // Facility scope check: if the request specifies a facility, verify actor has access
-        if (request.facilityId() != null && !isActorAuthorizedForFacility(request)) {
+        if ((request.facilityId() != null || request.tusoFacilityNumericId() != null)
+                && !isActorAuthorizedForFacility(request)) {
             Decision decision = Decision.deny("FACILITY_SCOPE",
                 "Actor not authorized for requested facility", riskScore);
             persistDecision(request, decision, startTime);
@@ -295,7 +301,8 @@ public class PolicyEngine {
     // ------------------------------------------------------------------
 
     private boolean isActorAuthorizedForFacility(AuthorizationRequest request) {
-        if (request.facilityId() == null) {
+        Long tusoFacility = request.tusoFacilityNumericId();
+        if (request.facilityId() == null && tusoFacility == null) {
             // No facility scope in request — allow (resource-level access)
             return true;
         }
@@ -308,7 +315,13 @@ public class PolicyEngine {
 
         // Check if the actor has an active workspace or shift at the requested facility
         if (request.workspaceId() != null) {
-            return workspaceMatchesFacility(request.tenantId(), request.workspaceId(), request.facilityId());
+            return workspaceMatchesFacility(
+                    request.tenantId(),
+                    request.workspaceId(),
+                    tusoFacility,
+                    request.actorId(),
+                    request.providerId(),
+                    request.correlationId());
         }
 
         if (request.shiftId() != null && !request.shiftId().isBlank()) {
@@ -316,15 +329,31 @@ public class PolicyEngine {
             return true;
         }
 
-        // Fallback: check if actor has any assignment to the requested facility
-        // This covers scenarios where workspace/shift headers aren't populated
-        // (e.g., API-only access patterns)
-        log.debug("No workspace/shift for actor {} at facility {}, allowing with audit",
-                request.actorId(), request.facilityId());
+        // Assignment-aware governance: when TUSO facility id is present, consult Workforce Governance.
+        if (tusoFacility != null) {
+            GovernanceScopeClient client = governanceScopeClient.getIfAvailable();
+            if (client != null && client.isEnabled()) {
+                String corr = request.correlationId() != null ? request.correlationId().toString() : null;
+                return client.evaluateFacilityScope(
+                        request.tenantId(),
+                        request.actorId(),
+                        request.providerId(),
+                        tusoFacility,
+                        corr);
+            }
+        }
+
+        log.debug("No workspace/shift for actor {} at facility context (tusoFacility={}, legacyUuid={}), allowing with audit",
+                request.actorId(), tusoFacility, request.facilityId());
         return true;
     }
 
-    private boolean workspaceMatchesFacility(UUID tenantId, UUID workspaceId, UUID facilityId) {
+    private boolean workspaceMatchesFacility(UUID tenantId,
+                                             UUID workspaceId,
+                                             Long requestedTusoFacilityId,
+                                             String actorId,
+                                             String providerId,
+                                             UUID correlationId) {
         if (workspaceId == null) {
             return false;
         }
@@ -339,7 +368,29 @@ public class PolicyEngine {
         log.debug("Workspace {} validation: valid={}, active={}, reason={}",
                 workspaceId, result.valid(), result.active(), result.reason());
 
-        return result.valid();
+        if (!result.valid()) {
+            return false;
+        }
+
+        if (requestedTusoFacilityId != null && result.facilityNumericId() != null
+                && !requestedTusoFacilityId.equals(result.facilityNumericId())) {
+            log.warn("Workspace {} belongs to facility {}, not {}",
+                    workspaceId, result.facilityNumericId(), requestedTusoFacilityId);
+            return false;
+        }
+
+        GovernanceScopeClient client = governanceScopeClient.getIfAvailable();
+        Long facilityForGovernance = requestedTusoFacilityId != null ? requestedTusoFacilityId : result.facilityNumericId();
+        if (client != null && client.isEnabled() && facilityForGovernance != null) {
+            return client.evaluateFacilityScope(
+                    tenantId,
+                    actorId,
+                    providerId,
+                    facilityForGovernance,
+                    correlationId != null ? correlationId.toString() : null);
+        }
+
+        return true;
     }
 
     private boolean requiresConsent(String action, String resourceType) {
@@ -393,7 +444,9 @@ public class PolicyEngine {
             resourceType.equals("lab-orders") ||
             resourceType.equals("clinical-notes") ||
             resourceType.equals("vitals") ||
-            resourceType.equals("triage")
+            resourceType.equals("triage") ||
+            resourceType.equals("imaging-governed-mutate") ||
+            resourceType.equals("imaging-viewer-launch")
         );
     }
 

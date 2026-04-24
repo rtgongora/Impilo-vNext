@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   listClients,
@@ -47,21 +47,22 @@ export default function CertificationPage() {
       }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial client list only
   }, []);
 
-  useEffect(() => {
+  const loadCertifications = useCallback(async () => {
     if (!selectedClientId) return;
-    loadCertifications();
-  }, [selectedClientId]);
-
-  async function loadCertifications() {
     try {
       const data = await listCertifications(selectedClientId);
       setCertifications(data.items);
-    } catch (err) {
+    } catch {
       /* ignore if no certs yet */
     }
-  }
+  }, [selectedClientId]);
+
+  useEffect(() => {
+    void loadCertifications();
+  }, [loadCertifications]);
 
   async function handleRunCertification() {
     setRunning(true);

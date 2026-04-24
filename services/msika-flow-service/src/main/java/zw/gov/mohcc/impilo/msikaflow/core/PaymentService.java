@@ -78,11 +78,19 @@ public class PaymentService {
         OrderEntity order = stateMachine.getOrder(settlement.getOrderId());
 
         if ("PAID".equalsIgnoreCase(status)) {
+            if (order.getStatus() == OrderStatus.PAID) {
+                log.debug("Duplicate PAID callback for order {}; ignoring state transition", settlement.getOrderId());
+                return;
+            }
             stateMachine.transition(settlement.getOrderId(), OrderStatus.PAID, actorId, "SYSTEM", "PAYMENT_CONFIRMED", null);
             settlement.setStatus(SettlementStatus.SPLIT_CALCULATED);
             settlementRepository.save(settlement);
             log.info("Payment confirmed: orderId={}", settlement.getOrderId());
         } else if ("FAILED".equalsIgnoreCase(status)) {
+            if (order.getStatus() == OrderStatus.FAILED) {
+                log.debug("Duplicate FAILED callback for order {}; ignoring", settlement.getOrderId());
+                return;
+            }
             stateMachine.transition(settlement.getOrderId(), OrderStatus.FAILED, actorId, "SYSTEM", "PAYMENT_FAILED", null);
             settlement.setStatus(SettlementStatus.FAILED);
             settlementRepository.save(settlement);

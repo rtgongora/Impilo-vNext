@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.integration.connectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -16,9 +17,11 @@ public class HttpConnector implements Connector {
     private static final Logger log = LoggerFactory.getLogger(HttpConnector.class);
     private static final int DEFAULT_TIMEOUT_MS = 30_000;
 
+    private final boolean stubHttp;
     private final HttpClient httpClient;
 
-    public HttpConnector() {
+    public HttpConnector(@Value("${impilo.integration.http.stub:false}") boolean stubHttp) {
+        this.stubHttp = stubHttp;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
@@ -31,6 +34,10 @@ public class HttpConnector implements Connector {
 
     @Override
     public ConnectorResult execute(ConnectorRequest request) {
+        if (stubHttp) {
+            log.debug("HttpConnector stub: skipping outbound {} {}", request.method(), request.targetUrl());
+            return ConnectorResult.success(200, "{}");
+        }
         try {
             int timeoutMs = request.timeoutMs() != null ? request.timeoutMs() : DEFAULT_TIMEOUT_MS;
 

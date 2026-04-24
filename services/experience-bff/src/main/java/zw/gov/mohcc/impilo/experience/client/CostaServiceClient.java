@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -364,6 +366,25 @@ public class CostaServiceClient {
         String url = baseUrl + (path.startsWith("/") ? path : "/" + path);
         log.info("COSTA internal PUT {}", url);
         return restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), String.class);
+    }
+
+    // ── Financial lifecycle (COSTA /costa/v1/finance/lifecycle) ───────
+
+    public ResponseEntity<String> financeLifecycleGet(String relativePath) {
+        String path = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        String url = baseUrl + "/costa/v1/finance/lifecycle" + path;
+        log.info("COSTA finance lifecycle GET {}", url);
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> financeLifecyclePost(String relativePath, String jsonBody) {
+        String path = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        String url = baseUrl + "/costa/v1/finance/lifecycle" + path;
+        log.info("COSTA finance lifecycle POST {}", url);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        String payload = jsonBody != null ? jsonBody : "{}";
+        return restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(payload, headers), String.class);
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

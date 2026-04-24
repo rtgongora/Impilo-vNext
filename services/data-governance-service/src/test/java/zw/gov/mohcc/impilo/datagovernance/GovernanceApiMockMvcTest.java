@@ -565,6 +565,9 @@ public class GovernanceApiMockMvcTest {
         @Test
         @DisplayName("POST /external/v1/exports denies by default without allow rule")
         void exportDeniedByDefault() throws Exception {
+            // Use a dataset name that will not match rules created in other nested tests in the same JVM
+            // (e.g. allow-research-encounters matches resourcePattern "encounters").
+            String dataset = "export-deny-isolated-" + System.nanoTime();
             mockMvc.perform(post("/external/v1/exports")
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
@@ -572,9 +575,10 @@ public class GovernanceApiMockMvcTest {
                             .header("X-Correlation-ID", "corr-exp-2")
                             .header("Idempotency-Key", "idem-exp-2")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"dataset\": \"encounters\", \"purposeOfUse\": \"RESEARCH\"}"))
+                            .content("{\"dataset\": \"" + dataset + "\", \"purposeOfUse\": \"RESEARCH\"}"))
                     .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.decision").value("DENY"));
+                    .andExpect(jsonPath("$.decision").value("DENY"))
+                    .andExpect(jsonPath("$.dataset").value(dataset));
         }
     }
 

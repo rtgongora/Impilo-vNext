@@ -19,9 +19,13 @@ import zw.gov.mohcc.impilo.devportal.repository.OutboxEventRepository;
 
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Wave 23 tests: Partner onboarding lifecycle — registration, key issuance,
@@ -45,9 +49,7 @@ class Wave23PartnerOnboardingTest {
         certRepo = mock(CertificationRepository.class);
         outboxRepo = mock(OutboxEventRepository.class);
 
-        when(clientRepo.save(any(ClientEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(keyRepo.save(any(ApiKeyEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(outboxRepo.save(any(OutboxEventEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+        DeveloperPortalRepositoryMocks.stubPersistence(clientRepo, keyRepo, outboxRepo);
 
         service = new DeveloperPortalService(clientRepo, keyRepo, certRepo, outboxRepo, new ObjectMapper());
     }

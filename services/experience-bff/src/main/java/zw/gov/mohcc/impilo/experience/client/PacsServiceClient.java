@@ -80,6 +80,47 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listInstances(String studyId, String seriesId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/series/" + seriesId + "/instances";
+        log.info("PACS: listInstances operation [studyId={}, seriesId={}]", studyId, seriesId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode syncStudyHierarchy(String studyId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/sync-hierarchy";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode launchViewerSession(String studyId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/viewer-sessions";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode searchStudies(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/search";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode linkReport(String studyId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/report-links";
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listReportLinks(String studyId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/report-links";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

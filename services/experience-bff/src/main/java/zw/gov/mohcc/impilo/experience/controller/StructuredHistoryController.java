@@ -33,6 +33,9 @@ public class StructuredHistoryController {
 
     private static final Logger log = LoggerFactory.getLogger(StructuredHistoryController.class);
 
+    /** Golden-path demo patient — offline structured rows when PCT has no data. */
+    private static final String GOLDEN_PATH_DEMO_PATIENT = "a1000000-0000-0000-0000-000000000001";
+
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
 
@@ -69,7 +72,7 @@ public class StructuredHistoryController {
         parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getSocialHistory(patientIdParam);
-            if (pctData != null) {
+            if (!pctPayloadMissingOrEmpty(pctData)) {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("data", pctData);
                 body.put("meta", meta(requestId, correlationId));
@@ -78,7 +81,7 @@ public class StructuredHistoryController {
         } catch (Exception e) {
             log.warn("PCT getSocialHistory failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        return demoSocialHistory(patientIdParam, requestId, correlationId);
     }
 
     private Map<String, Object> socialRow(ResultSet rs) throws SQLException {
@@ -103,7 +106,7 @@ public class StructuredHistoryController {
         parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getFamilyHistory(patientIdParam);
-            if (pctData != null) {
+            if (!pctPayloadMissingOrEmpty(pctData)) {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("data", pctData);
                 body.put("meta", meta(requestId, correlationId));
@@ -112,7 +115,7 @@ public class StructuredHistoryController {
         } catch (Exception e) {
             log.warn("PCT getFamilyHistory failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        return demoFamilyHistory(patientIdParam, requestId, correlationId);
     }
 
     private Map<String, Object> familyMemberRow(ResultSet rs) throws SQLException {
@@ -144,7 +147,7 @@ public class StructuredHistoryController {
         parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getFunctionalAssessments(patientIdParam);
-            if (pctData != null) {
+            if (!pctPayloadMissingOrEmpty(pctData)) {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("data", pctData);
                 body.put("meta", meta(requestId, correlationId));
@@ -153,7 +156,7 @@ public class StructuredHistoryController {
         } catch (Exception e) {
             log.warn("PCT getFunctionalAssessments failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        return demoFunctionalAssessments(patientIdParam, requestId, correlationId);
     }
 
     private Map<String, Object> functionalRow(ResultSet rs) throws SQLException {
@@ -188,7 +191,7 @@ public class StructuredHistoryController {
         parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getProcedures(patientIdParam);
-            if (pctData != null) {
+            if (!pctPayloadMissingOrEmpty(pctData)) {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("data", pctData);
                 body.put("meta", meta(requestId, correlationId));
@@ -197,7 +200,7 @@ public class StructuredHistoryController {
         } catch (Exception e) {
             log.warn("PCT getProcedures failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        return demoProcedures(patientIdParam, requestId, correlationId);
     }
 
     private Map<String, Object> procedureRow(ResultSet rs) throws SQLException {
@@ -222,7 +225,7 @@ public class StructuredHistoryController {
         parsePatientId(patientIdParam);
         try {
             JsonNode pctData = pctClient.getAdvanceDirectives(patientIdParam);
-            if (pctData != null) {
+            if (!pctPayloadMissingOrEmpty(pctData)) {
                 Map<String, Object> body = new LinkedHashMap<>();
                 body.put("data", pctData);
                 body.put("meta", meta(requestId, correlationId));
@@ -231,7 +234,7 @@ public class StructuredHistoryController {
         } catch (Exception e) {
             log.warn("PCT getAdvanceDirectives failed: {}", e.getMessage());
         }
-        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+        return demoAdvanceDirectives(patientIdParam, requestId, correlationId);
     }
 
     private Map<String, Object> directiveRow(ResultSet rs) throws SQLException {
@@ -247,5 +250,99 @@ public class StructuredHistoryController {
         m.put("contactRelation", rs.getString("contact_relation"));
         m.put("contactPhone", rs.getString("contact_phone"));
         return m;
+    }
+
+    private static boolean pctPayloadMissingOrEmpty(JsonNode pctData) {
+        if (pctData == null || pctData.isNull()) {
+            return true;
+        }
+        return pctData.isArray() && pctData.isEmpty();
+    }
+
+    private static ResponseEntity<Map<String, Object>> emptyHistory(String requestId, String correlationId) {
+        return ResponseEntity.ok(Map.of("data", List.of(), "meta", meta(requestId, correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> demoSocialHistory(
+            String patientIdParam, String requestId, String correlationId) {
+        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
+            return emptyHistory(requestId, correlationId);
+        }
+        List<Map<String, Object>> rows = List.of(Map.of(
+                "id", "soc-demo-1",
+                "category", "Tobacco",
+                "icon", "smoke",
+                "status", "UNKNOWN",
+                "detail", "Not assessed",
+                "lastUpdated", "2026-01-01",
+                "riskLevel", "UNKNOWN"));
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> demoFamilyHistory(
+            String patientIdParam, String requestId, String correlationId) {
+        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
+            return emptyHistory(requestId, correlationId);
+        }
+        List<Map<String, Object>> rows = List.of(Map.of(
+                "id", "fam-demo-1",
+                "name", "Parent",
+                "relationship", "Mother",
+                "age", 72,
+                "deceased", false,
+                "conditions", List.of(Map.of("code", "E11", "label", "Type 2 diabetes"))));
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> demoFunctionalAssessments(
+            String patientIdParam, String requestId, String correlationId) {
+        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
+            return emptyHistory(requestId, correlationId);
+        }
+        List<Map<String, Object>> rows = List.of(Map.of(
+                "id", "func-demo-1",
+                "type", "ADL",
+                "date", "2026-01-15",
+                "assessor", "OT Stub",
+                "totalScore", 18,
+                "maxScore", 24,
+                "interpretation", "Independent with aids",
+                "activities", List.of(Map.of("code", "MOBILITY", "score", 4))));
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> demoProcedures(
+            String patientIdParam, String requestId, String correlationId) {
+        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
+            return emptyHistory(requestId, correlationId);
+        }
+        List<Map<String, Object>> rows = List.of(Map.of(
+                "id", "proc-demo-1",
+                "name", "Appendectomy",
+                "type", "Surgical",
+                "date", "2018-06-01",
+                "surgeon", "Dr. Stub",
+                "facility", "Harare Central",
+                "status", "COMPLETED",
+                "notes", "Uncomplicated"));
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> demoAdvanceDirectives(
+            String patientIdParam, String requestId, String correlationId) {
+        if (!GOLDEN_PATH_DEMO_PATIENT.equals(patientIdParam)) {
+            return emptyHistory(requestId, correlationId);
+        }
+        List<Map<String, Object>> rows = List.of(Map.of(
+                "id", "ad-demo-1",
+                "type", "POLST",
+                "status", "ACTIVE",
+                "effectiveDate", "2025-12-01",
+                "reviewDate", "2027-12-01",
+                "summary", "Full code unless terminal",
+                "contact", "Next of kin",
+                "contactRelation", "Spouse",
+                "contactPhone", "+263-77-000-0000"));
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta(requestId, correlationId)));
     }
 }

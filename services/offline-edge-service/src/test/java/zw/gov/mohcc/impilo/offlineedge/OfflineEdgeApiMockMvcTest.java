@@ -253,7 +253,8 @@ public class OfflineEdgeApiMockMvcTest {
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", UUID.randomUUID().toString())
-                            .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "replay-batch-" + System.nanoTime()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.batch_id").exists())
                     .andExpect(jsonPath("$.total_actions").value(2))
@@ -277,7 +278,8 @@ public class OfflineEdgeApiMockMvcTest {
                             .header("X-Tenant-ID", TENANT_ID)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", UUID.randomUUID().toString())
-                            .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "replay-empty-" + System.nanoTime()))
                     .andExpect(status().isNotFound());
         }
     }

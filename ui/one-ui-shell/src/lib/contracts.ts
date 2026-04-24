@@ -9,7 +9,8 @@
 
 // Re-export shared trust contracts (single source of truth)
 export { TRUST_HEADERS } from "shared-ui";
-export type { PurposeOfUse, ActorType, ApiEnvelope, PagedResponse } from "shared-ui";
+import type { ActorType } from "shared-ui";
+export type { ActorType, ApiEnvelope, PagedResponse, PurposeOfUse } from "shared-ui";
 
 // ============================================================================
 // Authorization Decision

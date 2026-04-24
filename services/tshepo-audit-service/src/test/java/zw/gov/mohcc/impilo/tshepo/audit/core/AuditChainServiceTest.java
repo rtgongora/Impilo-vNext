@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,11 +70,18 @@ class AuditChainServiceTest {
     @Captor
     private ArgumentCaptor<AuditEventEntity> eventCaptor;
 
-    @Captor
-    private ArgumentCaptor<AuditChainHeadEntity> chainHeadCaptor;
+    /**
+     * Copies persisted chain-head state at each save invocation. Production code reuses the same
+     * {@link AuditChainHeadEntity} for genesis create and head update, so {@link ArgumentCaptor} values
+     * would otherwise both reflect the post-update hash.
+     */
+    private final List<AuditChainHeadEntity> chainHeadSaveSnapshots = new ArrayList<>();
 
     @BeforeEach
     void setUp() throws JsonProcessingException {
+        reset(eventRepository, chainHeadRepository, objectMapper);
+        chainHeadSaveSnapshots.clear();
+
         lenient().when(objectMapper.writeValueAsString(any()))
                 .thenReturn("{\"key\":\"value\"}");
 
@@ -86,7 +95,11 @@ class AuditChainServiceTest {
                 });
 
         lenient().when(chainHeadRepository.save(any(AuditChainHeadEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                .thenAnswer(invocation -> {
+                    AuditChainHeadEntity entity = invocation.getArgument(0);
+                    chainHeadSaveSnapshots.add(copyChainHeadState(entity));
+                    return entity;
+                });
     }
 
     // -----------------------------------------------------------------------
@@ -137,6 +150,16 @@ class AuditChainServiceTest {
         head.setSequenceNumber(sequenceNumber);
         head.setUpdatedAt(Instant.now());
         return head;
+    }
+
+    private static AuditChainHeadEntity copyChainHeadState(AuditChainHeadEntity src) {
+        AuditChainHeadEntity copy = new AuditChainHeadEntity();
+        copy.setId(src.getId());
+        copy.setTenantId(src.getTenantId());
+        copy.setCurrentHash(src.getCurrentHash());
+        copy.setSequenceNumber(src.getSequenceNumber());
+        copy.setUpdatedAt(src.getUpdatedAt());
+        return copy;
     }
 
     /**
@@ -293,8 +316,9 @@ class AuditChainServiceTest {
         assertThat(savedEvent.getCreatedAt()).isNotNull();
 
         // Then: chain head is saved twice — once for genesis creation, once for update
-        verify(chainHeadRepository, times(2)).save(chainHeadCaptor.capture());
-        List<AuditChainHeadEntity> savedHeads = chainHeadCaptor.getAllValues();
+        verify(chainHeadRepository, times(2)).save(any(AuditChainHeadEntity.class));
+        assertThat(chainHeadSaveSnapshots).hasSize(2);
+        List<AuditChainHeadEntity> savedHeads = chainHeadSaveSnapshots;
 
         // First save: genesis creation with zero hash and sequence 0
         AuditChainHeadEntity genesisHead = savedHeads.get(0);

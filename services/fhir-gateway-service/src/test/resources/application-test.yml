@@ -21,6 +21,8 @@ spring:
       auto-startup: false
 
 impilo:
+  security:
+    disable-oauth-for-tests: true
   companion:
     enabled: true
 

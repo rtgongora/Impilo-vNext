@@ -20,6 +20,7 @@ import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PolicyEngineTest {
 
-    @Mock private RiskScoring riskScoring;
+    @Mock private DeviceRiskScoreEvaluator riskScoring;
     @Mock private PolicyCacheService policyCacheService;
     @Mock private ProviderPrivilegeRevocationStore privilegeRevocationStore;
     @Mock private ConsentClient consentClient;
@@ -45,6 +46,7 @@ class PolicyEngineTest {
     @Mock private BreakGlassService breakGlassService;
     @Mock private PolicyDecisionLogRepository decisionLogRepository;
     @Mock private AuditPublisher auditPublisher;
+    @Mock private VisibilityEscalationService visibilityEscalationService;
 
     private AuthzProperties properties;
     private ObjectMapper objectMapper;
@@ -63,10 +65,11 @@ class PolicyEngineTest {
         properties = buildDefaultProperties();
         objectMapper = new ObjectMapper();
         lenient().when(privilegeRevocationStore.isRevoked(anyString())).thenReturn(false);
+        lenient().when(visibilityEscalationService.resolveActiveGrant(any())).thenReturn(Optional.empty());
         policyEngine = new PolicyEngine(
                 riskScoring, policyCacheService, privilegeRevocationStore, consentClient,
                 stepUpService, breakGlassService, decisionLogRepository,
-                auditPublisher, properties, objectMapper
+                auditPublisher, properties, objectMapper, visibilityEscalationService
         );
     }
 
@@ -83,7 +86,8 @@ class PolicyEngineTest {
                 deviceFingerprint, CORRELATION_ID, facilityId, workspaceId,
                 null, "GET", "/v1/patients", action, resourceType, resourceId,
                 loaLevel, "session-abc", null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null,
+                null, null
         );
     }
 
@@ -216,7 +220,8 @@ class PolicyEngineTest {
                 DEVICE_FP, CORRELATION_ID, FACILITY_ID, WORKSPACE_ID,
                 null, "GET", "/v1/patients", "GET:/v1/patients", "patients", null,
                 3, "session-abc", null,
-                providerPublicId, null, null, null, null, null
+                providerPublicId, null, null, null, null, null,
+                null, null
         );
     }
 
@@ -325,7 +330,7 @@ class PolicyEngineTest {
                 "ALLOW response must include header mutations");
 
         // Verify audit was logged
-        verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull());
+        verify(auditPublisher).queueAuditEvent(eq(request), eq("ALLOW"), eq(10), isNull(), any());
     }
 
     // ════════════════════════════════════════════════════════════════════
@@ -444,6 +449,11 @@ class PolicyEngineTest {
         AuthzInternalRequest request = requestWithAction("DELETE:/v1/patients/abc", "patients");
         stubHappyPathDefaults(65);
 
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), isNull(),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-step-up", List.of("delete")));
+
         when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
                 .thenReturn(false);
 
@@ -462,6 +472,11 @@ class PolicyEngineTest {
     void evaluate_withHighRisk_sensitiveAction_recentStepUp_allows() {
         AuthzInternalRequest request = requestWithAction("DELETE:/v1/patients/abc", "patients");
         stubHappyPathDefaults(65);
+
+        when(consentClient.evaluateConsent(
+                eq(TENANT_ID), eq("patients"), isNull(),
+                eq(ACTOR_ID), eq("TREATMENT")))
+                .thenReturn(ConsentDecision.permit("consent-step-up", List.of("delete")));
 
         when(stepUpService.hasRecentStepUp(TENANT_ID, ACTOR_ID))
                 .thenReturn(true);
@@ -538,9 +553,6 @@ class PolicyEngineTest {
     @Test
     @DisplayName("evaluate: every ALLOW decision persists a decision log entry")
     void evaluate_allowDecision_persistsLogEntry() {
-        AuthzInternalRequest request = defaultRequest();
-        stubHappyPathDefaults(10);
-
         // Use non-clinical resource to skip consent
         AuthzInternalRequest nonClinical = buildRequest(
                 TENANT_ID, "TREATMENT", "GET:/v1/facilities",

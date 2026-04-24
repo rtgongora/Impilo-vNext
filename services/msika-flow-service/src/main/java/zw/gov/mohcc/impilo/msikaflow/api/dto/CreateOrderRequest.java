@@ -9,7 +9,10 @@ public record CreateOrderRequest(
         @NotNull String orderType,
         String patientCpid,
         UUID facilityId,
+        String facilityRef,
         UUID vendorId,
+        String vendorRef,
+        String providerRef,
         String idempotencyKey,
         List<LineItemRequest> lines
 ) {}

@@ -26,18 +26,16 @@ public class TusoClient {
         this.tusoBaseUrl = tusoBaseUrl;
     }
 
-    public boolean facilitySupportsService(UUID facilityId, String serviceCode) {
+    public JsonNode getFacilityStatusSummary(long facilityId) {
         try {
-            String url = tusoBaseUrl + "/v1/facilities/" + facilityId + "/capabilities";
+            String url = tusoBaseUrl + "/v1/internal/facilities/" + facilityId + "/status-summary";
             String response = restTemplate.getForObject(url, String.class);
             if (response != null) {
-                JsonNode data = objectMapper.readTree(response).path("data");
-                // Check if facility has the capability
-                return data.has("capabilities");
+                return objectMapper.readTree(response).path("data");
             }
         } catch (Exception e) {
-            log.warn("TUSO capability check failed for facility {}: {}. Defaulting to allowed.", facilityId, e.getMessage());
+            log.warn("TUSO status-summary failed for facility {}: {}", facilityId, e.getMessage());
         }
-        return true; // Graceful degradation
+        return null;
     }
 }

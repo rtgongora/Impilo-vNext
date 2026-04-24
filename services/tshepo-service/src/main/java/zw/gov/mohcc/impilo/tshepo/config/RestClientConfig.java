@@ -29,4 +29,12 @@ public class RestClientConfig {
                 .setReadTimeout(Duration.ofSeconds(3))
                 .build();
     }
+
+    @Bean
+    public RestTemplate governanceRestTemplate(RestTemplateBuilder builder) {
+        return builder
+                .setConnectTimeout(Duration.ofSeconds(2))
+                .setReadTimeout(Duration.ofSeconds(4))
+                .build();
+    }
 }

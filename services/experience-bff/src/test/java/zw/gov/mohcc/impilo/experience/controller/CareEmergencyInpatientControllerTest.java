@@ -47,7 +47,10 @@ class CareEmergencyInpatientControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.createAdmission("t1", Map.of("patientId", "p1", "wardId", "w1"));
         assertEquals(201, response.getStatusCode().value());
-        assertNotNull(((Map<?, ?>) response.getBody().get("data")).get("id"));
+        Object data = response.getBody().get("data");
+        assertNotNull(data);
+        JsonNode dataNode = data instanceof JsonNode j ? j : mapper.valueToTree(data);
+        assertNotNull(dataNode.get("id"));
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
@@ -57,7 +60,7 @@ class CareEmergencyInpatientControllerTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null
         );
     }
 

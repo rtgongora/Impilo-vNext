@@ -30,8 +30,10 @@ class ImpiloIdFormatTest {
     void validationRejectsTamperedDigit() {
         String id = format.generate();
         char[] chars = id.toCharArray();
-        // Tamper with a digit
-        chars[4] = chars[4] == '0' ? '1' : '0';
+        // Cycle digit at index 0 (weight 2): a single-digit change never preserves sum mod 24
+        // (unlike flipping only 0↔1 at index 4 with weight 6, which can preserve the check letter when digit was 4).
+        int d = chars[0] - '0';
+        chars[0] = (char) ('0' + (d + 1) % 10);
         String tampered = new String(chars);
         assertFalse(format.validate(tampered), "Tampered digit should fail validation");
     }

@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.vito.api.dto.ClientRegistryDtos;
+import zw.gov.mohcc.impilo.vito.api.dto.ClientIdentitySummary;
 import zw.gov.mohcc.impilo.vito.core.id.ImpiloIdFormat;
 import zw.gov.mohcc.impilo.vito.core.matching.MatchingEngine;
 import zw.gov.mohcc.impilo.vito.core.merge.MergeService;
@@ -684,6 +685,19 @@ public class ClientIdentityOperationsService {
                 stewardshipActions.stream().map(this::toStewardshipActionView).toList(),
                 statusHistory.stream().map(this::toStatusHistoryView).toList(),
                 auditEvents.stream().map(this::toAuditEventView).toList()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ClientIdentitySummary getIdentitySummary(UUID healthId) {
+        TrustContext ctx = TrustContextHolder.require();
+        var client = clientRepository.findByTenantIdAndHealthId(ctx.tenantId(), healthId)
+                .orElseThrow(() -> new IllegalArgumentException("Client not found: " + healthId));
+        return new ClientIdentitySummary(
+                client.getHealthId(),
+                client.getStatus(),
+                client.getVerificationStatus(),
+                client.getIdentityAssuranceLevel()
         );
     }
 

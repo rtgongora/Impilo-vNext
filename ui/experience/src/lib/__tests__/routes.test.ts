@@ -136,7 +136,13 @@ describe("Route Registry", () => {
   });
 
   it("organization administration hubs require ORGANIZATION_ADMIN", () => {
-    const paths = ["/organization-admin", "/organization-admin/facility", "/organization-admin/staffing"];
+    const paths = [
+      "/organization-admin",
+      "/organization-admin/facility",
+      "/organization-admin/staffing",
+      "/organization-admin/governance",
+      "/organization-admin/governance/[id]",
+    ];
     for (const p of paths) {
       const route = ROUTES.find((r) => r.path === p);
       expect(route?.guard).toBe("role");

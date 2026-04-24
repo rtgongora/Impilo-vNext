@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   pctApi,
   type Journey,
-  type QueueItem,
   type Queue,
 } from "@/lib/pctApi";
 import { useSessionStore } from "@/stores/sessionStore";
@@ -30,7 +29,6 @@ export default function SortingPage() {
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
-  const [searching, setSearching] = useState(false);
 
   // Journey state
   const [activeJourney, setActiveJourney] = useState<Journey | null>(null);

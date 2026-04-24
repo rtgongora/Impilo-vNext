@@ -49,7 +49,11 @@ public class OrderController {
         OrderType orderType = OrderType.valueOf(req.orderType());
 
         OrderEntity order = stateMachine.createOrder(tenantId, actorId, actorType,
-                req.patientCpid(), orderType, req.facilityId(), req.vendorId(), req.idempotencyKey());
+                req.patientCpid(), orderType,
+                req.facilityId(), req.facilityRef(),
+                req.vendorId(), req.vendorRef(),
+                req.providerRef(),
+                req.idempotencyKey());
 
         // Add lines if provided
         if (req.lines() != null) {
@@ -73,6 +77,26 @@ public class OrderController {
         OrderEntity order = stateMachine.getOrder(id);
         List<OrderLineEntity> lines = stateMachine.getOrderLines(id);
         return ResponseEntity.ok(ApiResponse.ok(OrderView.from(order, lines), correlationId));
+    }
+
+    @GetMapping("/{id}/status-summary")
+    public ResponseEntity<ApiResponse<OrderStatusSummary>> getOrderStatusSummary(@PathVariable String id, HttpServletRequest httpReq) {
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        OrderEntity order = stateMachine.getOrder(id);
+        return ResponseEntity.ok(ApiResponse.ok(
+                new OrderStatusSummary(
+                        order.getOrderId(),
+                        order.getTenantId(),
+                        order.getStatus().name(),
+                        order.getOrderType().name(),
+                        order.getAmountTotal(),
+                        order.getCurrency(),
+                        order.getFacilityRef(),
+                        order.getVendorRef(),
+                        order.getProviderRef()
+                ),
+                correlationId
+        ));
     }
 
     @PostMapping("/{id}/cancel")

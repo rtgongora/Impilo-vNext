@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -62,9 +64,7 @@ public class PreauthRequestEntity {
     private BigDecimal annualLimit;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "approval_conditions", columnDefinition = "jsonb")
+    @Column(name = "approval_conditions")
     private String approvalConditions = "{}";
 
     @Column(name = "utilization_period", length = 16)

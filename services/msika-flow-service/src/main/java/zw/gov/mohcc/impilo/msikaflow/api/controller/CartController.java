@@ -34,7 +34,7 @@ public class CartController {
                 .toList();
 
         CatalogValidationService.ValidationResult result = catalogValidation.validateCart(
-                items, req.channel(), actorType, patientCpid);
+                items, req.channel(), actorType, patientCpid, req.facilityRef(), req.providerRef());
 
         return ResponseEntity.ok(ApiResponse.ok(result, correlationId));
     }

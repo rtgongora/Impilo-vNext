@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   getTicket,
@@ -22,7 +22,6 @@ import type {
   TicketAssignment,
   SupportMessage,
   TicketStatus,
-  TicketPriority,
 } from "@/types/support";
 
 const STATUS_TRANSITIONS: Record<string, TicketStatus[]> = {
@@ -35,7 +34,6 @@ const STATUS_TRANSITIONS: Record<string, TicketStatus[]> = {
 
 export default function TicketDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const ticketId = params.ticketId as string;
   const session = useSupportSession((s) => s.session);
 

@@ -1,10 +1,14 @@
 package zw.gov.mohcc.impilo.shared.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityHeaderParser;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -24,6 +28,17 @@ public class TrustContextFilter extends OncePerRequestFilter {
     /** Header injected by Envoy after successful ext_authz for internal requests */
     private static final String INTERNAL_MARKER = "x-envoy-internal";
 
+    /** When non-null, {@link VisibilityHeaderParser#resolve} merges {@code x-obligations} JSON. */
+    private final ObjectMapper visibilityObjectMapper;
+
+    public TrustContextFilter() {
+        this(null);
+    }
+
+    public TrustContextFilter(ObjectMapper visibilityObjectMapper) {
+        this.visibilityObjectMapper = visibilityObjectMapper;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -31,9 +46,11 @@ public class TrustContextFilter extends OncePerRequestFilter {
         try {
             TrustContext ctx = extractContext(request);
             TrustContextHolder.set(ctx);
+            VisibilityContextHolder.set(VisibilityHeaderParser.resolve(request, visibilityObjectMapper));
             filterChain.doFilter(request, response);
         } finally {
             TrustContextHolder.clear();
+            VisibilityContextHolder.clear();
         }
     }
 

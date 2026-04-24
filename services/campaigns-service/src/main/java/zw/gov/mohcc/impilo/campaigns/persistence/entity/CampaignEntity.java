@@ -11,6 +11,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.campaigns.core.CampaignStatus;
@@ -36,15 +38,11 @@ public class CampaignEntity {
     private String campaignType = "OUTREACH";
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "target_group", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "target_group", nullable = false)
     private String targetGroup = "{}";
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "message_template", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "message_template", nullable = false)
     private String messageTemplate = "{}";
 
     @Column(name = "channel", nullable = false)

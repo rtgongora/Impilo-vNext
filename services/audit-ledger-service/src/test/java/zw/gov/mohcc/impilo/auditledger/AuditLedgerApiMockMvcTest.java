@@ -72,10 +72,11 @@ public class AuditLedgerApiMockMvcTest {
         @Test
         @DisplayName("First appended record has genesis prev_hash and valid entry_hash")
         void firstRecordHasGenesisHash() throws Exception {
+            String freshTenant = UUID.randomUUID().toString();
             UUID correlationId = UUID.randomUUID();
 
             MvcResult result = mockMvc.perform(post("/internal/v1/audit/records")
-                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Tenant-ID", freshTenant)
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", UUID.randomUUID().toString())
                             .header("X-Correlation-ID", UUID.randomUUID().toString())

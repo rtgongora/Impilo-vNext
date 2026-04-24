@@ -31,9 +31,7 @@ public class ServiceHeartbeatEntity {
     private String versionTag;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(nullable = false, columnDefinition = "jsonb")
+    @Column(nullable = false)
     private String metadata = "{}";
 
     @Column(name = "last_heartbeat", nullable = false)

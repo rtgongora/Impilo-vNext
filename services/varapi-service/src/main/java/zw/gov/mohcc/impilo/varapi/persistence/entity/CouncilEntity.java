@@ -39,6 +39,10 @@ public class CouncilEntity {
     @Column(name = "phone", length = 30)
     private String phone;
 
+    /** Optional Java regex pattern for validating council registration numbers (collaboration). */
+    @Column(name = "registration_number_pattern", length = 512)
+    private String registrationNumberPattern;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -93,6 +97,11 @@ public class CouncilEntity {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getRegistrationNumberPattern() { return registrationNumberPattern; }
+    public void setRegistrationNumberPattern(String registrationNumberPattern) {
+        this.registrationNumberPattern = registrationNumberPattern;
+    }
 
     public Instant getCreatedAt() { return createdAt; }
 

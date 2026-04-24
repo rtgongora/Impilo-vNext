@@ -98,6 +98,10 @@ public class AuthSessionController {
 
         String email = body.getOrDefault("email", body.getOrDefault("identifier", "")).toString();
         String password = body.getOrDefault("password", "").toString();
+        String loginMethod = body.get("method") == null ? null : body.get("method").toString().trim();
+        if (loginMethod != null && loginMethod.isEmpty()) {
+            loginMethod = null;
+        }
 
         if (email.isBlank() || password.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
@@ -152,7 +156,8 @@ public class AuthSessionController {
 
                 log.info("Keycloak login successful: user={}, email={}, roles={}", userId, userEmail, roles);
 
-                return buildLoginResponse(accessToken, refreshToken, expiresIn, userId, userEmail, displayName, roles, actorType, requestId, correlationId);
+                return buildLoginResponse(accessToken, refreshToken, expiresIn, userId, userEmail, displayName, roles, actorType,
+                        email, loginMethod, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
@@ -184,7 +189,7 @@ public class AuthSessionController {
         // Health OS Identity Doctrine: everyone starts as CITIZEN.
         // Professional capacity is discovered post-login via /linked-ids.
         return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,
-                List.of("CITIZEN"), "CITIZEN", requestId, correlationId);
+                List.of("CITIZEN"), "CITIZEN", email, loginMethod, requestId, correlationId);
     }
 
     @PostMapping("/auth/logout")
@@ -279,7 +284,7 @@ public class AuthSessionController {
                 log.info("Token refreshed for user={}", userId);
 
                 return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, userId, userEmail,
-                        displayName, roles, actorType, requestId, correlationId);
+                        displayName, roles, actorType, userEmail, null, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
             log.info("Token refresh failed: {}", e.getMessage());
@@ -521,7 +526,7 @@ public class AuthSessionController {
                             userId != null ? userId : UUID.randomUUID().toString(),
                             email, firstName + " " + lastName,
                             List.of(role), "CITIZEN",
-                            requestId, correlationId);
+                            email, "email", requestId, correlationId);
                 }
             } catch (Exception e) {
                 log.warn("Auto-login after registration failed: {}", e.getMessage());
@@ -589,18 +594,23 @@ public class AuthSessionController {
     }
 
     private ResponseEntity<Map<String, Object>> buildLoginResponse(
-            String token, String refreshToken, int expiresIn, String userId, String email,
+            String token, String refreshToken, int expiresIn, String userId, String userEmail,
             String displayName, List<String> roles, String actorType,
+            String loginPrincipal, String loginMethod,
             String requestId, String correlationId) {
 
         OffsetDateTime expiresAt = OffsetDateTime.now().plusSeconds(expiresIn);
 
         Map<String, Object> user = new LinkedHashMap<>();
         user.put("id", userId);
-        user.put("email", email);
+        user.put("email", userEmail);
+        user.put("identifier", loginPrincipal != null && !loginPrincipal.isBlank() ? loginPrincipal : userEmail);
         user.put("displayName", displayName);
         user.put("roles", roles);
         user.put("actorType", actorType);
+        if (loginMethod != null && !loginMethod.isBlank()) {
+            user.put("method", loginMethod);
+        }
 
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put("token", token);

@@ -9,6 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.dags.core.DecisionType;
@@ -38,9 +41,7 @@ public class AccessDecisionEntity {
     private String reason;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "policy_ids", columnDefinition = "jsonb")
+    @Column(name = "policy_ids")
     private String policyIds = "[]";
 
     @Column(name = "decided_at", nullable = false, updatable = false)

@@ -11,6 +11,7 @@ public record ProviderLifecycleSummary(
         List<ProviderPracticeContextEntity> practiceContexts,
         List<ProviderComplianceActionEntity> outstandingCompliance,
         ProviderCertificateEntity currentCertificate,
-        PractitionerInChargeAssignmentEntity picAssignment
+        PractitionerInChargeAssignmentEntity picAssignment,
+        ProviderEligibilityResponse eligibility
 ) {
 }

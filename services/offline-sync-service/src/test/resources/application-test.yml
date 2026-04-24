@@ -31,3 +31,6 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+impilo:
+  security:
+    disable-oauth-for-tests: true

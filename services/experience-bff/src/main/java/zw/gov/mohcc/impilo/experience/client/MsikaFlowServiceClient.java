@@ -78,6 +78,146 @@ public class MsikaFlowServiceClient {
         return postJson(baseUrl + "/v1/pickup/claim", requestBody);
     }
 
+    // ── Persisted carts ─────────────────────────────────────────────────────
+
+    public ResponseEntity<String> getOrCreateOpenCart(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/carts/open")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> addCartItem(String cartId, String requestBody) {
+        return postJson(baseUrl + "/v1/carts/" + cartId + "/items", requestBody);
+    }
+
+    public ResponseEntity<String> removeCartItem(String cartId, String msikaCoreCode) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/carts/" + cartId + "/items")
+                .queryParam("msikaCoreCode", msikaCoreCode)
+                .toUriString();
+        return restTemplate.exchange(url, HttpMethod.DELETE, HttpEntity.EMPTY, String.class);
+    }
+
+    public ResponseEntity<String> checkoutCart(String cartId, String requestBody) {
+        return postJson(baseUrl + "/v1/carts/" + cartId + "/checkout", requestBody);
+    }
+
+    // ── Logistics orchestration (plans/exceptions/proofs) ───────────────────
+
+    public ResponseEntity<String> createDeliveryPlan(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/plans", requestBody);
+    }
+
+    public ResponseEntity<String> listDeliveryPlans(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/plans")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> getDeliveryPlan(String planId) {
+        return restTemplate.getForEntity(baseUrl + "/v1/logistics/plans/" + planId, String.class);
+    }
+
+    public ResponseEntity<String> updateDeliveryPlan(String planId, String requestBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(
+                baseUrl + "/v1/logistics/plans/" + planId,
+                HttpMethod.PATCH,
+                new HttpEntity<>(requestBody, headers),
+                String.class
+        );
+    }
+
+    public ResponseEntity<String> updateDeliveryLeg(String legId, String requestBody) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return restTemplate.exchange(
+                baseUrl + "/v1/logistics/legs/" + legId,
+                HttpMethod.PATCH,
+                new HttpEntity<>(requestBody, headers),
+                String.class
+        );
+    }
+
+    public ResponseEntity<String> raiseDeliveryException(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/exceptions", requestBody);
+    }
+
+    public ResponseEntity<String> listDeliveryExceptions(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/exceptions")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> recordProof(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/proofs", requestBody);
+    }
+
+    public ResponseEntity<String> listProofs(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/proofs")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createLogisticsProvider(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/providers", requestBody);
+    }
+
+    public ResponseEntity<String> listLogisticsProviders(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/providers")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createDeliveryAsset(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/assets", requestBody);
+    }
+
+    public ResponseEntity<String> listDeliveryAssets(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/assets")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createDeliveryMission(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/missions", requestBody);
+    }
+
+    public ResponseEntity<String> listDeliveryMissions(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/missions")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> recordHandoff(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/handoffs", requestBody);
+    }
+
+    public ResponseEntity<String> listHandoffs(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/handoffs")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> createCustody(String requestBody) {
+        return postJson(baseUrl + "/v1/logistics/custody", requestBody);
+    }
+
+    public ResponseEntity<String> listCustody(MultiValueMap<String, String> queryParams) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/logistics/custody")
+                .queryParams(copy(queryParams))
+                .toUriString();
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     public ResponseEntity<String> getVendorOrders(String vendorId, MultiValueMap<String, String> queryParams) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/vendors/" + vendorId + "/orders")
                 .queryParams(copy(queryParams))

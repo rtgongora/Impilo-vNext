@@ -49,6 +49,11 @@ jobs:
           SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
         run: mvn test -Dspring.profiles.active=test
 
+      - name: Test Tshepo authz + shared visibility
+        working-directory: services
+        run: |
+          mvn test -pl zw.gov.mohcc.impilo:tshepo-authz-service,zw.gov.mohcc.impilo:shared-core -am
+
   frontend-lint:
     name: Frontend Lint & Type Check
     runs-on: ubuntu-latest

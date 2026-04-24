@@ -150,8 +150,6 @@ class ValidationEngineTest {
 
             when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT_ID, CODE_SYSTEM_URL))
                     .thenReturn(List.of(codeSystem));
-            when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
-                    any(), any(), any())).thenReturn(Collections.emptyList());
             when(validationLogRepository.save(any(ValidationLogEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -177,8 +175,6 @@ class ValidationEngineTest {
 
             when(artifactRepository.findByTenantIdAndCanonicalUrl(TENANT_ID, CODE_SYSTEM_URL))
                     .thenReturn(List.of(codeSystem));
-            when(assignmentRepository.findByTenantIdAndScopeTypeAndScopeIdAndActiveTrue(
-                    any(), any(), any())).thenReturn(Collections.emptyList());
             when(validationLogRepository.save(any(ValidationLogEntity.class)))
                     .thenAnswer(invocation -> invocation.getArgument(0));
 

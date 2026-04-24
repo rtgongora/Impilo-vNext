@@ -59,6 +59,13 @@
         <!-- PostgreSQL and Flyway REMOVED — BFF is a pure proxy with no database -->
         <!-- All data owned by sovereign services, accessed via typed HTTP clients -->
 
+        <!-- RFC 4180 CSV parsing for governed import -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+
         <!-- Jackson -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -88,6 +95,18 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>shared-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>zw.gov.mohcc.impilo</groupId>
+            <artifactId>tshepo-contracts</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Shared Kernel Java (EventEnvelope) -->
         <dependency>
             <groupId>zw.gov.mohcc.impilo</groupId>
@@ -104,8 +123,21 @@
         <!-- Testcontainers PostgreSQL REMOVED — BFF has no database -->
         <dependency>
             <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>1.21.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
+            <version>3.10.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -120,6 +152,18 @@
 
     <build>
         <plugins>
+            <!-- Align with parent Byte Buddy flag; disable JVM system proxies so docker-java
+                 talks to Docker Desktop engine API without corporate HTTP(S)_PROXY interference. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true -Djava.net.useSystemProxies=false</argLine>
+                    <environmentVariables>
+                        <NO_PROXY>localhost,127.0.0.1,::1,*.docker.internal,docker.for.win.localhost,docker.for.mac.localhost</NO_PROXY>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

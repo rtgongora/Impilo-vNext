@@ -164,7 +164,8 @@ class NotificationExtensionsTest {
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "tmpl-publish-" + UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -200,7 +201,8 @@ class NotificationExtensionsTest {
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "tmpl-pub-life-" + UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -212,7 +214,8 @@ class NotificationExtensionsTest {
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-Pod-ID", POD_ID)
                         .header("X-Request-ID", UUID.randomUUID().toString())
-                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "tmpl-retire-" + UUID.randomUUID()))
                 .andExpect(status().isOk())
                 .andReturn();
 

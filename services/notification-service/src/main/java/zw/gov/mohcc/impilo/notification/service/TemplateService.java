@@ -58,6 +58,14 @@ public class TemplateService {
         entity = templateRepository.save(entity);
         log.info("Created template id={} key={} channel={} tenant={}", entity.getId(), entity.getKey(), entity.getChannel(), ctx.tenantId());
 
+        TemplateVersionEntity initialVersion = new TemplateVersionEntity();
+        initialVersion.setTemplateId(entity.getId());
+        initialVersion.setVersion(1);
+        initialVersion.setContent(entity.getContent());
+        initialVersion.setSubject(entity.getSubject());
+        initialVersion.setChangelog("Initial version");
+        templateVersionRepository.save(initialVersion);
+
         OutboxEventEntity outbox = new OutboxEventEntity();
         outbox.setTenantId(ctx.tenantId());
         outbox.setPodId(ctx.podId());

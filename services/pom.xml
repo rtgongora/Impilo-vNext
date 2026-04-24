@@ -89,6 +89,8 @@
         <module>butano-fhir</module>
         <!-- Search Service — Enterprise Search -->
         <module>search-service</module>
+        <!-- Learning — Fundo / CPD / helpdesk / workflow contextual layer -->
+        <module>learning-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
@@ -162,6 +164,8 @@
         <module>wellness-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
+        <!-- Workforce Governance — organisations, jurisdictions, assignments -->
+        <module>workforce-governance-service</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->
         <module>clinical-knowledge-platform-service</module>
         <module>guidance-service</module>
@@ -362,5 +366,15 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- Byte Buddy (Mockito inline) may trail the host JDK; experimental mode avoids failures on newer JDKs (e.g. 25) until BOM catches up. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dnet.bytebuddy.experimental=true -XX:+EnableDynamicAgentLoading</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

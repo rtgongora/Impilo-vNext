@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.dags.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -14,16 +17,64 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 public class SecurityConfig {
 
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
+    /**
+
+
+     * JVM tests (MockMvc, @ActiveProfiles("test")) do not send Bearer tokens; open the chain
+
+
+     * while keeping TrustContextFilter so v1.1 header / idempotency behaviour stays testable.
+
+
+     */
+
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+
+    @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "true")
+
+
+    public SecurityFilterChain testFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
+
+
+            http
+
+
+                    .csrf(csrf -> csrf.disable())
+
+
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+
+                    .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
+
+
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+
+            return http.build();
+
+
+        }
+
+
+
+        @Bean
+
+
+        @ConditionalOnProperty(name = "impilo.security.disable-oauth-for-tests", havingValue = "false", matchIfMissing = true)
+
+
+        public SecurityFilterChain productionFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/actuator/health/**",
@@ -37,5 +88,4 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
         return http.build();
-    }
-}
+    }}

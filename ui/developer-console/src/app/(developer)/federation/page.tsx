@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { listClients, getFederationReadiness } from "@/lib/developerApi";
 import type { DeveloperClient, FederationReadiness } from "@/types/developer";
@@ -32,9 +32,10 @@ export default function FederationPage() {
       }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial client list
   }, []);
 
-  async function handleCheckReadiness() {
+  const handleCheckReadiness = useCallback(async () => {
     if (!selectedClientId) return;
     setChecking(true);
     setError(null);
@@ -47,13 +48,13 @@ export default function FederationPage() {
     } finally {
       setChecking(false);
     }
-  }
+  }, [selectedClientId]);
 
   useEffect(() => {
     if (selectedClientId && !loading) {
-      handleCheckReadiness();
+      void handleCheckReadiness();
     }
-  }, [selectedClientId, loading]);
+  }, [selectedClientId, loading, handleCheckReadiness]);
 
   if (loading) {
     return (

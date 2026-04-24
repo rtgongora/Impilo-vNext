@@ -14,6 +14,12 @@ export interface RegistryPlaneCard {
 /** Sovereign registry sub-planes — each href is a real in-app route with live hooks. */
 export const REGISTRY_PLANE_CARDS: RegistryPlaneCard[] = [
   {
+    subtype: "registry_intake",
+    title: "Intake & onboarding",
+    description: "Bootstrap snapshot, progressive intake sessions, recovery tickets, and governed facility CSV import.",
+    href: "/registry/intake",
+  },
+  {
     subtype: "client_registry",
     title: "Client registry (MPI)",
     description: "Patient directory search via `/internal/v1/patients` for CPID and demographic governance.",
@@ -65,6 +71,13 @@ export const ORGANIZATION_PLANE_CARDS: OrganizationPlaneCard[] = [
     title: "Facility & ward administration",
     description: "Operational hub for beds, queue configuration, users, and audit — all existing admin routes.",
     href: "/organization-admin/facility",
+  },
+  {
+    surface: "settings",
+    title: "Organisations & assignments",
+    description:
+      "Workforce governance — organisations, facility/site links, jurisdictions, role definitions, and assignment scope (BFF → workforce-governance-service).",
+    href: "/organization-admin/governance",
   },
   {
     surface: "service_point_admin",

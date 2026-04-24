@@ -49,6 +49,12 @@ spring:
 
 # --- TSHEPO-specific ---
 tshepo:
+  learning:
+    base-url: ${TSHEPO_LEARNING_SERVICE_BASE_URL:}
+    relay-api-key: ${TSHEPO_LEARNING_RELAY_API_KEY:}
+    platform-orchestration-key: ${LEARNING_ORCHESTRATION_INTERNAL_KEY:}
+  council-regulatory:
+    deny-by-default: ${TSHEPO_COUNCIL_REGULATORY_DENY_BY_DEFAULT:true}
   pepper: ${TSHEPO_PEPPER:changeme-generate-a-real-pepper}
   rate-limit:
     max-requests-per-minute: 120
@@ -63,6 +69,8 @@ impilo:
   services:
     tuso:
       base-url: ${TUSO_SERVICE_URL:http://localhost:8084}
+    governance:
+      base-url: ${WORKFORCE_GOVERNANCE_SERVICE_URL:}
 
 management:
   endpoints:

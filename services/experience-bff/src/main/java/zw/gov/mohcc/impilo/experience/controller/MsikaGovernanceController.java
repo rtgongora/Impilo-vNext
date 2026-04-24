@@ -124,6 +124,96 @@ public class MsikaGovernanceController {
         }
     }
 
+    // ── Offerings / Policies / Governance ───────────────────────────────────
+
+    @GetMapping("/offerings")
+    public ResponseEntity<String> listOfferings(
+            @RequestParam MultiValueMap<String, String> queryParams,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("list offerings", requestId, correlationId,
+                () -> msikaClient.listOfferings(new LinkedMultiValueMap<>(queryParams)));
+    }
+
+    @PostMapping(value = "/offerings", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createOffering(
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("create offering", requestId, correlationId, () -> msikaClient.createOffering(body));
+    }
+
+    @PostMapping(value = "/offerings/{offeringId}/patch", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> patchOffering(
+            @PathVariable String offeringId,
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("patch offering", requestId, correlationId, () -> msikaClient.updateOffering(offeringId, body));
+    }
+
+    @GetMapping("/fulfillment-policies")
+    public ResponseEntity<String> listPolicies(
+            @RequestParam MultiValueMap<String, String> queryParams,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("list policies", requestId, correlationId,
+                () -> msikaClient.listFulfillmentPolicies(new LinkedMultiValueMap<>(queryParams)));
+    }
+
+    @PostMapping(value = "/fulfillment-policies", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createPolicy(
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("create policy", requestId, correlationId, () -> msikaClient.createFulfillmentPolicy(body));
+    }
+
+    @PostMapping(value = "/fulfillment-policies/{policyId}/patch", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> patchPolicy(
+            @PathVariable String policyId,
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("patch policy", requestId, correlationId, () -> msikaClient.updateFulfillmentPolicy(policyId, body));
+    }
+
+    @GetMapping("/governance/queue")
+    public ResponseEntity<String> governanceQueue(
+            @RequestParam MultiValueMap<String, String> queryParams,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("governance queue", requestId, correlationId,
+                () -> msikaClient.governanceQueue(new LinkedMultiValueMap<>(queryParams)));
+    }
+
+    @PostMapping(value = "/governance/records", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createGovernanceRecord(
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("create governance record", requestId, correlationId, () -> msikaClient.createGovernanceRecord(body));
+    }
+
+    @PostMapping(value = "/governance/records/{recordId}/review", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> reviewGovernanceRecord(
+            @PathVariable String recordId,
+            @RequestBody String body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("review governance record", requestId, correlationId, () -> msikaClient.reviewGovernanceRecord(recordId, body));
+    }
+
+    @GetMapping("/governance/targets/{targetType}/{targetId}")
+    public ResponseEntity<String> listGovernanceForTarget(
+            @PathVariable String targetType,
+            @PathVariable String targetId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward("list governance for target", requestId, correlationId,
+                () -> msikaClient.listGovernanceForTarget(targetType, targetId));
+    }
+
     private ResponseEntity<String> forward(String action, String requestId, String correlationId, UpstreamCall call) {
         try {
             return withHeaders(call.run(), requestId, correlationId);

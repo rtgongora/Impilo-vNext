@@ -36,6 +36,12 @@ public class CreateImagingStudyRequest {
     /** Optional accession / local identifier for reconciliation. */
     private String accessionNumber;
 
+    /** Optional encounter anchor (EHR encounter id or URI). */
+    private String encounterRef;
+
+    /** Optional facility / site (Tuso site id or URI). */
+    private String facilityId;
+
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
@@ -62,4 +68,10 @@ public class CreateImagingStudyRequest {
 
     public String getAccessionNumber() { return accessionNumber; }
     public void setAccessionNumber(String accessionNumber) { this.accessionNumber = accessionNumber; }
+
+    public String getEncounterRef() { return encounterRef; }
+    public void setEncounterRef(String encounterRef) { this.encounterRef = encounterRef; }
+
+    public String getFacilityId() { return facilityId; }
+    public void setFacilityId(String facilityId) { this.facilityId = facilityId; }
 }

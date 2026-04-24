@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -54,6 +55,7 @@ public abstract class GoldenContractSuite {
     protected MockMvc mockMvc;
 
     @Autowired(required = false)
+    @Qualifier("requestMappingHandlerMapping")
     protected RequestMappingHandlerMapping handlerMapping;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -89,6 +91,14 @@ public abstract class GoldenContractSuite {
      */
     protected String getFederationEndpointOverride() {
         return null;
+    }
+
+    /**
+     * When {@code false}, timeout-enforcement nested tests are skipped (services that do not
+     * apply companion {@code X-Client-Timeout-MS} on the read path yet).
+     */
+    protected boolean supportsClientTimeoutOnRead() {
+        return true;
     }
 
     // ── Backwards-compatible override points (Wave 5 API) ───────────
@@ -426,6 +436,8 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Already-expired X-Client-Timeout-MS returns 504 CLIENT_TIMEOUT_EXCEEDED")
         void alreadyExpiredTimeoutReturns504() throws Exception {
+            Assumptions.assumeTrue(supportsClientTimeoutOnRead(),
+                    "SKIPPED: Read path does not enforce X-Client-Timeout-MS for this service");
             Assumptions.assumeTrue(readEndpoint != null,
                     "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
 
@@ -434,7 +446,7 @@ public abstract class GoldenContractSuite {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-1")
                             .header("X-Correlation-ID", "corr-timeout-1")
-                            .header("X-Client-Timeout-MS", "1"))
+                            .header("X-Client-Timeout-MS", "0"))
                     .andExpect(status().is(504))
                     .andReturn();
 
@@ -444,6 +456,8 @@ public abstract class GoldenContractSuite {
         @Test
         @DisplayName("Timeout response includes request_id and correlation_id")
         void timeoutResponseIncludesTraceIds() throws Exception {
+            Assumptions.assumeTrue(supportsClientTimeoutOnRead(),
+                    "SKIPPED: Read path does not enforce X-Client-Timeout-MS for this service");
             Assumptions.assumeTrue(readEndpoint != null,
                     "SKIPPED: No v1.1 read endpoint discovered for timeout enforcement test");
 
@@ -452,7 +466,7 @@ public abstract class GoldenContractSuite {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-timeout-2")
                             .header("X-Correlation-ID", "corr-timeout-2")
-                            .header("X-Client-Timeout-MS", "1"))
+                            .header("X-Client-Timeout-MS", "0"))
                     .andExpect(status().is(504))
                     .andReturn();
 

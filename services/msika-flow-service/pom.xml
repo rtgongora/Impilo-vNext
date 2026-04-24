@@ -130,6 +130,15 @@
 
     <build>
         <plugins>
+            <!-- Mockito inline mocks: Byte Buddy may trail the JDK in CI (e.g. 25); opt into experimental classfile support. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- If you add JaCoCo or other agents, append the same flag to that plugin's argLine instead of replacing this. -->
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

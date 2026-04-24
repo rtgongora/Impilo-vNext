@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +35,12 @@ public class EncounterController {
     }
 
     public record CreateEncounterRequest(
-            String patientId,
-            String facilityId,
-            String encounterType,
-            String chiefComplaint,
-            String journeyId,
-            String cpid) {}
+            @JsonProperty("patient_id") String patientId,
+            @JsonProperty("facility_id") String facilityId,
+            @JsonProperty("encounter_type") String encounterType,
+            @JsonProperty("chief_complaint") String chiefComplaint,
+            @JsonProperty("journey_id") String journeyId,
+            @JsonProperty("cpid") String cpid) {}
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
@@ -159,7 +160,7 @@ public class EncounterController {
         attrs.put("startedAt", now);
         attrs.put("cpid", cpid);
 
-        Map<String, Object> encounter = Map.of("id", id, "type", "encounter", "attributes", attrs);
+        Map<String, Object> encounter = Map.of("id", id, "type", "Encounter", "attributes", attrs);
         LOCAL_ENCOUNTERS.add(encounter);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -185,7 +186,7 @@ public class EncounterController {
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "encounter", "attributes", attrs));
+        response.put("data", Map.of("id", id, "type", "Encounter", "attributes", attrs));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -208,7 +209,7 @@ public class EncounterController {
         }
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "encounter", "attributes", attrs));
+        response.put("data", Map.of("id", id, "type", "Encounter", "attributes", attrs));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

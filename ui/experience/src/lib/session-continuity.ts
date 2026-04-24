@@ -1,3 +1,4 @@
+import { useShellStore } from "@/hooks/useShellStore";
 import { type FacilityContext, useFacilityStore } from "@/hooks/useFacilityStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { type ShiftContext, useShiftStore } from "@/hooks/useShiftStore";
@@ -26,6 +27,7 @@ export function resetExperienceContinuity(): void {
   useFacilityStore.getState().clearFacility();
   useOperationalContextStore.getState().reset();
   useWorkModeStore.getState().reset();
+  useShellStore.getState().clearSessionShellState();
 
   if (typeof window !== "undefined") {
     sessionStorage.removeItem("exp:purpose_of_use");

@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.msikaflow.integration;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,21 +14,26 @@ public class VarapiClient {
     private static final Logger log = LoggerFactory.getLogger(VarapiClient.class);
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final String varapiBaseUrl;
 
-    public VarapiClient(@Value("${msika-flow.integration.varapi-url:http://localhost:8083}") String varapiBaseUrl) {
+    public VarapiClient(ObjectMapper objectMapper,
+                        @Value("${msika-flow.integration.varapi-url:http://localhost:8083}") String varapiBaseUrl) {
         this.restTemplate = new RestTemplate();
+        this.objectMapper = objectMapper;
         this.varapiBaseUrl = varapiBaseUrl;
     }
 
-    public boolean validateProviderCredentials(String providerId, String requiredRole) {
+    public JsonNode getStandingSummary(String providerPublicId) {
         try {
-            log.info("Verifying provider credentials: providerId={} role={}", providerId, requiredRole);
-            // In production, call VARAPI to verify provider registration and credentials
-            return true; // Graceful degradation
+            String url = varapiBaseUrl + "/v1/internal/providers/" + providerPublicId + "/standing-summary";
+            String response = restTemplate.getForObject(url, String.class);
+            if (response != null) {
+                return objectMapper.readTree(response).path("data");
+            }
         } catch (Exception e) {
-            log.warn("VARAPI credential check failed for {}: {}. Defaulting to allowed.", providerId, e.getMessage());
-            return true;
+            log.warn("VARAPI standing-summary failed for {}: {}", providerPublicId, e.getMessage());
         }
+        return null;
     }
 }

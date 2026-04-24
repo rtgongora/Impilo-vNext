@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.msikaflow.api;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -18,6 +20,7 @@ public final class TrustHeaderExtractor {
     public static final String H_FACILITY_ID = "X-Facility-Id";
     public static final String H_WORKSPACE_ID = "X-Workspace-Id";
     public static final String H_SHIFT_ID = "X-Shift-Id";
+    public static final String H_ASSURANCE_LEVEL = "X-Assurance-Level";
 
     private TrustHeaderExtractor() {}
 
@@ -57,5 +60,29 @@ public final class TrustHeaderExtractor {
     public static String purposeOfUse(HttpServletRequest req) {
         String val = req.getHeader(H_PURPOSE_OF_USE);
         return val != null ? val.trim() : "OPERATIONS";
+    }
+
+    /** Parses {@value H_ASSURANCE_LEVEL} (e.g. LOA3 → 3). */
+    public static Integer assuranceLevel(HttpServletRequest req) {
+        String raw = req.getHeader(H_ASSURANCE_LEVEL);
+        if (raw == null || raw.isBlank()) {
+            raw = req.getHeader(H_ASSURANCE_LEVEL.toLowerCase(Locale.ROOT));
+        }
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        raw = raw.trim();
+        if (raw.toUpperCase(Locale.ROOT).startsWith("LOA")) {
+            try {
+                return Integer.parseInt(raw.substring(3).trim());
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+        }
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

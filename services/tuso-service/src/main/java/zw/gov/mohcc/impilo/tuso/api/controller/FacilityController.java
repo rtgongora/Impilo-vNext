@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.tuso.api.policy.FacilityRepresentation;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.CreateFacilityRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityContactDto;
@@ -25,6 +29,7 @@ import zw.gov.mohcc.impilo.tuso.api.dto.FacilityIdentifierDto;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityListResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySearchRequest;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityStatusSummary;
 import zw.gov.mohcc.impilo.tuso.api.dto.UpdateFacilityRequest;
 import zw.gov.mohcc.impilo.tuso.core.FacilityService;
 import zw.gov.mohcc.impilo.tuso.persistence.entity.FacilityEntity;
@@ -74,7 +79,37 @@ public class FacilityController {
         FacilityService.FacilityDetail detail = facilityService.getFacility(id);
         FacilityResponse response = toDetailResponse(detail);
 
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Facility detail is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
+        response = FacilityRepresentation.apply(response, vis);
+
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Lightweight status reference endpoint for cross-service legitimacy checks.
+     * Used by VARAPI (PIC assignment) and commerce/booking flows.
+     */
+    @GetMapping("/{id}/status-summary")
+    public ResponseEntity<ApiResponse<FacilityStatusSummary>> getStatusSummary(@PathVariable Long id) {
+        TrustContext ctx = TrustContextHolder.require();
+        FacilityService.FacilityDetail detail = facilityService.getFacility(id);
+        FacilityEntity facility = detail.facility();
+        FacilityStatusSummary summary = new FacilityStatusSummary(
+                facility.getId(),
+                facility.getFacilityCode(),
+                facility.getName(),
+                facility.getStatus(),
+                facility.getOperationalStatus(),
+                facility.getRegulatoryStatus()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
     }
 
     @PostMapping("/search")

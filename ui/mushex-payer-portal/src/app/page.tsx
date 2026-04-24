@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { mushexApi, type PaymentIntent, type IntentStatus } from "@/lib/mushexApi";
 

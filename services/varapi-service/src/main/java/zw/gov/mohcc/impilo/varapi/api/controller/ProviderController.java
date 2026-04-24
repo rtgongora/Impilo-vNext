@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.varapi.api.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityContextHolder;
+import zw.gov.mohcc.impilo.varapi.api.policy.ProviderRepresentation;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.CreateProviderRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderContactDto;
@@ -24,10 +30,13 @@ import zw.gov.mohcc.impilo.varapi.api.dto.ProviderIdentifierDto;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderResponse;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSearchRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSpecialtyDto;
+import zw.gov.mohcc.impilo.varapi.api.dto.ProviderStandingSummary;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSummary;
 import zw.gov.mohcc.impilo.varapi.api.dto.StatusChangeRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.UpdateProviderRequest;
+import zw.gov.mohcc.impilo.varapi.core.EligibilityService;
 import zw.gov.mohcc.impilo.varapi.core.ProviderService;
+import zw.gov.mohcc.impilo.varapi.integration.WorkforceGovernanceClient;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderEntity;
 
 import java.util.List;
@@ -44,9 +53,15 @@ public class ProviderController {
     private static final Logger log = LoggerFactory.getLogger(ProviderController.class);
 
     private final ProviderService providerService;
+    private final EligibilityService eligibilityService;
+    private final WorkforceGovernanceClient workforceGovernanceClient;
 
-    public ProviderController(ProviderService providerService) {
+    public ProviderController(ProviderService providerService,
+                              EligibilityService eligibilityService,
+                              WorkforceGovernanceClient workforceGovernanceClient) {
         this.providerService = providerService;
+        this.eligibilityService = eligibilityService;
+        this.workforceGovernanceClient = workforceGovernanceClient;
     }
 
     @PostMapping
@@ -75,7 +90,64 @@ public class ProviderController {
         ProviderService.ProviderDetail detail = providerService.getProvider(providerPublicId);
         ProviderResponse response = toProviderDetailResponse(detail);
 
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Full provider record is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
+        response = ProviderRepresentation.apply(response, vis);
+
         return ResponseEntity.ok(ApiResponse.ok(response, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Lightweight provider standing summary for cross-service gating (commerce, booking, PIC).
+     */
+    @GetMapping("/{providerPublicId}/standing-summary")
+    public ResponseEntity<ApiResponse<ProviderStandingSummary>> getStandingSummary(@PathVariable String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ProviderService.ProviderDetail detail = providerService.getProvider(providerPublicId);
+        ProviderEntity p = detail.provider();
+
+        // Derive “has valid license” from lifecycle/licence fields (full license model lives elsewhere in Varapi).
+        boolean hasValidLicense = p.getLicenceStatus() != null
+                && (p.getLicenceStatus().equalsIgnoreCase("ACTIVE") || p.getLicenceStatus().equalsIgnoreCase("VALID"));
+
+        boolean picEligible = false;
+        try {
+            var eligibility = eligibilityService.checkPicEligibility(p.getId(), null);
+            picEligible = eligibility != null && Boolean.TRUE.equals(eligibility.canServeAsPic());
+        } catch (Exception ignored) {}
+
+        ProviderStandingSummary summary = new ProviderStandingSummary(
+                p.getProviderPublicId(),
+                p.getStatus(),
+                p.getLifecycleStatus(),
+                p.getLicenceStatus(),
+                p.getProfessionalStandingStatus(),
+                p.isActive(),
+                hasValidLicense,
+                picEligible,
+                p.getEffectiveTo()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(summary, ctx.correlationId().toString()));
+    }
+
+    /**
+     * Workforce Governance assignments for this provider (facilities, jurisdictions, orgs, etc.).
+     * Empty array when governance integration is disabled or unreachable.
+     */
+    @GetMapping("/{providerPublicId}/workforce-assignments-summary")
+    public ResponseEntity<ApiResponse<JsonNode>> workforceAssignmentsSummary(@PathVariable String providerPublicId) {
+        TrustContext ctx = TrustContextHolder.require();
+        JsonNode data = workforceGovernanceClient.fetchProviderAssignments(providerPublicId);
+        if (data == null || data.isNull()) {
+            return ResponseEntity.ok(ApiResponse.ok(JsonNodeFactory.instance.arrayNode(), ctx.correlationId().toString()));
+        }
+        return ResponseEntity.ok(ApiResponse.ok(data, ctx.correlationId().toString()));
     }
 
     @PostMapping("/search")
@@ -133,6 +205,7 @@ public class ProviderController {
         return new ProviderResponse(
                 entity.getProviderPublicId(),
                 entity.getProviderRef(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),
@@ -162,15 +235,24 @@ public class ProviderController {
 
     // ---- Mapper: ProviderDetail → Response DTO (full with identifiers, specialties, contacts) ----
 
-    private ProviderResponse toProviderDetailResponse(ProviderService.ProviderDetail detail) {
+    public ProviderResponse toProviderDetailResponse(ProviderService.ProviderDetail detail) {
         ProviderEntity entity = detail.provider();
 
         List<ProviderIdentifierDto> identifiers = detail.identifiers() != null
                 ? detail.identifiers().stream()
                     .map(i -> new ProviderIdentifierDto(
-                            i.getId(), i.getIdentifierSystem(), i.getIdentifierValue(),
-                            i.getIssuingCouncilId(), i.getStatus(),
-                            i.getIssuedDate(), i.getExpiryDate()))
+                            i.getId(),
+                            i.getIdentifierSystem(),
+                            i.getIdentifierType(),
+                            i.getIdentifierValue(),
+                            i.getIssuingCouncilId(),
+                            i.getStatus(),
+                            i.getVerificationState(),
+                            i.isPrimary(),
+                            i.getEffectiveFrom(),
+                            i.getEffectiveTo(),
+                            i.getIssuedDate(),
+                            i.getExpiryDate()))
                     .toList()
                 : List.of();
 
@@ -197,6 +279,7 @@ public class ProviderController {
         return new ProviderResponse(
                 entity.getProviderPublicId(),
                 entity.getProviderRef(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),
@@ -229,6 +312,7 @@ public class ProviderController {
     private ProviderSummary toProviderSummary(ProviderEntity entity) {
         return new ProviderSummary(
                 entity.getProviderPublicId(),
+                entity.getImpiloHealthId(),
                 entity.getTitle(),
                 entity.getGivenName(),
                 entity.getFamilyName(),

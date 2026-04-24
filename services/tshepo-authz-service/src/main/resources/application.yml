@@ -77,6 +77,11 @@ tshepo:
     # Break-glass
     break-glass-ttl-minutes: 60
     break-glass-review-sla-hours: 24
+    visibility-escalation-grant-ttl-hours: 4
+    visibility-escalation-approver-roles:
+      - SYSTEM_ADMIN
+      - DEVELOPER
+      - REGULATORY_REVIEWER
     # Risk score thresholds
     risk-thresholds:
       step-up-trigger: 61

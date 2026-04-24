@@ -59,9 +59,11 @@ class RbacIntegrationTest {
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
                 .header("X-Correlation-ID", correlationId())
+                .header("Idempotency-Key", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"test@test.com\",\"password\":\"test\"}"))
-                .andExpect(status().isServiceUnavailable()); // 503 because Keycloak is not running
+                // With impilo.auth.fallback-enabled=true (application-test.yml), unreachable Keycloak yields 200 + dev session.
+                .andExpect(status().isOk());
     }
 
     // ── Queue endpoints should work in dev mode ──────────────────
@@ -130,6 +132,7 @@ class RbacIntegrationTest {
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
                 .header("X-Correlation-ID", correlationId())
+                .header("Idempotency-Key", UUID.randomUUID().toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"facilityId\":\"00000000-0000-0000-0000-000000000001\"}"))
                 .andExpect(status().isOk())

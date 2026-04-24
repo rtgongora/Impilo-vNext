@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.oros.config.OrosProperties;
 import zw.gov.mohcc.impilo.oros.domain.*;
 import zw.gov.mohcc.impilo.oros.persistence.entity.*;
 import zw.gov.mohcc.impilo.oros.persistence.repository.*;
+import zw.gov.mohcc.impilo.oros.testsupport.OrosTestObjectMapper;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -58,7 +59,7 @@ class RoutingEngineTest {
     void setUp() {
         OrosProperties properties = new OrosProperties();
         properties.getRouting().setDefaultMode("INTERNAL");
-        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectMapper objectMapper = OrosTestObjectMapper.create();
 
         routingEngine = new RoutingEngine(
                 routingRepository, capabilityRepository, reconcileQueueRepository,

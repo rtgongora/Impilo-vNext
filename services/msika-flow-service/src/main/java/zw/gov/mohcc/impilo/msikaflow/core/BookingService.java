@@ -23,8 +23,18 @@ public class BookingService {
     @Transactional
     public OrderEntity createBooking(UUID tenantId, String actorId, ActorType actorType,
                                      String patientCpid, UUID facilityId, String idempotencyKey) {
-        return stateMachine.createOrder(tenantId, actorId, actorType, patientCpid,
-                OrderType.SERVICE_BOOKING_ORDER, facilityId, null, idempotencyKey);
+        return stateMachine.createOrder(
+                tenantId,
+                actorId,
+                actorType,
+                patientCpid,
+                OrderType.SERVICE_BOOKING_ORDER,
+                facilityId,
+                null,
+                null,
+                null,
+                null,
+                idempotencyKey);
     }
 
     @Transactional

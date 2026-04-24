@@ -60,6 +60,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-1")
                             .header("X-Correlation-ID", "corr-1")
+                            .header("Idempotency-Key", "idem-missing-tenant-1")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validTelemetryBody()))
                     .andExpect(status().isBadRequest())
@@ -82,6 +83,46 @@ public class TelemetryApiMockMvcTest {
         }
     }
 
+    @Nested
+    @DisplayName("A2) Missing Idempotency-Key on POST => 400")
+    class MissingIdempotencyKey {
+
+        @Test
+        @DisplayName("POST /internal/v1/telemetry/ingest without Idempotency-Key returns 400")
+        void missingIdempotencyKeyOnIngest() throws Exception {
+            MvcResult result = mockMvc.perform(post("/internal/v1/telemetry/ingest")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-idem-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(validTelemetryBody()))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "IDEMPOTENCY_KEY_REQUIRED");
+        }
+
+        @Test
+        @DisplayName("POST /internal/v1/telemetry/ingest/batch without Idempotency-Key returns 400")
+        void missingIdempotencyKeyOnBatch() throws Exception {
+            String body = """
+                    {"readings":[{"deviceId":"X","metricType":"TEMPERATURE","metricValue":1,"unit":"C","schemaVersion":"1","recordedAt":"2026-03-14T10:00:00Z"}]}
+                    """;
+            MvcResult result = mockMvc.perform(post("/internal/v1/telemetry/ingest/batch")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-idem-batch-1")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            assertErrorEnvelope(result, "IDEMPOTENCY_KEY_REQUIRED");
+        }
+    }
+
     // ── B) Telemetry ingestion writes append-only ──
 
     @Nested
@@ -98,6 +139,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-ingest-1")
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "idem-ingest-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validTelemetryBody()))
                     .andExpect(status().isCreated())
@@ -123,6 +165,7 @@ public class TelemetryApiMockMvcTest {
                                 .header("X-Pod-ID", "national")
                                 .header("X-Request-ID", "req-multi-" + i)
                                 .header("X-Correlation-ID", UUID.randomUUID().toString())
+                                .header("Idempotency-Key", "idem-multi-" + i + "-" + System.nanoTime())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(telemetryBody(deviceId, "TEMPERATURE", 36.5 + i, "1")))
                         .andExpect(status().isCreated());
@@ -149,6 +192,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-dlq-1")
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "idem-dlq-1-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(telemetryBody("DEVICE-DLQ", "TEMPERATURE", 37.0, "999")))
                     .andExpect(status().isUnprocessableEntity())
@@ -172,6 +216,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-dlq-2")
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "idem-dlq-2-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(telemetryBody("DEVICE-DLQ-2", "HUMIDITY", 85.0, "42")))
                     .andExpect(status().isUnprocessableEntity());
@@ -197,6 +242,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-outbox-1")
                             .header("X-Correlation-ID", correlationId)
+                            .header("Idempotency-Key", "idem-outbox-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validTelemetryBody()))
                     .andExpect(status().isCreated())
@@ -257,6 +303,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-batch-1")
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "idem-batch-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body))
                     .andExpect(status().isCreated())
@@ -284,6 +331,7 @@ public class TelemetryApiMockMvcTest {
                             .header("X-Pod-ID", "national")
                             .header("X-Request-ID", "req-list-1")
                             .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "idem-list-" + System.nanoTime())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(validTelemetryBody()))
                     .andExpect(status().isCreated());

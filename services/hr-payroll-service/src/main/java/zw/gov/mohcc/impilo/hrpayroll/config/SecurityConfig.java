@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.hrpayroll.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,16 +18,16 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 public class SecurityConfig {
 
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
                                                   @Value("${hr.security.oauth2-enabled:true}") boolean oauth2) throws Exception {
         http.csrf(c -> c.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
         if (oauth2) {
             http.authorizeHttpRequests(a -> a.requestMatchers(
                             "/actuator/health", "/actuator/health/**", "/actuator/info",

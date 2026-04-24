@@ -20,6 +20,7 @@ hs_err_pid*
 # ===== Node / Frontend =====
 **/node_modules/
 **/.next/
+**/.next-build/
 **/out/
 **/.turbo/
 *.tsbuildinfo

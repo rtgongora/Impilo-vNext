@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { listTickets } from "@/lib/supportApi";
 import { StatusBadge, PriorityBadge, EscalationBadge } from "@/components/StatusBadge";
 import type { Ticket, TicketFilters, TicketStatus, TicketPriority, TicketCategory } from "@/types/support";
@@ -13,7 +13,6 @@ const CATEGORY_OPTIONS: TicketCategory[] = ["GENERAL", "INCIDENT", "BUG", "FEATU
 
 export default function TicketsListPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [totalElements, setTotalElements] = useState(0);

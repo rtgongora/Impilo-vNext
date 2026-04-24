@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -16,6 +18,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/internal/v1/inventory")
 public class InventoryController {
+
+    private static final Logger log = LoggerFactory.getLogger(InventoryController.class);
 
     private final InventoryServiceClient inventoryClient;
     private final ObjectMapper objectMapper;
@@ -45,20 +49,34 @@ public class InventoryController {
 
         int limit = Math.min(size, 100);
 
-        UUID facilityUuid = facilityId != null ? UUID.fromString(facilityId) : null;
-        JsonNode result = inventoryClient.getOnHand(facilityUuid, null, null, null, page, limit);
+        UUID facilityUuid = null;
+        if (facilityId != null && !facilityId.isBlank()) {
+            try {
+                facilityUuid = UUID.fromString(facilityId);
+            } catch (IllegalArgumentException e) {
+                facilityUuid = null;
+            }
+        }
 
-        // PageRequest pageable = PageRequest.of(page, limit, Sort.by("productName").ascending());
-        // Page<InventoryItem> result = inventoryItemRepository.findByTenantIdAndFacilityId(tenantId, facilityId, pageable);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.ok(response);
+        try {
+            JsonNode result = inventoryClient.getOnHand(facilityUuid, null, null, null, page, limit);
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", result != null ? result : List.of());
+            response.put("meta", Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId
+            ));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.warn("Inventory on-hand list unavailable: {}", e.getMessage());
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", List.of());
+            response.put("meta", Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId
+            ));
+            return ResponseEntity.ok(response);
+        }
     }
 
     @GetMapping("/counts")

@@ -96,6 +96,39 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /**
+     * Lightweight facility legitimacy summary for cross-service gating.
+     */
+    public JsonNode getFacilityStatusSummary(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/status-summary";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility registry search (search-before-create). */
+    public JsonNode searchFacilities(Map<String, Object> requestBody) {
+        String url = baseUrl + "/v1/internal/facilities/search";
+        log.info("TUSO: Searching facilities");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Create facility shell / provisional record. */
+    public JsonNode createFacility(Map<String, Object> requestBody) {
+        String url = baseUrl + "/v1/internal/facilities";
+        log.info("TUSO: Creating facility");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Facility detail by numeric facility id. */
+    public JsonNode getFacility(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId;
+        log.info("TUSO: Getting facility id={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Shift Management ─────────────────────────────────────────────
 
     /** Get current active shift for a user. */

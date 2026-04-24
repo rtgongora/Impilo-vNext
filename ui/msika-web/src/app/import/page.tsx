@@ -2,10 +2,20 @@
 import { useState, useRef } from "react";
 import { apiClient } from "@/lib/apiClient";
 
+interface CsvImportResult {
+  totalRows: number;
+  importedRows: number;
+  validRows: number;
+  duplicateRows: number;
+  errorRows: number;
+  jobId: string;
+  status: string;
+}
+
 export default function ImportPage() {
   const [catalogId, setCatalogId] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CsvImportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -13,7 +23,7 @@ export default function ImportPage() {
     if (!file || !catalogId) { alert("Select file and enter catalog ID"); return; }
     setLoading(true);
     try {
-      const data = await apiClient.uploadCsv("/v1/import/csv", file, { catalogId });
+      const data = await apiClient.uploadCsv<CsvImportResult>("/v1/import/csv", file, { catalogId });
       setResult(data);
     } catch (e) {
       alert(String(e));

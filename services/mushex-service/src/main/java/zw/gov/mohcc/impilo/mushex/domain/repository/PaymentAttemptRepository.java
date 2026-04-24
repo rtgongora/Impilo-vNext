@@ -12,5 +12,8 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttemptEn
 
     List<PaymentAttemptEntity> findByIntentId(String intentId);
 
+    /**
+     * Find an attempt by the external adapter reference (webhook correlation).
+     */
     Optional<PaymentAttemptEntity> findByAdapterRef(String adapterRef);
 }

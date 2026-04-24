@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -52,8 +54,6 @@ public class ConsentDirectiveEntity {
     private String provision;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
     @Column(name = "fhir_consent_json", nullable = false, columnDefinition = "jsonb")
     private String fhirConsentJson;
 

@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.guidance.config;
 
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,18 +18,18 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContextFilter;
 public class SecurityConfig {
 
     @Bean
-    public TrustContextFilter trustContextFilter() {
-        return new TrustContextFilter();
+    public TrustContextFilter trustContextFilter(ObjectMapper objectMapper) {
+        return new TrustContextFilter(objectMapper);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
+            HttpSecurity http, TrustContextFilter trustContextFilter,
             @Value("${guidance.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(trustContextFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
 
         if (oauth2Enabled) {
             http.authorizeHttpRequests(auth -> auth

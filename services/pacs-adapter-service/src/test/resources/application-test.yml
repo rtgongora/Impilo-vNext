@@ -48,3 +48,6 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+impilo:
+  security:
+    disable-oauth-for-tests: true

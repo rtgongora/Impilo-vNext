@@ -16,6 +16,7 @@ public class SchemaVersionEntity {
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
 
     public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public UUID getSubjectId() { return subjectId; }
     public void setSubjectId(UUID v) { this.subjectId = v; }
     public int getVersion() { return version; }

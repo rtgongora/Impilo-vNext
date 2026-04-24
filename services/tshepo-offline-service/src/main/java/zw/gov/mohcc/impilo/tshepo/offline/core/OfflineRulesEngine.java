@@ -85,25 +85,26 @@ public class OfflineRulesEngine {
                     "This action is never permitted in offline mode");
         }
 
-        // Rule 2: Action must match a capability in the token
+        // Rule 2: DISPENSE_MEDICATION requires explicit pharmacy capability (before generic cover check,
+        // otherwise unrelated READ_* capabilities yield a generic denial message)
+        if ("DISPENSE_MEDICATION".equals(actionType) && !capabilities.contains("DISPENSE_MEDICATION")) {
+            throw new OfflineActionDeniedException(actionType,
+                    "DISPENSE_MEDICATION requires the pharmacy capability");
+        }
+
+        // Rule 3: Action must match a capability in the token
         if (!isActionCoveredByCapabilities(actionType, capabilities)) {
             throw new OfflineActionDeniedException(actionType,
                     "The capability token does not include permission for this action");
         }
 
-        // Rule 3: Encounter creation limit
+        // Rule 4: Encounter creation limit
         if ("CREATE_PROVISIONAL_ENCOUNTER".equals(actionType)) {
             long encounterCount = actionLogRepo.countProvisionalEncountersByToken(tokenId);
             if (encounterCount >= offlineProperties.maxOfflineEncounters()) {
                 throw new OfflineActionDeniedException(actionType,
                         "Maximum offline encounters (" + offlineProperties.maxOfflineEncounters() + ") reached for this token");
             }
-        }
-
-        // Rule 4: DISPENSE_MEDICATION requires explicit pharmacy capability
-        if ("DISPENSE_MEDICATION".equals(actionType) && !capabilities.contains("DISPENSE_MEDICATION")) {
-            throw new OfflineActionDeniedException(actionType,
-                    "DISPENSE_MEDICATION requires the pharmacy capability");
         }
 
         log.debug("Action {} permitted offline", actionType);

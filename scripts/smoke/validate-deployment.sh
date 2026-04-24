@@ -148,7 +148,7 @@ section "DATABASE" "Validating init script..."
 
 INIT_SQL="scripts/seed/init-databases.sql"
 if [ -f "$INIT_SQL" ]; then
-    for db in experience_bff tshepo vito varapi tuso zibo pct oros pharmacy; do
+    for db in experience_bff tshepo vito varapi tuso zibo pct oros pharmacy impilo_learning; do
         if grep -qi "CREATE DATABASE $db" "$INIT_SQL"; then
             pass "Database defined: $db"
         else

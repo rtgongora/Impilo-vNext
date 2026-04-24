@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.varapi.api.dto.CreateProviderRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.ProviderSearchRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.StatusChangeRequest;
 import zw.gov.mohcc.impilo.varapi.api.dto.UpdateProviderRequest;
+import zw.gov.mohcc.impilo.varapi.config.VarapiProperties;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.CouncilEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderContactEntity;
@@ -28,6 +29,7 @@ import zw.gov.mohcc.impilo.varapi.persistence.repository.ProviderSpecialtyReposi
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -51,19 +53,22 @@ public class ProviderService {
     private final ProviderContactRepository contactRepository;
     private final ProviderCouncilAffiliationRepository affiliationRepository;
     private final EventOutboxRepository outboxRepository;
+    private final VarapiProperties varapiProperties;
 
     public ProviderService(ProviderRepository providerRepository,
                            ProviderIdentifierRepository identifierRepository,
                            ProviderSpecialtyRepository specialtyRepository,
                            ProviderContactRepository contactRepository,
                            ProviderCouncilAffiliationRepository affiliationRepository,
-                           EventOutboxRepository outboxRepository) {
+                           EventOutboxRepository outboxRepository,
+                           VarapiProperties varapiProperties) {
         this.providerRepository = providerRepository;
         this.identifierRepository = identifierRepository;
         this.specialtyRepository = specialtyRepository;
         this.contactRepository = contactRepository;
         this.affiliationRepository = affiliationRepository;
         this.outboxRepository = outboxRepository;
+        this.varapiProperties = varapiProperties;
     }
 
     // ---- Inner DTOs ----
@@ -93,8 +98,14 @@ public class ProviderService {
         log.info("Creating provider for tenant={}, givenName={}, familyName={}",
                 ctx.tenantId(), request.givenName(), request.familyName());
 
+        UUID impiloHealthId = resolveImpiloHealthIdForCreate(request, ctx);
+        providerRepository.findByTenantIdAndImpiloHealthId(ctx.tenantId(), impiloHealthId).ifPresent(p -> {
+            throw new IllegalStateException("Provider profile already exists for Impilo ID: " + impiloHealthId);
+        });
+
         ProviderEntity provider = new ProviderEntity();
         provider.setTenantId(ctx.tenantId());
+        provider.setImpiloHealthId(impiloHealthId);
         provider.setProviderPublicId(generateProviderPublicId());
         provider.setTitle(request.title());
         provider.setGivenName(request.givenName());
@@ -123,19 +134,84 @@ public class ProviderService {
 
         provider = providerRepository.save(provider);
 
+        syncLinkedIdentifiersFromDemographics(provider, request);
+
         log.info("Provider created: providerPublicId={}, providerRef={}",
                 provider.getProviderPublicId(), provider.getProviderRef());
 
         publishEvent("PROVIDER", provider.getProviderPublicId(),
                 "varapi.provider.created",
-                String.format("{\"providerPublicId\":\"%s\",\"givenName\":\"%s\"," +
+                String.format("{\"providerPublicId\":\"%s\",\"impiloHealthId\":\"%s\",\"givenName\":\"%s\"," +
                                 "\"familyName\":\"%s\",\"profession\":\"%s\",\"status\":\"ACTIVE\"}",
                         provider.getProviderPublicId(),
+                        provider.getImpiloHealthId(),
                         provider.getGivenName(),
                         provider.getFamilyName(),
                         provider.getProfession()));
 
         return provider;
+    }
+
+    private UUID resolveImpiloHealthIdForCreate(CreateProviderRequest request, TrustContext ctx) {
+        boolean require = varapiProperties.getIdentity().isRequireImpiloHealthIdOnProviderCreate();
+        UUID hid = request.impiloHealthId();
+        if (hid == null) {
+            if (require) {
+                throw new IllegalArgumentException("impiloHealthId is required — resolve or allocate Health ID before registry create");
+            }
+            return UUID.randomUUID();
+        }
+        return hid;
+    }
+
+    private void syncLinkedIdentifiersFromDemographics(ProviderEntity provider, CreateProviderRequest request) {
+        if (request.nationalId() != null && !request.nationalId().isBlank()) {
+            upsertLinkedIdentifier(provider, "ZW_NATIONAL_ID", "NATIONAL_ID", request.nationalId(), false);
+        }
+        if (request.practiceNumber() != null && !request.practiceNumber().isBlank()) {
+            upsertLinkedIdentifier(provider, "VARAPI_PRACTICE_NUMBER", "PRACTICE_NUMBER", request.practiceNumber(), false);
+        }
+        upsertLinkedIdentifier(provider, "VARAPI_PROVIDER_PUBLIC_ID", "PROVIDER_PUBLIC_ID",
+                provider.getProviderPublicId(), true);
+    }
+
+    private void upsertLinkedIdentifier(
+            ProviderEntity provider,
+            String identifierSystem,
+            String identifierType,
+            String identifierValue,
+            boolean primary) {
+        Optional<ProviderIdentifierEntity> global = identifierRepository.findByIdentifierSystemAndIdentifierValue(
+                identifierSystem, identifierValue);
+        if (global.isPresent() && !global.get().getProvider().getId().equals(provider.getId())) {
+            throw new IllegalStateException("Identifier already linked to another provider: " + identifierSystem);
+        }
+        ProviderIdentifierEntity row = global.orElseGet(() -> identifierRepository.findByProviderId(provider.getId()).stream()
+                .filter(i -> identifierSystem.equals(i.getIdentifierSystem())
+                        && identifierValue.equals(i.getIdentifierValue()))
+                .findFirst()
+                .orElseGet(ProviderIdentifierEntity::new));
+        row.setTenantId(provider.getTenantId());
+        row.setProvider(provider);
+        row.setIdentifierSystem(identifierSystem);
+        row.setIdentifierType(identifierType);
+        row.setIdentifierValue(identifierValue);
+        row.setVerificationState("UNVERIFIED");
+        row.setPrimary(primary);
+        row.setStatus("ACTIVE");
+        identifierRepository.save(row);
+    }
+
+    /**
+     * Full provider projection keyed by canonical Impilo / Health ID (UUID string or UUID).
+     */
+    @Transactional(readOnly = true)
+    public ProviderDetail getProviderByImpiloHealthId(String healthId) {
+        TrustContext ctx = TrustContextHolder.require();
+        UUID hid = UUID.fromString(healthId.trim());
+        ProviderEntity provider = providerRepository.findByTenantIdAndImpiloHealthId(ctx.tenantId(), hid)
+                .orElseThrow(() -> new IllegalArgumentException("Provider not found for Impilo ID: " + healthId));
+        return getProvider(provider.getProviderPublicId());
     }
 
     /**

@@ -28,3 +28,6 @@ msika-flow:
     mushex-url: http://localhost:18087
     tuso-url: http://localhost:18084
     varapi-url: http://localhost:18083
+impilo:
+  security:
+    disable-oauth-for-tests: true

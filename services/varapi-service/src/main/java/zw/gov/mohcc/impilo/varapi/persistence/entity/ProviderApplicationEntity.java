@@ -75,6 +75,13 @@ public class ProviderApplicationEntity {
     @Column(name = "updated_by", length = 255)
     private String updatedBy;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "council_id")
+    private CouncilEntity council;
+
+    @Column(name = "review_state", length = 40)
+    private String reviewState;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
@@ -157,4 +164,10 @@ public class ProviderApplicationEntity {
 
     public String getUpdatedBy() { return updatedBy; }
     public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
+    public CouncilEntity getCouncil() { return council; }
+    public void setCouncil(CouncilEntity council) { this.council = council; }
+
+    public String getReviewState() { return reviewState; }
+    public void setReviewState(String reviewState) { this.reviewState = reviewState; }
 }

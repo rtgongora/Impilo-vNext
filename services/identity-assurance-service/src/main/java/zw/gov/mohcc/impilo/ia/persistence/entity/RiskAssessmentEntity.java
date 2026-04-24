@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import zw.gov.mohcc.impilo.ia.core.Recommendation;
@@ -43,9 +45,7 @@ public class RiskAssessmentEntity {
     private RiskLevel riskLevel = RiskLevel.LOW;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "factors", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "factors", nullable = false)
     private String factors = "[]";
 
     @Enumerated(EnumType.STRING)

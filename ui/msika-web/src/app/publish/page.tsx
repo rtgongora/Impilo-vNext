@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { apiClient, StepUpRequiredError } from "@/lib/apiClient";
+import { apiClient, StepUpRequiredError, type PagedList } from "@/lib/apiClient";
 
 interface Catalog {
   catalogId: string;
@@ -19,8 +19,8 @@ export default function PublishPage() {
 
   const load = async () => {
     try {
-      const data = await apiClient.get<any>("/v1/catalogs?size=50");
-      setCatalogs((data?.items || []).filter((c: Catalog) => c.status === "APPROVED" || c.status === "PUBLISHED"));
+      const data = await apiClient.get<PagedList<Catalog>>("/v1/catalogs?size=50");
+      setCatalogs((data?.items ?? []).filter((c) => c.status === "APPROVED" || c.status === "PUBLISHED"));
     } catch (e) {
       console.error(e);
     } finally {

@@ -52,6 +52,7 @@ public class MappingTemplateService {
         entity.setTargetFormat(request.targetFormat());
         entity.setMappingRulesJson(request.mappingRulesJson());
         entity.setActive(request.active() != null ? request.active() : true);
+        entity.setVersion(1);
 
         entity = templateRepository.save(entity);
 

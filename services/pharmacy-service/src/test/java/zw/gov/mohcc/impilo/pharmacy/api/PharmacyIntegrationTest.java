@@ -6,8 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import zw.gov.mohcc.impilo.pharmacy.api.dto.PickItemData;
+import zw.gov.mohcc.impilo.pharmacy.config.PharmacyTestSecurityBeans;
 import zw.gov.mohcc.impilo.pharmacy.core.DispenseEngine;
 import zw.gov.mohcc.impilo.pharmacy.core.StockLedgerService;
 import zw.gov.mohcc.impilo.pharmacy.domain.DispenseStatus;
@@ -49,6 +52,7 @@ import static org.mockito.Mockito.*;
  */
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(PharmacyTestSecurityBeans.class)
 class PharmacyIntegrationTest {
 
     @MockBean
@@ -65,6 +69,9 @@ class PharmacyIntegrationTest {
 
     @MockBean
     private PctIntegration pctIntegration;
+
+    @MockBean
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final UUID TENANT_ID = UUID.randomUUID();
     private static final UUID FACILITY_ID = UUID.randomUUID();

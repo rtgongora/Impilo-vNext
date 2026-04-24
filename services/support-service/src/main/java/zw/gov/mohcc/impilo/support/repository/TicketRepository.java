@@ -32,7 +32,12 @@ public interface TicketRepository extends JpaRepository<TicketEntity, UUID> {
 
     long countByTenantIdAndEscalationLevelGreaterThan(UUID tenantId, int level);
 
-    @Query("SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (t.resolvedAt - t.createdAt)) / 3600.0), 0)"
-            + " FROM TicketEntity t WHERE t.tenantId = :tenantId AND t.resolvedAt IS NOT NULL")
+    /**
+     * Native SQL: JPQL does not support {@code EXTRACT(EPOCH FROM ...)} on datetime differences.
+     * Matches PostgreSQL semantics; H2 test DB uses {@code MODE=PostgreSQL}.
+     */
+    @Query(value = "SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (t.resolved_at - t.created_at)) / 3600.0), 0) "
+            + "FROM sup_tickets t WHERE t.tenant_id = :tenantId AND t.resolved_at IS NOT NULL",
+            nativeQuery = true)
     double avgResolutionHours(@Param("tenantId") UUID tenantId);
 }

@@ -26,9 +26,7 @@ public class DatasetVersionEntity {
     private int versionNumber;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "schema_json", nullable = false, columnDefinition = "jsonb")
+    @Column(name = "schema_json", nullable = false)
     private String schemaJson = "{}";
 
     @Column(name = "row_count", nullable = false)

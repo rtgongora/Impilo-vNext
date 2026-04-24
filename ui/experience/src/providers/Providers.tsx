@@ -22,6 +22,9 @@ import { useConsentStore } from "@/hooks/useConsentStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { InactivityLockProvider } from "./InactivityLockProvider";
 import { PrivacyWatermark } from "@/components/PrivacyWatermark";
+import { VisibilityContextBar } from "@/components/VisibilityContextBar";
+import { ShellChrome } from "@/components/shell/ShellChrome";
+import { ShellWorkspaceRemoteSync } from "@/components/shell/ShellWorkspaceRemoteSync";
 import { loadHydratedExperienceContinuity, resetExperienceContinuity } from "@/lib/session-continuity";
 import { useWorkspaceStore } from "@/hooks/useWorkspaceStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
@@ -86,7 +89,12 @@ function StoreHydrator({ children }: { children: ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <ShellWorkspaceRemoteSync />
+      {children}
+    </>
+  );
 }
 
 export function Providers({ children }: { children: ReactNode }) {
@@ -109,7 +117,9 @@ export function Providers({ children }: { children: ReactNode }) {
           <AuthGuardProvider>
             <InactivityLockProvider>
               <PrivacyWatermark />
+              <VisibilityContextBar />
               {children}
+              <ShellChrome />
             </InactivityLockProvider>
           </AuthGuardProvider>
         </ExperienceEntryProvider>

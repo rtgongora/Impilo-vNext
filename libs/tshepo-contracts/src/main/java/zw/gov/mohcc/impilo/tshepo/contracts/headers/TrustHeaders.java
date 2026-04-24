@@ -41,6 +41,15 @@ package zw.gov.mohcc.impilo.tshepo.contracts.headers;
  *     <li>{@code x-max-scope} — maximum data scope for this request</li>
  *     <li>{@code x-mask-fields} — comma-separated fields to mask</li>
  *     <li>{@code x-logging-level} — audit logging level override</li>
+ *     <li>{@code x-visibility-tier} — coarse visibility tier (see {@code DataVisibilityTier})</li>
+ *     <li>{@code x-pii-access} — {@code NONE|MASKED|LIMITED|FULL}</li>
+ *     <li>{@code x-clinical-access} — {@code NONE|SUMMARY|FULL}</li>
+ *     <li>{@code x-aggregate-only} — {@code true} / {@code false}</li>
+ *     <li>{@code x-resource-sensitivity} — {@code DataSensitivityClass} name</li>
+ *     <li>{@code x-escalation-grant-id} — active workflow escalation grant UUID</li>
+ *     <li>{@code x-export-policy} — {@code PROHIBITED|AGGREGATE_ONLY|REDACTED|FULL_AUDITED}</li>
+ *     <li>{@code x-suppress-fields} — comma-separated JSON field paths to omit</li>
+ *     <li>{@code x-drill-down-allowed} — {@code true} / {@code false}</li>
  * </ul>
  *
  * These must match across:
@@ -68,6 +77,8 @@ public final class TrustHeaders {
 
     // ── Operational context (Health OS §7) ────────────────────────────────
     public static final String FACILITY_ID   = "x-facility-id";
+    /** Canonical TUSO numeric facility identifier (Long) for assignment-aware policy. */
+    public static final String TUSO_FACILITY_ID = "x-tuso-facility-id";
     public static final String DEPARTMENT_ID = "x-department-id";
     public static final String WARD_ID       = "x-ward-id";
     public static final String WORKSPACE_ID  = "x-workspace-id";
@@ -86,6 +97,16 @@ public final class TrustHeaders {
     public static final String MAX_SCOPE     = "x-max-scope";
     public static final String MASK_FIELDS   = "x-mask-fields";
     public static final String LOGGING_LEVEL = "x-logging-level";
+
+    public static final String VISIBILITY_TIER        = "x-visibility-tier";
+    public static final String PII_ACCESS             = "x-pii-access";
+    public static final String CLINICAL_ACCESS      = "x-clinical-access";
+    public static final String AGGREGATE_ONLY       = "x-aggregate-only";
+    public static final String RESOURCE_SENSITIVITY = "x-resource-sensitivity";
+    public static final String ESCALATION_GRANT_ID  = "x-escalation-grant-id";
+    public static final String EXPORT_POLICY        = "x-export-policy";
+    public static final String SUPPRESS_FIELDS      = "x-suppress-fields";
+    public static final String DRILL_DOWN_ALLOWED   = "x-drill-down-allowed";
 
     // ── Internal service-to-service headers ──────────────────────────────
     public static final String SERVICE_ID    = "x-service-id";

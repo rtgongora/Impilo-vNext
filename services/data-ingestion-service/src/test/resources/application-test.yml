@@ -18,3 +18,6 @@ spring:
 impilo:
   companion:
     enabled: true
+  security:
+    # MockMvc tests do not send JWTs; keep TrustContextFilter + companion filters, skip OAuth2 RS.
+    disable-oauth-for-tests: true

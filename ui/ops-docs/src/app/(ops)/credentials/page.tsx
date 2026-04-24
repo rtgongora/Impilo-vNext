@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, Badge } from "shared-ui";
+import { Card, CardHeader, CardTitle } from "shared-ui";
 
 interface CredentialResult {
   credentialId: string;

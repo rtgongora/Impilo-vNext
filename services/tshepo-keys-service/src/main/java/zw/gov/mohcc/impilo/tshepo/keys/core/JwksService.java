@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.tshepo.keys.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -33,6 +35,7 @@ public class JwksService {
 
     private static final Logger log = LoggerFactory.getLogger(JwksService.class);
     private static final String JWKS_CACHE_KEY = "tshepo-keys:jwks";
+    private static final ObjectMapper JWKS_JSON = new ObjectMapper();
 
     private final SigningKeyRepository signingKeyRepository;
     private final StringRedisTemplate redisTemplate;
@@ -91,8 +94,13 @@ public class JwksService {
 
         JWKSet jwkSet = new JWKSet(jwkList);
 
-        // Use toPublicJWKSet to ensure no private key material leaks
-        return jwkSet.toPublicJWKSet().toJSONObject().toString();
+        // Use toPublicJWKSet to ensure no private key material leaks.
+        // toJSONObject() is a Map — Map#toString() is not RFC 7517 JSON; serialize with Jackson.
+        try {
+            return JWKS_JSON.writeValueAsString(jwkSet.toPublicJWKSet().toJSONObject());
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize JWKS", e);
+        }
     }
 
     /**

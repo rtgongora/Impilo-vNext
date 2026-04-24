@@ -154,11 +154,12 @@ export function FieldOperationsTab() {
           </p>
         </div>
         <button
-          onClick={() => { setShowNewForm(!showNewForm); setFieldSubmitted(false); setFieldError(null); }}
-          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+          type="button"
+          disabled
+          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
         >
-          {showNewForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          {showNewForm ? "Cancel" : "Record New Field Activity"}
+          <Plus className="w-4 h-4" />
+          Record New Field Activity (pending)
         </button>
       </div>
 

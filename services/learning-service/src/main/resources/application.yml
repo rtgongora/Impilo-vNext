@@ -1,0 +1,63 @@
+server:
+  port: ${SERVER_PORT:8235}
+
+spring:
+  application:
+    name: learning-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_learning
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: learning-service
+
+learning:
+  security:
+    oauth2-enabled: ${LEARNING_SECURITY_OAUTH2_ENABLED:true}
+  fundo:
+    public-base-url: ${FUNDO_PUBLIC_BASE_URL:https://fundo.impilo.local}
+    wantsurl-login-enabled: ${FUNDO_WANTSURL_LOGIN_ENABLED:false}
+    login-path: ${FUNDO_LOGIN_PATH:/login/index.php}
+    launch-mode: ${FUNDO_LAUNCH_MODE:DIRECT}
+    launch-url-template: ${FUNDO_LAUNCH_URL_TEMPLATE:}
+  moodle:
+    ws-token: ${MOODLE_WS_TOKEN:}
+    ws-endpoint-url: ${MOODLE_WS_ENDPOINT_URL:}
+  integration:
+    varapi-internal-key: ${VARAPI_TO_LEARNING_INTERNAL_KEY:}
+    orchestration-internal-key: ${LEARNING_ORCHESTRATION_INTERNAL_KEY:}
+
+impilo:
+  companion:
+    enabled: true
+  ops:
+    enabled: true
+    outbox-table: lrn_event_outbox

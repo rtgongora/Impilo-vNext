@@ -58,6 +58,9 @@ public class OutboxPublisher {
             case "FRAUD_FLAGGED" -> "mushex.fraud.flagged";
             case "REMITTANCE_ISSUED" -> "mushex.remittance.issued";
             case "REMITTANCE_CLAIMED" -> "mushex.remittance.claimed";
+            case "WALLET_CREATED" -> "mushex.wallet.created";
+            case "WALLET_TRANSACTION_RECORDED" -> "mushex.wallet.transaction.recorded";
+            case "REMITTANCE_REQUESTED" -> "mushex.remittance.requested";
             default -> "mushex.events";
         };
     }

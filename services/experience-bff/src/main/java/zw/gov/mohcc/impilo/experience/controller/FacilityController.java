@@ -1,5 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -15,6 +18,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/internal/v1/facilities")
 public class FacilityController {
+
+    private static final Logger log = LoggerFactory.getLogger(FacilityController.class);
 
     private final TusoServiceClient tusoClient;
 
@@ -35,6 +40,41 @@ public class FacilityController {
             @RequestParam(required = false, name = "facility_type") String facilityType,
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String search) {
+
+        try {
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("query", search != null ? search : "");
+            body.put("facilityType", facilityType);
+            body.put("status", status);
+            body.put("province", province);
+            body.put("district", null);
+            body.put("level", null);
+            body.put("page", page);
+            body.put("size", Math.min(Math.max(size, 1), 200));
+            JsonNode paged = tusoClient.searchFacilities(body);
+            List<Map<String, Object>> mapped = new ArrayList<>();
+            if (paged != null && paged.has("items") && paged.get("items").isArray()) {
+                for (JsonNode row : paged.get("items")) {
+                    mapped.add(mapTusoSummaryToFacilityResource(row));
+                }
+            }
+            long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
+            return ResponseEntity.ok(Map.of(
+                    "data", mapped,
+                    "meta", Map.of(
+                            "request_id", requestId,
+                            "correlation_id", correlationId,
+                            "page", Map.of(
+                                    "number", page,
+                                    "size", size,
+                                    "total_elements", total,
+                                    "total_pages", size > 0 ? (int) Math.ceil((double) total / size) : 0
+                            )
+                    )
+            ));
+        } catch (Exception e) {
+            log.warn("TUSO facility search failed, using seed: {}", e.getMessage());
+        }
 
         List<Map<String, Object>> filtered = SEEDED_FACILITIES;
 
@@ -82,6 +122,20 @@ public class FacilityController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            long facilityId = Long.parseLong(id);
+            JsonNode detail = tusoClient.getFacility(facilityId);
+            if (detail != null) {
+                Map<String, Object> f = mapTusoDetailToFacilityResource(detail);
+                return ResponseEntity.ok(Map.of(
+                        "data", f,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (NumberFormatException ignored) {
+        } catch (Exception e) {
+            log.debug("TUSO facility get miss for id={}: {}", id, e.getMessage());
+        }
+
         return SEEDED_FACILITIES.stream()
                 .filter(f -> f.get("id").equals(id))
                 .findFirst()
@@ -92,6 +146,54 @@ public class FacilityController {
                     return ResponseEntity.ok(body);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    private static Map<String, Object> mapTusoSummaryToFacilityResource(JsonNode n) {
+        String idStr = n.has("id") ? String.valueOf(n.get("id").asLong()) : UUID.randomUUID().toString();
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("name", text(n, "name"));
+        attrs.put("code", text(n, "code"));
+        attrs.put("facilityType", text(n, "type"));
+        attrs.put("district", text(n, "district"));
+        attrs.put("province", text(n, "province"));
+        attrs.put("region", text(n, "province"));
+        attrs.put("status", text(n, "status"));
+        attrs.put("capabilities", List.of());
+        return Map.of("id", idStr, "type", "facility", "attributes", attrs);
+    }
+
+    private static Map<String, Object> mapTusoDetailToFacilityResource(JsonNode n) {
+        String idStr = n.has("id") ? String.valueOf(n.get("id").asLong()) : "0";
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("name", text(n, "name"));
+        attrs.put("code", text(n, "facilityCode"));
+        attrs.put("facilityType", text(n, "facilityType"));
+        attrs.put("district", text(n, "district"));
+        attrs.put("province", text(n, "province"));
+        attrs.put("region", text(n, "province"));
+        attrs.put("status", text(n, "status"));
+        if (n.has("latitude") && !n.get("latitude").isNull()) {
+            attrs.put("latitude", n.get("latitude").asDouble());
+        }
+        if (n.has("longitude") && !n.get("longitude").isNull()) {
+            attrs.put("longitude", n.get("longitude").asDouble());
+        }
+        attrs.put("capabilities", List.of());
+        JsonNode om = n.get("operatingModel");
+        if (om != null && !om.isNull()) {
+            attrs.put("facilityTier", text(om, "facilityTier"));
+            attrs.put("deploymentMode", text(om, "deploymentMode"));
+            attrs.put("continuityClass", text(om, "continuityClass"));
+            attrs.put("workflowArchetype", text(om, "workflowArchetype"));
+        }
+        return Map.of("id", idStr, "type", "facility", "attributes", attrs);
+    }
+
+    private static String text(JsonNode n, String field) {
+        if (n == null || !n.has(field) || n.get(field).isNull()) {
+            return "";
+        }
+        return n.get(field).asText("");
     }
 
     @SuppressWarnings("unchecked")

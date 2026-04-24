@@ -12,6 +12,12 @@ import {
   useMarketplaceOpsStuckOrders,
   useMarketplaceOpsVendor,
   useMarketplaceOpsVendors,
+  useMarketplaceLogisticsExceptions,
+  useMarketplaceLogisticsHandoffs,
+  useMarketplaceLogisticsPlans,
+  useMarketplaceLogisticsProviders,
+  useMarketplaceLogisticsCustody,
+  useMarketplaceLogisticsProofs,
   useRejectMarketplaceReview,
   useReinstateMarketplaceVendor,
   useSuspendMarketplaceVendor,
@@ -53,6 +59,26 @@ export default function MarketplaceOpsPage() {
   const suspendVendor = useSuspendMarketplaceVendor();
   const reinstateVendor = useReinstateMarketplaceVendor();
   const [vendorJson, setVendorJson] = useState("{}");
+
+  const [fulfillmentId, setFulfillmentId] = useState("");
+  const [plansArmed, setPlansArmed] = useState(false);
+  const plansQ = useMarketplaceLogisticsPlans({ fulfillmentId: fulfillmentId.trim() || undefined }, plansArmed);
+
+  const [planId, setPlanId] = useState("");
+  const [exceptionsArmed, setExceptionsArmed] = useState(false);
+  const exceptionsQ = useMarketplaceLogisticsExceptions({ planId: planId.trim() || undefined }, exceptionsArmed);
+
+  const [proofsArmed, setProofsArmed] = useState(false);
+  const proofsQ = useMarketplaceLogisticsProofs({ planId: planId.trim() || undefined }, proofsArmed);
+
+  const [providersArmed, setProvidersArmed] = useState(false);
+  const providersQ = useMarketplaceLogisticsProviders({ activeOnly: true }, providersArmed);
+
+  const [handoffsArmed, setHandoffsArmed] = useState(false);
+  const handoffsQ = useMarketplaceLogisticsHandoffs({ fulfillmentId: fulfillmentId.trim() || undefined }, handoffsArmed);
+
+  const [custodyArmed, setCustodyArmed] = useState(false);
+  const custodyQ = useMarketplaceLogisticsCustody({ fulfillmentId: fulfillmentId.trim() || undefined }, custodyArmed);
 
   function parseJson(body: string) {
     return JSON.parse(body) as unknown;
@@ -189,6 +215,88 @@ export default function MarketplaceOpsPage() {
             {vendorQ.data != null ? (
               <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(vendorQ.data, null, 2)}</pre>
             ) : null}
+          </section>
+
+          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900">Logistics desk</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              GET/POST <code className="text-[11px]">/internal/v1/commerce/logistics/*</code>
+            </p>
+
+            <div className="mt-3 grid gap-3 lg:grid-cols-[0.45fr_auto_1fr] lg:items-end">
+              <label className="text-xs text-slate-600">
+                Fulfillment id
+                <input value={fulfillmentId} onChange={(e) => setFulfillmentId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+              </label>
+              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setPlansArmed(true); void plansQ.refetch(); }}>
+                Fetch plans
+              </button>
+              {plansQ.data != null ? (
+                <pre className="max-h-40 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(plansQ.data, null, 2)}</pre>
+              ) : <div />}
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[0.45fr_auto_auto_1fr] lg:items-end">
+              <label className="text-xs text-slate-600">
+                Plan id
+                <input value={planId} onChange={(e) => setPlanId(e.target.value)} className="mt-1 block rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono" />
+              </label>
+              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setExceptionsArmed(true); void exceptionsQ.refetch(); }}>
+                Fetch exceptions
+              </button>
+              <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50" onClick={() => { setProofsArmed(true); void proofsQ.refetch(); }}>
+                Fetch proofs
+              </button>
+              <div className="grid gap-2">
+                {exceptionsQ.data != null ? (
+                  <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(exceptionsQ.data, null, 2)}</pre>
+                ) : null}
+                {proofsQ.data != null ? (
+                  <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(proofsQ.data, null, 2)}</pre>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50"
+                onClick={() => { setProvidersArmed(true); void providersQ.refetch(); }}
+              >
+                Fetch providers
+              </button>
+              {providersQ.data != null ? (
+                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(providersQ.data, null, 2)}</pre>
+              ) : <div />}
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                onClick={() => { setHandoffsArmed(true); void handoffsQ.refetch(); }}
+                disabled={!fulfillmentId.trim()}
+              >
+                Fetch handoffs (fulfillment)
+              </button>
+              {handoffsQ.data != null ? (
+                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(handoffsQ.data, null, 2)}</pre>
+              ) : <div />}
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-[auto_1fr] lg:items-start">
+              <button
+                type="button"
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                onClick={() => { setCustodyArmed(true); void custodyQ.refetch(); }}
+                disabled={!fulfillmentId.trim()}
+              >
+                Fetch custody (fulfillment)
+              </button>
+              {custodyQ.data != null ? (
+                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(custodyQ.data, null, 2)}</pre>
+              ) : <div />}
+            </div>
           </section>
         </div>
       </PageShell>

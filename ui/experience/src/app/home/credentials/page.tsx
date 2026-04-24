@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { ArrowLeft, Award, Shield, BookOpen, CheckCircle2, AlertTriangle, Clock, Download, BadgeCheck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ContextualLearningPanel } from "@/components/learning/ContextualLearningPanel";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useProviderLicenses, type LicenseResource } from "@/hooks/queries/useLicenses";
@@ -62,6 +63,12 @@ export default function CredentialsPage() {
         </div>
 
         <div className="space-y-6">
+          <ContextualLearningPanel
+            appCode="experience"
+            routeRef="/home/credentials"
+            workflowCode="provider_cpd"
+            title="CPD & professional learning"
+          />
           <div className={`rounded-lg border-2 p-6 ${hasActive ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
             <div className="mb-4 flex items-center gap-3">
               <div className={`flex h-12 w-12 items-center justify-center rounded-full ${hasActive ? "bg-green-100" : "bg-amber-100"}`}>

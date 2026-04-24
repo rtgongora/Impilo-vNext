@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { apiClient, StepUpRequiredError } from "@/lib/apiClient";
+import { apiClient, StepUpRequiredError, type PagedList } from "@/lib/apiClient";
 
 interface Mapping {
   id: string;
@@ -21,7 +21,7 @@ export default function MappingsPage() {
 
   const load = async () => {
     try {
-      const data = await apiClient.get<any>("/v1/mappings/pending?size=50");
+      const data = await apiClient.get<PagedList<Mapping>>("/v1/mappings/pending?size=50");
       setMappings(data?.items || []);
     } catch (e) {
       console.error(e);

@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "idempotency_keys", schema = "ia")
@@ -27,9 +29,7 @@ public class IdempotencyKeyEntity {
     private int responseStatus;
 
     @JdbcTypeCode(SqlTypes.JSON)
-
-
-    @Column(name = "response_body", columnDefinition = "jsonb")
+    @Column(name = "response_body")
     private String responseBody;
 
     @Column(name = "created_at", nullable = false, updatable = false)

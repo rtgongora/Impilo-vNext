@@ -68,8 +68,7 @@ export default function RootLayout({
                     <ul className="space-y-0.5">
                       {section.items.map(({ href, label }) => {
                         const isActive =
-                          pathname === href ||
-                          (pathname.startsWith(href + "/") && href !== "/");
+                          pathname === href || pathname.startsWith(`${href}/`);
                         return (
                           <li key={href}>
                             <Link

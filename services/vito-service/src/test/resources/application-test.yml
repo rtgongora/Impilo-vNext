@@ -62,3 +62,6 @@ vito:
     base-url: http://localhost:3000/fhir
   v11:
     emit-mode: DUAL
+impilo:
+  security:
+    disable-oauth-for-tests: true

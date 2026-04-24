@@ -12,6 +12,7 @@ import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
 import { OPERATIONAL_MODE_DEF, type RegistryAdminSubtype } from "@/lib/operational-context";
 
 const SUBTYPE_LABEL: Record<RegistryAdminSubtype, string> = {
+  registry_intake: "Registry intake & onboarding",
   client_registry: "Client registry (MPI)",
   provider_registry: "Provider registry",
   facility_registry: "Facility registry",

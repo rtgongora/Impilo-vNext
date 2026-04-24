@@ -18,6 +18,8 @@ import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportDefinitionEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.entity.ReportRunEntity;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.reporting.persistence.repository.ReportRunRepository;
+import zw.gov.mohcc.impilo.shared.visibility.ExportVisibilityGuard;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -57,6 +59,16 @@ public class ReportRunService {
     @Transactional
     public ReportRunEntity runReport(UUID tenantId, String reportKey, String actorId,
                                      RunReportRequest request) {
+        return runReport(tenantId, reportKey, actorId, request, null);
+    }
+
+    /**
+     * Same as {@link #runReport(UUID, String, String, RunReportRequest)} with optional
+     * {@link VisibilityProfile} for export-time redaction (JSON shaping / CSV column masking).
+     */
+    @Transactional
+    public ReportRunEntity runReport(UUID tenantId, String reportKey, String actorId,
+                                     RunReportRequest request, VisibilityProfile visibility) {
         ReportDefinitionEntity definition = definitionService.findByKey(tenantId, reportKey);
 
         if (definition.getStatus() != ReportStatus.ACTIVE) {
@@ -79,10 +91,16 @@ public class ReportRunService {
         run.setStatus(RunStatus.RUNNING);
         run.setStartedAt(OffsetDateTime.now());
         run.setCreatedBy(actorId);
+        if (run.getRunId() == null) {
+            run.setRunId(UUID.randomUUID());
+        }
         run = runRepository.save(run);
 
         try {
             String result = executeQuery(definition, runtimeParams, tenantId, format);
+            if (ExportVisibilityGuard.requiresRedactedReportOutput(visibility)) {
+                result = ExportReportOutputRedactor.apply(result, format, visibility, objectMapper);
+            }
             run.setResult(result);
             run.setStatus(RunStatus.COMPLETED);
             run.setCompletedAt(OffsetDateTime.now());
@@ -112,6 +130,12 @@ public class ReportRunService {
     public Page<ReportRunEntity> listRuns(UUID tenantId, String reportKey, Pageable pageable) {
         ReportDefinitionEntity definition = definitionService.findByKey(tenantId, reportKey);
         return runRepository.findByTenantIdAndDefinitionId(tenantId, definition.getId(), pageable);
+    }
+
+    /** Recent runs across all report definitions for the tenant (shell file catalog, admin surfaces). */
+    @Transactional(readOnly = true)
+    public Page<ReportRunEntity> listTenantRuns(UUID tenantId, Pageable pageable) {
+        return runRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, pageable);
     }
 
     public ReportRunResponse toResponse(ReportRunEntity entity) {
@@ -216,7 +240,7 @@ public class ReportRunService {
 
     private String toCsv(List<Map<String, Object>> rows) {
         if (rows.isEmpty()) {
-            return "";
+            return "report_key,name,generated_at,row_count\n";
         }
         StringBuilder sb = new StringBuilder();
         Set<String> headers = rows.get(0).keySet();

@@ -138,7 +138,7 @@ class StepUpServiceTest {
         entity.setIssuedAt(Instant.now().minusSeconds(30));
         entity.setExpiresAt(Instant.now().plusSeconds(270));
 
-        when(challengeRepository.findPendingById(challengeId, TENANT_ID, any(Instant.class)))
+        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(entity));
         when(challengeRepository.save(any(StepUpChallengeEntity.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
@@ -190,7 +190,7 @@ class StepUpServiceTest {
         entity.setIssuedAt(Instant.now().minusSeconds(30));
         entity.setExpiresAt(Instant.now().plusSeconds(270));
 
-        when(challengeRepository.findPendingById(challengeId, TENANT_ID, any(Instant.class)))
+        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(entity));
 
         StepUpVerifyRequest request = new StepUpVerifyRequest(
@@ -215,7 +215,7 @@ class StepUpServiceTest {
         entity.setIssuedAt(Instant.now().minusSeconds(30));
         entity.setExpiresAt(Instant.now().plusSeconds(270));
 
-        when(challengeRepository.findPendingById(challengeId, TENANT_ID, any(Instant.class)))
+        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(entity));
         when(challengeRepository.save(any(StepUpChallengeEntity.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
@@ -249,7 +249,7 @@ class StepUpServiceTest {
         entity.setIssuedAt(Instant.now().minusSeconds(30));
         entity.setExpiresAt(Instant.now().plusSeconds(270));
 
-        when(challengeRepository.findPendingById(challengeId, TENANT_ID, any(Instant.class)))
+        when(challengeRepository.findPendingById(eq(challengeId), eq(TENANT_ID), any(Instant.class)))
                 .thenReturn(Optional.of(entity));
         when(challengeRepository.save(any(StepUpChallengeEntity.class)))
                 .thenAnswer(inv -> inv.getArgument(0));

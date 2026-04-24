@@ -18,9 +18,15 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.companion.error.ErrorEnvelope;
+import jakarta.servlet.http.HttpServletRequest;
 import zw.gov.mohcc.impilo.indawo.api.dto.ExternalSiteResponse;
 import zw.gov.mohcc.impilo.indawo.api.dto.SiteResponse;
+import zw.gov.mohcc.impilo.indawo.api.dto.SiteStatusSummary;
 import zw.gov.mohcc.impilo.indawo.api.dto.UpsertSiteRequest;
+import zw.gov.mohcc.impilo.indawo.api.policy.SiteRepresentation;
+import zw.gov.mohcc.impilo.shared.visibility.AggregateVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityHeaderParser;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 import zw.gov.mohcc.impilo.indawo.core.SiteService;
 import zw.gov.mohcc.impilo.indawo.domain.SiteEntity;
 
@@ -71,7 +77,8 @@ public class SiteController {
     // ── GET /internal/v1/sites/{site_id} — Full internal view ──
 
     @GetMapping("/internal/v1/sites/{site_id}")
-    public ResponseEntity<?> getSiteInternal(@PathVariable("site_id") UUID siteId) {
+    public ResponseEntity<?> getSiteInternal(@PathVariable("site_id") UUID siteId,
+                                             HttpServletRequest httpRequest) {
         RequestContext ctx = RequestContextHolder.require();
         log.info("Get site [siteId={}] correlationId={}", siteId, ctx.correlationId());
 
@@ -81,7 +88,41 @@ public class SiteController {
                     .body(ErrorEnvelope.of("NOT_FOUND", "Site not found",
                             ctx.requestId(), ctx.correlationId()));
         }
-        return ResponseEntity.ok(toSiteResponse(site.get()));
+        SiteResponse body = toSiteResponse(site.get());
+        VisibilityProfile vis = VisibilityHeaderParser.parseFlat(httpRequest);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorEnvelope.of("VISIBILITY_AGGREGATE_ONLY",
+                            "Site detail is not available under aggregate-only visibility.",
+                            ctx.requestId(), ctx.correlationId()));
+        }
+        body = SiteRepresentation.apply(body, vis);
+        return ResponseEntity.ok(body);
+    }
+
+    // ── GET /internal/v1/sites/{site_id}/status-summary — Lightweight legitimacy view ──
+
+    @GetMapping("/internal/v1/sites/{site_id}/status-summary")
+    public ResponseEntity<?> getSiteStatusSummary(@PathVariable("site_id") UUID siteId) {
+        RequestContext ctx = RequestContextHolder.require();
+        log.info("Get site status-summary [siteId={}] correlationId={}", siteId, ctx.correlationId());
+
+        Optional<SiteEntity> site = siteService.getSite(siteId);
+        if (site.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorEnvelope.of("NOT_FOUND", "Site not found",
+                            ctx.requestId(), ctx.correlationId()));
+        }
+        SiteEntity s = site.get();
+        return ResponseEntity.ok(new SiteStatusSummary(
+                s.getSiteId(),
+                s.getSiteCode(),
+                s.getName(),
+                s.getStatus(),
+                s.getRegulatoryStatus(),
+                s.getOperationalStatus(),
+                s.isActiveFlag()
+        ));
     }
 
     // ── GET /internal/v1/sites — Paged list ──

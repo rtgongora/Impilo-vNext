@@ -23,8 +23,8 @@ import java.util.UUID;
  * Hard rule: ALL FOUR headers must be present and non-blank:
  *   X-Tenant-ID, X-Pod-ID, X-Request-ID, X-Correlation-ID
  * If any missing => HTTP 400 with structured error envelope.
- * The error envelope always includes request_id and correlation_id
- * (auto-generated UUIDs when the caller didn't supply them).
+ * The error envelope always includes {@code error.request_id} and {@code error.correlation_id}
+ * trace fields; when a header is absent those values are UUIDs so responses remain traceable.
  *
  * Populates {@link RequestContext} on the thread-local {@link RequestContextHolder}.
  *

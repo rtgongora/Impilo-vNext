@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { apiClient, StepUpRequiredError } from "@/lib/apiClient";
+import { apiClient, StepUpRequiredError, type PagedList } from "@/lib/apiClient";
 
 interface Catalog {
   catalogId: string;
@@ -24,7 +24,7 @@ export default function CatalogsPage() {
 
   const load = async () => {
     try {
-      const data = await apiClient.get<any>("/v1/catalogs?size=50");
+      const data = await apiClient.get<PagedList<Catalog>>("/v1/catalogs?size=50");
       setCatalogs(data?.items || []);
     } catch (e) {
       console.error(e);

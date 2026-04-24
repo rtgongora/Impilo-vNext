@@ -68,6 +68,9 @@ public class ScheduleService {
         schedule.setStatus(ScheduleStatus.ACTIVE);
         schedule.setNextRunAt(computeNextRun(request.cronExpression()));
         schedule.setCreatedBy(actorId);
+        if (schedule.getScheduleId() == null) {
+            schedule.setScheduleId(UUID.randomUUID());
+        }
         schedule = scheduleRepository.save(schedule);
 
         Map<String, Object> payload = new LinkedHashMap<>();

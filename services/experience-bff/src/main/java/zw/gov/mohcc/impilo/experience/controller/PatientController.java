@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +14,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * Patient registry proxy — delegates to VITO when available, falls back to
- * seeded patients so the walk-in registration flow always has data.
+ * Patient / client directory for walk-in and shell flows — delegates to VITO
+ * client registry and identity issuance, with seeded fallback when downstream
+ * is unavailable.
  */
 @RestController
 @RequestMapping("/internal/v1/patients")
@@ -35,7 +37,6 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
 
-        // Accept both camelCase and snake_case
         String givenName = strVal(body, "given_name", "givenName", "firstName");
         String familyName = strVal(body, "family_name", "familyName", "lastName");
         String displayName = strVal(body, "displayName", "display_name");
@@ -45,7 +46,6 @@ public class PatientController {
         String phone = strVal(body, "phone");
         String facilityId = strVal(body, "facility_id", "facilityId");
 
-        // Parse displayName into given/family if individual names not provided
         if ((givenName == null || givenName.isBlank()) && displayName != null) {
             String[] parts = displayName.trim().split("\\s+", 2);
             givenName = parts[0];
@@ -56,11 +56,10 @@ public class PatientController {
                     "error", Map.of("code", "VALIDATION", "message", "Patient name is required")));
         }
 
-        // Try VITO first
         try {
             Map<String, Object> patientData = new LinkedHashMap<>();
             patientData.put("given_name", givenName);
-            patientData.put("family_name", familyName);
+            patientData.put("family_name", familyName != null ? familyName : "");
             patientData.put("date_of_birth", dob);
             patientData.put("sex", sex);
             patientData.put("national_id", nationalId);
@@ -68,16 +67,18 @@ public class PatientController {
             patientData.put("facility_id", facilityId);
             patientData.put("tenant_id", tenantId);
 
-            var result = vitoClient.registerPatient(patientData);
+            JsonNode result = vitoClient.registerPatient(patientData);
+            Map<String, Object> patient = mapIssuanceToPatient(result, givenName,
+                    familyName != null ? familyName : "", dob, sex, nationalId, phone);
+
             Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", result);
+            response.put("data", patient);
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
             log.info("VITO unavailable — creating patient locally: {}", e.getMessage());
         }
 
-        // Fallback
         String id = "pat-" + UUID.randomUUID().toString().substring(0, 8);
         String cpid = "CPID-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Map<String, Object> patient = patient(id, cpid,
@@ -91,6 +92,27 @@ public class PatientController {
         return ResponseEntity.status(201).body(response);
     }
 
+    /**
+     * Masked client search (search-before-create) — proxies VITO internal search.
+     */
+    @PostMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchPatients(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = vitoClient.searchInternalClients(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("VITO client search failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("candidates", List.of()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "warning", e.getMessage())));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<Map<String, Object>> listPatients(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -99,6 +121,27 @@ public class PatientController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status) {
+
+        try {
+            JsonNode paged = vitoClient.listClientRegistryClients(search, status, null, page, size);
+            List<Map<String, Object>> mapped = new ArrayList<>();
+            if (paged != null && paged.has("items") && paged.get("items").isArray()) {
+                for (JsonNode item : paged.get("items")) {
+                    mapped.add(mapRegistrySummaryToPatient(item));
+                }
+            }
+            long total = paged != null && paged.has("totalElements") ? paged.get("totalElements").asLong() : mapped.size();
+            if (!mapped.isEmpty()) {
+                Map<String, Object> response = new LinkedHashMap<>();
+                response.put("data", mapped);
+                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId,
+                        "page", Map.of("number", page, "size", size, "total_elements", total)));
+                return ResponseEntity.ok(response);
+            }
+            log.debug("VITO returned no client rows — using local seeded directory");
+        } catch (Exception e) {
+            log.warn("VITO client registry list failed, using seed: {}", e.getMessage());
+        }
 
         List<Map<String, Object>> filtered = PATIENTS;
         if (search != null && !search.isBlank()) {
@@ -129,19 +172,141 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
+        try {
+            JsonNode profile = vitoClient.getClientRegistryProfile(id);
+            if (profile != null) {
+                Map<String, Object> patient = mapClientProfileToPatient(profile);
+                return ResponseEntity.ok(Map.of(
+                        "data", patient,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (Exception e) {
+            log.debug("VITO client profile miss for id={}: {}", id, e.getMessage());
+        }
+
+        try {
+            JsonNode entity = vitoClient.getPatient(id);
+            if (entity != null) {
+                Map<String, Object> patient = mapClientEntityToPatient(entity);
+                return ResponseEntity.ok(Map.of(
+                        "data", patient,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (Exception ignored) {
+        }
+
         return PATIENTS.stream()
                 .filter(p -> p.get("id").equals(id))
                 .findFirst()
                 .map(p -> {
-                    Map<String, Object> r = new LinkedHashMap<>();
-                    r.put("data", p);
-                    r.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                    return ResponseEntity.ok(r);
+                    Map<String, Object> body = new LinkedHashMap<>();
+                    body.put("data", p);
+                    body.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+                    return ResponseEntity.ok(body);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ── Seeded patients ──────────────────────────────────────────────
+    private static Map<String, Object> mapIssuanceToPatient(
+            JsonNode result, String given, String family, String dob, String sex,
+            String nationalId, String phone) {
+        String healthId = textOrNull(result, "healthId");
+        if (healthId == null) {
+            healthId = "pat-" + UUID.randomUUID().toString().substring(0, 8);
+        }
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("impiloHealthId", healthId);
+        attrs.put("cpid", healthId);
+        attrs.put("givenName", given);
+        attrs.put("familyName", family);
+        attrs.put("displayName", (given + " " + family).trim());
+        attrs.put("dateOfBirth", dob != null ? dob : "");
+        attrs.put("sex", sex != null ? sex : "unknown");
+        attrs.put("nationalId", nationalId);
+        attrs.put("phone", phone);
+        attrs.put("status", textOrNull(result, "status"));
+        attrs.put("age", dob != null && !dob.isBlank()
+                ? LocalDate.now().getYear() - LocalDate.parse(dob).getYear()
+                : null);
+        return Map.of("id", healthId, "type", "patient", "attributes", attrs);
+    }
+
+    private static Map<String, Object> mapRegistrySummaryToPatient(JsonNode item) {
+        String healthId = textOrNull(item, "healthId");
+        if (healthId == null) {
+            healthId = UUID.randomUUID().toString();
+        }
+        String impiloId = textOrNull(item, "impiloId");
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("impiloHealthId", healthId);
+        attrs.put("impiloId", impiloId);
+        attrs.put("cpid", impiloId != null ? impiloId : healthId);
+        attrs.put("displayName", textOrNull(item, "displayName"));
+        attrs.put("givenName", "");
+        attrs.put("familyName", "");
+        attrs.put("dateOfBirth", "");
+        attrs.put("sex", "unknown");
+        attrs.put("lifecycleStatus", textOrNull(item, "lifecycleStatus"));
+        attrs.put("verificationStatus", textOrNull(item, "verificationStatus"));
+        attrs.put("status", textOrNull(item, "lifecycleStatus"));
+        return Map.of("id", healthId, "type", "patient", "attributes", attrs);
+    }
+
+    private static Map<String, Object> mapClientProfileToPatient(JsonNode profile) {
+        JsonNode master = profile.get("master");
+        if (master == null || master.isNull()) {
+            return Map.of("id", "unknown", "type", "patient", "attributes", Map.of());
+        }
+        String healthId = textOrNull(master, "healthId");
+        String impiloId = textOrNull(master, "impiloId");
+        String first = textOrNull(master, "firstName");
+        String last = textOrNull(master, "lastName");
+        String dob = textOrNull(master, "dateOfBirth");
+        String sex = textOrNull(master, "sex");
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("impiloHealthId", healthId);
+        attrs.put("impiloId", impiloId);
+        attrs.put("cpid", impiloId != null ? impiloId : healthId);
+        attrs.put("givenName", first != null ? first : "");
+        attrs.put("familyName", last != null ? last : "");
+        attrs.put("displayName", ((first != null ? first : "") + " " + (last != null ? last : "")).trim());
+        attrs.put("dateOfBirth", dob != null ? dob : "");
+        attrs.put("sex", sex != null ? sex : "unknown");
+        attrs.put("lifecycleStatus", textOrNull(master, "lifecycleStatus"));
+        attrs.put("verificationStatus", textOrNull(master, "verificationStatus"));
+        attrs.put("status", textOrNull(master, "lifecycleStatus"));
+        if (dob != null && !dob.isBlank()) {
+            try {
+                attrs.put("age", LocalDate.now().getYear() - LocalDate.parse(dob).getYear());
+            } catch (Exception ignored) {
+            }
+        }
+        return Map.of("id", healthId != null ? healthId : UUID.randomUUID().toString(), "type", "patient", "attributes", attrs);
+    }
+
+    private static Map<String, Object> mapClientEntityToPatient(JsonNode entity) {
+        String healthId = textOrNull(entity, "healthId");
+        if (healthId == null) {
+            healthId = textOrNull(entity, "id");
+        }
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("impiloHealthId", healthId);
+        attrs.put("cpid", healthId);
+        attrs.put("displayName", textOrNull(entity, "displayName"));
+        attrs.put("givenName", textOrNull(entity, "givenName"));
+        attrs.put("familyName", textOrNull(entity, "familyName"));
+        attrs.put("dateOfBirth", textOrNull(entity, "dateOfBirth"));
+        attrs.put("sex", textOrNull(entity, "sex"));
+        attrs.put("status", textOrNull(entity, "status"));
+        return Map.of("id", healthId != null ? healthId : UUID.randomUUID().toString(), "type", "patient", "attributes", attrs);
+    }
+
+    private static String textOrNull(JsonNode n, String field) {
+        if (n == null || !n.has(field) || n.get(field).isNull()) {
+            return null;
+        }
+        return n.get(field).asText();
+    }
 
     private static List<Map<String, Object>> buildSeeded() {
         List<Map<String, Object>> list = new ArrayList<>();
@@ -178,7 +343,9 @@ public class PatientController {
     private static String strVal(Map<String, Object> map, String... keys) {
         for (String k : keys) {
             Object v = map.get(k);
-            if (v != null) return v.toString();
+            if (v != null) {
+                return v.toString();
+            }
         }
         return null;
     }

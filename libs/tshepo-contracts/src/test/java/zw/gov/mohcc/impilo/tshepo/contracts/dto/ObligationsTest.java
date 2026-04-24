@@ -16,6 +16,7 @@ class ObligationsTest {
         assertThat(obligations.maskFields()).isNull();
         assertThat(obligations.loggingLevel()).isEqualTo("STANDARD");
         assertThat(obligations.consentScopeRef()).isNull();
+        assertThat(obligations.visibilityProfile()).isNull();
     }
 
     @Test
@@ -26,6 +27,7 @@ class ObligationsTest {
         assertThat(obligations.maxScope()).isNull();
         assertThat(obligations.maskFields()).isNull();
         assertThat(obligations.consentScopeRef()).isNull();
+        assertThat(obligations.visibilityProfile()).isNull();
     }
 
     @Test
@@ -38,5 +40,6 @@ class ObligationsTest {
         assertThat(obligations.loggingLevel()).isEqualTo("STANDARD");
         assertThat(obligations.maxScope()).isNull();
         assertThat(obligations.consentScopeRef()).isNull();
+        assertThat(obligations.visibilityProfile()).isNull();
     }
 }

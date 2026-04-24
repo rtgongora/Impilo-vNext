@@ -18,6 +18,7 @@ public class PharmacyProperties {
     private Substitution substitution = new Substitution();
     private Stock stock = new Stock();
     private Elmis elmis = new Elmis();
+    private Hmac hmac = new Hmac();
 
     // ── Getters / setters ──────────────────────────────────────────────
 
@@ -35,6 +36,9 @@ public class PharmacyProperties {
 
     public Elmis getElmis() { return elmis; }
     public void setElmis(Elmis elmis) { this.elmis = elmis; }
+
+    public Hmac getHmac() { return hmac; }
+    public void setHmac(Hmac hmac) { this.hmac = hmac; }
 
     // ── Nested configuration classes ───────────────────────────────────
 
@@ -108,5 +112,15 @@ public class PharmacyProperties {
 
         public ElmisMode getMode() { return mode; }
         public void setMode(ElmisMode mode) { this.mode = mode; }
+    }
+
+    /**
+     * HMAC pepper for pickup proof token hashing (server-side secret).
+     */
+    public static class Hmac {
+        private String pepper = "changeme-pharmacy-hmac-not-for-production";
+
+        public String getPepper() { return pepper; }
+        public void setPepper(String pepper) { this.pepper = pepper; }
     }
 }

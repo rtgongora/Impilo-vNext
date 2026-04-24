@@ -2,7 +2,9 @@ package zw.gov.mohcc.impilo.fhirgateway.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -17,10 +19,21 @@ import zw.gov.mohcc.impilo.fhirgateway.core.GatewayRouteService;
 import zw.gov.mohcc.impilo.fhirgateway.persistence.entity.FhirAuditLogEntity;
 import zw.gov.mohcc.impilo.fhirgateway.persistence.entity.FhirRouteEntity;
 import zw.gov.mohcc.impilo.fhirgateway.persistence.repository.FhirAuditLogRepository;
+import zw.gov.mohcc.impilo.shared.visibility.ClinicalVisibilityGuard;
+import zw.gov.mohcc.impilo.shared.visibility.VisibilityHeaderParser;
+import zw.gov.mohcc.impilo.tshepo.contracts.dto.VisibilityProfile;
 
 @RestController
 @RequestMapping("/internal/v1/gateway")
 public class GatewayRouteController {
+
+    private static final Set<String> CLINICAL_FHIR_RESOURCE_TYPES = Set.of(
+            "Patient", "Encounter", "Observation", "Condition", "MedicationRequest",
+            "DiagnosticReport", "Procedure", "MedicationAdministration", "Immunization",
+            "CarePlan", "ClinicalImpression", "ServiceRequest", "Specimen", "DocumentReference",
+            "AllergyIntolerance", "MedicationStatement", "FamilyMemberHistory", "RiskAssessment",
+            "QuestionnaireResponse", "EpisodeOfCare"
+    );
 
     private final GatewayRouteService routeService;
     private final GatewayForwardService forwardService;
@@ -66,13 +79,25 @@ public class GatewayRouteController {
     }
 
     @PostMapping("/forward")
-    public ResponseEntity<Map<String, Object>> forwardRequest(@RequestBody ForwardRequest request) {
+    public ResponseEntity<Map<String, Object>> forwardRequest(@RequestBody ForwardRequest request,
+                                                                HttpServletRequest httpRequest) {
         UUID resolvedTenantId = request.tenantId() != null
                 ? request.tenantId()
                 : UUID.fromString("00000000-0000-0000-0000-000000000000");
         UUID correlationId = request.correlationId() != null
                 ? request.correlationId()
                 : UUID.randomUUID();
+
+        VisibilityProfile visibility = VisibilityHeaderParser.parseFlat(httpRequest);
+        if (isClinicalFhirRead(request.resourceType(), request.operation())
+                && ClinicalVisibilityGuard.deniesClinicalRead(visibility)) {
+            return ResponseEntity.status(403).body(Map.of(
+                    "status", "denied",
+                    "errorCode", "VISIBILITY_CLINICAL_BLOCKED",
+                    "message", "FHIR clinical read is not permitted for the current visibility profile.",
+                    "correlationId", correlationId.toString()
+            ));
+        }
 
         GatewayForwardService.ForwardResult result = forwardService.forward(
                 resolvedTenantId,
@@ -128,4 +153,16 @@ public class GatewayRouteController {
             String subjectCpid,
             String purposeOfUse
     ) {}
+
+    private static boolean isClinicalFhirRead(String resourceType, String operation) {
+        if (resourceType == null || !CLINICAL_FHIR_RESOURCE_TYPES.contains(resourceType)) {
+            return false;
+        }
+        if (operation == null || operation.isBlank()) {
+            return true;
+        }
+        String u = operation.toUpperCase();
+        return u.contains("READ") || u.contains("SEARCH") || u.contains("GET") || u.contains("VREAD")
+                || u.contains("HISTORY");
+    }
 }
