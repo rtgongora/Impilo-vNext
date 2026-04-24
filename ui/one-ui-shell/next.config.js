@@ -1,13 +1,34 @@
 /** @type {import('next').NextConfig} */
+
+/**
+ * Gateway default matches production-shaped routing (Envoy on :10000).
+ * For README-style local dev (TSHEPO on the host, no Envoy), set:
+ *   IMPILO_LOCAL_TSHEPO_URL=http://localhost:8079
+ * so `/api/v1/authorize` is proxied to TSHEPO's `/v1/authorize` (path strip).
+ * Other `/api/*` traffic still uses NEXT_PUBLIC_API_GATEWAY_URL or localhost:10000.
+ */
+const defaultGateway = "http://localhost:10000";
+
+const localTshepoBase =
+  process.env.IMPILO_LOCAL_TSHEPO_URL || "http://localhost:8079";
+
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ["shared-ui"],
   output: "standalone",
   async rewrites() {
+    const gateway =
+      process.env.NEXT_PUBLIC_API_GATEWAY_URL || defaultGateway;
+    const tshepo = localTshepoBase.replace(/\/$/, "");
+
     return [
       {
+        source: "/api/v1/authorize",
+        destination: `${tshepo}/v1/authorize`,
+      },
+      {
         source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://localhost:10000"}/api/:path*`,
+        destination: `${gateway}/api/:path*`,
       },
     ];
   },
