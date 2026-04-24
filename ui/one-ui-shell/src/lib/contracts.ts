@@ -37,9 +37,14 @@ export interface Obligations {
 // Session & Context
 // ============================================================================
 
+/** Whether actorType was inferred from realm_access.roles or defaulted for local OIDC. */
+export type ActorTypeSource = "realm_roles" | "default_no_roles";
+
 export interface SessionInfo {
   actorId: string;
   actorType: ActorType;
+  /** When default_no_roles, UI should label PROVIDER as a fallback (no realm roles in token). */
+  actorTypeSource?: ActorTypeSource;
   displayName: string;
   email?: string;
   roles: string[];
@@ -48,6 +53,12 @@ export interface SessionInfo {
   expiresAt: number;
 }
 
+/** How x-tenant-id was chosen (OIDC vs dev fallback vs manual form). */
+export type TenantIdHeaderOrigin =
+  | "keycloak_access_token"
+  | "fallback_uuid_no_claim"
+  | "manual";
+
 export interface WorkContext {
   tenantId: string;
   facilityId?: string;
@@ -55,6 +66,8 @@ export interface WorkContext {
   workspaceId?: string;
   workspaceName?: string;
   shiftId?: string;
+  /** When set, explains why x-tenant-id may not match a Keycloak tenant_id claim. */
+  tenantIdHeaderOrigin?: TenantIdHeaderOrigin;
 }
 
 // ============================================================================
