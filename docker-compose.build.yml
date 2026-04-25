@@ -19,27 +19,31 @@ services:
   # Maven Builder — builds ALL backend services in one pass
   # ---------------------------------------------------------------------------
   maven-builder:
-    image: eclipse-temurin:21-jdk-alpine
+    image: eclipse-temurin:21-jdk-jammy
     working_dir: /build/services
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: []
     command:
+      - /bin/bash
+      - -lc
       - |
-        set -e
+        set -eo pipefail
         echo "=== Installing Maven ==="
-        apk add --no-cache maven bash
+        apt-get update
+        apt-get install -y maven bash
+        rm -rf /var/lib/apt/lists/*
         echo "=== Building all services (skip tests for build phase) ==="
         mvn -B clean package -DskipTests \
           -Dmaven.repo.local=/root/.m2/repository \
-          -T 1C \
+          -T 1 \
           --fail-at-end
         echo "=== Maven build complete ==="
         # Copy all built JARs to output directory for easy access
         mkdir -p /build/output
-        find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read jar; do
-          svc_dir=$(echo "$jar" | sed 's|/build/services/||' | cut -d/ -f1)
-          mkdir -p "/build/output/$svc_dir"
-          cp "$jar" "/build/output/$svc_dir/"
-          echo "  -> $svc_dir/$(basename $jar)"
+        find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read -r jar; do
+          svc_dir=$$(echo "$$jar" | sed 's|/build/services/||' | cut -d/ -f1)
+          mkdir -p "/build/output/$$svc_dir"
+          cp "$$jar" "/build/output/$$svc_dir/"
+          echo "  -> $$svc_dir/$$(basename "$$jar")"
         done
         echo "=== JAR output complete ==="
     volumes:
@@ -47,6 +51,8 @@ services:
       - .:/build:rw
       # Maven local repository cache
       - ./vendor/m2/repository:/root/.m2/repository:rw
+      # Persist the protobuf tool build output that fails on Windows bind mounts
+      - tshepo-contracts-target:/build/libs/tshepo-contracts/target
     environment:
       MAVEN_OPTS: "-Xmx2g -XX:+UseZGC"
 
@@ -72,3 +78,6 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+
+volumes:
+  tshepo-contracts-target:
