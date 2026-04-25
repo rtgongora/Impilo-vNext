@@ -1,12 +1,53 @@
 ##
 ## Impilo vNext — Experience Platform Dev Runtime
 ##
-## Starts: Postgres, Wellness-service, Experience-BFF, Experience UI
-## Usage:  docker compose -f compose/experience/docker-compose.yml up
+## Self-contained local slice that mirrors repo-root infra (see ../../docker-compose.yml):
+##   Postgres (this file uses 5433 so it can run beside root postgres:5432),
+##   Redis :6379, Kafka :9092, wellness-service, experience-bff, experience-ui.
 ##
-version: "3.9"
+## Do not run root compose redis+kafka on the same host ports at the same time.
+##
+## Java images expect pre-built JARs: run tools/dev/up.ps1 / up.sh, or Maven from services/.
+##
 
 services:
+  # ── Redis 7 (same role as root docker-compose redis) ─────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Kafka 3.7 KRaft (advertised as kafka:9092 for in-network clients) ─
+  kafka:
+    image: apache/kafka:3.7.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: "impilo-experience-compose-01"
+    ports:
+      - "9092:9092"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 40s
+
   # ── PostgreSQL ───────────────────────────────────────────────────
   experience-db:
     image: postgres:16-alpine
@@ -27,8 +68,8 @@ services:
   # ── Wellness domain (citizen My Life + Health Connect) ─────────
   wellness-service:
     build:
-      context: ../../
-      dockerfile: services/wellness-service/Dockerfile
+      context: ../../services/wellness-service
+      dockerfile: Dockerfile
     environment:
       DB_HOST: experience-db
       DB_PORT: 5432
@@ -44,6 +85,8 @@ services:
     depends_on:
       experience-db:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8161/actuator/health || exit 1"]
       interval: 10s
@@ -52,10 +95,12 @@ services:
       start_period: 45s
 
   # ── Experience BFF ───────────────────────────────────────────────
+  # Build context must be the module directory: Dockerfile copies target/experience-bff-*.jar
+  # (run tools/dev/up.ps1 or: cd services && mvn … package — see compose/experience/README.md)
   experience-bff:
     build:
-      context: ../../
-      dockerfile: services/experience-bff/Dockerfile
+      context: ../../services/experience-bff
+      dockerfile: Dockerfile
     environment:
       DB_HOST: experience-db
       DB_PORT: 5432
@@ -83,12 +128,20 @@ services:
       WELLNESS_SERVICE_BASE_URL: http://wellness-service:8161
       # Dev compose: no Keycloak JWT — required when OAuth2 RS autoconfig is excluded.
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+      # Same defaults as local application.yml, but pointed at compose service names.
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8160:8160"
     depends_on:
       experience-db:
         condition: service_healthy
       wellness-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8160/actuator/health || exit 1"]
@@ -102,8 +155,10 @@ services:
     build:
       context: ../../ui/experience
       dockerfile: Dockerfile
-    environment:
-      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
+      args:
+        # Browser + SSR on the host must call the published BFF port, not the Docker DNS name.
+        NEXT_PUBLIC_BFF_URL: http://localhost:8160
+        NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     ports:
       - "3020:3020"
     depends_on:

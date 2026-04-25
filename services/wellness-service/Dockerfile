@@ -1,20 +1,19 @@
-FROM maven:3.9.9-eclipse-temurin-21 AS build
-WORKDIR /build
-COPY services/pom.xml services/pom.xml
-COPY libs/security-baseline/pom.xml libs/security-baseline/pom.xml
-COPY libs/security-baseline/src libs/security-baseline/src
-COPY services/shared-core/pom.xml services/shared-core/pom.xml
-COPY services/shared-core/src services/shared-core/src
-COPY services/wellness-service/pom.xml services/wellness-service/pom.xml
-COPY services/wellness-service/src services/wellness-service/src
-WORKDIR /build/services
-RUN mvn -q -pl wellness-service -am -DskipTests package
-
+## Runtime image — build the JAR on the host first (same pattern as experience-bff):
+##   cd services && mvn -B -pl wellness-service -am -DskipTests package
+## Or use tools/dev/up.ps1 / up.sh which run Maven before compose.
 FROM eclipse-temurin:21-jre-jammy
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r impilo && useradd -r -g impilo impilo
+
 WORKDIR /app
-COPY --from=build /build/services/wellness-service/target/wellness-service-*.jar app.jar
+COPY target/wellness-service-*.jar app.jar
+
+RUN chown -R impilo:impilo /app
+USER impilo
+
 EXPOSE 8161
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:+UseZGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

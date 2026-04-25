@@ -6,7 +6,7 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 
 1. **Replicates the Lovable prototype's UX/IA/routing** — 96 route pages across 15 zones, 4 layout variants, 3-zone sidebar navigation, hierarchical auth guards
 2. **Replaces Supabase with the Impilo stack** — experience-bff (Spring Boot) with PostgreSQL, Flyway migrations, outbox pattern, v1.1 header enforcement
-3. **Runs via Docker Compose** — Postgres + BFF + UI with healthchecks and smoke tests
+3. **Runs via Docker Compose** — Postgres (5433), Redis, Kafka, wellness-service, BFF, UI with healthchecks and smoke tests (mirrors root infra wiring for cache/event bus)
 
 ### Stage-1 Scope
 
@@ -28,7 +28,7 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 | Upstream service proxying | BFF owns its own data; proxying to VITO/VARAPI/TUSO deferred |
 | Full Keycloak OIDC | Auth endpoint returns session token; full OIDC deferred |
 | EHR clinical data (vitals, orders, results) | Page stubs exist; data binding deferred to Stage-2 |
-| Redis caching | Not required for Stage-1 golden paths |
+| Redis caching | BFF connects to Redis in compose for parity with full stack; many golden paths still work if Redis is empty |
 | Envoy gateway | BFF exposed directly in dev compose |
 
 ## Running Locally
@@ -41,16 +41,31 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 
 ### Quick Start (Docker Compose)
 
+The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092), wellness-service, experience-bff, experience-ui** — the same Redis/Kafka **roles** as the repo root [`docker-compose.yml`](../../docker-compose.yml), wired so Java services use `redis` / `kafka` on the Docker network (not `localhost` inside the container). Do not run root `redis` + `kafka` on the same host ports at the same time.
+
 ```bash
-# Start everything
+# Start everything (Maven JARs + compose)
 ./tools/dev/up.sh
 
-# Or with build
+# Or with image rebuild
 ./tools/dev/up.sh --build
 
-# Or with root infrastructure (Kafka, Redis, Keycloak)
+# Optional: also bring up root Postgres + Keycloak (see ../../docker-compose.yml).
+# Experience compose already binds 6379/9092 for Redis/Kafka — `./tools/dev/up.sh --infra` does not start root redis/kafka.
 ./tools/dev/up.sh --infra
 ```
+
+**Windows (PowerShell):** Docker images for **wellness-service** and **experience-bff** expect **pre-built JARs** under `services/wellness-service/target/` and `services/experience-bff/target/`. Use:
+
+```powershell
+.\tools\dev\up.ps1              # Maven package, then compose up
+.\tools\dev\up.ps1 -Build        # same + rebuild images
+.\tools\dev\up.ps1 -SkipMaven    # compose only (JARs must exist)
+```
+
+**Linux/macOS:** `./tools/dev/up.sh` runs the same Maven slice then compose; use `--skip-maven` if you already built.
+
+Or build once from `services/`: `mvn -B -pl wellness-service,experience-bff -am -DskipTests package`, then `docker compose -f compose/experience/docker-compose.yml up -d`.
 
 ### Building from Source
 
