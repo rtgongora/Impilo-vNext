@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.varapi.persistence.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.varapi.persistence.entity.ProviderQualificationEntity;
 
@@ -30,9 +32,11 @@ public interface ProviderQualificationRepository extends JpaRepository<ProviderQ
 
     List<ProviderQualificationEntity> findByTenantIdAndVerificationStatusIn(UUID tenantId, List<String> verificationStatuses);
 
-    List<ProviderQualificationEntity> findByAwardingBody(String awardingBody);
+    @Query("select q from ProviderQualificationEntity q where q.institutionName = :awardingBody")
+    List<ProviderQualificationEntity> findByAwardingBody(@Param("awardingBody") String awardingBody);
 
-    List<ProviderQualificationEntity> findByTenantIdAndAwardingBody(UUID tenantId, String awardingBody);
+    @Query("select q from ProviderQualificationEntity q where q.tenantId = :tenantId and q.institutionName = :awardingBody")
+    List<ProviderQualificationEntity> findByTenantIdAndAwardingBody(@Param("tenantId") UUID tenantId, @Param("awardingBody") String awardingBody);
 
     List<ProviderQualificationEntity> findByQualificationLevel(String qualificationLevel);
 
