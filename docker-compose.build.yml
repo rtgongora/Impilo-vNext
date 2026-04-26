@@ -32,7 +32,9 @@ services:
         set -eo pipefail
         echo "=== Installing Maven ==="
         apt-get update -qq
+        rm -rf /var/lib/apt/lists/*
         DEBIAN_FRONTEND=noninteractive apt-get install -y -qq maven bash findutils >/dev/null
+        rm -rf /var/lib/apt/lists/*
         echo "=== Building all services (skip tests for build phase) ==="
         # -T 1: avoid parallel protobuf/grpc codegen races on shared trees.
         # tshepo-contracts/target uses a named volume (see volumes) so protoc
@@ -44,11 +46,11 @@ services:
         echo "=== Maven build complete ==="
         # Copy all built JARs to output directory for easy access
         mkdir -p /build/output
-        find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read jar; do
+        find /build/services -path "*/target/*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -not -name "original-*" | while read -r jar; do
           svc_dir=$$(echo "$$jar" | sed 's|/build/services/||' | cut -d/ -f1)
           mkdir -p "/build/output/$$svc_dir"
           cp "$$jar" "/build/output/$$svc_dir/"
-          echo "  -> $$svc_dir/$$(basename \"$$jar\")"
+          echo "  -> $$svc_dir/$$(basename "$$jar")"
         done
         echo "=== JAR output complete ==="
     volumes:
@@ -57,6 +59,7 @@ services:
       # Maven local repository cache
       - ./vendor/m2/repository:/root/.m2/repository:rw
       # Protobuf/grpc plugins must be executable; Windows→Linux bind mounts drop +x
+      # Persist the protobuf tool build output that fails on Windows bind mounts
       - tshepo-contracts-target:/build/libs/tshepo-contracts/target
     environment:
       MAVEN_OPTS: "-Xmx2g -XX:+UseZGC"

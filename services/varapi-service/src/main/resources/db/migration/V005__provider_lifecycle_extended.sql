@@ -253,6 +253,10 @@ CREATE INDEX idx_provider_qualifications_verification ON varapi.provider_qualifi
 -- 4. PROVIDER_DOCUMENTS table (extended from existing)
 -- ============================================================
 
+CREATE TABLE IF NOT EXISTS varapi.provider_documents (
+    LIKE varapi.documents INCLUDING ALL
+);
+
 ALTER TABLE varapi.provider_documents ADD COLUMN IF NOT EXISTS document_type VARCHAR(50);
 ALTER TABLE varapi.provider_documents ADD COLUMN IF NOT EXISTS verification_status VARCHAR(20) DEFAULT 'PENDING';
 ALTER TABLE varapi.provider_documents ADD COLUMN IF NOT EXISTS reviewed_by VARCHAR(255);
@@ -480,5 +484,17 @@ ALTER TABLE varapi.provider ADD COLUMN IF NOT EXISTS effective_to DATE;
 -- 14. Add foreign key for primary_council_id
 -- ============================================================
 
-ALTER TABLE varapi.provider ADD CONSTRAINT fk_provider_primary_council
-    FOREIGN KEY (primary_council_id) REFERENCES varapi.councils(id) ON DELETE SET NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'fk_provider_primary_council'
+          AND conrelid = 'varapi.provider'::regclass
+    ) THEN
+        ALTER TABLE varapi.provider
+            ADD CONSTRAINT fk_provider_primary_council
+            FOREIGN KEY (primary_council_id) REFERENCES varapi.councils(id) ON DELETE SET NULL;
+    END IF;
+END
+$$;

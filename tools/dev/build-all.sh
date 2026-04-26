@@ -31,15 +31,14 @@ elif [ -n "${MAVEN_SETTINGS_FILE:-}" ]; then
   MAVEN_OPTS_EXTRA="-s $MAVEN_SETTINGS_FILE"
 fi
 
-# ── Build shared libs + experience-bff ────────────────────────
+# ── Build wellness + experience-bff (and Maven reactor deps) ──
 echo ""
-echo "── Building experience-bff (Maven) ──"
+echo "── Building wellness-service + experience-bff (Maven) ──"
 cd "$ROOT_DIR/services"
 
-mvn -pl ../libs/shared-kernel-java,../libs/tech-companion,../libs/tech-companion-harness,experience-bff \
-    -am -DskipTests package -q $MAVEN_OPTS_EXTRA
+mvn -pl wellness-service,experience-bff -am -DskipTests package -q $MAVEN_OPTS_EXTRA
 
-echo "[OK] experience-bff built successfully"
+echo "[OK] wellness-service + experience-bff built successfully"
 
 # ── Build one-ui-shell ───────────────────────────────────────
 echo ""

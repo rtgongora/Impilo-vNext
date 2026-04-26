@@ -129,7 +129,6 @@ flowchart TB
 - **Ring 2** adds integration, offline, supply chain, and analytics workloads without breaking Ring 0 authority.
 
 ---
-
 ## 1. Solution Context
 
 Impilo vNext is a Health Operating System, not a single app. It provides a governed runtime for many roles, many facilities, many workflows, and many applications anchored on one person identity model.

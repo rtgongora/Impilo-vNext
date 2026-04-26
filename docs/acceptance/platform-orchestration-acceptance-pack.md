@@ -4,6 +4,14 @@
 
 This document defines what constitutes a successful platform orchestration implementation and provides the evidence checklist for acceptance.
 
+For data-centre-grade sandbox acceptance, this pack is necessary but not sufficient. Use it together with:
+
+- `docs/deployment/data-centre-sandbox-deployment.md`
+- `docs/deployment/service-classification-matrix.md`
+- `docs/acceptance/data-centre-enforcement-gates.md`
+
+The data-centre sandbox must prove gateway-only access, TSHEPO/OPA enforcement, mandatory trust headers, service isolation, per-service database credentials, audit/outbox behaviour, synthetic-only PII, and FHIR/BUTANO PII separation.
+
 ## Acceptance Criteria
 
 ### A. Canonical Runtime Manifest

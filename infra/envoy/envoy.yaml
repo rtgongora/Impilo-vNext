@@ -34,57 +34,63 @@ static_resources:
                       routes:
                         # ── TSHEPO Authz (ext_authz + break-glass + step-up + policies + devices) ──
                         - match: { prefix: "/api/v1/authorize" }
-                          route: { cluster: tshepo_authz_service }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/authorize" }
                         - match: { prefix: "/api/v1/step-up" }
-                          route: { cluster: tshepo_authz_service }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/step-up" }
                         - match: { prefix: "/api/v1/break-glass" }
-                          route: { cluster: tshepo_authz_service }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/break-glass" }
                         - match: { prefix: "/api/v1/policies" }
-                          route: { cluster: tshepo_authz_service }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/policies" }
                         - match: { prefix: "/api/v1/devices" }
-                          route: { cluster: tshepo_authz_service }
+                          route: { cluster: tshepo_authz_service, prefix_rewrite: "/v1/devices" }
 
                         # ── TSHEPO Identity (resolution, CPID, tokens, MOSIP) ──
                         - match: { prefix: "/api/v1/identity" }
-                          route: { cluster: tshepo_identity_service }
+                          route: { cluster: tshepo_identity_service, prefix_rewrite: "/v1/identity" }
 
                         # ── TSHEPO Consent (FHIR Consent CRUD + evaluation + share-links) ──
                         - match: { prefix: "/api/v1/consent" }
-                          route: { cluster: tshepo_consent_service }
+                          route: { cluster: tshepo_consent_service, prefix_rewrite: "/v1/consent" }
 
                         # ── TSHEPO Audit (events, access-history, export, chain verify) ──
                         - match: { prefix: "/api/v1/audit" }
-                          route: { cluster: tshepo_audit_service }
+                          route: { cluster: tshepo_audit_service, prefix_rewrite: "/v1/audit" }
 
                         # ── TSHEPO Keys (JWKS, key management, signing, certificates) ──
                         - match: { prefix: "/api/v1/keys" }
-                          route: { cluster: tshepo_keys_service }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/keys" }
                         - match: { prefix: "/api/v1/sign" }
-                          route: { cluster: tshepo_keys_service }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/sign" }
                         - match: { prefix: "/api/v1/certificates" }
-                          route: { cluster: tshepo_keys_service }
+                          route: { cluster: tshepo_keys_service, prefix_rewrite: "/v1/certificates" }
 
                         # ── TSHEPO Offline (capability tokens, packs, reconciliation) ──
                         - match: { prefix: "/api/v1/offline" }
-                          route: { cluster: tshepo_offline_service }
+                          route: { cluster: tshepo_offline_service, prefix_rewrite: "/v1/offline" }
 
                         # ── VITO — Client Registry ──
+                        - match: { prefix: "/api/v1/clients/snapshot" }
+                          route: { cluster: vito_service, prefix_rewrite: "/internal/v1/snapshots/clients" }
                         - match: { prefix: "/api/v1/clients" }
-                          route: { cluster: vito_service }
+                          route: { cluster: vito_service, prefix_rewrite: "/v1/clients" }
                         - match: { prefix: "/api/v1/recovery" }
-                          route: { cluster: vito_service }
+                          route: { cluster: vito_service, prefix_rewrite: "/v1/recovery" }
 
                         # ── VARAPI — Provider Registry ──
+                        - match: { prefix: "/api/v1/providers/snapshot" }
+                          route: { cluster: varapi_service, prefix_rewrite: "/internal/v1/snapshots/providers" }
                         - match: { prefix: "/api/v1/providers" }
-                          route: { cluster: varapi_service }
+                          route: { cluster: varapi_service, prefix_rewrite: "/v1/internal/providers" }
 
                         # ── TUSO — Facility Registry ──
+                        - match: { prefix: "/api/v1/facilities/snapshot" }
+                          route: { cluster: tuso_service, prefix_rewrite: "/internal/v1/snapshots/facilities" }
                         - match: { prefix: "/api/v1/facilities" }
-                          route: { cluster: tuso_service }
+                          route: { cluster: tuso_service, prefix_rewrite: "/v1/internal/facilities" }
                         - match: { prefix: "/api/v1/workspaces" }
-                          route: { cluster: tuso_service }
+                          route: { cluster: tuso_service, prefix_rewrite: "/v1/internal/workspaces" }
                         - match: { prefix: "/api/v1/resources" }
-                          route: { cluster: tuso_service }
+                          route: { cluster: tuso_service, prefix_rewrite: "/v1/internal/resources" }
                         - match: { prefix: "/api/v1/bookings" }
                           route: { cluster: tuso_service }
                         - match: { prefix: "/api/v1/telemetry" }
@@ -128,15 +134,15 @@ static_resources:
 
                         # ── PCT — Patient Care Tracker ──
                         - match: { prefix: "/api/v1/work" }
-                          route: { cluster: pct_service }
+                          route: { cluster: pct_service, prefix_rewrite: "/v1/work" }
                         - match: { prefix: "/api/v1/journeys" }
-                          route: { cluster: pct_service }
+                          route: { cluster: pct_service, prefix_rewrite: "/v1/journeys" }
                         - match: { prefix: "/api/v1/queues" }
-                          route: { cluster: pct_service }
+                          route: { cluster: pct_service, prefix_rewrite: "/v1/queues" }
                         - match: { prefix: "/api/v1/queue-items" }
-                          route: { cluster: pct_service }
+                          route: { cluster: pct_service, prefix_rewrite: "/v1/queue-items" }
                         - match: { prefix: "/api/v1/encounters" }
-                          route: { cluster: pct_service }
+                          route: { cluster: pct_service, prefix_rewrite: "/v1/encounters" }
                         - match: { prefix: "/api/v1/admissions" }
                           route: { cluster: pct_service }
                         - match: { prefix: "/api/v1/discharge" }

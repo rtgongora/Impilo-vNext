@@ -40,6 +40,18 @@ Since direct server access was blocked, a comprehensive deployment preparation w
 - `docker-compose.runtime.yml` — full runtime with 8 core services + infrastructure + edge + UI
 - `scripts/dev-runtime.sh` — dev convenience wrapper
 
+### Data Centre Sandbox Posture
+
+The data centre sandbox is not a single-server Docker Compose deployment. Compose remains useful for local development, bootstrap, and narrow runtime validation only.
+
+Authoritative data-centre guidance now lives in:
+
+- `docs/deployment/data-centre-sandbox-deployment.md`
+- `docs/deployment/service-classification-matrix.md`
+- `docs/acceptance/data-centre-enforcement-gates.md`
+
+Any DevOps change that affects deployment, Helm, Kubernetes, gateway/security, service persistence, eventing, observability, or CI/CD must either update those documents or state that they were reviewed and no update was required.
+
 ### Core Runtime Services (from docker-compose.runtime.yml)
 | Service | Port | Type |
 |---------|------|------|

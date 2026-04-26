@@ -6,22 +6,26 @@
 ## Waits for healthchecks before returning.
 ##
 ## Usage:
-##   ./tools/dev/up.sh          # Start all
-##   ./tools/dev/up.sh --build  # Rebuild and start
-##   ./tools/dev/up.sh --infra  # Start with root infra (Kafka, Redis, Keycloak)
+##   ./tools/dev/up.sh              # Maven package (wellness + BFF), then compose up
+##   ./tools/dev/up.sh --build      # Same + docker compose --build
+##   ./tools/dev/up.sh --skip-maven # Compose only (JARs must exist under services/*/target)
+##   ./tools/dev/up.sh --infra      # Also start root postgres + Keycloak (no redis/kafka — those are in Experience compose)
 ##
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SERVICES_DIR="$ROOT_DIR/services"
 
 BUILD_FLAG=""
 INFRA_FLAG=""
+SKIP_MAVEN=""
 
 for arg in "$@"; do
   case $arg in
     --build) BUILD_FLAG="--build" ;;
     --infra) INFRA_FLAG="true" ;;
+    --skip-maven) SKIP_MAVEN="true" ;;
   esac
 done
 
@@ -29,11 +33,20 @@ echo "========================================"
 echo "  Impilo vNext — Experience Platform"
 echo "========================================"
 
+# ── Maven: wellness-service + experience-bff JARs for Docker images ──
+if [ -z "$SKIP_MAVEN" ]; then
+  echo ""
+  echo "[INFO] Building wellness-service + experience-bff (Maven)..."
+  cd "$SERVICES_DIR"
+  mvn -B -pl wellness-service,experience-bff -am -DskipTests package -q
+  echo "[OK] JARs ready"
+fi
+
 # ── Optionally start root infrastructure ─────────────────────
 if [ "$INFRA_FLAG" = "true" ]; then
-  echo "[INFO] Starting root infrastructure (Postgres, Redis, Kafka, Keycloak)..."
-  docker compose -f "$ROOT_DIR/docker-compose.yml" up -d postgres redis kafka keycloak
-  echo "[OK] Root infrastructure started"
+  echo "[INFO] Starting root Postgres + Keycloak (Experience compose already provides Redis + Kafka)..."
+  docker compose -f "$ROOT_DIR/docker-compose.yml" up -d postgres keycloak
+  echo "[OK] Root Postgres + Keycloak started"
   echo ""
 fi
 
@@ -48,7 +61,7 @@ echo "[INFO] Waiting for services to become healthy..."
 MAX_WAIT=120
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-  if curl -sf http://localhost:8160/health > /dev/null 2>&1; then
+  if curl -sf http://localhost:8160/actuator/health > /dev/null 2>&1; then
     break
   fi
   sleep 2
@@ -69,6 +82,8 @@ echo ""
 echo "  One UI Shell:   http://localhost:3000"
 echo "  Experience BFF: http://localhost:8160"
 echo "  Postgres:       localhost:5433"
+echo "  Redis:          localhost:6379"
+echo "  Kafka:          localhost:9092"
 echo ""
 echo "  Logs:   docker compose -f compose/experience/docker-compose.yml logs -f"
 echo "  Stop:   docker compose -f compose/experience/docker-compose.yml down"

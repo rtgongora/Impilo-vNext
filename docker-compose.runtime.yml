@@ -117,12 +117,14 @@ services:
   hapi-fhir:
     image: hapiproject/hapi:v7.4.0
     environment:
+      JAVA_TOOL_OPTIONS: -Xms256m -Xmx768m -XX:+UseG1GC
       spring.datasource.url: jdbc:postgresql://postgres:5432/butano
       spring.datasource.username: ${POSTGRES_USER:-impilo}
       spring.datasource.password: ${POSTGRES_PASSWORD:-changeme}
       spring.datasource.driverClassName: org.postgresql.Driver
       spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
       hapi.fhir.fhir_version: R4
+    mem_limit: 1280m
     ports:
       - "18090:8080"
     depends_on:
@@ -195,6 +197,7 @@ services:
       # Disable OAuth2 resource server for dev (no realm configured yet)
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "18081:8081"
     depends_on:
@@ -229,6 +232,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
       VITO_HMAC_PEPPER: impilo-dev-hmac-pepper-changeme-in-prod
+    mem_limit: 768m
     ports:
       - "8082:8082"
     depends_on:
@@ -262,6 +266,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "8083:8083"
     depends_on:
@@ -295,6 +300,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "8084:8084"
     depends_on:
@@ -328,6 +334,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "8085:8085"
     depends_on:
@@ -361,6 +368,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "8088:8088"
     depends_on:
@@ -394,6 +402,7 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    mem_limit: 768m
     ports:
       - "18089:8089"
     depends_on:
@@ -423,6 +432,7 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SEARCH_SERVICE_URL: http://search:8230
+    mem_limit: 768m
     ports:
       - "8260:8260"
     depends_on:
@@ -451,6 +461,7 @@ services:
       EDLIZ_REFERENCE_PDF_PATH: edliz/EDLIZ-2025-final-for-circulation.pdf
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CLINICAL_KAFKA_RELAY_ENABLED: "true"
+    mem_limit: 768m
     ports:
       - "8270:8270"
     depends_on:
@@ -513,6 +524,7 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
+    mem_limit: 768m
     ports:
       - "8160:8160"
     depends_on:
