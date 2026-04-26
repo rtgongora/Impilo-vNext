@@ -35,6 +35,8 @@ The architecture distinguishes between:
 
 Facilities are not treated as one-size-fits-all. Zimbabwe facility tiers from Community through Quinary Hospital, plus Virtual Hospital, are intended to drive deployment posture, enabled services, continuity requirements, and user experience shape. See [docs/architecture/facility-operating-model.md](docs/architecture/facility-operating-model.md) and [contracts/facility-operating-model.ts](contracts/facility-operating-model.ts).
 
+For the production-shaped sandbox and data-centre deployment posture, see [docs/deployment/data-centre-sandbox-deployment.md](docs/deployment/data-centre-sandbox-deployment.md). Docker Compose remains local/dev bootstrap only; the data-centre sandbox is expected to use Kubernetes/OpenShift, independent service deployment, network policies, GitOps, observability, and the enforcement gates in [docs/acceptance/data-centre-enforcement-gates.md](docs/acceptance/data-centre-enforcement-gates.md). The initial service classification baseline is maintained in [docs/deployment/service-classification-matrix.md](docs/deployment/service-classification-matrix.md).
+
 ## Repository Segmentation Intent
 
 The strategic platform spine remains closed by default. Over time, selected ecosystem-facing artefacts such as contracts, schemas, public SDKs, and partner-safe integration materials may be extracted into separately licensed packages.

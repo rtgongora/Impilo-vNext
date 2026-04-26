@@ -16,6 +16,7 @@
 | 3 | **Major Component Landscape Diagram** | [vnext-high-level-diagrams.md](vnext-high-level-diagrams.md) | `## 3. Major Component Landscape Diagram` | Maps all implemented components by functional domain — trust, registries, clinical, finance, health record, supply, documents, libraries, UIs, infrastructure | **CURRENT STATE** |
 | 4 | **Runtime Layer / Startup Order Diagram** | [vnext-high-level-diagrams.md](vnext-high-level-diagrams.md) | `## 4. Runtime Layer / Startup Order Diagram` | 10-layer startup sequence from infrastructure through UI, reflecting Docker Compose and platformctl ordering | **CURRENT STATE** |
 | 5 | **Experience / App Ecosystem Diagram** | [vnext-high-level-diagrams.md](vnext-high-level-diagrams.md) | `## 5. Experience / App Ecosystem Diagram` | All 24 web UIs, 2 mobile apps, shared foundations, and their backend service dependencies | **MIXED** |
+| 6 | **Solution In Diagrams** | [vnext-solution-diagrams.md](vnext-solution-diagrams.md) | Full document | Explains the vNext solution end to end: context, planes, request governance, identity model, clinical workflow, eventing, experience shell, data-centre sandbox, acceptance gates, and DevOps feedback loop | **MIXED** |
 
 ---
 
@@ -36,3 +37,4 @@
 | Component Catalog | [vnext-component-catalog.md](vnext-component-catalog.md) | Full inventory of all 68 services, 24 UIs, 12 libraries with ports, databases, status |
 | Service Dependency Map | [vnext-service-dependency-map.md](vnext-service-dependency-map.md) | Detailed inter-service dependency graph with ring rules and Kafka topics |
 | Platform Operations Runbook | [../runtime/platform-operations-runbook.md](../runtime/platform-operations-runbook.md) | platformctl startup, shutdown, bootstrap, smoke test procedures |
+| Solution In Diagrams | [vnext-solution-diagrams.md](vnext-solution-diagrams.md) | Narrative diagram guide for explaining Impilo vNext to leadership, engineers, implementation partners, and reviewers |
