@@ -234,6 +234,18 @@ export const SHELL_APPS: AppDefinition[] = [
     weight: 22,
   },
   {
+    id: "app-enterprise",
+    appCode: "enterprise",
+    name: "Enterprise resources",
+    description: "ERP plane — dashboard, procurement, finance, logistics, and asset handoffs",
+    icon: "Boxes",
+    category: "operations",
+    href: "/enterprise",
+    activeFlag: true,
+    systemAppFlag: false,
+    weight: 21,
+  },
+  {
     id: "app-settings",
     appCode: "settings",
     name: "Settings",
@@ -314,6 +326,12 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "Open Inventory",
     keywords: ["inventory", "stock", "warehouse", "requisition"],
     action: { type: "navigate", href: "/inventory" },
+  },
+  {
+    id: "cmd-enterprise",
+    label: "Open Enterprise resources",
+    keywords: ["enterprise", "erp", "procurement", "commodities", "supply", "resource plane"],
+    action: { type: "navigate", href: "/enterprise" },
   },
   {
     id: "cmd-file-manager",

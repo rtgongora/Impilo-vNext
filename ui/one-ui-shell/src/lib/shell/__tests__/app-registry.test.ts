@@ -8,6 +8,7 @@ describe("shell app-registry", () => {
     expect(findShellAppByCode("home")?.href).toBe("/home");
     expect(findShellAppByCode("intelligence_hub")?.href).toBe("/intelligence");
     expect(findShellAppByCode("inventory")?.href).toBe("/inventory");
+    expect(findShellAppByCode("enterprise")?.href).toBe("/enterprise");
   });
 
   it("listVisibleShellApps filters by role", () => {

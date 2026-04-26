@@ -128,4 +128,20 @@ describe("ExperienceSidebar", () => {
     expect(screen.getByText("Professional oversight")).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Knowledge curation" }).some((link) => link.getAttribute("href") === "/admin/clinical-curation")).toBe(true);
   });
+
+  it("exposes Enterprise resources in work navigation", () => {
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByRole("link", { name: "Enterprise resources" })).toHaveAttribute("href", "/enterprise");
+  });
+
+  it("shows enterprise resource plane spotlight on /enterprise and /erp routes", () => {
+    mockUsePathname.mockReturnValue("/enterprise");
+
+    render(<ExperienceSidebar />);
+
+    expect(screen.getByText("Enterprise resource plane")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Enterprise dashboard" })).toHaveAttribute("href", "/enterprise");
+    expect(screen.getByRole("link", { name: "Procurement" })).toHaveAttribute("href", "/erp/procurement");
+  });
 });

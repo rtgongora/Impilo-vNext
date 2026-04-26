@@ -5,14 +5,28 @@
  */
 
 import { type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ShieldAlert, ArrowLeft, Home } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
-const ERP_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
+/** GL / HR / fixed assets — finance administrators. */
+const ERP_FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
+
+/** Procurement workspace — store / clinical / commerce actors that raise or fulfil supply. */
+const ERP_PROCUREMENT_ROLES = [
+  "SYSTEM_ADMIN",
+  "FACILITY_ADMIN",
+  "FINANCE",
+  "PHARMACIST",
+  "CLINICIAN",
+  "NURSE",
+  "SUPPORT_AGENT",
+  "DEVELOPER",
+];
 
 export default function ErpLayout({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, user, hasRole } = useAuthStore();
 
@@ -27,7 +41,9 @@ export default function ErpLayout({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, router]);
 
-  const allowed = ERP_ROLES.some((role) => hasRole(role));
+  const procurementPath = pathname.startsWith("/erp/procurement");
+  const roleGate = procurementPath ? ERP_PROCUREMENT_ROLES : ERP_FINANCE_ROLES;
+  const allowed = roleGate.some((role) => hasRole(role));
 
   if (isAuthenticated && !allowed) {
     return (
@@ -41,7 +57,9 @@ export default function ErpLayout({ children }: { children: ReactNode }) {
             You do not have permission to access the native ERP workspace.
           </p>
           <p className="text-xs text-gray-400 mb-6">
-            Required roles: System Admin, Facility Admin, or Finance.
+            {procurementPath
+              ? "Procurement requires finance, facility admin, clinical, pharmacy, support, or developer access."
+              : "General ledger and finance modules require System Admin, Facility Admin, or Finance."}
             {user && (
               <span className="block mt-1">
                 Your roles: {user.roles.join(", ") || "none"}

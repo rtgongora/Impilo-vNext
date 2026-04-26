@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ImagingPage from "./page";
@@ -8,42 +9,53 @@ vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children:
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/queries/useEncounters", () => ({ useEncounters: () => ({ data: { data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" } }] } }) }));
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
-    if (queryKey[0] === "pacs" && queryKey[1] === "studies") {
-      return {
-        data: [
-          {
-            ID: "study-1",
-            MainDicomTags: {
-              StudyDate: "20260407",
-              StudyDescription: "Chest X-Ray",
-              StudyInstanceUID: "1.2.3",
-              AccessionNumber: "ACC-1",
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
+      if (queryKey[0] === "pacs" && queryKey[1] === "studies") {
+        return {
+          data: [
+            {
+              ID: "study-1",
+              MainDicomTags: {
+                StudyDate: "20260407",
+                StudyDescription: "Chest X-Ray",
+                StudyInstanceUID: "1.2.3",
+                AccessionNumber: "ACC-1",
+              },
+              PatientMainDicomTags: { PatientID: "patient-1", PatientName: "Tariro Moyo" },
+              Series: ["series-1"],
             },
-            PatientMainDicomTags: { PatientID: "patient-1", PatientName: "Tariro Moyo" },
-            Series: ["series-1"],
-          },
-        ],
+          ],
+          isLoading: false,
+          error: null,
+        };
+      }
+
+      return {
+        data: [{ ID: "series-1", label: "Series 1", modality: "DICOM", instances: ["inst-1"] }],
         isLoading: false,
         error: null,
       };
-    }
-
-    return {
-      data: [
-        { ID: "series-1", label: "Series 1", modality: "DICOM", instances: ["inst-1"] },
-      ],
-      isLoading: false,
-      error: null,
-    };
-  },
-}));
+    },
+  };
+});
 vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn() } }));
+
+function renderPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <ImagingPage />
+    </QueryClientProvider>,
+  );
+}
 
 describe("ImagingPage", () => {
   it("surfaces patient-matched imaging continuity and keeps chart handoff close", () => {
-    render(<ImagingPage />);
+    renderPage();
 
     expect(screen.getByText("Imaging continuity")).toBeInTheDocument();
     expect(screen.getByText("Imaging loop status")).toBeInTheDocument();

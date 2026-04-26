@@ -252,6 +252,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/payer-claims/[claimId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claim", navLabel: "Payer Claim", navZone: "work" },
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
   { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
+  { path: "/finance/reports", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Financial reports", navLabel: "Financial reports", navZone: "work" },
   { path: "/finance/my-account", zone: "finance", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Healthcare Account", navLabel: "My healthcare costs", navZone: "life" },
 
   // ── Zone: Beds & Wards ──────────────────────────────────────────
@@ -269,6 +270,19 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/inventory/counts", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Counts", navLabel: "Counts", navZone: "work" },
   { path: "/inventory/requisitions", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Requisitions", navLabel: "Requisitions", navZone: "work" },
   { path: "/inventory/stock-management", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Management", navLabel: "Stock Management", navZone: "work" },
+
+  // ── Zone: Enterprise Resource Plane (inventory + procurement + finance fusion) ──
+  { path: "/enterprise", zone: "enterprise", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Enterprise Resources", navLabel: "Enterprise", navZone: "work" },
+  { path: "/enterprise/warehousing", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "ADMIN", pageTitle: "Warehousing & distribution", navLabel: "Warehousing", navZone: "work" },
+  { path: "/enterprise/fleet", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet & logistics", navLabel: "Fleet", navZone: "work" },
+  { path: "/enterprise/charge-sheet", zone: "enterprise", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Charge sheet", navLabel: "Charge sheet", navZone: "work" },
+
+  // ── Zone: Institutional ERP (COSTA-aligned back office) ───────────
+  { path: "/erp", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "Institutional ERP", navLabel: "ERP", navZone: "work" },
+  { path: "/erp/gl", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "General ledger", navLabel: "GL", navZone: "work" },
+  { path: "/erp/hr", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "HR & payroll", navLabel: "HR", navZone: "work" },
+  { path: "/erp/procurement", zone: "enterprise", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Procurement", navLabel: "Procurement", navZone: "work" },
+  { path: "/erp/assets", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "Fixed assets", navLabel: "Fixed assets", navZone: "work" },
 
   // ── Zone: Reports ───────────────────────────────────────────────
   {
@@ -394,7 +408,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 252;
+export const EXPECTED_ROUTE_COUNT = 264;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

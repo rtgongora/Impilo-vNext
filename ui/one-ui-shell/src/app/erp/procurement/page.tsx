@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
@@ -13,8 +14,30 @@ import {
   useProcRfqResponses,
   useProcSuppliers,
 } from "@/hooks/queries/useProcurement";
+import { countEnvelopeList } from "@/lib/apiEnvelope";
 
 type Rfq = { rfqId?: string };
+
+function SectionCard(props: {
+  title: string;
+  count: number;
+  loading: boolean;
+  error: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-800">{props.title}</h3>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+          {props.loading ? "…" : props.error ? "—" : props.count}
+        </span>
+      </div>
+      {props.error ? <p className="mt-2 text-xs text-rose-700">Request failed — check BFF and procurement service.</p> : null}
+      {props.children}
+    </section>
+  );
+}
 
 export default function ErpProcurementPage() {
   const suppliers = useProcSuppliers();
@@ -34,10 +57,13 @@ export default function ErpProcurementPage() {
 
   return (
     <AppLayout>
-      <PageShell title="Procurement" subtitle="Suppliers through RFQs via BFF">
+      <PageShell title="Procurement" subtitle="Suppliers, requisitions, POs, GRN, invoices, and RFQs via Experience BFF.">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <Link href="/erp" className="text-sm text-impilo-500 hover:underline">
             ← ERP hub
+          </Link>
+          <Link href="/enterprise" className="text-sm text-slate-600 hover:underline">
+            Enterprise dashboard
           </Link>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             RFQ
@@ -56,50 +82,40 @@ export default function ErpProcurementPage() {
           </label>
         </div>
 
-        <div className="space-y-6">
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Suppliers</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(suppliers.data ?? suppliers.error ?? suppliers.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Requisitions</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(requisitions.data ?? requisitions.error ?? requisitions.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Purchase orders</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(pos.data ?? pos.error ?? pos.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Goods received</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(grn.data ?? grn.error ?? grn.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Invoices</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(invoices.data ?? invoices.error ?? invoices.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">RFQs</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(rfqs.data ?? rfqs.error ?? rfqs.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">RFQ responses</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(responses.data ?? responses.error ?? responses.isLoading, null, 2)}
-            </pre>
-          </section>
+        <div className="grid gap-4 md:grid-cols-2">
+          <SectionCard
+            title="Suppliers"
+            count={countEnvelopeList(suppliers.data)}
+            loading={suppliers.isLoading}
+            error={Boolean(suppliers.error)}
+          />
+          <SectionCard
+            title="Requisitions"
+            count={countEnvelopeList(requisitions.data)}
+            loading={requisitions.isLoading}
+            error={Boolean(requisitions.error)}
+          />
+          <SectionCard
+            title="Purchase orders"
+            count={countEnvelopeList(pos.data)}
+            loading={pos.isLoading}
+            error={Boolean(pos.error)}
+          />
+          <SectionCard title="Goods received" count={countEnvelopeList(grn.data)} loading={grn.isLoading} error={Boolean(grn.error)} />
+          <SectionCard title="Invoices" count={countEnvelopeList(invoices.data)} loading={invoices.isLoading} error={Boolean(invoices.error)} />
+          <SectionCard title="RFQs" count={countEnvelopeList(rfqs.data)} loading={rfqs.isLoading} error={Boolean(rfqs.error)} />
+          <SectionCard
+            title="RFQ responses"
+            count={countEnvelopeList(responses.data)}
+            loading={responses.isLoading}
+            error={Boolean(responses.error)}
+          />
         </div>
+
+        <p className="mt-6 text-xs text-slate-500">
+          Detailed row explorers ship with datagrids once procurement contracts stabilise; counts above are derived from API envelopes
+          only — no mock rows.
+        </p>
       </PageShell>
     </AppLayout>
   );

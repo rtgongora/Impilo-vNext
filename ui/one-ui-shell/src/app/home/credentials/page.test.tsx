@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import CredentialsPage from "./page";
+
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
 
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: { children: ReactNode; href: string }) => (
@@ -27,6 +30,10 @@ vi.mock("@/components/PageShell", () => ({
 vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: (selector: (state: { user: { id: string } }) => unknown) =>
     selector({ user: { id: "person-1" } }),
+}));
+
+vi.mock("@/lib/api-client", () => ({
+  apiClient: { get },
 }));
 
 vi.mock("@/hooks/queries/useLicenses", () => ({
@@ -85,17 +92,23 @@ vi.mock("@/hooks/queries/usePersonalCredentials", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
-    data: {
-      data: [],
-    },
-  }),
-}));
+function renderPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <CredentialsPage />
+    </QueryClientProvider>,
+  );
+}
 
 describe("CredentialsPage", () => {
+  beforeEach(() => {
+    get.mockReset();
+    get.mockResolvedValue({ data: [] });
+  });
+
   it("shows the digital credential vault alongside professional credentials", () => {
-    render(<CredentialsPage />);
+    renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: /Credentials & CPD/i })).toBeInTheDocument();
     expect(screen.getByText(/Digital credential vault/i)).toBeInTheDocument();

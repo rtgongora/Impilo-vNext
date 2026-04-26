@@ -11,6 +11,7 @@ import {
   Ambulance,
   Bell,
   BookMarked,
+  Boxes,
   BriefcaseBusiness,
   Building2,
   Calendar,
@@ -113,6 +114,7 @@ const ZONES: SidebarZone[] = [
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
       { href: "/inventory", label: "Inventory", icon: Package },
+      { href: "/enterprise", label: "Enterprise resources", icon: Boxes },
       { href: "/marketplace", label: "Marketplace", icon: BriefcaseBusiness },
       { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
       // Absorbed sidecars: oros-web → /lab
@@ -252,6 +254,21 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       actions: [
         { href: "/finance/billing", label: "Billing", icon: CreditCard },
         { href: "/finance/payments", label: "Payments", icon: Wallet },
+      ],
+    };
+  }
+
+  if (pathname.startsWith("/enterprise") || pathname.startsWith("/erp")) {
+    return {
+      title: "Enterprise resource plane",
+      description:
+        "Commodities, pharmacy stock, procurement, finance rails, logistics, and assets — scoped to your facility and roles, not isolated admin consoles.",
+      tone: "border-amber-400/20 bg-amber-950/35 text-amber-100",
+      actions: [
+        { href: "/enterprise", label: "Enterprise dashboard", icon: LayoutDashboard },
+        { href: "/inventory", label: "Inventory", icon: Package },
+        { href: "/erp/procurement", label: "Procurement", icon: ClipboardList },
+        { href: "/finance", label: "Finance", icon: Wallet },
       ],
     };
   }
