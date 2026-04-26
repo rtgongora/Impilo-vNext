@@ -29,7 +29,7 @@ class ButanoServiceClientTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
         ButanoServiceClient client = new ButanoServiceClient(restTemplate, endpoints);
 

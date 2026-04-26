@@ -99,7 +99,9 @@ public class ServiceClientConfig {
             String dispatchBaseUrl,
             String supportBaseUrl,
             String wellnessBaseUrl,
-            String workforceGovernanceBaseUrl
+            String workforceGovernanceBaseUrl,
+            /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
+            String schedulingServiceBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -162,6 +164,7 @@ public class ServiceClientConfig {
             if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8292";
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8293";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
+            if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
         }
     }
 
@@ -176,7 +179,8 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null,
+                null
         );
     }
 

@@ -5,13 +5,17 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 /**
@@ -25,9 +29,14 @@ public class SchedulingController {
     private static final Logger log = LoggerFactory.getLogger(SchedulingController.class);
 
     private final TusoServiceClient tusoClient;
+    private final SchedulingServiceClient schedulingServiceClient;
 
-    public SchedulingController(TusoServiceClient tusoClient) {
+    @Value("${impilo.scheduling.use-remote-slots:true}")
+    private boolean useRemoteSlots;
+
+    public SchedulingController(TusoServiceClient tusoClient, SchedulingServiceClient schedulingServiceClient) {
         this.tusoClient = tusoClient;
+        this.schedulingServiceClient = schedulingServiceClient;
     }
 
     public record CreateAppointmentRequest(
@@ -173,42 +182,71 @@ public class SchedulingController {
 
         try {
             java.time.LocalDate localDate = java.time.LocalDate.parse(date);
-            java.time.OffsetDateTime dayStart = localDate.atTime(8, 0)
-                    .atZone(java.time.ZoneOffset.UTC).toOffsetDateTime();
-            java.time.OffsetDateTime dayEnd = localDate.atTime(17, 0)
-                    .atZone(java.time.ZoneOffset.UTC).toOffsetDateTime();
+            OffsetDateTime dayStart = localDate.atTime(8, 0).atOffset(ZoneOffset.UTC);
+            OffsetDateTime dayEnd = localDate.atTime(17, 0).atOffset(ZoneOffset.UTC);
 
             JsonNode bookings = tusoClient.listBookings(
                     UUID.fromString(resourceId), dayStart, dayEnd);
 
-            java.util.Set<String> occupiedSlots = new java.util.HashSet<>();
+            List<OffsetDateTime[]> bookingIntervals = new ArrayList<>();
             if (bookings != null && bookings.isArray()) {
                 for (JsonNode booking : bookings) {
                     String startStr = booking.has("startTime") ? booking.get("startTime").asText() : null;
                     String endStr = booking.has("endTime") ? booking.get("endTime").asText() : null;
                     if (startStr != null && endStr != null) {
                         try {
-                            java.time.OffsetDateTime bStart = java.time.OffsetDateTime.parse(startStr);
-                            java.time.OffsetDateTime bEnd = java.time.OffsetDateTime.parse(endStr);
-                            java.time.OffsetDateTime slot = bStart;
-                            while (slot.isBefore(bEnd)) {
-                                occupiedSlots.add(String.format("%02d:%02d",
-                                        slot.getHour(), slot.getMinute()));
-                                slot = slot.plusMinutes(30);
-                            }
-                        } catch (Exception ignored) {}
+                            OffsetDateTime bStart = OffsetDateTime.parse(startStr);
+                            OffsetDateTime bEnd = OffsetDateTime.parse(endStr);
+                            bookingIntervals.add(new OffsetDateTime[]{bStart, bEnd});
+                        } catch (Exception ignored) {
+                        }
                     }
                 }
             }
 
-            List<Map<String, Object>> slots = new java.util.ArrayList<>();
-            java.time.OffsetDateTime slotTime = dayStart;
-            while (slotTime.isBefore(dayEnd)) {
-                String slotLabel = String.format("%02d:%02d",
-                        slotTime.getHour(), slotTime.getMinute());
-                boolean available = !occupiedSlots.contains(slotLabel);
-                slots.add(Map.of("time", slotLabel, "available", available));
-                slotTime = slotTime.plusMinutes(30);
+            List<Map<String, Object>> slots = new ArrayList<>();
+            String slotSource = "BFF_GRID";
+
+            if (useRemoteSlots) {
+                try {
+                    JsonNode remote = schedulingServiceClient.getSlots(resourceId, date);
+                    JsonNode remoteSlots = remote != null ? remote.path("slots") : null;
+                    if (remoteSlots != null && remoteSlots.isArray() && !remoteSlots.isEmpty()) {
+                        slotSource = "SCHEDULING_SERVICE";
+                        for (JsonNode s : remoteSlots) {
+                            String startRaw = s.path("start").asText(null);
+                            int durationMin = s.path("duration_minutes").asInt(20);
+                            boolean engineFree = s.path("available").asBoolean(true);
+                            if (startRaw == null || startRaw.isBlank()) {
+                                continue;
+                            }
+                            OffsetDateTime slotStart = parseSchedulingSlotStart(startRaw);
+                            OffsetDateTime slotEnd = slotStart.plusMinutes(durationMin);
+                            boolean tusoBlocked = overlapsBookings(bookingIntervals, slotStart, slotEnd);
+                            String slotLabel = String.format("%02d:%02d", slotStart.getHour(), slotStart.getMinute());
+                            slots.add(Map.of(
+                                    "time", slotLabel,
+                                    "start", slotStart.toString(),
+                                    "duration_minutes", durationMin,
+                                    "available", engineFree && !tusoBlocked));
+                        }
+                    }
+                } catch (Exception e) {
+                    log.debug("scheduling-service slots unavailable, using Tuso-only grid: {}", e.getMessage());
+                }
+            }
+
+            if (slots.isEmpty()) {
+                slotSource = "BFF_GRID";
+                java.util.Set<String> occupiedLabels = occupiedHalfHourLabels(bookingIntervals, dayStart, dayEnd);
+                OffsetDateTime slotTime = dayStart;
+                while (slotTime.isBefore(dayEnd)) {
+                    String slotLabel = String.format("%02d:%02d",
+                            slotTime.getHour(), slotTime.getMinute());
+                    boolean available = !occupiedLabels.contains(slotLabel);
+                    slots.add(Map.of("time", slotLabel, "available", available));
+                    slotTime = slotTime.plusMinutes(30);
+                }
             }
 
             Map<String, Object> response = new LinkedHashMap<>();
@@ -218,7 +256,10 @@ public class SchedulingController {
                     "slots", slots,
                     "existing_bookings", bookings != null ? bookings : List.of()
             ));
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            response.put("meta", Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId,
+                    "slot_source", slotSource));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.warn("Failed to check availability: {}", e.getMessage());
@@ -227,5 +268,47 @@ public class SchedulingController {
             response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
             return ResponseEntity.ok(response);
         }
+    }
+
+    private static OffsetDateTime parseSchedulingSlotStart(String startRaw) {
+        try {
+            return OffsetDateTime.parse(startRaw);
+        } catch (Exception ignored) {
+        }
+        LocalDateTime ldt = LocalDateTime.parse(startRaw);
+        return ldt.atOffset(ZoneOffset.UTC);
+    }
+
+    private static boolean overlapsBookings(List<OffsetDateTime[]> intervals,
+                                            OffsetDateTime slotStart, OffsetDateTime slotEnd) {
+        for (OffsetDateTime[] iv : intervals) {
+            if (iv.length == 2 && slotStart.isBefore(iv[1]) && slotEnd.isAfter(iv[0])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Half-hour labels (HH:mm UTC) touched by each booking — matches legacy BFF slot stepping.
+     */
+    private static Set<String> occupiedHalfHourLabels(List<OffsetDateTime[]> intervals,
+                                                     OffsetDateTime dayStart, OffsetDateTime dayEnd) {
+        Set<String> labels = new HashSet<>();
+        for (OffsetDateTime[] iv : intervals) {
+            if (iv.length != 2) {
+                continue;
+            }
+            OffsetDateTime bStart = iv[0];
+            OffsetDateTime bEnd = iv[1];
+            OffsetDateTime slot = bStart;
+            while (slot.isBefore(bEnd)) {
+                if (!slot.isBefore(dayStart) && slot.isBefore(dayEnd)) {
+                    labels.add(String.format("%02d:%02d", slot.getHour(), slot.getMinute()));
+                }
+                slot = slot.plusMinutes(30);
+            }
+        }
+        return labels;
     }
 }

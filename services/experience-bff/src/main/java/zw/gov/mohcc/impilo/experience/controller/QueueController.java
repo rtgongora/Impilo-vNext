@@ -8,11 +8,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.imaging.ImagingGovernanceService;
 import zw.gov.mohcc.impilo.experience.queue.QueueStatsAggregator;
 
+import jakarta.servlet.http.HttpServletRequest;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -27,16 +32,15 @@ import java.util.stream.Collectors;
 public class QueueController {
 
     private final PctServiceClient pctClient;
+    private final TshepoAuditServiceClient tshepoAuditServiceClient;
 
-    public QueueController(PctServiceClient pctClient) {
+    public QueueController(PctServiceClient pctClient, TshepoAuditServiceClient tshepoAuditServiceClient) {
         this.pctClient = pctClient;
+        this.tshepoAuditServiceClient = tshepoAuditServiceClient;
     }
 
     private static final Logger log = LoggerFactory.getLogger(QueueController.class);
     private static final List<Map<String, Object>> LOCAL_QUEUE = new CopyOnWriteArrayList<>();
-    /** Best-effort audit trail for queue mutations (BFF-local; replace with PCT audit API when available). */
-    private static final List<Map<String, Object>> QUEUE_AUDIT = Collections.synchronizedList(new ArrayList<>());
-    private static final int QUEUE_AUDIT_MAX = 2000;
 
     public record CreateQueueEntryRequest(
             @NotBlank String patient_id,
@@ -180,18 +184,67 @@ public class QueueController {
         return null;
     }
 
-    private static void appendQueueAudit(String entryId, String action, String toStatus, String detail) {
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("ts", OffsetDateTime.now().toString());
-        row.put("queue_entry_id", entryId);
-        row.put("action", action);
-        row.put("to_status", toStatus);
-        row.put("detail", detail != null ? detail : "");
-        synchronized (QUEUE_AUDIT) {
-            QUEUE_AUDIT.add(0, row);
-            while (QUEUE_AUDIT.size() > QUEUE_AUDIT_MAX) {
-                QUEUE_AUDIT.remove(QUEUE_AUDIT.size() - 1);
+    private void publishQueueAuditToTshepo(String entryId, String logicalAction, String toStatus, String detail) {
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attrs == null) {
+            return;
+        }
+        HttpServletRequest req = attrs.getRequest();
+        String tenantHeader = req.getHeader(CompanionHeaders.TENANT_ID);
+        String corrHeader = req.getHeader(CompanionHeaders.CORRELATION_ID);
+        String actorId = req.getHeader(CompanionHeaders.ACTOR_ID);
+        String actorType = req.getHeader(CompanionHeaders.ACTOR_TYPE);
+        String purpose = req.getHeader(CompanionHeaders.PURPOSE_OF_USE);
+        String facilityHeader = req.getHeader(CompanionHeaders.FACILITY_ID);
+
+        UUID tenantId = ImagingGovernanceService.parseTenantUuid(tenantHeader);
+        UUID correlationId = parseCorrelationUuid(corrHeader);
+
+        String actionField = toStatus != null && !toStatus.isBlank() ? toStatus : logicalAction;
+        if (actionField.length() > 64) {
+            actionField = actionField.substring(0, 64);
+        }
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("tenantId", tenantId);
+        body.put("eventType", "QUEUE_STATE_CHANGE");
+        body.put("actorId", actorId != null && !actorId.isBlank() ? actorId : "SYSTEM");
+        body.put("actorType", actorType != null && !actorType.isBlank() ? actorType : "SERVICE");
+        body.put("subjectRef", "queue-entry:" + entryId);
+        body.put("resourceType", "QUEUE_ENTRY");
+        body.put("resourceId", entryId.length() > 255 ? entryId.substring(0, 255) : entryId);
+        body.put("action", actionField);
+        body.put("outcome", "SUCCESS");
+        body.put("purposeOfUse", purpose != null && !purpose.isBlank() ? purpose : "OPERATIONS");
+        body.put("correlationId", correlationId);
+        if (facilityHeader != null && !facilityHeader.isBlank()) {
+            try {
+                body.put("facilityId", UUID.fromString(facilityHeader.trim()));
+            } catch (IllegalArgumentException ignored) {
+                // omit non-UUID facility keys
             }
+        }
+        Map<String, Object> d = new LinkedHashMap<>();
+        d.put("logical_action", logicalAction);
+        d.put("to_status", toStatus);
+        if (detail != null && !detail.isBlank()) {
+            d.put("note", detail);
+        }
+        if (!d.isEmpty()) {
+            body.put("detail", d);
+        }
+
+        tshepoAuditServiceClient.ingestAuditEvent(body);
+    }
+
+    private static UUID parseCorrelationUuid(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return UUID.randomUUID();
+        }
+        try {
+            return UUID.fromString(raw.trim());
+        } catch (IllegalArgumentException e) {
+            return UUID.nameUUIDFromBytes(raw.trim().getBytes(StandardCharsets.UTF_8));
         }
     }
 
@@ -200,15 +253,42 @@ public class QueueController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        List<Map<String, Object>> rows;
-        synchronized (QUEUE_AUDIT) {
-            rows = QUEUE_AUDIT.stream()
-                    .filter(m -> id.equals(String.valueOf(m.get("queue_entry_id"))))
-                    .collect(Collectors.toList());
+        List<Map<String, Object>> rows = List.of();
+        String source = "TSHEPO_AUDIT";
+        try {
+            JsonNode page = tshepoAuditServiceClient.queryEvents(
+                    null, "queue-entry:" + id, "QUEUE_STATE_CHANGE", null, null, 0, 200);
+            rows = mapTshepoEventsToQueueTrail(page, id);
+        } catch (Exception e) {
+            log.debug("Tshepo audit query failed for queue entry {}: {}", id, e.getMessage());
+            source = "UNAVAILABLE";
         }
-        return ResponseEntity.ok(Map.of(
-                "data", rows,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        meta.put("source", source);
+        return ResponseEntity.ok(Map.of("data", rows, "meta", meta));
+    }
+
+    private static List<Map<String, Object>> mapTshepoEventsToQueueTrail(JsonNode data, String entryId) {
+        if (data == null || data.isNull()) {
+            return List.of();
+        }
+        JsonNode items = data.path("items");
+        if (!items.isArray()) {
+            return List.of();
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (JsonNode ev : items) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("ts", ev.path("createdAt").asText(""));
+            row.put("queue_entry_id", entryId);
+            row.put("action", ev.path("eventType").asText(""));
+            row.put("to_status", ev.path("action").asText(""));
+            row.put("detail", ev.path("detail").asText(""));
+            out.add(row);
+        }
+        return out;
     }
 
     @PostMapping("/entries/{id}/call")
@@ -257,7 +337,7 @@ public class QueueController {
         if (targetQueueId != null && !targetQueueId.isBlank()) {
             try {
                 JsonNode data = pctClient.transferQueueItem(UUID.fromString(id), UUID.fromString(targetQueueId.trim()));
-                appendQueueAudit(id, "TRANSFER", "TRANSFERRED", "target_queue_id=" + targetQueueId);
+                publishQueueAuditToTshepo(id, "TRANSFER", "TRANSFERRED", "target_queue_id=" + targetQueueId);
                 if (data != null) {
                     return ResponseEntity.ok(Map.of(
                             "data", data,
@@ -310,7 +390,7 @@ public class QueueController {
             UUID uuid = UUID.fromString(id);
             JsonNode data = pctClient.updateQueueItemStatus(uuid, newStatus);
             if (data != null) {
-                appendQueueAudit(id, "STATUS", newStatus, auditDetail);
+                publishQueueAuditToTshepo(id, "STATUS", newStatus, auditDetail);
                 return ResponseEntity.ok(Map.of(
                         "data", data,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -326,7 +406,7 @@ public class QueueController {
                 Map<String, Object> attrs = (Map<String, Object>) entry.get("attributes");
                 attrs.put("status", newStatus);
                 attrs.put("updatedAt", OffsetDateTime.now().toString());
-                appendQueueAudit(id, "STATUS_LOCAL", newStatus, auditDetail);
+                publishQueueAuditToTshepo(id, "STATUS_LOCAL", newStatus, auditDetail);
                 return ResponseEntity.ok(Map.of(
                         "data", entry,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -337,7 +417,7 @@ public class QueueController {
         Map<String, Object> attrs = new LinkedHashMap<>();
         attrs.put("status", newStatus);
         attrs.put("updatedAt", OffsetDateTime.now().toString());
-        appendQueueAudit(id, "STATUS_SYNTHETIC", newStatus, auditDetail);
+        publishQueueAuditToTshepo(id, "STATUS_SYNTHETIC", newStatus, auditDetail);
         return ResponseEntity.ok(Map.of(
                 "data", Map.of("id", id, "type", "queue_entry", "attributes", attrs),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));

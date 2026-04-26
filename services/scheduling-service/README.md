@@ -10,7 +10,7 @@ Spring Boot **slot engine stub** for Impilo vNext:
 
 ## Integration
 
-1. Run on port **8121** (aligned with `docs/plan/SERVICE_CATALOG.md`; override locally if needed).
+1. Run on port **8128** by default (avoids clashing with `inpatient-service` on **8121**; override with `SERVER_PORT` / `application.properties` as needed).
 2. Point **Experience BFF** `SchedulingController` / Tuso bridges at this base URL when the façade should delegate slot math here instead of in-process Tuso availability.
 3. Wire **notification-service** reminder jobs to slot reservations once booking IDs are canonical.
 

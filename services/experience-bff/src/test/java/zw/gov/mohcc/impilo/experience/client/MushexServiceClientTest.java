@@ -96,7 +96,7 @@ class MushexServiceClientTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
     }
 }

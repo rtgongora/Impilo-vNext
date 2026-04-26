@@ -148,6 +148,8 @@ public class SecurityConfig {
                     // ── Multi-facility operational snapshots (oversight roles) ──
                     .requestMatchers(HttpMethod.POST, "/internal/v1/operations/facility-queue-snapshots")
                             .hasAnyRole(OPERATIONS_AGGREGATE_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/operations/national-kpis")
+                            .hasAnyRole(OPERATIONS_AGGREGATE_ROLES)
 
                     // ── Queue management ──────────────────────────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/queue/**")

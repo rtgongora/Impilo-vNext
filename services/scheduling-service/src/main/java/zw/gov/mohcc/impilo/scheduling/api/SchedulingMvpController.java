@@ -26,7 +26,7 @@ public class SchedulingMvpController {
         return Map.of(
                 "status", "UP",
                 "engine", "scheduling-service-mvp",
-                "description", "Slot templates + in-memory holds — wire BFF SchedulingController here when ready");
+                "description", "Slot templates + in-memory holds — BFF `/internal/v1/appointments/availability` calls this service when `impilo.scheduling.use-remote-slots=true`");
     }
 
     /**

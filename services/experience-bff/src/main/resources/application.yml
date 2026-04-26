@@ -69,6 +69,9 @@ impilo:
     allow-anonymous: false
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
+  scheduling:
+    # Merge scheduling-service slot grid with Tuso bookings for /appointments/availability
+    use-remote-slots: ${SCHEDULING_USE_REMOTE_SLOTS:true}
   bff:
     citizen-longtail:
       # stub = deterministic BFF behaviour; live = VITO patient-share + credential public verify
@@ -150,6 +153,7 @@ impilo:
     general-ledger-base-url: ${GENERAL_LEDGER_BASE_URL:http://localhost:8281}
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
+    scheduling-service-base-url: ${SCHEDULING_SERVICE_BASE_URL:http://localhost:8128}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}

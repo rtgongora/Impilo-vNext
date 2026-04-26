@@ -110,7 +110,7 @@ class MsikaFlowServiceClientTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
     }
 }

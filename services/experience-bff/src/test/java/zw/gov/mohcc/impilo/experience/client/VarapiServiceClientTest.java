@@ -31,7 +31,7 @@ class VarapiServiceClientTest {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null
+                null, null
         );
         VarapiServiceClient client = new VarapiServiceClient(restTemplate, endpoints);
 
