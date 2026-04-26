@@ -45,7 +45,7 @@ export function ShellTaskbar() {
           title="Start — apps and recent work"
           aria-label="Start menu"
         >
-          <ImpiloBrandLogo variant="mark" size={28} className="h-7 w-7" />
+          <ImpiloBrandLogo variant="mark" size={32} className="h-8 w-8" />
         </button>
 
         <button

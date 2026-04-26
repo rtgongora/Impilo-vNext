@@ -104,7 +104,7 @@ export default function ResolvingPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6">
       <div className="flex flex-col items-center max-w-sm w-full">
         {/* Logo */}
-        <ImpiloBrandLogo variant="full" size={40} />
+        <ImpiloBrandLogo variant="full" size={52} />
 
         {/* Heading */}
         <h1 className="mt-8 text-lg font-semibold text-gray-900">

@@ -36,10 +36,10 @@ export function UtilityStrip() {
   const activeCDSAlerts = cdsData?.data?.count ?? 0;
 
   return (
-    <div className="h-9 min-h-[2.25rem] shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-3 z-50">
+    <div className="h-10 min-h-[2.5rem] shrink-0 bg-white border-b border-gray-200 flex items-center justify-between px-3 z-50">
       {/* Left: Logo + Facility */}
       <div className="flex items-center gap-3">
-        <ImpiloBrandLogo variant="full" size={20} />
+        <ImpiloBrandLogo variant="full" size={26} />
         <div className="h-4 w-px bg-gray-200" />
         {facility ? (
           <span className="flex items-center gap-1.5 text-xs text-gray-600">

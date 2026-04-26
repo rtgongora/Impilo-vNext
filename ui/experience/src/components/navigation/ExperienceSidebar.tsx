@@ -382,7 +382,7 @@ export function ExperienceSidebar() {
           {!collapsed ? (
             <div className="min-w-0">
               <Link href="/home" className="block">
-                <ImpiloBrandLogo variant="full" tone="white" size={22} />
+                <ImpiloBrandLogo variant="full" tone="white" size={30} />
               </Link>
               <p className="mt-1 text-xs text-slate-400">
                 Health Operating System
@@ -390,7 +390,7 @@ export function ExperienceSidebar() {
             </div>
           ) : (
             <Link href="/home" className="block">
-              <ImpiloBrandLogo variant="mark" tone="white" size={24} />
+              <ImpiloBrandLogo variant="mark" tone="white" size={30} />
             </Link>
           )}
           <div className="flex items-center gap-2">
