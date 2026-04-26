@@ -24,7 +24,6 @@ import {
   ArrowRightLeft,
   Video,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters, useCreateEncounter } from "@/hooks/queries/useEncounters";
@@ -36,6 +35,8 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
+import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
+import { ClinicalFinanceContextStrip } from "@/components/clinical/ClinicalFinanceContextStrip";
 
 const CHART_SECTIONS = [
   { label: "Vitals", href: "vitals", icon: Activity, color: "bg-red-100 text-red-600" },
@@ -103,8 +104,7 @@ export default function PatientChartPage() {
   }, [activeEncounter, patientId, queueEntry, router]);
 
   return (
-    <EHRLayout>
-      <PageShell title="Patient Chart">
+    <PageShell title="Patient Chart">
         <div className="mb-4">
           <Link
             href="/queue"
@@ -127,6 +127,8 @@ export default function PatientChartPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <PatientJourneyContextPanel patientId={patientId} />
+            <ClinicalFinanceContextStrip patientId={patientId} />
             {activeEncounter && (
               <div className="bg-gradient-to-r from-green-50 via-white to-blue-50 border border-green-200 rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">
@@ -389,6 +391,5 @@ export default function PatientChartPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

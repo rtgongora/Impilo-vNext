@@ -12,7 +12,6 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, AlertTriangle, Baby, ClipboardList, Droplets, HeartPulse, Loader2, Plus, Truck } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEarlyWarningScores, useRecordEWS } from "@/hooks/queries/useEWS";
 import { useFluidBalance, useRecordFluid } from "@/hooks/queries/useFluidBalance";
@@ -404,8 +403,7 @@ export default function VitalsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell
+    <PageShell
         title="Vitals"
         subtitle="Vitals, maternity partograph & CTG, labour compatibility rows, EWS, neonatal APGAR, fluid I/O, observation entries, and transfer requests — live BFF data for this patient"
       >
@@ -1701,6 +1699,5 @@ export default function VitalsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ArrowRightLeft, Loader2, Pill, Plus, ShieldAlert } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useAllergies,
@@ -93,8 +92,7 @@ export default function AllergiesPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Allergies" subtitle="Patient allergy records and management">
+    <PageShell title="Allergies" subtitle="Patient allergy records and management">
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -341,6 +339,5 @@ export default function AllergiesPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

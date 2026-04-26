@@ -15,7 +15,6 @@ import {
   Save,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalDocuments,
@@ -111,8 +110,7 @@ export default function DocumentsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Documents">
+    <PageShell title="Documents">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -311,6 +309,5 @@ export default function DocumentsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

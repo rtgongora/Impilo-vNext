@@ -12,7 +12,6 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { Activity, ClipboardList, Clock, Droplets, FileText, Pill, RotateCw, Utensils } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { WARD_CHARTS, type WardChartType } from "@/data/wardChartTypes";
 
@@ -42,8 +41,7 @@ export default function WardChartsPage() {
   );
 
   return (
-    <EHRLayout>
-      <PageShell title="Ward Charts" subtitle="Select a charting template to record or review inpatient observations, fluid balance, medications, and more.">
+    <PageShell title="Ward Charts" subtitle="Select a charting template to record or review inpatient observations, fluid balance, medications, and more.">
         {/* Active charts with recent entries */}
         {activeCharts.length > 0 && (
           <section className="mb-6">
@@ -99,6 +97,5 @@ export default function WardChartsPage() {
           )}
         </section>
       </PageShell>
-    </EHRLayout>
   );
 }

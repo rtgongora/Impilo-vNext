@@ -9,7 +9,6 @@ import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Plus, Loader2, Receipt, ArrowRightLeft, Video, FileText } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useEncounters,
@@ -115,8 +114,7 @@ export default function EncountersPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Encounters" subtitle="Patient encounter history">
+    <PageShell title="Encounters" subtitle="Patient encounter history">
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -369,6 +367,5 @@ export default function EncountersPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

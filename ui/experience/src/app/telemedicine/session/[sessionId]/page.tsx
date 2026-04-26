@@ -19,6 +19,7 @@ import {
   Video, VideoOff, AlertTriangle, ClipboardList, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { TelemedicineWorkflowStrip } from "@/components/clinical/TelemedicineWorkflowStrip";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
@@ -72,21 +73,28 @@ export default function TeleconsultSessionPage() {
 
   // Load session
   useEffect(() => {
+    let cancelled = false;
     async function load() {
+      setLoading(true);
+      setSession(null);
       try {
         const res = await apiClient.get<{ data: Record<string, unknown> }>(`/internal/v1/teleconsult/sessions/${sessionId}`);
-        setSession(res.data);
+        if (!cancelled) setSession(res.data);
       } catch {
-        // Session might not exist in teleconsult controller — create a shell
-        setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+        if (!cancelled) setSession(null);
       }
       try {
         const msgs = await apiClient.get<{ data: Message[] }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`);
-        setMessages(msgs.data ?? []);
-      } catch { /* no messages yet */ }
-      setLoading(false);
+        if (!cancelled) setMessages(msgs.data ?? []);
+      } catch {
+        if (!cancelled) setMessages([]);
+      }
+      if (!cancelled) setLoading(false);
     }
-    load();
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId]);
 
   // Auto-scroll chat
@@ -179,6 +187,25 @@ export default function TeleconsultSessionPage() {
     );
   }
 
+  if (!session) {
+    return (
+      <AppLayout>
+        <div className="mx-auto max-w-lg space-y-4 p-8">
+          <Link href="/telemedicine" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Telemedicine Hub
+          </Link>
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-950">
+            <p className="font-semibold text-amber-900">Teleconsult session unavailable</p>
+            <p className="mt-2 text-amber-900/90">
+              The Experience BFF did not return a session payload for this identifier. No synthetic session is shown in production navigation — verify the session id or try again after the teleconsult service is reachable.
+            </p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   // ── Stage 7: Show completion form if responded ──
   if (showCompletion && isResponded && !isClosed) {
     return (
@@ -260,7 +287,7 @@ export default function TeleconsultSessionPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Top bar */}
-      <header className="h-12 bg-white border-b px-4 flex items-center justify-between shrink-0">
+      <header className="flex h-12 shrink-0 items-center justify-between border-b bg-white px-4">
         <div className="flex items-center gap-3">
           <Link href="/telemedicine" className="text-gray-400 hover:text-gray-600">
             <ArrowLeft className="w-4 h-4" />
@@ -289,6 +316,13 @@ export default function TeleconsultSessionPage() {
           <span className="text-xs text-gray-400">{sessionId}</span>
         </div>
       </header>
+
+      <div className="shrink-0 border-b border-slate-200 bg-slate-50/80 px-3 py-2">
+        <TelemedicineWorkflowStrip
+          status={status}
+          bffStage={typeof session?.stage === "number" ? (session.stage as number) : null}
+        />
+      </div>
 
       {/* 3-pane body */}
       <div className="flex flex-1 min-h-0">

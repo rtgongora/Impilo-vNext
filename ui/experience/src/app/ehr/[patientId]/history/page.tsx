@@ -32,7 +32,6 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -126,8 +125,7 @@ export default function ClinicalHistoryPage() {
   const isLoading = loadingEnc || loadingCond || loadingAllergy || loadingMeds || loadingImmun;
 
   return (
-    <EHRLayout>
-      <PageShell title="History">
+    <PageShell title="History">
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -398,6 +396,5 @@ export default function ClinicalHistoryPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ClipboardList, Calendar, Edit3, FileText, Link2, Loader2, Plus, Target, Users, X } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientGoalUi } from "@/hooks/queries/useCareContinuity";
@@ -66,8 +65,7 @@ export default function GoalsPage() {
   };
 
   return (
-    <EHRLayout>
-      <PageShell title="Goals" subtitle="Patient health goals with SMART tracking">
+    <PageShell title="Goals" subtitle="Patient health goals with SMART tracking">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -277,6 +275,5 @@ export default function GoalsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

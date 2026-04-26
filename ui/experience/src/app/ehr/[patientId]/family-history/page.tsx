@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { AlertTriangle, ClipboardList, FileText, Heart, Loader2, Plus, Users, X } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { FamilyMember } from "@/hooks/queries/useStructuredHistory";
@@ -45,8 +44,7 @@ export default function FamilyHistoryPage() {
   const [expandedMember, setExpandedMember] = useState<string | null>(null);
 
   return (
-    <EHRLayout>
-      <PageShell title="Family History" subtitle="Family medical history and hereditary risk factors">
+    <PageShell title="Family History" subtitle="Family medical history and hereditary risk factors">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -234,6 +232,5 @@ export default function FamilyHistoryPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

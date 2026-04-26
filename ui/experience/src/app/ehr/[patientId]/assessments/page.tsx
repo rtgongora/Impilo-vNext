@@ -15,7 +15,6 @@ import {
   Users,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -83,8 +82,7 @@ export default function AssessmentsPage() {
   const filtered = filterCategory === "All" ? tools : tools.filter((tool) => tool.category === filterCategory);
 
   return (
-    <EHRLayout>
-      <PageShell title="Clinical Assessments" subtitle="Standardized scoring tools and screening results">
+    <PageShell title="Clinical Assessments" subtitle="Standardized scoring tools and screening results">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -260,6 +258,5 @@ export default function AssessmentsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Baby, HeartPulse } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { VitalsCtgSection } from "@/features/maternity/ctg/VitalsCtgSection";
 import { VitalsPartographSection } from "@/features/maternity/partograph/VitalsPartographSection";
@@ -23,8 +22,7 @@ export default function MaternityMonitoringPage() {
   const encounterId = activeEncounter?.id ?? "";
 
   return (
-    <EHRLayout>
-      <PageShell
+    <PageShell
         title="Maternity Monitoring"
         subtitle="Canonical maternity surface for partograph and CTG monitoring. Legacy labour rows stay on Vitals as compatibility-only."
       >
@@ -62,6 +60,5 @@ export default function MaternityMonitoringPage() {
           />
         </section>
       </PageShell>
-    </EHRLayout>
   );
 }

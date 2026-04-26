@@ -91,6 +91,16 @@ vi.mock("@tanstack/react-query", () => ({
       data: [],
     },
   }),
+  useMutation: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
+  useQueryClient: () => ({
+    invalidateQueries: vi.fn(),
+    setQueryData: vi.fn(),
+  }),
 }));
 
 describe("CredentialsPage", () => {

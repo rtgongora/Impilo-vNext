@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useImagingStudies, useSyncImagingHierarchy } from "@/hooks/queries/useImaging";
@@ -204,8 +203,7 @@ export default function ImagingPage() {
   const selectedSeries = series.find((entry) => entry.instances.includes(selectedInstance ?? ""));
 
   return (
-    <EHRLayout>
-      <PageShell title="Imaging / PACS" subtitle="Diagnostic imaging review and viewer continuity">
+    <PageShell title="Imaging / PACS" subtitle="Diagnostic imaging review and viewer continuity">
         <div className="space-y-6">
           <ClinicalReviewHeader
             badge="Imaging continuity"
@@ -583,7 +581,6 @@ export default function ImagingPage() {
           </div>
         </div>
       </PageShell>
-    </EHRLayout>
   );
 }
 

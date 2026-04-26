@@ -31,6 +31,7 @@ import {
   useTelemedicineSessions,
   type TelemedicineSession,
 } from "@/hooks/queries/useTelemedicine";
+import { TelemedicineWorkflowLegend } from "@/components/clinical/TelemedicineWorkflowLegend";
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
@@ -190,6 +191,7 @@ export default function TelemedicinePage() {
           </div>
         ) : (
           <>
+            <TelemedicineWorkflowLegend />
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
               <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
                 <div className="mb-3 flex items-center gap-2">

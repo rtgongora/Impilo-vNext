@@ -28,9 +28,9 @@ import {
   Receipt,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
+import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
@@ -324,8 +324,7 @@ export default function EncounterPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Encounter">
+    <PageShell title="Encounter">
         <div className="mb-4">
           <Link
             href={`/ehr/${patientId}`}
@@ -350,6 +349,8 @@ export default function EncounterPage() {
           <div className="space-y-6">
             {/* Clinical Decision Support Alerts */}
             <ClinicalAlerts alerts={clinicalAlerts} />
+
+            <PatientJourneyContextPanel patientId={patientId} variant="compact" />
 
             <ClinicalReviewHeader
               badge="Encounter closure"
@@ -951,6 +952,5 @@ export default function EncounterPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

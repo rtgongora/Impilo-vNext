@@ -20,7 +20,6 @@ import {
   Syringe,
   Video,
   FileText } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useTimeline,
@@ -119,8 +118,10 @@ export default function TimelinePage() {
   }, [clinicalNotes, entries, facility, referrals, telemedicineSessions]);
 
   return (
-    <EHRLayout>
-      <PageShell title="Timeline" subtitle="Clinical event timeline">
+    <PageShell
+      title="Timeline"
+      subtitle="Clinical event timeline — Experience proxies PCT / Butano (SHR) timeline reads through GET /internal/v1/timeline; empty responses are real upstream gaps, not UI placeholders."
+    >
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -262,6 +263,5 @@ export default function TimelinePage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

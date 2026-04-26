@@ -25,6 +25,22 @@ vi.mock("@/hooks/useAuthStore", () => ({
     selector({ user: { roles: ["CLINICIAN"] } }),
 }));
 
+vi.mock("@/hooks/useRoleGroup", () => ({
+  useRoleGroup: () => ({
+    isClinical: true,
+    isPrescriber: true,
+    isDispenser: false,
+    isAdmin: false,
+    isFinance: false,
+    isPayerOps: false,
+    isMsikaGovernance: false,
+    isCommerce: false,
+    isQueueManager: false,
+    isCitizen: false,
+    hasGroup: () => false,
+  }),
+}));
+
 vi.mock("@/hooks/usePrivacyDisplayStore", () => ({
   usePrivacyDisplayStore: {
     getState: () => ({ level: "FULL" as const }),
@@ -39,11 +55,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-function getWizardNavLinkByHref(href: string) {
+function getEncounterNavLinkByHref(href: string) {
   const links = [...document.querySelectorAll(`a[href="${href}"]`)] as HTMLAnchorElement[];
-  const inNav = links.find((a) => a.closest("nav"));
+  const inNav = links.find((a) => a.closest("nav[aria-label='Encounter workspace']"));
   if (!inNav) {
-    throw new Error(`Expected wizard nav link for href ${href}`);
+    throw new Error(`Expected encounter nav link for href ${href}`);
   }
   return inNav;
 }
@@ -51,6 +67,7 @@ function getWizardNavLinkByHref(href: string) {
 describe("EncounterMenu", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     mockUsePatient.mockReturnValue({
       data: {
         data: {
@@ -86,64 +103,58 @@ describe("EncounterMenu", () => {
     expect(container.innerHTML).toBe("");
   });
 
-  it("returns null when params is null", () => {
-    mockUseParams.mockReturnValue(null);
-    mockUsePathname.mockReturnValue("/ehr");
-
-    const { container } = render(<EncounterMenu />);
-    expect(container.innerHTML).toBe("");
-  });
-
-  it("renders wizard progress and first clinical phase for doctors", () => {
+  it("renders Lovable-parity encounter menu labels", () => {
     mockUseParams.mockReturnValue({ patientId: "P-001" });
     mockUsePathname.mockReturnValue("/ehr/P-001/summary");
 
     render(<EncounterMenu />);
 
-    expect(screen.getByText("Progress")).toBeInTheDocument();
-    expect(screen.getByText("1. Assess")).toBeInTheDocument();
+    expect(screen.getByText("Encounter menu")).toBeInTheDocument();
+    expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByText("Assessment")).toBeInTheDocument();
+    expect(screen.getByText("Problems & Diagnoses")).toBeInTheDocument();
+    expect(screen.getByText("Orders & Results")).toBeInTheDocument();
     expect(screen.getByText("Jane Doe")).toBeInTheDocument();
     expect(screen.getByText("CPID-001")).toBeInTheDocument();
   });
 
-  it("renders Patient Chart link to the longitudinal chart", () => {
+  it("renders patient overview link", () => {
     mockUseParams.mockReturnValue({ patientId: "P-001" });
     mockUsePathname.mockReturnValue("/ehr/P-001/summary");
 
     render(<EncounterMenu />);
 
-    const patientChartLink = screen.getByText("Patient Chart").closest("a");
-    expect(patientChartLink).toHaveAttribute("href", "/ehr/P-001");
+    const overviewLink = screen.getByText("Patient overview").closest("a");
+    expect(overviewLink).toHaveAttribute("href", "/ehr/P-001");
   });
 
-  it("highlights the active wizard step", () => {
+  it("highlights assessment when on vitals route", () => {
     mockUseParams.mockReturnValue({ patientId: "P-001" });
     mockUsePathname.mockReturnValue("/ehr/P-001/vitals");
 
     render(<EncounterMenu />);
 
-    const vitalsLink = getWizardNavLinkByHref("/ehr/P-001/vitals");
-    expect(vitalsLink.className).toContain("bg-impilo-100");
-    expect(vitalsLink.className).toContain("text-impilo-700");
+    const assessmentLink = getEncounterNavLinkByHref("/ehr/P-001/encounter/enc-1");
+    expect(assessmentLink.className).toContain("bg-impilo-100");
   });
 
-  it("does not highlight non-active steps", () => {
+  it("does not highlight orders when on vitals", () => {
     mockUseParams.mockReturnValue({ patientId: "P-001" });
     mockUsePathname.mockReturnValue("/ehr/P-001/vitals");
 
     render(<EncounterMenu />);
 
-    const historyLink = getWizardNavLinkByHref("/ehr/P-001/history");
-    expect(historyLink.className).not.toContain("bg-impilo-100");
+    const ordersLink = getEncounterNavLinkByHref("/ehr/P-001/orders?encounter_id=enc-1");
+    expect(ordersLink.className).not.toContain("bg-impilo-100");
   });
 
-  it("generates correct hrefs for wizard segments", () => {
+  it("generates encounter-aware assessment href when active encounter exists", () => {
     mockUseParams.mockReturnValue({ patientId: "P-042" });
     mockUsePathname.mockReturnValue("/ehr/P-042/summary");
 
     render(<EncounterMenu />);
 
-    expect(getWizardNavLinkByHref("/ehr/P-042/vitals")).toHaveAttribute("href", "/ehr/P-042/vitals");
-    expect(getWizardNavLinkByHref("/ehr/P-042/medications")).toHaveAttribute("href", "/ehr/P-042/medications");
+    expect(getEncounterNavLinkByHref("/ehr/P-042/encounter/enc-1")).toBeTruthy();
+    expect(getEncounterNavLinkByHref("/ehr/P-042/conditions?encounter_id=enc-1")).toBeTruthy();
   });
 });

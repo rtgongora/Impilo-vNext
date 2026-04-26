@@ -14,7 +14,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useGrowth, useRecordGrowth } from "@/hooks/queries/useGrowth";
@@ -137,8 +136,7 @@ export default function GrowthChartPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell
+    <PageShell
         title="Growth Chart"
         subtitle={
           hasStructuredGrowth
@@ -418,6 +416,5 @@ export default function GrowthChartPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

@@ -28,6 +28,10 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/components/registry/VitoClientRegistrationWizard", () => ({
+  VitoClientRegistrationWizard: () => <div data-testid="vito-registration-wizard-stub" />,
+}));
+
 vi.mock("@/hooks/useFacilityStore", () => ({
   useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) =>
     selector({ facility: { id: "facility-1", name: "Harare Central" } }),

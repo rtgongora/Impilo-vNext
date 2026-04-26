@@ -26,8 +26,8 @@ import {
   Video,
   ClipboardCheck,
   Globe2,
+  FlaskConical,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -44,6 +44,8 @@ import {
   isReferralReceivingHere,
   parseConsultationCoordinationMeta,
 } from "@/lib/consult-workflows";
+import { useLabOrders } from "@/hooks/queries/useLabOrders";
+import { useImagingStudies } from "@/hooks/queries/useImaging";
 
 interface GenericResource {
   id: string;
@@ -63,6 +65,10 @@ export default function PatientSummaryPage() {
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const { data: patientSummaryData } = usePatientSummary(patientId);
   const patientSummary = patientSummaryData?.data ?? null;
+  const { data: labOrdersBundle } = useLabOrders(patientId);
+  const { data: imagingStudiesBundle } = useImagingStudies(patientId);
+  const labOrderCount = labOrdersBundle?.data?.length ?? 0;
+  const imagingStudyCount = (imagingStudiesBundle as { data?: unknown[] } | undefined)?.data?.length ?? 0;
 
   const { data: allergiesData } = useQuery<ApiResponse<GenericResource[]>>({
     queryKey: ["allergies", { patientId }],
@@ -141,8 +147,7 @@ export default function PatientSummaryPage() {
   );
 
   return (
-    <EHRLayout>
-      <PageShell title="Summary">
+    <PageShell title="Summary">
 
         {loadingPatient ? (
           <div className="flex items-center justify-center py-16">
@@ -181,6 +186,34 @@ export default function PatientSummaryPage() {
                 </div>
               </div>
             )}
+
+            <div className="rounded-lg border border-slate-200 bg-white p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Orders &amp; results</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">OROS laboratory orders + governed imaging</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Counts come from live BFF queries — nothing is fabricated when services return empty payloads.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/ehr/${patientId}/orders`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-100"
+                  >
+                    <FlaskConical className="h-3.5 w-3.5" />
+                    Labs ({labOrderCount})
+                  </Link>
+                  <Link
+                    href={`/ehr/${patientId}/imaging`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-800 hover:bg-slate-100"
+                  >
+                    <Activity className="h-3.5 w-3.5" />
+                    Imaging ({imagingStudyCount})
+                  </Link>
+                </div>
+              </div>
+            </div>
 
             <div className="rounded-lg border border-indigo-200 bg-indigo-50/90 p-4 text-sm text-indigo-950">
               <div className="flex items-start gap-2">
@@ -541,6 +574,5 @@ export default function PatientSummaryPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

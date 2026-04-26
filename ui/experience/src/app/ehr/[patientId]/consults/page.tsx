@@ -35,7 +35,6 @@ import {
   ClipboardCheck,
   ArrowRightLeft,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -66,6 +65,8 @@ import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob } from "@/lib/pii-mask";
 import { ReferralPackageBuilder } from "@/components/ReferralPackageBuilder";
 import { useQuery } from "@tanstack/react-query";
+import { TelemedicineWorkflowLegend } from "@/components/clinical/TelemedicineWorkflowLegend";
+import { TelemedicineWorkflowStrip } from "@/components/clinical/TelemedicineWorkflowStrip";
 
 // ────────────────────────────────────────────────────────────
 // Status / Priority badge helpers
@@ -533,8 +534,7 @@ export default function ConsultsPage() {
   }, [activeTeleconsult, openWorkCount, scheduledTeleconsult]);
 
   return (
-    <EHRLayout>
-      <PageShell title="Consults & Referrals">
+    <PageShell title="Consults & Referrals">
 
         <div className="space-y-5">
           {/* Patient Context Header — Lovable-aligned */}
@@ -970,6 +970,7 @@ export default function ConsultsPage() {
               {/* ═══════════ TELECONSULTS TAB ═══════════ */}
               {activeTab === "teleconsults" && (
                 <div className="space-y-4">
+                  <TelemedicineWorkflowLegend />
                   {/* Active Session Alert — Lovable pattern */}
                   {patientSessions.some((s) => s.attributes.status === "IN_PROGRESS") && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -1209,7 +1210,6 @@ export default function ConsultsPage() {
           )}
         </div>
       </PageShell>
-    </EHRLayout>
   );
 }
 
@@ -1675,6 +1675,9 @@ function TeleconsultCard({ session }: { session: TelemedicineSession }) {
               )}
             </div>
             {a.notes && <p className="text-xs text-gray-500 mt-1">{a.notes}</p>}
+            <div className="mt-3">
+              <TelemedicineWorkflowStrip status={a.status} bffStage={null} />
+            </div>
           </div>
         </div>
         {isJoinable && (

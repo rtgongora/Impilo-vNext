@@ -17,7 +17,6 @@ import {
   Loader2,
   Plus,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalNotes,
@@ -184,8 +183,7 @@ export default function ClinicalNotesPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell
+    <PageShell
         title="Clinical Notes"
         subtitle="Capture encounter documentation, consultation responses, and chart-level clinical reasoning."
       >
@@ -756,6 +754,5 @@ export default function ClinicalNotesPage() {
           )}
         </div>
       </PageShell>
-    </EHRLayout>
   );
 }

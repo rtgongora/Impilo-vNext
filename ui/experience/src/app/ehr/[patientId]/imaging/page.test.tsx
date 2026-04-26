@@ -9,6 +9,16 @@ vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { ch
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/queries/useEncounters", () => ({ useEncounters: () => ({ data: { data: [{ id: "enc-1", attributes: { status: "IN_PROGRESS", encounterType: "OUTPATIENT", startedAt: "2026-04-08T09:00:00.000Z" } }] } }) }));
 vi.mock("@tanstack/react-query", () => ({
+  useMutation: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+    isError: false,
+  }),
+  useQueryClient: () => ({
+    invalidateQueries: vi.fn(),
+    setQueryData: vi.fn(),
+  }),
   useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
     if (queryKey[0] === "pacs" && queryKey[1] === "studies") {
       return {

@@ -62,6 +62,10 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
+vi.mock("@/hooks/queries/useImaging", () => ({
+  useImagingStudies: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+}));
+
 vi.mock("@/hooks/queries/useLabOrders", () => ({
   useLabOrders: () => ({
     data: {

@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ArrowRightLeft, CheckCircle2, HeartPulse, Loader2, Pill, Plus, ShieldAlert } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useConditions,
@@ -99,8 +98,7 @@ export default function ConditionsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Conditions" subtitle="Patient problem list and condition management">
+    <PageShell title="Conditions" subtitle="Patient problem list and condition management">
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -383,6 +381,5 @@ export default function ConditionsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

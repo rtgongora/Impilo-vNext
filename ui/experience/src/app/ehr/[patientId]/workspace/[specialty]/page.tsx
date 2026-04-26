@@ -21,7 +21,6 @@ import {
   Baby, Bone, Eye, Pill, Scissors, Zap, Thermometer,
   FileText, ClipboardList, AlertTriangle,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 
 interface SpecialtyConfig {
   label: string;
@@ -126,8 +125,7 @@ export default function SpecialtyWorkspacePage() {
   const SpecIcon = config.icon;
 
   return (
-    <EHRLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Link href={`/ehr/${patientId}`} className="text-gray-400 hover:text-gray-600">
             <ArrowLeft className="w-5 h-5" />
@@ -184,6 +182,5 @@ export default function SpecialtyWorkspacePage() {
           </div>
         </div>
       </div>
-    </EHRLayout>
   );
 }

@@ -47,6 +47,21 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
     },
     isLoading: false,
   }),
+  useEncounters: () => ({
+    data: {
+      data: [
+        {
+          id: "enc-1",
+          attributes: {
+            status: "IN_PROGRESS",
+            encounterType: "OUTPATIENT",
+            startedAt: "2026-04-08T09:00:00.000Z",
+          },
+        },
+      ],
+    },
+    isLoading: false,
+  }),
   useCloseEncounter: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 vi.mock("@tanstack/react-query", () => ({

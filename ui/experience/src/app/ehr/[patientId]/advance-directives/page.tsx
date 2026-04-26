@@ -15,7 +15,6 @@ import {
   Users,
 } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { AdvanceDirective } from "@/hooks/queries/useStructuredHistory";
@@ -64,8 +63,7 @@ export default function AdvanceDirectivesPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <EHRLayout>
-      <PageShell title="Advance Directives" subtitle="Patient advance care planning and legal directives">
+    <PageShell title="Advance Directives" subtitle="Patient advance care planning and legal directives">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -247,6 +245,5 @@ export default function AdvanceDirectivesPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

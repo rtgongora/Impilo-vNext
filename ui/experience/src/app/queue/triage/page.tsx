@@ -186,6 +186,10 @@ export default function TriageQueuePage() {
   return (
     <AppLayout>
       <PageShell title="Triage Queue" subtitle={facility ? `${facility.name}` : "Assess and prioritize patients"}>
+        <p className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+          Triage posts to{" "}
+          <span className="font-mono">{"POST /internal/v1/queue/entries/{id}/triage"}</span>, which forwards acuity and vitals into the PCT journey model when configured. Patient journey context appears on the chart after handoff.
+        </p>
         <div className="space-y-6">
           <QueueWorkspaceHeader
             badge="Queue triage"

@@ -11,7 +11,6 @@ import { useParams } from "next/navigation";
 import { ArrowRightLeft, CheckCircle2, ClipboardList, Loader2, Pill, Plus, Save, ShieldAlert, TestTube2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -150,8 +149,7 @@ export default function MedicationsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Medications">
+    <PageShell title="Medications">
 
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
@@ -375,6 +373,5 @@ export default function MedicationsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

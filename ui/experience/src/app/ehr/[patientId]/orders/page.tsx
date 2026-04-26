@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Activity,
@@ -16,7 +17,6 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useCancelLabOrder,
@@ -26,6 +26,7 @@ import {
   type LabOrderResource,
 } from "@/hooks/queries/useLabOrders";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { useImagingStudies } from "@/hooks/queries/useImaging";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -102,6 +103,7 @@ export default function OrdersPage() {
 
   const queryClient = useQueryClient();
   const { data: ordersData, isLoading } = useLabOrders(patientId);
+  const { data: imagingBundle } = useImagingStudies(patientId);
   const createOrder = useCreateLabOrder();
   const collectOrder = useCollectLabOrder();
   const cancelOrder = useCancelLabOrder();
@@ -114,6 +116,7 @@ export default function OrdersPage() {
   const [resultSubmitting, setResultSubmitting] = useState(false);
 
   const orders = ordersData?.data ?? [];
+  const imagingStudies = (imagingBundle as { data?: unknown[] } | undefined)?.data ?? [];
   const orderedCount = orders.filter((order) => order.attributes.status === "ORDERED").length;
   const collectedCount = orders.filter((order) => order.attributes.status === "COLLECTED").length;
   const awaitingReviewCount = orders.filter((order) => order.attributes.status === "RESULTED").length;
@@ -180,8 +183,10 @@ export default function OrdersPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Lab Orders">
+    <PageShell
+      title="Orders & Results"
+      subtitle="Laboratory orders are proxied to OROS through the Experience BFF. Imaging studies use the governed imaging rail (Orthanc / PACS adapter) — open Imaging for modalities, status, and viewer handoff without raw PACS chrome."
+    >
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -216,6 +221,29 @@ export default function OrdersPage() {
                 </button>
               </div>
             )}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Imaging (PACS)</p>
+                <p className="mt-1 text-sm text-slate-800">
+                  {imagingStudies.length === 0
+                    ? "No governed imaging studies returned for this patient yet."
+                    : `${imagingStudies.length} study record(s) available from the imaging service.`}
+                </p>
+                <Link
+                  href={`/ehr/${patientId}/imaging`}
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-impilo-600 hover:text-impilo-800"
+                >
+                  Open imaging workspace
+                </Link>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Results acknowledgement</p>
+                <p className="mt-1 text-sm text-slate-700">
+                  Use the lab table below to collect specimens, enter results, acknowledge abnormal flags, and keep the encounter loop aligned with referrals and teleconsults.
+                </p>
+              </div>
+            </div>
+
             <ClinicalReviewHeader
               badge="Diagnostics ordering"
               badgeIcon={ClipboardList}
@@ -738,6 +766,5 @@ export default function OrdersPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

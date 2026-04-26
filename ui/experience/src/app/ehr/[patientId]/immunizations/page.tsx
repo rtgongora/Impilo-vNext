@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, FileText, Loader2, Plus, Stethoscope, Syringe } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useImmunizations,
@@ -100,8 +99,7 @@ export default function ImmunizationsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Immunizations" subtitle="Patient immunization records">
+    <PageShell title="Immunizations" subtitle="Patient immunization records">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -355,6 +353,5 @@ export default function ImmunizationsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

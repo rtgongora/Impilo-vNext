@@ -19,6 +19,7 @@ import {
   PlayCircle,
   ClipboardCheck,
   PauseCircle,
+  Route,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -167,6 +168,15 @@ export default function QueuePage() {
         title="Patient Queue"
         subtitle={facility ? `${facility.name}` : "Current queue entries"}
       >
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-impilo-100 bg-impilo-50/80 px-4 py-3 text-sm text-impilo-950">
+          <Route className="mt-0.5 h-4 w-4 shrink-0 text-impilo-600" />
+          <div>
+            <p className="font-semibold text-impilo-900">Patient journey (PCT)</p>
+            <p className="mt-1 text-xs text-impilo-900/90">
+              Queue entries and handoffs are written through the Experience BFF. When PCT is reachable, the BFF starts and advances canonical journeys; open a patient chart to see facility, queue, encounter, referral, telemedicine, and lab context composed without mock data.
+            </p>
+          </div>
+        </div>
         {facility && (
           <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]">
             <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#fffaf0_0%,#ffffff_55%,#eff6ff_100%)] p-5 shadow-sm">

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { ClipboardList, Edit3, Home, Loader2, Save, Target, Users } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { SocialHistoryEntry } from "@/hooks/queries/useStructuredHistory";
@@ -53,8 +52,7 @@ export default function SocialHistoryPage() {
   }).length;
 
   return (
-    <EHRLayout>
-      <PageShell title="Social History" subtitle="Social determinants of health and lifestyle factors">
+    <PageShell title="Social History" subtitle="Social determinants of health and lifestyle factors">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -202,6 +200,5 @@ export default function SocialHistoryPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

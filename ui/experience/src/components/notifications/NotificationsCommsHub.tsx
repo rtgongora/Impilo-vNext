@@ -68,7 +68,12 @@ const FILTER_TABS: { id: FilterCategory; label: string; icon?: React.ComponentTy
 
 type PanelView = 'list' | 'compose' | 'page';
 
-export function NotificationsCommsHub() {
+type NotificationsCommsHubProps = {
+  /** Label on the trigger button (e.g. "Comms Hub" in clinical support strip) */
+  triggerLabel?: string;
+};
+
+export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsCommsHubProps) {
   const { data: notificationsData, isLoading, isError } = useNotifications();
   const markReadMutation = useMarkNotificationRead();
   const [open, setOpen] = useState(false);
@@ -160,7 +165,7 @@ export function NotificationsCommsHub() {
         className={`relative inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors ${hasCritical && !isMuted ? 'text-red-600' : 'text-gray-600'}`}
       >
         <Bell className="h-4 w-4" />
-        <span className="text-xs font-medium">Comms</span>
+        <span className="text-xs font-medium">{triggerLabel}</span>
         {unreadCount > 0 && (
           <span className={`h-4 min-w-[1rem] px-1 rounded-full text-[9px] font-bold flex items-center justify-center bg-red-500 text-white ${hasCritical && !isMuted ? 'animate-pulse' : ''}`}>
             {unreadCount > 99 ? '99+' : unreadCount}

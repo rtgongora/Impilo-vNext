@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, Loader2, Plus, Trash2, Users, X, FileText, ClipboardList, CheckCircle2, AlertCircle } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useCareTeam, useAddCareTeamMember, useRemoveCareTeamMember } from "@/hooks/queries/useCareContinuity";
@@ -38,8 +37,7 @@ export default function CareTeamPage() {
   const [newSpecialty, setNewSpecialty] = useState("");
 
   return (
-    <EHRLayout>
-      <PageShell title="Care Team" subtitle="Assigned providers and care team management">
+    <PageShell title="Care Team" subtitle="Assigned providers and care team management">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -283,6 +281,5 @@ export default function CareTeamPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

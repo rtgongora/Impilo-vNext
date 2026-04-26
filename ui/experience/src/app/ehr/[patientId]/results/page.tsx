@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useLabOrders, type LabOrderResource } from "@/hooks/queries/useLabOrders";
@@ -140,8 +139,7 @@ export default function ResultsPage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Results">
+    <PageShell title="Results">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -341,6 +339,5 @@ export default function ResultsPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

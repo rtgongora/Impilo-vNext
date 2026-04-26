@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { FileJson, Globe2, Loader2, ShieldAlert } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { apiClient } from "@/lib/api-client";
@@ -54,8 +53,7 @@ export default function IpsPage() {
   }, [bundleQuery.data?.entry]);
 
   return (
-    <EHRLayout>
-      <PageShell title="International Patient Summary">
+    <PageShell title="International Patient Summary">
         <div className="space-y-6">
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50/90 p-5">
             <div className="flex items-start gap-3">
@@ -160,6 +158,5 @@ export default function IpsPage() {
           )}
         </div>
       </PageShell>
-    </EHRLayout>
   );
 }

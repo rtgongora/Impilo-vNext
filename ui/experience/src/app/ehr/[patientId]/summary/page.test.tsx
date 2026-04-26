@@ -87,6 +87,20 @@ vi.mock("@/hooks/queries/useClinicalNotes", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useLabOrders", () => ({
+  useLabOrders: () => ({
+    data: { data: [{ id: "lab-1", type: "lab_order", attributes: { status: "ORDERED" } }] },
+    isLoading: false,
+  }),
+}));
+
+vi.mock("@/hooks/queries/useImaging", () => ({
+  useImagingStudies: () => ({
+    data: { data: [{ id: "study-1" }] },
+    isLoading: false,
+  }),
+}));
+
 vi.mock("@/hooks/queries/useTelemedicine", () => ({
   useTelemedicineSessions: () => ({
     data: {
@@ -156,6 +170,8 @@ describe("PatientSummaryPage", () => {
     expect(screen.getByText(/Experience now proxies the Butano IPS bundle/)).toBeInTheDocument();
     expect(screen.getByText(/ZW-CPID-TEST-001/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Open IPS/i })).toHaveAttribute("href", "/ehr/patient-1/ips");
+    expect(screen.getByRole("link", { name: /Labs \(1\)/i })).toHaveAttribute("href", "/ehr/patient-1/orders");
+    expect(screen.getByRole("link", { name: /Imaging \(1\)/i })).toHaveAttribute("href", "/ehr/patient-1/imaging");
   });
 
   it("does not offer Open IPS when the patient has no CPID", () => {

@@ -32,13 +32,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters, type EncounterResource } from "@/hooks/queries/useEncounters";
 import { useDischargeEncounter } from "@/hooks/queries/useDischarge";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
 
 type DispositionType = "" | "DISCHARGE" | "ADMIT" | "TRANSFER" | "REFER" | "DEATH" | "LAMA";
 
@@ -151,8 +151,7 @@ export default function VisitOutcomePage() {
   }
 
   return (
-    <EHRLayout>
-      <PageShell title="Visit Outcome">
+    <PageShell title="Visit Outcome">
 
         {!isClinical ? (
           <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
@@ -217,6 +216,7 @@ export default function VisitOutcomePage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <PatientJourneyContextPanel patientId={patientId} variant="compact" />
             <ClinicalReviewHeader
               badge="Outcome closure"
               badgeIcon={CheckCircle2}
@@ -479,6 +479,5 @@ export default function VisitOutcomePage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

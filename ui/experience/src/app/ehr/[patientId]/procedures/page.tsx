@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Calendar, ClipboardList, FileText, Filter, Loader2, Scissors } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientProcedure } from "@/hooks/queries/useStructuredHistory";
@@ -49,8 +48,7 @@ export default function ProceduresPage() {
   });
 
   return (
-    <EHRLayout>
-      <PageShell title="Procedures" subtitle="Past and scheduled procedure history">
+    <PageShell title="Procedures" subtitle="Past and scheduled procedure history">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -200,6 +198,5 @@ export default function ProceduresPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

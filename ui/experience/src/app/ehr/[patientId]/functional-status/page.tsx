@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Activity, Calendar, ClipboardList, FileText, Loader2, TrendingUp } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { AssessmentType, FunctionalAssessment } from "@/hooks/queries/useStructuredHistory";
@@ -69,8 +68,7 @@ export default function FunctionalStatusPage() {
   const assistanceFlags = current?.activities.filter((activity) => activity.score < activity.maxScore).length ?? 0;
 
   return (
-    <EHRLayout>
-      <PageShell title="Functional Status" subtitle="ADL and IADL assessments with standardized scoring">
+    <PageShell title="Functional Status" subtitle="ADL and IADL assessments with standardized scoring">
         {isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -237,6 +235,5 @@ export default function FunctionalStatusPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }

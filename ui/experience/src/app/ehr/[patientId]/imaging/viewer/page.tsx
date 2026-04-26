@@ -15,7 +15,6 @@ import {
   Move,
   SunMedium,
 } from "lucide-react";
-import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLaunchImagingViewer } from "@/hooks/queries/useImaging";
 import { apiClient } from "@/lib/api-client";
@@ -336,8 +335,7 @@ export default function DicomViewerPage() {
   }, [viewMode, nativeLayer]);
 
   return (
-    <EHRLayout>
-      <PageShell
+    <PageShell
         title="DICOM viewer"
         subtitle="Study / series / instance navigation over DICOMweb (WADO-RS rendered frames)"
       >
@@ -592,6 +590,5 @@ export default function DicomViewerPage() {
           </div>
         )}
       </PageShell>
-    </EHRLayout>
   );
 }
