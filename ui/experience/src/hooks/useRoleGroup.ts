@@ -32,6 +32,8 @@ export function useRoleGroup() {
     isDispenser: hasGroupRole(hasRole, "DISPENSER"),
     isQueueManager: hasGroupRole(hasRole, "QUEUE"),
     isCitizen: hasGroupRole(hasRole, "CITIZEN"),
+    /** Oversight of multiple facilities (district / national operational snapshots). */
+    isOperationsOversight: hasGroupRole(hasRole, "OPERATIONS_AGGREGATE"),
     hasGroup: (group: string) => hasGroupRole(hasRole, group),
   };
 }

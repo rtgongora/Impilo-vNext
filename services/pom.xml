@@ -58,6 +58,7 @@
         <module>ubomi-service</module>
         <module>fhir-gateway-service</module>
         <module>pct-service</module>
+        <module>scheduling-service</module>
         <module>simba-service</module>
         <module>oros-service</module>
         <module>pharmacy-service</module>

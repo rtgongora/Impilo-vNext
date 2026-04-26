@@ -5,7 +5,7 @@
  * Route: /queue | pageTitle: "Patient Queue"
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -23,7 +23,12 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQueueEntries, useCallPatient } from "@/hooks/queries/useQueue";
+import {
+  useQueueEntries,
+  useCallPatient,
+  useTransferQueueEntry,
+  useAbandonQueueEntry,
+} from "@/hooks/queries/useQueue";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +66,7 @@ const STATUS_STYLES: Record<string, string> = {
   NO_SHOW: "bg-red-100 text-red-600",
   TRANSFERRED: "bg-purple-100 text-purple-600",
   CANCELLED: "bg-gray-100 text-gray-400",
+  LEFT: "bg-slate-200 text-slate-700",
 };
 
 export default function QueuePage() {
@@ -70,6 +76,7 @@ export default function QueuePage() {
   const callPatient = useCallPatient();
   const { isQueueManager } = useRoleGroup();
   const queryClient = useQueryClient();
+  const [transferTargetByEntry, setTransferTargetByEntry] = useState<Record<string, string>>({});
 
   // Queue stats for supervisor summary
   const { data: statsData } = useQuery<{ data: Record<string, number> }>({
@@ -91,6 +98,30 @@ export default function QueuePage() {
     mutationFn: (entryId: string) => apiClient.post(`/internal/v1/queue/entries/${entryId}/resume`),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
   });
+
+  const transferEntry = useTransferQueueEntry();
+  const abandonEntry = useAbandonQueueEntry();
+
+  const { data: queueDefinitions } = useQuery({
+    queryKey: ["queue-definitions", facility?.id],
+    queryFn: () =>
+      apiClient.get<{ data: Array<Record<string, unknown>> }>(
+        `/internal/v1/queue/definitions?facility_id=${encodeURIComponent(facility!.id)}`,
+      ),
+    enabled: !!facility?.id && isQueueManager,
+  });
+
+  const queueTargets = useMemo(() => {
+    const rows = queueDefinitions?.data ?? [];
+    return rows
+      .map((row) => {
+        const id = String(row.queueId ?? row.id ?? "");
+        const attrs = (row.attributes as Record<string, unknown> | undefined) ?? {};
+        const label = String(attrs.name ?? row.name ?? row.queueType ?? id);
+        return { id, label };
+      })
+      .filter((q) => q.id && q.id !== "undefined");
+  }, [queueDefinitions]);
 
   const entries = data?.data ?? [];
   const waitingEntries = useMemo(
@@ -488,6 +519,50 @@ export default function QueuePage() {
                             Resume
                           </button>
                         )}
+                        {isQueueManager && queueTargets.length > 0 && (
+                          <div className="mt-2 flex flex-wrap items-center justify-end gap-1 border-t border-slate-100 pt-2">
+                            <select
+                              aria-label={`Transfer target for ${entry.id}`}
+                              className="max-w-[140px] rounded border border-slate-200 px-1 py-1 text-[11px] text-slate-800"
+                              value={transferTargetByEntry[entry.id] ?? ""}
+                              onChange={(e) =>
+                                setTransferTargetByEntry((m) => ({ ...m, [entry.id]: e.target.value }))
+                              }
+                            >
+                              <option value="">Transfer to…</option>
+                              {queueTargets.map((q) => (
+                                <option key={q.id} value={q.id}>
+                                  {q.label}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              disabled={!transferTargetByEntry[entry.id] || transferEntry.isPending}
+                              onClick={() =>
+                                transferEntry.mutate({
+                                  id: entry.id,
+                                  targetQueueId: transferTargetByEntry[entry.id],
+                                })
+                              }
+                              className="rounded bg-purple-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-purple-700 disabled:opacity-40"
+                            >
+                              Transfer
+                            </button>
+                          </div>
+                        )}
+                        {isQueueManager &&
+                          (entry.attributes.status === "WAITING" || entry.attributes.status === "CALLED") && (
+                            <button
+                              type="button"
+                              onClick={() => abandonEntry.mutate({ id: entry.id })}
+                              disabled={abandonEntry.isPending}
+                              className="ml-1 rounded border border-slate-300 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                              title="Left without being seen (PCT LEFT)"
+                            >
+                              LWBS
+                            </button>
+                          )}
                       </td>
                     </tr>
                   );

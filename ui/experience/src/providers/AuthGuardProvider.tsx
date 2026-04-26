@@ -60,7 +60,7 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     // Assurance tier gate: restrict UNVERIFIED users from health pages
     const HEALTH_RESTRICTED_PREFIXES = [
       "/ehr", "/clinical", "/pharmacy", "/lab", "/queue",
-      "/scheduling", "/shift", "/telemedicine",
+      "/scheduling", "/shift", "/telemedicine", "/facility-operations",
     ];
 
     if (

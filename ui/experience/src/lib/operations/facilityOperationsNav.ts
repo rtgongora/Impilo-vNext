@@ -1,11 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
+  Armchair,
   BarChart3,
   BedDouble,
   Building2,
   Calendar,
   ClipboardList,
+  Globe2,
   Layers,
   Radio,
   Route,
@@ -19,6 +21,7 @@ export type FacilityOpsRoleMask = {
   isFinance: boolean;
   isDispenser: boolean;
   isQueueManager: boolean;
+  isOperationsOversight: boolean;
 };
 
 export type FacilityOpsNavCard = {
@@ -49,6 +52,22 @@ const CARDS: FacilityOpsNavCard[] = [
     href: "/facility-operations/patient-flow",
     Icon: Activity,
     anyOf: ["isQueueManager", "isClinical", "isAdmin"],
+  },
+  {
+    id: "district",
+    label: "District & national operations",
+    description: "Compare live queue pressure across up to 40 facilities (PCT-backed where reachable).",
+    href: "/facility-operations/district-view",
+    Icon: Globe2,
+    anyOf: ["isOperationsOversight"],
+  },
+  {
+    id: "resources-board",
+    label: "Service points & Tuso resources",
+    description: "Rooms, consultation points, and booking resources from Tuso via the appointments plane.",
+    href: "/facility-operations/resources",
+    Icon: Armchair,
+    anyOf: ["isClinical", "isQueueManager", "isAdmin"],
   },
   {
     id: "queues",

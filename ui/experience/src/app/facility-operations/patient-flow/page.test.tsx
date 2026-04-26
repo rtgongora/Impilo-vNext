@@ -43,6 +43,9 @@ vi.mock("@/lib/api-client", () => ({
 function mockApis() {
   get.mockImplementation((url: string) => {
     if (url.includes("/internal/v1/queue/entries")) {
+      if (url.includes("queue_type=")) {
+        return Promise.resolve({ data: [], meta: {} });
+      }
       const status = url.includes("status=WAITING")
         ? "WAITING"
         : url.includes("status=CALLED")

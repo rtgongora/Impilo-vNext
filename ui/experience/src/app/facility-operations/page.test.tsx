@@ -31,6 +31,7 @@ const roleState = vi.hoisted(() => ({
   isFinance: false,
   isDispenser: false,
   isQueueManager: true,
+  isOperationsOversight: false,
 }));
 
 vi.mock("@/hooks/useRoleGroup", () => ({

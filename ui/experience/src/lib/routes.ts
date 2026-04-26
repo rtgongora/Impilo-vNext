@@ -138,6 +138,10 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/queue/walk-in", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Walk-in Registration", navLabel: "Walk-in", navZone: "work" },
   { path: "/queue/scheduled", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Scheduled Visits", navLabel: "Scheduled", navZone: "work" },
   { path: "/queue/incoming-referrals", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Incoming Referrals", navLabel: "Incoming Referrals", navZone: "work" },
+  { path: "/facility-operations", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Facility operations", navLabel: "Facility operations", navZone: "work" },
+  { path: "/facility-operations/patient-flow", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Patient flow board", navLabel: "Patient flow", navZone: "work" },
+  { path: "/facility-operations/district-view", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "District operations", navLabel: "District view", navZone: "work" },
+  { path: "/facility-operations/resources", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Service points & resources", navLabel: "Resources", navZone: "work" },
 
   // ── Zone: EHR (Clinical) ────────────────────────────────────────
   { path: "/ehr/[patientId]", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Patient Chart", navLabel: "Chart", navZone: "work" },
@@ -392,7 +396,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 252;
+export const EXPECTED_ROUTE_COUNT = 256;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

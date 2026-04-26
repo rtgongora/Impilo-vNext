@@ -80,28 +80,45 @@ vi.mock("@/hooks/queries/useQueue", () => ({
     mutate: callMutate,
     isPending: false,
   }),
+  useTransferQueueEntry: () => ({ mutate: vi.fn(), isPending: false }),
+  useAbandonQueueEntry: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({
-    invalidateQueries: vi.fn(),
-  }),
-  useQuery: () => ({
-    data: {
-      data: {
-        waiting: 1,
-        called: 1,
-        inService: 0,
-        completed: 4,
-        avgWaitSeconds: 900,
-      },
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+    }),
+    useQuery: (opts: { queryKey: unknown[] }) => {
+      if (opts.queryKey[0] === "queue-definitions") {
+        return {
+          data: {
+            data: [{ queueId: "550e8400-e29b-41d4-a716-446655440000", queueType: "TRIAGE", name: "Triage desk" }],
+          },
+          isLoading: false,
+        };
+      }
+      return {
+        data: {
+          data: {
+            waiting: 1,
+            called: 1,
+            inService: 0,
+            completed: 4,
+            avgWaitSeconds: 900,
+          },
+        },
+        isLoading: false,
+      };
     },
-  }),
-  useMutation: () => ({
-    mutate: mutationMutate,
-    isPending: false,
-  }),
-}));
+    useMutation: () => ({
+      mutate: mutationMutate,
+      isPending: false,
+    }),
+  };
+});
 
 vi.mock("@/lib/api-client", () => ({
   apiClient: {

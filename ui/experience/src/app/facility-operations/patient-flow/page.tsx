@@ -87,6 +87,13 @@ export default function PatientFlowBoardPage() {
   const waiting = useQueueEntries(fid ? { facilityId: fid, status: "WAITING" } : undefined);
   const called = useQueueEntries(fid ? { facilityId: fid, status: "CALLED" } : undefined);
   const inProgress = useQueueEntries(fid ? { facilityId: fid, status: "IN_PROGRESS" } : undefined);
+  /** PCT queue-type slices — unified “journey lanes” until a single journey/timeline board API exists. */
+  const laneTriage = useQueueEntries(fid ? { facilityId: fid, status: "WAITING", queueType: "TRIAGE" } : undefined);
+  const laneConsult = useQueueEntries(
+    fid ? { facilityId: fid, status: "WAITING", queueType: "CONSULTATION" } : undefined,
+  );
+  const laneLab = useQueueEntries(fid ? { facilityId: fid, status: "WAITING", queueType: "LABORATORY" } : undefined);
+  const lanePharm = useQueueEntries(fid ? { facilityId: fid, status: "WAITING", queueType: "PHARMACY" } : undefined);
   const statsQ = useFacilityQueueStats(fid);
 
   const appointmentsTodayQ = useQuery({
@@ -109,7 +116,15 @@ export default function PatientFlowBoardPage() {
 
   const loading =
     !!fid &&
-    (waiting.isLoading || called.isLoading || inProgress.isLoading || statsQ.isLoading || appointmentsTodayQ.isLoading);
+    (waiting.isLoading ||
+      called.isLoading ||
+      inProgress.isLoading ||
+      laneTriage.isLoading ||
+      laneConsult.isLoading ||
+      laneLab.isLoading ||
+      lanePharm.isLoading ||
+      statsQ.isLoading ||
+      appointmentsTodayQ.isLoading);
 
   const summary = useMemo(() => {
     if (!stats) return null;
@@ -185,9 +200,33 @@ export default function PatientFlowBoardPage() {
                 empty="No IN_PROGRESS entries on the queue snapshot."
               />
             </div>
+
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+                PCT journey lanes (waiting by queue type)
+              </h3>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Each tile counts WAITING items for the queue type resolved by the BFF from PCT. Zeros are valid when no
+                queue exists for that lane.
+              </p>
+              <dl className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { title: "Triage", n: laneTriage.data?.data?.length ?? 0 },
+                  { title: "Consultation", n: laneConsult.data?.data?.length ?? 0 },
+                  { title: "Laboratory", n: laneLab.data?.data?.length ?? 0 },
+                  { title: "Pharmacy", n: lanePharm.data?.data?.length ?? 0 },
+                ].map((lane) => (
+                  <div key={lane.title} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <dt className="text-[10px] font-semibold uppercase text-slate-500">{lane.title}</dt>
+                    <dd className="text-lg font-bold text-slate-900">{lane.n}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
             <p className="text-[11px] text-slate-500">
-              Pharmacy, imaging, referrals, and coverage states remain on their dedicated routes; this board focuses on
-              queue movement only until a unified PCT journey lane API is available.
+              For per-patient PCT timeline composition (encounters, orders, referrals), use the chart timeline; this
+              board stays queue-first. Pharmacy, imaging, and payment coverage still have dedicated work routes.
             </p>
           </div>
         )}

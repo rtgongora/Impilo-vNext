@@ -9,6 +9,7 @@ describe("filterFacilityOpsNavCards", () => {
       isFinance: false,
       isDispenser: false,
       isQueueManager: true,
+      isOperationsOversight: false,
     });
     const ids = cards.map((c) => c.id);
     expect(ids).toContain("alerts");
@@ -21,6 +22,20 @@ describe("filterFacilityOpsNavCards", () => {
     expect(ids).not.toContain("handover");
     expect(ids).not.toContain("scheduling-roster");
     expect(ids).not.toContain("appointments");
+    expect(ids).not.toContain("district");
+  });
+
+  it("shows district card for operations oversight mask", () => {
+    const ids = filterFacilityOpsNavCards({
+      isClinical: false,
+      isAdmin: false,
+      isFinance: false,
+      isDispenser: false,
+      isQueueManager: false,
+      isOperationsOversight: true,
+    }).map((c) => c.id);
+    expect(ids).toContain("district");
+    expect(ids).toContain("alerts");
   });
 
   it("shows clinical and queue surfaces for clinician mask", () => {
@@ -30,6 +45,7 @@ describe("filterFacilityOpsNavCards", () => {
       isFinance: false,
       isDispenser: false,
       isQueueManager: false,
+      isOperationsOversight: false,
     }).map((c) => c.id);
     expect(ids).toContain("appointments");
     expect(ids).toContain("handover");
@@ -44,6 +60,7 @@ describe("filterFacilityOpsNavCards", () => {
       isFinance: true,
       isDispenser: false,
       isQueueManager: false,
+      isOperationsOversight: false,
     }).map((c) => c.id);
     expect(ids).toContain("alerts");
     expect(ids).toContain("reports");

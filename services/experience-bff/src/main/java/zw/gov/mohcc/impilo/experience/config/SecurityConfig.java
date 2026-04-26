@@ -97,6 +97,11 @@ public class SecurityConfig {
     private static final String[] PUBLIC_HEALTH_ROLES = {
             "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
 
+    /** District / provincial / national operational snapshots (queue stats across facilities). */
+    private static final String[] OPERATIONS_AGGREGATE_ROLES = mergeRoleSets(
+            mergeRoleSets(mergeRoleSets(CLINICAL_ROLES, QUEUE_ROLES), PUBLIC_HEALTH_ROLES),
+            new String[]{"HIE_ADMIN"});
+
     @Autowired(required = false)
     private JwtDecoder jwtDecoder;
 
@@ -139,6 +144,10 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/finance/**").hasAnyRole(FINANCE_ROLES)
                     .requestMatchers("/internal/v1/product-registry/**").hasAnyRole(COMMERCE_ROLES)
                     .requestMatchers("/internal/v1/commerce/**").hasAnyRole(COMMERCE_ROLES)
+
+                    // ── Multi-facility operational snapshots (oversight roles) ──
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/operations/facility-queue-snapshots")
+                            .hasAnyRole(OPERATIONS_AGGREGATE_ROLES)
 
                     // ── Queue management ──────────────────────────────────
                     .requestMatchers(HttpMethod.POST, "/internal/v1/queue/**")

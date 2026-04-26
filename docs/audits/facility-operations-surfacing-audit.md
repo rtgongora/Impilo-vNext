@@ -13,7 +13,7 @@ This audit adds:
 - **`/facility-operations`** — role-filtered hub linking queues, control tower, scheduling, rosters, beds, patient flow, tasks, alerts, and reports.
 - **`/facility-operations/patient-flow`** — facility-scoped **patient flow board** built only from **live** queue queries + queue stats + optional appointment counts (empty states when APIs return nothing).
 
-**Non-goals in this pass:** implementing a full new `scheduling-service`, complete queue state machine UI for every PCT status, or district/national aggregate dashboards (requires analytics APIs not yet exposed to Experience).
+**Follow-up implemented (this iteration):** `scheduling-service` **MVP module** (slot templates + in-memory holds), **district/national aggregate** UI via `POST /internal/v1/operations/facility-queue-snapshots`, **PCT-accurate queue stats** aggregation in the BFF, **transfer → PCT `transferQueueItem`**, **LWBS/abandon → `LEFT`**, **BFF-local audit trail** for queue mutations, **Tuso resource board** route, and **queue-type journey lanes** on the patient flow board. Deep analytics warehouse roll-ups and PCT-native audit persistence remain future work.
 
 ---
 
@@ -124,8 +124,8 @@ Record failures in PR notes; fix before merge.
 
 ## 7. Follow-up (prioritised)
 
-1. Single BFF aggregate endpoint for control tower (reduce N+1 calls).
-2. Expose PCT queue **transfer/hold/abandon** mutations with optimistic UI.
-3. Scheduling-service MVP or harden BFF façade with idempotent slot reservation.
-4. Tuso-backed **resource board** page.
-5. District aggregate dashboard behind new analytics API + role.
+1. Single BFF aggregate endpoint for **control tower** (replace parallel ward/bed/queue client calls).
+2. **PCT-persisted audit** for queue items (replace BFF in-memory deque); wire Tshepo audit export.
+3. **Wire BFF** `SchedulingController` availability to `scheduling-service` HTTP client when slot engine should own capacity math.
+4. **Tuso numeric ↔ Experience UUID** alignment for resources and facility registry rows.
+5. **Warehouse / NDR** aggregate dashboards for national KPIs beyond live PCT snapshots.

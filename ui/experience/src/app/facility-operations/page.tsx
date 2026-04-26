@@ -15,13 +15,14 @@ import { filterFacilityOpsNavCards } from "@/lib/operations/facilityOperationsNa
 
 export default function FacilityOperationsHubPage() {
   const facility = useFacilityStore((s) => s.facility);
-  const { isClinical, isAdmin, isFinance, isDispenser, isQueueManager } = useRoleGroup();
+  const { isClinical, isAdmin, isFinance, isDispenser, isQueueManager, isOperationsOversight } = useRoleGroup();
   const cards = filterFacilityOpsNavCards({
     isClinical,
     isAdmin,
     isFinance,
     isDispenser,
     isQueueManager,
+    isOperationsOversight,
   });
 
   return (
