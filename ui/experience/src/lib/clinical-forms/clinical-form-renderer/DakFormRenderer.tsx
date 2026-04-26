@@ -1,0 +1,254 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { AlertTriangle, CheckCircle2, ClipboardList } from "lucide-react";
+import type { ClinicalFormDefinition, ClinicalFormRuntimeContext, FormValues } from "../types";
+import { visibleFieldsForSection } from "../evaluate-visibility";
+import { validateClinicalForm } from "../validate-form";
+import { useClinicalFormDraft } from "./useClinicalFormDraft";
+import { runAncContact1DecisionSupport, type DecisionSupportAlert } from "../decision-support-hooks/anc-decision-support";
+import { ANTENATAL_CONTACT_1_FORM } from "../clinical-form-definitions/antenatal-contact-1-exemplar";
+
+function renderField(
+  field: ClinicalFormDefinition["sections"][number]["fields"][number],
+  values: FormValues,
+  setField: (id: string, v: FormValues[string]) => void,
+  errors: Record<string, string>,
+) {
+  const err = errors[field.id];
+  const base = "mt-2 block w-full rounded-lg border px-3 py-2 text-sm";
+  const border = err ? "border-red-400" : "border-gray-300";
+
+  switch (field.kind) {
+    case "coded_single":
+    case "segmented":
+      return (
+        <div key={field.id}>
+          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <select
+            className={`${base} ${border} mt-1`}
+            value={String(values[field.id] ?? "")}
+            onChange={(e) => setField(field.id, e.target.value)}
+          >
+            <option value="">Select…</option>
+            {(field.options ?? []).map((o) => (
+              <option key={o.code} value={o.code}>
+                {o.display}
+              </option>
+            ))}
+          </select>
+          {field.allowAuxiliaryNarrative && (
+            <textarea
+              className={`${base} ${border} mt-2`}
+              rows={2}
+              placeholder={field.auxiliaryNarrativeLabel ?? "Optional notes"}
+              value={String(values[`${field.id}__narrative`] ?? "")}
+              onChange={(e) => setField(`${field.id}__narrative`, e.target.value)}
+            />
+          )}
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </div>
+      );
+    case "coded_multi": {
+      const cur = (values[field.id] as string[] | undefined) ?? [];
+      const toggle = (code: string) => {
+        const set = new Set(cur);
+        if (set.has(code)) set.delete(code);
+        else set.add(code);
+        setField(field.id, Array.from(set));
+      };
+      return (
+        <div key={field.id}>
+          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1">
+            {(field.options ?? []).map((o) => (
+              <label key={o.code} className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="checkbox" checked={cur.includes(o.code)} onChange={() => toggle(o.code)} className="rounded border-gray-300" />
+                {o.display}
+              </label>
+            ))}
+          </div>
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </div>
+      );
+    }
+    case "numeric_with_unit":
+      return (
+        <label key={field.id} className="block">
+          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <input
+            type="number"
+            className={`${base} ${border} mt-1`}
+            value={values[field.id] === undefined || values[field.id] === null ? "" : String(values[field.id])}
+            onChange={(e) => setField(field.id, e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          {field.unit && <span className="ml-2 text-xs text-gray-400">{field.unit}</span>}
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </label>
+      );
+    case "date":
+      return (
+        <label key={field.id} className="block">
+          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <input
+            type="date"
+            className={`${base} ${border} mt-1`}
+            value={String(values[field.id] ?? "")}
+            onChange={(e) => setField(field.id, e.target.value)}
+          />
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </label>
+      );
+    case "text":
+      return (
+        <label key={field.id} className="block">
+          <span className="text-xs font-medium text-gray-600">{field.label}</span>
+          <textarea
+            className={`${base} ${border} mt-1`}
+            rows={3}
+            value={String(values[field.id] ?? "")}
+            onChange={(e) => setField(field.id, e.target.value)}
+          />
+          {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+        </label>
+      );
+    default:
+      return (
+        <div key={field.id} className="text-xs text-gray-500">
+          Unsupported field kind: {field.kind}
+        </div>
+      );
+  }
+}
+
+function decisionAlertsForForm(form: ClinicalFormDefinition, ctx: ClinicalFormRuntimeContext, values: FormValues): DecisionSupportAlert[] {
+  if (form.id === ANTENATAL_CONTACT_1_FORM.id) {
+    return runAncContact1DecisionSupport(ctx, values);
+  }
+  return [];
+}
+
+export function DakFormRenderer(props: {
+  form: ClinicalFormDefinition;
+  runtime: ClinicalFormRuntimeContext;
+  patientId: string;
+  encounterId: string;
+  showProgress?: boolean;
+}) {
+  const { form, runtime, patientId, encounterId, showProgress = true } = props;
+  const initial: FormValues = {};
+  const { values, setField, clearDraft, dirty } = useClinicalFormDraft(form.id, patientId, encounterId, initial);
+  const [attempted, setAttempted] = useState(false);
+
+  const issues = useMemo(() => validateClinicalForm(form, values, runtime), [form, values, runtime]);
+  const errors = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const i of issues) m[i.fieldId] = i.message;
+    return m;
+  }, [issues]);
+
+  const dsAlerts = useMemo(() => decisionAlertsForForm(form, runtime, values), [form, runtime, values]);
+
+  const { totalRequired, completedRequired } = useMemo(() => {
+    let total = 0;
+    let done = 0;
+    for (const sec of form.sections) {
+      const vis = visibleFieldsForSection(sec.fields, runtime);
+      for (const f of vis) {
+        if (!f.validation?.required) continue;
+        total += 1;
+        const v = values[f.id];
+        const ok =
+          v !== undefined &&
+          v !== null &&
+          v !== "" &&
+          !(Array.isArray(v) && v.length === 0);
+        if (ok) done += 1;
+      }
+    }
+    return { totalRequired: total, completedRequired: done };
+  }, [form, runtime, values]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-impilo-500" />
+            {form.title}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">{form.description}</p>
+          <p className="text-[10px] text-gray-400 mt-1">Form {form.id} · v{form.version}</p>
+        </div>
+        {showProgress && totalRequired > 0 && (
+          <div className="text-right">
+            <p className="text-xs font-medium text-gray-700">
+              {completedRequired}/{totalRequired} required
+            </p>
+            <div className="mt-1 h-1.5 w-28 rounded-full bg-gray-200 overflow-hidden">
+              <div
+                className="h-full bg-impilo-500 transition-all"
+                style={{ width: `${Math.round((100 * completedRequired) / totalRequired)}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {dirty && (
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+          Draft autosaved locally in this browser.
+          <button type="button" className="ml-2 underline" onClick={clearDraft}>
+            Reset draft
+          </button>
+        </p>
+      )}
+
+      {dsAlerts.length > 0 && (
+        <div className="space-y-1">
+          {dsAlerts.map((a) => (
+            <div
+              key={a.id}
+              className={`flex items-start gap-2 rounded-lg border px-2 py-1.5 text-xs ${
+                a.severity === "critical"
+                  ? "border-red-300 bg-red-50 text-red-900"
+                  : a.severity === "warning"
+                    ? "border-amber-300 bg-amber-50 text-amber-900"
+                    : "border-gray-200 bg-gray-50 text-gray-800"
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+              <span>{a.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {form.sections.map((sec) => {
+        const visFields = visibleFieldsForSection(sec.fields, runtime);
+        if (!visFields.length) return null;
+        return (
+          <div key={sec.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
+            <h4 className="text-xs font-semibold text-gray-800 uppercase tracking-wide">{sec.title}</h4>
+            {sec.description && <p className="text-[11px] text-gray-500">{sec.description}</p>}
+            <div className="space-y-3">{visFields.map((f) => renderField(f, values, setField, errors))}</div>
+          </div>
+        );
+      })}
+
+      {attempted && issues.length === 0 && (
+        <p className="text-xs text-green-700 flex items-center gap-1">
+          <CheckCircle2 className="w-3.5 h-3.5" /> All required visible fields pass validation.
+        </p>
+      )}
+
+      <button
+        type="button"
+        className="text-xs text-gray-500 underline"
+        onClick={() => setAttempted(true)}
+      >
+        Check validation
+      </button>
+    </div>
+  );
+}

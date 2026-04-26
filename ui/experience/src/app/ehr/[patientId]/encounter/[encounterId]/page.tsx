@@ -5,7 +5,7 @@
  * Route: /ehr/[patientId]/encounter/[encounterId] | pageTitle: "Encounter"
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -31,6 +31,15 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
+import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
+import {
+  ActiveDataEntryLayout,
+  ANTENATAL_CONTACT_1_FORM,
+  clinicalFormPatientContextFromPatient,
+  DakFormRenderer,
+  type ClinicalFormRuntimeContext,
+} from "@/lib/clinical-forms";
+import { usePatient } from "@/hooks/queries/usePatients";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
 import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
@@ -47,7 +56,7 @@ export default function EncounterPage() {
   const facility = useFacilityStore((state) => state.facility);
 
   // Determine role-specific form variant — check most specific role first
-  const roles = user?.roles ?? [];
+  const roles = useMemo(() => user?.roles ?? [], [user?.roles]);
   const activeRole =
     roles.includes("PHYSIOTHERAPIST") ? "PHYSIOTHERAPIST"
     : roles.includes("OCCUPATIONAL_THERAPIST") ? "OCCUPATIONAL_THERAPIST"
@@ -72,6 +81,7 @@ export default function EncounterPage() {
     : "CLINICIAN";
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
+  const { data: patientData } = usePatient(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
 
@@ -149,6 +159,29 @@ export default function EncounterPage() {
   const [noteError, setNoteError] = useState<string | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  /** WHO DAK–aligned structured ANC form takes primary column; journey moves to side rail. */
+  const [structuredFormFocus, setStructuredFormFocus] = useState(false);
+
+  const dakRuntime: ClinicalFormRuntimeContext | null = useMemo(() => {
+    if (!encounter || !patientData?.data) return null;
+    const et = String(encounter.attributes.encounterType ?? "").toUpperCase();
+    const anc =
+      et.includes("ANC") ||
+      et.includes("ANTENATAL") ||
+      et.includes("MATERNITY") ||
+      et.includes("OBSTETRIC");
+    const g = (patientData.data.attributes.gender ?? "").toUpperCase();
+    const pregnant = anc && (g === "FEMALE" || g === "F") ? true : null;
+    const patientCtx = clinicalFormPatientContextFromPatient(patientData.data, {
+      programmes: anc ? ["ANC"] : [],
+      pregnant,
+    });
+    return {
+      patient: patientCtx,
+      encounterType: String(encounter.attributes.encounterType ?? "UNKNOWN"),
+      providerRoles: roles,
+    };
+  }, [encounter, patientData, roles]);
 
   // Examination findings state (Lovable-aligned system-by-system capture)
   const [examGeneral, setExamGeneral] = useState("");
@@ -348,9 +381,9 @@ export default function EncounterPage() {
         ) : (
           <div className="space-y-6">
             {/* Clinical Decision Support Alerts */}
-            <ClinicalAlerts alerts={clinicalAlerts} />
+            {!structuredFormFocus && <ClinicalAlerts alerts={clinicalAlerts} />}
 
-            <PatientJourneyContextPanel patientId={patientId} variant="compact" />
+            {!structuredFormFocus && <PatientJourneyContextPanel patientId={patientId} variant="compact" />}
 
             <ClinicalReviewHeader
               badge="Encounter closure"
@@ -391,6 +424,56 @@ export default function EncounterPage() {
                 },
               ]}
             />
+
+            {isClinical && isActive && dakRuntime && (
+              <div className="rounded-lg border border-impilo-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">Structured clinical forms (WHO DAK pattern)</p>
+                    <p className="text-[11px] text-gray-500">
+                      Antenatal first-contact exemplar — coded fields, decision-support hooks, indicator & FHIR mapping utilities.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStructuredFormFocus((v) => !v)}
+                    className="shrink-0 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700"
+                  >
+                    {structuredFormFocus ? "Exit focused entry" : "Focus ANC structured form"}
+                  </button>
+                </div>
+                <div className="mt-3">
+                  {structuredFormFocus ? (
+                    <ActiveDataEntryLayout
+                      active
+                      onRequestExit={() => setStructuredFormFocus(false)}
+                      contextRail={
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase text-gray-500">Patient context</p>
+                          <PatientJourneyContextPanel patientId={patientId} variant="compact" />
+                        </div>
+                      }
+                      alerts={<ClinicalAlerts alerts={clinicalAlerts} />}
+                      primary={
+                        <DakFormRenderer
+                          form={ANTENATAL_CONTACT_1_FORM}
+                          runtime={dakRuntime}
+                          patientId={patientId}
+                          encounterId={encounterId}
+                        />
+                      }
+                    />
+                  ) : (
+                    <DakFormRenderer
+                      form={ANTENATAL_CONTACT_1_FORM}
+                      runtime={dakRuntime}
+                      patientId={patientId}
+                      encounterId={encounterId}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -734,6 +817,18 @@ export default function EncounterPage() {
                   </div>
                 </div>
                 {vitalsError && <p className="mt-2 text-xs text-red-600">{vitalsError}</p>}
+                {patientData?.data && (
+                  <EncounterVitalsGuidance
+                    ageBand={clinicalFormPatientContextFromPatient(patientData.data).ageBand}
+                    systolic={systolic}
+                    diastolic={diastolic}
+                    heartRate={heartRate}
+                    temperature={temperature}
+                    respiratoryRate={respiratoryRate}
+                    oxygenSat={oxygenSat}
+                    painScore={painScore}
+                  />
+                )}
                 {isActive && (
                   <button onClick={handleSaveVitals} disabled={vitalsSaving}
                     className="mt-4 w-full py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
