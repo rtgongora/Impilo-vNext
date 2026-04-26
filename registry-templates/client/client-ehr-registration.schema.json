@@ -1,0 +1,22 @@
+{
+  "id": "impilo.registry.client.ehr_registration.v1",
+  "owner": "VITO",
+  "title": "Health-worker EHR registration",
+  "fhirConceptualMappings": [
+    "Patient",
+    "Provenance"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "description": "Minimum safe dataset + duplicate search + Vito issuance. Extends client-core + registration-mode.",
+  "extendsTemplates": [
+    "client/client-core.schema.json",
+    "client/client-registration-mode.schema.json"
+  ],
+  "uiHints": {
+    "duplicateSearchRequired": true,
+    "allowEmergencyUnknownName": true,
+    "allowOfflineProvisional": true,
+    "encounterHandoffField": "vitoRegistryHealthId"
+  }
+}

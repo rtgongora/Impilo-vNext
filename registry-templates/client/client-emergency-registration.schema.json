@@ -1,0 +1,20 @@
+{
+  "id": "impilo.registry.client.emergency_registration.v1",
+  "owner": "VITO",
+  "title": "Emergency registration",
+  "fhirConceptualMappings": [
+    "Patient",
+    "Provenance"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "extendsTemplates": [
+    "client/client-core.schema.json",
+    "client/client-registration-mode.schema.json"
+  ],
+  "uiHints": {
+    "defaultRegistrationMode": "EMERGENCY_REGISTRATION",
+    "allowUnknownName": true,
+    "defaultAssuranceLevel": "UNVERIFIED"
+  }
+}

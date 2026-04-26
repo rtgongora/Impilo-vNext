@@ -1,0 +1,30 @@
+{
+  "version": "1.0.0",
+  "templates": [
+    "client/client-core.schema.json",
+    "client/client-registration-mode.schema.json",
+    "client/client-ehr-registration.schema.json",
+    "client/client-self-registration.schema.json",
+    "client/client-assisted-registration.schema.json",
+    "client/client-emergency-registration.schema.json",
+    "client/client-coverage.schema.json",
+    "provider/provider-person.schema.json",
+    "provider/provider-professional-profile.schema.json",
+    "provider/provider-facility-affiliation.schema.json",
+    "provider/provider-work-context.schema.json",
+    "facility/facility-core.schema.json",
+    "facility/facility-location.schema.json",
+    "facility/facility-services.schema.json",
+    "facility/facility-licensing.schema.json",
+    "facility/facility-digital-readiness.schema.json",
+    "facility/facility-locality-gazetteer.schema.json",
+    "terminology/countries.iso3166-1.schema.json",
+    "terminology/zimbabwe-provinces.schema.json",
+    "terminology/zimbabwe-districts.schema.json",
+    "terminology/zimbabwe-wards.schema.json",
+    "terminology/client-registration-value-sets.schema.json",
+    "terminology/provider-registration-value-sets.schema.json",
+    "terminology/facility-registration-value-sets.schema.json",
+    "terminology/coverage-payment-value-sets.schema.json"
+  ]
+}

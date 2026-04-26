@@ -1,0 +1,19 @@
+{
+  "id": "impilo.registry.client.self_registration.v1",
+  "owner": "VITO",
+  "title": "Citizen self-registration",
+  "fhirConceptualMappings": [
+    "Patient",
+    "Consent"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "extendsTemplates": [
+    "client/client-core.schema.json",
+    "client/client-registration-mode.schema.json"
+  ],
+  "uiHints": {
+    "defaultRegistrationMode": "SELF_REGISTRATION",
+    "initiatingActor": "CLIENT"
+  }
+}

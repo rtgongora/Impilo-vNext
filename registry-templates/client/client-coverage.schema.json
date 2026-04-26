@@ -1,0 +1,562 @@
+{
+  "id": "impilo.registry.client.coverage.v1",
+  "owner": "VITO",
+  "title": "Client coverage / medical aid",
+  "fhirConceptualMappings": [
+    "Coverage",
+    "Consent",
+    "Provenance"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "description": "Canonical coverage is not owned by the EHR. Capture forwards to Vito summary + MusheX eligibility + COSTA billing rules.",
+  "downstream": {
+    "vito": "coverage_summary",
+    "mushex": "eligibility_claims_cards",
+    "costa": "billing_rules"
+  },
+  "fields": [
+    {
+      "name": "coverageStatus",
+      "label": "Coverage status",
+      "description": "",
+      "dataType": "string",
+      "requirement": "required",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/coverageStatus",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.status"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "payerType",
+      "label": "Payer type",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/payerType",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "schemeOrInsurerName",
+      "label": "Medical aid / insurer / scheme",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.payor"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "planName",
+      "label": "Scheme or plan",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.class"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "membershipNumber",
+      "label": "Membership number",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "SENSITIVE_FINANCIAL",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.subscriberId"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "principalMemberRelationship",
+      "label": "Principal member relationship",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/principalMemberRelationship",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "principalMemberName",
+      "label": "Principal member name",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "principalMemberIdNumber",
+      "label": "Principal member ID number",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "SENSITIVE_IDENTIFIER",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "principalMemberPhone",
+      "label": "Principal member phone",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "dependentStatus",
+      "label": "Dependent status",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/dependentStatus",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "relationshipToSubscriber",
+      "label": "Relationship to principal member",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.relationship"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "coverageStart",
+      "label": "Coverage start",
+      "description": "",
+      "dataType": "date",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.period.start"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "coverageEnd",
+      "label": "Coverage end",
+      "description": "",
+      "dataType": "date",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [
+        "Coverage.period.end"
+      ],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "coverageVerificationStatus",
+      "label": "Verification status",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/coverageVerificationStatus",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "benefitClass",
+      "label": "Benefit class",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/benefitClass",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "coPaymentRule",
+      "label": "Co-payment rule",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/coPaymentRule",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "claimsDestination",
+      "label": "Claims destination",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/claimsDestination",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "eligibilityCheckConsent",
+      "label": "Consent for eligibility check",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/coverage-payment-value-sets.schema.json#/eligibilityCheckConsent",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "capturedByActorId",
+      "label": "Captured by",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "capturedAtFacilityId",
+      "label": "Captured at facility/workspace",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "capturedAt",
+      "label": "Captured date/time",
+      "description": "",
+      "dataType": "datetime",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "sourceWorkflow",
+      "label": "Source workflow",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    }
+  ]
+}

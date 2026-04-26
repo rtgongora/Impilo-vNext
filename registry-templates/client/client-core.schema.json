@@ -1,0 +1,1629 @@
+{
+  "id": "impilo.registry.client.core.v1",
+  "owner": "VITO",
+  "title": "Client core registration",
+  "fhirConceptualMappings": [
+    "Patient",
+    "RelatedPerson",
+    "Consent",
+    "Coverage",
+    "Provenance",
+    "AuditEvent"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "sections": [
+    {
+      "id": "registry_identifiers",
+      "title": "Registry identifiers",
+      "fields": [
+        {
+          "name": "vitoRegistryHealthId",
+          "label": "Vito registry Health ID",
+          "description": "Issued by Vito after successful registration.",
+          "dataType": "uuid_string",
+          "requirement": "conditional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.identifier"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "impiloIdAlias",
+          "label": "Impilo ID alias",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.identifier"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "healthIdLinkage",
+          "label": "Health ID linkage state",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/linkageStatus",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "cridCpidLinkageStatus",
+          "label": "CRID/CPID linkage status",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "temporaryProvisionalFlag",
+          "label": "Temporary / provisional",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "#/boolean",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "duplicateMergeStatus",
+          "label": "Duplicate / merge status",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/duplicateStatus",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "names",
+      "title": "Names",
+      "fields": [
+        {
+          "name": "familyName",
+          "label": "Surname",
+          "description": "",
+          "dataType": "string",
+          "requirement": "required",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.name.family"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "givenName",
+          "label": "First name",
+          "description": "",
+          "dataType": "string",
+          "requirement": "required",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.name.given"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "middleName",
+          "label": "Middle name",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.name.given"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "preferredName",
+          "label": "Preferred name",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "previousAliasNames",
+          "label": "Previous / alias names",
+          "description": "",
+          "dataType": "string_list",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "unknownNameFlag",
+          "label": "Unknown name (emergency)",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "dob_age",
+      "title": "Date of birth / age",
+      "fields": [
+        {
+          "name": "dateOfBirth",
+          "label": "Date of birth",
+          "description": "",
+          "dataType": "date",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.birthDate"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "estimatedDobFlag",
+          "label": "Estimated DOB",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "approximateAgeYears",
+          "label": "Approximate age (years)",
+          "description": "",
+          "dataType": "integer",
+          "requirement": "optional",
+          "conditionalWhen": "dob_unknown",
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "dobCertainty",
+          "label": "DOB certainty",
+          "description": "",
+          "dataType": "string",
+          "requirement": "required",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/dobCertainty",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.birthDate.extension"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "sex_gender",
+      "title": "Sex / gender",
+      "fields": [
+        {
+          "name": "administrativeSex",
+          "label": "Administrative sex",
+          "description": "",
+          "dataType": "string",
+          "requirement": "required",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/administrativeSex",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.gender"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "genderIdentity",
+          "label": "Gender identity",
+          "description": "Only where national policy allows capture.",
+          "dataType": "string",
+          "requirement": "conditional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "national_identifiers",
+      "title": "National or other identifiers",
+      "fields": [
+        {
+          "name": "nationalId",
+          "label": "National ID",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "SENSITIVE_IDENTIFIER",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "birthEntryNumber",
+          "label": "Birth entry number",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "passportNumber",
+          "label": "Passport number",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "refugeeAsylumDocumentNumber",
+          "label": "Refugee / asylum document number",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "otherIdentifierType",
+          "label": "Other identifier type",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/idDocumentType",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "noDocumentFlag",
+          "label": "No document on file",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "title": "Contact",
+      "fields": [
+        {
+          "name": "primaryPhone",
+          "label": "Primary phone",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.telecom"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "alternatePhone",
+          "label": "Alternate phone",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.telecom"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.telecom"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "preferredCommunicationChannel",
+          "label": "Preferred channel",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/communicationChannel",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "address_location",
+      "title": "Address / location",
+      "fields": [
+        {
+          "name": "countryAlpha2",
+          "label": "Country (ISO 3166-1 alpha-2)",
+          "description": "",
+          "dataType": "string",
+          "requirement": "required",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/countries.iso3166-1.json",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.address.country"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "provinceCode",
+          "label": "Province / Admin 1 code",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": "country=ZW",
+          "validation": {},
+          "valueSetRef": "terminology/zimbabwe-provinces.seed.json",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "districtCode",
+          "label": "District / Admin 2 code",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": "country=ZW",
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "wardCode",
+          "label": "Ward / Admin 3 code",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": "country=ZW",
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "localityGazetteerId",
+          "label": "Locality (Tuso gazetteer)",
+          "description": "Resolved from Tuso Locality Gazetteer — not free-text village lists.",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "addressLineDescription",
+          "label": "Address description",
+          "description": "Narrative address line — allowed free text per doctrine.",
+          "dataType": "text",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "gpsCoordinates",
+          "label": "GPS coordinates",
+          "description": "",
+          "dataType": "geo_point",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "usualFacilityId",
+          "label": "Usual / catchment facility (Tuso)",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.managingOrganization"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "guardian",
+      "title": "Guardian / next of kin",
+      "fields": [
+        {
+          "name": "guardianName",
+          "label": "Guardian name",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [
+            "Patient.contact.name"
+          ],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "guardianRelationship",
+          "label": "Relationship",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/relationshipToClient",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "guardianPhone",
+          "label": "Guardian phone",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "guardianConsentAuthority",
+          "label": "Consent authority (minor)",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "language_accessibility",
+      "title": "Language / accessibility",
+      "fields": [
+        {
+          "name": "preferredLanguage",
+          "label": "Preferred language",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/language",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "literacySupportNeed",
+          "label": "Literacy support need",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "disabilityAccommodationNeed",
+          "label": "Disability / accommodation",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/disabilityNeed",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "consent_privacy",
+      "title": "Consent and privacy",
+      "fields": [
+        {
+          "name": "consentStatus",
+          "label": "Consent status",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/consentStatus",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "consentType",
+          "label": "Consent type",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "consentCapturedAt",
+          "label": "Consent date/time",
+          "description": "",
+          "dataType": "datetime",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "consentCapturedByActorId",
+          "label": "Consent captured by",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "dataSharingPreference",
+          "label": "Data sharing preference",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "consentDeferredReason",
+          "label": "Consent deferred reason",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": "consent_deferred",
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "verification_assurance",
+      "title": "Verification and assurance",
+      "fields": [
+        {
+          "name": "verificationLevel",
+          "label": "Verification level",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "verificationMethod",
+          "label": "Verification method",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/verificationMethod",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "documentSeenFlag",
+          "label": "Document seen",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "biometricCapturedFlag",
+          "label": "Biometric captured",
+          "description": "",
+          "dataType": "boolean",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "biometricCaptureStatus",
+          "label": "Biometric capture status",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "verifiedByActorId",
+          "label": "Verified by",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "verifiedAt",
+          "label": "Verified at",
+          "description": "",
+          "dataType": "datetime",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "provenance_audit",
+      "title": "Provenance / audit",
+      "fields": [
+        {
+          "name": "createdByActorId",
+          "label": "Created by",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "createdAt",
+          "label": "Created at",
+          "description": "",
+          "dataType": "datetime",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "facilityId",
+          "label": "Facility / workspace (Tuso)",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "deviceId",
+          "label": "Device",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "onlineOfflineFlag",
+          "label": "Online/offline",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": "terminology/client-registration-value-sets.schema.json#/onlineState",
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "syncStatus",
+          "label": "Sync status",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        },
+        {
+          "name": "sourceWorkflow",
+          "label": "Source workflow code",
+          "description": "",
+          "dataType": "string",
+          "requirement": "optional",
+          "conditionalWhen": null,
+          "validation": {},
+          "valueSetRef": null,
+          "parentField": null,
+          "workflowApplicability": [
+            "*"
+          ],
+          "privacyClass": "PII",
+          "pii": true,
+          "auditProvenance": true,
+          "offline": "cache_lists",
+          "sync": "queue_reconcile",
+          "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+          "fhirConceptual": [],
+          "sourceAuthority": "Impilo Registry Doctrine",
+          "version": "1.0.0",
+          "active": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "sourceAuthority": "Authoritative Admin-1 boundaries must be verified against Zimbabwe COD-AB / ZIMSTAT before production cut-over.",
+  "version": "1.0.0",
+  "notes": "Stable internal codes are Impilo placeholders until COD-AB PCODEs are imported. Province NAMES match the 10 official provinces.",
+  "provinces": [
+    {
+      "code": "ZW-ADM1-BU",
+      "name": "Bulawayo"
+    },
+    {
+      "code": "ZW-ADM1-HA",
+      "name": "Harare"
+    },
+    {
+      "code": "ZW-ADM1-MA",
+      "name": "Manicaland"
+    },
+    {
+      "code": "ZW-ADM1-MC",
+      "name": "Mashonaland Central"
+    },
+    {
+      "code": "ZW-ADM1-ME",
+      "name": "Mashonaland East"
+    },
+    {
+      "code": "ZW-ADM1-MW",
+      "name": "Mashonaland West"
+    },
+    {
+      "code": "ZW-ADM1-MV",
+      "name": "Masvingo"
+    },
+    {
+      "code": "ZW-ADM1-MN",
+      "name": "Matabeleland North"
+    },
+    {
+      "code": "ZW-ADM1-MS",
+      "name": "Matabeleland South"
+    },
+    {
+      "code": "ZW-ADM1-MI",
+      "name": "Midlands"
+    }
+  ]
+}

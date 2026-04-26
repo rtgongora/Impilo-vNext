@@ -143,6 +143,17 @@ public class VitoServiceClient {
         issuance.put("familyName", patientData.get("family_name"));
         issuance.put("dateOfBirth", patientData.get("date_of_birth"));
         issuance.put("sex", patientData.get("sex"));
+        // Forward registry-template / Tshepo context fields for Vito (unknown keys ignored downstream if unsupported).
+        for (Map.Entry<String, Object> e : patientData.entrySet()) {
+            String k = e.getKey();
+            if (e.getValue() == null) {
+                continue;
+            }
+            if ("given_name".equals(k) || "family_name".equals(k) || "date_of_birth".equals(k) || "sex".equals(k)) {
+                continue;
+            }
+            issuance.put(k, e.getValue());
+        }
         return registerIdentity(issuance);
     }
 

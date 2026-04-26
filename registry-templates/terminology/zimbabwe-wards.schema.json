@@ -1,0 +1,5 @@
+{
+  "id": "impilo.terminology.zw.admin3.v1",
+  "referencesSeed": "terminology/data/zimbabwe-wards.seed.json",
+  "note": "Ward codes must be imported from COD-AB (~1961 wards) — seed file starts empty."
+}

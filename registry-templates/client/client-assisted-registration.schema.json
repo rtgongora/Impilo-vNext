@@ -1,0 +1,19 @@
+{
+  "id": "impilo.registry.client.assisted_registration.v1",
+  "owner": "VITO",
+  "title": "Assisted registration",
+  "fhirConceptualMappings": [
+    "Patient",
+    "Consent",
+    "Provenance"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "extendsTemplates": [
+    "client/client-core.schema.json",
+    "client/client-registration-mode.schema.json"
+  ],
+  "uiHints": {
+    "defaultRegistrationMode": "ASSISTED_REGISTRATION"
+  }
+}

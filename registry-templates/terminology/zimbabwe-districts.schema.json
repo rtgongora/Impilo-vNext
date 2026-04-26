@@ -1,0 +1,5 @@
+{
+  "id": "impilo.terminology.zw.admin2.v1",
+  "referencesSeed": "terminology/data/zimbabwe-districts.seed.json",
+  "note": "District codes must be imported from COD-AB / ZIMSTAT — seed file starts empty."
+}

@@ -1,0 +1,4 @@
+{
+  "_comment": "INTENTIONALLY EMPTY: districts (Admin-2) must be seeded from COD-AB / ZIMSTAT — do not invent district polygons or names here.",
+  "districts": []
+}

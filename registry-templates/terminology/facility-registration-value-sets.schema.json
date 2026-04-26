@@ -1,0 +1,247 @@
+{
+  "id": "impilo.value_sets.facility_registration.v1",
+  "entries": {
+    "facilityType": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "ownership": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "operationalStatus": [
+      {
+        "code": "OPERATIONAL",
+        "display": "Operational"
+      },
+      {
+        "code": "PARTIALLY_OPERATIONAL",
+        "display": "Partially operational"
+      },
+      {
+        "code": "NOT_OPERATIONAL",
+        "display": "Not operational"
+      }
+    ],
+    "serviceCategory": [
+      {
+        "code": "OPD",
+        "display": "OPD"
+      },
+      {
+        "code": "MATERNITY",
+        "display": "Maternity"
+      },
+      {
+        "code": "ART",
+        "display": "ART"
+      },
+      {
+        "code": "TB",
+        "display": "TB"
+      },
+      {
+        "code": "IMMUNISATION",
+        "display": "Immunisation"
+      },
+      {
+        "code": "PHARMACY",
+        "display": "Pharmacy"
+      },
+      {
+        "code": "LAB",
+        "display": "Laboratory"
+      },
+      {
+        "code": "RADIOLOGY",
+        "display": "Radiology"
+      },
+      {
+        "code": "THEATRE",
+        "display": "Theatre"
+      },
+      {
+        "code": "EMERGENCY",
+        "display": "Emergency"
+      },
+      {
+        "code": "TELEMEDICINE",
+        "display": "Telemedicine"
+      },
+      {
+        "code": "OUTREACH",
+        "display": "Outreach"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "licenceStatus": [
+      {
+        "code": "LICENSED",
+        "display": "Licensed"
+      },
+      {
+        "code": "PENDING",
+        "display": "Pending"
+      },
+      {
+        "code": "EXPIRED",
+        "display": "Expired"
+      },
+      {
+        "code": "REVOKED",
+        "display": "Revoked"
+      }
+    ],
+    "inspectionStatus": [
+      {
+        "code": "NOT_INSPECTED",
+        "display": "Not inspected"
+      },
+      {
+        "code": "PASSED",
+        "display": "Passed"
+      },
+      {
+        "code": "FAILED",
+        "display": "Failed"
+      },
+      {
+        "code": "CONDITIONAL",
+        "display": "Conditional"
+      }
+    ],
+    "connectivityType": [
+      {
+        "code": "FIBRE",
+        "display": "Fibre"
+      },
+      {
+        "code": "MOBILE_BROADBAND",
+        "display": "Mobile broadband"
+      },
+      {
+        "code": "SATELLITE",
+        "display": "Satellite"
+      },
+      {
+        "code": "MICROWAVE",
+        "display": "Microwave"
+      },
+      {
+        "code": "NONE",
+        "display": "None"
+      },
+      {
+        "code": "UNKNOWN",
+        "display": "Unknown"
+      }
+    ],
+    "powerBackupType": [
+      {
+        "code": "SOLAR",
+        "display": "Solar"
+      },
+      {
+        "code": "GENERATOR",
+        "display": "Generator"
+      },
+      {
+        "code": "INVERTER",
+        "display": "Inverter"
+      },
+      {
+        "code": "UPS",
+        "display": "UPS"
+      },
+      {
+        "code": "NONE",
+        "display": "None"
+      },
+      {
+        "code": "UNKNOWN",
+        "display": "Unknown"
+      }
+    ],
+    "deploymentStatus": [
+      {
+        "code": "NOT_DEPLOYED",
+        "display": "Not deployed"
+      },
+      {
+        "code": "ROLLOUT",
+        "display": "Rollout"
+      },
+      {
+        "code": "LIVE",
+        "display": "Live"
+      }
+    ],
+    "readinessStatus": [
+      {
+        "code": "LOW",
+        "display": "Low"
+      },
+      {
+        "code": "MEDIUM",
+        "display": "Medium"
+      },
+      {
+        "code": "HIGH",
+        "display": "High"
+      }
+    ],
+    "localityType": [
+      {
+        "code": "VILLAGE",
+        "display": "Village"
+      },
+      {
+        "code": "SUBURB",
+        "display": "Suburb"
+      },
+      {
+        "code": "GROWTH_POINT",
+        "display": "Growth point"
+      },
+      {
+        "code": "SETTLEMENT",
+        "display": "Settlement"
+      },
+      {
+        "code": "FARM",
+        "display": "Farm"
+      },
+      {
+        "code": "MINE",
+        "display": "Mine"
+      },
+      {
+        "code": "SCHOOL_AREA",
+        "display": "School area"
+      },
+      {
+        "code": "CHIEF_AREA",
+        "display": "Chief / headman area"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ]
+  }
+}

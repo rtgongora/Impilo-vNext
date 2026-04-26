@@ -1,0 +1,305 @@
+{
+  "id": "impilo.value_sets.coverage_payment.v1",
+  "entries": {
+    "coverageStatus": [
+      {
+        "code": "NO_COVER",
+        "display": "No cover"
+      },
+      {
+        "code": "MEDICAL_AID",
+        "display": "Medical aid"
+      },
+      {
+        "code": "PRIVATE_INSURANCE",
+        "display": "Private insurance"
+      },
+      {
+        "code": "EMPLOYER_COVER",
+        "display": "Employer cover"
+      },
+      {
+        "code": "GOVERNMENT_PROGRAMME",
+        "display": "Government programme"
+      },
+      {
+        "code": "DONOR_PROGRAMME",
+        "display": "Donor / programme cover"
+      },
+      {
+        "code": "SOCIAL_PROTECTION",
+        "display": "Social protection cover"
+      },
+      {
+        "code": "SELF_PAY",
+        "display": "Self-pay"
+      },
+      {
+        "code": "UNKNOWN",
+        "display": "Unknown"
+      }
+    ],
+    "payerType": [
+      {
+        "code": "MEDICAL_AID",
+        "display": "Medical aid"
+      },
+      {
+        "code": "PRIVATE_INSURER",
+        "display": "Private insurer"
+      },
+      {
+        "code": "EMPLOYER",
+        "display": "Employer"
+      },
+      {
+        "code": "GOVERNMENT",
+        "display": "Government"
+      },
+      {
+        "code": "DONOR",
+        "display": "Donor"
+      },
+      {
+        "code": "SELF",
+        "display": "Self"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "principalMemberRelationship": [
+      {
+        "code": "SELF",
+        "display": "Self"
+      },
+      {
+        "code": "SPOUSE",
+        "display": "Spouse"
+      },
+      {
+        "code": "PARENT_GUARDIAN",
+        "display": "Parent / guardian"
+      },
+      {
+        "code": "EMPLOYER",
+        "display": "Employer"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "dependentStatus": [
+      {
+        "code": "PRINCIPAL",
+        "display": "Principal member"
+      },
+      {
+        "code": "SPOUSE",
+        "display": "Spouse dependent"
+      },
+      {
+        "code": "CHILD",
+        "display": "Child dependent"
+      },
+      {
+        "code": "ADULT",
+        "display": "Adult dependent"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other dependent"
+      }
+    ],
+    "benefitClass": [
+      {
+        "code": "OUTPATIENT",
+        "display": "Outpatient"
+      },
+      {
+        "code": "INPATIENT",
+        "display": "Inpatient"
+      },
+      {
+        "code": "MATERNITY",
+        "display": "Maternity"
+      },
+      {
+        "code": "PHARMACY",
+        "display": "Pharmacy"
+      },
+      {
+        "code": "DIAGNOSTICS",
+        "display": "Diagnostics"
+      },
+      {
+        "code": "CHRONIC",
+        "display": "Chronic care"
+      },
+      {
+        "code": "EMERGENCY",
+        "display": "Emergency"
+      },
+      {
+        "code": "DENTAL",
+        "display": "Dental"
+      },
+      {
+        "code": "OPTICAL",
+        "display": "Optical"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "coPaymentRule": [
+      {
+        "code": "NONE",
+        "display": "None"
+      },
+      {
+        "code": "FIXED_AMOUNT",
+        "display": "Fixed amount"
+      },
+      {
+        "code": "PERCENTAGE",
+        "display": "Percentage"
+      },
+      {
+        "code": "UNKNOWN",
+        "display": "Unknown"
+      },
+      {
+        "code": "SCHEME_DETERMINED",
+        "display": "Scheme-determined"
+      }
+    ],
+    "claimsDestination": [
+      {
+        "code": "MUSHEX",
+        "display": "MusheX"
+      },
+      {
+        "code": "DIRECT_INSURER",
+        "display": "Direct insurer claim"
+      },
+      {
+        "code": "EMPLOYER",
+        "display": "Employer claim"
+      },
+      {
+        "code": "MANUAL",
+        "display": "Manual claim"
+      },
+      {
+        "code": "NOT_CLAIMABLE",
+        "display": "Not claimable"
+      }
+    ],
+    "coverageVerificationStatus": [
+      {
+        "code": "UNVERIFIED",
+        "display": "Unverified"
+      },
+      {
+        "code": "CARD_SEEN",
+        "display": "Card seen"
+      },
+      {
+        "code": "DIGITALLY_VERIFIED",
+        "display": "Digitally verified"
+      },
+      {
+        "code": "EMPLOYER_CONFIRMED",
+        "display": "Employer confirmed"
+      },
+      {
+        "code": "INSURER_VERIFIED",
+        "display": "Insurer verified"
+      },
+      {
+        "code": "EXPIRED",
+        "display": "Expired"
+      }
+    ],
+    "eligibilityCheckConsent": [
+      {
+        "code": "GRANTED",
+        "display": "Granted"
+      },
+      {
+        "code": "REFUSED",
+        "display": "Refused"
+      },
+      {
+        "code": "DEFERRED",
+        "display": "Deferred"
+      }
+    ],
+    "paymentMethod": [
+      {
+        "code": "CASH",
+        "display": "Cash"
+      },
+      {
+        "code": "CARD",
+        "display": "Card"
+      },
+      {
+        "code": "MOBILE_MONEY",
+        "display": "Mobile money"
+      },
+      {
+        "code": "BANK_TRANSFER",
+        "display": "Bank transfer"
+      },
+      {
+        "code": "WALLET",
+        "display": "Wallet"
+      },
+      {
+        "code": "VOUCHER",
+        "display": "Voucher"
+      }
+    ],
+    "billingArrangement": [
+      {
+        "code": "SELF_PAY",
+        "display": "Self-pay"
+      },
+      {
+        "code": "MEDICAL_AID",
+        "display": "Medical aid"
+      },
+      {
+        "code": "CAPITATION",
+        "display": "Capitation"
+      },
+      {
+        "code": "BUNDLED",
+        "display": "Bundled payment"
+      },
+      {
+        "code": "NO_CHARGE",
+        "display": "No charge"
+      },
+      {
+        "code": "SUBSIDISED",
+        "display": "Subsidised"
+      },
+      {
+        "code": "PROGRAMME_FUNDED",
+        "display": "Programme-funded"
+      }
+    ]
+  }
+}

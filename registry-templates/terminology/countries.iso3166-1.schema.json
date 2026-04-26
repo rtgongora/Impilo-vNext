@@ -1,0 +1,16 @@
+{
+  "id": "impilo.terminology.iso3166_1.v1",
+  "description": "Wrapper schema for countries.iso3166-1.json rows.",
+  "recordShape": {
+    "name": "string",
+    "alpha2": "string",
+    "alpha3": "string",
+    "numeric": "string"
+  },
+  "zimbabwe": {
+    "alpha2": "ZW",
+    "alpha3": "ZWE",
+    "numeric": "716",
+    "name": "Zimbabwe"
+  }
+}

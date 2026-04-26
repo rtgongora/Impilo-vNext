@@ -1,0 +1,111 @@
+{
+  "id": "impilo.value_sets.provider_registration.v1",
+  "entries": {
+    "council": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "cadre": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "specialty": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "verificationStatus": [
+      {
+        "code": "UNVERIFIED",
+        "display": "Unverified"
+      },
+      {
+        "code": "VERIFIED",
+        "display": "Verified"
+      },
+      {
+        "code": "PENDING",
+        "display": "Pending"
+      }
+    ],
+    "licenceStatus": [
+      {
+        "code": "ACTIVE",
+        "display": "Active"
+      },
+      {
+        "code": "PENDING",
+        "display": "Pending"
+      },
+      {
+        "code": "EXPIRED",
+        "display": "Expired"
+      },
+      {
+        "code": "SUSPENDED",
+        "display": "Suspended"
+      },
+      {
+        "code": "REVOKED",
+        "display": "Revoked"
+      },
+      {
+        "code": "RETIRED",
+        "display": "Retired"
+      }
+    ],
+    "facilityRole": [
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "affiliationType": [
+      {
+        "code": "PERMANENT",
+        "display": "Permanent"
+      },
+      {
+        "code": "CONTRACT",
+        "display": "Contract"
+      },
+      {
+        "code": "LOCUM",
+        "display": "Locum"
+      },
+      {
+        "code": "VOLUNTEER",
+        "display": "Volunteer"
+      },
+      {
+        "code": "STUDENT",
+        "display": "Student"
+      },
+      {
+        "code": "SECONDED",
+        "display": "Seconded"
+      },
+      {
+        "code": "VISITING",
+        "display": "Visiting"
+      },
+      {
+        "code": "PRIVATE_PROVIDER",
+        "display": "Private provider"
+      }
+    ]
+  }
+}

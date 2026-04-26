@@ -1,0 +1,417 @@
+{
+  "id": "impilo.value_sets.client_registration.v1",
+  "entries": {
+    "registrationMode": [
+      {
+        "code": "SELF_REGISTRATION",
+        "display": "Self-registration"
+      },
+      {
+        "code": "HEALTH_WORKER_INITIATED",
+        "display": "Health-worker initiated"
+      },
+      {
+        "code": "ASSISTED_REGISTRATION",
+        "display": "Assisted registration"
+      },
+      {
+        "code": "EMERGENCY_REGISTRATION",
+        "display": "Emergency registration"
+      },
+      {
+        "code": "OUTREACH_REGISTRATION",
+        "display": "Outreach registration"
+      },
+      {
+        "code": "OFFLINE_REGISTRATION",
+        "display": "Offline registration"
+      },
+      {
+        "code": "SYSTEM_IMPORT",
+        "display": "System import"
+      }
+    ],
+    "initiatingActor": [
+      {
+        "code": "CLIENT",
+        "display": "Client"
+      },
+      {
+        "code": "PROVIDER",
+        "display": "Provider"
+      },
+      {
+        "code": "CLERK",
+        "display": "Clerk"
+      },
+      {
+        "code": "CHW",
+        "display": "Community health worker"
+      },
+      {
+        "code": "CALL_CENTRE_AGENT",
+        "display": "Call centre agent"
+      },
+      {
+        "code": "OUTREACH_TEAM",
+        "display": "Outreach team"
+      },
+      {
+        "code": "SYSTEM_IMPORT",
+        "display": "System import"
+      }
+    ],
+    "initiatingContext": [
+      {
+        "code": "FACILITY",
+        "display": "Facility"
+      },
+      {
+        "code": "COMMUNITY",
+        "display": "Community"
+      },
+      {
+        "code": "HOME_VISIT",
+        "display": "Home visit"
+      },
+      {
+        "code": "TELEMEDICINE",
+        "display": "Telemedicine"
+      },
+      {
+        "code": "MOBILE_APP",
+        "display": "Mobile app"
+      },
+      {
+        "code": "WEB_PORTAL",
+        "display": "Web portal"
+      },
+      {
+        "code": "USSD_SMS",
+        "display": "USSD / SMS / messaging"
+      },
+      {
+        "code": "OFFLINE_DEVICE",
+        "display": "Offline device"
+      }
+    ],
+    "assuranceLevel": [
+      {
+        "code": "UNVERIFIED",
+        "display": "Unverified"
+      },
+      {
+        "code": "SELF_DECLARED",
+        "display": "Self-declared"
+      },
+      {
+        "code": "ASSISTED_UNVERIFIED",
+        "display": "Assisted — unverified"
+      },
+      {
+        "code": "DOCUMENT_SEEN",
+        "display": "Document seen"
+      },
+      {
+        "code": "PROVIDER_ATTESTED",
+        "display": "Provider attested"
+      },
+      {
+        "code": "BIOMETRIC_CONFIRMED",
+        "display": "Biometric confirmed"
+      },
+      {
+        "code": "CIVIL_REGISTRY_CONFIRMED",
+        "display": "Civil registry confirmed"
+      }
+    ],
+    "identityState": [
+      {
+        "code": "TEMPORARY",
+        "display": "Temporary"
+      },
+      {
+        "code": "PROVISIONAL",
+        "display": "Provisional"
+      },
+      {
+        "code": "ACTIVE",
+        "display": "Active"
+      },
+      {
+        "code": "VERIFIED",
+        "display": "Verified"
+      },
+      {
+        "code": "DUPLICATE_SUSPECTED",
+        "display": "Duplicate suspected"
+      },
+      {
+        "code": "MERGED",
+        "display": "Merged"
+      },
+      {
+        "code": "DEACTIVATED",
+        "display": "Deactivated"
+      }
+    ],
+    "followUpAction": [
+      {
+        "code": "NEEDS_DOCUMENT_VERIFICATION",
+        "display": "Needs document verification"
+      },
+      {
+        "code": "NEEDS_BIOMETRIC",
+        "display": "Needs biometric capture"
+      },
+      {
+        "code": "NEEDS_DUPLICATE_RESOLUTION",
+        "display": "Needs duplicate resolution"
+      },
+      {
+        "code": "NEEDS_GUARDIAN_CONFIRMATION",
+        "display": "Needs guardian confirmation"
+      },
+      {
+        "code": "NEEDS_FACILITY_VERIFICATION",
+        "display": "Needs facility verification"
+      },
+      {
+        "code": "NONE",
+        "display": "None"
+      }
+    ],
+    "administrativeSex": [
+      {
+        "code": "male",
+        "display": "Male"
+      },
+      {
+        "code": "female",
+        "display": "Female"
+      },
+      {
+        "code": "other",
+        "display": "Other"
+      },
+      {
+        "code": "unknown",
+        "display": "Unknown"
+      }
+    ],
+    "dobCertainty": [
+      {
+        "code": "EXACT",
+        "display": "Exact"
+      },
+      {
+        "code": "ESTIMATED",
+        "display": "Estimated"
+      },
+      {
+        "code": "UNKNOWN",
+        "display": "Unknown"
+      }
+    ],
+    "idDocumentType": [
+      {
+        "code": "NATIONAL_ID",
+        "display": "National ID"
+      },
+      {
+        "code": "PASSPORT",
+        "display": "Passport"
+      },
+      {
+        "code": "BIRTH_CERTIFICATE",
+        "display": "Birth certificate"
+      },
+      {
+        "code": "REFUGEE_ASYLUM",
+        "display": "Refugee / asylum document"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "relationshipToClient": [
+      {
+        "code": "MOTHER",
+        "display": "Mother"
+      },
+      {
+        "code": "FATHER",
+        "display": "Father"
+      },
+      {
+        "code": "GUARDIAN",
+        "display": "Guardian"
+      },
+      {
+        "code": "SPOUSE",
+        "display": "Spouse"
+      },
+      {
+        "code": "SIBLING",
+        "display": "Sibling"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "communicationChannel": [
+      {
+        "code": "SMS",
+        "display": "SMS"
+      },
+      {
+        "code": "VOICE",
+        "display": "Voice call"
+      },
+      {
+        "code": "EMAIL",
+        "display": "Email"
+      },
+      {
+        "code": "WHATSAPP",
+        "display": "WhatsApp"
+      },
+      {
+        "code": "IN_APP",
+        "display": "In-app"
+      }
+    ],
+    "consentStatus": [
+      {
+        "code": "OBTAINED",
+        "display": "Obtained"
+      },
+      {
+        "code": "DEFERRED",
+        "display": "Deferred"
+      },
+      {
+        "code": "REFUSED",
+        "display": "Refused"
+      },
+      {
+        "code": "NOT_APPLICABLE",
+        "display": "Not applicable"
+      }
+    ],
+    "disabilityNeed": [
+      {
+        "code": "NONE",
+        "display": "None reported"
+      },
+      {
+        "code": "MOBILITY",
+        "display": "Mobility"
+      },
+      {
+        "code": "VISION",
+        "display": "Vision"
+      },
+      {
+        "code": "HEARING",
+        "display": "Hearing"
+      },
+      {
+        "code": "COGNITIVE",
+        "display": "Cognitive"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "language": [
+      {
+        "code": "en",
+        "display": "English"
+      },
+      {
+        "code": "sn",
+        "display": "Shona"
+      },
+      {
+        "code": "nd",
+        "display": "Ndebele"
+      },
+      {
+        "code": "OTHER",
+        "display": "Other / specify",
+        "requiresSpecifyText": true,
+        "terminologyReview": true
+      }
+    ],
+    "verificationMethod": [
+      {
+        "code": "IN_PERSON_DOCUMENT",
+        "display": "In-person document"
+      },
+      {
+        "code": "REMOTE_VIDEO",
+        "display": "Remote video"
+      },
+      {
+        "code": "BANK_KYC",
+        "display": "Bank KYC"
+      },
+      {
+        "code": "CIVIL_REGISTRY",
+        "display": "Civil registry"
+      }
+    ],
+    "onlineState": [
+      {
+        "code": "ONLINE",
+        "display": "Online"
+      },
+      {
+        "code": "OFFLINE",
+        "display": "Offline"
+      }
+    ],
+    "linkageStatus": [
+      {
+        "code": "LINKED",
+        "display": "Linked"
+      },
+      {
+        "code": "PENDING",
+        "display": "Pending"
+      },
+      {
+        "code": "FAILED",
+        "display": "Failed"
+      }
+    ],
+    "duplicateStatus": [
+      {
+        "code": "NONE",
+        "display": "None"
+      },
+      {
+        "code": "SUSPECTED",
+        "display": "Suspected"
+      },
+      {
+        "code": "CONFIRMED_DUPLICATE",
+        "display": "Confirmed duplicate"
+      },
+      {
+        "code": "MERGED",
+        "display": "Merged"
+      }
+    ]
+  }
+}

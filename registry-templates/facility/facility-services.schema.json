@@ -1,0 +1,84 @@
+{
+  "id": "impilo.registry.facility.facility-services.v1",
+  "owner": "TUSO",
+  "title": "Healthcare services",
+  "fhirConceptualMappings": [
+    "HealthcareService"
+  ],
+  "templateVersion": "1.0.0",
+  "active": true,
+  "fields": [
+    {
+      "name": "serviceCategory",
+      "label": "Service category",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": "terminology/facility-registration-value-sets.schema.json#/serviceCategory",
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "serviceAvailability",
+      "label": "Availability status",
+      "description": "",
+      "dataType": "string",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    },
+    {
+      "name": "serviceScheduleNote",
+      "label": "Schedule note",
+      "description": "",
+      "dataType": "text",
+      "requirement": "optional",
+      "conditionalWhen": null,
+      "validation": {},
+      "valueSetRef": null,
+      "parentField": null,
+      "workflowApplicability": [
+        "*"
+      ],
+      "privacyClass": "PII",
+      "pii": true,
+      "auditProvenance": true,
+      "offline": "cache_lists",
+      "sync": "queue_reconcile",
+      "tshepoImpact": "purpose_of_use_and_consent_evaluated",
+      "fhirConceptual": [],
+      "sourceAuthority": "Impilo Registry Doctrine",
+      "version": "1.0.0",
+      "active": true
+    }
+  ]
+}

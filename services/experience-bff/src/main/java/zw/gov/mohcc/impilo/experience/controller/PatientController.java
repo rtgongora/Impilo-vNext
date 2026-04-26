@@ -35,16 +35,23 @@ public class PatientController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityHeader,
             @RequestBody Map<String, Object> body) {
 
-        String givenName = strVal(body, "given_name", "givenName", "firstName");
-        String familyName = strVal(body, "family_name", "familyName", "lastName");
-        String displayName = strVal(body, "displayName", "display_name");
-        String dob = strVal(body, "date_of_birth", "dateOfBirth");
-        String sex = strVal(body, "sex", "gender");
-        String nationalId = strVal(body, "national_id", "nationalId");
-        String phone = strVal(body, "phone");
-        String facilityId = strVal(body, "facility_id", "facilityId");
+        Map<String, Object> patientData = new LinkedHashMap<>(body);
+        if ((!patientData.containsKey("facility_id") || patientData.get("facility_id") == null)
+                && facilityHeader != null && !facilityHeader.isBlank()) {
+            patientData.put("facility_id", facilityHeader);
+        }
+
+        String givenName = strVal(patientData, "given_name", "givenName", "firstName");
+        String familyName = strVal(patientData, "family_name", "familyName", "lastName");
+        String displayName = strVal(patientData, "displayName", "display_name");
+        String dob = strVal(patientData, "date_of_birth", "dateOfBirth");
+        String sex = strVal(patientData, "sex", "gender");
+        String nationalId = strVal(patientData, "national_id", "nationalId");
+        String phone = strVal(patientData, "phone");
+        String facilityId = strVal(patientData, "facility_id", "facilityId");
 
         if ((givenName == null || givenName.isBlank()) && displayName != null) {
             String[] parts = displayName.trim().split("\\s+", 2);
@@ -57,19 +64,20 @@ public class PatientController {
         }
 
         try {
-            Map<String, Object> patientData = new LinkedHashMap<>();
-            patientData.put("given_name", givenName);
-            patientData.put("family_name", familyName != null ? familyName : "");
-            patientData.put("date_of_birth", dob);
-            patientData.put("sex", sex);
-            patientData.put("national_id", nationalId);
-            patientData.put("phone", phone);
-            patientData.put("facility_id", facilityId);
-            patientData.put("tenant_id", tenantId);
+            Map<String, Object> vitoPayload = new LinkedHashMap<>(patientData);
+            vitoPayload.put("given_name", givenName);
+            vitoPayload.put("family_name", familyName != null ? familyName : "");
+            vitoPayload.put("date_of_birth", dob);
+            vitoPayload.put("sex", sex);
+            vitoPayload.put("national_id", nationalId);
+            vitoPayload.put("phone", phone);
+            vitoPayload.put("facility_id", facilityId);
+            vitoPayload.put("tenant_id", tenantId);
 
-            JsonNode result = vitoClient.registerPatient(patientData);
+            JsonNode result = vitoClient.registerPatient(vitoPayload);
             Map<String, Object> patient = mapIssuanceToPatient(result, givenName,
                     familyName != null ? familyName : "", dob, sex, nationalId, phone);
+            patient = withRegistrationOverlay(patient, patientData, true);
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", patient);
@@ -84,6 +92,7 @@ public class PatientController {
         Map<String, Object> patient = patient(id, cpid,
                 givenName, familyName != null ? familyName : "",
                 dob, sex != null ? sex : "unknown", nationalId, phone);
+        patient = withRegistrationOverlay(patient, patientData, false);
         PATIENTS.add(patient);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -205,6 +214,43 @@ public class PatientController {
                     return ResponseEntity.ok(body);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Copies registry-template / workflow metadata onto the patient envelope returned to the Experience Layer.
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> withRegistrationOverlay(
+            Map<String, Object> patient,
+            Map<String, Object> request,
+            boolean delegatedToVito) {
+        Map<String, Object> out = new LinkedHashMap<>(patient);
+        Map<String, Object> attrs = new LinkedHashMap<>((Map<String, Object>) patient.get("attributes"));
+        copyIfPresent(attrs, request, "registration_mode");
+        copyIfPresent(attrs, request, "initiating_actor");
+        copyIfPresent(attrs, request, "initiating_context");
+        copyIfPresent(attrs, request, "assurance_level");
+        copyIfPresent(attrs, request, "identity_state");
+        copyIfPresent(attrs, request, "offline_provisional");
+        copyIfPresent(attrs, request, "consent_status");
+        copyIfPresent(attrs, request, "consent_deferred_reason");
+        copyIfPresent(attrs, request, "purpose_of_use");
+        copyIfPresent(attrs, request, "country_alpha2");
+        copyIfPresent(attrs, request, "province_code");
+        copyIfPresent(attrs, request, "district_code");
+        copyIfPresent(attrs, request, "ward_code");
+        copyIfPresent(attrs, request, "locality_gazetteer_id");
+        copyIfPresent(attrs, request, "coverage");
+        attrs.put("registryDelegation", delegatedToVito);
+        attrs.put("registrySyncState", delegatedToVito ? "VITO_ISSUED" : "OFFLINE_PROVISIONAL_LOCAL_FALLBACK");
+        out.put("attributes", attrs);
+        return out;
+    }
+
+    private static void copyIfPresent(Map<String, Object> attrs, Map<String, Object> req, String key) {
+        if (req.containsKey(key) && req.get(key) != null) {
+            attrs.put(key, req.get(key));
+        }
     }
 
     private static Map<String, Object> mapIssuanceToPatient(

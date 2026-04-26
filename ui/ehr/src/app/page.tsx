@@ -1,13 +1,16 @@
 "use client";
 
-import { useEhrStore } from "@/stores/ehrStore";
+import { useState } from "react";
+import { useEhrStore, type Patient } from "@/stores/ehrStore";
 import { PatientBanner } from "./components/PatientBanner";
 import { PatientSearch } from "./components/PatientSearch";
 import { ClinicalDashboard } from "./components/ClinicalDashboard";
 import { EncounterPanel } from "./components/EncounterPanel";
+import { VitoClientRegistrationPanel } from "./components/VitoClientRegistrationPanel";
 
 export default function EhrPage() {
-  const { activePatient, activeEncounter } = useEhrStore();
+  const { activePatient, activeEncounter, setActivePatient, addRecentPatient } = useEhrStore();
+  const [showVitoRegister, setShowVitoRegister] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -31,6 +34,22 @@ export default function EhrPage() {
       <main className="flex-1 flex">
         <aside className="w-80 border-r bg-white p-4 overflow-y-auto">
           <PatientSearch />
+          <button
+            type="button"
+            onClick={() => setShowVitoRegister((v) => !v)}
+            className="mt-3 w-full text-xs font-medium text-impilo-primary border border-impilo-primary/40 rounded-md py-1.5 hover:bg-impilo-primary/5"
+          >
+            {showVitoRegister ? "Hide" : "Show"} Vito new-client registration
+          </button>
+          {showVitoRegister ? (
+            <VitoClientRegistrationPanel
+              onRegistered={(p: Patient) => {
+                setActivePatient(p);
+                addRecentPatient(p);
+                setShowVitoRegister(false);
+              }}
+            />
+          ) : null}
         </aside>
 
         <section className="flex-1 flex flex-col">
