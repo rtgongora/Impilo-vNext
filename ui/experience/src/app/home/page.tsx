@@ -20,6 +20,7 @@ import {
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
   Wifi, Wrench, Layers, QrCode, Bell, FlaskConical, FileCheck, Clipboard, Play,
+  LayoutDashboard,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -149,6 +150,7 @@ function getOperatingSignals(model?: FacilityOperatingModel): OperatingSignal[] 
 // ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
 function getModuleCategories(roles: {
   isClinical: boolean; isAdmin: boolean; isFinance: boolean; isDispenser: boolean;
+  isQueueManager: boolean;
 }): ModuleCategory[] {
   const cats: ModuleCategory[] = [];
 
@@ -175,13 +177,20 @@ function getModuleCategories(roles: {
     });
   }
 
-  if (roles.isClinical || roles.isAdmin) {
+  if (roles.isClinical || roles.isAdmin || roles.isQueueManager || roles.isDispenser) {
     cats.push({
       id: "facility-ops",
       title: "Facility Operations",
       icon: Clock,
       color: "bg-rose-500",
       modules: [
+        {
+          label: "Facility command centre",
+          description: "Unified entry to queues, flow board, scheduling, rosters, and alerts",
+          href: "/facility-operations",
+          icon: LayoutDashboard,
+          color: "bg-rose-100 text-rose-700",
+        },
         ...(roles.isClinical ? [
           { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
         ] : []),
@@ -333,8 +342,22 @@ function getWorkerLaunchActions(args: {
   isAdmin: boolean;
   isFinance: boolean;
   isDispenser: boolean;
+  isQueueManager: boolean;
 }, operatingModel?: FacilityOperatingModel): WorkerLaunchAction[] {
   const actions: WorkerLaunchAction[] = [];
+
+  if (args.isClinical || args.isDispenser || args.isQueueManager) {
+    actions.push(
+      {
+        label: "Facility command",
+        description: "Facility operations hub — control tower, patient flow, queues, and scheduling entry.",
+        href: "/facility-operations",
+        icon: BarChart3,
+        color: "bg-rose-100 text-rose-700",
+        requiresWorkContext: true,
+      },
+    );
+  }
 
   if (args.isClinical || args.isDispenser) {
     actions.push(
@@ -574,7 +597,7 @@ export default function HomePage() {
   const user = useAuthStore((s) => s.user);
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
-  const { isClinical, isAdmin, isFinance, isDispenser } = roleGroup;
+  const { isClinical, isAdmin, isFinance, isDispenser, isQueueManager } = roleGroup;
   const { facility, selectFacility, enterMode, operationalMode, availableOperationalModes } =
     useExperienceEntry();
   const pathname = usePathname();
@@ -586,7 +609,7 @@ export default function HomePage() {
     }
   }, [pathname]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
+  const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser || isQueueManager;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
 
   // Correct the active tab whenever the user's roles are known.
@@ -725,9 +748,15 @@ export default function HomePage() {
   const { activeShiftCount } = useFacilityActiveShiftCount(facility?.id);
 
   // Module categories
-  const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
+  const categories = getModuleCategories({
+    isClinical,
+    isAdmin,
+    isFinance,
+    isDispenser,
+    isQueueManager,
+  });
   const workerLaunchActions = getWorkerLaunchActions(
-    { isClinical, isAdmin, isFinance, isDispenser },
+    { isClinical, isAdmin, isFinance, isDispenser, isQueueManager },
     selectedOperatingModel,
   );
   const launchActions = workerLaunchActions.filter((action) => !action.requiresWorkContext || hasWorkContext);

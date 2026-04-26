@@ -141,6 +141,11 @@ describe("ControlTowerPage", () => {
       expect(screen.getByText("Facility overview")).toBeInTheDocument();
     });
 
+    expect(screen.getByRole("link", { name: "Facility operations hub" })).toHaveAttribute(
+      "href",
+      "/facility-operations",
+    );
+
     expect(get).toHaveBeenCalled();
     expect(post).toHaveBeenCalledWith("/internal/v1/queue/entries/stats", {
       facilityId: "f1000000-0000-0000-0000-000000000001",

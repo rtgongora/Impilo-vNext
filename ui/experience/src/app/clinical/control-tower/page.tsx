@@ -150,19 +150,27 @@ export default function ControlTowerPage() {
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-rose-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Facility overview</h2>
                 <span className="text-xs text-gray-500">({facility.name})</span>
               </div>
-              <button
-                type="button"
-                onClick={onRefresh}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> Refresh
-              </button>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/facility-operations"
+                  className="text-xs font-medium text-impilo-600 hover:text-impilo-800 underline-offset-2 hover:underline"
+                >
+                  Facility operations hub
+                </Link>
+                <button
+                  type="button"
+                  onClick={onRefresh}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

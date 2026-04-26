@@ -29,6 +29,8 @@ type QueueEntryResponse = ApiResponse<QueueEntryResource>;
 export function useQueueEntries(params?: QueueEntriesParams) {
   return useQuery<QueueEntriesResponse>({
     queryKey: ["queue-entries", params],
+    enabled:
+      !!params && (!!params.facilityId || (typeof params.status === "string" && params.status.length > 0)),
     queryFn: () => {
       const searchParams = new URLSearchParams();
       if (params?.facilityId) searchParams.set("facility_id", params.facilityId);

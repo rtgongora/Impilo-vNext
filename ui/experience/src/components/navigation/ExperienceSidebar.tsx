@@ -81,6 +81,8 @@ const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
 const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+/** Facility command layer: queue-capable roles plus dispensers who run service-point flow. */
+const FACILITY_OPS_ROLES = Array.from(new Set([...QUEUE_ROLES, "PHARMACIST"]));
 
 /**
  * Returns true when the user should see citizen-only experience.
@@ -110,6 +112,12 @@ const ZONES: SidebarZone[] = [
       { href: "/clinical-tools", label: "Clinical References", icon: BookMarked, requiredRoles: CLINICAL_ROLES },
       { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
+      {
+        href: "/facility-operations",
+        label: "Facility operations",
+        icon: LayoutDashboard,
+        requiredRoles: FACILITY_OPS_ROLES,
+      },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
       { href: "/inventory", label: "Inventory", icon: Package },
