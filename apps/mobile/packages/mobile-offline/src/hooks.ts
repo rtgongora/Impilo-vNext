@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import type { OfflineRecord, SyncStatus, ConflictRecord, ConflictResolution, EdgeSnapshot } from "./types";
+import type { OfflineRecord, SyncStatus, ConflictRecord, ConflictResolution, EdgeSnapshot, QueuedOperation } from "./types";
 import { createCollection, getOfflineStorage } from "./offlineStore";
 import { syncEngine } from "./syncEngine";
 import type { SyncEngineStatus } from "./syncEngine";
@@ -73,10 +73,38 @@ export function useOfflineStore<T>(collectionName: string, apiBasePath: string =
 /**
  * Hook for the sync engine.
  */
+function mapQueuedOperationForUi(op: QueuedOperation) {
+  const statusMap: Record<QueuedOperation["status"], string> = {
+    pending: "PENDING",
+    in_flight: "SYNCING",
+    failed: "FAILED",
+    completed: "SYNCED",
+  };
+  return {
+    id: op.id,
+    type: op.type,
+    resourceType: op.collection,
+    resourceId: op.recordId,
+    payload: op.payload as Record<string, unknown>,
+    status: statusMap[op.status] ?? "PENDING",
+    attempts: op.retryCount,
+    lastAttemptAt: undefined as string | undefined,
+    error: op.error,
+    createdAt: op.createdAt,
+  };
+}
+
 export function useSyncEngine() {
   const [status, setStatus] = useState<SyncEngineStatus>(syncEngine.getStatus());
   const [pendingCount, setPendingCount] = useState(0);
   const [conflictCount, setConflictCount] = useState(0);
+  const [queue, setQueue] = useState<ReturnType<typeof mapQueuedOperationForUi>[]>([]);
+
+  const refreshQueue = useCallback(async () => {
+    const storage = getOfflineStorage();
+    const ops = await storage.listQueue();
+    setQueue(ops.map(mapQueuedOperationForUi));
+  }, []);
 
   useEffect(() => {
     syncEngine.setCallbacks({
@@ -84,6 +112,10 @@ export function useSyncEngine() {
       onSyncComplete: async () => {
         setPendingCount(await syncEngine.getPendingCount());
         setConflictCount(await syncEngine.getConflictCount());
+        await refreshQueue();
+      },
+      onError: async () => {
+        await refreshQueue();
       },
     });
 
@@ -91,8 +123,14 @@ export function useSyncEngine() {
     (async () => {
       setPendingCount(await syncEngine.getPendingCount());
       setConflictCount(await syncEngine.getConflictCount());
+      await refreshQueue();
     })();
-  }, []);
+
+    const interval = setInterval(() => {
+      void refreshQueue();
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [refreshQueue]);
 
   const sync = useCallback(() => syncEngine.sync(), []);
   const forcePush = useCallback(() => syncEngine.forcePush(), []);
@@ -108,7 +146,7 @@ export function useSyncEngine() {
      */
     triggerSync: sync,
     retryFailed: sync,
-    queue: [],
+    queue,
     lastSyncAt: null,
   };
 }
@@ -175,6 +213,43 @@ export function useConflicts() {
   const resolve = useCallback(
     async (conflictId: string, resolution: ConflictResolution) => {
       const storage = getOfflineStorage();
+      const all = await storage.getConflicts();
+      const conflict = all.find((c) => c.id === conflictId);
+      if (conflict) {
+        const record = await storage.get(conflict.collection, conflict.recordId);
+        if (record) {
+          if (resolution === "KEEP_SERVER" && conflict.serverData != null) {
+            await storage.put({
+              ...record,
+              data: conflict.serverData as typeof record.data,
+              status: "synced",
+              serverVersion: record.localVersion,
+              conflictData: undefined,
+              updatedAt: new Date().toISOString(),
+            });
+          } else if (resolution === "KEEP_LOCAL") {
+            await storage.put({
+              ...record,
+              data: conflict.localData as typeof record.data,
+              status: "pending",
+              conflictData: undefined,
+              updatedAt: new Date().toISOString(),
+            });
+          } else if (resolution === "MERGE") {
+            const merged =
+              record.data && typeof record.data === "object" && conflict.localData && typeof conflict.localData === "object"
+                ? ({ ...(record.data as object), ...(conflict.localData as object) } as typeof record.data)
+                : (conflict.localData as typeof record.data);
+            await storage.put({
+              ...record,
+              data: merged,
+              status: "pending",
+              conflictData: undefined,
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
       await storage.resolveConflict(conflictId, resolution);
       await storage.removeConflict(conflictId);
       await reload();

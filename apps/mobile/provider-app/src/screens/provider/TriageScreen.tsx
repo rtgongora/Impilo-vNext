@@ -31,7 +31,7 @@ export function TriageScreen() {
 
   return (
     <Screen><Header title="Patient Triage" />
-      <View style={styles.container}>
+      <View testID="triage-screen" style={styles.container}>
         <Text style={styles.sectionTitle}>Triage Level</Text>
         {TRIAGE_LEVELS.map((t) => (
           <View key={t.level} style={[styles.levelRow, selectedLevel === t.level && { borderColor: t.color, borderWidth: 2 }]}>
@@ -40,11 +40,12 @@ export function TriageScreen() {
               <Text style={styles.levelLabel}>{t.label} (Level {t.level})</Text>
               <Text style={styles.levelDesc}>{t.description}</Text>
             </View>
-            <Button title="Select" size="sm" onPress={() => setSelectedLevel(t.level)} />
+            <Button title="Select" size="sm" onPress={() => setSelectedLevel(t.level)} testID={`triage-level-${t.level}`} />
           </View>
         ))}
         <Text style={styles.sectionTitle}>Chief Complaint</Text>
         <TextInput
+          testID="triage-chief-complaint"
           style={styles.input}
           placeholder="Presenting complaint..."
           value={chiefComplaint}
@@ -52,7 +53,12 @@ export function TriageScreen() {
           multiline
           numberOfLines={3}
         />
-        <Button title={mutation.isPending ? "Saving..." : "Record Triage"} onPress={() => mutation.mutate()} disabled={!chiefComplaint || mutation.isPending} />
+        <Button
+          testID="triage-record"
+          title={mutation.isPending ? "Saving..." : "Record Triage"}
+          onPress={() => mutation.mutate()}
+          disabled={!chiefComplaint || mutation.isPending}
+        />
       </View>
     </Screen>
   );

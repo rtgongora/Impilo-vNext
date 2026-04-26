@@ -160,9 +160,9 @@ docker stats --no-stream
 - Increase Docker memory (Settings → Resources → 12 GB+)
 - Use `dev-lite` profile instead of `full`
 
-### 7. Experience UI not loading
+### 7. One UI Shell not loading
 
-**Signature**: Browser shows blank page or connection refused at :3020
+**Signature**: Browser shows blank page or connection refused at :3000
 
 **Likely causes**:
 - UI container not built
@@ -171,15 +171,15 @@ docker stats --no-stream
 
 **Diagnosis**:
 ```bash
-docker logs impilo-experience-ui --tail 20
+docker logs impilo-one-ui-shell --tail 20
 curl http://localhost:8160/actuator/health  # Check BFF
 ```
 
 **Fix**:
 ```bash
 # Rebuild UI
-docker compose -f ops/runtime/docker-compose.apps.yml build experience-ui
-docker compose -f ops/runtime/docker-compose.apps.yml up -d experience-ui
+docker compose -f ops/runtime/docker-compose.apps.yml build one-ui-shell
+docker compose -f ops/runtime/docker-compose.apps.yml up -d one-ui-shell
 ```
 
 ### 8. v1.1 header enforcement not working

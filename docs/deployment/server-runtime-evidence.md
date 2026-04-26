@@ -88,7 +88,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 | impilo-pct | custom build | `/actuator/health` |
 | impilo-oros | custom build | `/actuator/health` |
 | impilo-experience-bff | custom build | `/actuator/health` |
-| impilo-experience-ui | custom build | HTTP 200 on `:3020` |
+| impilo-one-ui-shell | custom build | HTTP 200 on `:3000` |
 
 ---
 

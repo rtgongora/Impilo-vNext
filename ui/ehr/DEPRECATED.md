@@ -4,7 +4,7 @@
 
 **Reason**: This EHR UI has been superseded by `ui/experience`, which provides the full clinical experience with 80+ pages across 17 zones, React Query hooks, and real BFF integration.
 
-**Replacement**: `ui/experience` (port 3020)
+**Replacement**: `ui/one-ui-shell` (port 3000; merged Experience surface)
 
 **Action**: Do not develop new features in this directory. All clinical UI work should target `ui/experience`.
 

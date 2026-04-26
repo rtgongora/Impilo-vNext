@@ -79,6 +79,7 @@ export class SyncEngine {
     this.isSyncing = true;
 
     const storage = getOfflineStorage();
+    await storage.resetStaleInFlight("recovered_after_restart_or_interrupt");
     this.setStatus("syncing");
 
     try {
@@ -191,27 +192,45 @@ export class SyncEngine {
       noRetry: true, // We handle retries at the queue level
     };
 
+    let responseData: unknown;
     switch (operation.method) {
       case "POST":
-        await apiClient.post(operation.path, operation.payload, options);
+        responseData = (await apiClient.post(operation.path, operation.payload, options)).data;
         break;
       case "PUT":
-        await apiClient.put(operation.path, operation.payload, options);
+        responseData = (await apiClient.put(operation.path, operation.payload, options)).data;
         break;
       case "PATCH":
-        await apiClient.patch(operation.path, operation.payload, options);
+        responseData = (await apiClient.patch(operation.path, operation.payload, options)).data;
         break;
       case "DELETE":
         await apiClient.delete(operation.path, options);
+        responseData = null;
         break;
+      default:
+        responseData = null;
     }
 
     // Update local record status to synced
     const storage = getOfflineStorage();
     const record = await storage.get(operation.collection, operation.recordId);
     if (record) {
+      let mergedData = record.data;
+      if (responseData && typeof responseData === "object") {
+        const envelope = responseData as Record<string, unknown>;
+        const inner =
+          "data" in envelope && envelope.data !== undefined && typeof envelope.data === "object"
+            ? (envelope.data as Record<string, unknown>)
+            : (envelope as Record<string, unknown>);
+        if (operation.method === "POST" && record.data && typeof record.data === "object") {
+          mergedData = { ...(record.data as Record<string, unknown>), ...inner } as typeof record.data;
+        } else if (operation.method !== "DELETE") {
+          mergedData = inner as typeof record.data;
+        }
+      }
       await storage.put({
         ...record,
+        data: mergedData,
         status: "synced" as SyncStatus,
         serverVersion: record.localVersion,
         syncedAt: new Date().toISOString(),
@@ -228,8 +247,8 @@ export class SyncEngine {
       collection: operation.collection,
       recordId: operation.recordId,
       localData: localRecord?.data ?? operation.payload,
-      serverData: error.details?.serverData ?? null,
-      baseData: error.details?.baseData ?? null,
+      serverData: (error.details?.serverData as unknown) ?? null,
+      baseData: (error.details?.baseData as unknown) ?? null,
       detectedAt: new Date().toISOString(),
     };
 

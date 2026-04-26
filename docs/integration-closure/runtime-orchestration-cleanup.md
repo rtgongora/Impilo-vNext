@@ -39,13 +39,13 @@ This document records all runtime orchestration issues identified and resolved d
 | mushex-finance-console | 3017 | Active — MUSheX finance |
 | mushex-ops-console | 3018 | Active — MUSheX ops |
 | support-console | 3019 | Active — Support/helpdesk (moved from 3006) |
-| experience | 3020 | Active — Main clinical UI |
+| one-ui-shell | 3000 | Active — Main clinical UI (merged Experience) |
 | pct-web | 3021 | Active — Patient Care Tracker (moved from 3007) |
 
 ## ui/ehr Disposition — DEPRECATED
 
 - **Classification**: FRAGILE (0 source files, package.json only with 4 skeleton components)
-- **Superseded by**: `ui/experience` — 125 source files, 80+ pages across 17 zones
+- **Superseded by**: `ui/one-ui-shell` — merged Experience routes (see `ui/experience/DEPRECATED.md`)
 - **Action taken**: Added `ui/ehr/DEPRECATED.md` with explicit deprecation notice
 - **Port 3002**: Reserved/unassigned
 - **Rationale**: The completeness audit explicitly states "Empty — package.json only. Superseded by experience app"
@@ -69,7 +69,7 @@ The canonical integration runtime includes:
 
 **Backend Services**: TSHEPO (8081), VITO (8082), VARAPI (8083), TUSO (8084), ZIBO (8085), PCT (8088), OROS (8089), Experience BFF (8160)
 
-**UI**: Experience UI (3020)
+**UI**: One UI Shell (3000)
 
 ### How to run
 ```bash

@@ -31,7 +31,7 @@ PCT_URL="${PCT_URL:-http://localhost:8088}"
 OROS_URL="${OROS_URL:-http://localhost:8089}"
 BFF_URL="${BFF_URL:-http://localhost:8160}"
 OPA_URL="${OPA_URL:-http://localhost:8181}"
-UI_URL="${UI_URL:-http://localhost:3020}"
+UI_URL="${UI_URL:-http://localhost:3000}"
 
 POSTGRES_HOST="${POSTGRES_HOST:-localhost}"
 POSTGRES_PORT="${POSTGRES_PORT:-5432}"

@@ -188,7 +188,7 @@ cmd_up() {
 
     # Phase 5: UI
     log_info "Phase 5: Starting Experience UI..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d experience-ui
+    docker compose -f "$RUNTIME_COMPOSE" up -d one-ui-shell
     log_ok "UI starting"
 
     log_info "Waiting for services to stabilize (60s)..."
@@ -198,7 +198,7 @@ cmd_up() {
     echo ""
     echo "Service URLs:"
     echo "  Envoy Gateway:    http://$(hostname -I | awk '{print $1}'):10000"
-    echo "  Experience UI:    http://$(hostname -I | awk '{print $1}'):3020"
+    echo "  One UI Shell:      http://$(hostname -I | awk '{print $1}'):3000"
     echo "  Keycloak:         http://$(hostname -I | awk '{print $1}'):8080"
     echo "  HAPI FHIR:        http://$(hostname -I | awk '{print $1}'):8090/fhir"
     echo "  OPA:              http://$(hostname -I | awk '{print $1}'):8181"
@@ -285,7 +285,7 @@ cmd_health() {
     check_health "PCT"             "http://localhost:8088/actuator/health"
     check_health "OROS"            "http://localhost:8089/actuator/health"
     check_health "Experience BFF"  "http://localhost:8160/actuator/health"
-    check_health "Experience UI"   "http://localhost:3020"
+    check_health "One UI Shell"   "http://localhost:3000"
 
     echo ""
     log_step "RESULTS: $pass passed / $fail failed / $total total"

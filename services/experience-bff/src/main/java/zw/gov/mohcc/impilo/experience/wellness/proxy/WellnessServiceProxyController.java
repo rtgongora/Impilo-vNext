@@ -21,8 +21,13 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Forwards citizen wellness, health wallet, and Health Connect traffic to {@code wellness-service}
- * (Phase F — domain backend owns persistence; BFF keeps stable URLs for Experience / mobile).
+ * Forwards <strong>wellness-domain</strong> traffic to {@code wellness-service}.
+ *
+ * <p>Only a subset of {@code /internal/v1/mobile/citizen/**} is owned by wellness-service
+ * (see {@code CitizenMyLifeController} there). The rest of citizen mobile APIs are implemented
+ * directly in experience-bff and must not be swallowed by this proxy.</p>
+ *
+ * <p>Health Connect ingest remains under {@code /internal/v1/wellness/**}.</p>
  */
 @RestController
 public class WellnessServiceProxyController {
@@ -50,13 +55,25 @@ public class WellnessServiceProxyController {
     }
 
     @RequestMapping(
-            value = {"/internal/v1/wellness/**", "/internal/v1/mobile/citizen/**"},
+            value = {
+                    "/internal/v1/wellness/**",
+                    "/internal/v1/mobile/citizen/health-id",
+                    "/internal/v1/mobile/citizen/wellness/**",
+                    "/internal/v1/mobile/citizen/wallet/**",
+                    "/internal/v1/mobile/citizen/sos/**",
+                    "/internal/v1/mobile/citizen/monitoring/**",
+                    "/internal/v1/mobile/citizen/queue/**",
+                    "/internal/v1/mobile/citizen/clubs/**",
+                    "/internal/v1/mobile/citizen/providers/**",
+                    "/internal/v1/mobile/citizen/crowdfunding/**",
+                    "/internal/v1/mobile/citizen/services/discover"
+            },
             method = {
-                RequestMethod.GET,
-                RequestMethod.POST,
-                RequestMethod.PUT,
-                RequestMethod.PATCH,
-                RequestMethod.DELETE
+                    RequestMethod.GET,
+                    RequestMethod.POST,
+                    RequestMethod.PUT,
+                    RequestMethod.PATCH,
+                    RequestMethod.DELETE
             })
     public ResponseEntity<byte[]> forward(HttpServletRequest request, @RequestBody(required = false) byte[] body) {
         if (body == null && request.getContentLengthLong() > 0) {

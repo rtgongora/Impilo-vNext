@@ -1,0 +1,11 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+- extendedWaitUntil: { id: "provider-tabs", timeout: 120000 }
+- assertNotVisible: { id: "login-screen" }
+- assertVisible: { id: "provider-activation-screen" }
+- tapOn: { id: "provider-id-input" }
+- inputText: "PRV-2024-00147"
+- tapOn: { id: "activate-provider-button" }
+- extendedWaitUntil: { id: "select-facility-screen", timeout: 120000 }
+

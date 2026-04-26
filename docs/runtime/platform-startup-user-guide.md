@@ -50,7 +50,7 @@ docker info               # Should not error (daemon running)
    - Starts Keycloak and HAPI FHIR
    - Starts OPA and Envoy gateway
    - Starts TSHEPO (trust), then core registries
-   - Starts PCT, OROS, Experience BFF, Experience UI
+   - Starts PCT, OROS, Experience BFF, Impilo web experience (Compose: `one-ui-shell`)
    - Runs readiness checks on all services
    - Prints service URLs
 
@@ -61,13 +61,13 @@ docker info               # Should not error (daemon running)
      Service URLs:
      ─────────────────────────────────────────
      Envoy Gateway:    http://localhost:10000
-     Experience UI:    http://localhost:3020
+     Web experience:    http://localhost:3000
      Keycloak:         http://localhost:8080
      ...
    ```
 
-5. **Open the Experience UI**:
-   Visit http://localhost:3020 in your browser.
+5. **Open the web experience** (single orchestration layer):
+   Visit http://localhost:3000 in your browser.
 
 ### After Starting: Bootstrap
 
@@ -198,7 +198,7 @@ docker volume rm impilo-vnext_pg_data
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Experience UI | http://localhost:3020 | — |
+| Impilo web experience | http://localhost:3000 | — |
 | Keycloak Admin | http://localhost:8080 | admin / admin |
 | HAPI FHIR | http://localhost:8090/fhir | — |
 | Envoy Gateway | http://localhost:10000 | — |

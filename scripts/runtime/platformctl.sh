@@ -196,7 +196,7 @@ cmd_up() {
     if [[ "${profile}" == "lite" ]]; then
         # Lite: only PCT, OROS, BFF, UI
         docker compose ${compose_files} up -d pct oros experience-bff 2>/dev/null || true
-        docker compose ${compose_files} up -d experience-ui 2>/dev/null || true
+        docker compose ${compose_files} up -d one-ui-shell 2>/dev/null || true
     else
         docker compose ${compose_files} up -d
     fi
@@ -217,7 +217,7 @@ cmd_up() {
     echo "  Service URLs:"
     echo "  ─────────────────────────────────────────"
     echo "  Envoy Gateway:    http://localhost:10000"
-    echo "  Experience UI:    http://localhost:3020"
+    echo "  One UI Shell:      http://localhost:3000"
     echo "  Keycloak:         http://localhost:8080"
     echo "  HAPI FHIR:        http://localhost:8090/fhir"
     echo "  OPA:              http://localhost:8181"

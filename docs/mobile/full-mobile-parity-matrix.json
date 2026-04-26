@@ -1,0 +1,756 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.818Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier1",
+    "total": 48,
+    "done": 48,
+    "missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier1",
+      "routePath": "/",
+      "routeTitle": "Home",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_home",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/HomeScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/citizen/health-id/qr",
+      "routeTitle": "My Health ID QR",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_health_id_qr",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/communication/secure-messaging",
+      "routeTitle": "Secure Messaging",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_messaging",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/messaging/MessagingInboxScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/messaging/ThreadViewScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/home",
+      "routeTitle": "Home",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_home",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/HomeScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/home/profile",
+      "routeTitle": "My Profile",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_profile",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/ProfileSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace",
+      "routeTitle": "Health Marketplace",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/bookings",
+      "routeTitle": "Bookings",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/cart",
+      "routeTitle": "Shopping Cart",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/catalog",
+      "routeTitle": "Service Catalog",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/ops",
+      "routeTitle": "Marketplace Operations",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/orders",
+      "routeTitle": "My Orders",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/orders/[id]",
+      "routeTitle": "Order Details",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/pickup",
+      "routeTitle": "Pickup Handoff",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/substitutions",
+      "routeTitle": "Substitutions",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/vendor",
+      "routeTitle": "Vendor Fulfilment",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/vendor/orders",
+      "routeTitle": "Vendor Orders",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/marketplace/vendors",
+      "routeTitle": "Vendors",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_marketplace",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/marketplace/CartScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring",
+      "routeTitle": "Remote Monitoring",
+      "routeZone": "monitoring",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring/alerts",
+      "routeTitle": "Monitoring Alerts",
+      "routeZone": "monitoring",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring/care-plans",
+      "routeTitle": "Chronic Care Plans",
+      "routeZone": "monitoring",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring/devices",
+      "routeTitle": "My Devices",
+      "routeZone": "monitoring",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring/provider-dashboard",
+      "routeTitle": "Patient Monitoring Dashboard",
+      "routeZone": "monitoring",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/monitoring/readings",
+      "routeTitle": "Readings & Trends",
+      "routeZone": "monitoring",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_monitoring",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/MonitoringSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/telemedicine",
+      "routeTitle": "Telemedicine Hub",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_telehealth",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/telemedicine/new",
+      "routeTitle": "New Teleconsultation",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_telehealth",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/telemedicine/session/[sessionId]",
+      "routeTitle": "Teleconsult Session",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_telehealth",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthListScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/telehealth/TelehealthSessionScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness",
+      "routeTitle": "Wellness Hub",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/activity",
+      "routeTitle": "Activity & Fitness",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/challenges",
+      "routeTitle": "Challenges",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/clubs",
+      "routeTitle": "Clubs & Communities",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/coaching",
+      "routeTitle": "Coaching & Habits",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/community",
+      "routeTitle": "Wellness Community",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/connect",
+      "routeTitle": "Health Connect ingest",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/diet",
+      "routeTitle": "Diet & Nutrition",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/goals",
+      "routeTitle": "Health Goals",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/programs",
+      "routeTitle": "Prevention Programs",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/routes",
+      "routeTitle": "Routes & Places",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/screenings",
+      "routeTitle": "Screening Schedule",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/wellness/sleep",
+      "routeTitle": "Sleep & Recovery",
+      "routeZone": "wellness",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mappingId": "citizen_wellness",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/WellnessSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/clinical",
+      "routeTitle": "Clinical Care",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_dashboard",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/clinical-tools",
+      "routeTitle": "Clinical Tools",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_dashboard",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/communication/secure-messaging",
+      "routeTitle": "Secure Messaging",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "provider_messaging",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MessagingScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/ehr/[patientId]/results",
+      "routeTitle": "Results",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_results",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/lab/results",
+      "routeTitle": "Results Review",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_results",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/queue",
+      "routeTitle": "Patient Queue",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_dashboard",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProviderDashboardScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/queue/search",
+      "routeTitle": "Patient Search",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_patient_lookup",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/queue/walk-in",
+      "routeTitle": "Walk-in Registration",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mappingId": "provider_patient_lookup",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/shift/handover",
+      "routeTitle": "Shift Handover",
+      "routeZone": "shift",
+      "routeGuard": "facility",
+      "routeNavZone": null,
+      "mappingId": "provider_shift_handoff",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    }
+  ]
+}

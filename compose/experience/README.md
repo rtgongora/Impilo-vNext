@@ -92,7 +92,7 @@ cd ui/experience && npm run test:routes
 
 | Service | Port | URL |
 |---------|------|-----|
-| Experience UI | 3020 | http://localhost:3020 |
+| One UI Shell (unified Experience) | 3000 | http://localhost:3000 |
 | Experience BFF | 8160 | http://localhost:8160 |
 | Experience DB | 5433 | localhost:5433 |
 
@@ -102,7 +102,7 @@ cd ui/experience && npm run test:routes
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
 │ Experience   │────▶│ Experience  │────▶│ PostgreSQL  │
 │ UI (Next.js) │     │ BFF (Spring)│     │ 16-alpine   │
-│ :3020        │     │ :8160       │     │ :5433       │
+│ :3000        │     │ :8160       │     │ :5433       │
 └─────────────┘     └─────────────┘     └─────────────┘
                          │
                          ▼

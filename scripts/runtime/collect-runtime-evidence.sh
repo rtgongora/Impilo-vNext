@@ -65,7 +65,7 @@ tee_output() {
         "PCT:http://localhost:8088/actuator/health"
         "OROS:http://localhost:8089/actuator/health"
         "Experience-BFF:http://localhost:8160/actuator/health"
-        "Experience-UI:http://localhost:3020"
+        "One-UI-Shell:http://localhost:3000"
     )
 
     for svc in "${SERVICES[@]}"; do

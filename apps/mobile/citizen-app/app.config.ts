@@ -48,6 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-web-browser",
     "expo-secure-store",
+    "expo-sqlite",
     [
       "expo-build-properties",
       {

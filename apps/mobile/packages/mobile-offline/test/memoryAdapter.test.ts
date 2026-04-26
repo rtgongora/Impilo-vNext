@@ -42,15 +42,23 @@ describe("MemoryStorageAdapter", () => {
   });
 
   describe("queue operations", () => {
-    const op: QueuedOperation = {
-      id: "op-1", type: "CREATE", collection: "c", recordId: "r1",
-      payload: {}, method: "POST", path: "/api/v1/c",
-      createdAt: "2026-01-01", retryCount: 0, maxRetries: 3,
-      status: "pending", idempotencyKey: "ik-1",
-    };
+    const makeOp = (id: string = "op-1"): QueuedOperation => ({
+      id,
+      type: "CREATE",
+      collection: "c",
+      recordId: "r1",
+      payload: {},
+      method: "POST",
+      path: "/api/v1/c",
+      createdAt: "2026-01-01",
+      retryCount: 0,
+      maxRetries: 3,
+      status: "pending",
+      idempotencyKey: `ik-${id}`,
+    });
 
     it("enqueue and dequeue", async () => {
-      await adapter.enqueue(op);
+      await adapter.enqueue(makeOp());
       const dequeued = await adapter.dequeue();
       expect(dequeued).not.toBeNull();
       expect(dequeued!.id).toBe("op-1");
@@ -62,14 +70,33 @@ describe("MemoryStorageAdapter", () => {
     });
 
     it("getQueueSize counts pending and in_flight", async () => {
-      await adapter.enqueue(op);
+      await adapter.enqueue(makeOp());
       expect(await adapter.getQueueSize()).toBe(1);
     });
 
     it("removeQueueItem removes from queue", async () => {
-      await adapter.enqueue(op);
+      await adapter.enqueue(makeOp());
       await adapter.removeQueueItem("op-1");
       expect(await adapter.getQueueSize()).toBe(0);
+    });
+
+    it("listQueue returns queued items", async () => {
+      await adapter.enqueue(makeOp());
+      const list = await adapter.listQueue();
+      expect(list).toHaveLength(1);
+      expect(list[0].id).toBe("op-1");
+      expect(list[0].status).toBe("pending");
+    });
+
+    it("resetStaleInFlight resets in_flight to pending with reason", async () => {
+      await adapter.enqueue(makeOp());
+      const dequeued = await adapter.dequeue();
+      expect(dequeued!.status).toBe("in_flight");
+
+      await adapter.resetStaleInFlight("stale");
+      const list = await adapter.listQueue();
+      expect(list[0].status).toBe("pending");
+      expect(list[0].error).toBe("stale");
     });
   });
 
@@ -95,6 +122,18 @@ describe("MemoryStorageAdapter", () => {
       await adapter.resolveConflict("conf-1", "KEEP_LOCAL");
       await adapter.removeConflict("conf-1");
       expect(await adapter.getConflicts()).toHaveLength(0);
+    });
+
+    it("supports null serverData", async () => {
+      await adapter.addConflict({
+        id: "conf-null", collection: "c", recordId: "r1",
+        localData: { a: 1 }, serverData: null,
+        detectedAt: "2026-01-01",
+      });
+      const conflicts = await adapter.getConflicts();
+      const match = conflicts.find((c) => c.id === "conf-null");
+      expect(match).toBeTruthy();
+      expect(match!.serverData).toBeNull();
     });
   });
 });

@@ -829,12 +829,10 @@
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:3020/*",
         "http://localhost:3000/*",
         "https://impilo.gov.zw/*"
       ],
       "webOrigins": [
-        "http://localhost:3020",
         "http://localhost:3000",
         "https://impilo.gov.zw"
       ],

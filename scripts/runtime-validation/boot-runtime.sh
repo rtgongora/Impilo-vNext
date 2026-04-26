@@ -40,7 +40,7 @@ SERVICES=(
   "experience-bff|8160|/actuator/health"
   "envoy|9901|/ready"
   "opa|8181|/health"
-  "experience-ui|3020|"
+  "one-ui-shell|3000|"
 )
 
 check_tcp() {

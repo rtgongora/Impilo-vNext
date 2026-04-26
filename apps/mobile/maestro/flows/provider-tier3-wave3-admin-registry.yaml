@@ -1,0 +1,25 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+- assertVisible:
+    id: "provider-tabs"
+
+# Tier-3 wave 3: Admin & registry hub under Clinical Tools
+- tapOn: "Tools"
+- assertVisible:
+    text: "Clinical Tools"
+
+- tapOn:
+    id: "tools-tab-admin"
+- assertVisible:
+    id: "admin-registry-hub-screen"
+
+# At least one mapped web landing is visible
+- assertVisible:
+    id: "admin-registry-section-admin"

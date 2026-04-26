@@ -6,9 +6,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class CredentialServiceClient {
@@ -37,6 +41,22 @@ public class CredentialServiceClient {
     public ResponseEntity<byte[]> getCredentialPdf(String credentialId) {
         log.info("Credential service: downloading credential PDF={}", credentialId);
         return restTemplate.getForEntity(baseUrl + "/v1/internal/credentials/" + credentialId + "/pdf", byte[].class);
+    }
+
+    /**
+     * Public verification by opaque token — maps to credential-verification-service
+     * {@code GET /v1/public/verify/{token}} (returns {@code ApiResponse<VerificationResult>}).
+     */
+    public JsonNode publicVerifyByToken(String token) {
+        String encoded = URLEncoder.encode(token, StandardCharsets.UTF_8);
+        String url = baseUrl + "/v1/public/verify/" + encoded;
+        log.info("Credential service: public verify (token length={})", token != null ? token.length() : 0);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        JsonNode root = response.getBody();
+        if (root != null && root.has("data")) {
+            return root.get("data");
+        }
+        return root;
     }
 
     private MultiValueMap<String, String> copy(MultiValueMap<String, String> source) {

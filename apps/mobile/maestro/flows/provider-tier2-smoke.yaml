@@ -1,0 +1,43 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Tier-2: Queue basics
+- tapOn: "Queue"
+- assertVisible:
+    text: "Queue"
+
+# Tier-2: EHR surface exists (Encounter screen placeholder if no encounter)
+- tapOn: "Encounter"
+- assertVisible:
+    id: "encounter-screen"
+
+# Tier-2: Lab/Results surface exists
+- tapOn: "Results"
+- assertVisible:
+    id: "results-view-screen"
+
+# Tier-2: Pharmacy/Lab/Marketplace hubs (via Tools)
+- tapOn: "Tools"
+- assertVisible:
+    text: "Clinical Tools"
+
+- tapOn:
+    id: "tools-tab-pharmacy"
+- assertVisible:
+    id: "pharmacy-dashboard-screen"
+
+- tapOn:
+    id: "tools-tab-lab"
+- assertVisible:
+    id: "results-view-screen"
+
+- tapOn:
+    id: "tools-tab-marketplace"
+- assertVisible:
+    id: "marketplace-ops-screen"
+

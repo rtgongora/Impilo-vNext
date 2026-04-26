@@ -18,6 +18,7 @@ import { createEncounter } from "../../services/encounterService";
 import { encounterStore } from "../../stores/encounterStore";
 import { useAppStore } from "../../stores/appStore";
 import type { Patient } from "../../types";
+import { PatientRegistrationScreen } from "./PatientRegistrationScreen";
 
 export function PatientLookupScreen() {
   const { facilityId, setProviderTab } = useAppStore();
@@ -28,6 +29,7 @@ export function PatientLookupScreen() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [startingEncounter, setStartingEncounter] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -96,7 +98,36 @@ export function PatientLookupScreen() {
           </TouchableOpacity>
         </View>
 
-        {loading ? (
+        {showRegistration ? (
+          <Card>
+            <View style={styles.registrationHeader}>
+              <View style={styles.registrationHeaderLeft}>
+                <Ionicons name="person-add-outline" size={18} color="#1E40AF" />
+                <Text style={styles.registrationTitle}>New Patient Registration</Text>
+              </View>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Close registration"
+                onPress={() => setShowRegistration(false)}
+                style={styles.registrationClose}
+                testID="close-registration-btn"
+              >
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <CardBody>
+              <PatientRegistrationScreen
+                embedded
+                onRegistered={() => {
+                  setShowRegistration(false);
+                  setQuery("");
+                  setPatients([]);
+                  setError(null);
+                }}
+              />
+            </CardBody>
+          </Card>
+        ) : loading ? (
           <View style={styles.centerContainer}>
             <LoadingSpinner size="md" />
           </View>
@@ -154,8 +185,14 @@ export function PatientLookupScreen() {
           ))
         )}
 
-        {patients.length === 0 && (
-          <TouchableOpacity style={styles.newPatientButton}>
+        {!showRegistration && patients.length === 0 && (
+          <TouchableOpacity
+            style={styles.newPatientButton}
+            onPress={() => setShowRegistration(true)}
+            testID="new-patient-registration-btn"
+            accessibilityRole="button"
+            accessibilityLabel="New patient registration"
+          >
             <Ionicons name="person-add-outline" size={16} color="#1E40AF" />
             <Text style={styles.newPatientButtonText}>New Patient Registration</Text>
           </TouchableOpacity>
@@ -326,5 +363,27 @@ const styles = StyleSheet.create({
     color: "#1E40AF",
     fontWeight: "600",
     fontSize: 14,
+  },
+  registrationHeader: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  registrationHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  registrationTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  registrationClose: {
+    padding: 6,
+    borderRadius: 999,
   },
 });

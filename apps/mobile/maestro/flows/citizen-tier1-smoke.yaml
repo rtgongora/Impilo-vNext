@@ -1,0 +1,32 @@
+appId: zw.gov.impilo.citizen
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Health..."
+    timeout: 60000
+
+# Once boot is done, we should be in the tab shell.
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+# Tab bar basic navigation (Tier-1)
+- assertVisible:
+    id: "home-screen"
+- assertVisible:
+    id: "health-id-card"
+- tapOn: "Health"
+- assertVisible:
+    id: "personal-screen"
+- tapOn: "Services"
+- assertVisible:
+    id: "marketplace-screen"
+- tapOn: "Messages"
+- assertVisible:
+    id: "messaging-inbox-screen"
+- tapOn: "Home"
+- assertVisible:
+    id: "home-screen"
+

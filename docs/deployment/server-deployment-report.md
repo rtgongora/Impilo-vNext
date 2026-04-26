@@ -28,7 +28,7 @@ Since direct server access was blocked, a comprehensive deployment preparation w
 
 ### Architecture
 - **68+ microservices** (Java 21 / Spring Boot 3.3.6)
-- **1 Experience UI** (Next.js 14.2.x / React 18)
+- **1 One UI Shell** (Next.js 14.2.x / React 18)
 - **1 Experience BFF** (Java/Spring Boot)
 - **Infrastructure**: PostgreSQL 16, Redis 7, Kafka 3.7.1 (KRaft), Keycloak 25, HAPI FHIR 7.4, MinIO, OPA, Envoy 1.31
 - **Multi-module Maven build** with parent POM at `services/pom.xml`
@@ -51,7 +51,7 @@ Since direct server access was blocked, a comprehensive deployment preparation w
 | PCT (Patient Care) | 8088 | Java/Spring Boot |
 | OROS (Orders & Results) | 8089 | Java/Spring Boot |
 | Experience BFF | 8160 | Java/Spring Boot |
-| Experience UI | 3020 | Next.js |
+| One UI Shell | 3000 | Next.js |
 | Envoy Gateway | 10000 | Envoy Proxy |
 | Keycloak | 8080 | Identity |
 | HAPI FHIR | 8090 | FHIR Server |
@@ -82,7 +82,7 @@ Since direct server access was blocked, a comprehensive deployment preparation w
 
 ### 4. Keycloak Realm Missing Server Redirect URIs
 **Problem**: Keycloak realm only had localhost redirect URIs, which would block OIDC flows from the server IP.
-**Fix**: Added `http://197.221.242.150:*` redirect URIs and web origins for all clients (experience-ui, one-ui-shell, citizen-portal).
+**Fix**: Added `http://197.221.242.150:*` redirect URIs and web origins for all clients (`experience-ui`, `one-ui-shell`, `citizen-portal` — OIDC identifiers for the same web origin policy, not separate UX products).
 **File**: `tools/auth/impilo-realm.json`
 
 ---

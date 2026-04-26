@@ -80,7 +80,7 @@ This runs:
 [INFO]  Starting UI...
 [OK]    All services starting.
 [INFO]  Envoy gateway: http://localhost:10000
-[INFO]  Experience UI: http://localhost:3020
+[INFO]  Experience UI: http://localhost:3000
 ```
 
 ### Service endpoints after startup
@@ -97,7 +97,7 @@ This runs:
 | PCT | http://localhost:8088 | http://localhost:8088/actuator/health |
 | OROS | http://localhost:8089 | http://localhost:8089/actuator/health |
 | Experience BFF | http://localhost:8160 | http://localhost:8160/actuator/health |
-| Experience UI | http://localhost:3020 | http://localhost:3020 |
+| Experience UI | http://localhost:3000 | http://localhost:3000 |
 | Keycloak | http://localhost:8080 | http://localhost:8080/health/ready |
 | HAPI FHIR | http://localhost:8090/fhir | http://localhost:8090/fhir/metadata |
 | PostgreSQL | localhost:5432 | `pg_isready -U impilo` |
@@ -132,7 +132,7 @@ This runs three test suites in sequence:
 | Non-v1.1 passthrough | `GET /api/v1/facilities` → not 403 | PASS |
 | Idempotent replay | Same key+body → same HTTP code | PASS/WARN |
 | Idempotency conflict | Same key, different body → 409 | PASS/WARN |
-| Experience UI reachable | `GET http://localhost:3020` | PASS |
+| Experience UI reachable | `GET http://localhost:3000` | PASS |
 
 ### 3b. Event Bus Proof (`scripts/smoke/event-bus-proof.sh`)
 

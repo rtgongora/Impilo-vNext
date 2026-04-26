@@ -26,7 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * Auth session controller with real Keycloak credential exchange.
  *
  * <p>Uses the Resource Owner Password Credentials (ROPC) grant against
- * Keycloak's token endpoint. The experience-ui client is configured
+ * Keycloak's token endpoint. The experience-ui OIDC client is configured
  * as a public client with direct access grants enabled in the impilo
  * realm.</p>
  *

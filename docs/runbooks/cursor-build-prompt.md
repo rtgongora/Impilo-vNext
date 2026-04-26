@@ -39,12 +39,12 @@ mvn test -pl services/experience-bff
 
 ---
 
-## 2. Experience UI (Next.js)
+## 2. One UI Shell (Next.js)
 
 ### Install, type-check, build
 
 ```bash
-cd ui/experience
+cd ui/one-ui-shell
 pnpm install
 pnpm type-check                                         # Must be zero errors
 NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm build     # Production build
@@ -116,7 +116,7 @@ After completing all phases, create `docs/runbooks/build-log.md`:
 - Fixes applied:
   1. description — commit SHA
 
-### Experience UI Build
+### One UI Shell Build
 - pnpm type-check: PASS / FAIL
 - pnpm build: PASS / FAIL
 - pnpm test: PASS / FAIL (X passed, Y failed)
@@ -155,8 +155,8 @@ git push origin claude/staging-ux-orchestration-remediation-Yypyl
 | BFF compile | `mvn clean compile -pl services/experience-bff -am -DskipTests` | 8160 |
 | BFF run | `cd services/experience-bff && mvn spring-boot:run` | 8160 |
 | BFF health | `curl http://localhost:8160/actuator/health` | — |
-| UI dev | `cd ui/experience && NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm dev` | 3020 |
-| UI build | `cd ui/experience && pnpm build` | — |
+| UI dev | `cd ui/one-ui-shell && NEXT_PUBLIC_BFF_URL=http://localhost:8160 npm run dev` | 3000 |
+| UI build | `cd ui/one-ui-shell && npm run build` | — |
 | Mobile install | `cd apps/mobile && pnpm install` | — |
 | Citizen dev | `cd apps/mobile/citizen-app && pnpm start` | Expo |
 | Provider dev | `cd apps/mobile/provider-app && pnpm start` | Expo |

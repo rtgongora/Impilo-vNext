@@ -64,6 +64,9 @@ export function buildTrustHeaders(
   if (session.facilityId) {
     headers[TRUST_HEADERS.FACILITY_ID] = session.facilityId;
   }
+  if (session.providerId) {
+    headers[TRUST_HEADERS.PROVIDER_ID] = session.providerId;
+  }
   if (session.workspaceId) {
     headers[TRUST_HEADERS.WORKSPACE_ID] = session.workspaceId;
   }

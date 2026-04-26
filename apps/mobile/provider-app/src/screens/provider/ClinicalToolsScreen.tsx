@@ -19,8 +19,39 @@ import { SpecialtyWorkspacePanel } from "./SpecialtyWorkspacePanel";
 import { FacilityAdminScreen } from "./FacilityAdminScreen";
 import { ReportsScreen } from "./ReportsScreen";
 import { FinanceOverviewScreen } from "./FinanceOverviewScreen";
+import { PharmacyHubScreen } from "./PharmacyHubScreen";
+import { LabHubScreen } from "./LabHubScreen";
+import { MarketplaceOpsScreen } from "./MarketplaceOpsScreen";
+import { ScheduleScreen } from "./ScheduleScreen";
+import { AdminRegistryHubScreen } from "./AdminRegistryHubScreen";
+import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
+import { DeveloperHubScreen } from "./DeveloperHubScreen";
+import { ProfessionalSettingsHubScreen } from "./ProfessionalSettingsHubScreen";
+import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
 
-type ToolTab = "soap" | "drugs" | "orders" | "care" | "mar" | "cds" | "paging" | "barcode" | "workspaces" | "inpatient" | "facility" | "reports" | "finance";
+type ToolTab =
+  | "soap"
+  | "drugs"
+  | "orders"
+  | "care"
+  | "mar"
+  | "cds"
+  | "paging"
+  | "barcode"
+  | "workspaces"
+  | "inpatient"
+  | "facility"
+  | "reports"
+  | "finance"
+  | "schedule"
+  | "pharmacy"
+  | "lab"
+  | "marketplace"
+  | "admin"
+  | "ops_reports"
+  | "developer_hub"
+  | "prof_settings"
+  | "prof_channels";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -28,6 +59,15 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "reports", label: "Reports" },
   { id: "finance", label: "Finance" },
+  { id: "schedule", label: "Schedule" },
+  { id: "pharmacy", label: "Pharmacy" },
+  { id: "lab", label: "Lab" },
+  { id: "marketplace", label: "Market Ops" },
+  { id: "admin", label: "Admin" },
+  { id: "ops_reports", label: "Ops+" },
+  { id: "developer_hub", label: "Dev" },
+  { id: "prof_settings", label: "Prefs" },
+  { id: "prof_channels", label: "CX+" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -36,7 +76,12 @@ export function ClinicalToolsScreen() {
     <Screen><Header title="Clinical Tools" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabBarContent}>
         {TABS.map((t) => (
-          <TouchableOpacity key={t.id} onPress={() => setTab(t.id)} style={[styles.tab, tab === t.id && styles.activeTab]}>
+          <TouchableOpacity
+            key={t.id}
+            testID={`tools-tab-${t.id}`}
+            onPress={() => setTab(t.id)}
+            style={[styles.tab, tab === t.id && styles.activeTab]}
+          >
             <Text style={[styles.tabText, tab === t.id && styles.activeTabText]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
@@ -55,6 +100,15 @@ export function ClinicalToolsScreen() {
         {tab === "facility" && <FacilityAdminScreen />}
         {tab === "reports" && <ReportsScreen />}
         {tab === "finance" && <FinanceOverviewScreen />}
+        {tab === "schedule" && <ScheduleScreen />}
+        {tab === "pharmacy" && <PharmacyHubScreen />}
+        {tab === "lab" && <LabHubScreen />}
+        {tab === "marketplace" && <MarketplaceOpsScreen />}
+        {tab === "admin" && <AdminRegistryHubScreen />}
+        {tab === "ops_reports" && <OpsReportsHubScreen />}
+        {tab === "developer_hub" && <DeveloperHubScreen />}
+        {tab === "prof_settings" && <ProfessionalSettingsHubScreen />}
+        {tab === "prof_channels" && <ProfessionalChannelsHubScreen />}
       </ScrollView>
     </Screen>
   );

@@ -3,7 +3,6 @@
  */
 
 import React from "react";
-import type { NativeSyntheticEvent, TextInputFocusEventData } from "react-native";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 
 export interface TextFieldProps {
@@ -29,8 +28,8 @@ export interface TextFieldProps {
   autoComplete?: string;
   testID?: string;
   accessibilityLabel?: string;
-  onFocus?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
-  onBlur?: (e: NativeSyntheticEvent<TextInputFocusEventData>) => void;
+  onFocus?: React.ComponentProps<typeof TextInput>["onFocus"];
+  onBlur?: React.ComponentProps<typeof TextInput>["onBlur"];
 }
 
 export function TextField({

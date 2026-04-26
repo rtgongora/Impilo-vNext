@@ -1,0 +1,92 @@
+flowchart TB
+    subgraph People["People"]
+        Citizen["Citizen"]
+        Provider["Provider"]
+        Ops["Admin/Ops"]
+        Partner["Partner/Dev"]
+        Regulator["Ministry/Regulator"]
+    end
+
+    subgraph Experience["Experience surfaces (UI)"]
+        OneUIShell["one-ui-shell"]
+        CitizenPortal["portal"]
+        MobileApps["citizen-app / provider-app"]
+        OpsConsoles["ops-console / developer-console"]
+        ExperienceBff["experience-bff"]
+    end
+
+    subgraph GovernanceEntry["Governance entry"]
+        Envoy["Envoy Gateway (ext_authz)"]
+        TShepoAuthz["TSHEPO Authz (+ OPA where used)"]
+        Keycloak["Keycloak (OIDC)"]
+        TrustHeaders["Trust context headers"]
+    end
+
+    subgraph Ring0["Ring 0 — Kernel (authoritative primitives)"]
+        subgraph TrustCluster["Trust & governance (TSHEPO cluster)"]
+            TShepoIdentity["tshepo-identity-service"]
+            TShepoConsent["tshepo-consent-service"]
+            TShepoAudit["tshepo-audit-service"]
+            TShepoKeys["tshepo-keys-service"]
+            TShepoOffline["tshepo-offline-service"]
+        end
+
+        subgraph Registries["Registry spine"]
+            Vito["vito-service (person/MPI)"]
+            Varapi["varapi-service (providers)"]
+            Tuso["tuso-service (facilities)"]
+            Zibo["zibo-service (terminology)"]
+            Msika["msika-service (products/services)"]
+        end
+
+        subgraph SharedRecordFinance["Shared record + finance"]
+            ButanoSvc["butano-service (SHR orchestration)"]
+            ButanoFhir["butano-fhir (HAPI FHIR)"]
+            Mushex["mushex-service (finance engine)"]
+        end
+    end
+
+    subgraph Ring1["Ring 1 — Clinical execution (depends on Ring 0)"]
+        Pct["pct-service (care journeys)"]
+        Oros["oros-service (orders/results)"]
+        Pharmacy["pharmacy-service"]
+        Costa["costing-engine-service (COSTA)"]
+        Coverage["coverage-service"]
+    end
+
+    subgraph Ring2["Ring 2 — Integration, data, supply (depends on Ring 0 + Ring 1)"]
+        Integration["integration-hub (adapters)"]
+        OfflineSync["offline-sync-service"]
+        DocumentSuite["document-service / credential-verification / share-slip"]
+        Inventory["inventory-service (+ eLMIS adapters)"]
+        DataPlane["reporting / pipeline / warehouse / ndr"]
+        NotifyFlow["notification / workflow / jobs / rules / forms"]
+    end
+
+    subgraph Foundations["Shared foundations"]
+        Postgres["PostgreSQL (per-service databases)"]
+        Kafka["Kafka (trust.* / kernel.* / clinical.* / finance.* / analytics.*)"]
+        Redis["Redis"]
+        ObjectStorage["Object storage (documents)"]
+        Imaging["PACS storage (imaging)"]
+        Obs["Observability/SecOps"]
+    end
+
+    People --> Experience
+    Experience --> Envoy
+    Envoy --> TShepoAuthz
+    TShepoAuthz --> Keycloak
+    TShepoAuthz --> TrustHeaders
+
+    TrustHeaders --> Ring0
+    TrustHeaders --> Ring1
+    TrustHeaders --> Ring2
+
+    Ring1 --> Registries
+    Ring1 --> SharedRecordFinance
+    Ring2 --> Registries
+    Ring2 --> Ring1
+
+    Ring0 --> Foundations
+    Ring1 --> Foundations
+    Ring2 --> Foundations

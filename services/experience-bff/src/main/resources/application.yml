@@ -69,6 +69,20 @@ impilo:
     allow-anonymous: false
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
+  bff:
+    citizen-longtail:
+      # stub = deterministic BFF behaviour; live = VITO patient-share + credential public verify
+      mode: ${IMPILO_BFF_CITIZEN_LONGTAIL_MODE:stub}
+      # When live: stub_fallback recovers to legacy BFF stubs on downstream errors; propagate returns HTTP 502
+      failure-policy: ${IMPILO_BFF_CITIZEN_LONGTAIL_FAILURE_POLICY:stub_fallback}
+    provider-hubs:
+      # stub = BFF holds hard-coded sections; live = fetch sections from one-ui-shell gateway.
+      mode: ${IMPILO_BFF_PROVIDER_HUBS_MODE:stub}
+      failure-policy: ${IMPILO_BFF_PROVIDER_HUBS_FAILURE_POLICY:stub_fallback}
+      one-ui-shell-base-url: ${ONE_UI_SHELL_BASE_URL:http://localhost:3000}
+    facilities:
+      # live = TUSO then seed fallback; stub = seed only (CI / Maestro without TUSO)
+      mode: ${IMPILO_BFF_FACILITIES_MODE:live}
   services:
     pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
     oros-base-url: ${OROS_BASE_URL:http://localhost:8089}

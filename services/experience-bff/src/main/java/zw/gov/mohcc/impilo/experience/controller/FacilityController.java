@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.config.BffFacilitiesProperties;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,9 +23,11 @@ public class FacilityController {
     private static final Logger log = LoggerFactory.getLogger(FacilityController.class);
 
     private final TusoServiceClient tusoClient;
+    private final BffFacilitiesProperties facilitiesProperties;
 
-    public FacilityController(TusoServiceClient tusoClient) {
+    public FacilityController(TusoServiceClient tusoClient, BffFacilitiesProperties facilitiesProperties) {
         this.tusoClient = tusoClient;
+        this.facilitiesProperties = facilitiesProperties;
     }
 
     private static final List<Map<String, Object>> SEEDED_FACILITIES = buildSeededFacilities();
@@ -41,7 +44,8 @@ public class FacilityController {
             @RequestParam(required = false) String province,
             @RequestParam(required = false) String search) {
 
-        try {
+        if (facilitiesProperties.getMode() == BffFacilitiesProperties.Mode.live) {
+            try {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("query", search != null ? search : "");
             body.put("facilityType", facilityType);
@@ -72,8 +76,9 @@ public class FacilityController {
                             )
                     )
             ));
-        } catch (Exception e) {
-            log.warn("TUSO facility search failed, using seed: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("TUSO facility search failed, using seed: {}", e.getMessage());
+            }
         }
 
         List<Map<String, Object>> filtered = SEEDED_FACILITIES;
@@ -122,18 +127,20 @@ public class FacilityController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        try {
-            long facilityId = Long.parseLong(id);
-            JsonNode detail = tusoClient.getFacility(facilityId);
-            if (detail != null) {
-                Map<String, Object> f = mapTusoDetailToFacilityResource(detail);
-                return ResponseEntity.ok(Map.of(
-                        "data", f,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        if (facilitiesProperties.getMode() == BffFacilitiesProperties.Mode.live) {
+            try {
+                long facilityId = Long.parseLong(id);
+                JsonNode detail = tusoClient.getFacility(facilityId);
+                if (detail != null) {
+                    Map<String, Object> f = mapTusoDetailToFacilityResource(detail);
+                    return ResponseEntity.ok(Map.of(
+                            "data", f,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+            } catch (NumberFormatException ignored) {
+            } catch (Exception e) {
+                log.debug("TUSO facility get miss for id={}: {}", id, e.getMessage());
             }
-        } catch (NumberFormatException ignored) {
-        } catch (Exception e) {
-            log.debug("TUSO facility get miss for id={}: {}", id, e.getMessage());
         }
 
         return SEEDED_FACILITIES.stream()

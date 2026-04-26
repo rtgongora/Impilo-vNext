@@ -140,7 +140,7 @@ fi
 step "Layer 7: Applications"
 
 wait_for_health "Experience BFF" "http://localhost:8160/actuator/health" 90 || true
-wait_for_health "Experience UI"  "http://localhost:3020" 60 || true
+wait_for_health "One UI Shell"  "http://localhost:3000" 60 || true
 
 # ── Layer 8: Observability (integration/pilot only) ──────────────────────────
 if [[ "${PROFILE}" == "integration" || "${PROFILE}" == "pilot" ]]; then

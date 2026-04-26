@@ -38,7 +38,7 @@ ssh -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no -p 7557 19
 
 | Endpoint | Port | Expected Service | HTTP Status | Response Body | Response Time |
 |----------|------|------------------|-------------|---------------|---------------|
-| Experience UI | 13020 | Next.js | 403 | `Host not allowed` | 3.6ms |
+| One UI Shell | 13020 | Next.js | 403 | `Host not allowed` | 3.6ms |
 | Envoy Gateway | 13021 | Envoy | 403 | `Host not allowed` | 2.9ms |
 | Keycloak | 13022 | Keycloak | 403 | `Host not allowed` | 2.6ms |
 | HAPI FHIR | 13023 | HAPI FHIR | 403 | `Host not allowed` | 3.1ms |

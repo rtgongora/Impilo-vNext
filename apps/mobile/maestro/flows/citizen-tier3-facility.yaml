@@ -1,0 +1,61 @@
+appId: zw.gov.impilo.citizen
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+- assertVisible:
+    id: "home-screen"
+
+# Open facility picker
+- tapOn:
+    id: "choose-facility"
+
+- extendedWaitUntil:
+    id: "facility-directory-screen"
+    timeout: 120000
+
+# Open a seeded facility (present in experience-bff fallback list)
+- tapOn: "Harare Central Hospital"
+
+- extendedWaitUntil:
+    id: "facility-detail-screen"
+    timeout: 120000
+
+- tapOn:
+    id: "select-facility-btn"
+
+- assertVisible:
+    text: "Selected"
+
+# Pull-to-refresh on detail (RefreshControl on ScrollView)
+- swipe:
+    from:
+      id: "facility-detail-screen"
+    direction: DOWN
+    duration: 600
+
+- assertVisible:
+    text: "Harare Central Hospital"
+
+# Back to directory
+- tapOn:
+    id: "back-to-facilities"
+
+- extendedWaitUntil:
+    id: "facility-directory-screen"
+    timeout: 120000
+
+# Pull-to-refresh on directory
+- swipe:
+    from:
+      id: "facility-directory-screen"
+    direction: DOWN
+    duration: 600
+
+- assertVisible:
+    id: "facility-search"
+

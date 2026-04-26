@@ -130,7 +130,7 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
   },
   {
     sidecarApp: "ui/inventory-web",
-    port: 3020,
+    port: 3011,
     capability: "Inventory dashboard, stock counts, movements, requisitions",
     experienceRoutes: ["/inventory", "/inventory/movements", "/inventory/counts", "/inventory/requisitions"],
     status: "absorbed into Experience",
@@ -209,12 +209,12 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
 
   // ── Shell / infrastructure ────────────────────────────────────────
   {
-    sidecarApp: "ui/one-ui-shell",
-    port: 3000,
-    capability: "Legacy shell scaffolding (minimal, no substantial pages)",
+    sidecarApp: "ui/experience",
+    port: 3099,
+    capability: "Former standalone Next workspace (same route tree; merged into one-ui-shell)",
     experienceRoutes: [],
     status: "deprecated — do not use",
-    notes: "Experience UI on port 3020 is the canonical unified shell. one-ui-shell is defunct.",
+    notes: "Do not use as a product entry. Run **ui/one-ui-shell** on port **3000** (Docker/runtime). This folder is legacy-only.",
   },
 ];
 

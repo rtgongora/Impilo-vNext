@@ -183,7 +183,7 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 1 | **one-ui-shell** | 3000 | Primary UI shell — 3-zone layout (Work/Pro/Life), trust header injection, module federation host | Envoy Gateway → all services |
+| 1 | **one-ui-shell** | 3000 | **Impilo web experience** — single actor-facing orchestration layer (Work/Pro/Life zones, clinical + ops + life flows, trust headers, federation host). Not a separate “shell” product from the Experience plane. | Envoy Gateway → all services |
 | 2 | **ops-console** | 3001 | Operations console — system administration, monitoring, configuration | TSHEPO, TUSO, all registries |
 | 3 | **portal** | 3003 | Citizen-facing portal — self-service, health records, appointments | VITO, PCT, BUTANO, MUSHEX |
 | 4 | **self-service** | 3005 | Patient self-service kiosk / registration | VITO, TSHEPO, PCT |
@@ -229,14 +229,13 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 |---|-----|------|---------|---------------------|
 | 20 | **developer-console** | 3007 | Developer portal UI — client registration, federation, certification | Developer Portal service |
 | 21 | **support-console** | 3019 | Help desk / support UI — tickets, knowledge base | Support service |
-| 22 | **experience** | 3020 | Unified clinical experience — pharmacy, inventory, EHR workflows | Experience BFF (:8160) |
-| 23 | **ops-docs** | 3004 | Operations documentation & document management console | Landela, CVS, Card Print |
+| 22 | **ops-docs** | 3004 | Operations documentation & document management console | Landela, CVS, Card Print |
 
 ### 2.7 Shared UI Library
 
 | # | App | Port | Purpose |
 |---|-----|------|---------|
-| 24 | **shared-ui** | — | Shared React component library — design system, Radix primitives, form components |
+| 23 | **shared-ui** | — | Shared React component library — design system, Radix primitives, form components |
 
 ---
 
@@ -322,7 +321,6 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 3017 | mushex-finance-console | UI |
 | 3018 | mushex-ops-console | UI |
 | 3019 | support-console | UI |
-| 3020 | experience UI | UI |
 | 3021 | pct-web | UI |
 | 4242 | Orthanc DICOM | Infra |
 | 5432 | PostgreSQL | Infra |

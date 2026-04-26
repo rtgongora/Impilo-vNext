@@ -19,7 +19,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | 9092 | Kafka (client) |
 | 9090 | Prometheus (host map in observability stack) — **not** TSHEPO gRPC |
 | 10000 / 9901 | Envoy |
-| 3000–3006, 3020 | UI apps (see `CLAUDE.md`) |
+| 3000–3006 | UI apps (see `CLAUDE.md`; **3000** = One UI Shell / merged Experience) |
 
 **TSHEPO Authz gRPC** uses **9090** *inside* `tshepo-authz-service` only (separate from host Prometheus when both run on one machine — use profiles or different hosts).
 

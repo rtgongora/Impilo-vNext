@@ -1,28 +1,28 @@
 # =============================================================================
 # Impilo vNext — Layer 7: Applications (UIs)
 # =============================================================================
-# Experience UI (Next.js), and references to other UIs.
+# One UI Shell — unified Next.js Experience surface (port 3000).
 #
 # Depends on: operations (experience-bff), edge (envoy)
 # =============================================================================
 
 services:
 
-  experience-ui:
+  one-ui-shell:
     build:
-      context: ../../ui/experience
-      dockerfile: Dockerfile
-    container_name: impilo-experience-ui
+      context: ../../ui
+      dockerfile: one-ui-shell/Dockerfile
+    container_name: impilo-one-ui-shell
     environment:
-      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
-      NEXT_PUBLIC_GATEWAY_URL: http://envoy:10000
+      NEXT_PUBLIC_BFF_URL: http://localhost:8160
+      NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     ports:
-      - "3020:3020"
+      - "3000:3000"
     depends_on:
       experience-bff:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3020 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

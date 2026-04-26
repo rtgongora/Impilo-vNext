@@ -25,7 +25,7 @@
 | PCT (8088) | No | — | /actuator/health | BLOCKED_EXTERNAL | Same |
 | OROS (8089) | No | — | /actuator/health | BLOCKED_EXTERNAL | Same |
 | Experience BFF (8160) | No | — | /actuator/health | BLOCKED_EXTERNAL | Same |
-| Experience UI (3020) | No | — | HTTP GET / | BLOCKED_EXTERNAL | Same |
+| One UI Shell (3000) | No | — | HTTP GET / | BLOCKED_EXTERNAL | Same |
 
 ## Blocker Detail
 The container environment does not provide a Docker daemon. The Docker CLI is installed (v29.2.1) and Docker Compose is available (v5.0.2), but there is no Docker socket at `/var/run/docker.sock`.

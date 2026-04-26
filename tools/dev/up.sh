@@ -2,7 +2,7 @@
 ##
 ## Impilo vNext — Start Experience Platform (Docker Compose)
 ##
-## Starts Postgres + experience-bff + experience-ui using compose.
+## Starts Postgres + experience-bff + one-ui-shell (unified Experience) using compose.
 ## Waits for healthchecks before returning.
 ##
 ## Usage:
@@ -66,7 +66,7 @@ echo ""
 echo "========================================"
 echo "  Experience Platform is running!"
 echo ""
-echo "  Experience UI:  http://localhost:3020"
+echo "  One UI Shell:   http://localhost:3000"
 echo "  Experience BFF: http://localhost:8160"
 echo "  Postgres:       localhost:5433"
 echo ""

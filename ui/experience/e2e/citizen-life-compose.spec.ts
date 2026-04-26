@@ -4,13 +4,13 @@ import { test, expect } from "@playwright/test";
  * Real-stack citizen flows — **no** `page.route` mocks.
  *
  * Prereqs (host):
- * 1. `docker compose -f compose/experience/docker-compose.yml up` (DB + wellness + BFF + UI on **3020**).
+ * 1. `docker compose -f compose/experience/docker-compose.yml up` (DB + wellness + BFF + One UI Shell on **3000**).
  * 2. Run Playwright with **`PLAYWRIGHT_COMPOSE_E2E=1`** so this project does not spawn a second Next dev server.
  *
  * The compose file sets anonymous security on BFF/wellness for dev (no Keycloak). The browser still calls
  * **NEXT_PUBLIC_BFF_URL** (defaults to `http://localhost:8160` in the client bundle) from the host.
  */
-const UI_ORIGIN = process.env.PLAYWRIGHT_EXPERIENCE_URL || "http://localhost:3020";
+const UI_ORIGIN = process.env.PLAYWRIGHT_EXPERIENCE_URL || "http://localhost:3000";
 const BFF_ORIGIN = process.env.PLAYWRIGHT_BFF_URL || "http://localhost:8160";
 const WELLNESS_ORIGIN = process.env.PLAYWRIGHT_WELLNESS_URL || "http://localhost:8161";
 

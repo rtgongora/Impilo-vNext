@@ -10,6 +10,8 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { LoginScreen } from "../screens/LoginScreen";
 import { SelectFacilityScreen } from "../screens/SelectFacilityScreen";
+import { SelectWorkspaceScreen } from "../screens/SelectWorkspaceScreen";
+import { ProviderActivationScreen } from "../screens/ProviderActivationScreen";
 import { useAppStore } from "../stores/appStore";
 
 interface AuthGuardProps {
@@ -18,7 +20,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const auth = useAuth();
-  const { facilityId } = useAppStore();
+  const { facilityId, workspaceId } = useAppStore();
 
   if (auth.isLoading) {
     return (
@@ -32,8 +34,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <LoginScreen />;
   }
 
+  // Health OS §6: "Sign in as a person; practice as a provider only under activated Provider ID."
+  if (!auth.hasActiveProvider()) {
+    return <ProviderActivationScreen />;
+  }
+
   if (!facilityId) {
     return <SelectFacilityScreen />;
+  }
+
+  if (!workspaceId) {
+    return <SelectWorkspaceScreen />;
   }
 
   return <>{children}</>;

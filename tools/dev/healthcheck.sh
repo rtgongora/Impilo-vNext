@@ -10,7 +10,7 @@
 set -euo pipefail
 
 BFF_URL="${BFF_URL:-http://localhost:8160}"
-UI_URL="${UI_URL:-http://localhost:3020}"
+UI_URL="${UI_URL:-http://localhost:3000}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5433}"
 

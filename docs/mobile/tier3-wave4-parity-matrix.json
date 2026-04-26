@@ -1,0 +1,181 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.839Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave4",
+    "scope": "provider-operations-reports-hub",
+    "total": 11,
+    "done_ui": 11,
+    "missing_ui": 0,
+    "contract_ok": 11,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/operations",
+      "routeTitle": "Operations",
+      "routeZone": "operations",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/operations/assets",
+      "routeTitle": "Asset Management",
+      "routeZone": "operations",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/operations/butano",
+      "routeTitle": "SHR Operations",
+      "routeZone": "operations",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/operations/equipment",
+      "routeTitle": "Equipment Management",
+      "routeZone": "operations",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/operations/vito",
+      "routeTitle": "Identity Operations",
+      "routeZone": "operations",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports",
+      "routeTitle": "Reports",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports/[id]",
+      "routeTitle": "Report Details",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports/clinical",
+      "routeTitle": "Clinical Reports",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports/custom",
+      "routeTitle": "Custom Reports",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports/facility",
+      "routeTitle": "Facility Reports",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave4",
+      "routePath": "/reports/operational",
+      "routeTitle": "Operational Reports",
+      "routeZone": "reports",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

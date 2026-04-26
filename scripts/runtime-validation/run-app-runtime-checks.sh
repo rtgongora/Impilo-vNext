@@ -19,7 +19,7 @@ echo -e "${BOLD}=== App Runtime Checks ===${NC}"
 # 1. Experience UI
 echo ""
 echo -e "${BOLD}--- Experience UI ---${NC}"
-HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "http://localhost:3020" 2>/dev/null) || HTTP_STATUS="000"
+HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" "http://localhost:3000" 2>/dev/null) || HTTP_STATUS="000"
 if [[ "$HTTP_STATUS" -ge 200 && "$HTTP_STATUS" -lt 400 ]]; then
   report_pass "Experience UI reachable (HTTP $HTTP_STATUS)"
 else

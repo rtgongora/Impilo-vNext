@@ -36,7 +36,7 @@ spec:
                 name: envoy-gateway
                 port:
                   number: 10000
-    # Web UI traffic → Experience UI
+    # Web UI traffic → One UI Shell (unified Experience)
     - host: impilo.gov.zw
       http:
         paths:
@@ -44,9 +44,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: experience-ui
+                name: one-ui-shell
                 port:
-                  number: 3020
+                  number: 3000
     # Auth traffic → Keycloak
     - host: auth.impilo.gov.zw
       http:

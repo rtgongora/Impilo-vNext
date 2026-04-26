@@ -302,7 +302,7 @@ graph LR
         U1["one-ui-shell :3000"]
         U2["ehr :3002"]
         U3["ops-console :3001"]
-        U4["experience :3020"]
+        U4["experience :3000"]
         U5["pct-web · oros-web · pharmacy-web"]
         U6["inventory-web · msika-web"]
         U7["mushex-finance-console · mushex-ops-console"]
@@ -420,7 +420,7 @@ graph TB
         EHR_UI["ehr :3002"]
         OPS_UI["ops-console :3001"]
         PORTAL_UI["portal :3003"]
-        EXP_UI["experience :3020"]
+        EXP_UI["experience :3000"]
         OTHER_UI["14 more UIs..."]
     end
 
@@ -464,7 +464,7 @@ graph TB
             PCT_WEB["pct-web :3021<br/>Queue · Triage · Encounters"]
             OROS_WEB["oros-web :3009<br/>Worklists · Order entry"]
             PHARMA_WEB["pharmacy-web :3010<br/>Dispensing · Stock"]
-            EXP_APP["experience :3020<br/>Unified clinical experience"]
+            EXP_APP["experience :3000<br/>Unified clinical experience"]
         end
 
         subgraph SUPPLY_UIS["Supply & Marketplace"]

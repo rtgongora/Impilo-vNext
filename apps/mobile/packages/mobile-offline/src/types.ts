@@ -39,7 +39,7 @@ export interface ConflictRecord<T = unknown> {
   collection: string;
   recordId: string;
   localData: T;
-  serverData: T;
+  serverData: T | null;
   baseData?: T;
   detectedAt: string;
   resolution?: ConflictResolution;
@@ -89,4 +89,10 @@ export interface LocalStorageAdapter {
   getConflicts(): Promise<ConflictRecord[]>;
   resolveConflict(id: string, resolution: ConflictResolution): Promise<void>;
   removeConflict(id: string): Promise<void>;
+
+  /** All queued operations (pending, in_flight, failed) for diagnostics UI. */
+  listQueue(): Promise<QueuedOperation[]>;
+
+  /** Recover operations left `in_flight` after a crash or process kill. */
+  resetStaleInFlight(reason?: string): Promise<void>;
 }

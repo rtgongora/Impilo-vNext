@@ -9,7 +9,7 @@ import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { configureAuth } from "@impilo/mobile-auth";
 import { configureApiClient } from "@impilo/mobile-api-client";
-import { configureOfflineStorage, MemoryStorageAdapter } from "@impilo/mobile-offline";
+import { configureOfflineStorage, MemoryStorageAdapter, openExpoSqliteOfflineAdapter } from "@impilo/mobile-offline";
 import { configureSecureStorage, type SecureStorageAdapter } from "@impilo/mobile-auth";
 
 const extra = Constants.expoConfig?.extra ?? {};
@@ -59,8 +59,18 @@ export function initializeApp(): void {
     maxRetries: 3,
     retryBaseDelayMs: 1000,
   });
+}
 
-  configureOfflineStorage(new MemoryStorageAdapter());
+/**
+ * Durable offline store (Expo SQLite). Falls back to in-memory adapter if SQLite is unavailable (tests / web).
+ */
+export async function initializeOfflinePersistence(): Promise<void> {
+  try {
+    const adapter = await openExpoSqliteOfflineAdapter("impilo_provider_offline.db");
+    configureOfflineStorage(adapter);
+  } catch {
+    configureOfflineStorage(new MemoryStorageAdapter());
+  }
 }
 
 export { ENV };

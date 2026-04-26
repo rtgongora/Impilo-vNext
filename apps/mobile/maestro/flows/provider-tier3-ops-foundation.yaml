@@ -1,0 +1,23 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Ensure we can reach the app shell (facility + workspace chosen)
+- assertVisible:
+    id: "provider-tabs"
+
+# Tier-3: Scheduling + shift surface exists via Tools hub
+- tapOn: "Tools"
+- assertVisible:
+    text: "Clinical Tools"
+
+- tapOn:
+    id: "tools-tab-schedule"
+- assertVisible:
+    id: "schedule-screen"
+

@@ -21,7 +21,7 @@ Layer 5: Ring 2 (Clinical)  ─── pct, oros, ubomi, pharmacy, inventory, ...
     │
 Layer 6: Operations         ─── integration-hub, notifications, jobs, ...
     │
-Layer 7: Applications       ─── experience-bff, experience-ui, consoles
+Layer 7: Applications       ─── experience-bff, one-ui-shell, consoles
     │
 Layer 8: Observability      ─── prometheus, grafana, otel-collector, jaeger
 ```
@@ -29,7 +29,7 @@ Layer 8: Observability      ─── prometheus, grafana, otel-collector, jaege
 ## Dependency Graph
 
 ```
-postgres ──┬── keycloak ──┬── tshepo ──┬── vito ──── pct ──── experience-bff ──── experience-ui
+postgres ──┬── keycloak ──┬── tshepo ──┬── vito ──── pct ──── experience-bff ──── one-ui-shell
            │              │            │── varapi ── oros
            │              │            │── tuso
            ├── hapi-fhir  │            └── zibo
@@ -47,7 +47,7 @@ minio ─────┘
 - **HAPI FHIR** depends on: postgres (butano database)
 - **Envoy** depends on: OPA (ext_authz policy engine)
 - **Experience BFF** depends on: postgres
-- **Experience UI** depends on: experience-bff
+- **One UI Shell** depends on: experience-bff
 
 ## Profiles
 
@@ -77,7 +77,7 @@ Each layer has its own compose file:
 | `docker-compose.edge.yml` | 2 | opa, envoy |
 | `docker-compose.kernel.yml` | 3-4 | tshepo, vito, varapi, tuso, zibo |
 | `docker-compose.operations.yml` | 5-6 | pct, oros, clinical, bff, ops services |
-| `docker-compose.apps.yml` | 7 | experience-ui |
+| `docker-compose.apps.yml` | 7 | one-ui-shell |
 | `docker-compose.observability.yml` | 8 | prometheus, grafana, otel, jaeger |
 
 All files are in `ops/runtime/` and share the `impilo-network` Docker network.

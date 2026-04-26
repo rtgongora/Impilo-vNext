@@ -24,7 +24,7 @@
 
 ### Runtime Stack
 - BFF startup: **PASS** (port 8160)
-- UI startup: **PASS** (port 3020)
+- UI startup: **PASS** (port 3000)
 - /actuator/health: **UP**
 - /auth/login: **200** (Keycloak + fallback both work)
 - UI title renders: **YES** ("Impilo — Health Operating System")
@@ -81,7 +81,7 @@
 - **New tests**: AllergiesControllerTest, AuditControllerTest, AuthSessionControllerTest, BedControllerTest, CareEmergencyInpatientControllerTest, ChannelsControllerTest, ClinicalCurationControllerTest, ClinicalDocumentsControllerTest, ClinicalNotesControllerTest, ConditionsControllerTest, ConsentControllerTest, CoverageControllerTest, DagsControllerTest, DispatchControllerTest, EncounterControllerTest, FhirGatewayControllerTest, GrowthControllerTest, ImmunizationsControllerTest, InventoryControllerTest, NotificationControllerTest
 - **Fixes applied**: None required — all new tests passed on first run
 
-### Experience UI
+### One UI Shell
 - **pnpm test**: PASS — **131 test files, 356 tests, 0 failures**
 - **New tests**: admin/page, auth/login/page, auth/register/page, clinical/page, consent/page, lab/page, privacy/page, scheduling/page, wellness/page
 - **Fixes applied**: None required — all new tests passed on first run
@@ -98,7 +98,7 @@
 - **Total fixes this pass**: 1 commit (citizen-app react-native mock setup)
 - **All builds**: GREEN
   - Experience BFF tests: 154 pass (+57 from previous)
-  - Experience UI: 356 tests pass (+25 from previous)
+  - One UI Shell: 356 tests pass (+25 from previous)
   - Citizen-app: 77 tests pass (+18 from previous)
   - Provider-app: 79 tests pass (+18 from previous)
 - **Total tests passing**: 666 (154 + 356 + 77 + 79)
@@ -122,13 +122,13 @@
   1. `df1cf69f` — `fix(tshepo)`: Replace `connectTimeout()`/`readTimeout()` with `setConnectTimeout()`/`setReadTimeout()` on RestTemplateBuilder for Spring Boot 3.3 compat (3 services: tshepo-authz, tshepo-identity, tshepo-audit)
   2. `893b02a9` — `fix(tuso)`: Resolve type mismatches in FacilityController, WorkspaceController, ShiftController, WorkspaceService, FacilityService — replace `setFacilityId()` with `setFacility()`, fix `PagedResponse.from()` → `.of()`, add DTO mapping, add missing `ShiftRepository` method
 
-### Experience UI Build
+### One UI Shell Build
 - **pnpm type-check**: PASS (0 TypeScript errors)
 - **pnpm build**: Compiled successfully (EPERM on standalone symlinks — expected on Windows/OneDrive)
 - **pnpm test**: PASS (122 test files, 331 tests, 0 failures)
 - **pnpm lint**: PASS (0 errors, warnings only)
 - **Fixes applied**:
-  1. `62885ad1` — `fix(experience-ui)`: Fix unknown→ReactNode error in patient chart (Boolean cast), pass patientId prop to LabResultsSystem/PatientTimeline in AssessmentSection, move useState before early return in WardManagementPanel, add missing QueryClientProvider/useAdmissions/usePrivacyDisplayStore mocks in tests
+  1. `62885ad1` — `fix(one-ui-shell)`: Fix unknown→ReactNode error in patient chart (Boolean cast), pass patientId prop to LabResultsSystem/PatientTimeline in AssessmentSection, move useState before early return in WardManagementPanel, add missing QueryClientProvider/useAdmissions/usePrivacyDisplayStore mocks in tests
 
 ### Mobile Apps Build
 - **Citizen-app type-check**: PASS
@@ -142,7 +142,7 @@
 - **All builds**: GREEN
   - Full Java reactor: Compiles (all ~70 services)
   - Experience BFF tests: 97 pass
-  - Experience UI: 331 tests pass, lint clean
+  - One UI Shell: 331 tests pass, lint clean
   - Citizen-app: 59 tests pass
   - Provider-app: 61 tests pass
 - **Total tests passing**: 548 (97 + 331 + 59 + 61)
@@ -168,7 +168,7 @@
   3. `fix(channels-service)`: Removed unused SecurityConfig, made OutboxEventEntity constructor public
   4. `fix(dispatch-service)`: Removed unused SecurityConfig, made OutboxEventEntity constructor public
 
-### Experience UI Build
+### One UI Shell Build
 - **pnpm install**: PASS (560 packages installed)
 - **pnpm type-check**: PASS (0 TypeScript errors)
 - **pnpm build**: FAIL (Windows symlink permission error EPERM — expected in OneDrive/Windows environment without admin; build failed at standalone output phase after successful compilation)
@@ -188,12 +188,12 @@
 - **Total fixes applied**: 5 commits
 - **All critical path builds**: GREEN ✅
   - Java Experience BFF: Compiles and all 97 tests pass
-  - Experience UI: 331 tests pass, linting clean (warnings only)
+  - One UI Shell: 331 tests pass, linting clean (warnings only)
   - Mobile citizen-app: 59 tests pass
   - Mobile provider-app: 61 tests pass
 - **Remaining blockers**: 
   - tuso-service and other non-critical services have compilation errors (not addressed to focus on critical path)
-  - Experience UI build fails on Windows due to symlink permissions (expected; code is correct)
+  - One UI Shell build fails on Windows due to symlink permissions (expected; code is correct)
 - **Total tests passing**: 548 (97 + 331 + 59 + 61)
 
 ### Notes

@@ -19,7 +19,7 @@ Seven architectural planes:
 | **Clinical Execution** | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
 | **Finance** | Costing Engine, MUSheX (Payments/Claims) |
 | **Integration/Ops** | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
-| **Experience** | One UI Shell (WORK/EHR/CONTROL/MY PROFESSIONAL/MY LIFE), Ops Console, EHR, Portal |
+| **Experience** | **Impilo web experience** (single orchestration layer on **3000** — zones WORK / EHR / CONTROL / MY PROFESSIONAL / MY LIFE; shipped as `one-ui-shell`), Ops Console, EHR, Portal |
 | **Enterprise Resource Plane** | General Ledger, HR & Payroll, Procurement, enterprise reporting, and control surfaces |
 
 ## Deployment Model

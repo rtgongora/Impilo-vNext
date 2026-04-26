@@ -1,0 +1,166 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.833Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave2",
+    "scope": "citizen-longtail",
+    "total": 10,
+    "done_ui": 10,
+    "missing_ui": 0,
+    "contract_ok": 10,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/account-deletion",
+      "routeTitle": "Account Deletion",
+      "routeZone": "auth",
+      "routeGuard": "none",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/SettingsSection.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/citizen/delegated-pickup",
+      "routeTitle": "Delegated Pickup",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/DelegatedPickupScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/citizen/health-id/request",
+      "routeTitle": "Request Health ID",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/citizen/id-recovery",
+      "routeTitle": "ID Recovery",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/IdRecoverySection.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/citizen/record-sharing",
+      "routeTitle": "Share My Record",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/consent",
+      "routeTitle": "Review Policies",
+      "routeZone": "auth",
+      "routeGuard": "none",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/privacy",
+      "routeTitle": "Privacy Policy",
+      "routeZone": "auth",
+      "routeGuard": "none",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/PrivacyPolicyScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/share/claim",
+      "routeTitle": "Claim Shared Documents",
+      "routeZone": "home",
+      "routeGuard": "none",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/ClaimSharedDocumentsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/terms",
+      "routeTitle": "Terms of Use",
+      "routeZone": "auth",
+      "routeGuard": "none",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/TermsOfUseScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave2",
+      "routePath": "/verify/credential",
+      "routeTitle": "Verify Credential",
+      "routeZone": "home",
+      "routeGuard": "none",
+      "routeNavZone": "life",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/VerifyCredentialScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

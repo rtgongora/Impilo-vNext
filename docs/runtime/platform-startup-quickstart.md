@@ -22,7 +22,7 @@ Get the platform running in 3 commands.
 
 ## Verify
 
-Open http://localhost:3020 — you should see the Experience UI.
+Open http://localhost:3000 — you should see the Experience UI.
 
 Check health:
 ```bash
@@ -48,7 +48,7 @@ Expected: all services show "healthy" or "Up".
 
 | Service | URL |
 |---------|-----|
-| Experience UI | http://localhost:3020 |
+| Experience UI | http://localhost:3000 |
 | Keycloak | http://localhost:8080 (admin/admin) |
 | Envoy Gateway | http://localhost:10000 |
 | TSHEPO | http://localhost:8081/actuator/health |

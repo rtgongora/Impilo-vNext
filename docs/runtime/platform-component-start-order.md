@@ -68,7 +68,7 @@
 ### Layer 7 — Applications
 | # | Component | Port | Readiness Check | Timeout | Depends On |
 |---|-----------|------|----------------|---------|-----------|
-| 35 | experience-ui | 3020 | HTTP `/` | 60s | experience-bff |
+| 35 | one-ui-shell | 3000 | HTTP `/` | 60s | experience-bff |
 
 ### Layer 8 — Observability (optional, parallel start)
 | # | Component | Port | Readiness Check | Timeout |
@@ -83,7 +83,7 @@
 | Phase | Layer | Services |
 |-------|-------|----------|
 | 1 | 8 | prometheus, grafana, otel-collector, jaeger |
-| 2 | 7 | experience-ui |
+| 2 | 7 | one-ui-shell |
 | 3 | 6 | experience-bff, integration-hub, notification, jobs, ... |
 | 4 | 5 | pct, oros, ubomi, pharmacy, inventory, msika, ... |
 | 5 | 4 | vito, varapi, tuso, zibo |

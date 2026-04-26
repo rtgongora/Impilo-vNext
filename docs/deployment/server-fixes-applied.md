@@ -67,6 +67,6 @@ build:
 **Problem**: All OIDC client redirect URIs and web origins only included `localhost` entries. When deployed on 197.221.242.150, Keycloak would reject redirect flows from the server's IP.
 
 **Fix**: Added server IP-based redirect URIs and web origins for all three public clients:
-- `experience-ui`: Added `http://197.221.242.150:3020/*` and `http://197.221.242.150/*`
+- `experience-ui` (Keycloak client for the unified shell): Added `http://197.221.242.150:3000/*` and `http://197.221.242.150/*`
 - `one-ui-shell`: Added `http://197.221.242.150:3000/*`
 - `citizen-portal`: Added `http://197.221.242.150:3003/*`

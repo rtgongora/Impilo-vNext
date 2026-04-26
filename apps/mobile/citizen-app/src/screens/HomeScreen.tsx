@@ -3,7 +3,7 @@
  * Modern card layout with green brand accent.
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -22,6 +22,8 @@ import { fetchAppointments } from "../services/appointmentService";
 import { fetchPrescriptions } from "../services/prescriptionService";
 import { fetchLabResults } from "../services/labResultService";
 import type { Appointment, Prescription, LabResult } from "../types";
+import { FacilityDirectoryScreen } from "./FacilityDirectoryScreen";
+import { FacilityDetailScreen } from "./FacilityDetailScreen";
 
 const GREEN = "#059669";
 
@@ -35,7 +37,8 @@ const QUICK_ACTIONS = [
 ] as const;
 
 export function HomeScreen() {
-  const { profile, setActiveTab, unreadNotifications } = useAppStore();
+  const { profile, setActiveTab, unreadNotifications, selectedFacilityName } = useAppStore();
+  const [facilityView, setFacilityView] = useState<null | { mode: "list" } | { mode: "detail"; id: string }>(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [activePrescriptions, setActivePrescriptions] = useState<Prescription[]>([]);
   const [pendingResults, setPendingResults] = useState<LabResult[]>([]);
@@ -59,8 +62,18 @@ export function HomeScreen() {
   const nextAppointment = upcomingAppointments[0];
 
   const greeting = profile
-    ? `Hello, ${profile.givenName} 👋`
+    ? `Hello, ${profile.givenName}`
     : "Welcome back";
+
+  const facilityPicker = useMemo(() => {
+    if (!facilityView) return null;
+    if (facilityView.mode === "list") {
+      return <FacilityDirectoryScreen onOpenFacility={(id) => setFacilityView({ mode: "detail", id })} />;
+    }
+    return <FacilityDetailScreen facilityId={facilityView.id} onBack={() => setFacilityView({ mode: "list" })} />;
+  }, [facilityView]);
+
+  if (facilityPicker) return facilityPicker;
 
   return (
     <Screen>
@@ -122,8 +135,17 @@ export function HomeScreen() {
                     {`${profile.givenName} ${profile.familyName}`}
                   </Text>
                   <Text style={styles.profileFacility}>
-                    {profile.facilityName ?? "Primary facility not set"}
+                    {selectedFacilityName ?? profile.facilityName ?? "Primary facility not set"}
                   </Text>
+                  <View style={styles.profileFacilityActions}>
+                    <Button
+                      title="Choose facility"
+                      size="sm"
+                      variant="outline"
+                      onPress={() => setFacilityView({ mode: "list" })}
+                      testID="choose-facility"
+                    />
+                  </View>
                   {profile.cpid ? (
                     <Text style={styles.profileCpid}>ID: {profile.cpid}</Text>
                   ) : null}
@@ -388,6 +410,10 @@ const styles = StyleSheet.create({
   profileFacility: {
     fontSize: 13,
     color: "#6B7280",
+  },
+  profileFacilityActions: {
+    marginTop: 10,
+    alignSelf: "flex-start",
   },
   profileCpid: {
     fontSize: 11,

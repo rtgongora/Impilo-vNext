@@ -20,6 +20,7 @@ export type {
 
 // Storage adapter
 export { MemoryStorageAdapter } from "./memoryAdapter";
+export { ExpoSqliteStorageAdapter, openExpoSqliteOfflineAdapter } from "./expoSqliteAdapter";
 
 // Offline store
 export { configureOfflineStorage, getOfflineStorage, createCollection } from "./offlineStore";

@@ -1,0 +1,869 @@
+openapi: 3.0.3
+info:
+  title: Impilo Mobile Provider API (BFF)
+  version: 0.2.2
+  description: |
+    Tier-2 contract slice for provider mobile endpoints exposed by `experience-bff`.
+
+    This spec intentionally focuses on the Tier-2 parity wave zones:
+    **EHR, Queue, Pharmacy, Lab, Marketplace (ops/work)**.
+servers:
+  - url: http://localhost:8160
+tags:
+  - name: ProviderQueue
+  - name: ProviderTriage
+  - name: ProviderPharmacy
+  - name: ProviderLab
+  - name: ProviderOpsFoundation
+  - name: ProviderAdminRegistry
+  - name: ProviderOpsReports
+  - name: ProviderDeveloperPortal
+  - name: ProviderProfessionalSettings
+  - name: ProviderProfessionalChannels
+
+paths:
+  /internal/v1/facilities:
+    get:
+      tags: [ProviderOpsFoundation]
+      summary: List facilities (for provider facility selection)
+      operationId: providerFacilitiesList
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Facility list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderFacilityListResponse'
+
+  /internal/v1/facilities/{id}:
+    get:
+      tags: [ProviderOpsFoundation]
+      summary: Get facility details (for provider facility selection)
+      operationId: providerFacilityGet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Facility detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderFacilityDetailResponse'
+
+  /internal/v1/workspaces:
+    get:
+      tags: [ProviderOpsFoundation]
+      summary: List workspaces for a facility (for provider workspace selection)
+      operationId: providerWorkspacesList
+      parameters:
+        - name: facility_id
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Workspace list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderWorkspaceListResponse'
+
+  /internal/v1/mobile/provider/queue:
+    get:
+      tags: [ProviderQueue]
+      summary: List queue entries (waiting/in-progress)
+      operationId: providerQueueList
+      responses:
+        '200':
+          description: Queue entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderQueueListResponse'
+
+  /internal/v1/mobile/provider/queue/stats:
+    get:
+      tags: [ProviderQueue]
+      summary: Queue statistics
+      operationId: providerQueueStats
+      responses:
+        '200':
+          description: Stats payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderQueueStatsResponse'
+
+  /internal/v1/mobile/provider/queue/call-next:
+    post:
+      tags: [ProviderQueue]
+      summary: Call next patient in queue
+      operationId: providerQueueCallNext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderQueueCallNextRequest'
+      responses:
+        '200':
+          description: Next queue entry / encounter payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderQueueCallNextResponse'
+
+  /internal/v1/mobile/provider/queue/complete/{id}:
+    post:
+      tags: [ProviderQueue]
+      summary: Complete a queue entry
+      operationId: providerQueueComplete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Completion acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderQueueCompleteResponse'
+
+  /internal/v1/mobile/provider/triage:
+    get:
+      tags: [ProviderTriage]
+      summary: List triage records for an encounter or patient
+      operationId: providerTriageList
+      parameters:
+        - name: encounter_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: patient_id
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Triage list or subtree from PCT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderTriageListResponse'
+    post:
+      tags: [ProviderTriage]
+      summary: Record triage assessment
+      operationId: providerTriageRecord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderTriageRecordRequest'
+      responses:
+        '200':
+          description: Fallback when PCT write is unavailable or encounter_id missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderTriageWriteResponse'
+        '201':
+          description: Triage recorded (PCT delegation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderTriageWriteResponse'
+
+  /internal/v1/mobile/provider/pharmacy/pending:
+    get:
+      tags: [ProviderPharmacy]
+      summary: List pending prescriptions to dispense
+      operationId: providerPharmacyPending
+      responses:
+        '200':
+          description: Pending dispensing list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderPharmacyPendingResponse'
+
+  /internal/v1/mobile/provider/pharmacy/verify-five-rights:
+    post:
+      tags: [ProviderPharmacy]
+      summary: Verify 5-rights for a prescription
+      operationId: providerPharmacyVerifyFiveRights
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Rights check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderPharmacyVerifyFiveRightsResponse'
+
+  /internal/v1/mobile/provider/pharmacy/dispense:
+    post:
+      tags: [ProviderPharmacy]
+      summary: Mark a prescription as dispensed
+      operationId: providerPharmacyDispense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderPharmacyDispenseRequest'
+      responses:
+        '200':
+          description: Dispense acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderPharmacyDispenseResponse'
+
+  /internal/v1/mobile/provider/labs:
+    get:
+      tags: [ProviderLab]
+      summary: List lab orders (by encounter or patient)
+      operationId: providerLabOrdersList
+      parameters:
+        - name: encounter_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: patient_id
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Lab orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabPassthroughResponse'
+
+    post:
+      tags: [ProviderLab]
+      summary: Create a lab order
+      operationId: providerLabOrdersCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderLabOrderCreateRequest'
+      responses:
+        '201':
+          description: Created lab order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabOrderCreatedResponse'
+
+  /internal/v1/mobile/provider/labs/{id}:
+    get:
+      tags: [ProviderLab]
+      summary: Get a lab order
+      operationId: providerLabOrderGet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Lab order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabPassthroughResponse'
+
+  /internal/v1/mobile/provider/labs/{id}/cancel:
+    post:
+      tags: [ProviderLab]
+      summary: Cancel a lab order
+      operationId: providerLabOrderCancel
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderLabOrderCancelRequest'
+      responses:
+        '200':
+          description: Cancel result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabPassthroughResponse'
+
+  /internal/v1/mobile/provider/labs/results:
+    get:
+      tags: [ProviderLab]
+      summary: List resulted lab orders for a facility
+      operationId: providerLabResultsList
+      responses:
+        '200':
+          description: Results list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabPassthroughResponse'
+
+  /internal/v1/mobile/provider/labs/results/{id}/acknowledge:
+    post:
+      tags: [ProviderLab]
+      summary: Acknowledge a result
+      operationId: providerLabResultAcknowledge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Acknowledge result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderLabPassthroughResponse'
+
+  /internal/v1/mobile/provider/admin-registry/hub:
+    get:
+      tags: [ProviderAdminRegistry]
+      summary: Admin and registry hub metadata for mobile professional plane
+      operationId: providerAdminRegistryHub
+      responses:
+        '200':
+          description: Hub payload (sections aligned with web landings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileHubResponse'
+
+  /internal/v1/mobile/provider/ops-reports/hub:
+    get:
+      tags: [ProviderOpsReports]
+      summary: Operations and reports hub metadata for mobile professional plane
+      operationId: providerOpsReportsHub
+      responses:
+        '200':
+          description: Hub payload (operations + reports web landings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileHubResponse'
+
+  /internal/v1/mobile/provider/developer/hub:
+    get:
+      tags: [ProviderDeveloperPortal]
+      summary: Developer portal hub metadata for mobile professional plane
+      operationId: providerDeveloperHub
+      responses:
+        '200':
+          description: Hub payload (developer web landings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileHubResponse'
+
+  /internal/v1/mobile/provider/professional-settings/hub:
+    get:
+      tags: [ProviderProfessionalSettings]
+      summary: Professional settings hub metadata (web /settings* parity)
+      operationId: providerProfessionalSettingsHub
+      responses:
+        '200':
+          description: Hub payload (settings web landings)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileHubResponse'
+
+  /internal/v1/mobile/provider/professional-channels/hub:
+    get:
+      tags: [ProviderProfessionalChannels]
+      summary: Omnichannel, coverage, credentials, and public-health hub metadata
+      operationId: providerProfessionalChannelsHub
+      responses:
+        '200':
+          description: Hub payload (web professional channels parity)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileHubResponse'
+
+  /internal/v1/mobile/provider/reports:
+    get:
+      tags: [ProviderOpsReports]
+      summary: Provider mobile report catalog (Gap 3 vertical)
+      operationId: providerReportList
+      responses:
+        '200':
+          description: Report catalog
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileReportListResponse'
+
+  /internal/v1/mobile/provider/reports/{reportId}/data:
+    get:
+      tags: [ProviderOpsReports]
+      summary: Provider mobile report data (Gap 3 vertical)
+      operationId: providerReportData
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Report data payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderMobileReportDataResponse'
+
+components:
+  schemas:
+    CompanionRequestMeta:
+      type: object
+      properties:
+        request_id: { type: string }
+        correlation_id: { type: string }
+      additionalProperties: true
+
+    ProviderHubSection:
+      type: object
+      required: [id, title, web_path]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        web_path: { type: string }
+        hint: { type: string, nullable: true }
+
+    ProviderHubPayload:
+      type: object
+      required: [refreshed_at, sections]
+      properties:
+        refreshed_at:
+          type: string
+          format: date-time
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderHubSection'
+
+    ProviderMobileHubResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProviderHubPayload'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    ProviderMobileReportSummary:
+      type: object
+      required: [id, name, category]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category:
+          type: string
+          description: Report category used for client filtering.
+          enum: [Clinical, Operational, Financial]
+        description: { type: string }
+        last_run_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProviderMobileReportListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderMobileReportSummary'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    ProviderMobileReportDataEntry:
+      type: object
+      required: [key, value]
+      properties:
+        key: { type: string }
+        value:
+          oneOf:
+            - type: string
+            - type: number
+        unit: { type: string }
+
+    ProviderMobileReportData:
+      type: object
+      required: [report_id, report_name, generated_at, entries]
+      properties:
+        report_id: { type: string }
+        report_name: { type: string }
+        generated_at:
+          type: string
+          format: date-time
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderMobileReportDataEntry'
+
+    ProviderMobileReportDataResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProviderMobileReportData'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    FacilityPageInfo:
+      type: object
+      properties:
+        number: { type: integer }
+        size: { type: integer }
+        total_elements: { type: integer }
+        total_pages: { type: integer }
+
+    FacilityListMeta:
+      allOf:
+        - $ref: '#/components/schemas/CompanionRequestMeta'
+        - type: object
+          properties:
+            page:
+              $ref: '#/components/schemas/FacilityPageInfo'
+          additionalProperties: true
+
+    FacilityAttributes:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        code: { type: string }
+        facilityType: { type: string }
+        district: { type: string }
+        province: { type: string }
+        region: { type: string }
+        status: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        contactPhone: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        bedCount: { type: integer }
+        capabilities:
+          type: array
+          items: { type: string }
+        operatingHours: { type: string }
+        facilityTier: { type: string }
+        deploymentMode: { type: string }
+        continuityClass: { type: string }
+        workflowArchetype: { type: string }
+        operatingModel:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    FacilityResource:
+      type: object
+      required: [id, type, attributes]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [facility]
+        attributes:
+          $ref: '#/components/schemas/FacilityAttributes'
+
+    ProviderFacilityListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacilityResource'
+        meta:
+          $ref: '#/components/schemas/FacilityListMeta'
+
+    ProviderFacilityDetailResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/FacilityResource'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    WorkspaceAttributes:
+      type: object
+      required: [name, facilityId, workspaceType, location, capacity, status]
+      properties:
+        name: { type: string }
+        facilityId: { type: string }
+        workspaceType: { type: string }
+        location: { type: string }
+        capacity: { type: integer }
+        status: { type: string }
+      additionalProperties: true
+
+    WorkspaceResource:
+      type: object
+      required: [id, type, attributes]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [workspace]
+        attributes:
+          $ref: '#/components/schemas/WorkspaceAttributes'
+
+    ProviderWorkspaceListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkspaceResource'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    # ── Tier-2 queue / pharmacy (MobileProviderExtendedController) ────────────
+
+    ProviderQueueListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    ProviderQueueStatsData:
+      type: object
+      required: [waiting, inProgress, completedToday]
+      properties:
+        waiting: { type: integer, format: int64 }
+        inProgress: { type: integer, format: int64 }
+        completedToday: { type: integer, format: int64 }
+
+    ProviderQueueStatsResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProviderQueueStatsData'
+
+    ProviderQueueCallNextRequest:
+      type: object
+      properties:
+        queueId: { type: string }
+      additionalProperties: true
+
+    ProviderQueueCallNextResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+
+    ProviderQueueCompleteResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [COMPLETED]
+
+    ProviderPharmacyPendingResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    ProviderPharmacyVerifyFiveRightsResponse:
+      type: object
+      required: [verified, rights]
+      properties:
+        verified: { type: boolean }
+        rights:
+          type: object
+          required: [rightPatient, rightDrug, rightDose, rightRoute, rightTime]
+          properties:
+            rightPatient: { type: boolean }
+            rightDrug: { type: boolean }
+            rightDose: { type: boolean }
+            rightRoute: { type: boolean }
+            rightTime: { type: boolean }
+
+    ProviderPharmacyDispenseRequest:
+      type: object
+      required: [prescriptionId]
+      properties:
+        prescriptionId: { type: string }
+
+    ProviderPharmacyDispenseResponse:
+      type: object
+      required: [dispensed]
+      properties:
+        dispensed: { type: boolean }
+
+    # ── Tier-2 triage (MobileTriageController) ────────────────────────────────
+
+    ProviderTriageRecordRequest:
+      type: object
+      required: [patient_id, acuity, triaged_by]
+      properties:
+        patient_id: { type: string }
+        encounter_id: { type: string, nullable: true }
+        queue_entry_id: { type: string, nullable: true }
+        acuity: { type: integer, minimum: 1, maximum: 5 }
+        chief_complaint: { type: string, nullable: true }
+        danger_signs:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        vitals:
+          type: object
+          additionalProperties: true
+        notes: { type: string, nullable: true }
+        triaged_by: { type: string }
+        triaged_by_name: { type: string, nullable: true }
+
+    ProviderTriageWriteResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          oneOf:
+            - type: array
+              items: {}
+            - type: object
+              additionalProperties: true
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    ProviderTriageListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          oneOf:
+            - type: array
+              items: {}
+            - type: object
+              additionalProperties: true
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    # ── Tier-2 labs (MobileLabController / MobileResultsController) ───────────
+
+    ProviderLabOrderCreateRequest:
+      type: object
+      required: [encounter_id, patient_id, test_code, test_name]
+      properties:
+        encounter_id: { type: string }
+        patient_id: { type: string }
+        test_code: { type: string }
+        test_name: { type: string }
+        priority: { type: string, nullable: true }
+        clinical_notes: { type: string, nullable: true }
+        specimen_type: { type: string, nullable: true }
+
+    ProviderLabOrderCancelRequest:
+      type: object
+      properties:
+        reason: { type: string, nullable: true }
+
+    ProviderLabOrderAttributes:
+      type: object
+      required:
+        - encounter_id
+        - patient_id
+        - test_code
+        - test_name
+        - priority
+        - status
+        - ordered_at
+        - created_at
+      properties:
+        encounter_id: { type: string }
+        patient_id: { type: string }
+        test_code: { type: string }
+        test_name: { type: string }
+        priority: { type: string }
+        clinical_notes: { type: string, nullable: true }
+        specimen_type: { type: string, nullable: true }
+        status: { type: string }
+        ordered_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        oros_order_id: { type: string, nullable: true }
+      additionalProperties: true
+
+    ProviderLabOrderResource:
+      type: object
+      required: [id, type, attributes]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [LabOrder]
+        attributes:
+          $ref: '#/components/schemas/ProviderLabOrderAttributes'
+
+    ProviderLabOrderCreatedResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/ProviderLabOrderResource'
+        meta:
+          $ref: '#/components/schemas/CompanionRequestMeta'
+
+    ProviderLabPassthroughResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          oneOf:
+            - type: array
+              items: {}
+            - type: object
+              additionalProperties: true
+

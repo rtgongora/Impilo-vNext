@@ -1,13 +1,21 @@
 {
   "name": "one-ui-shell",
+  "description": "Impilo web experience — single user-facing orchestration layer (zones, routes, BFF-backed flows). Folder/service name one-ui-shell is packaging only; not a separate product from the Experience plane.",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3000",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:routes": "node scripts/route-parity-check.mjs",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "next": "14.2.18",
@@ -19,16 +27,27 @@
     "@radix-ui/react-dropdown-menu": "^2.1.1",
     "@radix-ui/react-navigation-menu": "^1.2.0",
     "@radix-ui/react-toast": "^1.2.1",
+    "lucide-react": "^0.441.0",
+    "framer-motion": "^11.5.4",
+    "dicom-parser": "^1.8.21",
     "shared-ui": "file:../shared-ui"
   },
   "devDependencies": {
     "typescript": "~5.5.4",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
+    "@types/node": "^20.16.10",
     "tailwindcss": "^3.4.13",
     "postcss": "^8.4.47",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
-    "eslint-config-next": "14.2.18"
+    "eslint-config-next": "14.2.18",
+    "vitest": "^2.1.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "@testing-library/react": "^16.0.1",
+    "@playwright/test": "^1.45.0",
+    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/user-event": "^14.5.2",
+    "jsdom": "^25.0.0"
   }
 }

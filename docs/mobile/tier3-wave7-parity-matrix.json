@@ -1,0 +1,121 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.845Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave7",
+    "scope": "provider-professional-channels-hub",
+    "total": 7,
+    "done_ui": 7,
+    "missing_ui": 0,
+    "contract_ok": 7,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/coverage",
+      "routeTitle": "Coverage Operations",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/home/credentials",
+      "routeTitle": "Credentials & CPD",
+      "routeZone": "home",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/omnichannel",
+      "routeTitle": "Omnichannel Hub",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/public-health/campaigns",
+      "routeTitle": "Campaigns",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/public-health/site-registry",
+      "routeTitle": "Site Registry",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/public-health/site-registry/[siteId]",
+      "routeTitle": "Site Profile",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave7",
+      "routePath": "/public-health/surveillance",
+      "routeTitle": "Surveillance",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalChannelsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

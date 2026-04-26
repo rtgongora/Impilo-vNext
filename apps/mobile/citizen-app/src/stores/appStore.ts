@@ -16,6 +16,8 @@ export interface AppState {
   activeTab: CitizenTab;
   isOnline: boolean;
   profile: CitizenProfile | null;
+  selectedFacilityId: string | null;
+  selectedFacilityName: string | null;
   /**
    * Back-compat convenience fields (older screens select these directly).
    */
@@ -33,6 +35,8 @@ export interface AppState {
    */
   setIsOnline: (online: boolean) => void;
   setProfile: (profile: CitizenProfile | null) => void;
+  setSelectedFacility: (id: string, name: string) => void;
+  clearSelectedFacility: () => void;
   setUnreadNotifications: (count: number) => void;
   setUnreadMessages: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
@@ -42,6 +46,8 @@ export const appStore = createStore<AppState>((set) => ({
   activeTab: "home",
   isOnline: true,
   profile: null,
+  selectedFacilityId: null,
+  selectedFacilityName: null,
   cpid: undefined,
   givenName: undefined,
   familyName: undefined,
@@ -59,6 +65,8 @@ export const appStore = createStore<AppState>((set) => ({
       givenName: profile?.givenName,
       familyName: profile?.familyName,
     }),
+  setSelectedFacility: (id, name) => set({ selectedFacilityId: id, selectedFacilityName: name }),
+  clearSelectedFacility: () => set({ selectedFacilityId: null, selectedFacilityName: null }),
   setUnreadNotifications: (count) => set({ unreadNotifications: count }),
   setUnreadMessages: (count) => set({ unreadMessages: count }),
   setGlobalError: (error) => set({ globalError: error }),

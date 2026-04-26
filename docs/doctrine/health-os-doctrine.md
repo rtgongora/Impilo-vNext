@@ -43,6 +43,21 @@ The experience layer is the actor-facing participation layer of the Health Opera
 System. It is the environment in which the system's core transactions and broader value
 exchanges become real.
 
+### 2.0 One orchestration surface (implementation discipline)
+
+Actors SHALL perceive **one** seamless web experience: navigation, clinical and
+operational work, wellness and life-linked flows, and governance surfaces that are in
+scope for the platform. **There is a single user-facing experience orchestration layer**
+— not a separate “shell product” and “experience product,” not competing localhost entry
+points, and not multiple parallel “primary” web apps for the same actor journeys.
+
+Repository layout names (for example `ui/one-ui-shell`), Compose/Kubernetes **service**
+names, container names, and OIDC **client** identifiers (for example historical
+`experience-ui` in Keycloak next to `one-ui-shell`) exist for engineering, packaging, and
+identity continuity. They MUST be documented and operated as **one layer behind one
+browser origin** (per environment), with Envoy and the Experience BFF as the governed edge
+to backends — not as alternate brands or user-selectable product modes.
+
 This experience is inherently broad. It includes, but is not limited to:
 
 - Clinical care, self-care, caregiving, telemedicine

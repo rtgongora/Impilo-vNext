@@ -12,6 +12,7 @@ export type ProviderTabKey =
   | "encounter"
   | "results"
   | "queue"
+  | "messaging"
   | "tools"
   | "professional";
 

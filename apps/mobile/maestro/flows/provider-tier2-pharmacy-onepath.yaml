@@ -1,0 +1,25 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Pharmacy smoke: enter tools -> pharmacy -> dispense
+- tapOn: "Tools"
+- assertVisible:
+    text: "Clinical Tools"
+
+- tapOn:
+    id: "tools-tab-pharmacy"
+- assertVisible:
+    id: "pharmacy-dashboard-screen"
+
+# One happy path: open dispensing list and assert root
+- tapOn: "Dispense"
+- assertVisible:
+    id: "pharmacy-dispensing-screen"
+- assertVisible:
+    text: "Pending Prescriptions"
+

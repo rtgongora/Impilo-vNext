@@ -108,10 +108,10 @@ mvn -f services/pom.xml \
 
 **Expected test count**: All tests green, zero failures, zero errors.
 
-### 4c. Experience UI — Route parity, lint, type-check, build
+### 4c. Web experience layer — Route parity, lint, type-check, build
 
 ```bash
-cd /home/user/Impilo-vNext/ui/experience
+cd /home/user/Impilo-vNext/ui/one-ui-shell
 
 # Route parity check (98 routes expected)
 npm run test:routes
@@ -144,7 +144,7 @@ npm run build
 compose/experience/docker-compose.yml
 ```
 
-Services started: `experience-db` (Postgres 16), `experience-bff` (Spring Boot on :8160), `experience-ui` (Next.js on :3020)
+Services started: `experience-db` (Postgres 16), `experience-bff` (Spring Boot on :8160), `one-ui-shell` (Next.js on :3000)
 
 ### 5a. Build and start
 
@@ -170,7 +170,7 @@ done
 |---------|-----|----------|
 | **BFF custom health** | `curl -sf http://localhost:8160/health` | `{"status":"UP","service":"experience-bff"}` |
 | **BFF actuator** | `curl -sf http://localhost:8160/actuator/health` | `{"status":"UP",...}` (HTTP 200) |
-| **Experience UI** | `curl -sf http://localhost:3020` | HTML page (HTTP 200) |
+| **Web experience** | `curl -sf http://localhost:3000` | HTML page (HTTP 200) |
 | **Postgres** | `docker exec <experience-db-container> pg_isready -U impilo -d experience_bff` | `accepting connections` |
 
 ### 5d. Run BFF smoke tests
@@ -199,7 +199,7 @@ docker compose -f compose/experience/docker-compose.yml down -v
 
 ## 6. Golden Path Smoke Checklist
 
-Manual UI flows to verify after Docker Compose is running (UI at `http://localhost:3020`).
+Manual UI flows to verify after Docker Compose is running (UI at `http://localhost:3000`).
 
 | # | Flow | Steps | Expected Outcome |
 |---|------|-------|------------------|
@@ -225,8 +225,8 @@ Manual UI flows to verify after Docker Compose is running (UI at `http://localho
 | Encounter status is `OPEN` instead of `IN_PROGRESS` | `services/experience-bff/src/main/java/.../controller/EncounterController.java:130` | Regression — someone reverted the dcc32ab status fix |
 | Docker Compose BFF won't start | `compose/experience/docker-compose.yml`, `services/experience-bff/Dockerfile`, check `docker compose logs experience-bff` | DB connection refused (Postgres not healthy yet), or Dockerfile build failure (missing libs) |
 | Docker Compose DB healthcheck fails | `compose/experience/docker-compose.yml` — `experience-db` service healthcheck | Port 5433 already in use, or Postgres image pull failed |
-| UI `npm run build` fails | `ui/experience/package.json`, `ui/experience/tsconfig.json`, check TypeScript errors | Type annotation missing (see commit `90f9596` for prior fix pattern), or dependency not installed |
-| UI route parity check fails | `ui/experience/src/lib/routes.ts` (expected count = 98), `ui/experience/scripts/route-parity-check.mjs` | Route added/removed in `routes.ts` without updating `EXPECTED_ROUTE_COUNT`, or `src/app/` directory structure doesn't match registry |
+| UI `npm run build` fails | `ui/one-ui-shell/package.json`, `ui/one-ui-shell/tsconfig.json`, check TypeScript errors | Type annotation missing (see commit `90f9596` for prior fix pattern), or dependency not installed |
+| UI route parity check fails | `ui/one-ui-shell/src/lib/routes.ts` (expected count = 98), `ui/one-ui-shell/scripts/route-parity-check.mjs` | Route added/removed in `routes.ts` without updating `EXPECTED_ROUTE_COUNT`, or `src/app/` directory structure doesn't match registry |
 | BFF smoke test — missing headers returns 200 | `services/experience-bff/src/main/java/.../filter/V11HeaderFilter.java` | Filter not intercepting the tested endpoint, or endpoint path changed |
 | `verify-online.sh` can't find compose file | Script checks repo root for `docker-compose.yml` — but experience compose is at `compose/experience/docker-compose.yml` | Set `COMPOSE_FILE` env var or symlink, or run the compose commands from Section 5 directly |
 
@@ -286,9 +286,9 @@ Exit code: `0`
 | GoldenContractIT | `services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/GoldenContractIT.java` |
 | GoldenPathIntegrationTest | `services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/GoldenPathIntegrationTest.java` |
 | Static verifier | `tools/static-verifier/V11ComplianceStaticVerifier.java` |
-| Experience UI | `ui/experience/` |
-| UI routes registry | `ui/experience/src/lib/routes.ts` |
-| UI API client | `ui/experience/src/lib/api-client.ts` |
+| Web experience (orchestration layer) | `ui/one-ui-shell/` |
+| UI routes registry | `ui/one-ui-shell/src/lib/routes.ts` |
+| UI API client | `ui/one-ui-shell/src/lib/api-client.ts` |
 | Docker Compose | `compose/experience/docker-compose.yml` |
 | BFF smoke tests | `scripts/experience/smoke/bff-smoke.sh` |
 | Full online verifier | `scripts/experience/verify-online.sh` |

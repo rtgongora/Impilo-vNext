@@ -77,8 +77,8 @@ HC parity ingest and read-backs live on **`wellness-service`** (`WellnessHealthC
 | Check | Command |
 |-------|---------|
 | Wellness HTTP + Postgres (Flyway, real JDBC) | From `services/`: `mvn -pl wellness-service test` — `WellnessCitizenApiDockerIntegrationTest` runs when **Docker** is available; otherwise it is **skipped** (no mocks). |
-| Full stack (BFF + wellness + UI) | `docker compose -f compose/experience/docker-compose.yml up` then open Experience UI on port **3020** (see compose file). |
-| Playwright against **real** compose (no `page.route`) | From `ui/experience/`: `PLAYWRIGHT_COMPOSE_E2E=1 npm run e2e -- citizen-life-compose.spec.ts --project=chromium` — requires compose **up** first; uses `e2e/citizen-life-compose.spec.ts`. |
+| Full stack (BFF + wellness + UI) | `docker compose -f compose/experience/docker-compose.yml up` then open One UI Shell on port **3000** (see compose file). |
+| Playwright against **real** compose (no `page.route`) | From `ui/one-ui-shell/`: `PLAYWRIGHT_COMPOSE_E2E=1 npm run e2e -- citizen-life-compose.spec.ts --project=chromium` — requires compose **up** first; uses `e2e/citizen-life-compose.spec.ts`. |
 
 ---
 

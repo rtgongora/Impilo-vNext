@@ -125,7 +125,7 @@ log_phase "Check 4: Backend Service Coverage"
 
 # Services in runtime compose (excluding infra, edge, ui)
 INFRA_NAMES="postgres redis kafka keycloak minio hapi-fhir envoy opa orthanc"
-UI_NAMES="experience-ui"
+UI_NAMES="one-ui-shell"
 COMPOSE_BACKENDS=()
 
 while IFS= read -r svc; do
@@ -285,7 +285,7 @@ if [ "$LIVE_MODE" = true ]; then
         "http://localhost:8088/actuator/health:pct"
         "http://localhost:8089/actuator/health:oros"
         "http://localhost:8160/actuator/health:experience-bff"
-        "http://localhost:3020:experience-ui"
+        "http://localhost:3000:one-ui-shell"
         "http://localhost:9901/ready:envoy"
         "http://localhost:8181/health:opa"
     )

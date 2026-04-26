@@ -13,6 +13,15 @@ spring:
       auto-startup: false
 
 impilo:
+  bff:
+    citizen-longtail:
+      mode: stub
+      failure-policy: stub_fallback
+    provider-hubs:
+      mode: stub
+      failure-policy: stub_fallback
+    facilities:
+      mode: stub
   security:
     allow-anonymous: true
   auth:

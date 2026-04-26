@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * HTTP client for the VITO (Client Registry / Patient Identity) service.
@@ -190,6 +191,28 @@ public class VitoServiceClient {
 
     public JsonNode addClientEvidence(String healthId, Map<String, Object> body) {
         return postJson(baseUrl + "/v1/client-registry/clients/" + healthId + "/evidence", body);
+    }
+
+    /**
+     * Patient-mediated share issuance (authenticated lane on VITO).
+     * {@code POST /v1/clients/{healthId}/patient-shares}
+     */
+    public JsonNode createPatientShare(UUID healthId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/clients/" + healthId + "/patient-shares";
+        log.info("VITO: Creating patient share for healthId={}", healthId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Validates a share artifact token (public lane — no session yet).
+     * {@code POST /v1/public/patient-shares/validate}
+     */
+    public JsonNode validatePublicPatientShareArtifact(Map<String, Object> body) {
+        String url = baseUrl + "/v1/public/patient-shares/validate";
+        log.info("VITO: Validating public patient-share artifact");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
     }
 
     public JsonNode recordClientVerificationReview(String healthId, Map<String, Object> body) {

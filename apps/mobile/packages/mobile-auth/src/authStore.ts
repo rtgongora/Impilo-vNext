@@ -114,6 +114,7 @@ export const authStore = createStore<AuthState>((set, get) => ({
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         expiresAt: tokens.expiresAt,
+        providerId: sessionData.providerId,
         facilityId: sessionData.facilityId,
         facilityName: sessionData.facilityName,
         workspaceId: sessionData.workspaceId,
@@ -314,6 +315,7 @@ async function persistSessionData(session: SessionContext): Promise<void> {
     workspaceId: session.workspaceId,
     workspaceName: session.workspaceName,
     shiftId: session.shiftId,
+    providerId: (session as SessionContext & { providerId?: string }).providerId,
     purposeOfUse: session.purposeOfUse,
     deviceFingerprint: session.deviceFingerprint,
   }));

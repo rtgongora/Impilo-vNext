@@ -18,7 +18,7 @@ export function QueueManagementScreen() {
   return (
     <Screen>
       <Header title="Queue Management" />
-      <View style={styles.container}>
+      <View testID="queue-management-screen" style={styles.container}>
         {stats && (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
@@ -46,6 +46,7 @@ export function QueueManagementScreen() {
         )}
 
         <TouchableOpacity
+          testID="queue-call-next"
           style={[styles.callNextButton, callMutation.isPending && styles.callNextButtonDisabled]}
           onPress={() => callMutation.mutate()}
           disabled={callMutation.isPending}
@@ -70,7 +71,10 @@ export function QueueManagementScreen() {
             keyExtractor={(item) => String(item.id)}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (
-              <View style={[styles.queueItem, { borderLeftColor: priorityColors[String(item.priority)] ?? "#6B7280" }]}>
+              <View
+                testID={`queue-entry-${String(item.id)}`}
+                style={[styles.queueItem, { borderLeftColor: priorityColors[String(item.priority)] ?? "#6B7280" }]}
+              >
                 <View style={styles.queueItemLeft}>
                   <View style={[styles.priorityDot, { backgroundColor: priorityColors[String(item.priority)] ?? "#6B7280" }]} />
                   <View style={{ flex: 1 }}>
@@ -85,6 +89,7 @@ export function QueueManagementScreen() {
                 </View>
                 {item.status === "IN_PROGRESS" && (
                   <TouchableOpacity
+                    testID={`queue-complete-${String(item.id)}`}
                     style={[styles.completeBtn, completeMutation.isPending && styles.completeBtnDisabled]}
                     onPress={() => completeMutation.mutate(String(item.id))}
                     disabled={completeMutation.isPending}

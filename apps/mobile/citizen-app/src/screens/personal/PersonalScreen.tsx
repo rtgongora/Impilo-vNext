@@ -28,6 +28,12 @@ import { CarePlansSection } from "./CarePlansSection";
 import { IdRecoverySection } from "./IdRecoverySection";
 import { AssessmentsSection } from "./AssessmentsSection";
 import { CareTeamSection } from "./CareTeamSection";
+import { RecordSharingScreen } from "./RecordSharingScreen";
+import { ClaimSharedDocumentsScreen } from "./ClaimSharedDocumentsScreen";
+import { VerifyCredentialScreen } from "./VerifyCredentialScreen";
+import { DelegatedPickupScreen } from "./DelegatedPickupScreen";
+import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
+import { TermsOfUseScreen } from "./TermsOfUseScreen";
 
 type PersonalTab =
   | "profile"
@@ -55,7 +61,13 @@ type PersonalTab =
   | "settings"
   | "assessments"
   | "care-team"
-  | "id-recovery";
+  | "id-recovery"
+  | "record-sharing"
+  | "claim"
+  | "verify"
+  | "delegated-pickup"
+  | "privacy"
+  | "terms";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -86,6 +98,12 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "assessments", label: "Assessments", icon: "duplicate" },
   { id: "care-team", label: "Care Team", icon: "people" },
   { id: "id-recovery", label: "ID Recovery", icon: "key" },
+  { id: "record-sharing", label: "Share", icon: "share-social" },
+  { id: "claim", label: "Claim", icon: "download" },
+  { id: "verify", label: "Verify", icon: "shield-checkmark" },
+  { id: "delegated-pickup", label: "Pickup", icon: "car" },
+  { id: "privacy", label: "Privacy", icon: "lock-closed" },
+  { id: "terms", label: "Terms", icon: "document-text" },
 ];
 
 const SECTIONS: Record<PersonalTab, React.FC> = {
@@ -115,6 +133,12 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   assessments: AssessmentsSection,
   "care-team": CareTeamSection,
   "id-recovery": IdRecoverySection,
+  "record-sharing": RecordSharingScreen,
+  claim: ClaimSharedDocumentsScreen,
+  verify: VerifyCredentialScreen,
+  "delegated-pickup": DelegatedPickupScreen,
+  privacy: PrivacyPolicyScreen,
+  terms: TermsOfUseScreen,
 };
 
 export function PersonalScreen() {

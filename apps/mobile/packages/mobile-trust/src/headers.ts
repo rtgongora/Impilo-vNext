@@ -13,6 +13,7 @@ export const TRUST_HEADERS = {
   TENANT_ID: "x-tenant-id",
   ACTOR_ID: "x-actor-id",
   ACTOR_TYPE: "x-actor-type",
+  PROVIDER_ID: "x-provider-id",
   PURPOSE_OF_USE: "x-purpose-of-use",
   DEVICE_FINGERPRINT: "x-device-fingerprint",
   CORRELATION_ID: "x-correlation-id",

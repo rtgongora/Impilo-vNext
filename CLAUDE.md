@@ -142,4 +142,4 @@ Summary:
 - Card print agent: **8291**, Product registry: **8097**, Inventory eLMIS adapter: **8108**
 - Envoy: 10000 (public), 9901 (admin)
 - Keycloak: 8080, MinIO: 9000/9001, Kafka: 9092
-- Experience UI: 3020, UI Shell: 3000, Ops Console: 3001, EHR: 3002, Portal: 3003
+- Impilo web experience (single orchestration layer; Compose `one-ui-shell`): 3000; Ops Console: 3001; EHR: 3002; Portal: 3003

@@ -1070,31 +1070,20 @@ components:
     profiles: [dev-lite, dev-full, integration, pilot]
     database: experience_bff
 
-  - name: experience-ui
-    type: app
-    layer: 7
-    description: "Experience UI — unified Next.js frontend"
-    module_path: ui/experience
-    build_target: "ui/experience (npm + Dockerfile)"
-    port: 3020
-    dependencies: [experience-bff]
-    healthcheck:
-      type: http
-      endpoint: "http://localhost:3020"
-    readiness_timeout: 60s
-    shutdown_priority: 50
-    profiles: [dev-lite, dev-full, integration, pilot]
-
-  # Additional UI apps (not all have Dockerfiles — listed for completeness)
   - name: one-ui-shell
     type: app
     layer: 7
-    description: "One UI Shell — unified navigation shell"
+    description: "One UI Shell — unified user-facing Experience (merged ui/experience)"
     module_path: ui/one-ui-shell
+    build_target: "ui/one-ui-shell (npm + Dockerfile, context ui/)"
     port: 3000
-    dependencies: [envoy]
-    profiles: [dev-full, integration, pilot]
+    dependencies: [experience-bff]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:3000"
+    readiness_timeout: 60s
     shutdown_priority: 50
+    profiles: [dev-lite, dev-full, integration, pilot]
 
   - name: ops-console
     type: app

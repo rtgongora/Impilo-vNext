@@ -62,22 +62,23 @@ services:
       MAVEN_OPTS: "-Xmx2g -XX:+UseZGC"
 
   # ---------------------------------------------------------------------------
-  # UI Builder — builds the Experience UI
+  # UI Builder — builds the unified One UI Shell (merged Experience surface)
   # ---------------------------------------------------------------------------
   ui-builder:
     image: node:20-alpine
-    working_dir: /build/ui/experience
+    working_dir: /build/ui/one-ui-shell
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
         set -e
         echo "=== Installing npm dependencies ==="
         npm install --legacy-peer-deps --cache /root/.npm
-        echo "=== Building Experience UI ==="
+        echo "=== Building One UI Shell ==="
         npm run build
         echo "=== UI build complete ==="
     volumes:
-      - ./ui/experience:/build/ui/experience:rw
+      - ./ui/one-ui-shell:/build/ui/one-ui-shell:rw
+      - ./ui/shared-ui:/build/ui/shared-ui:rw
       # npm cache
       - ./vendor/node-cache:/root/.npm:rw
     environment:

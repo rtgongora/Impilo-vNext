@@ -1,0 +1,93 @@
+appId: zw.gov.impilo.citizen
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+# Navigate to Personal
+- tapOn: "Health"
+- assertVisible:
+    id: "personal-screen"
+
+# Happy path 1: Record sharing -> issue share code
+- tapOn:
+    id: "personal-tab-record-sharing"
+- assertVisible:
+    id: "record-sharing-screen"
+- tapOn:
+    id: "issue-share-code"
+- assertVisible:
+    text: "Issued"
+- assertVisible:
+    id: "share-code-native-share"
+
+# Happy path 2: Claim shared docs
+- tapOn:
+    id: "personal-tab-claim"
+- assertVisible:
+    id: "claim-shared-documents-screen"
+- tapOn:
+    id: "claim-code"
+- inputText: "SHARE-1234"
+- tapOn:
+    id: "claim-btn"
+- assertVisible:
+    text: "Claimed"
+- assertVisible:
+    id: "claim-confirmed-at"
+- assertVisible:
+    id: "claim-share-native"
+
+# Happy path 3: Verify credential
+- tapOn:
+    id: "personal-tab-verify"
+- assertVisible:
+    id: "verify-credential-screen"
+- tapOn:
+    id: "credential-input"
+- inputText: "credential-payload-example-123456"
+- tapOn:
+    id: "verify-btn"
+- assertVisible:
+    text: "Verified"
+- assertVisible:
+    id: "verify-share-native"
+
+# Happy path 4: Delegated pickup issue + share affordance
+- tapOn:
+    id: "personal-tab-delegated-pickup"
+- assertVisible:
+    id: "delegated-pickup-screen"
+- tapOn:
+    id: "delegate-name"
+- eraseText
+- tapOn:
+    id: "delegate-name"
+- eraseText
+- inputText: "Delegated Test User"
+- tapOn:
+    id: "delegate-phone"
+- eraseText
+- tapOn:
+    id: "delegate-phone"
+- eraseText
+- inputText: "+263771000001"
+- tapOn:
+    id: "issue-delegated-pickup"
+- assertVisible:
+    text: "Authorization issued"
+- assertVisible:
+    id: "delegated-pickup-native-share"
+
+# Smoke: Legal surfaces
+- tapOn:
+    id: "personal-tab-privacy"
+- assertVisible:
+    id: "privacy-policy-screen"
+- tapOn:
+    id: "personal-tab-terms"
+- assertVisible:
+    id: "terms-of-use-screen"

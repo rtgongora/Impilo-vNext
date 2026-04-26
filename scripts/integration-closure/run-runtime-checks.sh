@@ -21,7 +21,7 @@ SERVICES=(
   "Experience BFF|localhost:8160/actuator/health|http"
   "Envoy|localhost:9901/ready|http"
   "OPA|localhost:8181/health|http"
-  "Experience UI|localhost:3020|http"
+  "One UI Shell|localhost:3000|http"
 )
 
 PASS=0

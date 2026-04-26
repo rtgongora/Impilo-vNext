@@ -86,11 +86,11 @@ cmd_up() {
     docker compose -f "$RUNTIME_COMPOSE" up -d tshepo vito varapi tuso zibo pct oros experience-bff
 
     log_info "Starting UI..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d experience-ui
+    docker compose -f "$RUNTIME_COMPOSE" up -d one-ui-shell
 
     log_ok "All services starting. Use './scripts/dev-runtime.sh status' to check health."
     log_info "Envoy gateway: http://localhost:10000"
-    log_info "Experience UI: http://localhost:3020"
+    log_info "One UI Shell: http://localhost:3000"
     log_info "Keycloak:      http://localhost:8080"
     log_info "HAPI FHIR:     http://localhost:8090/fhir"
     log_info "OPA:           http://localhost:8181"

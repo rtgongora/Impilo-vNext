@@ -12,7 +12,7 @@ The runtime composition is **partially complete**. Infrastructure services (Post
 | File | Purpose | Status |
 |---|---|---|
 | `docker-compose.yml` | Base infrastructure (dev) | COMPLETE — 7 infra services |
-| `docker-compose.build.yml` | Build phase (Maven + UI) | COMPLETE — builds JARs + Experience UI |
+| `docker-compose.build.yml` | Build phase (Maven + UI) | COMPLETE — builds JARs + One UI Shell |
 | `docker-compose.runtime.yml` | Full runtime (infra + services + UI + edge) | PARTIAL — only 9 backend services |
 
 ## Infrastructure Coverage (docker-compose.runtime.yml)
@@ -43,7 +43,7 @@ The runtime composition is **partially complete**. Infrastructure services (Post
 | pct | 8088 | /actuator/health | postgres, redis, kafka |
 | oros | 8089 | /actuator/health | postgres, redis, kafka |
 | experience-bff | 8160 | /actuator/health | postgres |
-| experience-ui | 3020 | HTTP / | experience-bff |
+| one-ui-shell | 3000 | HTTP / | experience-bff |
 
 ### NOT in Runtime Compose (58/67)
 

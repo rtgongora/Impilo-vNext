@@ -46,6 +46,8 @@ export interface SessionContext {
   podId: string;
   actorId: string;
   actorType: ActorType;
+  /** Health OS §6: activated Provider ID for regulated work (optional). */
+  providerId?: string;
   accessToken: string;
   refreshToken?: string;
   expiresAt: number;

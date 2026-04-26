@@ -165,7 +165,7 @@ echo ""
 # ── 8. Experience Layer ──────────────────────────────────────────────────────
 info "8. Experience Layer"
 check_actuator "Experience BFF" "http://localhost:8160"
-check_url "Experience UI" "http://localhost:3020" "200"
+check_url "One UI Shell" "http://localhost:3000" "200"
 echo ""
 
 # ── 9. Outbox/Event Bus Proof ───────────────────────────────────────────────

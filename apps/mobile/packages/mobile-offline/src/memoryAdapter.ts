@@ -88,6 +88,19 @@ export class MemoryStorageAdapter implements LocalStorageAdapter {
     this.queue = this.queue.filter((op) => op.id !== id);
   }
 
+  async listQueue(): Promise<QueuedOperation[]> {
+    return this.queue.map((op) => ({ ...op }));
+  }
+
+  async resetStaleInFlight(reason: string = "reset_stale_in_flight"): Promise<void> {
+    for (const op of this.queue) {
+      if (op.status === "in_flight") {
+        op.status = "pending";
+        op.error = reason;
+      }
+    }
+  }
+
   async getQueueSize(): Promise<number> {
     return this.queue.filter((op) => op.status === "pending" || op.status === "in_flight").length;
   }

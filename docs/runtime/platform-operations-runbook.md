@@ -104,7 +104,7 @@ curl http://localhost:8089/actuator/health   # OROS
 curl http://localhost:8160/actuator/health   # BFF
 
 # UI
-curl http://localhost:3020                   # Experience UI
+curl http://localhost:3000                   # Experience UI
 ```
 
 ## Collect Logs and Evidence

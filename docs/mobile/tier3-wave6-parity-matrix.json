@@ -1,0 +1,121 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.843Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave6",
+    "scope": "provider-professional-settings-hub",
+    "total": 7,
+    "done_ui": 7,
+    "missing_ui": 0,
+    "contract_ok": 7,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings",
+      "routeTitle": "Settings",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/account",
+      "routeTitle": "Account Settings",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/display",
+      "routeTitle": "Display Settings",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/integrations",
+      "routeTitle": "Integrations",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/notifications",
+      "routeTitle": "Notification Preferences",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/privacy",
+      "routeTitle": "Privacy & Data",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave6",
+      "routePath": "/settings/security",
+      "routeTitle": "Security Settings",
+      "routeZone": "settings",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ProfessionalSettingsHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

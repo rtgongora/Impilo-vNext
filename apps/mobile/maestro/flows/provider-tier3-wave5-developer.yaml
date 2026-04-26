@@ -1,0 +1,22 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+- assertVisible:
+    id: "provider-tabs"
+
+- tapOn: "Tools"
+- assertVisible:
+    text: "Clinical Tools"
+
+- tapOn:
+    id: "tools-tab-developer_hub"
+- assertVisible:
+    id: "developer-hub-screen"
+
+- assertVisible:
+    id: "developer-hub-section-developer"

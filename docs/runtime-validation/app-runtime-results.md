@@ -3,7 +3,7 @@
 ## Summary
 | App | Target Posture | Build Attempted | Runtime Attempted | Result | Blocker |
 |-----|---------------|----------------|-------------------|--------|---------|
-| Experience UI (ui/experience) | Web (Next.js 14) | Yes — npm install + next build | No (Docker) | **BUILD PASS** | Runtime needs Docker |
+| One UI Shell (ui/experience) | Web (Next.js 14) | Yes — npm install + next build | No (Docker) | **BUILD PASS** | Runtime needs Docker |
 | Support Console (ui/support-console) | Web (Next.js 14) | Yes — npm install + tsc | No | BUILD FAIL | workspace:* protocol — needs pnpm |
 | Developer Console (ui/developer-console) | Web (Next.js 14) | Yes — npm install + tsc | No | BUILD FAIL | workspace:* protocol — needs pnpm |
 | Provider App (apps/mobile/provider-app) | Android + iOS (Expo/React Native) | Yes — tsc | No | BUILD FAIL | workspace:* + expo base tsconfig |
@@ -11,12 +11,12 @@
 
 ## Detailed Results
 
-### Experience UI — BUILD PASS
+### One UI Shell — BUILD PASS
 - **Target**: Web application (Next.js 14.2.x)
 - **Build tool**: `npm install --legacy-peer-deps && npx next build`
 - **Result**: SUCCESS — 80+ routes compiled (static + dynamic)
 - **Evidence**: Production build completed with all routes listed. First Load JS: 87.2 kB shared.
-- **Runtime**: Needs Docker Compose to serve at port 3020 with BFF backend. Standalone build artifacts exist in `.next/`.
+- **Runtime**: Needs Docker Compose to serve at port 3000 with BFF backend. Standalone build artifacts exist in `.next/`.
 - **Type-check**: Clean (tsc --noEmit passes with no errors)
 
 ### Support Console — BUILD FAIL

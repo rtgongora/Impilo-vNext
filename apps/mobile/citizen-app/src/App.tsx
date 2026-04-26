@@ -14,18 +14,22 @@ import { ThemeProvider } from "@impilo/mobile-design-system";
 import { authStore } from "@impilo/mobile-auth";
 import { onStepUpRequired } from "@impilo/mobile-api-client";
 import { AppNavigator } from "./navigation/AppNavigator";
-import { initializeApp } from "./config";
+import { initializeApp, initializeOfflinePersistence } from "./config";
+import { syncEngine } from "@impilo/mobile-offline";
 import { appStore } from "./stores/appStore";
 
 export function App() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    initializeApp();
-
-    authStore.getState().initialize().then(() => {
-      setInitialized(true);
-    });
+    let cancelled = false;
+    void (async () => {
+      await initializeOfflinePersistence();
+      if (cancelled) return;
+      initializeApp();
+      await authStore.getState().initialize();
+      if (!cancelled) setInitialized(true);
+    })();
 
     const unsubStepUp = onStepUpRequired((challenge) => {
       appStore.getState().setGlobalError({
@@ -35,10 +39,15 @@ export function App() {
     });
 
     const unsubscribeNetInfo = NetInfo.addEventListener((state) => {
-      appStore.getState().setOnlineStatus(state.isConnected ?? false);
+      const online = state.isConnected ?? false;
+      appStore.getState().setOnlineStatus(online);
+      if (online) {
+        void syncEngine.sync();
+      }
     });
 
     return () => {
+      cancelled = true;
       unsubStepUp();
       unsubscribeNetInfo();
     };

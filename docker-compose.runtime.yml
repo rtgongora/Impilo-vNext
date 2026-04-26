@@ -70,9 +70,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
       interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
+      timeout: 20s
+      retries: 12
+      start_period: 90s
 
   # ── Keycloak 25.x ─────────────────────────────────────────────────
   keycloak:
@@ -529,25 +529,25 @@ services:
       retries: 15
       start_period: 30s
 
-  # ── Experience UI (port 3020) ──────────────────────────────────────
-  experience-ui:
+  # ── One UI Shell — unified user-facing Experience (port 3000) ───────
+  one-ui-shell:
     build:
-      context: ./ui/experience
-      dockerfile: Dockerfile
+      context: ./ui
+      dockerfile: one-ui-shell/Dockerfile
       args:
         NEXT_PUBLIC_BFF_URL: http://localhost:8160
         NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
-      NEXT_PUBLIC_GATEWAY_URL: http://localhost:10000
+      NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
       HOSTNAME: "0.0.0.0"
     ports:
-      - "3020:3020"
+      - "3000:3000"
     depends_on:
       experience-bff:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3020 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10

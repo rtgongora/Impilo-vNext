@@ -1,0 +1,31 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+# App boot
+- extendedWaitUntil:
+    visible: "Initializing Impilo Provider..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Tier-1: tab shell basics
+- assertVisible:
+    id: "provider-tabs"
+- tapOn: "Patients"
+- assertVisible:
+    id: "patient-lookup-screen"
+
+# CTA present (registration is embedded)
+- assertVisible:
+    id: "new-patient-registration-btn"
+
+- tapOn: "Queue"
+- assertVisible:
+    text: "Queue"
+
+- tapOn: "Messages"
+- assertVisible:
+    text: "Messages"
+

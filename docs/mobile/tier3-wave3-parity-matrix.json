@@ -1,0 +1,136 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.836Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave3",
+    "scope": "provider-admin-registry-hub",
+    "total": 8,
+    "done_ui": 8,
+    "missing_ui": 0,
+    "contract_ok": 8,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/access",
+      "routeTitle": "Access Channels",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/admin",
+      "routeTitle": "Administration",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/ai-governance",
+      "routeTitle": "AI Governance",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/id-services",
+      "routeTitle": "Identity Services",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/organization-admin",
+      "routeTitle": "Organization Administration",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/public-health",
+      "routeTitle": "Public Health",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/registry",
+      "routeTitle": "Registry Hub",
+      "routeZone": "registry",
+      "routeGuard": "auth",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave3",
+      "routePath": "/registry-admin",
+      "routeTitle": "Registry Administration",
+      "routeZone": "admin",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

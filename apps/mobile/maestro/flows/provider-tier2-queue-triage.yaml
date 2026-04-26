@@ -1,0 +1,23 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Queue smoke: open and assert stable root
+- tapOn: "Queue"
+- assertVisible:
+    id: "queue-management-screen"
+- assertVisible:
+    id: "queue-call-next"
+
+# Triage tap-through (Encounter tab) — asserts the Triage surface exists
+- tapOn: "Encounter"
+- assertVisible:
+    id: "encounter-screen"
+- tapOn: "Triage"
+- assertVisible:
+    text: "Triage assessment available from the Triage screen in Clinical Tools"
+

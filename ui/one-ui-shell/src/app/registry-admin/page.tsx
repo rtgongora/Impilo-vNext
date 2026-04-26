@@ -1,0 +1,135 @@
+"use client";
+
+/**
+ * Registry Administration landing — high-trust sovereign registry plane.
+ * Route: /registry-admin | operational context: registry_admin
+ *
+ * Differs from /registry (browse hub) and generic /admin: explicit governance framing.
+ */
+
+import { useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  BookOpen,
+  Building2,
+  Route,
+  Shield,
+  UserCheck,
+} from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { PlaneTrustBanner } from "@/components/experience/PlaneTrustBanner";
+import { PageShell } from "@/components/PageShell";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
+import { REGISTRY_PLANE_CARDS } from "@/lib/plane-landings";
+import { isRegistryAdminSubtype, principalHasRegistryAdminPlane } from "@/lib/operational-context";
+
+const SUBTYPE_ICONS = {
+  registry_intake: Route,
+  client_registry: Shield,
+  provider_registry: UserCheck,
+  facility_registry: Building2,
+  terminology_admin: BookOpen,
+  trust_admin: Shield,
+} as const;
+
+export default function RegistryAdminLandingPage() {
+  const searchParams = useSearchParams();
+  const rehydrate = useOperationalContextStore((s) => s.rehydrateFromSession);
+
+  useEffect(() => {
+    const user = useAuthStore.getState().user;
+    if (principalHasRegistryAdminPlane(user)) {
+      useOperationalContextStore.getState().setOperationalMode("registry_admin");
+    }
+  }, []);
+
+  useEffect(() => {
+    const raw = searchParams.get("subtype");
+    if (raw && isRegistryAdminSubtype(raw)) {
+      useOperationalContextStore.getState().setRegistryAdminSubtype(raw);
+    }
+  }, [searchParams]);
+
+  return (
+    <AppLayout>
+      <PageShell
+        title="Registry administration"
+        subtitle="Sovereign registry governance — not facility shift work"
+      >
+        <div className="space-y-6">
+          <Link
+            href="/home"
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to home
+          </Link>
+
+          <PlaneTrustBanner
+            variant="registry"
+            eyebrow="High-trust plane"
+            title="You are in the registry governance context"
+          >
+            <p>
+              Use this entry when changing national or enterprise registries, terminology, or trust fabric.
+              Browse-oriented registry tools remain on{" "}
+              <Link href="/registry" className="font-medium underline-offset-2 hover:underline">
+                Registry hub
+              </Link>{" "}
+              — this page is for <strong>administrative</strong> registry operations with elevated expectations.
+            </p>
+          </PlaneTrustBanner>
+
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Registry sub-planes</h3>
+            <p className="mt-1 text-xs text-gray-500">
+              Pick a sub-plane to focus tooling; your selection is remembered for this session (
+              <button
+                type="button"
+                className="text-impilo-500 hover:underline"
+                onClick={() => {
+                  useOperationalContextStore.getState().setRegistryAdminSubtype(null);
+                  rehydrate();
+                }}
+              >
+                clear subtype
+              </button>
+              ).
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {REGISTRY_PLANE_CARDS.map((card) => {
+                const Icon = SUBTYPE_ICONS[card.subtype];
+                return (
+                  <Link
+                    key={card.subtype}
+                    href={`${card.href}${card.href.includes("?") ? "&" : "?"}from=registry-admin`}
+                    onClick={() =>
+                      useOperationalContextStore.getState().setRegistryAdminSubtype(card.subtype)
+                    }
+                    className="group flex flex-col rounded-2xl border border-amber-200/80 bg-white p-5 shadow-sm transition hover:border-amber-400 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-gray-900 group-hover:text-amber-900">{card.title}</h4>
+                          <p className="mt-1 text-sm text-gray-600">{card.description}</p>
+                        </div>
+                      </div>
+                      <ArrowUpRight className="h-4 w-4 shrink-0 text-gray-400 group-hover:text-amber-700" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </PageShell>
+    </AppLayout>
+  );
+}

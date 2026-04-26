@@ -1,0 +1,76 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.841Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3-wave5",
+    "scope": "provider-developer-portal-hub",
+    "total": 4,
+    "done_ui": 4,
+    "missing_ui": 0,
+    "contract_ok": 4,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3-wave5",
+      "routePath": "/developer",
+      "routeTitle": "Developer Portal",
+      "routeZone": "developer",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave5",
+      "routePath": "/developer/api-catalog",
+      "routeTitle": "API Catalog",
+      "routeZone": "developer",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave5",
+      "routePath": "/developer/clients",
+      "routeTitle": "Client Registration",
+      "routeZone": "developer",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3-wave5",
+      "routePath": "/developer/sandbox",
+      "routeTitle": "Sandbox",
+      "routeZone": "developer",
+      "routeGuard": "role",
+      "routeNavZone": "professional",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/DeveloperHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

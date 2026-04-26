@@ -1,0 +1,1324 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.827Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier2",
+    "zones": [
+      "ehr",
+      "lab",
+      "marketplace",
+      "pharmacy",
+      "queue"
+    ],
+    "total": 76,
+    "done_ui": 76,
+    "missing_ui": 0
+  },
+  "rows": [
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]",
+      "routeTitle": "Patient Chart",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/advance-directives",
+      "routeTitle": "Advance Directives",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/allergies",
+      "routeTitle": "Allergies",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/assessments",
+      "routeTitle": "Assessments",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/care-plans",
+      "routeTitle": "Care Plans",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/care-team",
+      "routeTitle": "Care Team",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/charts",
+      "routeTitle": "Ward Charts",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/conditions",
+      "routeTitle": "Conditions",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/consults",
+      "routeTitle": "Consults & Referrals",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/discharge",
+      "routeTitle": "Discharge",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/documents",
+      "routeTitle": "Documents",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/encounter/[encounterId]",
+      "routeTitle": "Encounter",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/encounters",
+      "routeTitle": "Encounters",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/family-history",
+      "routeTitle": "Family History",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/functional-status",
+      "routeTitle": "Functional Status",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/goals",
+      "routeTitle": "Goals",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/growth-chart",
+      "routeTitle": "Growth Chart",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/history",
+      "routeTitle": "Medical History",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/immunizations",
+      "routeTitle": "Immunizations",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/ips",
+      "routeTitle": "International Patient Summary",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/maternity",
+      "routeTitle": "Maternity Monitoring",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/medications",
+      "routeTitle": "Medications",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/notes",
+      "routeTitle": "Clinical Notes",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/orders",
+      "routeTitle": "Orders",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/procedures",
+      "routeTitle": "Procedures",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/referrals",
+      "routeTitle": "Referrals",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/results",
+      "routeTitle": "Results",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/social-history",
+      "routeTitle": "Social History",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/summary",
+      "routeTitle": "Patient Summary",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/teleconsults",
+      "routeTitle": "Teleconsults",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/timeline",
+      "routeTitle": "Timeline",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/ehr/[patientId]/vitals",
+      "routeTitle": "Vitals",
+      "routeZone": "ehr",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/EncounterScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/lab",
+      "routeTitle": "Laboratory",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/lab/catalog",
+      "routeTitle": "Test Catalog",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/lab/reconciliation",
+      "routeTitle": "Lab Reconciliation",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/lab/results",
+      "routeTitle": "Results Review",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/lab/worklist",
+      "routeTitle": "Lab Worklist",
+      "routeZone": "lab",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/LabHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace",
+      "routeTitle": "Health Marketplace",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/bookings",
+      "routeTitle": "Bookings",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/cart",
+      "routeTitle": "Shopping Cart",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/catalog",
+      "routeTitle": "Service Catalog",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/ops",
+      "routeTitle": "Marketplace Operations",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/orders",
+      "routeTitle": "My Orders",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/orders/[id]",
+      "routeTitle": "Order Details",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/pickup",
+      "routeTitle": "Pickup Handoff",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/substitutions",
+      "routeTitle": "Substitutions",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/vendor",
+      "routeTitle": "Vendor Fulfilment",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/vendor/orders",
+      "routeTitle": "Vendor Orders",
+      "routeZone": "marketplace",
+      "routeGuard": "role",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/marketplace/vendors",
+      "routeTitle": "Vendors",
+      "routeZone": "marketplace",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/pharmacy",
+      "routeTitle": "Pharmacy Dashboard",
+      "routeZone": "pharmacy",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/pharmacy/dispense",
+      "routeTitle": "Dispensing",
+      "routeZone": "pharmacy",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/pharmacy/prescriptions",
+      "routeTitle": "Prescriptions",
+      "routeZone": "pharmacy",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/pharmacy/stock",
+      "routeTitle": "Stock Management",
+      "routeZone": "pharmacy",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/PharmacyHubScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/beds",
+      "routeTitle": "Bed Management",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical",
+      "routeTitle": "Clinical Care",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical-tools",
+      "routeTitle": "Clinical Tools",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical-tools/forms",
+      "routeTitle": "Form Builder",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical-tools/rules",
+      "routeTitle": "Rules Engine",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical/control-tower",
+      "routeTitle": "Control Tower",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical/dictation",
+      "routeTitle": "Voice Dictation",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/clinical/emergency",
+      "routeTitle": "ED / Casualty",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/communication/secure-messaging",
+      "routeTitle": "Secure Messaging",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue",
+      "routeTitle": "Patient Queue",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/incoming-referrals",
+      "routeTitle": "Incoming Referrals",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/scheduled",
+      "routeTitle": "Scheduled Visits",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/search",
+      "routeTitle": "Patient Search",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/triage",
+      "routeTitle": "Triage Queue",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/waiting",
+      "routeTitle": "Waiting Room",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/queue/walk-in",
+      "routeTitle": "Walk-in Registration",
+      "routeZone": "queue",
+      "routeGuard": "facility",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/scheduling",
+      "routeTitle": "Scheduling",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/scheduling/noticeboard",
+      "routeTitle": "Provider Noticeboard",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/scheduling/on-call",
+      "routeTitle": "On-Call Schedule",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/scheduling/roster",
+      "routeTitle": "Staff Roster",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/telemedicine",
+      "routeTitle": "Telemedicine Hub",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/telemedicine/new",
+      "routeTitle": "New Teleconsultation",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier2",
+      "routePath": "/telemedicine/session/[sessionId]",
+      "routeTitle": "Teleconsult Session",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/QueueManagementScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/TriageScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

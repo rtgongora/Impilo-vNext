@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: Impilo Mobile Citizen API (BFF)
+  version: 0.2.0
+  description: |
+    Tier-3 contract slice for citizen mobile endpoints exposed by `experience-bff`.
+
+    **Tier-3 wave 1:** facility directory + detail (`/internal/v1/facilities*`).  
+    **Tier-3 wave 2:** long-tail POST endpoints under `/internal/v1/mobile/citizen/*`.
+
+    Response envelopes align with `experience-bff` controllers (`FacilityController`, `CitizenLongtailController`).
+servers:
+  - url: http://localhost:8160
+tags:
+  - name: CitizenFacility
+  - name: CitizenLongtail
+
+paths:
+  /internal/v1/facilities:
+    get:
+      tags: [CitizenFacility]
+      summary: List facilities (for citizen facility directory)
+      operationId: citizenFacilitiesList
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema: { type: string }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, default: 0 }
+        - name: size
+          in: query
+          required: false
+          schema: { type: integer, default: 20 }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string }
+        - name: facility_type
+          in: query
+          required: false
+          schema: { type: string }
+        - name: province
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Facility list (JSON resource array under `data`)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenFacilityListResponse"
+
+  /internal/v1/facilities/{id}:
+    get:
+      tags: [CitizenFacility]
+      summary: Get facility details (for citizen facility detail)
+      operationId: citizenFacilityGet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Single facility resource under `data`
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenFacilityDetailResponse"
+
+  /internal/v1/mobile/citizen/share/issue:
+    post:
+      tags: [CitizenLongtail]
+      summary: Issue a share code for record sharing
+      operationId: citizenShareIssue
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenShareIssueRequest"
+      responses:
+        "200":
+          description: Issued share code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenShareIssueResponse"
+
+  /internal/v1/mobile/citizen/share/claim:
+    post:
+      tags: [CitizenLongtail]
+      summary: Claim shared documents by share code
+      operationId: citizenShareClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenShareClaimRequest"
+      responses:
+        "200":
+          description: Claim acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenShareClaimResponse"
+
+  /internal/v1/mobile/citizen/credential/verify:
+    post:
+      tags: [CitizenLongtail]
+      summary: Verify a credential payload
+      operationId: citizenCredentialVerify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenCredentialVerifyRequest"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenCredentialVerifyResponse"
+
+  /internal/v1/mobile/citizen/delegated-pickup/issue:
+    post:
+      tags: [CitizenLongtail]
+      summary: Issue a delegated pickup authorization
+      operationId: citizenDelegatedPickupIssue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CitizenDelegatedPickupIssueRequest"
+      responses:
+        "200":
+          description: Authorization issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CitizenDelegatedPickupIssueResponse"
+
+components:
+  schemas:
+    CompanionRequestMeta:
+      type: object
+      description: Request correlation metadata returned by the BFF.
+      properties:
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+      additionalProperties: true
+
+    FacilityPageInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+        size:
+          type: integer
+        total_elements:
+          type: integer
+        total_pages:
+          type: integer
+
+    FacilityListMeta:
+      allOf:
+        - $ref: "#/components/schemas/CompanionRequestMeta"
+        - type: object
+          properties:
+            page:
+              $ref: "#/components/schemas/FacilityPageInfo"
+          additionalProperties: true
+
+    FacilityAttributes:
+      type: object
+      required: [name]
+      description: Facility attributes (seeded list or TUSO); extra fields allowed.
+      properties:
+        name: { type: string }
+        code: { type: string }
+        facilityType: { type: string }
+        district: { type: string }
+        province: { type: string }
+        region: { type: string }
+        status: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        contactPhone: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        bedCount: { type: integer }
+        capabilities:
+          type: array
+          items: { type: string }
+        operatingHours: { type: string }
+        facilityTier: { type: string }
+        deploymentMode: { type: string }
+        continuityClass: { type: string }
+        workflowArchetype: { type: string }
+        operatingModel:
+          type: object
+          additionalProperties: true
+      additionalProperties: true
+
+    FacilityResource:
+      type: object
+      required: [id, type, attributes]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [facility]
+        attributes:
+          $ref: "#/components/schemas/FacilityAttributes"
+
+    CitizenFacilityListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/FacilityResource"
+        meta:
+          $ref: "#/components/schemas/FacilityListMeta"
+
+    CitizenFacilityDetailResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/FacilityResource"
+        meta:
+          $ref: "#/components/schemas/CompanionRequestMeta"
+
+    CitizenShareIssueRequest:
+      type: object
+      properties:
+        purpose:
+          type: string
+          nullable: true
+
+    CitizenShareIssueResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [code, issued_at]
+          properties:
+            code: { type: string }
+            issued_at: { type: string, format: date-time }
+            purpose: { type: string, nullable: true }
+        meta:
+          $ref: "#/components/schemas/CompanionRequestMeta"
+
+    CitizenShareClaimRequest:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string }
+
+    CitizenShareClaimResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [claimed, claimed_at]
+          properties:
+            claimed: { type: boolean }
+            code: { type: string, nullable: true }
+            claimed_at: { type: string, format: date-time }
+        meta:
+          $ref: "#/components/schemas/CompanionRequestMeta"
+
+    CitizenCredentialVerifyRequest:
+      type: object
+      required: [payload]
+      properties:
+        payload: { type: string }
+
+    CitizenCredentialVerifyResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [verified, checked_at]
+          properties:
+            verified: { type: boolean }
+            checked_at: { type: string, format: date-time }
+        meta:
+          $ref: "#/components/schemas/CompanionRequestMeta"
+
+    CitizenDelegatedPickupIssueRequest:
+      type: object
+      required: [delegate_name, delegate_phone]
+      properties:
+        delegate_name: { type: string }
+        delegate_phone: { type: string }
+
+    CitizenDelegatedPickupIssueResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [token, issued_at]
+          properties:
+            token: { type: string }
+            issued_at: { type: string, format: date-time }
+            delegate_name: { type: string, nullable: true }
+            delegate_phone: { type: string, nullable: true }
+        meta:
+          $ref: "#/components/schemas/CompanionRequestMeta"

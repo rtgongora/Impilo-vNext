@@ -119,42 +119,42 @@ Key environment variables (see `application.yml` for full list):
 
 ---
 
-## 4. Build the Experience UI
+## 4. Build the Impilo web experience (orchestration layer)
 
-The Experience UI is a Next.js 14 application with TailwindCSS, TanStack Query, and Zustand.
+The **only** canonical user-facing web layer is the Impilo **web experience** — one orchestration surface (zones, routes, BFF-backed flows). It is developed in **`ui/one-ui-shell`** and shipped as the Compose/Kubernetes service **`one-ui-shell`**; that folder name is packaging, not a second product beside “Experience.” Stack: Next.js 14, TailwindCSS, TanStack Query, Zustand.
 
 ```bash
-cd ui/experience
-pnpm install
+cd ui/one-ui-shell
+npm install
 ```
 
 ### Type-check (verify compilation)
 
 ```bash
-pnpm type-check
+npm run type-check
 ```
 
 ### Development server
 
 ```bash
-NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm dev
+NEXT_PUBLIC_BFF_URL=http://localhost:8160 npm run dev
 ```
 
-Opens on **port 3020** — visit `http://localhost:3020`.
+Opens on **port 3000** — visit `http://localhost:3000`.
 
 ### Production build
 
 ```bash
-NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm build
-pnpm start
+NEXT_PUBLIC_BFF_URL=http://localhost:8160 npm run build
+npm start
 ```
 
 ### Run tests
 
 ```bash
-pnpm test              # Vitest unit tests
-pnpm test:coverage     # With coverage report
-pnpm e2e               # Playwright E2E (requires dev server running)
+npm test              # Vitest unit tests
+npm run test:coverage     # With coverage report
+npm run e2e               # Playwright E2E (requires dev server running)
 ```
 
 ---
@@ -227,12 +227,12 @@ docker compose -f docker-compose.runtime.yml up -d
 cd services/experience-bff
 mvn spring-boot:run
 
-# Terminal 3 — UI
-cd ui/experience
-NEXT_PUBLIC_BFF_URL=http://localhost:8160 pnpm dev
+# Terminal 3 — UI (web experience orchestration layer)
+cd ui/one-ui-shell
+NEXT_PUBLIC_BFF_URL=http://localhost:8160 npm run dev
 ```
 
-Then open `http://localhost:3020` in your browser.
+Then open `http://localhost:3000` in your browser.
 
 For the experience-specific Docker Compose (BFF + UI containerised):
 
@@ -250,7 +250,7 @@ Full authoritative table: `docs/runbooks/port-allocation.md`
 
 | Service | Port |
 |---------|------|
-| Experience UI | 3020 |
+| Web experience (`one-ui-shell`) | 3000 |
 | Experience BFF | 8160 |
 | Keycloak | 8080 |
 | TSHEPO Authz | 8081 |
@@ -278,10 +278,10 @@ Run through these after your first build to confirm everything is working:
 - [ ] `docker compose -f docker-compose.runtime.yml ps` — all containers healthy
 - [ ] `mvn clean package -pl services/experience-bff -am -DskipTests` — BUILD SUCCESS
 - [ ] BFF health check: `curl http://localhost:8160/actuator/health` returns `{"status":"UP"}`
-- [ ] `cd ui/experience && pnpm type-check` — zero errors
-- [ ] `cd ui/experience && pnpm build` — completes without errors
-- [ ] `http://localhost:3020` — Impilo logo (green shield) appears in browser tab
-- [ ] `http://localhost:3020/auth/login` — Login page renders with green gradient branding
+- [ ] `cd ui/one-ui-shell && npm run type-check` — zero errors
+- [ ] `cd ui/one-ui-shell && npm run build` — completes without errors
+- [ ] `http://localhost:3000` — Impilo logo (green shield) appears in browser tab
+- [ ] `http://localhost:3000/auth/login` — Login page renders with green gradient branding
 - [ ] `cd apps/mobile/citizen-app && pnpm type-check` — zero errors
 - [ ] `cd apps/mobile/provider-app && pnpm type-check` — zero errors
 

@@ -31,7 +31,7 @@ export function PharmacyDispensingScreen() {
 
   return (
     <Screen><Header title="Pharmacy Dispensing" />
-      <View style={styles.container}>
+      <View testID="pharmacy-dispensing-screen" style={styles.container}>
         <Text style={styles.title}>Pending Prescriptions ({(pending as unknown[]).length})</Text>
         <FlatList data={pending as Array<Record<string, unknown>>} keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
@@ -42,10 +42,18 @@ export function PharmacyDispensingScreen() {
                 <Text style={styles.meta}>Patient: {String(item.patient_name ?? item.patient_id ?? "")}</Text>
               </View>
               <View style={styles.actions}>
-                <TouchableOpacity style={styles.verifyBtn} onPress={() => verifyMutation.mutate(String(item.id))}>
+                <TouchableOpacity
+                  testID={`pharmacy-verify-${String(item.id)}`}
+                  style={styles.verifyBtn}
+                  onPress={() => verifyMutation.mutate(String(item.id))}
+                >
                   <Text style={styles.btnText}>Verify</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.dispenseBtn} onPress={() => dispenseMutation.mutate(String(item.id))}>
+                <TouchableOpacity
+                  testID={`pharmacy-dispense-${String(item.id)}`}
+                  style={styles.dispenseBtn}
+                  onPress={() => dispenseMutation.mutate(String(item.id))}
+                >
                   <Text style={styles.btnText}>Dispense</Text>
                 </TouchableOpacity>
               </View>

@@ -13,6 +13,7 @@
   "dependencies": {
     "@impilo/mobile-trust": "workspace:*",
     "@impilo/mobile-api-client": "workspace:*",
+    "expo-sqlite": "~16.0.10",
     "zustand": "^4.5.0"
   },
   "peerDependencies": {

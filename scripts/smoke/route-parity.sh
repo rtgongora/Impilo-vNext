@@ -11,7 +11,7 @@
 #
 # It can run:
 #   1. Via Node.js directly (if node is available)
-#   2. Via Docker (using the experience-ui container)
+#   2. Via Docker (using the one-ui-shell container)
 #   3. Via static file count (fallback)
 #
 # Usage:

@@ -1,0 +1,219 @@
+{
+  "summary": {
+    "generatedAt": "2026-04-26T01:29:26.831Z",
+    "source": "ui/one-ui-shell/src/lib/routes.ts",
+    "tier": "tier3",
+    "scope": {
+      "provider": "facility/workspace/shift + /scheduling*",
+      "citizen": "facility"
+    },
+    "total": 13,
+    "done_ui": 13,
+    "missing_ui": 0,
+    "contract_ok": 13,
+    "contract_partial": 0,
+    "contract_missing": 0
+  },
+  "rows": [
+    {
+      "tier": "tier3",
+      "routePath": "/facility",
+      "routeTitle": "Select Facility",
+      "routeZone": "facility",
+      "routeGuard": "auth",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/FacilityDirectoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/FacilityDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/facility/[id]",
+      "routeTitle": "Facility Details",
+      "routeZone": "facility",
+      "routeGuard": "auth",
+      "routeNavZone": null,
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/FacilityDirectoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/FacilityDetailScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/facility",
+      "routeTitle": "Select Facility",
+      "routeZone": "facility",
+      "routeGuard": "auth",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/SelectFacilityScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/facility/[id]",
+      "routeTitle": "Facility Details",
+      "routeZone": "facility",
+      "routeGuard": "auth",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/SelectFacilityScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/scheduling",
+      "routeTitle": "Scheduling",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/scheduling/noticeboard",
+      "routeTitle": "Provider Noticeboard",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/scheduling/on-call",
+      "routeTitle": "On-Call Schedule",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/scheduling/roster",
+      "routeTitle": "Staff Roster",
+      "routeZone": "queue",
+      "routeGuard": "workspace",
+      "routeNavZone": "work",
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/shift",
+      "routeTitle": "Start Shift",
+      "routeZone": "shift",
+      "routeGuard": "workspace",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/shift/active",
+      "routeTitle": "Active Shift",
+      "routeZone": "shift",
+      "routeGuard": "facility",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/shift/handover",
+      "routeTitle": "Shift Handover",
+      "routeZone": "shift",
+      "routeGuard": "facility",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/provider/ScheduleScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/ShiftHandoffScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/workspace",
+      "routeTitle": "Select Workspace",
+      "routeZone": "workspace",
+      "routeGuard": "facility",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/SelectWorkspaceScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    },
+    {
+      "tier": "tier3",
+      "routePath": "/workspace/[id]",
+      "routeTitle": "Workspace Details",
+      "routeZone": "workspace",
+      "routeGuard": "facility",
+      "routeNavZone": null,
+      "mobileApp": "provider",
+      "mobileFiles": [
+        "apps/mobile/provider-app/src/screens/SelectWorkspaceScreen.tsx"
+      ],
+      "uiStatus": "done_ui",
+      "missingFiles": [],
+      "contractStatus": "contract_ok"
+    }
+  ]
+}

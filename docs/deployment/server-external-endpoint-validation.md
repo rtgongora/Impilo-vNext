@@ -9,7 +9,7 @@
 
 | Service | Internal Port | External Validation URL | Expected Response |
 |---------|---------------|-------------------------|-------------------|
-| Experience UI | 3020 | http://197.221.242.150:13020 | HTML page (Next.js) |
+| One UI Shell | 3000 | http://197.221.242.150:13020 | HTML page (Next.js) |
 | Envoy Gateway | 10000 | http://197.221.242.150:13021 | Envoy response |
 | Keycloak | 8080 | http://197.221.242.150:13022 | Keycloak login page |
 | HAPI FHIR | 8090 | http://197.221.242.150:13023/fhir | FHIR CapabilityStatement |
@@ -20,7 +20,7 @@
 
 | Internal Port | External Port | Offset |
 |---------------|---------------|--------|
-| 3020 | 13020 | +10000 |
+| 3000 | 13020 | +10020 (example host map; adjust if publish rules change) |
 | 10000 | 13021 | +3021 |
 | 8080 | 13022 | +4942 |
 | 8090 | 13023 | +4933 |
@@ -35,7 +35,7 @@
 
 | Service | URL | Result | Details |
 |---------|-----|--------|---------|
-| Experience UI | :13020 | ❌ 403 | `host_not_allowed` via egress proxy |
+| One UI Shell | :13020 | ❌ 403 | `host_not_allowed` via egress proxy |
 | Envoy Gateway | :13021 | ❌ 403 | `host_not_allowed` via egress proxy |
 | Keycloak | :13022 | ❌ 403 | `host_not_allowed` via egress proxy |
 | HAPI FHIR | :13023/fhir | ❌ 403 | `host_not_allowed` via egress proxy |
@@ -62,7 +62,7 @@ These 403 responses are **NOT from the target server**. They are from the Anthro
 To validate from a machine with direct access, run:
 
 ```bash
-# Experience UI
+# One UI Shell
 curl -sS -o /dev/null -w "%{http_code}" http://197.221.242.150:13020
 
 # Envoy Gateway

@@ -1,7 +1,7 @@
 ##
 ## Impilo vNext — Experience Platform Dev Runtime
 ##
-## Starts: Postgres, Wellness-service, Experience-BFF, Experience UI
+## Starts: Postgres, Wellness-service, Experience-BFF, One UI Shell (merged Experience)
 ## Usage:  docker compose -f compose/experience/docker-compose.yml up
 ##
 version: "3.9"
@@ -97,15 +97,16 @@ services:
       retries: 10
       start_period: 30s
 
-  # ── Experience UI ────────────────────────────────────────────────
-  experience-ui:
+  # ── One UI Shell (unified Experience surface, port 3000) ─────────
+  one-ui-shell:
     build:
-      context: ../../ui/experience
-      dockerfile: Dockerfile
+      context: ../../ui
+      dockerfile: one-ui-shell/Dockerfile
     environment:
-      NEXT_PUBLIC_BFF_URL: http://experience-bff:8160
+      NEXT_PUBLIC_BFF_URL: http://localhost:8160
+      NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
     ports:
-      - "3020:3020"
+      - "3000:3000"
     depends_on:
       experience-bff:
         condition: service_healthy

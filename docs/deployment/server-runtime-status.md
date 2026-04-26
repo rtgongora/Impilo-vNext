@@ -38,7 +38,7 @@
 ### Experience Layer
 | Service | Port | Expected Status |
 |---------|------|----------------|
-| Experience UI | 3020 | Next.js SSR, depends on Experience BFF |
+| One UI Shell | 3000 | Next.js SSR, depends on Experience BFF |
 
 ---
 
@@ -66,7 +66,7 @@ curl http://localhost:8085/actuator/health  # ZIBO
 curl http://localhost:8088/actuator/health  # PCT
 curl http://localhost:8089/actuator/health  # OROS
 curl http://localhost:8160/actuator/health  # Experience BFF
-curl http://localhost:3020                  # Experience UI
+curl http://localhost:3000                  # One UI Shell
 ```
 
 ### 3. Auth Flow (Keycloak Token)

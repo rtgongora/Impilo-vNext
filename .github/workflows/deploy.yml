@@ -103,7 +103,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   build-ui:
-    name: Build Experience UI
+    name: Build One UI Shell
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,7 +111,7 @@ jobs:
       - name: Check if UI should be built
         id: check
         run: |
-          if [ "${{ inputs.service }}" = "all" ] || [ "${{ inputs.service }}" = "experience-ui" ]; then
+          if [ "${{ inputs.service }}" = "all" ] || [ "${{ inputs.service }}" = "one-ui-shell" ] || [ "${{ inputs.service }}" = "experience-ui" ]; then
             echo "build=true" >> $GITHUB_OUTPUT
           else
             echo "build=false" >> $GITHUB_OUTPUT
@@ -129,11 +129,12 @@ jobs:
         if: steps.check.outputs.build == 'true'
         uses: docker/build-push-action@v5
         with:
-          context: ui/experience
+          context: ui
+          file: ui/one-ui-shell/Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/experience-ui:${{ github.sha }}
-            ${{ env.IMAGE_PREFIX }}/experience-ui:${{ inputs.environment }}
+            ${{ env.IMAGE_PREFIX }}/one-ui-shell:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/one-ui-shell:${{ inputs.environment }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

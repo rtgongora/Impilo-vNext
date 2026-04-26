@@ -7,18 +7,26 @@ import { Screen, Header, Button } from "@impilo/mobile-design-system";
 import { useMutation } from "@tanstack/react-query";
 import { registerPatient } from "../../services/queueService";
 
-export function PatientRegistrationScreen() {
+export interface PatientRegistrationScreenProps {
+  /** When true, render without outer Screen/Header (embed under an existing shell). */
+  embedded?: boolean;
+  onRegistered?: () => void;
+}
+
+export function PatientRegistrationScreen({ embedded, onRegistered }: PatientRegistrationScreenProps = {}) {
   const [form, setForm] = useState({ givenName: "", familyName: "", dateOfBirth: "", sex: "MALE", nationalId: "", phone: "", email: "" });
 
   const mutation = useMutation({
     mutationFn: () => registerPatient(form),
-    onSuccess: (data) => Alert.alert("Registered", `Patient ID: ${data.id}`),
+    onSuccess: (data) => {
+      Alert.alert("Registered", `Patient ID: ${data.id}`);
+      onRegistered?.();
+    },
   });
 
   const update = (key: string, value: string) => setForm({ ...form, [key]: value });
 
-  return (
-    <Screen><Header title="Patient Registration" />
+  const body = (
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         <Text style={styles.label}>Given Name *</Text>
         <TextInput style={styles.input} value={form.givenName} onChangeText={(v) => update("givenName", v)} placeholder="First name" />
@@ -40,6 +48,16 @@ export function PatientRegistrationScreen() {
         <TextInput style={styles.input} value={form.email} onChangeText={(v) => update("email", v)} placeholder="email@example.com" keyboardType="email-address" />
         <Button title={mutation.isPending ? "Registering..." : "Register Patient"} onPress={() => mutation.mutate()} disabled={!form.givenName || !form.familyName || mutation.isPending} />
       </ScrollView>
+  );
+
+  if (embedded) {
+    return body;
+  }
+
+  return (
+    <Screen>
+      <Header title="Patient Registration" />
+      {body}
     </Screen>
   );
 }

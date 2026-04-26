@@ -1,0 +1,23 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+# Lab results smoke: open Results surface and toggle filters (stable testIDs)
+- tapOn: "Results"
+- assertVisible:
+    id: "results-view-screen"
+
+- tapOn:
+    id: "filter-PENDING"
+- assertVisible:
+    id: "results-view-screen"
+
+- tapOn:
+    id: "filter-RESULTED"
+- assertVisible:
+    id: "results-view-screen"
+

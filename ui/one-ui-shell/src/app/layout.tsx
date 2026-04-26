@@ -1,15 +1,30 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Inter } from "next/font/google";
+import { Providers } from "@/providers/Providers";
+import "@/styles/globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Impilo — One UI Shell",
-  description: "Shared shell runtime for Impilo vNext",
+  title: "Impilo — Health Operating System",
+  description: "One Health Operating System — Experience Platform",
+  icons: { icon: "/brand/mark-rgb.svg" },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={inter.variable}>
+      <body className={inter.className}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

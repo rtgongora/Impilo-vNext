@@ -6,6 +6,16 @@ Impilo vNext is a **Health Operating System (HOS)** — a sovereign-grade, secur
 
 > **Doctrine**: One Health OS, one experience shell, one person anchor, many roles, many contexts, one governed runtime. Full doctrine: [`docs/doctrine/health-os-doctrine.md`](docs/doctrine/health-os-doctrine.md)
 
+### Experience orchestration layer (canonical)
+
+There is **one** actor-facing web orchestration layer: zones, routes, trust-header-aware
+API usage, and BFF-backed flows that operators and citizens see as a single Impilo
+experience. The workspace and Docker artifact **`one-ui-shell`** is how that layer is built
+and shipped; it is **not** a second product alongside “Experience.” Deprecated paths (for
+example `ui/experience/`) and multiple Keycloak **client** names are continuity and wiring
+only — they MUST NOT imply a second default web entry or a parallel UX stack. See doctrine
+[§2.0](docs/doctrine/health-os-doctrine.md).
+
 ---
 
 ## Project Structure & Module Organization
@@ -27,7 +37,7 @@ tests/          Integration tests
 - **Clinical Execution**: BUTANO/HAPI FHIR (SHR, 8090), PCT (8088), OROS (8089), Pharmacy (8096), Inpatient (8121)
 - **Finance**: MUSheX (8102), Costing Engine
 - **Integration/Ops**: Integration Hub, Offline Sync (8095), Document Service (8093), Notification (8200), Jobs (8109)
-- **Experience**: One UI Shell (3000), Experience UI (3020), EHR (3002), Portal (3003), Ops Console (3001)
+- **Experience**: **Impilo web experience** (orchestration layer, port **3000** — built from `ui/one-ui-shell`, Compose service `one-ui-shell`); thin or legacy consoles: Ops Console (3001), EHR stub (3002), Portal (3003)
 - **Enterprise Resource**: General Ledger, HR & Payroll, Procurement
 
 Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md)
@@ -39,7 +49,7 @@ Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-al
 - DB migrations use **Flyway** with `V001__init.sql`, `V002__*.sql` naming in `src/main/resources/db/migration/`.
 - Java package root: `zw.gov.mohcc.impilo.<service>`
 
-**Trust header contract** (all outbound requests must carry these — see [`ui/experience/src/lib/api-client.ts`](ui/experience/src/lib/api-client.ts)):
+**Trust header contract** (all outbound requests must carry these — see [`ui/one-ui-shell/src/lib/api-client.ts`](ui/one-ui-shell/src/lib/api-client.ts)):
 - Mandatory: `X-Tenant-ID`, `X-Pod-ID`, `X-Request-ID`, `X-Correlation-ID`
 - Actor: `X-Actor-ID`, `X-Actor-Type`, `X-Provider-ID`
 - Context: `X-Facility-ID`, `X-Department-ID`, `X-Ward-ID`, `X-Workspace-ID`, `X-Programme-ID`, `X-Shift-ID`
@@ -74,18 +84,18 @@ cd ui && npm run lint
 cd ui && npm run type-check
 
 # Dev server for a specific workspace
-cd ui && npm run dev:shell          # One UI Shell → port 3000
-cd ui/experience && npm run dev     # Experience UI → port 3020
+cd ui && npm run dev:shell          # Impilo web experience (orchestration layer) → port 3000
+cd ui/one-ui-shell && npm run dev   # Same layer (direct workspace)
 cd ui/ehr && npm run dev            # EHR UI → port 3002
 
-# Tests (Experience UI)
-cd ui/experience && npm test                  # Vitest unit tests
-cd ui/experience && npm run test:coverage     # With coverage
-cd ui/experience && npm run e2e               # Playwright E2E
-cd ui/experience && npm run test:routes       # Route parity check
+# Tests (same orchestration layer codebase)
+cd ui/one-ui-shell && npm test                  # Vitest unit tests
+cd ui/one-ui-shell && npm run test:coverage     # With coverage
+cd ui/one-ui-shell && npm run e2e               # Playwright E2E
+cd ui/one-ui-shell && npm run test:routes       # Route parity check
 
-# Type check (Experience UI)
-cd ui/experience && npm run type-check
+# Type check
+cd ui/one-ui-shell && npm run type-check
 ```
 
 ### Infrastructure
