@@ -39,9 +39,12 @@ export default function FinanceSettlementsPage() {
         title="Settlements"
         subtitle="Run settlement periods, inspect a settlement, and release payouts through the Experience BFF (MusheX upstream). Reconciliation and refunds stay on other finance routes."
       >
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Link href="/finance" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Finance dashboard
+          </Link>
+          <Link href="/finance/costa" className="text-xs font-medium text-indigo-700 hover:underline">
+            COSTA intel & cost probes
           </Link>
         </div>
 

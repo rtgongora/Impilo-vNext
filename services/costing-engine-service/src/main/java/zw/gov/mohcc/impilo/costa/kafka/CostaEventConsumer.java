@@ -18,6 +18,7 @@ import java.util.List;
 import zw.gov.mohcc.impilo.costa.service.BillService;
 import zw.gov.mohcc.impilo.costa.service.ChargeRecordService;
 import zw.gov.mohcc.impilo.costa.service.InpatientCostingService;
+import zw.gov.mohcc.impilo.costa.service.CostEventCaptureService;
 import zw.gov.mohcc.impilo.costa.service.PaymentAllocationService;
 import zw.gov.mohcc.impilo.costa.service.PaymentIntegrationService;
 
@@ -39,6 +40,7 @@ public class CostaEventConsumer {
     private final IdempotencyRepository idempotencyRepository;
     private final PaymentAllocationService paymentAllocationService;
     private final ChargeRecordService chargeRecordService;
+    private final CostEventCaptureService costEventCaptureService;
     private final ObjectMapper objectMapper;
 
     public CostaEventConsumer(BillService billService,
@@ -49,6 +51,7 @@ public class CostaEventConsumer {
                               IdempotencyRepository idempotencyRepository,
                               PaymentAllocationService paymentAllocationService,
                               ChargeRecordService chargeRecordService,
+                              CostEventCaptureService costEventCaptureService,
                               ObjectMapper objectMapper) {
         this.billService = billService;
         this.inpatientCostingService = inpatientCostingService;
@@ -58,6 +61,7 @@ public class CostaEventConsumer {
         this.idempotencyRepository = idempotencyRepository;
         this.paymentAllocationService = paymentAllocationService;
         this.chargeRecordService = chargeRecordService;
+        this.costEventCaptureService = costEventCaptureService;
         this.objectMapper = objectMapper;
     }
 
@@ -84,6 +88,18 @@ public class CostaEventConsumer {
             encounter.setEncounterType(encounterType != null ? EncounterType.valueOf(encounterType) : EncounterType.OUTPATIENT);
             encounter.setStatus(EncounterStatus.OPEN);
             encounterRepository.save(encounter);
+
+            var encMeta = objectMapper.createObjectNode();
+            encMeta.put("pct_journey_id", journeyId);
+            encMeta.put("encounter_type", encounterType != null ? encounterType : "");
+            costEventCaptureService.tryCaptureClinical(
+                    "ENCOUNTER_STARTED",
+                    "PCT",
+                    encounter.getTenantId(),
+                    patientCpid,
+                    encounter.getEncounterId(),
+                    encounter.getFacilityId(),
+                    encMeta);
 
             // Auto-create a DRAFT bill for the encounter so order/dispense events
             // can post line items as they arrive (before discharge)
@@ -187,6 +203,18 @@ public class CostaEventConsumer {
             if (line != null) {
                 log.info("OROS order {} posted as bill line {} on bill {}",
                         orderId, line.getLineId(), bill.getBillId());
+                var om = objectMapper.createObjectNode();
+                om.put("order_id", orderId);
+                om.put("msika_code", msikaCode);
+                om.put("bill_id", bill.getBillId());
+                costEventCaptureService.tryCaptureClinical(
+                        "ORDER_PLACED",
+                        "OROS",
+                        encounter.getTenantId(),
+                        patientCpid,
+                        encounter.getEncounterId(),
+                        encounter.getFacilityId(),
+                        om);
             } else {
                 log.info("OROS order {} excluded by charging rules for bill {}",
                         orderId, bill.getBillId());
@@ -275,6 +303,19 @@ public class CostaEventConsumer {
             if (line != null) {
                 log.info("Pharmacy dispense {} posted as bill line {} on bill {}",
                         dispenseId, line.getLineId(), bill.getBillId());
+                var dm = objectMapper.createObjectNode();
+                dm.put("dispense_id", dispenseId != null ? dispenseId : "");
+                dm.put("oros_order_id", orosOrderId != null ? orosOrderId : "");
+                dm.put("msika_code", msikaCode);
+                dm.put("bill_id", bill.getBillId());
+                costEventCaptureService.tryCaptureClinical(
+                        "PHARMACY_DISPENSE",
+                        "PHARMACY",
+                        encounter.getTenantId(),
+                        patientCpid,
+                        encounter.getEncounterId(),
+                        encounter.getFacilityId(),
+                        dm);
             } else {
                 log.info("Pharmacy dispense {} excluded by charging rules for bill {}",
                         dispenseId, bill.getBillId());
@@ -303,6 +344,24 @@ public class CostaEventConsumer {
 
             if ("ISSUE".equals(eventType) || "WASTAGE".equals(eventType)) {
                 log.info("Inventory {} for item {}: qty={}", eventType, itemCode, qty);
+                String tenantTxt = text(event, "tenantId");
+                if (tenantTxt != null) {
+                    var im = objectMapper.createObjectNode();
+                    im.put("event_type", eventType);
+                    im.put("item_code", itemCode != null ? itemCode : "");
+                    im.put("qty", qty.toPlainString());
+                    if (unitCost != null) {
+                        im.put("unit_cost", unitCost.toPlainString());
+                    }
+                    costEventCaptureService.tryCaptureClinical(
+                            "INVENTORY_" + eventType,
+                            "INVENTORY",
+                            UUID.fromString(tenantTxt),
+                            text(event, "patientCpid"),
+                            text(event, "encounterId"),
+                            null,
+                            im);
+                }
             }
 
             markProcessed(eventId, "INVENTORY");
@@ -466,6 +525,19 @@ public class CostaEventConsumer {
                 return;
             }
             chargeRecordService.ingestMsikaFlowOrderPriced(event);
+            String tenantPriced = text(event, "tenantId");
+            if (tenantPriced != null) {
+                var pm = objectMapper.createObjectNode();
+                pm.put("order_id", text(event, "orderId"));
+                costEventCaptureService.tryCaptureClinical(
+                        "MSIKA_FLOW_ORDER_PRICED",
+                        "MSIKA_FLOW",
+                        UUID.fromString(tenantPriced),
+                        text(event, "patientCpid"),
+                        text(event, "encounterId"),
+                        null,
+                        pm);
+            }
             markProcessed(eventId, "MSIKA_FLOW_PRICED");
             ack.acknowledge();
         } catch (Exception e) {
@@ -503,6 +575,19 @@ public class CostaEventConsumer {
             case "PHARMACY" -> BillLineKind.PRODUCT;
             default -> BillLineKind.SERVICE;
         };
+    }
+
+    @KafkaListener(topics = "impilo.costa.cost-signals", groupId = "costa-costing-engine")
+    @Transactional
+    public void onCostSignals(String message, Acknowledgment ack) {
+        try {
+            JsonNode body = objectMapper.readTree(message);
+            costEventCaptureService.captureFromSignal(body);
+            ack.acknowledge();
+        } catch (Exception e) {
+            log.error("Failed to process impilo.costa.cost-signals", e);
+            ack.acknowledge();
+        }
     }
 
     private String text(JsonNode node, String field) {

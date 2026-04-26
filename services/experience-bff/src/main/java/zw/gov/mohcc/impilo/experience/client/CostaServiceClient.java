@@ -198,6 +198,16 @@ public class CostaServiceClient {
     }
 
     /**
+     * Tariff / charge preview for registration and counselling flows ({@code POST /costa/v1/estimate}).
+     */
+    public JsonNode createEstimate(Map<String, Object> body) {
+        String url = baseUrl + "/costa/v1/estimate";
+        log.info("COSTA: Creating estimate");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * List payments (paginated, tenant-scoped via trust headers).
      */
     public JsonNode listPayments(int page, int size) {
@@ -366,6 +376,26 @@ public class CostaServiceClient {
         String url = baseUrl + (path.startsWith("/") ? path : "/" + path);
         log.info("COSTA internal PUT {}", url);
         return restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), String.class);
+    }
+
+    /**
+     * Proxies COSTA {@code /api/costa/...} tariff intel, upload, cost events, and billing decisions.
+     *
+     * @param relativePath path starting with {@code /api/costa} or suffix after it (e.g. {@code /tariff-lists})
+     */
+    public ResponseEntity<String> costaIntelExchange(HttpMethod method, String relativePath, String body) {
+        String path = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        if (!path.startsWith("/api/costa")) {
+            path = "/api/costa" + path;
+        }
+        String url = baseUrl + path;
+        log.info("COSTA intel {} {}", method, url);
+        HttpHeaders headers = new HttpHeaders();
+        if (body != null && (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.PATCH)) {
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            return restTemplate.exchange(url, method, new HttpEntity<>(body, headers), String.class);
+        }
+        return restTemplate.exchange(url, method, new HttpEntity<>(null, headers), String.class);
     }
 
     // ── Financial lifecycle (COSTA /costa/v1/finance/lifecycle) ───────

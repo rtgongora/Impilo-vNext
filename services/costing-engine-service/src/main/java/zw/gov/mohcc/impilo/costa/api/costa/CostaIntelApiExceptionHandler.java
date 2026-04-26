@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.response.ApiError;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @RestControllerAdvice(basePackages = "zw.gov.mohcc.impilo.costa.api.costa")
@@ -16,6 +17,13 @@ public class CostaIntelApiExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse<Void>> badRequest(IllegalArgumentException ex, HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(ApiResponse.error(
+                new ApiError("BAD_REQUEST", ex.getMessage(), 400),
+                correlationId(request)));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ApiResponse<Void>> ioBadRequest(IOException ex, HttpServletRequest request) {
         return ResponseEntity.badRequest().body(ApiResponse.error(
                 new ApiError("BAD_REQUEST", ex.getMessage(), 400),
                 correlationId(request)));

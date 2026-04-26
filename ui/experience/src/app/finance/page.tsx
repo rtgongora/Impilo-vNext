@@ -19,6 +19,7 @@ import {
   BarChart3,
   Wallet,
   Landmark,
+  Sparkles,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
@@ -54,6 +55,13 @@ const FINANCE_SECTIONS = [
     href: "/finance/tariffs",
     icon: BookOpen,
     color: "bg-amber-100 text-amber-600",
+  },
+  {
+    title: "COSTA & MusheX",
+    description: "Tariff intel API, cost probes, cost events, and links to settlements",
+    href: "/finance/costa",
+    icon: Sparkles,
+    color: "bg-sky-100 text-sky-700",
   },
   {
     title: "MSIKA Governance",

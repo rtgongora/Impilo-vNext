@@ -42,6 +42,10 @@ public class FinancePlaneAuthorizationService {
         assertGate(method, "/internal/v1/finance/mushex-platform", "mushex-platform");
     }
 
+    public void assertCostaIntelAccess(String method) {
+        assertGate(method, "/internal/v1/finance/costa-intel", "costa-intel");
+    }
+
     private void assertGate(String method, String syntheticPath, String label) {
         if (allowAnonymous) {
             return;

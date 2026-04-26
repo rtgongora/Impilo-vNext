@@ -9,13 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.costa.domain.entity.CostaTariffListEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.TariffLibraryEntity;
 import zw.gov.mohcc.impilo.costa.service.CostaTariffIntelService;
+import zw.gov.mohcc.impilo.costa.service.CostEventCaptureService;
+import zw.gov.mohcc.impilo.costa.service.tariff.TariffUploadService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
-import zw.gov.mohcc.impilo.shared.response.ApiError;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+
+import java.io.IOException;
+import zw.gov.mohcc.impilo.costa.domain.entity.CostEventEntity;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * COSTA tariff-library intelligence and settlement handoff API ({@code /api/costa/...}).
@@ -26,9 +31,15 @@ import java.util.Map;
 public class CostaIntelApiController {
 
     private final CostaTariffIntelService intelService;
+    private final TariffUploadService tariffUploadService;
+    private final CostEventCaptureService costEventCaptureService;
 
-    public CostaIntelApiController(CostaTariffIntelService intelService) {
+    public CostaIntelApiController(CostaTariffIntelService intelService,
+                                   TariffUploadService tariffUploadService,
+                                   CostEventCaptureService costEventCaptureService) {
         this.intelService = intelService;
+        this.tariffUploadService = tariffUploadService;
+        this.costEventCaptureService = costEventCaptureService;
     }
 
     @GetMapping("/tariff-libraries")
@@ -58,6 +69,13 @@ public class CostaIntelApiController {
         var ctx = TrustContextHolder.require();
         Map<String, Object> result = intelService.computeCostEstimate(body);
         return ResponseEntity.ok(ApiResponse.ok(result, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/billing-decisions/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getBillingDecision(@PathVariable UUID id) {
+        var ctx = TrustContextHolder.require();
+        var bd = intelService.requireBillingDecision(id, ctx.tenantId());
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("billing_decision", bd), ctx.correlationId().toString()));
     }
 
     @PostMapping("/charge-sheets")
@@ -130,26 +148,86 @@ public class CostaIntelApiController {
     }
 
     @PostMapping("/tariff-upload")
-    public ResponseEntity<ApiResponse<Void>> tariffUploadStub() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> tariffUpload(@RequestBody JsonNode body) throws IOException {
         var ctx = TrustContextHolder.require();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(ApiResponse.error(
-                new ApiError("NOT_IMPLEMENTED", "Tariff upload (CSV/XLSX/JSON) pipeline is deferred.", 501),
+        var batch = tariffUploadService.ingest(ctx.tenantId(), body, ctx.actorId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
+                Map.of("upload_batch_id", batch.getUploadBatchId().toString(), "upload", batch),
                 ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/tariff-upload/{id}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTariffUpload(@PathVariable UUID id) {
+        var ctx = TrustContextHolder.require();
+        var batch = tariffUploadService.requireBatch(ctx.tenantId(), id);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("upload", batch), ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/tariff-upload/{id}/rows")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> listTariffUploadRows(@PathVariable UUID id) {
+        var ctx = TrustContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("rows", tariffUploadService.listRows(ctx.tenantId(), id)),
+                ctx.correlationId().toString()));
+    }
+
+    @PutMapping("/tariff-upload/{id}/column-mapping")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> tariffUploadMapping(
+            @PathVariable UUID id,
+            @RequestBody JsonNode body) {
+        var ctx = TrustContextHolder.require();
+        var batch = tariffUploadService.setColumnMapping(ctx.tenantId(), id, body);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("upload", batch), ctx.correlationId().toString()));
     }
 
     @PostMapping("/tariff-upload/{id}/validate")
-    public ResponseEntity<ApiResponse<Void>> tariffUploadValidateStub(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> tariffUploadValidate(@PathVariable UUID id) {
         var ctx = TrustContextHolder.require();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(ApiResponse.error(
-                new ApiError("NOT_IMPLEMENTED", "Tariff upload validation is deferred (batch " + id + ").", 501),
-                ctx.correlationId().toString()));
+        var batch = tariffUploadService.validate(ctx.tenantId(), id);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("upload", batch), ctx.correlationId().toString()));
     }
 
     @PostMapping("/tariff-upload/{id}/submit")
-    public ResponseEntity<ApiResponse<Void>> tariffUploadSubmitStub(@PathVariable String id) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> tariffUploadSubmit(@PathVariable UUID id) {
         var ctx = TrustContextHolder.require();
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(ApiResponse.error(
-                new ApiError("NOT_IMPLEMENTED", "Tariff upload submit is deferred (batch " + id + ").", 501),
+        var batch = tariffUploadService.submit(ctx.tenantId(), id);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("upload", batch), ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/tariff-upload/{id}/approve-import")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> tariffUploadApproveImport(
+            @PathVariable UUID id,
+            @RequestBody(required = false) JsonNode body) {
+        var ctx = TrustContextHolder.require();
+        JsonNode payload = body != null ? body : JsonNodeFactory.instance.objectNode();
+        Map<String, Object> out = tariffUploadService.approveImport(ctx.tenantId(), id, payload);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(out, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/cost-events")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createCostEvent(@RequestBody JsonNode body) {
+        var ctx = TrustContextHolder.require();
+        var saved = costEventCaptureService.captureFromTrustApi(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(
+                Map.of("cost_event_id", saved.getCostEventId(), "cost_event", saved),
                 ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/cost-events")
+    public ResponseEntity<ApiResponse<List<CostEventEntity>>> listCostEvents(
+            @RequestParam(required = false) String encounter_id,
+            @RequestParam(required = false) String patient_cpid) {
+        var ctx = TrustContextHolder.require();
+        if (encounter_id != null && !encounter_id.isBlank()) {
+            return ResponseEntity.ok(ApiResponse.ok(
+                    costEventCaptureService.listForEncounter(ctx.tenantId(), encounter_id),
+                    ctx.correlationId().toString()));
+        }
+        if (patient_cpid != null && !patient_cpid.isBlank()) {
+            return ResponseEntity.ok(ApiResponse.ok(
+                    costEventCaptureService.listForPatient(ctx.tenantId(), patient_cpid),
+                    ctx.correlationId().toString()));
+        }
+        throw new IllegalArgumentException("Provide encounter_id or patient_cpid");
     }
 }

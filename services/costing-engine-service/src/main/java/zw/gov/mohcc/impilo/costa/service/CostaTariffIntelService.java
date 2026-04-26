@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.costa.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class CostaTariffIntelService {
     private final ClaimPackRepository claimPackRepository;
     private final InvoiceRepository invoiceRepository;
     private final MushexPaymentIntentClient mushexPaymentIntentClient;
+    private final BillingDecisionRepository billingDecisionRepository;
     private final ObjectMapper objectMapper;
 
     public CostaTariffIntelService(TariffLibraryRepository tariffLibraryRepository,
@@ -54,6 +56,7 @@ public class CostaTariffIntelService {
                                    ClaimPackRepository claimPackRepository,
                                    InvoiceRepository invoiceRepository,
                                    MushexPaymentIntentClient mushexPaymentIntentClient,
+                                   BillingDecisionRepository billingDecisionRepository,
                                    ObjectMapper objectMapper) {
         this.tariffLibraryRepository = tariffLibraryRepository;
         this.costaTariffListRepository = costaTariffListRepository;
@@ -68,6 +71,7 @@ public class CostaTariffIntelService {
         this.claimPackRepository = claimPackRepository;
         this.invoiceRepository = invoiceRepository;
         this.mushexPaymentIntentClient = mushexPaymentIntentClient;
+        this.billingDecisionRepository = billingDecisionRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -246,7 +250,47 @@ public class CostaTariffIntelService {
         row.setAuditReference(auditRef);
         row = costaCostEstimateRepository.save(row);
         response.put("cost_estimate_id", row.getCostEstimateId().toString());
+
+        BillingDecisionEntity decision = new BillingDecisionEntity();
+        decision.setTenantId(tenantId);
+        decision.setCostEstimateId(row.getCostEstimateId());
+        decision.setGrossTariffedAmount(totalTariff);
+        decision.setPatientLiability(split.patientPayable());
+        decision.setPayerLiability(split.insurerPayable());
+        decision.setExemptedAmount(split.writeOff());
+        decision.setWaivedAmount(BigDecimal.ZERO);
+        decision.setSubsidisedAmount(split.subsidyPayable());
+        decision.setUnrecoveredAmount(economic.subtract(totalTariff).max(BigDecimal.ZERO));
+        decision.setApprovalRequired(list.isReferenceOnly() || !list.isApprovedForBilling());
+        decision.setAuditReference(auditRef);
+        try {
+            ArrayNode linesJson = objectMapper.createArrayNode();
+            for (Map<String, Object> line : appliedItems) {
+                linesJson.add(objectMapper.valueToTree(line));
+            }
+            decision.setLines(linesJson.toString());
+            decision.setRulesApplied(objectMapper.writeValueAsString(split.trace()));
+            ArrayNode reasons = objectMapper.createArrayNode();
+            for (String w : warnings) {
+                reasons.add(w);
+            }
+            decision.setReasonCodes(reasons.toString());
+            ObjectNode meta = objectMapper.createObjectNode();
+            meta.put("tariff_list_id", tariffListId);
+            meta.put("tariff_external_code", list.getExternalCode());
+            decision.setMetadata(meta.toString());
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to persist billing decision snapshot", e);
+        }
+        decision = billingDecisionRepository.save(decision);
+        response.put("billing_decision_id", decision.getBillingDecisionId().toString());
+
         return response;
+    }
+
+    public BillingDecisionEntity requireBillingDecision(UUID id, UUID tenantId) {
+        return billingDecisionRepository.findByBillingDecisionIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Billing decision not found: " + id));
     }
 
     public ChargeSheetEntity createChargeSheet(JsonNode body) {
