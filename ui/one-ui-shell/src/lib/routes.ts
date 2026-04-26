@@ -428,3 +428,22 @@ export function matchRouteDefinition(pathname: string): RouteDefinition | null {
 
   return null;
 }
+
+/** Breadcrumb trail from route registry — skips unknown path prefixes (e.g. partial /ehr). */
+export function buildBreadcrumbTrail(pathname: string): { href: string; label: string }[] {
+  const trail: { href: string; label: string }[] = [{ href: "/home", label: "Home" }];
+  const normalized = pathname === "/" || pathname === "" ? "/home" : pathname;
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.length === 0) return trail;
+
+  for (let i = 1; i <= parts.length; i++) {
+    const prefix = `/${parts.slice(0, i).join("/")}`;
+    const def = matchRouteDefinition(prefix);
+    if (!def) continue;
+    const prev = trail[trail.length - 1];
+    if (prev?.href === prefix) continue;
+    if (trail.length === 1 && trail[0].href === "/home" && prefix === "/home") continue;
+    trail.push({ href: prefix, label: def.navLabel });
+  }
+  return trail;
+}

@@ -1,34 +1,47 @@
 "use client";
 
 /**
- * AppLayout — Standard application layout with 3-zone sidebar navigation.
+ * AppLayout — Standard application layout with off-canvas zone navigation (Experience sidebar).
  * Layout variant: "app" (used by most non-EHR routes)
  *
  * Structure:
- *   [Sidebar (3-zone nav)] [Main Content Area] [Header Bar]
+ *   [Off-canvas zone nav] [Main Content Area] [Header Bar]
  */
 
 import { type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, Menu } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
+import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuthStore();
   const { facility, workspace, shiftActive } = useExperienceEntry();
   const router = useRouter();
+  const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
 
   return (
     <div className="flex h-screen bg-gray-50">
       <ExperienceSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b bg-white px-6 flex items-center justify-between shrink-0">
-          <div className="ml-12 flex items-center gap-2 text-sm text-gray-500 md:ml-0">
+        <header className="h-14 border-b bg-white px-4 sm:px-6 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-gray-500">
+            <button
+              type="button"
+              onClick={() => toggleNavDrawer()}
+              className="inline-flex shrink-0 items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              title="Work zones — clinical, professional, and personal navigation"
+              aria-label="Open work zones menu"
+            >
+              <Menu className="h-4 w-4" />
+              <span className="hidden sm:inline">Menu</span>
+            </button>
             <button
               onClick={() => router.back()}
               className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
@@ -43,11 +56,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
             >
               <Home className="w-4 h-4" />
             </Link>
-            <div className="w-px h-5 bg-gray-200 mx-1" />
+            <div className="hidden h-5 w-px bg-gray-200 sm:mx-1 sm:block" />
             {facility && (
               <Link
                 href="/facility"
-                className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-700"
+                className="hidden shrink-0 rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-700 sm:inline-flex"
               >
                 {facility.name}
               </Link>
@@ -55,16 +68,17 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {workspace && (
               <Link
                 href="/workspace"
-                className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
+                className="hidden shrink-0 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 lg:inline-flex"
               >
                 {workspace.name}
               </Link>
             )}
             {shiftActive && (
-              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+              <span className="hidden shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 xl:inline-flex">
                 Shift Active
               </span>
             )}
+            <ModuleBreadcrumb />
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated && user ? (

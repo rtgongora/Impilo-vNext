@@ -139,4 +139,14 @@ describe("useShellStore", () => {
     useShellStore.getState().focusSearchPalette();
     expect(useShellStore.getState().searchPaletteFocusTick).toBe(2);
   });
+
+  it("opening the nav drawer closes search, start, and SOS", () => {
+    useShellStore.setState({ searchOpen: true, startOpen: true, sosDialogOpen: true });
+    useShellStore.getState().setNavDrawerOpen(true);
+    const s = useShellStore.getState();
+    expect(s.navDrawerOpen).toBe(true);
+    expect(s.searchOpen).toBe(false);
+    expect(s.startOpen).toBe(false);
+    expect(s.sosDialogOpen).toBe(false);
+  });
 });

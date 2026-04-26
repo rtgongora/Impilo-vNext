@@ -78,7 +78,9 @@ export type ShellCommandAction =
   | { type: "open-search" }
   | { type: "open-start" }
   | { type: "open-task-manager" }
-  | { type: "open-file-manager" };
+  | { type: "open-file-manager" }
+  | { type: "open-nav-drawer" }
+  | { type: "open-sos" };
 
 /** Palette / quick-action command */
 export interface ShellCommand {

@@ -29,7 +29,6 @@ import {
   Layers,
   LifeBuoy,
   Lightbulb,
-  Menu,
   MessageSquare,
   Monitor,
   Package,
@@ -50,6 +49,7 @@ import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { ProviderActivationBanner } from "@/components/ProviderActivationBanner";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
+import { useShellStore } from "@/hooks/useShellStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -324,8 +324,9 @@ export function ExperienceSidebar() {
   const pathname = usePathname();
   const { user, hasRole } = useAuthStore();
   const { currentRoute, facility, workspace, stage, shiftActive, workMode } = useExperienceEntry();
+  const navDrawerOpen = useShellStore((s) => s.navDrawerOpen);
+  const setNavDrawerOpen = useShellStore((s) => s.setNavDrawerOpen);
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   useEffect(() => {
@@ -367,38 +368,33 @@ export function ExperienceSidebar() {
 
   const shellClasses = collapsed ? "w-[88px]" : "w-[320px]";
 
+  function closeDrawer() {
+    setNavDrawerOpen(false);
+  }
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm md:hidden"
-        aria-label="Open navigation"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
-      {mobileOpen && (
+      {navDrawerOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-slate-950/40 md:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/50"
           aria-label="Close navigation overlay"
-          onClick={() => setMobileOpen(false)}
+          onClick={closeDrawer}
         />
-      )}
+      ) : null}
 
       <aside
         data-sidebar
         className={[
-          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200",
           shellClasses,
-          mobileOpen ? "translate-x-0" : "-translate-x-full",
+          navDrawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full pointer-events-none",
         ].join(" ")}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
           {!collapsed ? (
             <div className="min-w-0">
-              <Link href="/home" className="block">
+              <Link href="/home" className="block" onClick={closeDrawer}>
                 <ImpiloBrandLogo variant="full" tone="white" size={22} />
               </Link>
               <p className="mt-1 text-xs text-slate-400">
@@ -406,7 +402,7 @@ export function ExperienceSidebar() {
               </p>
             </div>
           ) : (
-            <Link href="/home" className="block">
+            <Link href="/home" className="block" onClick={closeDrawer}>
               <ImpiloBrandLogo variant="mark" tone="white" size={24} />
             </Link>
           )}
@@ -429,8 +425,8 @@ export function ExperienceSidebar() {
             </button>
             <button
               type="button"
-              onClick={() => setMobileOpen(false)}
-              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/5 md:hidden"
+              onClick={closeDrawer}
+              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/5"
               aria-label="Close navigation"
             >
               <X className="h-4 w-4" />
@@ -534,6 +530,7 @@ export function ExperienceSidebar() {
                     <Link
                       key={action.href}
                       href={action.href}
+                      onClick={closeDrawer}
                       className="inline-flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/20 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-white/10"
                     >
                       <span className="inline-flex items-center gap-2">
@@ -573,7 +570,7 @@ export function ExperienceSidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={closeDrawer}
                       title={collapsed ? item.label : undefined}
                       className={[
                         "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition",
@@ -608,12 +605,14 @@ export function ExperienceSidebar() {
                 <div className="flex gap-2 pt-1">
                   <Link
                     href="/home/profile"
+                    onClick={closeDrawer}
                     className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
                   >
                     Profile
                   </Link>
                   <Link
                     href="/settings"
+                    onClick={closeDrawer}
                     className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
                   >
                     Settings
@@ -635,12 +634,14 @@ export function ExperienceSidebar() {
               <div className="flex gap-2 pt-1">
                 <Link
                   href="/facility"
+                  onClick={closeDrawer}
                   className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
                 >
                   Facility
                 </Link>
                 <Link
                   href="/workspace"
+                  onClick={closeDrawer}
                   className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
                 >
                   Workspace
@@ -653,10 +654,10 @@ export function ExperienceSidebar() {
             <div className="flex flex-col items-center gap-3">
               {!citizenOnly && (
               <>
-              <Link href="/facility" title={facility?.name ?? "Facility"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+              <Link href="/facility" title={facility?.name ?? "Facility"} onClick={closeDrawer} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
                 <Building2 className="h-4 w-4" />
               </Link>
-              <Link href="/workspace" title={workspace?.name ?? "Workspace"} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+              <Link href="/workspace" title={workspace?.name ?? "Workspace"} onClick={closeDrawer} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
                 <BriefcaseBusiness className="h-4 w-4" />
               </Link>
               <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>

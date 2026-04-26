@@ -22,6 +22,8 @@ export function ShellChrome() {
   const searchOpen = useShellStore((s) => s.searchOpen);
   const setStartOpen = useShellStore((s) => s.setStartOpen);
   const setSearchOpen = useShellStore((s) => s.setSearchOpen);
+  const setNavDrawerOpen = useShellStore((s) => s.setNavDrawerOpen);
+  const setSosDialogOpen = useShellStore((s) => s.setSosDialogOpen);
 
   const show = shouldShowExperienceShell(pathname, isAuthenticated);
 
@@ -29,8 +31,10 @@ export function ShellChrome() {
     if (!show) {
       setStartOpen(false);
       setSearchOpen(false);
+      setNavDrawerOpen(false);
+      setSosDialogOpen(false);
     }
-  }, [show, setSearchOpen, setStartOpen]);
+  }, [show, setSearchOpen, setStartOpen, setNavDrawerOpen, setSosDialogOpen]);
 
   useEffect(() => {
     if (!show) return;
@@ -53,13 +57,15 @@ export function ShellChrome() {
       if (e.key === "Escape") {
         setStartOpen(false);
         setSearchOpen(false);
+        setNavDrawerOpen(false);
+        setSosDialogOpen(false);
         useShellStore.getState().setTaskManagerOpen(false);
       }
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [show, setSearchOpen, setStartOpen]);
+  }, [show, setSearchOpen, setStartOpen, setNavDrawerOpen, setSosDialogOpen]);
 
   return (
     <>

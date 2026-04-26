@@ -13,7 +13,13 @@ export type ShellEventName =
   | "app_unpinned"
   | "search_executed"
   | "fusion_hints_loaded"
-  | "live_notification";
+  | "live_notification"
+  /** SOS lifecycle — session-local; server audit when API wired */
+  | "sos_activated"
+  | "sos_cancelled"
+  | "sos_escalated"
+  | "sos_acknowledged"
+  | "sos_closed";
 
 export type ShellEventPayload = Record<string, unknown>;
 

@@ -18,6 +18,14 @@ vi.mock("@/providers/ExperienceEntryProvider", () => ({
   useExperienceEntry: () => mockUseExperienceEntry(),
 }));
 
+const mockSetNavDrawerOpen = vi.fn();
+vi.mock("@/hooks/useShellStore", () => ({
+  useShellStore: (selector?: (s: { navDrawerOpen: boolean; setNavDrawerOpen: typeof mockSetNavDrawerOpen }) => unknown) => {
+    const state = { navDrawerOpen: true, setNavDrawerOpen: mockSetNavDrawerOpen };
+    return selector ? selector(state) : state;
+  },
+}));
+
 describe("ExperienceSidebar", () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue("/clinical");

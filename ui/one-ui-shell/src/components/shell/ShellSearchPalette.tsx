@@ -130,6 +130,12 @@ export function ShellSearchPalette() {
         case "open-file-manager":
           router.push("/shell/file-manager");
           break;
+        case "open-nav-drawer":
+          useShellStore.getState().setNavDrawerOpen(true);
+          break;
+        case "open-sos":
+          useShellStore.getState().setSosDialogOpen(true);
+          break;
         default:
           break;
       }
@@ -471,6 +477,10 @@ function commandRecentHref(cmd: ShellCommand): string {
     case "open-search":
       return "/search";
     case "open-start":
+      return "/home";
+    case "open-nav-drawer":
+      return "/home";
+    case "open-sos":
       return "/home";
     default:
       return "/home";

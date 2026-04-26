@@ -23,6 +23,7 @@ export function ShellStartMenu() {
   const router = useRouter();
   const hasRole = useAuthStore((s) => s.hasRole);
   const setStartOpen = useShellStore((s) => s.setStartOpen);
+  const setNavDrawerOpen = useShellStore((s) => s.setNavDrawerOpen);
   const pinnedAppCodes = useShellStore((s) => s.pinnedAppCodes);
   const togglePinApp = useShellStore((s) => s.togglePinApp);
   const launchApp = useShellStore((s) => s.launchApp);
@@ -139,6 +140,22 @@ export function ShellStartMenu() {
               </ul>
             </section>
           ))}
+
+          <div className="border-t border-slate-100 px-1 py-3 dark:border-slate-800">
+            <button
+              type="button"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-medium text-slate-800 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900"
+              onClick={() => {
+                setStartOpen(false);
+                setNavDrawerOpen(true);
+              }}
+            >
+              Full navigation map (Work · Professional · Life)
+            </button>
+            <p className="mt-1 px-1 text-[11px] text-slate-500">
+              Same destinations as before — now off-canvas so the workspace stays wide.
+            </p>
+          </div>
         </div>
       </div>
     </div>

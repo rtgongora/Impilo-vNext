@@ -5,6 +5,7 @@ import {
   ROUTE_COUNT,
   ZONES,
   ZONE_COUNT,
+  buildBreadcrumbTrail,
   type LayoutVariant,
   type SidebarContext,
   type GuardType,
@@ -247,5 +248,19 @@ describe("Route Registry", () => {
       const route = ROUTES.find((r) => r.path === p);
       expect(route?.guard).toBe("workspace");
     }
+  });
+});
+
+describe("buildBreadcrumbTrail", () => {
+  it("returns Home only for root paths", () => {
+    expect(buildBreadcrumbTrail("/")).toEqual([{ href: "/home", label: "Home" }]);
+    expect(buildBreadcrumbTrail("/home")).toEqual([{ href: "/home", label: "Home" }]);
+  });
+
+  it("builds a chain for nested registered paths", () => {
+    const trail = buildBreadcrumbTrail("/queue/triage");
+    expect(trail[0]).toEqual({ href: "/home", label: "Home" });
+    expect(trail.map((t) => t.href)).toContain("/queue");
+    expect(trail[trail.length - 1].href).toBe("/queue/triage");
   });
 });

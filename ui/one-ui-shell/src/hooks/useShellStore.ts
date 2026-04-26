@@ -50,12 +50,19 @@ export interface ShellStore {
   startOpen: boolean;
   searchOpen: boolean;
   taskManagerOpen: boolean;
+  /** Full zone navigation drawer (legacy sidebar content) — off-canvas at all breakpoints. */
+  navDrawerOpen: boolean;
+  /** SOS escalation dialog (shell taskbar + command palette). */
+  sosDialogOpen: boolean;
   /** Incremented when the search palette should focus its input (toggle, Ctrl+K, or quick action). */
   searchPaletteFocusTick: number;
 
   setStartOpen: (open: boolean) => void;
   setSearchOpen: (open: boolean) => void;
   setTaskManagerOpen: (open: boolean) => void;
+  setNavDrawerOpen: (open: boolean) => void;
+  setSosDialogOpen: (open: boolean) => void;
+  toggleNavDrawer: () => void;
   toggleStart: () => void;
   toggleSearch: () => void;
   /** Opens search (if closed) and requests input focus — idempotent for already-open palette. */
@@ -114,6 +121,8 @@ export const useShellStore = create<ShellStore>()(
     startOpen: false,
     searchOpen: false,
     taskManagerOpen: false,
+    navDrawerOpen: false,
+    sosDialogOpen: false,
     searchPaletteFocusTick: 0,
 
     hydrateFromSession: () => {
@@ -178,16 +187,51 @@ export const useShellStore = create<ShellStore>()(
       saveJson(STORAGE_RECENT, recents);
     },
 
-    setStartOpen: (open) => set({ startOpen: open }),
-    setSearchOpen: (open) => set({ searchOpen: open }),
+    setStartOpen: (open) =>
+      set(() => ({
+        startOpen: open,
+        ...(open ? { navDrawerOpen: false, searchOpen: false, sosDialogOpen: false } : {}),
+      })),
+    setSearchOpen: (open) =>
+      set(() => ({
+        searchOpen: open,
+        ...(open ? { navDrawerOpen: false, startOpen: false, sosDialogOpen: false } : {}),
+      })),
     setTaskManagerOpen: (open) => set({ taskManagerOpen: open }),
-    toggleStart: () => set((s) => ({ startOpen: !s.startOpen, searchOpen: false })),
+    setNavDrawerOpen: (open) =>
+      set((s) => ({
+        navDrawerOpen: open,
+        startOpen: open ? false : s.startOpen,
+        searchOpen: open ? false : s.searchOpen,
+        sosDialogOpen: open ? false : s.sosDialogOpen,
+      })),
+    setSosDialogOpen: (open) =>
+      set((s) => ({
+        sosDialogOpen: open,
+        startOpen: open ? false : s.startOpen,
+        searchOpen: open ? false : s.searchOpen,
+        navDrawerOpen: open ? false : s.navDrawerOpen,
+      })),
+    toggleNavDrawer: () =>
+      set((s) => {
+        const next = !s.navDrawerOpen;
+        return {
+          navDrawerOpen: next,
+          startOpen: next ? false : s.startOpen,
+          searchOpen: next ? false : s.searchOpen,
+          sosDialogOpen: next ? false : s.sosDialogOpen,
+        };
+      }),
+    toggleStart: () =>
+      set((s) => ({ startOpen: !s.startOpen, searchOpen: false, navDrawerOpen: false, sosDialogOpen: false })),
     toggleSearch: () =>
       set((s) => {
         const nextOpen = !s.searchOpen;
         return {
           searchOpen: nextOpen,
           startOpen: false,
+          navDrawerOpen: false,
+          sosDialogOpen: false,
           searchPaletteFocusTick: nextOpen ? s.searchPaletteFocusTick + 1 : s.searchPaletteFocusTick,
         };
       }),
@@ -195,6 +239,8 @@ export const useShellStore = create<ShellStore>()(
       set((s) => ({
         searchOpen: true,
         startOpen: false,
+        navDrawerOpen: false,
+        sosDialogOpen: false,
         searchPaletteFocusTick: s.searchPaletteFocusTick + 1,
       })),
 
@@ -349,7 +395,7 @@ export const useShellStore = create<ShellStore>()(
       });
       emitShellEvent("app_launched", { appCode: app.appCode, href: app.href });
       routerPush(app.href);
-      set({ startOpen: false, searchOpen: false });
+      set({ startOpen: false, searchOpen: false, navDrawerOpen: false, sosDialogOpen: false });
     },
 
     clearSessionShellState: () => {
@@ -361,6 +407,8 @@ export const useShellStore = create<ShellStore>()(
         startOpen: false,
         searchOpen: false,
         taskManagerOpen: false,
+        navDrawerOpen: false,
+        sosDialogOpen: false,
         searchPaletteFocusTick: 0,
       });
       if (typeof window !== "undefined") {
