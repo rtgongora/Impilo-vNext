@@ -57,6 +57,10 @@ public class SecurityConfig {
     private static final String[] ADMIN_ROLES = {
             "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"};
 
+    /** Tuso locality proposal approval + ZW geo bulk import (registry operators). */
+    private static final String[] REGISTRY_OPS_ROLES = {
+            "SYSTEM_ADMIN", "DEVELOPER", "REGISTRY_ADMIN"};
+
     private static final String[] FINANCE_ROLES = {
             "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"};
 
@@ -310,6 +314,20 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/public/patient-shares/**").permitAll()
                     .requestMatchers("/internal/v1/citizen/clients/*/patient-shares/**")
                             .hasAnyRole(CITIZEN_ROLES)
+
+                    // ── Registry ZW geography bulk import + locality approval (ops) ──
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/registry/geo/zw/bulk")
+                            .hasAnyRole(REGISTRY_OPS_ROLES)
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/registry/localities/proposals/*/approve",
+                            "/internal/v1/registry/localities/proposals/*/reject")
+                            .hasAnyRole(REGISTRY_OPS_ROLES)
+                    .requestMatchers("/internal/v1/registry/zibo/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers("/internal/v1/registry/geo/**",
+                            "/internal/v1/registry/localities/**",
+                            "/internal/v1/registry/coverage/preview")
+                            .hasAnyRole(CLINICAL_ROLES, QUEUE_ROLES)
 
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()

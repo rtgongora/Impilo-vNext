@@ -373,6 +373,70 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    // ── Zimbabwe admin reference (COD-AB / ZIMSTAT import) ────────────
+
+    public JsonNode listZwDistricts(String provinceCode) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/geo/zw/districts")
+                .queryParam("provinceCode", provinceCode)
+                .toUriString();
+        log.info("TUSO: list ZW districts provinceCode={}", provinceCode);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listZwWards(String districtCode) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/geo/zw/wards")
+                .queryParam("districtCode", districtCode)
+                .toUriString();
+        log.info("TUSO: list ZW wards districtCode={}", districtCode);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode bulkUpsertZwGeo(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/geo/zw/bulk";
+        log.info("TUSO: bulk upsert ZW geo");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    // ── Locality gazetteer ───────────────────────────────────────────
+
+    public JsonNode searchLocalities(String districtCode, String q, int limit) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/localities/search")
+                .queryParam("districtCode", districtCode)
+                .queryParam("q", q)
+                .queryParam("limit", limit)
+                .toUriString();
+        log.info("TUSO: search localities districtCode={}", districtCode);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listPendingLocalityProposals() {
+        String url = baseUrl + "/v1/internal/localities/proposals/pending";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode proposeLocality(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/localities/proposals";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode approveLocalityProposal(long proposalId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/localities/proposals/" + proposalId + "/approve";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode rejectLocalityProposal(long proposalId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/localities/proposals/" + proposalId + "/reject";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

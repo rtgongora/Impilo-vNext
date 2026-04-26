@@ -2,20 +2,24 @@
   "id": "impilo.value_sets.provider_registration.v1",
   "entries": {
     "council": [
-      {
-        "code": "OTHER",
-        "display": "Other / specify",
-        "requiresSpecifyText": true,
-        "terminologyReview": true
-      }
+      { "code": "MDPCZ", "display": "Medical and Dental Practitioners Council of Zimbabwe" },
+      { "code": "NCZ", "display": "Nurses Council of Zimbabwe" },
+      { "code": "PCZ", "display": "Pharmacists Council of Zimbabwe" },
+      { "code": "AHPCZ", "display": "Allied Health Practitioners Council of Zimbabwe" },
+      { "code": "OTHER", "display": "Other / specify", "requiresSpecifyText": true, "terminologyReview": true }
     ],
     "cadre": [
-      {
-        "code": "OTHER",
-        "display": "Other / specify",
-        "requiresSpecifyText": true,
-        "terminologyReview": true
-      }
+      { "code": "MEDICAL_PRACTITIONER", "display": "Medical practitioner" },
+      { "code": "DENTAL_PRACTITIONER", "display": "Dental practitioner" },
+      { "code": "REGISTERED_NURSE_GENERAL", "display": "Registered nurse — general" },
+      { "code": "REGISTERED_NURSE_MIDWIFE", "display": "Registered nurse — midwife" },
+      { "code": "PHARMACIST", "display": "Pharmacist" },
+      { "code": "ENVIRONMENTAL_HEALTH", "display": "Environmental health officer" },
+      { "code": "CLINICAL_PSYCHOLOGIST", "display": "Clinical psychologist" },
+      { "code": "PHYSIOTHERAPIST", "display": "Physiotherapist" },
+      { "code": "RADIOGRAPHER", "display": "Radiographer" },
+      { "code": "LABORATORY_SCIENTIST", "display": "Laboratory scientist" },
+      { "code": "OTHER", "display": "Other / specify", "requiresSpecifyText": true, "terminologyReview": true }
     ],
     "specialty": [
       {

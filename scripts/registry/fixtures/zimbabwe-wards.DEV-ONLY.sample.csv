@@ -1,0 +1,4 @@
+districtCode,wardCode,name,sourceRef
+DEV-HRE-D1,DEV-HRE-W1,DEMO Ward North (DEV-ONLY),impilo:dev-fixture:v1
+DEV-HRE-D1,DEV-HRE-W2,DEMO Ward South (DEV-ONLY),impilo:dev-fixture:v1
+DEV-BY-D1,DEV-BY-W1,DEMO Ward Central (DEV-ONLY),impilo:dev-fixture:v1

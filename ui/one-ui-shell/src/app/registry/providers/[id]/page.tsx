@@ -60,7 +60,15 @@ export default function ProviderDetailPage() {
     enabled: !!id,
   });
 
+  const { data: wcEnvelope } = useQuery({
+    queryKey: ["providers", id, "work-context"],
+    queryFn: () =>
+      apiClient.get<ApiResponse<Record<string, unknown>>>(`/internal/v1/registry/providers/${id}/work-context`),
+    enabled: !!id,
+  });
+
   const provider = data?.data;
+  const workContext = wcEnvelope?.data;
 
   return (
     <AppLayout>
@@ -182,6 +190,18 @@ export default function ProviderDetailPage() {
                 </div>
               ) : (
                 <p className="text-sm text-gray-400">No facilities assigned</p>
+              )}
+            </div>
+
+            {/* Varapi + Tuso work context */}
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h3 className="font-medium text-gray-900 mb-3">Work context (Varapi + Tuso)</h3>
+              {workContext ? (
+                <pre className="text-xs bg-slate-900 text-slate-100 p-3 rounded-lg max-h-64 overflow-auto">
+                  {JSON.stringify(workContext, null, 2)}
+                </pre>
+              ) : (
+                <p className="text-sm text-gray-400">Loading or unavailable…</p>
               )}
             </div>
 

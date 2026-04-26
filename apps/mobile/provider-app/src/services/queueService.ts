@@ -34,9 +34,31 @@ export async function assignBed(bedId: string, patientId: string): Promise<void>
 export async function dischargeBed(bedId: string): Promise<void> {
   await apiClient.post(`${V1}/beds/${bedId}/discharge`);
 }
-export async function registerPatient(body: Record<string, string>): Promise<{ id: string }> {
+export async function registerPatient(body: Record<string, unknown>): Promise<{ id: string }> {
   const r = await apiClient.post<{ data: { id: string } }>(`${V1}/patients/register`, body);
   return r.data.data;
+}
+
+type GeoRow = Record<string, unknown>;
+
+function bffListPayload(envelope: unknown): GeoRow[] {
+  if (!envelope || typeof envelope !== "object") return [];
+  const inner = (envelope as { data?: unknown }).data;
+  return Array.isArray(inner) ? (inner as GeoRow[]) : [];
+}
+
+export async function fetchZwDistricts(provinceCode: string): Promise<GeoRow[]> {
+  const r = await apiClient.get<{ data: unknown[]; meta?: unknown }>(
+    `/internal/v1/registry/geo/zw/districts?provinceCode=${encodeURIComponent(provinceCode)}`,
+  );
+  return bffListPayload(r.data);
+}
+
+export async function fetchZwWards(districtCode: string): Promise<GeoRow[]> {
+  const r = await apiClient.get<{ data: unknown[]; meta?: unknown }>(
+    `/internal/v1/registry/geo/zw/wards?districtCode=${encodeURIComponent(districtCode)}`,
+  );
+  return bffListPayload(r.data);
 }
 export async function fetchPendingDispensing(): Promise<unknown[]> {
   const r = await apiClient.get<{ data: unknown[] }>(`${V1}/pharmacy/pending`);

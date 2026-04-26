@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -116,15 +117,68 @@ public class MobileProviderExtendedController {
     // ── Patient Registration ────────────────────────────────────────
 
     @PostMapping("/patients/register")
-    public ResponseEntity<Map<String, Object>> registerPatient(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // Previously: jdbc.update INSERT INTO patients
-        try {
-            var result = vitoClient.registerIdentity(body);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result != null ? result : Map.of("id", UUID.randomUUID())));
-        } catch (Exception e) {
-            UUID id = UUID.randomUUID();
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+    public ResponseEntity<Map<String, Object>> registerPatient(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(value = "X-Facility-ID", required = false) String facilityHeader,
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> patientData = new LinkedHashMap<>(body);
+        patientData.put("tenant_id", tenantId);
+        if (facilityHeader != null && !facilityHeader.isBlank()) {
+            patientData.putIfAbsent("facility_id", facilityHeader);
         }
+        String givenName = strVal(patientData, "given_name", "givenName", "firstName");
+        String familyName = strVal(patientData, "family_name", "familyName", "lastName");
+        String dob = strVal(patientData, "date_of_birth", "dateOfBirth");
+        String sex = strVal(patientData, "sex", "gender");
+        if (sex != null && sex.equalsIgnoreCase("MALE")) {
+            sex = "male";
+        } else if (sex != null && sex.equalsIgnoreCase("FEMALE")) {
+            sex = "female";
+        }
+        String nationalId = strVal(patientData, "national_id", "nationalId");
+        String phone = strVal(patientData, "phone");
+        if (givenName == null || givenName.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "givenName / given_name is required")));
+        }
+        Map<String, Object> vitoPayload = new LinkedHashMap<>(patientData);
+        vitoPayload.put("given_name", givenName);
+        vitoPayload.put("family_name", familyName != null ? familyName : "");
+        vitoPayload.put("date_of_birth", dob);
+        vitoPayload.put("sex", sex);
+        vitoPayload.put("national_id", nationalId);
+        vitoPayload.put("phone", phone);
+        try {
+            JsonNode result = vitoClient.registerPatient(vitoPayload);
+            String id = firstHealthId(result);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VITO_UNAVAILABLE", "message", e.getMessage())));
+        }
+    }
+
+    private static String strVal(Map<String, Object> map, String... keys) {
+        for (String k : keys) {
+            Object v = map.get(k);
+            if (v != null && !v.toString().isBlank()) {
+                return v.toString();
+            }
+        }
+        return null;
+    }
+
+    private static String firstHealthId(JsonNode result) {
+        if (result == null) {
+            return UUID.randomUUID().toString();
+        }
+        if (result.hasNonNull("healthId")) {
+            return result.get("healthId").asText();
+        }
+        if (result.hasNonNull("id")) {
+            return result.get("id").asText();
+        }
+        return UUID.randomUUID().toString();
     }
 
     // ── Pharmacy Dispensing ─────────────────────────────────────────

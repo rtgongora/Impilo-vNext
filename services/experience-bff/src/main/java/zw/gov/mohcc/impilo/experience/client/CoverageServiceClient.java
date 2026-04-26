@@ -224,6 +224,20 @@ public class CoverageServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    /**
+     * Mesh-internal eligibility check — {@code POST /internal/v1/eligibility/check}
+     * (aligned with mushex-service coverage integration; forwards {@code X-Tenant-ID} via RestTemplate interceptor).
+     */
+    public JsonNode meshInternalEligibilityCheck(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/eligibility/check";
+        log.info("COVERAGE: mesh internal eligibility check");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        if (response.getBody() != null) {
+            return response.getBody();
+        }
+        return null;
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) return response.getBody().get("data");
         return response.getBody();

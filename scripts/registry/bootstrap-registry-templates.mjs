@@ -83,6 +83,50 @@ write("terminology/data/zimbabwe-wards.seed.json", {
   wards: [],
 });
 
+// ── CSV templates (alongside import-zw-admin-csv.mjs) — regenerated each bootstrap run ──
+const scriptsRegistry = path.join(root, "scripts", "registry");
+
+function writeRegistryScript(rel, text) {
+  const p = path.join(scriptsRegistry, rel);
+  fs.mkdirSync(path.dirname(p), { recursive: true });
+  const body = text.endsWith("\n") ? text : `${text}\n`;
+  fs.writeFileSync(p, body, "utf8");
+  console.log("wrote", path.relative(root, p));
+}
+
+writeRegistryScript(
+  path.join("templates", "README.md"),
+  `# CSV templates — Zimbabwe Admin-2 / Admin-3
+
+These files are **column headers plus optional \`#\` comment lines**. Copy to a working file, fill rows from **COD-AB** or **ZIMSTAT** extracts, then run \`scripts/registry/import-zw-admin-csv.mjs\`.
+
+| Template | Columns |
+|----------|---------|
+| \`zimbabwe-districts.template.csv\` | provinceCode, districtCode, name, sourceRef |
+| \`zimbabwe-wards.template.csv\` | districtCode, wardCode, name, sourceRef |
+
+The import script **ignores** lines that start with \`#\`.
+
+## DEV-only samples
+
+For local UI demos only (synthetic \`DEV-*\` codes), see \`scripts/registry/fixtures/README-DEV-ONLY.md\`.
+`,
+);
+
+writeRegistryScript(
+  path.join("templates", "zimbabwe-districts.template.csv"),
+  `# Copy this file; replace with COD-AB / ZIMSTAT rows. provinceCode must match registry-templates zimbabwe-provinces.seed.json codes.
+provinceCode,districtCode,name,sourceRef
+`,
+);
+
+writeRegistryScript(
+  path.join("templates", "zimbabwe-wards.template.csv"),
+  `# Copy this file; districtCode must exist after districts import.
+districtCode,wardCode,name,sourceRef
+`,
+);
+
 write("terminology/SOURCE-ZIM-ADMIN.md", `# Zimbabwe administrative seeding
 
 ## Doctrine
@@ -97,6 +141,17 @@ write("terminology/SOURCE-ZIM-ADMIN.md", `# Zimbabwe administrative seeding
 | \`zimbabwe-provinces.seed.json\` | Ten provinces — **verify PCODEs** against COD-AB before production. |
 | \`data/zimbabwe-districts.seed.json\` | Empty until import pipeline runs. |
 | \`data/zimbabwe-wards.seed.json\` | Empty until import pipeline runs. |
+
+## Import pipeline
+
+1. Prepare CSV extracts aligned to COD-AB / ZIMSTAT (see \`scripts/registry/import-zw-admin-csv.mjs\`).
+2. **Blank templates:** run \`node scripts/registry/bootstrap-registry-templates.mjs\` — writes \`scripts/registry/templates/zimbabwe-districts.template.csv\` and \`zimbabwe-wards.template.csv\` (headers + \`#\` comments; comment lines are skipped on import).
+3. Run the importer against Tuso \`POST /v1/internal/geo/zw/bulk\` or BFF \`POST /internal/v1/registry/geo/zw/bulk\` (admin bearer).
+4. Pickers use BFF \`GET /internal/v1/registry/geo/zw/districts|wards\` (Tuso \`zw_admin_district\` / \`zw_admin_ward\`).
+
+## DEV-only demo fixtures (non-authoritative)
+
+Synthetic CSVs under \`scripts/registry/fixtures/\` (\`README-DEV-ONLY.md\`) — **local demos only**; \`DEV-*\` codes are not national truth.
 
 ## Zimbabwe ISO country row
 

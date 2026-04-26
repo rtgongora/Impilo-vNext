@@ -2,20 +2,29 @@
   "id": "impilo.value_sets.facility_registration.v1",
   "entries": {
     "facilityType": [
-      {
-        "code": "OTHER",
-        "display": "Other / specify",
-        "requiresSpecifyText": true,
-        "terminologyReview": true
-      }
+      { "code": "NATIONAL_CENTRAL_HOSPITAL", "display": "National / central hospital" },
+      { "code": "PROVINCIAL_HOSPITAL", "display": "Provincial hospital" },
+      { "code": "DISTRICT_HOSPITAL", "display": "District hospital" },
+      { "code": "RURAL_HOSPITAL", "display": "Rural hospital" },
+      { "code": "CLINIC", "display": "Clinic" },
+      { "code": "RURAL_HEALTH_CENTRE", "display": "Rural health centre" },
+      { "code": "URBAN_HEALTH_CENTRE", "display": "Urban health centre" },
+      { "code": "MISSION_HOSPITAL", "display": "Mission hospital" },
+      { "code": "PRIVATE_HOSPITAL", "display": "Private hospital" },
+      { "code": "PRIVATE_CLINIC", "display": "Private clinic" },
+      { "code": "DENTAL_CLINIC", "display": "Dental clinic" },
+      { "code": "PHARMACY", "display": "Pharmacy (standalone)" },
+      { "code": "LABORATORY", "display": "Laboratory (standalone)" },
+      { "code": "OTHER", "display": "Other / specify", "requiresSpecifyText": true, "terminologyReview": true }
     ],
     "ownership": [
-      {
-        "code": "OTHER",
-        "display": "Other / specify",
-        "requiresSpecifyText": true,
-        "terminologyReview": true
-      }
+      { "code": "PUBLIC_MOHC", "display": "Public — Ministry of Health & Child Care" },
+      { "code": "PUBLIC_LOCAL_AUTHORITY", "display": "Public — local authority" },
+      { "code": "MISSION_FBO", "display": "Mission / faith-based organisation" },
+      { "code": "PRIVATE_FOR_PROFIT", "display": "Private for-profit" },
+      { "code": "PRIVATE_NOT_FOR_PROFIT", "display": "Private not-for-profit / NGO" },
+      { "code": "COMPANY_OCCUPATIONAL", "display": "Company / occupational health unit" },
+      { "code": "OTHER", "display": "Other / specify", "requiresSpecifyText": true, "terminologyReview": true }
     ],
     "operationalStatus": [
       {

@@ -25,7 +25,7 @@ function trustHeaders(): Record<string, string> {
   };
 }
 
-async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
+export async function fetchJson<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BFF_URL}${path}`, {
     ...options,
     headers: {

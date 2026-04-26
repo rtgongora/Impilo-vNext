@@ -1,0 +1,2 @@
+# Copy this file; replace with COD-AB / ZIMSTAT rows. provinceCode must match registry-templates zimbabwe-provinces.seed.json codes.
+provinceCode,districtCode,name,sourceRef

@@ -66,6 +66,11 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
   const [coverageStatus, setCoverageStatus] = useState("NO_COVER");
   const [membershipNumber, setMembershipNumber] = useState("");
   const [schemeName, setSchemeName] = useState("");
+  const [planCode, setPlanCode] = useState("");
+  const [patientCpidPreview, setPatientCpidPreview] = useState("");
+  const [serviceCodePreview, setServiceCodePreview] = useState("");
+  const [coveragePreview, setCoveragePreview] = useState<unknown>(null);
+  const [coveragePreviewBusy, setCoveragePreviewBusy] = useState(false);
   const [eligibilityConsent, setEligibilityConsent] = useState("DEFERRED");
 
   const [dupQuery, setDupQuery] = useState("");
@@ -73,6 +78,25 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
   const [dupHits, setDupHits] = useState<unknown[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function runCoveragePreview() {
+    setCoveragePreviewBusy(true);
+    setError(null);
+    try {
+      const res = await apiClient.post<ApiResponse<unknown>>("/internal/v1/registry/coverage/preview", {
+        patient_cpid: patientCpidPreview.trim() || undefined,
+        plan_code: planCode.trim() || schemeName.trim() || undefined,
+        service_code: serviceCodePreview.trim() || undefined,
+        msika_code: "GEN-CONSULT",
+      });
+      setCoveragePreview(res.data);
+    } catch {
+      setError("Coverage / tariff preview failed.");
+      setCoveragePreview(null);
+    } finally {
+      setCoveragePreviewBusy(false);
+    }
+  }
 
   async function runDuplicateSearch() {
     const q = dupQuery.trim() || `${givenName} ${familyName}`.trim();
@@ -132,6 +156,7 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
           coverage_status: coverageStatus,
           membership_number: membershipNumber || undefined,
           scheme_or_insurer_name: schemeName || undefined,
+          plan_code: planCode || undefined,
           eligibility_check_consent: eligibilityConsent,
         },
       };
@@ -350,7 +375,48 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
             />
           </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Plan code (eligibility)</label>
+            <input
+              value={planCode}
+              onChange={(e) => setPlanCode(e.target.value)}
+              placeholder="Falls back to scheme name if empty"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Patient CPID (for preview only)</label>
+            <input
+              value={patientCpidPreview}
+              onChange={(e) => setPatientCpidPreview(e.target.value)}
+              placeholder="Existing member CPID — optional"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Service / benefit code (optional)</label>
+            <input
+              value={serviceCodePreview}
+              onChange={(e) => setServiceCodePreview(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+          </div>
         </div>
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            type="button"
+            onClick={() => void runCoveragePreview()}
+            disabled={coveragePreviewBusy}
+            className="text-xs px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-50"
+          >
+            {coveragePreviewBusy ? "Preview…" : "Run eligibility + COSTA estimate preview"}
+          </button>
+        </div>
+        {coveragePreview ? (
+          <pre className="mt-2 max-h-40 overflow-auto rounded bg-slate-900 text-slate-100 p-2 text-[10px]">
+            {JSON.stringify(coveragePreview, null, 2)}
+          </pre>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

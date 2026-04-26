@@ -240,6 +240,7 @@ public class PatientController {
         copyIfPresent(attrs, request, "district_code");
         copyIfPresent(attrs, request, "ward_code");
         copyIfPresent(attrs, request, "locality_gazetteer_id");
+        copyIfPresent(attrs, request, "locality_proposal_text");
         copyIfPresent(attrs, request, "coverage");
         attrs.put("registryDelegation", delegatedToVito);
         attrs.put("registrySyncState", delegatedToVito ? "VITO_ISSUED" : "OFFLINE_PROVISIONAL_LOCAL_FALLBACK");

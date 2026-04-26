@@ -351,4 +351,46 @@ public class RegistryController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
+
+    /**
+     * GET /internal/v1/registry/providers/{id}/work-context
+     *
+     * <p>Aggregates VARAPI provider read surfaces with optional TUSO shift context for the signed-in actor.</p>
+     */
+    @GetMapping("/providers/{id}/work-context")
+    public ResponseEntity<Map<String, Object>> getProviderWorkContext(
+            @PathVariable String id,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorHealthId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        try {
+            payload.put("profile", varapiClient.getProvider(id));
+        } catch (Exception e) {
+            log.debug("work-context profile miss: {}", e.getMessage());
+            payload.put("profile", null);
+        }
+        try {
+            payload.put("privileges", varapiClient.getProviderPrivileges(id));
+        } catch (Exception e) {
+            payload.put("privileges", JsonNodeFactory.instance.arrayNode());
+        }
+        try {
+            payload.put("licenses", varapiClient.getProviderLicenses(id));
+        } catch (Exception e) {
+            payload.put("licenses", JsonNodeFactory.instance.arrayNode());
+        }
+        if (actorHealthId != null && !actorHealthId.isBlank()) {
+            try {
+                payload.put("currentShift", tusoClient.getCurrentShift(actorHealthId));
+            } catch (Exception e) {
+                payload.put("currentShift", null);
+            }
+        } else {
+            payload.put("currentShift", null);
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", payload,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
 }

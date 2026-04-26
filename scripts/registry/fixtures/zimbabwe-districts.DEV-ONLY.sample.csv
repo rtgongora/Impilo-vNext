@@ -1,0 +1,3 @@
+provinceCode,districtCode,name,sourceRef
+ZW-ADM1-HA,DEV-HRE-D1,DEMO Harare Urban (DEV-ONLY — not COD-AB),impilo:dev-fixture:v1
+ZW-ADM1-BU,DEV-BY-D1,DEMO Bulawayo Urban (DEV-ONLY — not COD-AB),impilo:dev-fixture:v1

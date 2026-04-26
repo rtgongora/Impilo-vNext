@@ -5,6 +5,7 @@ import type { Patient } from "@/stores/ehrStore";
 import { apiClient, patientResourceToPatient } from "@/lib/apiClient";
 import clientVs from "@registry-templates/terminology/client-registration-value-sets.schema.json";
 import { CountryPicker } from "./registry/CountryPicker";
+import { ZimbabweLocationCascader } from "./registry/ZimbabweLocationCascader";
 
 type Props = {
   onRegistered: (patient: Patient) => void;
@@ -33,6 +34,11 @@ export function VitoClientRegistrationPanel({ onRegistered }: Props) {
   const [identityState, setIdentityState] = useState("PROVISIONAL");
   const [offlineProvisional, setOfflineProvisional] = useState(false);
   const [country, setCountry] = useState("ZW");
+  const [provinceCode, setProvinceCode] = useState("");
+  const [districtCode, setDistrictCode] = useState("");
+  const [wardCode, setWardCode] = useState("");
+  const [localityGazetteerId, setLocalityGazetteerId] = useState("");
+  const [localityProposal, setLocalityProposal] = useState("");
   const [consentStatus, setConsentStatus] = useState("OBTAINED");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -54,6 +60,11 @@ export function VitoClientRegistrationPanel({ onRegistered }: Props) {
         offline_provisional: offlineProvisional,
         consent_status: consentStatus,
         country_alpha2: country,
+        province_code: country === "ZW" ? provinceCode : undefined,
+        district_code: country === "ZW" ? districtCode : undefined,
+        ward_code: country === "ZW" ? wardCode : undefined,
+        locality_gazetteer_id: localityGazetteerId || undefined,
+        locality_proposal_text: localityProposal || undefined,
         purpose_of_use: "TREATMENT",
         source_workflow: "EHR_STUB",
       });
@@ -133,6 +144,19 @@ export function VitoClientRegistrationPanel({ onRegistered }: Props) {
         <label className="text-xs text-gray-600">Country</label>
         <CountryPicker value={country} onChange={setCountry} />
       </div>
+      <ZimbabweLocationCascader
+        countryAlpha2={country}
+        provinceCode={provinceCode}
+        districtCode={districtCode}
+        wardCode={wardCode}
+        localityGazetteerId={localityGazetteerId}
+        localityFreeText={localityProposal}
+        onProvince={setProvinceCode}
+        onDistrict={setDistrictCode}
+        onWard={setWardCode}
+        onLocalityId={setLocalityGazetteerId}
+        onLocalityFreeText={setLocalityProposal}
+      />
       <select value={consentStatus} onChange={(e) => setConsentStatus(e.target.value)} className="w-full px-2 py-1 border rounded text-xs">
         {options(clientVs.entries.consentStatus)}
       </select>
