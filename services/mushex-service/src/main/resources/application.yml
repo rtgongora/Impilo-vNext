@@ -105,3 +105,5 @@ mushex:
     sandbox:
       enabled: true
       simulate-delay-ms: 500
+      bypass-credential-check-for-simulation: true
+      apply-simulation-outcome-on-create: true

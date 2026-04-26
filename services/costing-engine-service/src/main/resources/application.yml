@@ -74,6 +74,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+impilo:
+  integrations:
+    mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
+
 costa:
   outbox:
     poll-interval-ms: 2000

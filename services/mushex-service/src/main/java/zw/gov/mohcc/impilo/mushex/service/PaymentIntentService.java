@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
+import zw.gov.mohcc.impilo.mushex.config.MushexProperties;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
@@ -19,6 +20,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.EnumMap;
 import java.util.List;
@@ -61,6 +63,10 @@ public class PaymentIntentService {
         VALID_TRANSITIONS.put(IntentStatus.FAILED, Set.of());
         VALID_TRANSITIONS.put(IntentStatus.CANCELLED, Set.of());
         VALID_TRANSITIONS.put(IntentStatus.REFUNDED, Set.of());
+        VALID_TRANSITIONS.put(IntentStatus.PARTIALLY_PAID, Set.of());
+        VALID_TRANSITIONS.put(IntentStatus.SUBMITTED, Set.of());
+        VALID_TRANSITIONS.put(IntentStatus.ADJUDICATED, Set.of());
+        VALID_TRANSITIONS.put(IntentStatus.REJECTED, Set.of());
     }
 
     /** Payment method metadata key; when set to this value the wallet adapter is used. */
@@ -73,6 +79,7 @@ public class PaymentIntentService {
     private final CredentialVerificationClient credentialVerificationClient;
     private final ProviderContractClient providerContractClient;
     private final MusheWalletAdapter musheWalletAdapter;
+    private final MushexProperties mushexProperties;
 
     public PaymentIntentService(PaymentIntentRepository intentRepository,
                                 EventOutboxRepository outboxRepository,
@@ -80,7 +87,8 @@ public class PaymentIntentService {
                                 ObjectMapper objectMapper,
                                 CredentialVerificationClient credentialVerificationClient,
                                 ProviderContractClient providerContractClient,
-                                MusheWalletAdapter musheWalletAdapter) {
+                                MusheWalletAdapter musheWalletAdapter,
+                                MushexProperties mushexProperties) {
         this.intentRepository = intentRepository;
         this.outboxRepository = outboxRepository;
         this.receiptService = receiptService;
@@ -88,6 +96,7 @@ public class PaymentIntentService {
         this.credentialVerificationClient = credentialVerificationClient;
         this.providerContractClient = providerContractClient;
         this.musheWalletAdapter = musheWalletAdapter;
+        this.mushexProperties = mushexProperties;
     }
 
     /**
@@ -105,31 +114,42 @@ public class PaymentIntentService {
         TrustContext ctx = TrustContextHolder.require();
 
         UUID facility = facilityId != null ? facilityId : ctx.facilityId();
-        String providerId = extractProviderId(metadata, facility);
-        CredentialVerificationClient.CredentialVerificationResult cred =
-                credentialVerificationClient.verifyPayee(ctx.tenantId(), providerId);
-        if (!cred.allowed()) {
-            log.warn("Provider credential verification failed before intent create: providerId={} status={}",
-                    providerId, cred.status());
-            throw new IllegalStateException("PROVIDER_CREDENTIAL_INVALID");
-        }
-        log.info("Provider credential verification passed before intent create: providerId={} status={} ref={}",
-                providerId, cred.status(), cred.verificationRef());
 
-        String payerId = readMetadataField(metadata, "payer_id", "payerId", "insurer_id", "insurerId");
-        if (payerId != null && !payerId.isBlank()) {
-            if (!providerContractClient.hasActiveContract(ctx.tenantId().toString(), facility.toString(), payerId)) {
-                log.warn("No active contract for facility={} payer={} — blocking payment", facility, payerId);
-                throw new IllegalStateException(
-                        "No active provider contract for this facility and payer combination");
-            }
-        }
-
-        // Idempotency check: return existing intent if key already used
         Optional<PaymentIntentEntity> existing = intentRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
             log.info("Idempotency hit: returning existing intent for key={}", idempotencyKey);
             return existing.get();
+        }
+
+        boolean simBypass = mushexProperties.getAdapters().getSandbox().isBypassCredentialCheckForSimulation()
+                && this.isImpiloSimulation(metadata);
+
+        CredentialVerificationClient.CredentialVerificationResult cred;
+        if (simBypass) {
+            cred = new CredentialVerificationClient.CredentialVerificationResult(
+                    true, "SIMULATION", "impilo-simulation", null);
+            log.info("Impilo sandbox simulation: skipping provider credential verification for new intent");
+        } else {
+            String providerId = extractProviderId(metadata, facility);
+            cred = credentialVerificationClient.verifyPayee(ctx.tenantId(), providerId);
+            if (!cred.allowed()) {
+                log.warn("Provider credential verification failed before intent create: providerId={} status={}",
+                        providerId, cred.status());
+                throw new IllegalStateException("PROVIDER_CREDENTIAL_INVALID");
+            }
+            log.info("Provider credential verification passed before intent create: providerId={} status={} ref={}",
+                    providerId, cred.status(), cred.verificationRef());
+        }
+
+        if (!simBypass) {
+            String payerId = readMetadataField(metadata, "payer_id", "payerId", "insurer_id", "insurerId");
+            if (payerId != null && !payerId.isBlank()) {
+                if (!providerContractClient.hasActiveContract(ctx.tenantId().toString(), facility.toString(), payerId)) {
+                    log.warn("No active contract for facility={} payer={} — blocking payment", facility, payerId);
+                    throw new IllegalStateException(
+                            "No active provider contract for this facility and payer combination");
+                }
+            }
         }
 
         PaymentIntentEntity intent = new PaymentIntentEntity();
@@ -151,8 +171,10 @@ public class PaymentIntentService {
 
         intent = intentRepository.save(intent);
 
-        log.info("Created payment intent: id={}, source={}/{}, amount={} {}",
-                intent.getIntentId(), sourceType, sourceId, amount, currency);
+        applySimulationOutcomeOnCreateIfEnabled(intent, metadata);
+
+        log.info("Created payment intent: id={}, source={}/{}, amount={} {}, status={}",
+                intent.getIntentId(), sourceType, sourceId, amount, currency, intent.getStatus());
 
         publishEvent("PAYMENT_INTENT", intent.getIntentId(), "INTENT_CREATED",
                 Map.of(
@@ -161,11 +183,68 @@ public class PaymentIntentService {
                         "sourceId", sourceId,
                         "amount", amount.toPlainString(),
                         "currency", currency,
-                        "facilityId", intent.getFacilityId().toString()
+                        "facilityId", intent.getFacilityId().toString(),
+                        "status", intent.getStatus().name()
                 ),
                 ctx.tenantId());
 
         return intent;
+    }
+
+    private void applySimulationOutcomeOnCreateIfEnabled(PaymentIntentEntity intent, String metadata) {
+        if (!mushexProperties.getAdapters().getSandbox().isApplySimulationOutcomeOnCreate()) {
+            return;
+        }
+        if (!isImpiloSimulation(metadata)) {
+            return;
+        }
+        String outcomeRaw = readMetadataField(metadata, "simulation_outcome", "simulationOutcome");
+        IntentStatus mapped = mapSimulationOutcome(outcomeRaw);
+        if (mapped == null || mapped == IntentStatus.CREATED) {
+            return;
+        }
+        intent.setStatus(mapped);
+        if (mapped == IntentStatus.PAID) {
+            intent.setAmountPaid(intent.getAmountTotal());
+        } else if (mapped == IntentStatus.PARTIALLY_PAID) {
+            intent.setAmountPaid(intent.getAmountTotal()
+                    .divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP)
+                    .min(intent.getAmountTotal()));
+        }
+        intentRepository.save(intent);
+    }
+
+    private static IntentStatus mapSimulationOutcome(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        return switch (raw.trim().toLowerCase(Locale.ROOT)) {
+            case "pending" -> IntentStatus.PENDING;
+            case "authorised", "authorized" -> IntentStatus.AUTHORIZED;
+            case "paid" -> IntentStatus.PAID;
+            case "failed" -> IntentStatus.FAILED;
+            case "reversed" -> IntentStatus.CANCELLED;
+            case "partially_paid" -> IntentStatus.PARTIALLY_PAID;
+            case "submitted" -> IntentStatus.SUBMITTED;
+            case "adjudicated" -> IntentStatus.ADJUDICATED;
+            case "rejected" -> IntentStatus.REJECTED;
+            default -> null;
+        };
+    }
+
+    private boolean isImpiloSimulation(String metadataJson) {
+        if (metadataJson == null || metadataJson.isBlank()) {
+            return false;
+        }
+        try {
+            JsonNode n = objectMapper.readTree(metadataJson);
+            if (n.has("impilo_simulation") && n.get("impilo_simulation").asBoolean()) {
+                return true;
+            }
+            return n.has("impiloSimulation") && n.get("impiloSimulation").asBoolean();
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**

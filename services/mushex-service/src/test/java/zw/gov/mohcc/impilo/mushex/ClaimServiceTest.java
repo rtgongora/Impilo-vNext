@@ -21,7 +21,9 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.ReceiptRepository;
 import zw.gov.mohcc.impilo.mushex.integration.CoverageEligibilityClient;
+import zw.gov.mohcc.impilo.mushex.config.MushexProperties;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
+import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.service.ClaimService;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
@@ -425,7 +427,7 @@ class ClaimServiceTest {
             super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper,
                     (tenantId, providerId) -> new CredentialVerificationClient.CredentialVerificationResult(
                             true, "VALID", "test-verification-ref", null),
-                    (t, p, pay) -> true, null);
+                    (t, p, pay) -> true, mock(MusheWalletAdapter.class), new MushexProperties());
         }
 
         @Override

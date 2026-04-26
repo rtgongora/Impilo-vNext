@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
+import zw.gov.mohcc.impilo.mushex.config.MushexProperties;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
 import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
@@ -62,7 +63,7 @@ class PaymentIntentServiceTest {
     void setUp() {
         lenient().when(providerContractClient.hasActiveContract(any(), any(), any())).thenReturn(true);
         service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper,
-                NOOP_CREDENTIALS, providerContractClient, walletAdapter);
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL

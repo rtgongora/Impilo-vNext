@@ -3,8 +3,10 @@ package zw.gov.mohcc.impilo.costa.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import zw.gov.mohcc.impilo.costa.domain.entity.CostaTariffListItemEntity;
 import zw.gov.mohcc.impilo.costa.domain.entity.TariffEntity;
 import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
+import zw.gov.mohcc.impilo.costa.domain.repository.CostaTariffListItemRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.TariffRepository;
 
 import java.math.BigDecimal;
@@ -22,10 +24,15 @@ public class TariffCostEngine implements CostEngine {
 
     private static final Logger log = LoggerFactory.getLogger(TariffCostEngine.class);
 
-    private final TariffRepository tariffRepository;
+    public static final String CTX_COSTA_TARIFF_LIST_ID = "costa_tariff_list_id";
 
-    public TariffCostEngine(TariffRepository tariffRepository) {
+    private final TariffRepository tariffRepository;
+    private final CostaTariffListItemRepository costaTariffListItemRepository;
+
+    public TariffCostEngine(TariffRepository tariffRepository,
+                            CostaTariffListItemRepository costaTariffListItemRepository) {
         this.tariffRepository = tariffRepository;
+        this.costaTariffListItemRepository = costaTariffListItemRepository;
     }
 
     @Override
@@ -39,6 +46,28 @@ public class TariffCostEngine implements CostEngine {
         LocalDate asOf = LocalDate.now();
         String facilityCategory = (String) context.getOrDefault("facility_category", null);
         String patientCategory = (String) context.getOrDefault("patient_category", null);
+
+        Long tariffListId = parseTariffListId(context.get(CTX_COSTA_TARIFF_LIST_ID));
+        if (tariffListId != null) {
+            Optional<CostaTariffListItemEntity> libItem =
+                    costaTariffListItemRepository.findByTariffListIdAndItemCode(tariffListId, msikaCode);
+            if (libItem.isPresent()) {
+                CostaTariffListItemEntity row = libItem.get();
+                BigDecimal unitPrice = row.getBasePrice();
+                Map<String, Object> trace = new LinkedHashMap<>();
+                trace.put("cost_method", "TARIFF_LIBRARY_ITEM");
+                trace.put(CTX_COSTA_TARIFF_LIST_ID, tariffListId);
+                trace.put("tariff_list_item_id", row.getId());
+                trace.put("item_code", row.getItemCode());
+                trace.put("item_name", row.getItemName());
+                trace.put("unit_price", unitPrice);
+                trace.put("currency", row.getCurrency());
+                trace.put("qty", qty);
+                trace.put("total", unitPrice.multiply(qty));
+                return CostResult.of(unitPrice, qty, CostMethodType.TARIFF,
+                        "TARIFF_LIBRARY:" + row.getItemCode(), trace);
+            }
+        }
 
         // Try to find tariff by msika code first, then by tariff code
         List<TariffEntity> tariffs = tariffRepository.findByMsikaCode(tenantId, msikaCode, asOf);
@@ -95,5 +124,22 @@ public class TariffCostEngine implements CostEngine {
             }
         }
         return best;
+    }
+
+    private static Long parseTariffListId(Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        if (raw instanceof Long l) {
+            return l;
+        }
+        if (raw instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.parseLong(raw.toString().trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 }

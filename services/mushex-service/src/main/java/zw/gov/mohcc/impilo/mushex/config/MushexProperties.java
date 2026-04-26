@@ -87,10 +87,28 @@ public class MushexProperties {
     public static class Sandbox {
         private boolean enabled = true;
         private long simulateDelayMs = 500;
+        /**
+         * When true and a COSTA handoff sends {@code impilo_simulation} in payment-intent metadata,
+         * MusheX skips external credential and payer-contract checks so local demos can run without adapters.
+         */
+        private boolean bypassCredentialCheckForSimulation = true;
+        /**
+         * When true with {@code bypassCredentialCheckForSimulation}, applies {@code simulation_outcome}
+         * from metadata immediately after intent creation (demo state machine).
+         */
+        private boolean applySimulationOutcomeOnCreate = true;
 
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
         public long getSimulateDelayMs() { return simulateDelayMs; }
         public void setSimulateDelayMs(long simulateDelayMs) { this.simulateDelayMs = simulateDelayMs; }
+        public boolean isBypassCredentialCheckForSimulation() { return bypassCredentialCheckForSimulation; }
+        public void setBypassCredentialCheckForSimulation(boolean bypassCredentialCheckForSimulation) {
+            this.bypassCredentialCheckForSimulation = bypassCredentialCheckForSimulation;
+        }
+        public boolean isApplySimulationOutcomeOnCreate() { return applySimulationOutcomeOnCreate; }
+        public void setApplySimulationOutcomeOnCreate(boolean applySimulationOutcomeOnCreate) {
+            this.applySimulationOutcomeOnCreate = applySimulationOutcomeOnCreate;
+        }
     }
 }

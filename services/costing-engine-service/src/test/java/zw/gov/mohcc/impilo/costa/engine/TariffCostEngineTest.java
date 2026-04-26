@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.costa.domain.entity.TariffEntity;
 import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
+import zw.gov.mohcc.impilo.costa.domain.repository.CostaTariffListItemRepository;
 import zw.gov.mohcc.impilo.costa.domain.repository.TariffRepository;
 
 import java.math.BigDecimal;
@@ -17,7 +18,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,13 +29,18 @@ class TariffCostEngineTest {
     @Mock
     private TariffRepository tariffRepository;
 
+    @Mock
+    private CostaTariffListItemRepository costaTariffListItemRepository;
+
     private TariffCostEngine engine;
     private final UUID tenantId = UUID.randomUUID();
     private final UUID facilityId = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        engine = new TariffCostEngine(tariffRepository);
+        lenient().when(costaTariffListItemRepository.findByTariffListIdAndItemCode(anyLong(), any()))
+                .thenReturn(java.util.Optional.empty());
+        engine = new TariffCostEngine(tariffRepository, costaTariffListItemRepository);
     }
 
     @Test

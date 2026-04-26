@@ -8,5 +8,13 @@ public enum IntentStatus {
     FAILED,
     CANCELLED,
     REFUND_PENDING,
-    REFUNDED
+    REFUNDED,
+    /** Outstanding balance recorded (simulation / claims-style lifecycle). */
+    PARTIALLY_PAID,
+    /** Submitted to external payer or switch (simulation). */
+    SUBMITTED,
+    /** Payer adjudication complete (simulation). */
+    ADJUDICATED,
+    /** Payer rejected the obligation (simulation). */
+    REJECTED
 }
