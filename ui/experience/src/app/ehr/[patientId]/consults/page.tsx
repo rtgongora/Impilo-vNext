@@ -103,7 +103,8 @@ const TAB_META: Record<
   teleconsults: {
     emptyLabel: "No teleconsultations for this patient",
     emptyAction: "Schedule first teleconsult",
-    subtitle: "Virtual sessions, handoffs, and follow-up activity linked to this chart.",
+    subtitle:
+      "Virtual sessions, handoffs, and follow-up linked to this chart. Use the Telemedicine Hub facility lens for receiving-site vs remote-host queues; SHR/Butano write of referral packages is not wired yet (see docs/audits/service-surfacing-audit.md).",
   },
 };
 

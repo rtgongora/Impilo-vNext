@@ -32,6 +32,13 @@ import {
   type TelemedicineSession,
 } from "@/hooks/queries/useTelemedicine";
 import { TelemedicineWorkflowLegend } from "@/components/clinical/TelemedicineWorkflowLegend";
+import { TelemedicineAssistantSignals } from "@/components/clinical/TelemedicineAssistantSignals";
+import {
+  classifyTelemedicineFacilityRole,
+  filterTelemedicineSessionsByLens,
+  partitionTelemedicineSessionsByFacilityHost,
+  type TelemedicineFacilityLens,
+} from "@/lib/clinical/telemedicine-facility-lens";
 
 const STATUS_STYLES: Record<string, { label: string; className: string }> = {
   SCHEDULED: { label: "Scheduled", className: "bg-impilo-100 text-impilo-600" },
@@ -72,6 +79,7 @@ export default function TelemedicinePage() {
   const { user } = useAuthStore();
   const facility = useFacilityStore((s) => s.facility);
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
+  const [facilityLens, setFacilityLens] = useState<TelemedicineFacilityLens>("all");
   const [showComposer, setShowComposer] = useState(false);
   const [composer, setComposer] = useState<ComposerState>(() => createDefaultComposer());
 
@@ -90,6 +98,14 @@ export default function TelemedicinePage() {
   const createSession = useCreateTelemedicineSession();
 
   const sessions: TelemedicineSession[] = data?.data ?? [];
+  const facilityPartition = useMemo(
+    () => partitionTelemedicineSessionsByFacilityHost(sessions, facility?.id),
+    [sessions, facility?.id],
+  );
+  const displayedSessions = useMemo(
+    () => filterTelemedicineSessionsByLens(sessions, facilityLens, facility?.id),
+    [sessions, facilityLens, facility?.id],
+  );
   const incomingSessions = useMemo(
     () => sessions.filter((session) => session.attributes.provider_id !== user?.id),
     [sessions, user?.id],
@@ -110,6 +126,10 @@ export default function TelemedicinePage() {
     { key: "IN_PROGRESS", label: "Active" },
     { key: "COMPLETED", label: "Completed" },
   ];
+
+  useEffect(() => {
+    setFacilityLens("all");
+  }, [facility?.id]);
 
   useEffect(() => {
     if (!patientIdFilter && !referralIdFilter) return;
@@ -192,6 +212,30 @@ export default function TelemedicinePage() {
         ) : (
           <>
             <TelemedicineWorkflowLegend />
+            <TelemedicineAssistantSignals />
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Facility queue lens</p>
+              <p className="mt-1 text-xs text-slate-600">
+                <span className="font-medium text-slate-800">Receiving site (this workplace)</span> uses{" "}
+                <code className="rounded bg-white px-1 text-[11px]">session.facility_id</code> equal to your selected
+                facility. <span className="font-medium text-slate-800">Hosted elsewhere</span> is the referring-side
+                view when another facility owns the session record.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-white bg-white/90 p-3 text-center shadow-sm">
+                  <p className="text-2xl font-semibold text-slate-900">{facilityPartition.hostedHere.length}</p>
+                  <p className="text-xs font-medium text-slate-600">Receiving / hosted here</p>
+                </div>
+                <div className="rounded-xl border border-white bg-white/90 p-3 text-center shadow-sm">
+                  <p className="text-2xl font-semibold text-slate-900">{facilityPartition.remoteHost.length}</p>
+                  <p className="text-xs font-medium text-slate-600">Hosted at another facility</p>
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-3 text-center">
+                  <p className="text-2xl font-semibold text-amber-900">{facilityPartition.unknownFacility.length}</p>
+                  <p className="text-xs font-medium text-amber-900/90">Unknown facility on session</p>
+                </div>
+              </div>
+            </div>
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
               <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -200,7 +244,8 @@ export default function TelemedicinePage() {
                 </div>
                 <p className="text-3xl font-semibold text-gray-900">{incomingSessions.length}</p>
                 <p className="mt-1 text-sm text-impilo-700">
-                  Sessions initiated by another clinician and waiting on your team.
+                  Sessions where you are not the listed provider — team queue (distinct from facility receiving lens
+                  above).
                 </p>
                 <Link
                   href="/queue/incoming-referrals"
@@ -401,6 +446,30 @@ export default function TelemedicinePage() {
                 </button>
               ))}
             </div>
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-slate-500">Facility lens:</span>
+              {(
+                [
+                  { key: "all" as const, label: "All sessions" },
+                  { key: "hosted_here" as const, label: "Receiving site (here)" },
+                  { key: "remote_host" as const, label: "Hosted elsewhere" },
+                  { key: "facility_unknown" as const, label: "Unknown host" },
+                ] as const
+              ).map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setFacilityLens(key)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    facilityLens === key
+                      ? "border-impilo-500 bg-impilo-50 text-impilo-800"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             {isLoading ? (
               <div className="flex items-center justify-center rounded-2xl border border-gray-200 bg-white py-16">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -423,9 +492,28 @@ export default function TelemedicinePage() {
                   Schedule first session
                 </button>
               </div>
+            ) : displayedSessions.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 p-10 text-center">
+                <Video className="mx-auto mb-3 h-9 w-9 text-slate-300" />
+                <p className="text-sm font-medium text-slate-800">No sessions for this facility lens</p>
+                <p className="mt-2 text-xs text-slate-600">
+                  {sessions.length > 0
+                    ? "Widen the lens to “All sessions” or pick another status tab — data exists but is filtered out."
+                    : "No rows returned from the BFF for this workplace filter."}
+                </p>
+                {sessions.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setFacilityLens("all")}
+                    className="mt-4 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Reset facility lens
+                  </button>
+                ) : null}
+              </div>
             ) : (
               <div className="space-y-4">
-                {sessions.map((session) => {
+                {displayedSessions.map((session) => {
                   const attrs = session.attributes;
                   const status = STATUS_STYLES[attrs.status] ?? {
                     label: attrs.status,
@@ -433,6 +521,13 @@ export default function TelemedicinePage() {
                   };
                   const isJoinable = attrs.status === "SCHEDULED" || attrs.status === "IN_PROGRESS";
                   const isOutgoing = attrs.provider_id === user?.id;
+                  const facilityRole = classifyTelemedicineFacilityRole(session, facility?.id);
+                  const facilityRoleLabel =
+                    facilityRole === "hosted_here"
+                      ? "Receiving site"
+                      : facilityRole === "remote_host"
+                        ? "Remote host"
+                        : "Unknown host";
 
                   return (
                     <div
@@ -467,6 +562,9 @@ export default function TelemedicinePage() {
                                   }`}
                                 >
                                   {isOutgoing ? "Outgoing" : "Incoming"}
+                                </span>
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                                  {facilityRoleLabel}
                                 </span>
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
