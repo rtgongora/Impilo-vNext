@@ -3,6 +3,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ImagingPage from "./page";
 
+const { mockPost } = vi.hoisted(() => ({
+  mockPost: vi.fn().mockRejectedValue({
+    status: 501,
+    message: "Butano/SHR artifact ingest is not enabled in this BFF build; request was logged for audit.",
+  }),
+}));
+
 vi.mock("next/navigation", () => ({ useParams: () => ({ patientId: "patient-1" }) }));
 vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
@@ -49,13 +56,15 @@ vi.mock("@tanstack/react-query", () => ({
     };
   },
 }));
-vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn() } }));
+vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn(), post: mockPost } }));
 
 describe("ImagingPage", () => {
-  it("surfaces patient-matched imaging continuity and keeps chart handoff close", () => {
+  it("surfaces patient-matched imaging continuity and keeps chart handoff close", async () => {
     render(<ImagingPage />);
 
     expect(screen.getByText("Imaging continuity")).toBeInTheDocument();
+    expect(screen.getByText(/SHR \/ Butano write-back/i)).toBeInTheDocument();
+    expect(screen.getByText(/POST \/internal\/v1\/clinical\/shr-artifacts/i)).toBeInTheDocument();
     expect(screen.getByText("Imaging loop status")).toBeInTheDocument();
     expect(screen.getAllByText("Chest X-Ray")).toHaveLength(2);
     expect(screen.getByRole("link", { name: "Orders" })).toHaveAttribute("href", "/ehr/patient-1/orders");
@@ -64,5 +73,15 @@ describe("ImagingPage", () => {
 
     expect(screen.getByText(/Reviewing Series 1/)).toBeInTheDocument();
     expect(screen.getByText("Tariro Moyo")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Log SHR linkage intent/i }));
+    expect(await screen.findByText(/Butano\/SHR artifact ingest is not enabled/i)).toBeInTheDocument();
+    expect(mockPost).toHaveBeenCalledWith(
+      "/internal/v1/clinical/shr-artifacts",
+      expect.objectContaining({
+        patient_id: "patient-1",
+        artifact_type: "IMAGING_STUDY",
+      }),
+    );
   });
 });

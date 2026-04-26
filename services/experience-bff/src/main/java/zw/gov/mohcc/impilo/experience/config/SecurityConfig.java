@@ -20,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -327,7 +328,7 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/registry/geo/**",
                             "/internal/v1/registry/localities/**",
                             "/internal/v1/registry/coverage/preview")
-                            .hasAnyRole(CLINICAL_ROLES, QUEUE_ROLES)
+                            .hasAnyRole(mergeRoleSets(CLINICAL_ROLES, QUEUE_ROLES))
 
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
@@ -346,6 +347,18 @@ public class SecurityConfig {
         }
 
         return http.build();
+    }
+
+    /** Spring {@code hasAnyRole} is {@code String...}; pass a single merged array for union role sets. */
+    private static String[] mergeRoleSets(String[] first, String[] second) {
+        LinkedHashSet<String> roles = new LinkedHashSet<>();
+        for (String r : first) {
+            roles.add(r);
+        }
+        for (String r : second) {
+            roles.add(r);
+        }
+        return roles.toArray(String[]::new);
     }
 
     @Bean

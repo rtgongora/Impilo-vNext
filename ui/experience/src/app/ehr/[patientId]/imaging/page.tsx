@@ -156,7 +156,43 @@ export default function ImagingPage() {
   const [contrast, setContrast] = useState(100);
   const [zoom, setZoom] = useState(100);
   const [rotation, setRotation] = useState(0);
+  const [shrArtifactMessage, setShrArtifactMessage] = useState<string | null>(null);
+  const [shrArtifactPending, setShrArtifactPending] = useState(false);
   const viewerRef = useRef<HTMLDivElement>(null);
+
+  const requestShrArtifactForStudy = useCallback(async () => {
+    setShrArtifactPending(true);
+    setShrArtifactMessage(null);
+    const body = {
+      patient_id: patientId,
+      artifact_type: "IMAGING_STUDY",
+      encounter_id: activeEncounter?.id ?? undefined,
+      payload: {
+        orthanc_study_id: selectedStudy?.ID ?? null,
+        study_instance_uid: selectedStudy?.MainDicomTags?.StudyInstanceUID ?? null,
+        accession_number: selectedStudy?.MainDicomTags?.AccessionNumber ?? null,
+        facility_id: facility?.id ?? null,
+      },
+    };
+    try {
+      await apiClient.post("/internal/v1/clinical/shr-artifacts", body);
+      setShrArtifactMessage("Unexpected success — check BFF deployment.");
+    } catch (e: unknown) {
+      const err = e as { status?: number; message?: string; code?: string };
+      if (err.status === 501) {
+        setShrArtifactMessage(
+          err.message ??
+            "SHR write is not implemented upstream; the BFF logged this request for audit.",
+        );
+      } else if (err.status === 400) {
+        setShrArtifactMessage(typeof err.message === "string" ? err.message : "Invalid request.");
+      } else {
+        setShrArtifactMessage("Request failed (network, auth, or BFF). See browser devtools.");
+      }
+    } finally {
+      setShrArtifactPending(false);
+    }
+  }, [activeEncounter?.id, facility?.id, patientId, selectedStudy]);
 
   useEffect(() => {
     if (!selectedStudyDefault) {
@@ -274,6 +310,38 @@ export default function ImagingPage() {
               },
             ]}
           />
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
+            <span className="font-semibold">SHR / Butano write-back: </span>
+            Governed imaging can be registered for SHR ingest via{" "}
+            <span className="font-mono text-[11px]">POST /internal/v1/clinical/shr-artifacts</span>. The BFF endpoint is
+            live for audit and contract testing; upstream Butano write is still{" "}
+            <span className="font-semibold">not implemented</span> (response{" "}
+            <span className="font-mono text-[11px]">501</span>). Open{" "}
+            <Link href={`/ehr/${patientId}/timeline`} className="font-medium underline">
+              patient timeline
+            </Link>{" "}
+            for federated SHR reads; see{" "}
+            <span className="font-mono text-xs">docs/audits/service-surfacing-audit.md</span>.
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void requestShrArtifactForStudy()}
+                disabled={shrArtifactPending || !selectedStudy}
+                className="rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-950 shadow-sm hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {shrArtifactPending ? "Contacting BFF…" : "Log SHR linkage intent (selected study)"}
+              </button>
+              {!selectedStudy ? (
+                <span className="text-xs text-amber-900/80">Select a study first.</span>
+              ) : null}
+            </div>
+            {shrArtifactMessage ? (
+              <p className="mt-2 text-xs text-amber-900" role="status">
+                {shrArtifactMessage}
+              </p>
+            ) : null}
+          </div>
 
           <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">

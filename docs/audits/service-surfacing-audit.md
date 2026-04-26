@@ -95,10 +95,10 @@ This document complements `service-surfacing-traceability-matrix.md` with a per-
 
 | Dimension | Notes |
 |-----------|--------|
-| Backend | SHR timeline + IPS bundles. |
-| API | `/internal/v1/timeline`; IPS via BFF. |
-| Frontend | Timeline page; IPS on summary. |
-| Gaps | Write-back of imaging metadata; richer timeline when SHR empty. |
+| Backend | SHR timeline reads via PCT (`ClinicalTimelineController`); IPS / visit summaries via read-only `ButanoServiceClient`. |
+| API | `GET /internal/v1/timeline`; `POST /internal/v1/clinical/shr-artifacts` (**stub** — logs + `501` until Butano ingest exists). |
+| Frontend | Timeline page; IPS on summary; Imaging “Log SHR linkage intent” posts real payload, shows honest 501. |
+| Gaps | Forward `shr-artifacts` to Butano/PCT persistence; richer timeline when SHR empty. |
 
 ### Vito / Varapi / Tuso / Zibo
 
@@ -111,6 +111,39 @@ Policy and terminology mix: Zibo artifacts + Tshepo policies; encounter-specific
 ### Notifications
 
 Inbox/toast patterns depend on shell configuration; no single documented clinical notification hub in this audit pass.
+
+**Routing clarity:** assistant signals use **`GET /internal/v1/assistant/notifications`** (`AssistantNotificationsController`); policy evaluation remains on Tshepo **`/api/v1/policies`** through the gateway. Operational handoffs use **`useNotifications`** → BFF notification routes when the tenant enables them — see `NotificationsCommsHub`.
+
+**Chart shell:** `ClinicalSupportStrip` shows an **Assistant** count (same BFF hook as the telemedicine hub strip) plus a **Policies** deep link to `/admin/policies` on wide viewports so ABAC work is one hop away for authorised staff.
+
+---
+
+## Follow-up implementation notes (2026-04-12)
+
+### Deeper Envoy vs BFF mapping
+
+- Documented dual ingress (Next → `:8160` vs Envoy `:10000` → `experience_bff`) and a **BFF prefix catalog** in `service-surfacing-traceability-matrix.md`.
+- **Appendix:** [`bff-internal-v1-controller-roots.md`](./bff-internal-v1-controller-roots.md) lists class-level `/internal/v1/*` controller roots for row-level traceability.
+- `infra/envoy/envoy-runtime.yaml` routes **`/internal/v1/*`** and **`/bff/*`** to the Experience BFF; the shorter `infra/envoy/envoy.yaml` used for some local flows does **not** list the blanket `/internal/v1/` rule — teams should treat **`envoy-runtime.yaml`** as the compose-complete reference.
+
+### Telemedicine: receiving vs referring (facility lens)
+
+- **Implemented in One UI:** `telemedicine-facility-lens.ts` partitions sessions by `session.attributes.facility_id` vs the selected workplace (`useFacilityStore`). The Telemedicine Hub shows counts, filter chips, per-row badges, and clarifies that **provider incoming/outgoing** (by `provider_id`) is orthogonal to the **facility receiving-site lens**.
+- **Remaining gap:** downstream services could add explicit `referring_facility_id` / `receiving_facility_id` on the session DTO for stronger interoperability than inferring from `facility_id` alone.
+
+### Butano write from imaging / referrals
+
+- **BFF:** `POST /internal/v1/clinical/shr-artifacts` logs intent and returns **501** until Butano exposes ingest.
+- **Experience:** Imaging page button exercises the contract; consults copy still flags referral-package persistence as a gap.
+
+### Mobile parity
+
+- Documented a **subset mapping** (telemedicine, labs, queue, referrals) in the matrix. Further work: align every `use*` hook used on web encounter with a documented mobile route or explicitly mark N/A.
+
+### Rules / notifications surfacing
+
+- **Telemedicine Hub:** `TelemedicineAssistantSignals` surfaces `GET /internal/v1/assistant/notifications` with empty/error honesty.
+- **Patient chart shell:** `ClinicalSupportStrip` adds assistant count + policies shortcut (see Notifications section above).
 
 ---
 
