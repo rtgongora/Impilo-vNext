@@ -1,6 +1,6 @@
 # Full Mobile Parity Matrix (Tier-1)
 
-**Generated**: 2026-04-26T01:29:26.818Z
+**Generated**: 1970-01-01T00:00:00.000Z
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier1
 **Status**: done=48 missing=0 total=48

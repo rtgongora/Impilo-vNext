@@ -55,6 +55,10 @@ const outTier3Wave6Md = path.join(repoRoot, "docs", "mobile", "tier3-wave6-parit
 const outTier3Wave7Json = path.join(repoRoot, "docs", "mobile", "tier3-wave7-parity-matrix.json");
 const outTier3Wave7Md = path.join(repoRoot, "docs", "mobile", "tier3-wave7-parity-matrix.md");
 
+// CI enforces `git diff --exit-code` after generation. A wall-clock timestamp would
+// cause perpetual drift; keep this deterministic.
+const GENERATED_AT = "1970-01-01T00:00:00.000Z";
+
 function readText(p) {
   return fs.readFileSync(p, "utf8");
 }
@@ -871,7 +875,7 @@ function evaluateTier3Wave7Mapping() {
 
 const tier1Rows = evaluateTier1Mapping();
 const tier1Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier1",
   total: tier1Rows.length,
@@ -913,7 +917,7 @@ fs.writeFileSync(outMd, tier1ToMd());
 
 const tier2Rows = evaluateTier2Mapping();
 const tier2Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier2",
   zones: Array.from(tier2Zones).sort(),
@@ -956,7 +960,7 @@ fs.writeFileSync(outTier2Md, tier2ToMd());
 
 const tier3Rows = evaluateTier3Mapping();
 const tier3Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3",
   scope: {
@@ -1012,7 +1016,7 @@ fs.writeFileSync(outTier3Md, tier3ToMd());
 
 const tier3Wave2Rows = evaluateTier3Wave2Mapping();
 const tier3Wave2Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave2",
   scope: "citizen-longtail",
@@ -1057,7 +1061,7 @@ fs.writeFileSync(outTier3Wave2Md, tier3Wave2ToMd());
 
 const tier3Wave3Rows = evaluateTier3Wave3Mapping();
 const tier3Wave3Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave3",
   scope: "provider-admin-registry-hub",
@@ -1102,7 +1106,7 @@ fs.writeFileSync(outTier3Wave3Md, tier3Wave3ToMd());
 
 const tier3Wave4Rows = evaluateTier3Wave4Mapping();
 const tier3Wave4Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave4",
   scope: "provider-operations-reports-hub",
@@ -1147,7 +1151,7 @@ fs.writeFileSync(outTier3Wave4Md, tier3Wave4ToMd());
 
 const tier3Wave5Rows = evaluateTier3Wave5Mapping();
 const tier3Wave5Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave5",
   scope: "provider-developer-portal-hub",
@@ -1192,7 +1196,7 @@ fs.writeFileSync(outTier3Wave5Md, tier3Wave5ToMd());
 
 const tier3Wave6Rows = evaluateTier3Wave6Mapping();
 const tier3Wave6Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave6",
   scope: "provider-professional-settings-hub",
@@ -1237,7 +1241,7 @@ fs.writeFileSync(outTier3Wave6Md, tier3Wave6ToMd());
 
 const tier3Wave7Rows = evaluateTier3Wave7Mapping();
 const tier3Wave7Summary = {
-  generatedAt: new Date().toISOString(),
+  generatedAt: GENERATED_AT,
   source: "ui/one-ui-shell/src/lib/routes.ts",
   tier: "tier3-wave7",
   scope: "provider-professional-channels-hub",

@@ -1,6 +1,6 @@
 # Mobile Parity Matrix (Tier-3 wave 1)
 
-**Generated**: 2026-04-26T01:29:26.831Z
+**Generated**: 1970-01-01T00:00:00.000Z
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier3
 **Scope**: provider=facility/workspace/shift + /scheduling*; citizen=facility

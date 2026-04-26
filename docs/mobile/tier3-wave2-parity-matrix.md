@@ -1,6 +1,6 @@
 # Mobile Parity Matrix (Tier-3 wave 2)
 
-**Generated**: 2026-04-26T01:29:26.833Z
+**Generated**: 1970-01-01T00:00:00.000Z
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier3-wave2
 **Scope**: citizen-longtail

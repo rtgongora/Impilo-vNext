@@ -1,6 +1,6 @@
 # Mobile Parity Matrix (Tier-3 wave 6)
 
-**Generated**: 2026-04-26T01:29:26.843Z
+**Generated**: 1970-01-01T00:00:00.000Z
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier3-wave6
 **Scope**: provider-professional-settings-hub
