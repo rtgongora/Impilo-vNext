@@ -9,7 +9,7 @@
  * and ExpandableCategoryCards.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -18,7 +18,7 @@ import {
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
-  MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
+  MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle,
   Wifi, Wrench, Layers, QrCode, Bell, FlaskConical, FileCheck, Clipboard, Play,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -45,6 +45,8 @@ import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { useFacilityActiveShiftCount, useFacilityQueueStats } from "@/hooks/queries/useFacilityOperations";
 import { apiClient } from "@/lib/api-client";
+import { countUnacknowledgedAbnormalLabResults } from "@/lib/lab-results-attention";
+import { getAppointmentStatus, getAppointmentTime, getAppointmentType, getAppointmentProvider } from "@/lib/queue-workflows";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
 // ── Module category types ────────────────────────────────────────
@@ -733,6 +735,30 @@ export default function HomePage() {
   const queueStats = queueStatsQuery.data?.data;
   const { activeShiftCount } = useFacilityActiveShiftCount(facility?.id);
 
+  const { data: providerSupportTicketsData } = useQuery<{
+    data: Array<{ id: string; attributes?: Record<string, unknown> }>;
+  }>({
+    queryKey: ["home-provider-support-tickets", facility?.id],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/mobile/provider/support/tickets?facility_id=${facility?.id}`),
+    enabled: hasWorkContext && !!facility?.id && (isClinical || isDispenser),
+    staleTime: 60_000,
+  });
+  const providerSupportTickets = providerSupportTicketsData?.data ?? [];
+  const resolvedTicketStatuses = new Set(["RESOLVED", "CLOSED", "CANCELLED", "COMPLETED", "DONE"]);
+  const openSupportTicketCount = providerSupportTickets.filter((row) => {
+    const s = String(row.attributes?.status ?? "").toUpperCase();
+    return s.length > 0 && !resolvedTicketStatuses.has(s);
+  }).length;
+
+  const { data: providerLabResultsPayload } = useQuery<unknown>({
+    queryKey: ["home-provider-lab-results-attention", user?.id, facility?.id],
+    queryFn: () => apiClient.get("/internal/v1/mobile/provider/labs/results?page=0&size=50"),
+    enabled: hasWorkContext && !!facility?.id && (isClinical || isDispenser),
+    staleTime: 60_000,
+  });
+  const unackedAbnormalLabCount = countUnacknowledgedAbnormalLabResults(providerLabResultsPayload);
+
   // Module categories
   const categories = getModuleCategories({ isClinical, isAdmin, isFinance, isDispenser });
   const workerLaunchActions = getWorkerLaunchActions(
@@ -864,6 +890,8 @@ export default function HomePage() {
               queueWaiting={queueStats?.waiting ?? 0}
               activeEncounterCount={activeEncounterCount}
               hasWorkContext={hasWorkContext}
+              openSupportTickets={openSupportTicketCount}
+              unackedAbnormalLabResults={unackedAbnormalLabCount}
             />
           </div>
 
@@ -1547,6 +1575,36 @@ export default function HomePage() {
 // Left: quick-nav shortcuts · Centre: timeline feed · Right: widgets
 // ═══════════════════════════════════════════════════════════════════
 
+/** Normalize citizen + scheduling appointment payloads into JSON:API-style rows for queue-workflows helpers. */
+function normalizeCitizenAppointmentList(payload: unknown): Array<{ id: string; attributes: Record<string, unknown> }> {
+  const root = payload as { data?: unknown } | null | undefined;
+  const raw = root?.data;
+  const arr: unknown[] = Array.isArray(raw) ? raw : [];
+  return arr.map((row, i) => {
+    if (row && typeof row === "object" && "attributes" in row) {
+      const r = row as { id?: string; attributes?: Record<string, unknown> };
+      return { id: String(r.id ?? `apt-${i}`), attributes: r.attributes ?? {} };
+    }
+    if (row && typeof row === "object") {
+      const o = row as Record<string, unknown>;
+      return {
+        id: String(o.id ?? `apt-${i}`),
+        attributes: {
+          scheduled_at: o.scheduledAt ?? o.scheduled_at,
+          scheduledAt: o.scheduledAt,
+          appointment_time: o.appointmentTime ?? o.appointment_time,
+          appointment_type: o.appointmentType ?? o.appointment_type,
+          appointmentType: o.appointmentType,
+          status: o.status,
+          provider_name: o.providerName ?? o.provider_name,
+          providerName: o.providerName,
+        },
+      };
+    }
+    return { id: `apt-${i}`, attributes: {} };
+  });
+}
+
 function CitizenHome({
   user,
   greeting,
@@ -1554,6 +1612,54 @@ function CitizenHome({
   user: AuthUser | null;
   greeting: string;
 }) {
+  const patientAnchor = (user?.healthId && user.healthId.trim()) || user?.id || "";
+
+  const citizenActorAppointments = useQuery<unknown>({
+    queryKey: ["citizen-upcoming-appointments-mobile", user?.id],
+    queryFn: () => apiClient.get("/internal/v1/mobile/citizen/appointments?page=0&size=25"),
+    enabled: !!user?.id,
+    staleTime: 60_000,
+  });
+
+  const citizenPatientAppointments = useQuery<unknown>({
+    queryKey: ["citizen-upcoming-appointments-patient", patientAnchor],
+    queryFn: () =>
+      apiClient.get(`/internal/v1/appointments?patient_id=${encodeURIComponent(patientAnchor)}&size=25`),
+    enabled: !!patientAnchor,
+    staleTime: 60_000,
+  });
+
+  const mergedAppointmentRows = useMemo(() => {
+    const fromActor = normalizeCitizenAppointmentList(citizenActorAppointments.data);
+    const fromPatient = normalizeCitizenAppointmentList(citizenPatientAppointments.data);
+    const map = new Map<string, { id: string; attributes: Record<string, unknown> }>();
+    for (const row of fromActor) map.set(row.id, row);
+    for (const row of fromPatient) map.set(row.id, row);
+    return [...map.values()];
+  }, [citizenActorAppointments.data, citizenPatientAppointments.data]);
+
+  const citizenAppointmentsLoading = citizenActorAppointments.isPending || citizenPatientAppointments.isPending;
+  const citizenAppointmentsError = citizenActorAppointments.isError && citizenPatientAppointments.isError;
+
+  const terminalAppt = new Set(["CANCELLED", "CANCELED", "NO_SHOW", "COMPLETED", "DONE"]);
+  const startOfToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+  const upcomingAppointments = mergedAppointmentRows
+    .filter((row) => {
+      const status = getAppointmentStatus(row).toUpperCase();
+      if (terminalAppt.has(status)) return false;
+      const when = getAppointmentTime(row);
+      if (!when) return false;
+      const ms = new Date(when).getTime();
+      if (Number.isNaN(ms)) return false;
+      return ms >= startOfToday();
+    })
+    .sort((a, b) => new Date(getAppointmentTime(a)).getTime() - new Date(getAppointmentTime(b)).getTime())
+    .slice(0, 5);
+
   return (
     <>
       {/* ── Top status bar ────────────────────────────────────────── */}
@@ -1699,15 +1805,41 @@ function CitizenHome({
             </div>
           </Link>
 
-          {/* Upcoming — no demo appointments; use Scheduling when integrated */}
+          {/* Upcoming — live appointments from BFF when the session can see them */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming
             </h3>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              No appointments are shown here until your account is linked to a scheduling feed. Use Scheduling to book
-              or manage visits.
-            </p>
+            {citizenAppointmentsLoading && (
+              <p className="text-xs text-gray-500">Loading appointments…</p>
+            )}
+            {!citizenAppointmentsLoading && citizenAppointmentsError && (
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Appointments could not be loaded. Open Scheduling to book or manage visits.
+              </p>
+            )}
+            {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length === 0 && (
+              <p className="text-xs text-gray-500 leading-relaxed">
+                No upcoming visits in the scheduling feed for this account yet. Book or manage visits in Scheduling.
+              </p>
+            )}
+            {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length > 0 && (
+              <ul className="space-y-2.5">
+                {upcomingAppointments.map((appt) => {
+                  const when = getAppointmentTime(appt);
+                  const label = when
+                    ? new Date(when).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })
+                    : "Date TBC";
+                  return (
+                    <li key={appt.id} className="text-xs text-gray-700 border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                      <p className="font-medium text-gray-900">{getAppointmentType(appt)}</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">{label}</p>
+                      <p className="text-[11px] text-gray-500">{getAppointmentProvider(appt)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
             <Link href="/scheduling" className="mt-3 block text-center text-xs font-medium text-impilo-600 hover:underline">
               Open scheduling →
             </Link>
@@ -1760,7 +1892,7 @@ function CitizenHome({
 
 /** Compact announcements banner showing pinned/urgent items from the noticeboard */
 // ═══════════════════════════════════════════════════════════════════
-// Timeline components — post creation + seeded feed
+// Timeline components — post creation + live citizen feed
 // ═══════════════════════════════════════════════════════════════════
 
 function TimelineComposer({ userName }: { userName: string }) {
@@ -1809,17 +1941,9 @@ function TimelineComposer({ userName }: { userName: string }) {
       </div>
       {/* Action bar */}
       <div className="flex items-center justify-between border-t border-gray-100 px-4 py-2">
-        <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors">
-            <Video className="w-4 h-4" /> Live video
-          </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-green-50 hover:text-green-500 transition-colors">
-            <Image className="w-4 h-4" /> Photo
-          </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs text-gray-500 hover:bg-amber-50 hover:text-amber-500 transition-colors">
-            <Activity className="w-4 h-4" /> Health check-in
-          </button>
-        </div>
+        <p className="text-[11px] text-gray-400 px-1">
+          Media and structured check-ins will appear here when those channels are enabled for citizen posts.
+        </p>
         <button
           onClick={handlePost}
           disabled={!postText.trim() || posting}
@@ -1934,35 +2058,6 @@ function TimelineFeed({ userId }: { userId?: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Status updates strip — people/entities you follow */}
-      <div className="hidden bg-white rounded-xl border border-gray-200 p-4">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Status updates</h3>
-        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-          {/* Add your status */}
-          <div className="flex flex-col items-center gap-1.5 shrink-0">
-            <div className="w-14 h-14 rounded-full border-2 border-dashed border-impilo-300 flex items-center justify-center bg-impilo-50">
-              <span className="text-impilo-500 text-lg font-bold">+</span>
-            </div>
-            <span className="text-[10px] text-gray-500 w-14 text-center truncate">Your story</span>
-          </div>
-          {/* Followed entities */}
-          {[
-            { name: "MoH Zimbabwe", initials: "MoH", color: "bg-red-100 text-red-700 ring-red-400" },
-            { name: "Harare Central", initials: "HC", color: "bg-blue-100 text-blue-700 ring-blue-400" },
-            { name: "Nompilo", initials: "N", color: "bg-impilo-100 text-impilo-700 ring-impilo-400" },
-            { name: "Wellness", initials: "W", color: "bg-pink-100 text-pink-700 ring-pink-400" },
-            { name: "My Pharmacy", initials: "Rx", color: "bg-green-100 text-green-700 ring-green-400" },
-          ].map((entity) => (
-            <div key={entity.name} className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-offset-2 ${entity.color}`}>
-                {entity.initials}
-              </div>
-              <span className="text-[10px] text-gray-500 w-14 text-center truncate">{entity.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Call / video shortcuts — prominent strip */}
       <div className="grid grid-cols-3 gap-3">
         <Link href="/telemedicine"

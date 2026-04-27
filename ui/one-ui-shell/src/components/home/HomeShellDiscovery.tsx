@@ -80,12 +80,23 @@ export interface HomeAttentionSignalsProps {
   queueWaiting: number;
   activeEncounterCount: number;
   hasWorkContext: boolean;
+  /** Open / in-progress facility support tickets from the provider support BFF (when available). */
+  openSupportTickets?: number;
+  /** Unacknowledged resulted labs with abnormal/critical flags or STAT urgency (mobile provider lab results BFF). */
+  unackedAbnormalLabResults?: number;
 }
 
 /**
  * Only surfaces counts backed by current API/query data — no invented alerts.
  */
-export function HomeAttentionFromData({ enabled, queueWaiting, activeEncounterCount, hasWorkContext }: HomeAttentionSignalsProps) {
+export function HomeAttentionFromData({
+  enabled,
+  queueWaiting,
+  activeEncounterCount,
+  hasWorkContext,
+  openSupportTickets = 0,
+  unackedAbnormalLabResults = 0,
+}: HomeAttentionSignalsProps) {
   if (!enabled || !hasWorkContext) {
     return (
       <div className="rounded-xl border border-gray-100 bg-slate-50 p-4 text-xs text-gray-600">
@@ -110,6 +121,20 @@ export function HomeAttentionFromData({ enabled, queueWaiting, activeEncounterCo
       label: `${activeEncounterCount} active encounter${activeEncounterCount === 1 ? "" : "s"}`,
       detail: "From your recent encounters list",
       href: "/queue",
+    });
+  }
+  if (openSupportTickets > 0) {
+    items.push({
+      label: `${openSupportTickets} open support ticket${openSupportTickets === 1 ? "" : "s"}`,
+      detail: "From facility-linked support requests",
+      href: "/support/tickets",
+    });
+  }
+  if (unackedAbnormalLabResults > 0) {
+    items.push({
+      label: `${unackedAbnormalLabResults} lab result${unackedAbnormalLabResults === 1 ? "" : "s"} need review`,
+      detail: "Unacknowledged results flagged abnormal, critical, or STAT in the lab results list",
+      href: "/lab/results",
     });
   }
 
