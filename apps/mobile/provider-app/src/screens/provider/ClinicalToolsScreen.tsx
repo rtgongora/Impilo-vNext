@@ -2,9 +2,9 @@
  * ClinicalToolsScreen — SOAP notes, drug interactions, order sets, care plans,
  * MAR, CDS, paging, barcode scanning, and specialty workspaces in one hub.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { Screen, Header, Button, Badge, LoadingSpinner, DictationAssistButton } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   checkDrugInteractions, fetchOrderSets, fetchCarePlans, createCarePlan,
@@ -28,6 +28,8 @@ import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
 import { DeveloperHubScreen } from "./DeveloperHubScreen";
 import { ProfessionalSettingsHubScreen } from "./ProfessionalSettingsHubScreen";
 import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
+import { TelemedicineScreen } from "./TelemedicineScreen";
+import { appStore, useAppStore } from "../../stores/appStore";
 
 type ToolTab =
   | "soap"
@@ -51,10 +53,11 @@ type ToolTab =
   | "ops_reports"
   | "developer_hub"
   | "prof_settings"
-  | "prof_channels";
+  | "prof_channels"
+  | "telemedicine";
 
 const TABS: { id: ToolTab; label: string }[] = [
-  { id: "soap", label: "SOAP" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
+  { id: "soap", label: "SOAP" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "reports", label: "Reports" },
@@ -72,6 +75,15 @@ const TABS: { id: ToolTab; label: string }[] = [
 
 export function ClinicalToolsScreen() {
   const [tab, setTab] = useState<ToolTab>("soap");
+  const { clinicalToolsInitialTab } = useAppStore();
+
+  useEffect(() => {
+    if (clinicalToolsInitialTab) {
+      setTab(clinicalToolsInitialTab as ToolTab);
+      appStore.getState().setClinicalToolsInitialTab(null);
+    }
+  }, [clinicalToolsInitialTab]);
+
   return (
     <Screen><Header title="Clinical Tools" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar} contentContainerStyle={styles.tabBarContent}>
@@ -88,6 +100,7 @@ export function ClinicalToolsScreen() {
       </ScrollView>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPad}>
         {tab === "soap" && <SOAPPanel />}
+        {tab === "telemedicine" && <TelemedicineScreen />}
         {tab === "drugs" && <DrugInteractionPanel />}
         {tab === "orders" && <OrderSetsPanel />}
         {tab === "care" && <CarePlanPanel />}
@@ -118,7 +131,10 @@ function SOAPPanel() {
   const [soap, setSOAP] = useState({ subjective: "", objective: "", assessment: "", plan: "" });
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>SOAP Note</Text>
+      <View style={styles.soapHeaderRow}>
+        <Text style={styles.sectionTitle}>SOAP Note</Text>
+        <DictationAssistButton fieldLabel="SOAP sections" testID="soap-dictation-assist" />
+      </View>
       {(["subjective", "objective", "assessment", "plan"] as const).map((field) => (
         <View key={field}>
           <Text style={styles.label}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
@@ -284,6 +300,12 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   contentPad: { padding: 16, paddingBottom: 32 },
   section: { gap: 12 },
+  soapHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
   label: { fontSize: 13, fontWeight: "600", color: "#374151" },
   input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },

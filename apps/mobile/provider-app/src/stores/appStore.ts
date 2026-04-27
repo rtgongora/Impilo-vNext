@@ -24,6 +24,10 @@ export interface AppState {
   unreadNotifications: number;
   pendingSyncCount: number;
   globalError: { code: string; message: string } | null;
+  /** When opening Clinical Tools, select this tab once then clear (e.g. telemedicine). */
+  clinicalToolsInitialTab: string | null;
+  /** When switching to Supervisor mode, open this tab once then clear (e.g. escalations). */
+  supervisorEntryTab: "dashboard" | "team" | "stock" | "inventory" | "escalations" | null;
 
   setMode: (mode: AppMode) => void;
   setOnlineStatus: (online: boolean) => void;
@@ -34,6 +38,8 @@ export interface AppState {
   setUnreadNotifications: (count: number) => void;
   setPendingSyncCount: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
+  setClinicalToolsInitialTab: (tab: string | null) => void;
+  setSupervisorEntryTab: (tab: AppState["supervisorEntryTab"]) => void;
   clearContext: () => void;
 }
 
@@ -49,6 +55,8 @@ export const appStore = createStore<AppState>((set) => ({
   unreadNotifications: 0,
   pendingSyncCount: 0,
   globalError: null,
+  clinicalToolsInitialTab: null,
+  supervisorEntryTab: null,
 
   setMode: (mode) => set({ mode }),
   setOnlineStatus: (isOnline) => set({ isOnline }),
@@ -59,6 +67,8 @@ export const appStore = createStore<AppState>((set) => ({
   setUnreadNotifications: (count) => set({ unreadNotifications: count }),
   setPendingSyncCount: (count) => set({ pendingSyncCount: count }),
   setGlobalError: (error) => set({ globalError: error }),
+  setClinicalToolsInitialTab: (clinicalToolsInitialTab) => set({ clinicalToolsInitialTab }),
+  setSupervisorEntryTab: (supervisorEntryTab) => set({ supervisorEntryTab }),
   clearContext: () =>
     set({
       facilityId: null,

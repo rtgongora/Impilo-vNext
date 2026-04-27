@@ -76,6 +76,15 @@ These numbers were sourced from the `docs/prototype/final/` original summaries a
 - **6 golden paths**: Login, Clinical workflow, Admin, Marketplace, Registry, Reports
 - **6 React contexts** (implemented as 4 Zustand stores — see Spec Conflict #7)
 
+## Mobile parity (Citizen + Provider apps)
+
+Mobile implementation and parity classification for the same platform capabilities live outside this web-centric index:
+
+- `docs/audits/mobile-parity-audit.md` — audit summary vs web/One UI
+- `docs/audits/mobile-parity-traceability-matrix.md` — capability × role × status × API
+- `docs/product/mobile-navigation-and-parity-doctrine.md` — navigation rules (no desktop sidebar clone)
+- `docs/plan/SERVICE_CATALOG.md` §11 — mobile adjunct entry
+
 ## Contract Statement
 
 > Any replication prompt, build task, or CI check that references `docs/prototype/final/*` MUST follow the links in this index to reach the canonical detailed content. The `docs/prototype/final/` directory is an **index and contract layer**, not a self-contained specification set. The canonical detailed specs live in `docs/plan/` and `docs/architecture/v1.1/`.

@@ -43,6 +43,8 @@ export { Select } from "./forms/Select";
 export type { SelectProps, SelectOption } from "./forms/Select";
 export { Switch } from "./forms/Switch";
 export type { SwitchProps } from "./forms/Switch";
+export { DictationAssistButton } from "./forms/DictationAssistButton";
+export type { DictationAssistButtonProps } from "./forms/DictationAssistButton";
 
 // Clinical Components
 export { VitalCard } from "./clinical/VitalCard";

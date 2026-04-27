@@ -4,7 +4,7 @@
  * Tabs: Dashboard, Team, Stock, Inventory, Escalations
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useLayoutEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { TabBar } from "@impilo/mobile-design-system";
@@ -13,6 +13,7 @@ import { TeamOverviewScreen } from "../screens/supervisor/TeamOverviewScreen";
 import { StockScreen } from "../screens/supervisor/StockScreen";
 import { InventoryScreen } from "../screens/supervisor/InventoryScreen";
 import { EscalationsScreen } from "../screens/supervisor/EscalationsScreen";
+import { appStore } from "../stores/appStore";
 
 const ACCENT = "#1E40AF";
 
@@ -28,6 +29,14 @@ const TABS: Array<{ key: TabKey; label: string; activeIcon: string; inactiveIcon
 
 export function SupervisorTabs() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
+
+  useLayoutEffect(() => {
+    const entry = appStore.getState().supervisorEntryTab;
+    if (entry) {
+      setActiveTab(entry);
+      appStore.getState().setSupervisorEntryTab(null);
+    }
+  }, []);
 
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key as TabKey);

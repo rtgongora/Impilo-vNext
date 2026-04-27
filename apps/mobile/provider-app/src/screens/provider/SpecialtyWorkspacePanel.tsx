@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import type { SpecialtyWorkspaceDef } from "../../data/specialtyWorkspaces";
+import { DictationAssistButton } from "@impilo/mobile-design-system";
 
 type Props = {
   workspace: SpecialtyWorkspaceDef;
@@ -291,7 +292,10 @@ function NotesForm() {
   const [notes, setNotes] = useState("");
   return (
     <View style={styles.formBlock}>
-      <Text style={styles.formLabel}>Structured notes</Text>
+      <View style={styles.notesLabelRow}>
+        <Text style={styles.formLabel}>Structured notes</Text>
+        <DictationAssistButton fieldLabel="structured notes" testID="specialty-notes-dictation-assist" />
+      </View>
       <TextInput style={[styles.input, { minHeight: 100 }]} multiline value={notes} onChangeText={setNotes} placeholder="Clinical findings, plan..." />
       <TouchableOpacity style={styles.primaryBtn} onPress={() => Alert.alert("Saved", notes ? "Note captured locally." : "Nothing to save")}>
         <Text style={styles.primaryBtnText}>Save</Text>
@@ -350,6 +354,12 @@ const styles = StyleSheet.create({
   modalMeta: { fontSize: 12, color: "#6B7280" },
   modalDesc: { fontSize: 14, color: "#4B5563", lineHeight: 20 },
   formBlock: { gap: 10 },
+  notesLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
   formLabel: { fontSize: 15, fontWeight: "600", color: "#111827" },
   inputLabel: { fontSize: 12, fontWeight: "600", color: "#374151" },
   input: {

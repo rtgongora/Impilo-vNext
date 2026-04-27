@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
@@ -19,7 +19,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { useAppStore } from "../../stores/appStore";
+import { appStore, useAppStore } from "../../stores/appStore";
 import { useEncounterStore } from "../../stores/encounterStore";
 import { getMyTasks } from "../../services/taskService";
 import { listEncounters } from "../../services/encounterService";
@@ -51,7 +51,7 @@ const PRIORITY_VARIANT: Record<string, string> = {
 };
 
 export function ProviderDashboardScreen() {
-  const { facilityId, facilityName, workspaceName, setProviderTab } = useAppStore();
+  const { facilityId, facilityName, workspaceName, setProviderTab, setMode } = useAppStore();
   const { activeEncounter } = useEncounterStore();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openEncounters, setOpenEncounters] = useState<Encounter[]>([]);
@@ -233,6 +233,63 @@ export function ProviderDashboardScreen() {
               <Text style={styles.launchSubtitle}>Continue live encounter</Text>
             </Pressable>
           ) : null}
+        </View>
+
+        <Text style={styles.sectionLabel}>Safety, support &amp; comms</Text>
+        <View style={styles.supportRow}>
+          <Pressable
+            style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
+            onPress={() => setProviderTab("messaging")}
+            testID="launch-comms-hub"
+          >
+            <Ionicons name="chatbubbles-outline" size={16} color={BLUE} />
+            <Text style={styles.supportChipText}>Comms</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
+            onPress={() => {
+              appStore.getState().setClinicalToolsInitialTab("telemedicine");
+              setProviderTab("tools");
+            }}
+            testID="launch-telehealth-tools"
+          >
+            <Ionicons name="videocam-outline" size={16} color="#0891B2" />
+            <Text style={styles.supportChipText}>Telehealth</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
+            onPress={() => {
+              appStore.getState().setSupervisorEntryTab("escalations");
+              setMode("supervisor");
+            }}
+            testID="launch-system-support"
+          >
+            <Ionicons name="construct-outline" size={16} color="#7C3AED" />
+            <Text style={styles.supportChipText}>Support</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.supportChip, styles.supportChipSos, { opacity: pressed ? 0.88 : 1 }]}
+            onPress={() =>
+              Alert.alert(
+                "SOS & escalations",
+                "For immediate danger to life, call your local emergency number.\n\nFor facility incidents, outages, safeguarding, or security events, open Support to file a ticket or use your facility escalation protocol.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Open support",
+                    onPress: () => {
+                      appStore.getState().setSupervisorEntryTab("escalations");
+                      setMode("supervisor");
+                    },
+                  },
+                ],
+              )
+            }
+            testID="launch-sos-info"
+          >
+            <Ionicons name="warning-outline" size={16} color="#B91C1C" />
+            <Text style={[styles.supportChipText, { color: "#B91C1C" }]}>SOS</Text>
+          </Pressable>
         </View>
 
         {/* Task list */}
@@ -510,5 +567,30 @@ const styles = StyleSheet.create({
   refreshRow: {
     alignItems: "center",
     marginTop: 8,
+  },
+  supportRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  supportChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  supportChipSos: {
+    borderColor: "#FECACA",
+    backgroundColor: "#FEF2F2",
+  },
+  supportChipText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#1F2937",
   },
 });

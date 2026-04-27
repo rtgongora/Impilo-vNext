@@ -34,6 +34,8 @@ import { VerifyCredentialScreen } from "./VerifyCredentialScreen";
 import { DelegatedPickupScreen } from "./DelegatedPickupScreen";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { TermsOfUseScreen } from "./TermsOfUseScreen";
+import { ConsentScreen } from "./ConsentScreen";
+import { SupportScreen } from "../support/SupportScreen";
 
 type PersonalTab =
   | "profile"
@@ -67,7 +69,9 @@ type PersonalTab =
   | "verify"
   | "delegated-pickup"
   | "privacy"
-  | "terms";
+  | "terms"
+  | "consent"
+  | "support";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -94,6 +98,8 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "queue", label: "Queue", icon: "location" },
   { id: "sos", label: "Emergency", icon: "warning" },
   { id: "coverage", label: "Coverage", icon: "shield" },
+  { id: "consent", label: "Consent", icon: "book-outline" },
+  { id: "support", label: "Help", icon: "help-circle" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "assessments", label: "Assessments", icon: "duplicate" },
   { id: "care-team", label: "Care Team", icon: "people" },
@@ -129,6 +135,8 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   queue: QueueStatusSection,
   sos: EmergencySOSSection,
   coverage: CoverageSection,
+  consent: ConsentScreen,
+  support: SupportScreen,
   settings: SettingsSection,
   assessments: AssessmentsSection,
   "care-team": CareTeamSection,

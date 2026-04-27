@@ -32,6 +32,7 @@ Zero dependencies on Ring 1+. Strictest operational standards.
 | tshepo-authz-service | `services/tshepo-authz-service` | 8081 (HTTP) + 9090 (gRPC) | tshepo_authz | LIVE | — | ext_authz policy decision point, RBAC/ABAC, break-glass, step-up, device identity, risk scoring |
 | tshepo-identity-service | `services/tshepo-identity-service` | 8181 | tshepo_identity | LIVE | — | CPID resolution, MOSIP integration, O-CPID provisioning, token issuance, reconciliation |
 | tshepo-consent-service | `services/tshepo-consent-service` | 8182 | tshepo_consent | LIVE | — | FHIR R4 Consent CRUD, consent evaluation (Redis-cached), share links, revocation |
+| mvumo-service | `services/mvumo-service` | 8195 | mvumo | SKELETON | A | **Sovereign (same tier as Tshepo & co. in this table).** **Mvumo** — adaptive digital consent orchestration: templates, consent requests, remote sessions, assurance levels, proof links; defers FHIR enforcement/evaluation to `tshepo-consent-service` |
 | tshepo-audit-service | `services/tshepo-audit-service` | 8183 | tshepo_audit | LIVE | — | SHA-256 hash-chain audit ledger, Kafka consumer, query/export/verify, decision evidence |
 | tshepo-keys-service | `services/tshepo-keys-service` | 8184 | tshepo_keys | LIVE | — | Ed25519 signing, JWKS, key rotation, certificate trust, KMS/HSM (Vault-ready) |
 | tshepo-offline-service | `services/tshepo-offline-service` | 8185 | tshepo_offline | LIVE | — | Offline capability tokens (JWS-signed), offline packs, O-CPID issuance, reconciliation |
@@ -280,3 +281,37 @@ Operational support, analytics, integration. Must NOT impact Ring 1 latency or s
 | Keep Pharmacy + Inventory eLMIS adapters as separate services | They bridge external systems — clear boundary justification for extraction | No change |
 | Keep `tshepo-service` (legacy) as redirect during migration | Existing consumers may reference old endpoints | Phase out over 1 release cycle |
 | Do NOT create separate IoT Gateway service | Telemetry ingestion handled by TUSO Control Tower + existing Kafka topics | Route IoT data through `telemetry.*` bus |
+
+---
+
+## 10. Experience adjunct — voice dictation (cross-cutting)
+
+Voice dictation is **not** a standalone microservice in this catalog. It is a **client-side (and optional BFF-mediated) capability** that must respect the same trust and consent planes as any other UI mutation.
+
+| Concern | Owner | Notes |
+|---------|-------|-------|
+| Type & provider contracts | `ui/shared-ui` (`dictation/`) | `DictationProvider`, `DictationSession`, `TranscriptionResult`, … |
+| Canonical UX | `ui/one-ui-shell` | `DictationButton`, `DictatableTextarea`, `useSpeechToText` — align with `shared-ui` types |
+| Optional server STT | Experience BFF or dedicated edge route | Must carry v1.1 headers; **Mvumo** when audio leaves device |
+| Audit (metadata) | `tshepo-audit-service` (when wired) | Events such as dictation session start/stop without transcript payload by default |
+| Consent channel `VOICE` | `tshepo-consent-service` | **IVR/telephony consent** — not the same namespace as browser dictation |
+
+**References**: `docs/audits/voice-dictation-current-state-audit.md`, `docs/product/platform-wide-voice-dictation-doctrine.md`, `docs/architecture/voice-dictation-platform-integration.md`.
+
+---
+
+## 11. Experience adjunct — mobile parity (Citizen + Provider)
+
+Mobile is **not** a separate product plane: the same BFF and Ring-0 services apply. This catalog entry tracks **where** mobile consumes those services and **which** docs govern parity.
+
+| Concern | Owner | Notes |
+|---------|-------|------|
+| Parity audit | `docs/audits/mobile-parity-audit.md` | Web vs mobile capability classification and gaps |
+| Traceability | `docs/audits/mobile-parity-traceability-matrix.md` | Req / status / API / offline / push / tests per capability |
+| Navigation doctrine | `docs/product/mobile-navigation-and-parity-doctrine.md` | No desktop sidebar; Start + tabs + contextual hubs |
+| Security & push | `docs/security/mobile-security-privacy-notification-rules.md` | Lock-screen-safe notification copy; voice rules |
+| Offline readiness | `docs/audits/mobile-offline-readiness-audit.md` | `@impilo/mobile-offline`, sync UI, conflict handling |
+| No fake data | `docs/audits/mobile-no-fake-data-audit.md` | Production `src` must not ship mock clinical/financial data |
+| Apps | `apps/mobile/citizen-app`, `apps/mobile/provider-app` | Expo; workspaces under `apps/mobile/packages/*` |
+| Telemedicine API (provider) | Experience BFF | `/internal/v1/mobile/provider/telemedicine/sessions` (+ join/end) |
+| Trust headers on mobile | `@impilo/mobile-trust` | Must stay aligned with §2.1 TSHEPO cluster and `ui/shared-ui` contracts |
