@@ -7,6 +7,7 @@ import {
   Volume2, VolumeX, Shield, ArrowRightLeft, Phone, Loader2,
 } from 'lucide-react';
 import { useNotifications, useMarkNotificationRead } from '@/hooks/queries/useNotifications';
+import { useMvumoCommunicationEvaluate } from '@/hooks/queries/useMvumoCommsEvaluate';
 
 // ─── Types ───
 
@@ -71,11 +72,14 @@ type PanelView = 'list' | 'compose' | 'page';
 type NotificationsCommsHubProps = {
   /** Label on the trigger button (e.g. "Comms Hub" in clinical support strip) */
   triggerLabel?: string;
+  /** When set (e.g. on /ehr/[cpid]/*), compose/page actions run Mvumo preference pre-check before the local send stub. */
+  chartPatientCpid?: string;
 };
 
-export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsCommsHubProps) {
+export function NotificationsCommsHub({ triggerLabel = "Comms", chartPatientCpid }: NotificationsCommsHubProps) {
   const { data: notificationsData, isLoading, isError } = useNotifications();
   const markReadMutation = useMarkNotificationRead();
+  const evaluatePrefs = useMvumoCommunicationEvaluate();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<FilterCategory>('all');
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -100,6 +104,7 @@ export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsC
   const [pageUrgency, setPageUrgency] = useState<'routine' | 'urgent' | 'stat'>('routine');
   const [pageMessage, setPageMessage] = useState('');
   const [pageCallback, setPageCallback] = useState('');
+  const [prefGateMessage, setPrefGateMessage] = useState<string | null>(null);
 
   const unreadCount = notifications.filter(n => !n.read).length;
   const hasCritical = notifications.some(n => !n.read && (n.priority === 'critical' || n.priority === 'high'));
@@ -114,8 +119,25 @@ export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsC
     system: notifications.filter(n => n.category === 'system' && !n.read).length,
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!composeRecipient || !composeBody) return;
+    setPrefGateMessage(null);
+    if (chartPatientCpid) {
+      try {
+        const res = await evaluatePrefs.mutateAsync({
+          patientCpid: chartPatientCpid,
+          proposedChannel: "in_app",
+          messageKind: "GENERAL",
+        });
+        const d = res?.data;
+        if (d && d.allowed === false) {
+          setPrefGateMessage(d.rationale || "This send is not allowed for the current chart patient’s communication preferences.");
+          return;
+        }
+      } catch {
+        // Fail open when Mvumo/BFF is unavailable
+      }
+    }
     setNotifications(prev => [{
       id: `sent-${Date.now()}`, category: 'message' as const, priority: composePriority, title: composeSubject || 'Message', body: composeBody,
       timestamp: 'Just now', read: true, sender: 'You → ' + composeRecipient, workspaceScoped: false,
@@ -124,8 +146,25 @@ export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsC
     setPanelView('list');
   };
 
-  const handleSendPage = () => {
+  const handleSendPage = async () => {
     if (!pageRecipient || !pageMessage) return;
+    setPrefGateMessage(null);
+    if (chartPatientCpid) {
+      try {
+        const res = await evaluatePrefs.mutateAsync({
+          patientCpid: chartPatientCpid,
+          proposedChannel: pageUrgency === 'stat' ? 'phone' : 'app_push',
+          messageKind: pageUrgency === 'stat' ? 'URGENT' : 'GENERAL',
+        });
+        const d = res?.data;
+        if (d && d.allowed === false) {
+          setPrefGateMessage(d.rationale || "Page blocked by the patient’s communication preferences (use emergency workflows if appropriate).");
+          return;
+        }
+      } catch {
+        // fail open
+      }
+    }
     setNotifications(prev => [{
       id: `page-${Date.now()}`, category: 'alert' as const, priority: pageUrgency === 'stat' ? 'critical' as const : pageUrgency === 'urgent' ? 'high' as const : 'normal' as const,
       title: `Page: ${pageRecipient}`, body: pageMessage + (pageCallback ? ` [Callback: ${pageCallback}]` : ''),
@@ -241,6 +280,12 @@ export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsC
             {panelView === 'compose' && (
               <div className="p-3 border-b border-gray-200 bg-impilo-50/30 space-y-2">
                 <h4 className="text-xs font-semibold text-gray-700">New Message</h4>
+                {chartPatientCpid ? (
+                  <p className="text-[10px] text-slate-500">Patient context: {chartPatientCpid} — Comms Hub runs a Mvumo preference check before this stub send.</p>
+                ) : null}
+                {prefGateMessage ? (
+                  <p className="text-[10px] text-red-800 bg-red-50 border border-red-100 rounded p-1.5">{prefGateMessage}</p>
+                ) : null}
                 <input value={composeRecipient} onChange={e => setComposeRecipient(e.target.value)} placeholder="To (name or role)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
                 <input value={composeSubject} onChange={e => setComposeSubject(e.target.value)} placeholder="Subject (optional)" className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
                 <textarea value={composeBody} onChange={e => setComposeBody(e.target.value)} placeholder="Message..." rows={3} className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
@@ -260,6 +305,12 @@ export function NotificationsCommsHub({ triggerLabel = "Comms" }: NotificationsC
             {panelView === 'page' && (
               <div className="p-3 border-b border-gray-200 bg-amber-50/30 space-y-2">
                 <h4 className="text-xs font-semibold text-gray-700">Clinical Page</h4>
+                {chartPatientCpid ? (
+                  <p className="text-[10px] text-slate-500">Patient context: {chartPatientCpid} — Stat/urgent maps to phone/push for the preference gate.</p>
+                ) : null}
+                {prefGateMessage ? (
+                  <p className="text-[10px] text-red-800 bg-red-50 border border-red-100 rounded p-1.5">{prefGateMessage}</p>
+                ) : null}
                 <input value={pageRecipient} onChange={e => setPageRecipient(e.target.value)} placeholder="Page to (Dr. Name / On-call team)..." className="w-full px-2.5 py-1.5 text-xs border rounded-lg" />
                 <div className="flex gap-2">
                   {(['routine', 'urgent', 'stat'] as const).map(u => (

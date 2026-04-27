@@ -1,0 +1,48 @@
+replicaCount: 2
+
+image:
+  repository: impilo/mvumo-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8195
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/mvumo
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_DATA_REDIS_HOST: redis
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  TSHEPO_CONSENT_BASE_URL: http://tshepo-consent:8182
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  MVUMO_KAFKA_TOPIC: platform.mvumo.events
+  KEYCLOAK_URL: http://keycloak:8080
+  # Optional: enable when Mvumo must call Tshepo without a user token (e.g. batch/worker); set from secrets in real deploys
+  # MVUMO_TSHEPO_OAUTH2_ENABLED: "true"
+  # MVUMO_TSHEPO_TOKEN_URI: "http://keycloak:8080/realms/impilo/protocol/openid-connect/token"
+  # MVUMO_TSHEPO_CLIENT_ID: "mvumo-service"
+  # MVUMO_TSHEPO_CLIENT_SECRET: ""
+  # Optional OTLP trace export (set when a collector is available)
+  # OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector:4318/v1/traces"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8195
+  initialDelaySeconds: 40
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8195
+  initialDelaySeconds: 20

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.costa.domain.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -36,6 +37,10 @@ public class CostaPaymentHandoffEntity {
 
     @Column(name = "status", nullable = false, length = 40)
     private String status = "CREATED";
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_timing_mode", length = 40)
+    private BillingTimingMode billingTimingMode;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", nullable = false, columnDefinition = "jsonb")
@@ -136,6 +141,14 @@ public class CostaPaymentHandoffEntity {
 
     public void setMetadata(String metadata) {
         this.metadata = metadata;
+    }
+
+    public BillingTimingMode getBillingTimingMode() {
+        return billingTimingMode;
+    }
+
+    public void setBillingTimingMode(BillingTimingMode billingTimingMode) {
+        this.billingTimingMode = billingTimingMode;
     }
 
     public OffsetDateTime getCreatedAt() {

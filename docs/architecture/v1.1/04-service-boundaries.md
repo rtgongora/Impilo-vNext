@@ -50,7 +50,7 @@ They MUST enforce Clinical Safety Consistency Classes.
 |---|---|---|---|
 | **PCT** | Implemented | Patient Care Tracker: journeys, encounters, queues, discharge, triage | TSHEPO (auth), VITO (identity), TUSO (facility), BUTANO (record), MUSHEX (payment gate) |
 | **OROS** | Implemented | Orders & Results Orchestration: orders, worklists, worksteps, SLA | TSHEPO (auth), BUTANO (writeback), ZIBO (terminology), TUSO (routing) |
-| **COSTA** | Implemented | Costing Engine: billing, tariffs, exemptions, claims packing | TSHEPO (auth), MSIKA (tariffs), MUSHEX (payment intents) |
+| **COSTA** | Implemented | Costing Engine: continuous costing; billing timing (pre / PoC / post / periodic / episode / package / claim / deferred); tariffs; exemptions; claims packing; service access decisions (see `docs/doctrine/costa-mushex-billing-timing.md`) | TSHEPO (auth), MSIKA (tariffs), MUSHEX (payment intents) |
 | **Pharmacy** | Implemented | Dispense workflow, stock management, FEFO, barcode, pickup proof | TSHEPO (auth), OROS (orders), MUSHEX (charges), MSIKA (formulary) |
 | **MSIKA Flow** | Implemented | Health Marketplace: orders, fulfillment, vendor, booking | TSHEPO (auth), MSIKA (catalog), MUSHEX (payments), VARAPI (credentials) |
 | **Inpatient** | Skeleton | Bed management, ward allocation | TSHEPO, TUSO, PCT |

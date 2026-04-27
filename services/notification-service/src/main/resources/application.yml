@@ -26,6 +26,8 @@ spring:
         jwt:
           jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
           issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
 management:
   endpoints:
@@ -39,6 +41,14 @@ management:
 impilo:
   companion:
     enabled: true
+  mvumo:
+    base-url: ${MVUMO_BASE_URL:http://localhost:8195}
+    enabled: true
+  kafka:
+    mvumo:
+      enabled: ${KAFKA_MVUMO_CONSUMER_ENABLED:false}
+      topic: ${KAFKA_MVUMO_TOPIC:platform.mvumo.events}
+      group-id: ${KAFKA_MVUMO_GROUP:notification-service-mvumo}
   ops:
     enabled: true
     outbox-table: ns_event_outbox

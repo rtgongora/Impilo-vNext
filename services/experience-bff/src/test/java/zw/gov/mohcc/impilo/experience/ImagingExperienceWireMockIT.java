@@ -8,19 +8,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +24,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(ImagingExperienceWireMockIT.TestImagingSecurityBeans.class)
 @ExtendWith(DockerOrExternalPostgresCondition.class)
 class ImagingExperienceWireMockIT {
 
@@ -100,7 +94,9 @@ class ImagingExperienceWireMockIT {
     void listImagingStudies_proxiesPacsAndHonorsGovernanceEnvelope() throws Exception {
         mvc.perform(
                         get("/internal/v1/imaging/studies")
-                                .header("Authorization", "Bearer test-token")
+                                .with(jwt()
+                                .authorities(new SimpleGrantedAuthority("ROLE_CLINICIAN"))
+                                .jwt(j -> j.claim("realm_access", Map.of("roles", List.of("CLINICIAN")))))
                                 .header("X-Tenant-ID", "00000000-0000-0000-0000-000000000001")
                                 .header("X-Pod-ID", "national-spine")
                                 .header("X-Request-ID", UUID.randomUUID().toString())
@@ -109,24 +105,5 @@ class ImagingExperienceWireMockIT {
                 .andExpect(jsonPath("$.success", is(true)))
                 .andExpect(jsonPath("$.data[0].studyUid").value("1.2.3.4.5.6.7.8.9"))
                 .andExpect(jsonPath("$.data[0].patientCpid").value("CPID-IT-1"));
-    }
-
-    @Configuration
-    static class TestImagingSecurityBeans {
-
-        @Bean
-        @Primary
-        JwtDecoder integrationJwtDecoder() {
-            return token ->
-                    Jwt.withTokenValue(token)
-                            .header("alg", "none")
-                            .issuedAt(Instant.now())
-                            .expiresAt(Instant.now().plusSeconds(3600))
-                            .issuer("https://impilo-integration-test/realms/impilo")
-                            .audience(List.of("account"))
-                            .subject("integration-clinician")
-                            .claim("realm_access", Map.of("roles", List.of("CLINICIAN")))
-                            .build();
-        }
     }
 }

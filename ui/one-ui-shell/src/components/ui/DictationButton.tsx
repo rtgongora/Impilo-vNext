@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useRef } from "react";
 import { Mic, MicOff } from "lucide-react";
+import type { DictationLanguage, TranscriptionResult } from "shared-ui";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
 
 interface DictationButtonProps {
@@ -14,7 +15,14 @@ interface DictationButtonProps {
   /** Called with the updated text (existing + dictated) */
   onValueChange: (newValue: string) => void;
   /** Language for recognition (BCP-47) */
-  language?: string;
+  language?: DictationLanguage;
+  /** Structured transcript events (audit / Mvumo / platform hooks). */
+  onTranscriptionResult?: (result: TranscriptionResult) => void;
+  /**
+   * When true, allows server STT (e.g. chunked upload) when browser STT is unavailable.
+   * Default false — browser-only unless explicitly enabled with consent.
+   */
+  allowCloudStt?: boolean;
   /** Size variant */
   size?: "sm" | "default" | "icon";
   /** Additional className */
@@ -27,6 +35,8 @@ export function DictationButton({
   value,
   onValueChange,
   language = "en-US",
+  onTranscriptionResult,
+  allowCloudStt = false,
   size = "icon",
   className,
   disabled = false,
@@ -45,6 +55,8 @@ export function DictationButton({
     language,
     continuous: true,
     interimResults: true,
+    onTranscriptionResult,
+    allowCloudStt,
   });
 
   // Capture the base value when dictation starts

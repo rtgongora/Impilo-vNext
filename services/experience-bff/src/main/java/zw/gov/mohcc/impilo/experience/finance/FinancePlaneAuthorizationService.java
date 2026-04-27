@@ -46,6 +46,11 @@ public class FinancePlaneAuthorizationService {
         assertGate(method, "/internal/v1/finance/costa-intel", "costa-intel");
     }
 
+    /** COSTA pre-service / gate decisions ({@code /costa/v1/service-access-decisions}). */
+    public void assertServiceAccessDecisionAccess(String method) {
+        assertGate(method, "/internal/v1/finance/service-access-decisions", "service-access-decisions");
+    }
+
     private void assertGate(String method, String syntheticPath, String label) {
         if (allowAnonymous) {
             return;

@@ -14,5 +14,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     List<NotificationEntity> findByStatusOrderByCreatedAtAsc(NotificationStatus status);
 
+    List<NotificationEntity> findByTenantIdAndPatientRefAndStatus(
+            String tenantId, String patientRef, NotificationStatus status);
+
     Page<NotificationEntity> findByTenantId(String tenantId, Pageable pageable);
 }

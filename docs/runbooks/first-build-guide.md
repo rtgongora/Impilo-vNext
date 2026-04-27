@@ -94,7 +94,7 @@ cd services/experience-bff
 mvn spring-boot:run
 ```
 
-The BFF starts on **port 8160**. It proxies to sovereign services — if any downstream service is unavailable, the BFF will return graceful fallbacks (empty arrays) thanks to resilience4j circuit breakers.
+The BFF starts on **port 8160**. It proxies to sovereign services — if any downstream service is unavailable, the BFF will return graceful fallbacks (empty arrays) thanks to resilience4j circuit breakers. For **patient summary** including **Mvumo** `consentSummary`, run **mvumo-service** (`8195`) and set **`MVUMO_BASE_URL`** on the BFF (see `docs/architecture/patient-care-consent-surface.md`).
 
 ### Environment overrides
 

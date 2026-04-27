@@ -15,6 +15,7 @@ import zw.gov.mohcc.impilo.notification.api.dto.NotifyResponse;
 import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
 import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
 import zw.gov.mohcc.impilo.notification.domain.OutboxEventEntity;
+import zw.gov.mohcc.impilo.notification.integration.MvumoPreferenceClient;
 import zw.gov.mohcc.impilo.notification.repository.NotificationRepository;
 import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 
@@ -30,13 +31,17 @@ public class NotifyService {
     private final NotificationRepository notificationRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
+    private final MvumoPreferenceClient mvumoPreferenceClient;
 
-    public NotifyService(NotificationRepository notificationRepository,
-                         OutboxEventRepository outboxEventRepository,
-                         ObjectMapper objectMapper) {
+    public NotifyService(
+            NotificationRepository notificationRepository,
+            OutboxEventRepository outboxEventRepository,
+            ObjectMapper objectMapper,
+            MvumoPreferenceClient mvumoPreferenceClient) {
         this.notificationRepository = notificationRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
+        this.mvumoPreferenceClient = mvumoPreferenceClient;
     }
 
     @Transactional
@@ -46,18 +51,34 @@ public class NotifyService {
         entity.setChannel(request.channel());
         entity.setToAddr(request.recipient());
         entity.setVarsJson(serializeVariables(request.variables()));
-        entity.setStatus(NotificationStatus.PENDING);
         entity.setTenantId(ctx.tenantId());
         entity.setPodId(ctx.podId());
+        entity.setPatientRef(request.patientRef());
+
+        java.util.Optional<Boolean> allow =
+                mvumoPreferenceClient.evaluateAllowed(
+                        ctx.tenantId(), request.patientRef(), request.channel(), request.messageKind());
+        if (allow.isPresent() && !allow.get()) {
+            entity.setStatus(NotificationStatus.CANCELLED);
+            entity.setLastError("Blocked by Mvumo communication preferences");
+        } else {
+            entity.setStatus(NotificationStatus.PENDING);
+        }
 
         entity = notificationRepository.save(entity);
-        log.info("Enqueued notification id={} channel={} to={} tenant={}", entity.getId(), entity.getChannel(), entity.getToAddr(), ctx.tenantId());
+        log.info(
+                "Enqueued notification id={} channel={} to={} tenant={} status={}",
+                entity.getId(), entity.getChannel(), entity.getToAddr(), ctx.tenantId(), entity.getStatus());
 
         OutboxEventEntity outbox = new OutboxEventEntity();
         outbox.setTenantId(ctx.tenantId());
         outbox.setPodId(ctx.podId());
         outbox.setCorrelationId(ctx.correlationId());
-        outbox.setEventType("impilo.notify.notification.enqueued.v1");
+        if (entity.getStatus() == NotificationStatus.CANCELLED) {
+            outbox.setEventType("impilo.notify.notification.preference_blocked.v1");
+        } else {
+            outbox.setEventType("impilo.notify.notification.enqueued.v1");
+        }
         outbox.setSchemaVersion(1);
         outbox.setOccurredAt(OffsetDateTime.now());
 
@@ -67,10 +88,17 @@ public class NotifyService {
         payload.put("to", entity.getToAddr());
         payload.put("templateKey", entity.getTemplateKey());
         payload.put("status", entity.getStatus().name());
+        if (entity.getPatientRef() != null) {
+            payload.put("patientRef", entity.getPatientRef());
+        }
+        if (entity.getStatus() == NotificationStatus.CANCELLED) {
+            payload.put("reason", "preference_gate");
+        }
         outbox.setPayloadJson(serializePayload(payload));
         outboxEventRepository.save(outbox);
 
-        return new NotifyResponse(entity.getId(), entity.getStatus().name(), entity.getChannel(), entity.getToAddr());
+        String detail = entity.getStatus() == NotificationStatus.CANCELLED ? entity.getLastError() : null;
+        return new NotifyResponse(entity.getId(), entity.getStatus().name(), entity.getChannel(), entity.getToAddr(), detail);
     }
 
     @Transactional(readOnly = true)

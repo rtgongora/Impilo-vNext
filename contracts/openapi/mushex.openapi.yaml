@@ -555,6 +555,26 @@ components:
         intentId:
           type: string
 
+    PaymentIntentType:
+      type: string
+      description: >
+        Optional classifier on payment intents. Set via metadata keys intent_type or payment_intent_type
+        when creating intents (COSTA handoffs may populate these).
+      enum:
+        - PRE_SERVICE_PAYMENT
+        - DEPOSIT
+        - AUTHORISATION_HOLD
+        - POINT_OF_CARE_PAYMENT
+        - FINAL_PAYMENT
+        - PARTIAL_PAYMENT
+        - CO_PAYMENT
+        - CLAIM_SUBMISSION
+        - WALLET_DEBIT
+        - REMITTANCE
+        - REFUND
+        - REVERSAL
+        - DEFERRED_PAYMENT_PROMISE
+
     PaymentIntent:
       type: object
       properties:
@@ -575,6 +595,12 @@ components:
           type: number
         status:
           type: string
+          description: >
+            Canonical lifecycle state (IntentStatus). Extended business labels (awaiting_payment, covered,
+            deferred, reversed, expired, etc.) may additionally be mirrored in metadata.lifecycle_label until
+            the state machine is expanded.
+        intentType:
+          $ref: '#/components/schemas/PaymentIntentType'
         createdAt:
           type: string
           format: date-time

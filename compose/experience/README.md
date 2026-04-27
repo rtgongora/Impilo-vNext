@@ -8,6 +8,8 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 2. **Replaces Supabase with the Impilo stack** — experience-bff (Spring Boot) with PostgreSQL, Flyway migrations, outbox pattern, v1.1 header enforcement
 3. **Runs via Docker Compose** — Postgres (5433), Redis, Kafka, wellness-service, BFF, UI with healthchecks and smoke tests (mirrors root infra wiring for cache/event bus)
 
+**Sovereign downstreams (full stack):** For chart **patient summary** with **Mvumo** `consentSummary`, run **mvumo-service** (`:8195`) and **pct-service** (`:8088`), and set **`MVUMO_BASE_URL`** (and `PCT_BASE_URL`) on **experience-bff** when not using defaults. See [`docs/architecture/patient-care-consent-surface.md`](../../docs/architecture/patient-care-consent-surface.md).
+
 ### Stage-1 Scope
 
 | Area | Included |

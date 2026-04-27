@@ -41,15 +41,7 @@ class SettlementControllerTest {
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         // Pass all nulls — the compact constructor defaults every field to localhost URLs
-        return new ServiceClientConfig.ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null
-        );
+        return ServiceClientConfig.testServiceEndpoints();
     }
 
     private static final class StubMushexClient extends MushexServiceClient {

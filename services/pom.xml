@@ -139,6 +139,8 @@
         <module>tshepo-authz-service</module>
         <module>tshepo-identity-service</module>
         <module>tshepo-consent-service</module>
+        <!-- Mvumo — national digital consent orchestration (adaptive assurance, templates, remote sessions) -->
+        <module>mvumo-service</module>
         <module>tshepo-audit-service</module>
         <module>tshepo-keys-service</module>
         <module>tshepo-offline-service</module>

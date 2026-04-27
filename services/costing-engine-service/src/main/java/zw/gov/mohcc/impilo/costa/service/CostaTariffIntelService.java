@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import zw.gov.mohcc.impilo.costa.api.dto.finance.TariffApplicationResult;
 import zw.gov.mohcc.impilo.costa.domain.entity.*;
 import zw.gov.mohcc.impilo.costa.domain.enums.BillLineKind;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
 import zw.gov.mohcc.impilo.costa.domain.enums.ClaimPackStatus;
+import zw.gov.mohcc.impilo.costa.domain.enums.CostaInvoiceType;
 import zw.gov.mohcc.impilo.costa.domain.enums.CostMethodType;
 import zw.gov.mohcc.impilo.costa.domain.repository.*;
 import zw.gov.mohcc.impilo.costa.engine.TariffCostEngine;
@@ -112,6 +115,7 @@ public class CostaTariffIntelService {
 
         Long tariffListId = resolveTariffListId(body, tenantId);
         CostaTariffListEntity list = requireTariffList(tariffListId, tenantId);
+        BillingTimingMode billingTimingMode = parseBillingTimingMode(body);
 
         List<String> warnings = new ArrayList<>();
         if (list.isReferenceOnly()) {
@@ -234,6 +238,17 @@ public class CostaTariffIntelService {
         response.put("warnings", warnings);
         response.put("duplicate_charge_sheet_warnings", duplicateWarnings);
         response.put("billing_rules_applied", split.trace());
+        TariffApplicationResult tariffApplicationResult = new TariffApplicationResult(
+                tariffListId,
+                list.getExternalCode(),
+                billingTimingMode,
+                totalTariff.toPlainString(),
+                split.patientPayable().toPlainString(),
+                split.insurerPayable().toPlainString(),
+                split.writeOff().toPlainString(),
+                split.subsidyPayable().toPlainString()
+        );
+        response.put("tariff_application_result", tariffApplicationResult.toMap());
 
         String auditRef = "CE-" + UlidGenerator.generate().substring(0, 12);
         response.put("audit_reference", auditRef);
@@ -248,6 +263,7 @@ public class CostaTariffIntelService {
             throw new IllegalStateException("Failed to persist cost estimate", e);
         }
         row.setAuditReference(auditRef);
+        row.setBillingTimingMode(billingTimingMode);
         row = costaCostEstimateRepository.save(row);
         response.put("cost_estimate_id", row.getCostEstimateId().toString());
 
@@ -263,6 +279,7 @@ public class CostaTariffIntelService {
         decision.setUnrecoveredAmount(economic.subtract(totalTariff).max(BigDecimal.ZERO));
         decision.setApprovalRequired(list.isReferenceOnly() || !list.isApprovedForBilling());
         decision.setAuditReference(auditRef);
+        decision.setBillingTimingMode(billingTimingMode);
         try {
             ArrayNode linesJson = objectMapper.createArrayNode();
             for (Map<String, Object> line : appliedItems) {
@@ -456,6 +473,9 @@ public class CostaTariffIntelService {
         billService.approve(bill.getBillId(), ctx.actorId(), "COSTA tariff intel auto-approve");
         billService.finalize(bill.getBillId());
         InvoiceEntity inv = paymentIntegrationService.issueInvoice(bill.getBillId());
+        inv.setBillingTimingMode(parseBillingTimingMode(body));
+        inv.setInvoiceType(parseInvoiceType(body));
+        invoiceRepository.save(inv);
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("invoice_id", inv.getInvoiceId());
@@ -482,6 +502,7 @@ public class CostaTariffIntelService {
 
         ClaimPackEntity c = new ClaimPackEntity();
         c.setBillId(inv.getBillId());
+        c.setBillingTimingMode(parseBillingTimingMode(body));
         c.setInsurerRef(body.path("payer_context").path("insurer_ref").asText(null));
         c.setClaimType(body.path("claim_type").asText("INITIAL"));
         c.setStatus(ClaimPackStatus.PENDING);
@@ -536,6 +557,9 @@ public class CostaTariffIntelService {
         meta.put("impilo_simulation", body.path("impilo_simulation").asBoolean(true));
         meta.put("simulation_outcome", body.path("simulation_outcome").asText("authorised"));
         meta.put("provider_id", body.path("provider_id").asText(ctx.facilityId() != null ? ctx.facilityId().toString() : ""));
+        if (body.hasNonNull("intent_type")) {
+            meta.put("intent_type", body.get("intent_type").asText());
+        }
         if (invoiceId != null) {
             meta.put("invoice_id", invoiceId);
         }
@@ -558,6 +582,7 @@ public class CostaTariffIntelService {
 
         CostaPaymentHandoffEntity h = new CostaPaymentHandoffEntity();
         h.setTenantId(ctx.tenantId());
+        h.setBillingTimingMode(parseBillingTimingMode(body));
         h.setInvoiceId(invoiceId);
         h.setClaimId(claimId);
         h.setMushexIntentId(created.intentId());
@@ -579,6 +604,28 @@ public class CostaTariffIntelService {
                 "mushex_intent_id", created.intentId(),
                 "status", h.getStatus()
         );
+    }
+
+    private BillingTimingMode parseBillingTimingMode(JsonNode body) {
+        if (body == null || !body.hasNonNull("billing_timing_mode")) {
+            return null;
+        }
+        try {
+            return BillingTimingMode.valueOf(body.get("billing_timing_mode").asText().trim());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private CostaInvoiceType parseInvoiceType(JsonNode body) {
+        if (body == null || !body.hasNonNull("invoice_type")) {
+            return null;
+        }
+        try {
+            return CostaInvoiceType.valueOf(body.get("invoice_type").asText().trim());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     private void assertCanBill(CostaTariffListEntity list, JsonNode body) {

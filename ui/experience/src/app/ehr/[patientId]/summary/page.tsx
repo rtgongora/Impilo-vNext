@@ -27,6 +27,8 @@ import {
   ClipboardCheck,
   Globe2,
   FlaskConical,
+  FileCheck,
+  Shield,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
@@ -274,6 +276,114 @@ export default function PatientSummaryPage() {
                     <div className="text-[10px] text-gray-500">Immunizations</div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {patient && (
+              <div
+                id="consent-preferences"
+                className="rounded-lg border border-amber-200 bg-amber-50/40 p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileCheck className="h-4 w-4 shrink-0 text-amber-700" aria-hidden />
+                    <div>
+                      <h3 className="text-sm font-medium text-amber-950">Consent, Preferences &amp; Directives</h3>
+                      <p className="text-xs text-amber-900/80">
+                        Surfaced from Mvumo via the patient summary API — not only the consent request history list.
+                        {patientSummary?.consentSummary?.requiresReview ? (
+                          <span className="ml-1 font-semibold text-amber-950"> Review required.</span>
+                        ) : null}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/ehr/${patientId}/emergency`}
+                      className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-900 hover:bg-red-100"
+                    >
+                      Emergency / high-risk view
+                    </Link>
+                    <Link
+                      href={`/ehr/${patientId}/preferences/communications`}
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-900 hover:bg-emerald-100"
+                    >
+                      Communication preferences
+                    </Link>
+                    <span
+                      className="rounded-lg border border-amber-200/80 bg-white/80 px-3 py-1.5 text-xs text-amber-950"
+                      title="Capture and withdrawals are handled in the Mvumo consent registry (operator shell)."
+                    >
+                      Request / update in Mvumo registry
+                    </span>
+                  </div>
+                </div>
+
+                {patientSummary?.consentSummary && (
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-md border border-amber-100 bg-white/90 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Critical flags</p>
+                      <ul className="mt-2 space-y-1.5 text-sm text-slate-800">
+                        {(patientSummary.consentSummary.criticalFlags ?? []).slice(0, 6).map((f) => (
+                          <li key={f.id ?? f.code} className="flex flex-wrap items-baseline gap-2">
+                            <Shield className="h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+                            <span className="font-medium">{f.label}</span>
+                            {f.severity && (
+                              <span className="text-[10px] uppercase text-slate-500">{f.severity}</span>
+                            )}
+                          </li>
+                        ))}
+                        {(patientSummary.consentSummary.criticalFlags ?? []).length === 0 && (
+                          <li className="text-sm text-slate-500">No critical flags in current extract.</li>
+                        )}
+                      </ul>
+                    </div>
+                    <div className="rounded-md border border-amber-100 bg-white/90 p-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Active &amp; refusals</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        Active: {(patientSummary.consentSummary.activeConsents ?? []).length} · Refusals:{" "}
+                        {(patientSummary.consentSummary.refusals ?? []).length} · Withdrawn:{" "}
+                        {(patientSummary.consentSummary.withdrawals ?? []).length}
+                      </p>
+                      {patientSummary.consentSummary.capacityStatus && (
+                        <p className="mt-2 text-sm text-slate-800">
+                          Capacity:{" "}
+                          <span className="font-medium">{patientSummary.consentSummary.capacityStatus}</span>
+                        </p>
+                      )}
+                    </div>
+                    <div className="rounded-md border border-amber-100 bg-white/90 p-3 md:col-span-2">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                        Communication preference profile (Mvumo)
+                      </p>
+                      {patientSummary.consentSummary.communicationPreferenceProfile?.hasProfile ? (
+                        <p className="mt-2 text-sm text-slate-800">
+                          State:{" "}
+                          <span className="font-medium">
+                            {patientSummary.consentSummary.communicationPreferenceProfile.lifecycleState ?? "—"}
+                          </span>
+                          {" · "}
+                          Bundle v{patientSummary.consentSummary.communicationPreferenceProfile.bundleVersion ?? "—"}
+                          {patientSummary.consentSummary.communicationPreferenceProfile.updatedAt ? (
+                            <>
+                              {" · "}
+                              Updated {patientSummary.consentSummary.communicationPreferenceProfile.updatedAt}
+                            </>
+                          ) : null}
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-sm text-slate-600">
+                          No versioned communication preference bundle on file yet — preferences are not one-time
+                          registration fields; they can be added or revised in intake, portal, or assisted workflows.
+                        </p>
+                      )}
+                    </div>
+                    <div className="md:col-span-2 rounded-md border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600">
+                      Communication / data / blood restrictions are listed in the structured Mvumo response; workbench
+                      workflows (orders, theatre, comms) should read the same BFF field for context-sensitive alerts.
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

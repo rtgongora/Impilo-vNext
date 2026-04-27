@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mvumo.fullname" . }}
+  labels:
+    {{- include "mvumo.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port | default 8195 }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "mvumo.selectorLabels" . | nindent 4 }}

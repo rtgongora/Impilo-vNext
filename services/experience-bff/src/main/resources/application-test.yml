@@ -1,3 +1,8 @@
+# Force ROPC against a closed port so login fails with "connection refused" (not HTTP 401 from a
+# real Keycloak on localhost). AuthSessionController only uses dev fallback on transport errors,
+# not on invalid-credentials 401 responses.
+KEYCLOAK_URL: http://127.0.0.1:1
+
 spring:
   autoconfigure:
     exclude:

@@ -358,6 +358,33 @@ public class CostaServiceClient {
         return extractData(response);
     }
 
+    // ── Service access decisions (COSTA /costa/v1/service-access-decisions) ─
+
+    public JsonNode postServiceAccessDecision(Map<String, Object> body) {
+        String url = baseUrl + "/costa/v1/service-access-decisions";
+        log.info("COSTA: Register service access decision");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getServiceAccessDecisions(String encounterId) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/costa/v1/service-access-decisions");
+        if (encounterId != null && !encounterId.isBlank()) {
+            b.queryParam("encounter_id", encounterId);
+        }
+        log.info("COSTA: List service access decisions encounterId={}", encounterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getServiceAccessDecision(String id) {
+        String enc = UriUtils.encodePathSegment(id, StandardCharsets.UTF_8);
+        String url = baseUrl + "/costa/v1/service-access-decisions/" + enc;
+        log.info("COSTA: Get service access decision id={}", id);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Institutional financial reporting (COSTA internal) ────────────
 
     public ResponseEntity<String> costaInternalGet(String pathAndQuery) {

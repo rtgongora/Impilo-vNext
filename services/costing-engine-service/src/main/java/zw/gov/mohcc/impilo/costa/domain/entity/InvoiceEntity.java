@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.costa.domain.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
+import zw.gov.mohcc.impilo.costa.domain.enums.CostaInvoiceType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -66,6 +68,14 @@ public class InvoiceEntity {
     @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson = "{}";
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_timing_mode", length = 40)
+    private BillingTimingMode billingTimingMode;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "invoice_type", length = 50)
+    private CostaInvoiceType invoiceType;
+
     @PrePersist
     protected void onCreate() { if (issuedAt == null) issuedAt = OffsetDateTime.now(); }
 
@@ -102,4 +112,20 @@ public class InvoiceEntity {
     public void setOutstandingAmount(BigDecimal outstandingAmount) { this.outstandingAmount = outstandingAmount; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
+
+    public BillingTimingMode getBillingTimingMode() {
+        return billingTimingMode;
+    }
+
+    public void setBillingTimingMode(BillingTimingMode billingTimingMode) {
+        this.billingTimingMode = billingTimingMode;
+    }
+
+    public CostaInvoiceType getInvoiceType() {
+        return invoiceType;
+    }
+
+    public void setInvoiceType(CostaInvoiceType invoiceType) {
+        this.invoiceType = invoiceType;
+    }
 }

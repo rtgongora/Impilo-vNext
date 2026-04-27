@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import { ServiceAccessPaymentPanel } from "@/components/billing/ServiceAccessPaymentPanel";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -75,7 +76,7 @@ export default function BillingPage() {
     <AppLayout>
       <PageShell
         title="Billing"
-        subtitle="Manage invoices and billing records"
+        subtitle="Manage invoices and billing records. Billing may occur before, during, or after care; costing runs continuously."
       >
         <div className="mb-4">
           <Link
@@ -131,6 +132,8 @@ export default function BillingPage() {
                 },
               ]}
             />
+
+            <ServiceAccessPaymentPanel encounterId={encounterId} patientId={patientId} />
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">

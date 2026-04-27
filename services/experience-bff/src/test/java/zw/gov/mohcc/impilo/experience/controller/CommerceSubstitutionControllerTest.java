@@ -38,15 +38,7 @@ class CommerceSubstitutionControllerTest {
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
-        return new ServiceClientConfig.ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null
-        );
+        return ServiceClientConfig.testServiceEndpoints();
     }
 
     private static final class StubFlowClient extends MsikaFlowServiceClient {

@@ -245,11 +245,14 @@ document-service
 ```
 experience-bff
     ├──→ tshepo-authz-service      [auth]
-    ├──→ vito-service               [patient data]
-    ├──→ pct-service                [care journeys]
-    ├──→ butano-fhir                [health records]
+    ├──→ vito-service               [patient identity / CPID resolution]
+    ├──→ pct-service                [care journeys, patient health summary]
+    ├──→ mvumo-service              [consent orchestration; consent-summary for chart UI]
+    ├──→ butano-fhir                [health records / IPS proxy]
     └──→ mushex-service             [payment/claims status]
 ```
+
+Patient chart “consent surface” is composed in the BFF (`EhrPatientSummaryController`: PCT `/v1/patient/{cpid}/summary` + Mvumo `/internal/v1/mvumo/consent-summary`). UIs call `GET /internal/v1/summary/patient/{patientId}` only.
 
 ### Adapters (eLMIS, PACS, Integration Hub)
 

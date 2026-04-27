@@ -51,15 +51,7 @@ class CredentialVaultControllerTest {
         private StubCredentialClient() {
             super(
                     new RestTemplate(),
-                    new ServiceClientConfig.ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null
-        ));
+                    ServiceClientConfig.testServiceEndpoints());
         }
 
         @Override

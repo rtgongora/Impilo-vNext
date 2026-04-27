@@ -1,0 +1,24 @@
+impilo:
+  security:
+    disable-oauth-for-tests: true
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    url: jdbc:h2:mem:mvumo_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+mvumo:
+  tshepo-consent:
+    enabled: false
+    client-credentials:
+      enabled: false
+management:
+  tracing:
+    enabled: false

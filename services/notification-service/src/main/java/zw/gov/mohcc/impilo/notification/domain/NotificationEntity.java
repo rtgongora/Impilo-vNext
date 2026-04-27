@@ -28,6 +28,9 @@ public class NotificationEntity {
     @Column(name = "to_addr", length = 256, nullable = false)
     private String toAddr;
 
+    @Column(name = "patient_ref", length = 300)
+    private String patientRef;
+
     @Column(name = "vars_json", columnDefinition = "TEXT")
     private String varsJson;
 
@@ -76,6 +79,9 @@ public class NotificationEntity {
 
     public String getToAddr() { return toAddr; }
     public void setToAddr(String toAddr) { this.toAddr = toAddr; }
+
+    public String getPatientRef() { return patientRef; }
+    public void setPatientRef(String patientRef) { this.patientRef = patientRef; }
 
     public String getVarsJson() { return varsJson; }
     public void setVarsJson(String varsJson) { this.varsJson = varsJson; }

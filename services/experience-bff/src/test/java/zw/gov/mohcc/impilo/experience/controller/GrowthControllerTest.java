@@ -48,15 +48,7 @@ class GrowthControllerTest {
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
-        return new ServiceClientConfig.ServiceEndpoints(
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
-                null
-        );
+        return ServiceClientConfig.testServiceEndpoints();
     }
 
     private static final class StubPctClient extends PctServiceClient {

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
+import zw.gov.mohcc.impilo.mushex.domain.enums.PaymentIntentType;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 import zw.gov.mohcc.impilo.mushex.config.MushexProperties;
 import zw.gov.mohcc.impilo.mushex.domain.repository.EventOutboxRepository;
@@ -164,6 +165,7 @@ public class PaymentIntentService {
         intent.setStatus(IntentStatus.CREATED);
         intent.setIdempotencyKey(idempotencyKey);
         intent.setMetadata(metadata);
+        intent.setIntentType(parseIntentTypeFromMetadata(metadata));
         intent.setExpiresAt(OffsetDateTime.now().plusHours(24));
         if (cred.verificationRef() != null && !cred.verificationRef().isBlank()) {
             intent.setCredentialVerificationRef(cred.verificationRef());
@@ -189,6 +191,24 @@ public class PaymentIntentService {
                 ctx.tenantId());
 
         return intent;
+    }
+
+    private PaymentIntentType parseIntentTypeFromMetadata(String metadata) {
+        if (metadata == null || metadata.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode n = objectMapper.readTree(metadata);
+            if (n.hasNonNull("intent_type")) {
+                return PaymentIntentType.valueOf(n.get("intent_type").asText().trim());
+            }
+            if (n.hasNonNull("payment_intent_type")) {
+                return PaymentIntentType.valueOf(n.get("payment_intent_type").asText().trim());
+            }
+        } catch (Exception e) {
+            log.debug("Could not parse intent_type from metadata: {}", e.getMessage());
+        }
+        return null;
     }
 
     private void applySimulationOutcomeOnCreateIfEnabled(PaymentIntentEntity intent, String metadata) {

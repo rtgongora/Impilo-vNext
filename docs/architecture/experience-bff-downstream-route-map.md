@@ -40,6 +40,9 @@ Trust headers from inbound requests are copied onto outbound `RestTemplate` call
 | `workflow-base-url` | `http://localhost:8250` | Workflow |
 | `guidance-base-url` | `http://localhost:8260` | Guidance |
 | `integration-hub-base-url` | `http://localhost:8110` | Integration Hub |
+| `mvumo-base-url` | `http://localhost:8195` | **Mvumo** (sovereign Ring-0 service, same integration pattern as `tshepo-*` / `vito` URLs) — `/internal/v1/mvumo/**` via `MvumoServiceProxyController`; `EhrPatientSummaryController` also calls `.../mvumo/consent-summary` for chart surfacing |
+
+Environment variable: `MVUMO_BASE_URL` (see `application.yml`), alongside `TSHEPO_*`, `VITO_BASE_URL`, etc. UIs use the BFF only: `GET /internal/v1/summary/patient/{patientId}` (PCT + `consentSummary`) or `/internal/v1/mvumo/**` through the same proxy pattern as other sovereigns.
 
 Ports should match [`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md) and [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml); if YAML and BFF defaults diverge, treat the port runbook + registry as the reconciliation target.
 

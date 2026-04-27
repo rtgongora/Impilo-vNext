@@ -145,6 +145,7 @@ impilo:
     # Health OS §7: Trust Layer (TSHEPO cluster)
     tshepo-authz-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
     tshepo-consent-base-url: ${TSHEPO_CONSENT_BASE_URL:http://localhost:8182}
+    mvumo-base-url: ${MVUMO_BASE_URL:http://localhost:8195}
     tshepo-audit-base-url: ${TSHEPO_AUDIT_BASE_URL:http://localhost:8183}
 
     # Health Intelligence Plane — AI Model Registry

@@ -1,18 +1,27 @@
 /**
  * useSpeechToText — Unified voice dictation hook
- * Uses Web Speech API (browser-native) with ElevenLabs Scribe fallback.
+ * Uses Web Speech API (browser-native) with optional server STT fallback (gated).
+ * Types align with `shared-ui` dictation contracts.
  */
 import { useState, useRef, useCallback, useEffect } from "react";
+import type { DictationLanguage, TranscriptionResult } from "shared-ui";
 
 export type SpeechEngine = "browser" | "elevenlabs" | "auto";
 
 interface UseSpeechToTextOptions {
   engine?: SpeechEngine;
-  language?: string;
+  language?: DictationLanguage;
   continuous?: boolean;
   interimResults?: boolean;
   onTranscript?: (text: string, isFinal: boolean) => void;
+  /** Structured transcript events (platform dictation contract). */
+  onTranscriptionResult?: (result: TranscriptionResult) => void;
   onError?: (error: string) => void;
+  /**
+   * When false (default), never starts MediaRecorder / server transcription — browser STT only.
+   * Set true only where product + Mvumo consent allow raw audio to leave the device.
+   */
+  allowCloudStt?: boolean;
 }
 
 interface UseSpeechToTextReturn {
@@ -48,7 +57,9 @@ export function useSpeechToText({
   continuous = true,
   interimResults = true,
   onTranscript,
+  onTranscriptionResult,
   onError,
+  allowCloudStt = false,
 }: UseSpeechToTextOptions = {}): UseSpeechToTextReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -60,14 +71,38 @@ export function useSpeechToText({
   const activeEngineRef = useRef<"browser" | "elevenlabs" | "none">("none");
 
   const browserSupported = isBrowserSpeechSupported();
-  // ElevenLabs fallback always available via API
-  const isSupported = browserSupported || true;
+  const isSupported =
+    browserSupported || (allowCloudStt && (engine === "auto" || engine === "elevenlabs"));
 
-  // Determine engine: auto = browser first, fallback to elevenlabs
-  const resolvedEngine =
-    engine === "auto"
-      ? browserSupported ? "browser" : "elevenlabs"
-      : engine;
+  const emitResult = useCallback(
+    (text: string, isFinal: boolean) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      onTranscriptionResult?.({
+        transcript: trimmed,
+        isFinal,
+        language,
+      });
+    },
+    [language, onTranscriptionResult],
+  );
+
+  const resolvedEngine: "browser" | "elevenlabs" | "none" =
+    engine === "browser"
+      ? browserSupported
+        ? "browser"
+        : "none"
+      : engine === "elevenlabs"
+        ? allowCloudStt
+          ? "elevenlabs"
+          : "none"
+        : engine === "auto"
+          ? browserSupported
+            ? "browser"
+            : allowCloudStt
+              ? "elevenlabs"
+              : "none"
+          : "none";
 
   useEffect(() => {
     return () => {
@@ -108,6 +143,7 @@ export function useSpeechToText({
           ? (data as { text: string }).text.trim()
           : "";
       if (text) {
+        emitResult(text, true);
         setTranscript((prev) => {
           const newText = prev ? `${prev} ${text}` : text;
           onTranscript?.(newText, true);
@@ -117,7 +153,7 @@ export function useSpeechToText({
     } catch (e) {
       console.error("Scribe chunk error:", e);
     }
-  }, [language, onTranscript]);
+  }, [language, onTranscript, emitResult]);
 
   const startElevenLabsRecognition = useCallback(async () => {
     try {
@@ -185,14 +221,20 @@ export function useSpeechToText({
         }
       }
       if (final) {
-        setTranscript((prev) => {
-          const newText = prev ? prev + " " + final.trim() : final.trim();
-          onTranscript?.(newText, true);
-          return newText;
-        });
+        const segment = final.trim();
+        if (segment) {
+          emitResult(segment, true);
+          setTranscript((prev) => {
+            const newText = prev ? prev + " " + segment : segment;
+            onTranscript?.(newText, true);
+            return newText;
+          });
+        }
         setInterimTranscript("");
       }
       if (interim) {
+        const interimTrim = interim.trim();
+        if (interimTrim) emitResult(interimTrim, false);
         setInterimTranscript(interim);
         onTranscript?.(interim, false);
       }
@@ -221,28 +263,30 @@ export function useSpeechToText({
       const msg = e instanceof Error ? e.message : "Failed to start speech recognition";
       onError?.(msg);
     }
-  }, [language, continuous, interimResults, onTranscript, onError, isListening]);
+  }, [language, continuous, interimResults, onTranscript, onError, isListening, emitResult]);
 
   const startListening = useCallback(() => {
     if (isListening) return;
 
     if (resolvedEngine === "elevenlabs") {
-      startElevenLabsRecognition();
-    } else {
-      navigator.mediaDevices
+      void startElevenLabsRecognition();
+      return;
+    }
+
+    if (resolvedEngine === "browser") {
+      void navigator.mediaDevices
         .getUserMedia({ audio: true })
         .then(() => {
-          if (browserSupported) {
-            startBrowserRecognition();
-          } else {
-            startElevenLabsRecognition();
-          }
+          startBrowserRecognition();
         })
         .catch(() => {
           onError?.("Microphone access is required for voice dictation");
         });
+      return;
     }
-  }, [isListening, resolvedEngine, browserSupported, startBrowserRecognition, startElevenLabsRecognition, onError]);
+
+    onError?.("Voice dictation is not available in this browser");
+  }, [isListening, resolvedEngine, startBrowserRecognition, startElevenLabsRecognition, onError]);
 
   const stopListening = useCallback(() => {
     // Stop browser recognition

@@ -29,6 +29,7 @@ CREATE DATABASE integration_hub;
 CREATE DATABASE tshepo_authz;
 CREATE DATABASE tshepo_identity;
 CREATE DATABASE tshepo_consent;
+CREATE DATABASE mvumo;
 CREATE DATABASE tshepo_audit;
 CREATE DATABASE tshepo_keys;
 CREATE DATABASE tshepo_offline;

@@ -6,6 +6,9 @@ This document provides exact commands to build, run, and validate the Impilo vNe
 dev runtime. It covers all infrastructure, backend services, the experience UI, and
 edge enforcement (Envoy + OPA).
 
+For **PCT + Mvumo + Experience BFF** (patient chart consent summary and `/internal` routes), see
+[`../architecture/patient-care-consent-surface.md`](../architecture/patient-care-consent-surface.md).
+
 ---
 
 ## Prerequisites

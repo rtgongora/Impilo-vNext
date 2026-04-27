@@ -33,8 +33,9 @@
 | # | Component | Port | Readiness Check | Timeout | Depends On |
 |---|-----------|------|----------------|---------|-----------|
 | 10 | tshepo | 8081 | HTTP `/actuator/health` | 120s | postgres, redis, kafka, keycloak |
+| 10b | mvumo | 8195 | HTTP `/actuator/health` | 90s | postgres, redis, kafka |
 
-**Wait**: tshepo must be healthy.
+**Wait**: tshepo (and mvumo, if used for chart consent) must be healthy before BFF-dependent checks that need full `consentSummary`.
 
 ### Layer 4 — Ring 1: Core Registries (parallel start)
 | # | Component | Port | Readiness Check | Timeout | Depends On |

@@ -28,8 +28,10 @@ import {
   ShieldAlert,
   Stethoscope,
   Video,
+  Siren,
 } from "lucide-react";
 import { usePatient } from "@/hooks/queries/usePatients";
+import { usePatientSummary } from "@/hooks/queries/useSummary";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAllergies, type AllergyResource } from "@/hooks/queries/useAllergies";
 import { useQuery } from "@tanstack/react-query";
@@ -51,6 +53,19 @@ const SEVERITY_COLORS: Record<string, string> = {
   SEVERE: "bg-red-50 text-red-700 border-red-200",
 };
 
+function consentChipClass(sev: string | undefined): string {
+  switch (sev) {
+    case "CRITICAL":
+      return "bg-red-50 text-red-900 border-red-200";
+    case "HIGH":
+      return "bg-amber-50 text-amber-900 border-amber-200";
+    case "MODERATE":
+      return "bg-orange-50 text-orange-800 border-orange-200";
+    default:
+      return "bg-slate-50 text-slate-700 border-slate-200";
+  }
+}
+
 export function PatientBanner() {
   const params = useParams();
   const patientId = params?.patientId as string | undefined;
@@ -70,6 +85,7 @@ export function PatientBanner() {
       ),
     enabled: !!patientId,
   });
+  const { data: patientSummaryRes } = usePatientSummary(patientId);
   const { facility } = useFacilityStore();
   const { shift } = useShiftStore();
   const privacyLevel = usePrivacyDisplayStore((s) => s.level);
@@ -101,6 +117,12 @@ export function PatientBanner() {
     (e) =>
       e.attributes.status === "IN_PROGRESS" || e.attributes.status === "ACTIVE"
   );
+
+  const highBannerConsentFlags = (patientSummaryRes?.data?.consentSummary?.criticalFlags ?? []).filter(
+    (f) => f.severity === "CRITICAL" || f.severity === "HIGH",
+  );
+  const bannerConsentFlags = highBannerConsentFlags.slice(0, 8);
+  const moreConsentFlags = Math.max(0, highBannerConsentFlags.length - 8);
 
   const attrs = patient.attributes;
   const age = safeAge(attrs.dateOfBirth);
@@ -254,6 +276,13 @@ export function PatientBanner() {
 
             <div className="hidden xl:flex items-center gap-2">
               <Link
+                href={`/ehr/${patientId}/emergency`}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-red-800 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+              >
+                <Siren className="h-3.5 w-3.5" />
+                Emergency
+              </Link>
+              <Link
                 href={`/ehr/${patientId}/summary`}
                 className="px-2.5 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
               >
@@ -292,6 +321,40 @@ export function PatientBanner() {
             </button>
           </div>
         </div>
+
+        {bannerConsentFlags.length > 0 && (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              Consent / directives
+            </span>
+            {bannerConsentFlags.map((f) => (
+              <Link
+                key={`${f.code ?? "flag"}-${f.id ?? f.label}`}
+                href={`/ehr/${patientId}/summary#consent-preferences`}
+                className={`inline-flex max-w-[14rem] truncate rounded border px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-90 ${consentChipClass(f.severity)}`}
+                title={[
+                  f.label,
+                  f.severity,
+                  f.source,
+                  f.effectiveDate ? `from ${f.effectiveDate}` : "",
+                  f.expiryDate ? `until ${f.expiryDate}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              >
+                {f.label ?? f.code ?? "Flag"}
+              </Link>
+            ))}
+            {moreConsentFlags > 0 && (
+              <Link
+                href={`/ehr/${patientId}/summary#consent-preferences`}
+                className="text-xs font-medium text-impilo-600 hover:text-impilo-800"
+              >
+                +{moreConsentFlags} more
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Expanded Section */}

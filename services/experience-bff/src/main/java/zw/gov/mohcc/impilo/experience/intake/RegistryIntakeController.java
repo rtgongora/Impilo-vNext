@@ -11,6 +11,11 @@ import java.util.Map;
 /**
  * Registry intake orchestration API — progressive sessions, governed bulk import,
  * self-help recovery tickets, and day-zero bootstrap snapshot (read-only probes).
+ * <p>
+ * When a session completes and a patient identity is materialised, downstream flows should synchronise
+ * <strong>communication preferences</strong> in mvumo-service (versioned {@code /internal/v1/mvumo/.../communication-preferences*},
+ * or consent-summary for read surfaces) so intake does not treat preferences as one-time registration fields.
+ * Desk and facility intake UIs can call the same BFF-proxied Mvumo routes as the citizen portal and EHR.
  */
 @RestController
 @RequestMapping("/internal/v1/registry-intake")

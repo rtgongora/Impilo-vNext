@@ -30,6 +30,8 @@ env:
   ZIBO_BASE_URL: http://zibo-service.impilo-registry.svc.cluster.local:8085
   PCT_BASE_URL: http://pct-service.impilo-clinical.svc.cluster.local:8088
   OROS_BASE_URL: http://oros-service.impilo-clinical.svc.cluster.local:8089
+  # Patient summary aggregation + /internal/v1/mvumo/** proxy — must match deployed mvumo chart/service
+  MVUMO_BASE_URL: http://mvumo-service:8195
   BUTANO_BASE_URL: http://butano-service.impilo-clinical.svc.cluster.local:8090
   MSIKA_BASE_URL: http://msika-service:8086
   MSIKA_FLOW_BASE_URL: http://msika-flow-service:8100

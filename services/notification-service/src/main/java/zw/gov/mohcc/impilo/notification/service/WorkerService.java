@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
 import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
 import zw.gov.mohcc.impilo.notification.domain.OutboxEventEntity;
 import zw.gov.mohcc.impilo.notification.domain.TemplateEntity;
+import zw.gov.mohcc.impilo.notification.integration.MvumoPreferenceClient;
 import zw.gov.mohcc.impilo.notification.provider.NotificationProvider;
 import zw.gov.mohcc.impilo.notification.provider.ProviderRegistry;
 import zw.gov.mohcc.impilo.notification.repository.NotificationRepository;
@@ -35,19 +36,23 @@ public class WorkerService {
     private final ProviderRegistry providerRegistry;
     private final TemplateService templateService;
     private final ObjectMapper objectMapper;
+    private final MvumoPreferenceClient mvumoPreferenceClient;
 
-    public WorkerService(NotificationRepository notificationRepository,
-                         TemplateRepository templateRepository,
-                         OutboxEventRepository outboxEventRepository,
-                         ProviderRegistry providerRegistry,
-                         TemplateService templateService,
-                         ObjectMapper objectMapper) {
+    public WorkerService(
+            NotificationRepository notificationRepository,
+            TemplateRepository templateRepository,
+            OutboxEventRepository outboxEventRepository,
+            ProviderRegistry providerRegistry,
+            TemplateService templateService,
+            ObjectMapper objectMapper,
+            MvumoPreferenceClient mvumoPreferenceClient) {
         this.notificationRepository = notificationRepository;
         this.templateRepository = templateRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.providerRegistry = providerRegistry;
         this.templateService = templateService;
         this.objectMapper = objectMapper;
+        this.mvumoPreferenceClient = mvumoPreferenceClient;
     }
 
     @Transactional
@@ -63,8 +68,9 @@ public class WorkerService {
             NotificationEntity notification = pending.get(i);
             notification.setAttempts(notification.getAttempts() + 1);
             try {
-                processOne(notification);
-                sent++;
+                if (processOne(notification)) {
+                    sent++;
+                }
             } catch (Exception e) {
                 markFailed(notification, e.getMessage());
                 failed++;
@@ -75,7 +81,20 @@ public class WorkerService {
         return new WorkerResponse(toProcess, sent, failed);
     }
 
-    private void processOne(NotificationEntity notification) {
+    /** @return true if message was actually dispatched to a provider, false if cancelled in-process */
+    private boolean processOne(NotificationEntity notification) {
+        if (notification.getPatientRef() != null && !notification.getPatientRef().isBlank()) {
+            java.util.Optional<Boolean> allow =
+                    mvumoPreferenceClient.evaluateAllowed(
+                            notification.getTenantId(),
+                            notification.getPatientRef(),
+                            notification.getChannel(),
+                            null);
+            if (allow.isPresent() && !allow.get()) {
+                markCancelledByPreference(notification, "Policy changed before send (Mvumo)");
+                return false;
+            }
+        }
         String body = null;
         String subject = null;
 
@@ -99,7 +118,8 @@ public class WorkerService {
         notification.setLastError(null);
         notificationRepository.save(notification);
 
-        emitOutboxEvent(notification, "impilo.notify.notification.sent.v1");
+        emitOutboxEvent(notification, "impilo.notify.notification.sent.v1", null);
+        return true;
     }
 
     private void markFailed(NotificationEntity notification, String error) {
@@ -107,10 +127,17 @@ public class WorkerService {
         notification.setLastError(error);
         notificationRepository.save(notification);
 
-        emitOutboxEvent(notification, "impilo.notify.notification.failed.v1");
+        emitOutboxEvent(notification, "impilo.notify.notification.failed.v1", null);
     }
 
-    private void emitOutboxEvent(NotificationEntity notification, String eventType) {
+    private void markCancelledByPreference(NotificationEntity notification, String reason) {
+        notification.setStatus(NotificationStatus.CANCELLED);
+        notification.setLastError(reason);
+        notificationRepository.save(notification);
+        emitOutboxEvent(notification, "impilo.notify.notification.cancelled_preference.v1", reason);
+    }
+
+    private void emitOutboxEvent(NotificationEntity notification, String eventType, String extraNote) {
         OutboxEventEntity outbox = new OutboxEventEntity();
         outbox.setTenantId(notification.getTenantId());
         outbox.setPodId(notification.getPodId());
@@ -127,6 +154,12 @@ public class WorkerService {
         payload.put("attempts", notification.getAttempts());
         if (notification.getLastError() != null) {
             payload.put("lastError", notification.getLastError());
+        }
+        if (notification.getPatientRef() != null) {
+            payload.put("patientRef", notification.getPatientRef());
+        }
+        if (extraNote != null) {
+            payload.put("note", extraNote);
         }
         outbox.setPayloadJson(serializePayload(payload));
         outboxEventRepository.save(outbox);

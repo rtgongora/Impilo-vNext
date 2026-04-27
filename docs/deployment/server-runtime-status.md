@@ -33,7 +33,8 @@
 | ZIBO | 8085 | /actuator/health | Depends on postgres, redis, kafka |
 | PCT | 8088 | /actuator/health | Depends on postgres, redis, kafka |
 | OROS | 8089 | /actuator/health | Depends on postgres, redis, kafka |
-| Experience BFF | 8160 | /actuator/health | Depends on postgres |
+| Mvumo | 8195 | /actuator/health | Consent / regulatory orchestration (Ring 0) — BFF may aggregate `consentSummary` |
+| Experience BFF | 8160 | /actuator/health | BFF: downstream PCT, VITO, Mvumo, and other registries (see [patient-care-consent-surface.md](../architecture/patient-care-consent-surface.md)) |
 
 ### Experience Layer
 | Service | Port | Expected Status |
@@ -65,6 +66,7 @@ curl http://localhost:8084/actuator/health  # TUSO
 curl http://localhost:8085/actuator/health  # ZIBO
 curl http://localhost:8088/actuator/health  # PCT
 curl http://localhost:8089/actuator/health  # OROS
+curl http://localhost:8195/actuator/health  # Mvumo
 curl http://localhost:8160/actuator/health  # Experience BFF
 curl http://localhost:3000                  # One UI Shell
 ```
@@ -103,3 +105,7 @@ curl -X POST http://localhost:8181/v1/data/impilo/gateway/headers \
   -H "Content-Type: application/json" \
   -d '{"input":{"attributes":{"request":{"http":{"path":"/api/v1/clients","headers":{}}}}}}'
 ```
+
+## Related
+
+- PCT + Mvumo + BFF patient chart flow: [`docs/architecture/patient-care-consent-surface.md`](../architecture/patient-care-consent-surface.md)

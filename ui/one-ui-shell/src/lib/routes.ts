@@ -207,6 +207,7 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Registry ──────────────────────────────────────────────
   { path: "/registry/clients", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Client Registry", navLabel: "Client Registry", navZone: "professional" },
   { path: "/registry/trust", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Trust & Federation", navLabel: "Trust", navZone: "professional" },
+  { path: "/registry/mvumo", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Mvumo — Digital Consent", navLabel: "Mvumo", navZone: "professional" },
   { path: "/registry", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Hub", navLabel: "Registry", navZone: "professional" },
   { path: "/registry/intake", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Intake", navLabel: "Intake", navZone: "professional" },
   { path: "/registry/locality-review", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Locality gazetteer review", navLabel: "Locality review", navZone: "professional" },

@@ -13,7 +13,7 @@ Layer 1: Shared Services    ─── keycloak, hapi-fhir, orthanc
     │
 Layer 2: Edge               ─── opa, envoy
     │
-Layer 3: Ring 0 (Trust)     ─── tshepo (trust & governance)
+Layer 3: Ring 0 (Trust)     ─── tshepo (trust & governance), mvumo (consent orchestration), …
     │
 Layer 4: Ring 1 (Registries)─── vito, varapi, tuso, zibo
     │
@@ -30,9 +30,11 @@ Layer 8: Observability      ─── prometheus, grafana, otel-collector, jaege
 
 ```
 postgres ──┬── keycloak ──┬── tshepo ──┬── vito ──── pct ──── experience-bff ──── one-ui-shell
-           │              │            │── varapi ── oros
-           │              │            │── tuso
-           ├── hapi-fhir  │            └── zibo
+           │              │            ├── varapi ── oros
+           │              │            ├── tuso
+           │              │            └── zibo
+           ├── hapi-fhir  │
+           │              ├── mvumo    (ring-0 consent; BFF `MVUMO_BASE_URL`)
            │              │
 redis ─────┘              └── envoy ─── (all v1.1 traffic)
            │
@@ -46,7 +48,7 @@ minio ─────┘
 - **Keycloak** depends on: postgres (for its database)
 - **HAPI FHIR** depends on: postgres (butano database)
 - **Envoy** depends on: OPA (ext_authz policy engine)
-- **Experience BFF** depends on: postgres
+- **Experience BFF** depends on: postgres, and (for full chart behaviour) **PCT** + **Mvumo** for `GET /internal/v1/summary/patient/{id}`
 - **One UI Shell** depends on: experience-bff
 
 ## Profiles

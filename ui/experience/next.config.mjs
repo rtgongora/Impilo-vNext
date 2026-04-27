@@ -8,8 +8,11 @@ const registryTemplatesRoot = path.join(__dirname, '..', '..', 'registry-templat
 const nextConfig = {
   output: 'standalone',
   distDir: '.next-build',
+  transpilePackages: ['shared-ui'],
   experimental: {
     externalDir: true,
+    // Monorepo: trace shared-ui into standalone output (Next 14)
+    outputFileTracingRoot: path.join(__dirname, '..'),
   },
   webpack: (config) => {
     config.resolve.alias = {

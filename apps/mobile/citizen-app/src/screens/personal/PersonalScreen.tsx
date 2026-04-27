@@ -34,7 +34,7 @@ import { VerifyCredentialScreen } from "./VerifyCredentialScreen";
 import { DelegatedPickupScreen } from "./DelegatedPickupScreen";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { TermsOfUseScreen } from "./TermsOfUseScreen";
-import { ConsentScreen } from "./ConsentScreen";
+import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen";
 import { SupportScreen } from "../support/SupportScreen";
 
 type PersonalTab =
@@ -68,6 +68,7 @@ type PersonalTab =
   | "claim"
   | "verify"
   | "delegated-pickup"
+  | "comms-prefs"
   | "privacy"
   | "terms"
   | "consent"
@@ -99,6 +100,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "sos", label: "Emergency", icon: "warning" },
   { id: "coverage", label: "Coverage", icon: "shield" },
   { id: "consent", label: "Consent", icon: "book-outline" },
+  { id: "comms-prefs", label: "Comms", icon: "chatbubbles-outline" },
   { id: "support", label: "Help", icon: "help-circle" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "assessments", label: "Assessments", icon: "duplicate" },
@@ -136,6 +138,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   sos: EmergencySOSSection,
   coverage: CoverageSection,
   consent: ConsentScreen,
+  "comms-prefs": CommunicationPreferencesScreen,
   support: SupportScreen,
   settings: SettingsSection,
   assessments: AssessmentsSection,

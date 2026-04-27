@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.costa.domain.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -31,6 +32,10 @@ public class CostaCostEstimateEntity {
 
     @Column(name = "audit_reference", length = 120)
     private String auditReference;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_timing_mode", length = 40)
+    private BillingTimingMode billingTimingMode;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -95,5 +100,13 @@ public class CostaCostEstimateEntity {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public BillingTimingMode getBillingTimingMode() {
+        return billingTimingMode;
+    }
+
+    public void setBillingTimingMode(BillingTimingMode billingTimingMode) {
+        this.billingTimingMode = billingTimingMode;
     }
 }

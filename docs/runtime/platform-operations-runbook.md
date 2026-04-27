@@ -101,7 +101,12 @@ curl http://localhost:8084/actuator/health   # TUSO
 curl http://localhost:8085/actuator/health   # ZIBO
 curl http://localhost:8088/actuator/health   # PCT
 curl http://localhost:8089/actuator/health   # OROS
+curl http://localhost:8195/actuator/health   # Mvumo (sovereign consent orchestration)
 curl http://localhost:8160/actuator/health   # BFF
+
+# BFF aggregated patient summary (PCT + Mvumo consentSummary; requires live PCT/Mvumo if not using empty fallbacks)
+# curl -s -H "X-Tenant-ID: tenant-moh-zw" -H "X-Request-ID: $(uuidgen)" -H "X-Correlation-ID: $(uuidgen)" \
+#   "http://localhost:8160/internal/v1/summary/patient/pat-001" | jq .
 
 # UI
 curl http://localhost:3000                   # Experience UI

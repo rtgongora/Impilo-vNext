@@ -21,6 +21,7 @@ import java.util.*;
  *   {
  *     "name": "Emergency surcharge",
  *     "priority": 10,
+ *     "billing_timing_mode": "POINT_OF_CARE",
  *     "conditions": {
  *       "is_emergency": true,
  *       "encounter_type": "EMERGENCY"

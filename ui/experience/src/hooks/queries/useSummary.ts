@@ -1,14 +1,66 @@
 /**
  * Longitudinal Summary Hooks — Health OS §4 (Longitudinal Records)
  *
- * Queries patient summaries from the Experience BFF, which bridges to
- * BUTANO (HAPI FHIR R4 shared health record) via SummaryProxyController.
+ * Queries patient summaries from the Experience BFF: PCT longitudinal data plus
+ * Mvumo `consentSummary` (Butano IPS remains a separate CPID-scoped proxy).
  *
  * BUTANO uses CPID (Clinical Pseudonym ID) only — no PII.
  */
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+
+/** Single banner-safe surface item from Mvumo consent-summary via BFF. */
+export interface ConsentFlag {
+  id?: string;
+  code?: string;
+  label?: string;
+  severity?: string;
+  source?: string;
+  effectiveDate?: string;
+  expiryDate?: string | null;
+  state?: string;
+  detailHref?: string | null;
+}
+
+export interface ConsentRecordItem {
+  title?: string;
+  consentType?: string;
+  state?: string;
+  requestId?: string;
+  at?: string;
+  [key: string]: unknown;
+}
+
+export interface ConsentSummary {
+  criticalFlags: ConsentFlag[];
+  advanceDirectives: ConsentRecordItem[];
+  treatmentLimitations: ConsentRecordItem[];
+  bloodProductRestrictions: ConsentRecordItem[];
+  activeConsents: ConsentRecordItem[];
+  missingRequiredConsents: ConsentRecordItem[];
+  refusals: ConsentRecordItem[];
+  withdrawals: ConsentRecordItem[];
+  dataSharingRestrictions: ConsentRecordItem[];
+  /** Versioned communication/follow-up preference bundle from Mvumo (independent of one-time registration). */
+  communicationPreferenceProfile?: {
+    hasProfile?: boolean;
+    lifecycleState?: string;
+    bundleVersion?: number;
+    revisionId?: string;
+    updatedAt?: string | null;
+    sourceChannel?: string | null;
+    auditRef?: string | null;
+    payload?: Record<string, unknown>;
+  };
+  communicationPreferences: ConsentRecordItem[];
+  proxyGuardianInfo: ConsentRecordItem[];
+  capacityStatus?: string | null;
+  lastReviewedAt?: string | null;
+  requiresReview?: boolean;
+  patientRef?: string;
+  generatedAt?: string;
+}
 
 export interface PatientSummary {
   cpid: string;
@@ -17,6 +69,8 @@ export interface PatientSummary {
   allergies: Array<{ substance: string; reaction: string; criticality: string }>;
   immunizations: Array<{ vaccine: string; date: string; status: string }>;
   recentEncounters: Array<{ id: string; type: string; date: string; facility: string; status: string }>;
+  /** Mvumo-derived consent surface; present when BFF can reach mvumo-service. */
+  consentSummary?: ConsentSummary;
 }
 
 export interface IPSBundle {
@@ -53,11 +107,23 @@ export function useVisitSummary(encounterId: string | undefined) {
   });
 }
 
-/** Fetch aggregated patient summary (conditions, meds, allergies, immunizations). */
+/** Fetch aggregated patient summary (conditions, meds, allergies, immunizations, Mvumo `consentSummary`). */
 export function usePatientSummary(patientId: string | undefined) {
   return useQuery({
     queryKey: ["summary", "patient", patientId],
     queryFn: () => apiClient.get<ApiResponse<PatientSummary>>(`/internal/v1/summary/patient/${patientId}`),
     enabled: !!patientId,
   });
+}
+
+/**
+ * Same React Query cache as `usePatientSummary` — use on workflow pages that only need the Mvumo
+ * consent surface (refusals, flags, comms restrictions) for gating and banners.
+ */
+export function usePatientConsentSurface(patientId: string | undefined) {
+  const q = usePatientSummary(patientId);
+  return {
+    ...q,
+    consentSummary: q.data?.data.consentSummary,
+  };
 }

@@ -1,0 +1,122 @@
+# COSTA billing timing extensions (reference fragment; merge into sovereign COSTA OpenAPI as needed)
+components:
+  schemas:
+    BillingTimingMode:
+      type: string
+      enum:
+        - PRE_SERVICE
+        - POINT_OF_CARE
+        - POST_SERVICE
+        - PERIODIC
+        - EPISODE_BASED
+        - PACKAGE_BASED
+        - CLAIM_BASED
+        - DEFERRED
+    CostaInvoiceType:
+      type: string
+      enum:
+        - PRE_SERVICE_INVOICE
+        - DEPOSIT_INVOICE
+        - POINT_OF_CARE_INVOICE
+        - FINAL_INVOICE
+        - CLAIM_INVOICE
+        - PACKAGE_INVOICE
+        - PERIODIC_INVOICE
+        - DEFERRED_PAYMENT_INVOICE
+        - REVERSAL_INVOICE
+        - REFUND_CREDIT_NOTE
+    ServiceAccessStatus:
+      type: string
+      enum:
+        - ALLOWED_WITHOUT_PAYMENT
+        - PAYMENT_REQUIRED_BEFORE_SERVICE
+        - DEPOSIT_REQUIRED
+        - AUTHORISATION_REQUIRED
+        - COVERED_BY_PAYER
+        - EXEMPT
+        - WAIVER_REQUIRED
+        - DEFERRED_PAYMENT_ALLOWED
+        - BLOCKED_PENDING_PAYMENT
+        - BLOCKED_PENDING_AUTHORISATION
+        - EMERGENCY_OVERRIDE
+    ServiceAccessDecision:
+      type: object
+      properties:
+        service_access_decision_id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        patient_cpid:
+          type: string
+        encounter_id:
+          type: string
+        facility_id:
+          type: string
+          format: uuid
+        workspace_id:
+          type: string
+          format: uuid
+        requested_service_id:
+          type: string
+        requested_service_name:
+          type: string
+        requested_service_category:
+          type: string
+        estimated_cost:
+          type: number
+        selected_tariff_list_id:
+          type: integer
+          format: int64
+        tariffed_price:
+          type: number
+        billing_timing_mode:
+          $ref: '#/components/schemas/BillingTimingMode'
+        access_status:
+          $ref: '#/components/schemas/ServiceAccessStatus'
+        required_deposit_amount:
+          type: number
+        required_payment_amount:
+          type: number
+        payer_id:
+          type: string
+        coverage_reference:
+          type: string
+        exemption_reference:
+          type: string
+        waiver_reference:
+          type: string
+        authorisation_reference:
+          type: string
+        promise_to_pay_reference:
+          type: string
+        decision_reason:
+          type: string
+        decided_by:
+          type: string
+        decision_timestamp:
+          type: string
+          format: date-time
+        audit_reference:
+          type: string
+    TariffApplicationResult:
+      type: object
+      properties:
+        tariff_list_id:
+          type: integer
+          format: int64
+        tariff_external_code:
+          type: string
+        billing_timing_mode:
+          $ref: '#/components/schemas/BillingTimingMode'
+        tariffed_price:
+          type: string
+        patient_liability:
+          type: string
+        payer_liability:
+          type: string
+        exempted_amount:
+          type: string
+        subsidised_amount:
+          type: string

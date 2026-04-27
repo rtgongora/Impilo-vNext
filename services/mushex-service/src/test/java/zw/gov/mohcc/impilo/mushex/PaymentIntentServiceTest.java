@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.mushex;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import zw.gov.mohcc.impilo.mushex.domain.enums.PaymentIntentType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -176,6 +177,38 @@ class PaymentIntentServiceTest {
         assertEquals("INTENT_CREATED", outbox.getEventType());
         assertEquals(tenantId, outbox.getTenantId());
         assertNotNull(outbox.getPayload());
+    }
+
+    @Test
+    void createIntent_parsesIntentTypeFromMetadata_intentTypeKey() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String metadata = "{\"intent_type\":\"DEPOSIT\",\"provider_id\":\"VA-00000000000001\"}";
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-DEP", new BigDecimal("50.00"), "USD",
+                facilityId, "idem-deposit-1", metadata);
+
+        assertEquals(PaymentIntentType.DEPOSIT, result.getIntentType());
+    }
+
+    @Test
+    void createIntent_parsesIntentTypeFromMetadata_paymentIntentTypeAlias() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        String metadata = "{\"payment_intent_type\":\"PRE_SERVICE_PAYMENT\",\"provider_id\":\"VA-00000000000001\"}";
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-PRE", new BigDecimal("30.00"), "USD",
+                facilityId, "idem-pre-1", metadata);
+
+        assertEquals(PaymentIntentType.PRE_SERVICE_PAYMENT, result.getIntentType());
     }
 
     // ---------------------------------------------------------------

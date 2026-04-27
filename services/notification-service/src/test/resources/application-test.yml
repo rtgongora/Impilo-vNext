@@ -16,5 +16,8 @@ spring:
 impilo:
   security:
     disable-oauth-for-tests: true
+  kafka:
+    mvumo:
+      enabled: false
   companion:
     enabled: true

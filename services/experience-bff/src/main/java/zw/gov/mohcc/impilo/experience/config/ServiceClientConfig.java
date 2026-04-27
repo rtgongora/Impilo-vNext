@@ -69,6 +69,8 @@ public class ServiceClientConfig {
             // Health OS §7: Trust Layer (TSHEPO cluster)
             String tshepoAuthzBaseUrl,
             String tshepoConsentBaseUrl,
+            /** Mvumo — sovereign Ring-0 consent orchestration (same class as Tshepo); BFF {@code /internal/v1/mvumo/**}. */
+            String mvumoBaseUrl,
             String tshepoAuditBaseUrl,
             String tshepoIdentityBaseUrl,
             String tshepoKeysBaseUrl,
@@ -135,6 +137,7 @@ public class ServiceClientConfig {
             if (dagsBaseUrl == null) dagsBaseUrl = "http://localhost:8170";
             if (tshepoAuthzBaseUrl == null) tshepoAuthzBaseUrl = "http://localhost:8081";
             if (tshepoConsentBaseUrl == null) tshepoConsentBaseUrl = "http://localhost:8182";
+            if (mvumoBaseUrl == null) mvumoBaseUrl = "http://localhost:8195";
             if (tshepoAuditBaseUrl == null) tshepoAuditBaseUrl = "http://localhost:8183";
             if (tshepoIdentityBaseUrl == null) tshepoIdentityBaseUrl = "http://localhost:8181";
             if (tshepoKeysBaseUrl == null) tshepoKeysBaseUrl = "http://localhost:8184";
@@ -177,10 +180,30 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null
+        );
+    }
+
+    /**
+     * Canonical {@code http://…} hostnames for MockRestServiceServer client tests (pct through notifications).
+     * Credential and all remaining slots are {@code null}; the compact constructor applies localhost defaults where needed.
+     */
+    public static ServiceEndpoints testEndpointsStandardWireMocks() {
+        return new ServiceEndpoints(
+                "http://pct", "http://oros", "http://pharmacy", "http://butano",
+                "http://msika", "http://msika-flow", "http://mushex", "http://vito",
+                "http://tuso", "http://varapi", "http://documents", "http://costa",
+                "http://coverage", "http://surveillance", "http://campaigns", "http://indawo",
+                "http://governance", "http://landela", "http://notifications",
+                null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null,
+                null, null
         );
     }
 

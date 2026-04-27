@@ -362,6 +362,24 @@ components:
     database: tshepo_consent
     kafka_topics: [platform.consent.events]
 
+  - name: mvumo
+    type: ring0
+    layer: 3
+    description: "Mvumo — sovereign digital consent orchestration (Ring 0; product-facing; Tshepo Consent remains FHIR enforcement authority)"
+    module_path: services/mvumo-service
+    build_target: "services/mvumo-service (Maven + Dockerfile)"
+    port: 8195
+    dependencies: [postgres, redis, kafka]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8195/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 10
+    profiles: [dev-full, integration, pilot]
+    database: mvumo
+    kafka_topics: [platform.mvumo.events]
+    notes: "BFF: MVUMO_BASE_URL; UIs: GET /internal/v1/summary/patient/{id} (PCT + consentSummary) and /internal/v1/mvumo/** via proxy. Often run on host in dev — compose sets host.docker.internal for BFF when Mvumo not in stack."
+
   - name: tshepo-audit
     type: ring0
     layer: 3
@@ -1057,11 +1075,11 @@ components:
   - name: experience-bff
     type: app
     layer: 7
-    description: "Experience BFF — backend-for-frontend aggregation"
+    description: "Experience BFF — backend-for-frontend aggregation (PCT, VITO, registries, MVUMO consent, …)"
     module_path: services/experience-bff
     build_target: "services/experience-bff (Maven + Dockerfile)"
     port: 8160
-    dependencies: [postgres, tshepo, vito, tuso, varapi]
+    dependencies: [postgres, tshepo, vito, tuso, varapi, pct, mvumo]
     healthcheck:
       type: http
       endpoint: "http://localhost:8160/actuator/health"

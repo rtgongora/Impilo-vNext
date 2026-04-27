@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.costa.domain.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
 import zw.gov.mohcc.impilo.costa.domain.enums.ClaimPackStatus;
 
 import java.time.OffsetDateTime;
@@ -33,6 +34,10 @@ public class ClaimPackEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private ClaimPackStatus status = ClaimPackStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_timing_mode", length = 40)
+    private BillingTimingMode billingTimingMode;
 
     @Column(name = "sent_at")
     private OffsetDateTime sentAt;
@@ -66,4 +71,12 @@ public class ClaimPackEntity {
     public String getResponse() { return response; }
     public void setResponse(String response) { this.response = response; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
+
+    public BillingTimingMode getBillingTimingMode() {
+        return billingTimingMode;
+    }
+
+    public void setBillingTimingMode(BillingTimingMode billingTimingMode) {
+        this.billingTimingMode = billingTimingMode;
+    }
 }

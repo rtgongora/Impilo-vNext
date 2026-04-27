@@ -6,6 +6,7 @@ info:
   version: 0.1.0
 tags:
   - name: Health
+  - name: Summary
   - name: ERP-GL
   - name: ERP-HR
   - name: ERP-Procurement
@@ -15,6 +16,28 @@ servers:
     description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
 
 paths:
+  /internal/v1/summary/patient/{patientId}:
+    get:
+      operationId: bffPatientSummaryAggregated
+      tags: [Summary]
+      summary: Chart patient summary — PCT longitudinal slice + Mvumo consent surface
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |
+            `{ data: { cpid, conditions, medications, allergies, immunizations, recentEncounters, consentSummary } }`
+            — `consentSummary` matches Mvumo deriver output (criticalFlags, refusals, etc.).
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
   /internal/v1/health:
     get:
       operationId: internalHealth

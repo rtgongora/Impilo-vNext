@@ -1,0 +1,92 @@
+server:
+  port: 8195
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: mvumo-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/mvumo
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 3
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: mvumo
+  flyway:
+    enabled: true
+    schemas: mvumo
+    locations: classpath:db/migration
+    default-schema: mvumo
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+mvumo:
+  token-ttl-minutes: ${MVUMO_TOKEN_TTL_MINUTES:20}
+  outbox:
+    topic: ${MVUMO_KAFKA_TOPIC:platform.mvumo.events}
+    poll-interval-ms: 1000
+    enabled: true
+  tshepo-consent:
+    base-url: ${TSHEPO_CONSENT_BASE_URL:http://localhost:8182}
+    enabled: ${MVUMO_TSHEPO_CONSENT_ENABLED:true}
+    client-credentials:
+      enabled: ${MVUMO_TSHEPO_OAUTH2_ENABLED:false}
+      token-uri: ${MVUMO_TSHEPO_TOKEN_URI:}
+      client-id: ${MVUMO_TSHEPO_CLIENT_ID:}
+      client-secret: ${MVUMO_TSHEPO_CLIENT_SECRET:}
+      scope: ${MVUMO_TSHEPO_TOKEN_SCOPE:openid profile}
+  redis-token-store:
+    enabled: true
+  redis-rate-limit:
+    max-per-window: ${MVUMO_RATE_LIMIT_MAX:60}
+    window-seconds: ${MVUMO_RATE_LIMIT_WINDOW_SEC:60}
+  pin-guard:
+    max-failures: ${MVUMO_PIN_MAX_FAILURES:5}
+    lockout-seconds: ${MVUMO_PIN_LOCKOUT_SEC:900}
+    fail-counter-ttl-seconds: ${MVUMO_PIN_FAIL_TTL_SEC:3600}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  metrics:
+    tags:
+      application: mvumo-service
+  tracing:
+    sampling:
+      probability: ${TRACE_SAMPLING:1.0}
+  # OTLP span export; leave endpoint unset to disable (see Spring Boot tracing reference).
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:}
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name:mvumo-service}

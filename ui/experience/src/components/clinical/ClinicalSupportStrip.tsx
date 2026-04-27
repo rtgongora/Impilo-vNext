@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 import { Bell, HelpCircle, LifeBuoy, Shield } from "lucide-react";
 import { NotificationsCommsHub } from "@/components/notifications/NotificationsCommsHub";
 import { useAssistantNotifications } from "@/hooks/queries/useAssistantNotifications";
@@ -13,6 +14,10 @@ import { useAssistantNotifications } from "@/hooks/queries/useAssistantNotificat
 export function ClinicalSupportStrip() {
   const pathname = usePathname() ?? "";
   const isPatientChart = pathname.startsWith("/ehr/");
+  const chartPatientCpid = useMemo(() => {
+    const m = pathname.match(/^\/ehr\/([^/]+)/);
+    return m ? m[1] : undefined;
+  }, [pathname]);
   const { data: assistant = [], isLoading: assistantLoading } = useAssistantNotifications(isPatientChart);
 
   return (
@@ -45,7 +50,7 @@ export function ClinicalSupportStrip() {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-3">
-      <NotificationsCommsHub triggerLabel="Comms Hub" />
+      <NotificationsCommsHub triggerLabel="Comms Hub" chartPatientCpid={chartPatientCpid} />
       <Link
         href="/support/knowledge-base"
         className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-gray-600 hover:bg-white hover:text-impilo-700"

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.costa.domain.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import zw.gov.mohcc.impilo.costa.domain.enums.BillingTimingMode;
 import zw.gov.mohcc.impilo.costa.domain.enums.RulesetStatus;
 
 import java.time.LocalDate;
@@ -35,6 +36,10 @@ public class ChargingRulesetEntity {
 
     @Column(name = "rules", nullable = false, columnDefinition = "jsonb")
     private String rules = "[]";
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_billing_timing_mode", length = 40)
+    private BillingTimingMode defaultBillingTimingMode;
 
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;
@@ -86,4 +91,12 @@ public class ChargingRulesetEntity {
     public void setPublishedAt(OffsetDateTime publishedAt) { this.publishedAt = publishedAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
+
+    public BillingTimingMode getDefaultBillingTimingMode() {
+        return defaultBillingTimingMode;
+    }
+
+    public void setDefaultBillingTimingMode(BillingTimingMode defaultBillingTimingMode) {
+        this.defaultBillingTimingMode = defaultBillingTimingMode;
+    }
 }

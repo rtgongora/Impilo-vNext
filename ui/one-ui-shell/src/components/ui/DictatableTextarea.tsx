@@ -5,6 +5,7 @@
  * Renders a standard textarea with a mic button in the corner.
  */
 import * as React from "react";
+import type { DictationLanguage, TranscriptionResult } from "shared-ui";
 import { DictationButton } from "@/components/ui/DictationButton";
 
 interface DictatableTextareaProps
@@ -12,7 +13,11 @@ interface DictatableTextareaProps
   /** Show dictation button (default true) */
   dictation?: boolean;
   /** Language for speech recognition */
-  dictationLanguage?: string;
+  dictationLanguage?: DictationLanguage;
+  /** Forwarded to dictation hook — server STT only when true and product consent allows. */
+  dictationAllowCloudStt?: boolean;
+  /** Structured transcript events for audit / Mvumo / platform hooks. */
+  onDictationTranscriptionResult?: (result: TranscriptionResult) => void;
   /** Controlled value — required for dictation to work */
   value?: string;
   /** onChange handler */
@@ -29,6 +34,8 @@ const DictatableTextarea = React.forwardRef<
     {
       dictation = true,
       dictationLanguage = "en-US",
+      dictationAllowCloudStt = false,
+      onDictationTranscriptionResult,
       className,
       value,
       onChange,
@@ -74,6 +81,8 @@ const DictatableTextarea = React.forwardRef<
               value={typeof value === "string" ? value : ""}
               onValueChange={handleDictationChange}
               language={dictationLanguage}
+              allowCloudStt={dictationAllowCloudStt}
+              onTranscriptionResult={onDictationTranscriptionResult}
               size="icon"
               className="h-7 w-7"
               disabled={disabled}

@@ -323,6 +323,8 @@ services:
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       # Sovereign service URLs (compose networking)
       PCT_BASE_URL: http://pct:8088
+      # Aggregated patient summary (PCT + Mvumo consent) — run mvumo on host or add service to this compose
+      MVUMO_BASE_URL: ${MVUMO_BASE_URL:-http://host.docker.internal:8195}
       OROS_BASE_URL: http://oros:8089
       PHARMACY_BASE_URL: http://pharmacy:8096
       VITO_BASE_URL: http://vito:8082

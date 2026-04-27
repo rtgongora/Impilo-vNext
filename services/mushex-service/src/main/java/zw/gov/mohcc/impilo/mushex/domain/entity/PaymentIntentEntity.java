@@ -12,6 +12,7 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import zw.gov.mohcc.impilo.mushex.domain.enums.IntentStatus;
+import zw.gov.mohcc.impilo.mushex.domain.enums.PaymentIntentType;
 import zw.gov.mohcc.impilo.mushex.domain.enums.SourceType;
 
 import java.math.BigDecimal;
@@ -51,6 +52,10 @@ public class PaymentIntentEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private IntentStatus status;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "intent_type", length = 50)
+    private PaymentIntentType intentType;
 
     @Column(name = "idempotency_key")
     private String idempotencyKey;
@@ -159,6 +164,14 @@ public class PaymentIntentEntity {
 
     public void setStatus(IntentStatus status) {
         this.status = status;
+    }
+
+    public PaymentIntentType getIntentType() {
+        return intentType;
+    }
+
+    public void setIntentType(PaymentIntentType intentType) {
+        this.intentType = intentType;
     }
 
     public String getIdempotencyKey() {

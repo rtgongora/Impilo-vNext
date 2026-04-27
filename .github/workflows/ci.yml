@@ -46,6 +46,7 @@ jobs:
         working-directory: services/experience-bff
         env:
           SPRING_PROFILES_ACTIVE: test
+          KEYCLOAK_URL: http://127.0.0.1:1
           SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
         run: mvn test -Dspring.profiles.active=test
 
