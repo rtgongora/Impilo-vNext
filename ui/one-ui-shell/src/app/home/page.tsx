@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import {
+  HomeAttentionFromData,
+  HomeRecentFromShell,
+  HomeSearchCommandPrompt,
+} from "@/components/home/HomeShellDiscovery";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
@@ -712,6 +717,10 @@ export default function HomePage() {
     enabled: isClinical,
   });
   const encounters = recentEncounters?.data ?? [];
+  const activeEncounterCount = encounters.filter((enc) => {
+    const status = String(enc.attributes.status ?? "");
+    return status === "IN_PROGRESS" || status === "ACTIVE";
+  }).length;
 
   // Fetch today's appointments
   const { data: appointmentsData } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
@@ -754,12 +763,7 @@ export default function HomePage() {
     return (
       <AppLayout>
         <PageShell title="Home">
-          <CitizenHome
-            user={user}
-            greeting={greeting}
-            communityGroups={communityGroups}
-            joinGroup={joinGroup}
-          />
+          <CitizenHome user={user} greeting={greeting} />
         </PageShell>
       </AppLayout>
     );
@@ -850,6 +854,18 @@ export default function HomePage() {
 
           {/* ═══ WORK TAB ═══ */}
           {activeTab === "work" && (<>
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="space-y-3 lg:col-span-2">
+              <HomeSearchCommandPrompt />
+              <HomeRecentFromShell />
+            </div>
+            <HomeAttentionFromData
+              enabled={isClinical || isDispenser}
+              queueWaiting={queueStats?.waiting ?? 0}
+              activeEncounterCount={activeEncounterCount}
+              hasWorkContext={hasWorkContext}
+            />
+          </div>
 
           {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
@@ -1534,13 +1550,9 @@ export default function HomePage() {
 function CitizenHome({
   user,
   greeting,
-  communityGroups,
-  joinGroup,
 }: {
   user: AuthUser | null;
   greeting: string;
-  communityGroups: Array<{ id: string; attributes: Record<string, unknown> }>;
-  joinGroup: ReturnType<typeof useJoinGroup>;
 }) {
   return (
     <>
@@ -1594,9 +1606,9 @@ function CitizenHome({
             <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-2 mb-1">My Health</p>
             {[
               { href: "/home/profile", label: "Profile", icon: User, badge: null },
-              { href: "/home/medications", label: "Medications", icon: Pill, badge: 3 },
+              { href: "/home/medications", label: "Medications", icon: Pill, badge: null },
               { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
-              { href: "/scheduling", label: "Appointments", icon: Calendar, badge: 2 },
+              { href: "/scheduling", label: "Appointments", icon: Calendar, badge: null },
               { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
             ].map((item) => {
               const Icon = item.icon;
@@ -1625,7 +1637,7 @@ function CitizenHome({
             {[
               { href: "/home/care-team", label: "Care Team", icon: Users, badge: null },
               { href: "/coverage", label: "Coverage", icon: Shield, badge: null },
-              { href: "/home/referrals", label: "Referrals", icon: ArrowRight, badge: 1 },
+              { href: "/home/referrals", label: "Referrals", icon: ArrowRight, badge: null },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -1687,39 +1699,17 @@ function CitizenHome({
             </div>
           </Link>
 
-          {/* Upcoming Appointments */}
+          {/* Upcoming — no demo appointments; use Scheduling when integrated */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming
             </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-impilo-50 border border-impilo-100">
-                <div className="flex items-center gap-2">
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-impilo-700">TOM</p>
-                    <p className="text-[10px] text-impilo-500">2pm</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">Dr. Moyo</p>
-                  <p className="text-[10px] text-gray-500">Check-up</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 border border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="text-center">
-                    <p className="text-xs font-semibold text-gray-600">FRI</p>
-                    <p className="text-[10px] text-gray-400">10am</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">Lab Visit</p>
-                  <p className="text-[10px] text-gray-500">Blood work</p>
-                </div>
-              </div>
-            </div>
-            <Link href="/scheduling" className="block text-center text-xs text-impilo-500 mt-2 hover:underline">
-              View all appointments →
+            <p className="text-xs text-gray-500 leading-relaxed">
+              No appointments are shown here until your account is linked to a scheduling feed. Use Scheduling to book
+              or manage visits.
+            </p>
+            <Link href="/scheduling" className="mt-3 block text-center text-xs font-medium text-impilo-600 hover:underline">
+              Open scheduling →
             </Link>
           </div>
 

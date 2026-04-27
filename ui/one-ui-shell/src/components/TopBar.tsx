@@ -26,6 +26,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useShiftStore } from "@/hooks/useShiftStore";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { PRIVACY_LEVEL_LABELS } from "@/lib/pii-mask";
+import { buildBreadcrumbTrail } from "@/lib/routes";
 import { Eye, EyeOff } from "lucide-react";
 
 const EHR_ACTIONS = [
@@ -55,10 +56,15 @@ export function TopBar() {
     return action.href;
   }
 
-  const breadcrumbs = buildBreadcrumbs(pathname, patientId);
+  const registryTrail = buildBreadcrumbTrail(pathname ?? "/");
+  const trailAfterHome = registryTrail.slice(1);
+  const breadcrumbs = trailAfterHome.map((c, i) => ({
+    label: c.label,
+    href: i < trailAfterHome.length - 1 ? c.href : undefined,
+  }));
 
   return (
-    <header className="h-12 border-b bg-white px-4 flex items-center gap-2 shrink-0">
+    <header className="h-12 border-b bg-white px-4 flex items-center gap-2 shrink-0 min-w-0">
       <Link
         href="/home"
         className="text-gray-400 hover:text-impilo-500 transition-colors"
@@ -67,23 +73,23 @@ export function TopBar() {
         <Home className="w-4 h-4" />
       </Link>
 
-      {breadcrumbs.map((crumb, i) => (
-        <span key={i} className="flex items-center gap-1">
-          <ChevronRight className="w-3 h-3 text-gray-300" />
-          {crumb.href ? (
-            <Link
-              href={crumb.href}
-              className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
-            >
-              {crumb.label}
-            </Link>
-          ) : (
-            <span className="text-xs text-gray-700 font-medium">
-              {crumb.label}
-            </span>
-          )}
-        </span>
-      ))}
+      <nav aria-label="Breadcrumb" className="flex min-w-0 max-w-[min(100%,32rem)] items-center gap-0 overflow-x-auto">
+        {breadcrumbs.map((crumb, i) => (
+          <span key={`${crumb.label}-${i}`} className="flex min-w-0 items-center gap-1">
+            <ChevronRight className="w-3 h-3 shrink-0 text-gray-300" aria-hidden />
+            {crumb.href ? (
+              <Link
+                href={crumb.href}
+                className="truncate text-xs text-impilo-500 hover:text-impilo-700 font-medium"
+              >
+                {crumb.label}
+              </Link>
+            ) : (
+              <span className="truncate text-xs text-gray-700 font-medium">{crumb.label}</span>
+            )}
+          </span>
+        ))}
+      </nav>
 
       {pathname.startsWith("/ehr") && (
         <Link
@@ -171,30 +177,3 @@ function PrivacyToggle() {
   );
 }
 
-function buildBreadcrumbs(
-  pathname: string,
-  patientId?: string
-): Array<{ label: string; href?: string }> {
-  const crumbs: Array<{ label: string; href?: string }> = [];
-
-  if (pathname.startsWith("/ehr")) {
-    crumbs.push({ label: "Queue", href: "/queue" });
-
-    if (patientId) {
-      crumbs.push({ label: "Patient Chart", href: `/ehr/${patientId}` });
-
-      const segments = pathname.split("/").filter(Boolean);
-      if (segments.length > 2) {
-        const section = segments[2];
-        if (section === "encounter") {
-          crumbs.push({ label: "Encounter" });
-        } else {
-          const label = section.charAt(0).toUpperCase() + section.slice(1);
-          crumbs.push({ label });
-        }
-      }
-    }
-  }
-
-  return crumbs;
-}
