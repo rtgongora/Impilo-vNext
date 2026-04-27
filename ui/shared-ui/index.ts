@@ -31,3 +31,29 @@ export type { StatusIndicatorProps } from "./components/StatusIndicator";
 
 export { DataTable } from "./components/DataTable";
 export type { DataTableProps, Column } from "./components/DataTable";
+
+// Voice dictation — shared contracts (implementations live in shells / apps)
+export type {
+  DictationAuditMetadata,
+  DictationConfig,
+  DictationError,
+  DictationErrorCode,
+  DictationLanguage,
+  DictationProvider,
+  DictationSession,
+  TranscriptionAlternative,
+  TranscriptionConfidence,
+  TranscriptionResult,
+} from "./dictation";
+export { createNoopDictationProvider } from "./dictation";
+
+// Finance — COSTA tariff library grouping (Experience + One UI Shell)
+export {
+  REFERENCE_TARIFF_WARNING,
+  ZIMBABWE_POC_DISCLAIMER,
+  parseTariffMetadata,
+  classifyTariffList,
+  groupTariffLists,
+  sectionCatalog,
+} from "./lib/finance/tariff-library-groups";
+export type { CostaTariffListRow, TariffListSectionKey } from "./lib/finance/tariff-library-groups";

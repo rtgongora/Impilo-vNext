@@ -341,6 +341,29 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     action: { type: "navigate", href: "/clinical" },
     requiredRole: "CLINICAL",
   },
+  {
+    id: "cmd-finance-tariff-library",
+    label: "Tariff library",
+    keywords: [
+      "tariff",
+      "tariff library",
+      "costing",
+      "costa",
+      "price list",
+      "schedule",
+      "billing tariff",
+      "reference tariff",
+    ],
+    action: { type: "navigate", href: "/finance/tariffs" },
+    requiredRole: "FINANCE",
+  },
+  {
+    id: "cmd-finance-costa",
+    label: "COSTA & MusheX tools",
+    keywords: ["costa", "cost estimate", "charge sheet", "settlement", "mushex handoff", "tariff intel"],
+    action: { type: "navigate", href: "/finance/costa" },
+    requiredRole: "FINANCE",
+  },
 ];
 
 export function appVisibleForUser(

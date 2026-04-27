@@ -34,51 +34,53 @@ vi.mock("@/hooks/useFacilityStore", () => ({
 }));
 
 vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({
-    data: {
-      data: [
-        {
-          id: "tariff-1",
-          type: "tariff",
-          attributes: {
-            serviceCode: "CONS-001",
-            description: "Consultation",
-            tariffAmount: 25,
+  useQuery: (opts: { queryKey: unknown[] }) => {
+    const key = opts.queryKey;
+    if (key[0] === "finance" && key[1] === "costa-intel") {
+      return {
+        data: [
+          {
+            id: 1,
+            externalCode: "ZW-PLACEHOLDER-POC-V0.1",
+            name: "Zimbabwe Placeholder Health Services Tariff — Proof of Concept v0.1",
+            description: "Placeholder proof-of-concept tariff for demos",
+            tariffFamily: "zimbabwe_placeholder",
+            tariffType: "operational",
+            priceBasis: "placeholder_rate",
+            officialStatus: "placeholder",
+            validationStatus: "validated",
+            referenceOnly: false,
+            approvedForBilling: true,
             currency: "USD",
-            effectiveDate: "2026-04-01T00:00:00.000Z",
-            status: "ACTIVE",
+            effectiveFrom: "2020-01-01",
+            effectiveTo: null,
+            metadata: { default_for_demo: true },
           },
-        },
-        {
-          id: "tariff-2",
-          type: "tariff",
-          attributes: {
-            serviceCode: "XR-001",
-            description: "Chest X-ray",
-            tariffAmount: 45,
-            currency: "USD",
-            effectiveDate: "2026-04-01T00:00:00.000Z",
-            status: "DRAFT",
-          },
-        },
-      ],
-    },
-    isLoading: false,
-    error: null,
-  }),
+        ],
+        isLoading: false,
+        error: null,
+      };
+    }
+    return {
+      data: { data: [] },
+      isLoading: false,
+      error: null,
+    };
+  },
 }));
 
 describe("TariffsPage", () => {
-  it("keeps tariff review connected to encounter-aware finance continuity", () => {
+  it("loads COSTA tariff library lists and keeps encounter-aware finance continuity", () => {
     render(<TariffsPage />);
 
+    expect(screen.getByText("Tariff library")).toBeInTheDocument();
     expect(screen.getByText("Tariff continuity")).toBeInTheDocument();
-    expect(screen.getByText("Tariff loop status")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Encounter" })).toHaveAttribute("href", "/ehr/patient-1/encounter/enc-1");
     expect(screen.getByRole("link", { name: "Billing" })).toHaveAttribute(
       "href",
       "/finance/billing?patientId=patient-1&encounterId=enc-1&source=discharge",
     );
-    expect(screen.getByText("CONS-001")).toBeInTheDocument();
+    expect(screen.getAllByText(/Zimbabwe Placeholder Health Services Tariff/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Reference tariffs/)).toBeInTheDocument();
   });
 });

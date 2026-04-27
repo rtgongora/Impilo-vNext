@@ -23,7 +23,7 @@ export default function FinanceCostaIntelPage() {
   const estimateM = useCostaCostEstimate();
 
   const [selectedListId, setSelectedListId] = useState<string>("");
-  const [itemCode, setItemCode] = useState("CONSULT_GP");
+  const [itemCode, setItemCode] = useState("ZW-OPD-001");
   const [encounterId, setEncounterId] = useState("");
   const [patientCpid, setPatientCpid] = useState("");
   const [estimatePreview, setEstimatePreview] = useState<unknown>(null);
