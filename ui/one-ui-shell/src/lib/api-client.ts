@@ -293,12 +293,16 @@ async function attemptRefresh(): Promise<boolean> {
 /**
  * Clear auth state and redirect to login.
  */
+const AUTH_BYPASS_PREFIXES = ["/auth", "/consent", "/privacy", "/terms"];
+
 function handleAuthFailure(): void {
   if (typeof window !== "undefined") {
     useAuthStore.getState().clearAuth();
 
-    // Only redirect if not already on auth page
-    if (!window.location.pathname.startsWith("/auth")) {
+    const isOnBypassPath = AUTH_BYPASS_PREFIXES.some((p) =>
+      window.location.pathname.startsWith(p)
+    );
+    if (!isOnBypassPath) {
       window.location.href = "/auth/login";
     }
   }

@@ -16,7 +16,6 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle2, Loader2, Stethoscope } from "lucide-react";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
@@ -32,7 +31,6 @@ interface ResolverStep {
 }
 
 export default function ResolvingPage() {
-  const router = useRouter();
   const { user } = useAuthStore();
   const { data, isLoading, isSuccess, isError } = useLinkedIds();
   const [hasNavigated, setHasNavigated] = useState(false);
@@ -45,8 +43,8 @@ export default function ResolvingPage() {
   const navigate = useCallback(() => {
     if (hasNavigated) return;
     setHasNavigated(true);
-    router.push("/home");
-  }, [hasNavigated, router]);
+    window.location.assign("/home");
+  }, [hasNavigated]);
 
   // Resolution steps for the UI
   const steps: ResolverStep[] = [

@@ -10,8 +10,6 @@
 -- ═══════════════════════════════════════════════════════════════════════
 
 -- Expand the V001 facility table with full attributes
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-
 ALTER TABLE tuso.facility
     ADD COLUMN IF NOT EXISTS gofr_id         VARCHAR(255),
     ADD COLUMN IF NOT EXISTS ownership       VARCHAR(50),
@@ -435,4 +433,6 @@ CREATE TABLE tuso.gofr_sync_log (
 -- ═══════════════════════════════════════════════════════════════════════
 -- 9. Enable trigram extension for facility name search
 -- ═══════════════════════════════════════════════════════════════════════
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
 

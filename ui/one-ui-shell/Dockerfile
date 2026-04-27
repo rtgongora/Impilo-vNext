@@ -24,12 +24,12 @@ COPY one-ui-shell ./one-ui-shell
 RUN npm -w one-ui-shell run build
 
 FROM node:20-alpine AS runner
-WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-COPY --from=base /workspace/one-ui-shell/.next-build/standalone ./
-COPY --from=base /workspace/one-ui-shell/.next-build/static ./.next-build/static
-COPY --from=base /workspace/one-ui-shell/public ./public
+COPY --from=base /workspace/one-ui-shell/.next-build/standalone /app
+COPY --from=base /workspace/one-ui-shell/.next-build/static /app/one-ui-shell/.next-build/static
+COPY --from=base /workspace/one-ui-shell/public /app/one-ui-shell/public
 
+WORKDIR /app/one-ui-shell
 EXPOSE 3000
 CMD ["node", "server.js"]
