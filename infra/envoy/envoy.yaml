@@ -277,6 +277,10 @@ static_resources:
                             envoy.filters.http.ext_authz:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
 
+                        # ── Experience BFF — internal profile/visibility paths ──
+                        - match: { prefix: "/internal/v1/" }
+                          route: { cluster: experience_bff }
+
                         # ── BUTANO — Shared Health Record (HAPI FHIR R4) ──
                         - match: { prefix: "/fhir" }
                           route: { cluster: butano_service }
@@ -638,3 +642,14 @@ static_resources:
                     socket_address:
                       address: host.docker.internal
                       port_value: 8087
+
+    # ── Experience BFF ──
+    - name: experience_bff
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: experience_bff
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8160 }

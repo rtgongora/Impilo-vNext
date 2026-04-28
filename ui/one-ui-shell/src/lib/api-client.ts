@@ -297,14 +297,16 @@ const AUTH_BYPASS_PREFIXES = ["/auth", "/consent", "/privacy", "/terms"];
 
 function handleAuthFailure(): void {
   if (typeof window !== "undefined") {
-    useAuthStore.getState().clearAuth();
-
     const isOnBypassPath = AUTH_BYPASS_PREFIXES.some((p) =>
       window.location.pathname.startsWith(p)
     );
-    if (!isOnBypassPath) {
-      window.location.href = "/auth/login";
-    }
+    if (isOnBypassPath) return;
+
+    const store = useAuthStore.getState();
+    if (!store.isTokenExpired()) return;
+
+    store.clearAuth();
+    window.location.href = "/auth/login";
   }
 }
 

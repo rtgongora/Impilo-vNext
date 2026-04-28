@@ -400,6 +400,16 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    // ── Workspace Management ─────────────────────────────────────────
+
+    /** List active workspaces for a facility. */
+    public JsonNode listWorkspaces(long facilityId) {
+        String url = baseUrl + "/v1/internal/facilities/" + facilityId + "/workspaces";
+        log.info("TUSO: Listing workspaces facilityId={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Locality gazetteer ───────────────────────────────────────────
 
     public JsonNode searchLocalities(String districtCode, String q, int limit) {

@@ -12,8 +12,8 @@ function labelForSource(source: string | undefined): string {
   if (source === "headers") {
     return "Active session view";
   }
-  if (source === "headers-absent") {
-    return "Gateway did not attach visibility headers";
+  if (source === "obligations-or-headers") {
+    return "Active session view";
   }
   return "Visibility";
 }
@@ -21,7 +21,7 @@ function labelForSource(source: string | undefined): string {
 export function VisibilityContextBar() {
   const { data, isLoading, isError } = useVisibilityProfile();
 
-  if (isLoading || isError || !data) {
+  if (isLoading || isError || !data || data.source === "headers-absent") {
     return null;
   }
 

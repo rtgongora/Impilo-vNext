@@ -149,8 +149,21 @@ static_resources:
                           route: { cluster: tshepo_service }
 
                 http_filters:
-                  # OPA ext_authz disabled in dev — BFF V11HeaderFilter enforces
-                  # the same v1.1 headers. Re-enable with gRPC ext_authz in production.
+                  # TSHEPO ext_authz — injects visibility headers (x-visibility-tier,
+                  # x-pii-access, x-clinical-access, x-obligations, …) into every
+                  # forwarded request so BFF VisibilityProfileController can read them.
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+                      grpc_service:
+                        envoy_grpc:
+                          cluster_name: tshepo_authz_grpc
+                        timeout: 0.5s
+                      failure_mode_allow: false
+                      with_request_body:
+                        max_request_bytes: 8192
+                        allow_partial_message: true
                   - name: envoy.filters.http.router
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -167,6 +180,22 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: opa, port_value: 8181 }
+
+    # ── TSHEPO Authz (gRPC — for ext_authz) ──
+    - name: tshepo_authz_grpc
+      type: STRICT_DNS
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: tshepo_authz_grpc
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: tshepo, port_value: 9090 }
 
     # ── TSHEPO ──
     - name: tshepo_service
@@ -298,5 +327,4 @@ static_resources:
           - lb_endpoints:
               - endpoint:
                   address:
-                    # host.docker.internal resolves to the Docker host where the BFF runs
-                    socket_address: { address: host.docker.internal, port_value: 8160 }
+                    socket_address: { address: experience-bff, port_value: 8160 }

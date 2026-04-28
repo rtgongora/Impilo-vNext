@@ -552,6 +552,8 @@ services:
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
       NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
+      API_GATEWAY_URL: http://envoy:10000
+      BFF_URL: http://experience-bff:8160
       HOSTNAME: "0.0.0.0"
     ports:
       - "3000:3000"

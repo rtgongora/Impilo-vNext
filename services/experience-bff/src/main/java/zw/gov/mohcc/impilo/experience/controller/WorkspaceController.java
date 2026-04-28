@@ -35,6 +35,22 @@ public class WorkspaceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
 
+        try {
+            long facIdLong = Long.parseLong(facilityId);
+            com.fasterxml.jackson.databind.JsonNode tusoData = tusoClient.listWorkspaces(facIdLong);
+            if (tusoData != null && tusoData.isArray() && tusoData.size() > 0) {
+                List<Map<String, Object>> mapped = new ArrayList<>();
+                for (com.fasterxml.jackson.databind.JsonNode ws : tusoData) {
+                    mapped.add(mapTusoWorkspace(ws, facilityId));
+                }
+                return ResponseEntity.ok(Map.of(
+                        "data", mapped,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (Exception e) {
+            // fall through to seeded data
+        }
+
         List<Map<String, Object>> filtered = SEEDED.stream()
                 .filter(w -> facilityId.equals(((Map<?, ?>) w.get("attributes")).get("facilityId")))
                 .collect(Collectors.toList());
@@ -42,6 +58,17 @@ public class WorkspaceController {
         return ResponseEntity.ok(Map.of(
                 "data", filtered,
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static Map<String, Object> mapTusoWorkspace(com.fasterxml.jackson.databind.JsonNode ws, String facilityId) {
+        String id = ws.has("id") ? ws.get("id").asText() : "";
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("name", ws.has("name") ? ws.get("name").asText() : "");
+        attrs.put("facilityId", facilityId);
+        attrs.put("workspaceType", ws.has("workspaceType") ? ws.get("workspaceType").asText() : "");
+        attrs.put("description", ws.has("description") && !ws.get("description").isNull() ? ws.get("description").asText() : null);
+        attrs.put("status", ws.has("active") && ws.get("active").asBoolean() ? "ACTIVE" : "INACTIVE");
+        return Map.of("id", id, "type", "workspace", "attributes", attrs);
     }
 
     @PostMapping("/{id}/activate")
