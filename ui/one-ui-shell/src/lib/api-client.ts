@@ -29,6 +29,12 @@ import { useAuthStore } from "@/hooks/useAuthStore";
 // through the Next.js dev server (see next.config.mjs rewrites), avoiding CORS.
 const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
 
+// When BFF_BASE_URL is a full URL (non-empty), requests are cross-origin.
+// Use "include" to send HttpOnly cookies (refresh token) cross-origin.
+// Use "same-origin" for relative paths so the browser's same-origin cookie
+// policy is enforced in production where the BFF is behind the same reverse proxy.
+const fetchCredentials: RequestCredentials = BFF_BASE_URL ? "include" : "same-origin";
+
 export interface ApiResponse<T> {
   data: T;
   meta?: {
@@ -174,8 +180,8 @@ function getTenantId(): string {
     const stored = sessionStorage.getItem("exp:tenant_id");
     if (stored) return stored;
   }
-  // Canonical dev default — matches V2/V21+ seeds. Golden-path integration tests use X-Tenant-ID "moh-zw".
-  return "tenant-moh-zw";
+  // Canonical dev default UUID — matches V2/V21+ seed: Tenant moh-zw = 00000000-0000-4000-8000-000000000001
+  return "00000000-0000-4000-8000-000000000001";
 }
 
 function getPodId(): string {
@@ -236,8 +242,14 @@ function getPurposeOfUse(): string {
  */
 async function attemptRefresh(): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  const hasSessionCookie = document.cookie.includes("exp_has_session=1");
-  if (!hasSessionCookie) return false;
+  // When same-origin, the sentinel cookie is readable; skip refresh if absent.
+  // When cross-origin (BFF_BASE_URL set), document.cookie belongs to the UI
+  // origin and won't include cookies set by the BFF — skip the check to ensure
+  // the refresh attempt always reaches the server.
+  if (!BFF_BASE_URL) {
+    const hasSessionCookie = document.cookie.includes("exp_has_session=1");
+    if (!hasSessionCookie) return false;
+  }
 
   // If a refresh is already in progress, wait for it
   if (refreshPromise) return refreshPromise;
@@ -252,7 +264,7 @@ async function attemptRefresh(): Promise<boolean> {
       const response = await fetch(`${BFF_BASE_URL}/internal/v1/auth/refresh`, {
         method: "POST",
         headers,
-        credentials: "same-origin",
+        credentials: fetchCredentials,
       });
 
       if (!response.ok) return false;
@@ -330,7 +342,7 @@ async function request<T>(
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method,
     headers,
-    credentials: "same-origin",
+    credentials: fetchCredentials,
     body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
   });
 
@@ -346,7 +358,7 @@ async function request<T>(
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
         headers: retryHeaders,
-        credentials: "same-origin",
+        credentials: fetchCredentials,
         body: body !== undefined && body !== null ? JSON.stringify(body) : undefined,
       });
 
@@ -401,7 +413,7 @@ async function requestForm<T>(
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method,
     headers,
-    credentials: "same-origin",
+    credentials: fetchCredentials,
     body,
   });
 
@@ -417,7 +429,7 @@ async function requestForm<T>(
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
         headers: retryHeaders,
-        credentials: "same-origin",
+        credentials: fetchCredentials,
         body,
       });
 
@@ -454,7 +466,7 @@ async function requestBlob(path: string): Promise<Blob> {
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
     method: "GET",
     headers,
-    credentials: "same-origin",
+    credentials: fetchCredentials,
   });
 
   if (response.status === 401) {
@@ -464,7 +476,7 @@ async function requestBlob(path: string): Promise<Blob> {
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method: "GET",
         headers: retryHeaders,
-        credentials: "same-origin",
+        credentials: fetchCredentials,
       });
       if (retryResponse.ok) {
         return retryResponse.blob();
@@ -490,12 +502,12 @@ async function requestBlob(path: string): Promise<Blob> {
 }
 
 export const apiClient = {
-  get: <T>(path: string) => request<T>("GET", path),
+  get: <T>(path: string, opts?: ApiRequestOptions) => request<T>("GET", path, undefined, "json", opts),
   getBlob: (path: string) => requestBlob(path),
-  getText: (path: string) => request<string>("GET", path, undefined, "text"),
+  getText: (path: string, opts?: ApiRequestOptions) => request<string>("GET", path, undefined, "text", opts),
   post: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("POST", path, body, "json", opts),
-  put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
-  patch: <T>(path: string, body?: unknown) => request<T>("PATCH", path, body),
-  delete: <T>(path: string, body?: unknown) => request<T>("DELETE", path, body),
+  put: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("PUT", path, body, "json", opts),
+  patch: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("PATCH", path, body, "json", opts),
+  delete: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("DELETE", path, body, "json", opts),
   postForm: <T>(path: string, body: FormData, opts?: ApiRequestOptions) => requestForm<T>("POST", path, body, opts),
 };

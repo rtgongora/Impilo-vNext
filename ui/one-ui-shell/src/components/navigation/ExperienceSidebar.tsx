@@ -291,6 +291,28 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     };
   }
 
+  if (pathname.startsWith("/operations/vito")) {
+    return {
+      title: "VITO — Identity Operations",
+      description: "Client registry workflows: registration, issuance, smart cards, deduplication, biometrics, and recovery.",
+      tone: "border-indigo-400/30 bg-indigo-950/40 text-indigo-100",
+      actions: [
+        { href: "/operations/vito/registration", label: "Registration", icon: Users },
+        { href: "/operations/vito/issuance", label: "Issuance", icon: IdCard },
+        { href: "/operations/vito/cards", label: "Smart Cards", icon: CreditCard },
+        { href: "/operations/vito/cards/pickup", label: "Card Pickup", icon: Package },
+        { href: "/operations/vito/match", label: "Match Review", icon: ArrowLeftRight },
+        { href: "/operations/vito/dedup", label: "Deduplication", icon: Layers },
+        { href: "/operations/vito/patient-shares", label: "Patient Shares", icon: HeartHandshake },
+        { href: "/operations/vito/print", label: "Print & Slips", icon: FileText },
+        { href: "/operations/vito/internal-search", label: "Internal Search", icon: Search },
+        { href: "/operations/vito/biometrics", label: "Biometrics", icon: ShieldCheck },
+        { href: "/operations/vito/recovery", label: "Recovery", icon: Shield },
+        { href: "/operations/vito/registry-admin", label: "Registry Admin", icon: Settings2 },
+      ],
+    };
+  }
+
   if (
     pathname.startsWith("/registry") ||
     pathname.startsWith("/admin") ||

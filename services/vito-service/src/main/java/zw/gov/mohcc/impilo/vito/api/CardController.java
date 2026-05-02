@@ -16,6 +16,7 @@ import zw.gov.mohcc.impilo.vito.persistence.entity.SmartCardEntity;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Objects;
 
 /**
  * SMART Card Management API.
@@ -36,8 +37,19 @@ public class CardController {
         TrustContext ctx = TrustContextHolder.require();
         requireInternal(ctx);
 
+        UUID healthId;
+        try {
+            healthId = UUID.fromString(Objects.requireNonNull(request.healthId(), "healthId is required"));
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return ResponseEntity.status(400).body(
+                    ApiResponse.error("INVALID_HEALTH_ID",
+                            "healthId must be a valid UUID (e.g. b0000000-0000-4000-8000-000000000001)",
+                            400, ctx.correlationId().toString()));
+        }
+
+        String requestedBy = ctx.actorId() != null ? ctx.actorId() : "system";
         SmartCardEntity card = cardService.requestCard(
-                ctx.tenantId(), request.healthId(), request.publicKey(), ctx.actorId());
+                ctx.tenantId(), healthId, request.publicKey(), requestedBy);
         return ResponseEntity.status(201).body(
                 ApiResponse.ok(card, ctx.correlationId().toString()));
     }
@@ -111,6 +123,6 @@ public class CardController {
         }
     }
 
-    record CardRequest(UUID healthId, String publicKey) {}
+    record CardRequest(String healthId, String publicKey) {}
     record RevokeRequest(RevocationReason reason) {}
 }

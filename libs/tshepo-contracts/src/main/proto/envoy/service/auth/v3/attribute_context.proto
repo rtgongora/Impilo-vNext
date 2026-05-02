@@ -19,7 +19,7 @@ message AttributeContext {
   map<string, string> context_extensions = 10;
 
   message Peer {
-    string address = 1;
+    bytes address = 1;
     uint32 port = 2;
     map<string, string> labels = 6;
     string principal = 7;

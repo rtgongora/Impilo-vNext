@@ -1,7 +1,7 @@
 # External Service Access — Envoy Gateway & TSHEPO Trust Specification
 
-**Version**: 1.0  
-**Scope**: How external callers (browser, mobile apps, partner systems) reach platform services (VITO, TUSO, VARAPI, PCT, OROS, BUTANO, etc.) through the Envoy edge and TSHEPO Policy Decision Point.
+**Version**: 1.1  
+**Scope**: How external callers (browser, mobile apps, partner systems) reach platform services (VITO, TUSO, VARAPI, PCT, OROS, BUTANO, etc.) through the Envoy edge and TSHEPO Policy Decision Point. Includes a dedicated section (§13) covering machine-to-machine access patterns for external partner systems integrating directly with the Registry Spine (VITO, TUSO, VARAPI).
 
 ---
 
@@ -467,3 +467,283 @@ sequenceDiagram
 | Next.js rewrite config | [`ui/one-ui-shell/next.config.mjs`](../../ui/one-ui-shell/next.config.mjs) |
 | Runtime compose | [`docker-compose.runtime.yml`](../../docker-compose.runtime.yml) |
 | Port allocation | [`docs/runbooks/port-allocation.md`](../runbooks/port-allocation.md) |
+
+---
+
+## 13. External Service (Machine-to-Machine) Access to the Registry Spine
+
+This section covers **partner systems and external services** — HMIS integrations, lab systems, insurance platforms, government registries, and any non-human caller — that need to communicate directly with VITO (Client Registry), TUSO (Facility Registry), or VARAPI (Provider Registry) through the Envoy/TSHEPO gateway without routing through the Experience BFF.
+
+---
+
+### 13.1 Design Principles
+
+1. **No bypass** — every M2M request must pass through Envoy (`ext_authz` → TSHEPO) regardless of caller type. There is no separate "service mesh" shortcut for external systems.
+2. **Service identity != human identity** — external services authenticate as a named **Keycloak confidential client** using the Client Credentials grant. The resulting JWT identifies the _system_, not a person.
+3. **Human-context headers are still required** — even for M2M calls, TSHEPO evaluates `x-purpose-of-use`, `x-actor-type` (`SERVICE` or `SYSTEM`), and `x-tenant-id`. Calls missing these headers receive `403 MISSING_HEADERS`.
+4. **Audit chain applies universally** — every M2M decision (ALLOW or DENY) is written to the tamper-evident audit chain with the system's `client_id` as the audit subject.
+5. **Principle of Least Privilege** — each partner system receives its own dedicated Keycloak client scoped to only the registry operations it requires. Shared service accounts are prohibited.
+
+---
+
+### 13.2 Keycloak Client Registration
+
+External services must be provisioned as **confidential clients** with Service Accounts enabled in the `impilo` realm:
+
+```json
+{
+  "clientId": "partner-hmis-example",
+  "name": "Example HMIS Integration",
+  "enabled": true,
+  "publicClient": false,
+  "standardFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": true,
+  "secret": "<generated — never reuse impilo-backend-secret>",
+  "defaultClientScopes": ["openid", "impilo-tenant"],
+  "attributes": {
+    "access.token.lifespan": "300"
+  }
+}
+```
+
+**Required realm roles** assigned to the service account (`service-account-<clientId>`):
+
+| Registry | Minimum Role | Permitted Operations |
+|---|---|---|
+| VITO (Client Registry) | `DEVELOPER` | Read-only client lookup, identity resolution |
+| VITO (Client Registry) | `SYSTEM_ADMIN` | Snapshot pulls, bulk reads |
+| TUSO (Facility Registry) | `DEVELOPER` | Read-only facility/workspace/resource queries |
+| VARAPI (Provider Registry) | `DEVELOPER` | Read-only provider lookups |
+
+> **Note**: Write operations on any registry (create/update client, facility, or provider records) require escalation to `FACILITY_ADMIN` or `SYSTEM_ADMIN` role assignment — these are audited separately and require prior approval through the Impilo governance process.
+
+**Protocol mappers** that must be configured on the client to populate the trust header claims in the JWT:
+
+| Mapper | Claim | Value |
+|---|---|---|
+| Hardcoded claim | `actor_type` | `SERVICE` |
+| Hardcoded claim | `tenant_id` | `<partner-tenant-uuid>` |
+| User attribute mapper | `facility_id` | Set on the service account user if scoped to a facility |
+
+---
+
+### 13.3 Token Acquisition (Client Credentials Flow)
+
+External services obtain a short-lived access token from Keycloak before every call batch (tokens expire in **300 seconds** by default):
+
+```http
+POST /realms/impilo/protocol/openid-connect/token
+Host: keycloak:8480
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id=partner-hmis-example
+&client_secret=<secret>
+```
+
+**Response:**
+```json
+{
+  "access_token": "<jwt>",
+  "token_type": "Bearer",
+  "expires_in": 300,
+  "scope": "openid impilo-tenant"
+}
+```
+
+**Token management rules**:
+- Cache the token until `expires_in - 30` seconds (30-second safety margin before expiry).
+- Do **not** request a new token on every API call — Keycloak rate-limits token endpoint requests.
+- On a `401 Unauthorized` from Envoy, acquire a fresh token and retry **once**. Do not retry infinitely.
+
+---
+
+### 13.4 Constructing a Valid M2M Request
+
+Every request to Envoy must include the JWT bearer token **and** the complete mandatory trust header set. For external services, `x-actor-type` must be `SERVICE` or `SYSTEM`.
+
+```http
+GET /api/v1/clients/{healthId}
+Host: <envoy-host>:10000
+Authorization: Bearer <keycloak-jwt>
+X-Tenant-ID: <partner-tenant-uuid>
+X-Actor-ID: partner-hmis-example
+X-Actor-Type: SERVICE
+X-Purpose-Of-Use: CARE_MANAGEMENT
+X-Correlation-ID: <uuid-v4>
+X-Request-ID: <uuid-v4>
+X-Pod-ID: hmis-pod-01
+```
+
+For calls that involve a **specific facility context** (e.g., querying resources at a known facility):
+
+```http
+X-Facility-ID: <facility-uuid>
+X-Tuso-Facility-ID: <tuso-numeric-id>
+```
+
+**Purpose-of-use values permitted for external services:**
+
+| Purpose | Allowed For |
+|---|---|
+| `CARE_MANAGEMENT` | Clinical integration partners reading client/provider records |
+| `ADMINISTRATIVE` | Insurance, billing, facility management integrations |
+| `PUBLIC_HEALTH` | Surveillance, reporting, epidemiological systems |
+| `RESEARCH` | Approved research institutions (requires additional consent gate) |
+| `SYSTEM_SYNC` | Registry-to-registry synchronisation (snapshot pulls only) |
+
+> `TREATMENT` and `BREAK_GLASS` purposes are **not permitted** for service accounts — they require a human actor with a verified clinical session.
+
+---
+
+### 13.5 Registry Endpoint Reference (via Envoy)
+
+All paths below are relative to `envoy:10000`. Every request passes through the `ext_authz` → TSHEPO gate before being forwarded to the upstream service.
+
+#### VITO — Client Registry (`:8082`)
+
+| Method | Envoy Path | Internal Rewrite | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/clients/{healthId}` | `GET /v1/clients/{healthId}` | Look up a single client by Health ID |
+| `GET` | `/api/v1/clients?nid={nid}` | `GET /v1/clients?nid={nid}` | Resolve client by National ID |
+| `GET` | `/api/v1/clients/snapshot` | `GET /internal/v1/snapshots/clients` | Full snapshot pull (requires `SYSTEM_SYNC` purpose) |
+| `GET` | `/api/v1/recovery` | `GET /v1/recovery` | Identity recovery queries |
+
+> VITO holds all PII. Response fields may be masked by TSHEPO obligation headers (e.g., `x-mask-fields: nin,dob`) depending on the partner's role and assurance level.
+
+#### TUSO — Facility Registry (`:8084`)
+
+| Method | Envoy Path | Internal Rewrite | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/facilities/{id}` | `GET /v1/internal/facilities/{id}` | Look up a facility by UUID |
+| `GET` | `/api/v1/facilities` | `GET /v1/internal/facilities` | List/filter facilities |
+| `GET` | `/api/v1/facilities/snapshot` | `GET /internal/v1/snapshots/facilities` | Full snapshot pull |
+| `GET` | `/api/v1/workspaces` | `GET /v1/internal/workspaces` | List workspaces |
+| `GET` | `/api/v1/resources` | `GET /v1/internal/resources` | List facility resources |
+| `GET` | `/api/v1/bookings` | `GET /api/v1/bookings` (no rewrite) | Booking queries |
+| `GET` | `/api/v1/telemetry` | `GET /api/v1/telemetry` (no rewrite) | Facility telemetry |
+
+#### VARAPI — Provider Registry (`:8083`)
+
+| Method | Envoy Path | Internal Rewrite | Description |
+|---|---|---|---|
+| `GET` | `/api/v1/providers/{id}` | `GET /v1/internal/providers/{id}` | Look up a provider by ID |
+| `GET` | `/api/v1/providers` | `GET /v1/internal/providers` | List/filter providers |
+| `GET` | `/api/v1/providers/snapshot` | `GET /internal/v1/snapshots/providers` | Full snapshot pull |
+
+---
+
+### 13.6 Complete M2M Flow: External Service → VITO
+
+```mermaid
+sequenceDiagram
+    actor ES as External Service (Partner HMIS)
+    participant KC as Keycloak :8480
+    participant E as Envoy PEP :10000
+    participant T as TSHEPO PDP :9090
+    participant DB as Audit Chain
+    participant V as VITO :8082
+
+    ES->>KC: POST /realms/impilo/protocol/openid-connect/token (client_credentials)
+    KC-->>ES: access_token + expires_in 300
+
+    Note over ES: Cache token; reuse until expires_in minus 30s
+
+    ES->>E: GET /api/v1/clients/{healthId} + Bearer jwt + trust headers
+    Note over ES: X-Actor-Type SERVICE, X-Purpose-Of-Use CARE_MANAGEMENT
+
+    E->>T: ext_authz gRPC check — all headers forwarded (500ms timeout)
+
+    Note over T: Gate 1 device risk ok, Gate 2 CARE_MANAGEMENT valid
+    Note over T: Gate 3 not break-glass, Gate 4 facility scope ok
+    Note over T: Gate 5 no consent gate, Gate 6 risk below 61
+    Note over T: Gate 7 no Provider ID needed, Gate 8 LOA1 sufficient
+    Note over T: Gate 9 obligations computed — mask-fields nin
+
+    T->>DB: persist decision + SHA-256 audit chain entry (subject = partner-hmis-example)
+
+    alt DENY — missing headers or invalid purpose
+        T-->>E: 403 + X-Decision-Reason
+        E-->>ES: 403 Forbidden
+    else STEP_UP — high-sensitivity resource requires LOA3+
+        T-->>E: 401 + required challenge methods
+        E-->>ES: 401 Step-Up Required — service account cannot satisfy challenge
+    else ALLOW
+        T-->>E: 200 ALLOW + x-obligations + x-mask-fields nin + x-logging-level STANDARD
+        E->>V: GET /v1/clients/{healthId} + trust headers + obligations injected
+        Note over V: masks NIN per x-mask-fields obligation
+        V-->>E: 200 client record with NIN masked
+        E-->>ES: 200 response
+    end
+```
+
+> **Step-up behaviour for service accounts**: TSHEPO may return `STEP_UP_REQUIRED` (`401`) for high-sensitivity resources that require LOA3+ or MFA. Service accounts **cannot** satisfy a step-up challenge. If this occurs, the partner must contact the platform governance team to request an explicit policy exception or to provide the resource through a lower-sensitivity projection endpoint.
+
+---
+
+### 13.7 TSHEPO Policy Evaluation for SERVICE Actors
+
+`PolicyEngine.java` applies the same 10-dimension gate chain for service accounts as it does for human actors, with these behavioural differences:
+
+| Gate | Human Actor Behaviour | SERVICE Actor Behaviour |
+|---|---|---|
+| **Device risk** | Device fingerprint from browser session | `x-device-fingerprint` evaluated if present; defaults to risk=0 if absent |
+| **Break-glass** | Permitted with supervisor approval | `BREAK_GLASS` purpose denied outright — service accounts cannot break glass |
+| **Facility scope** | Checked against user's facility assignments | Checked against `x-facility-id` header; if absent, evaluated at tenant scope |
+| **Consent gate** | Evaluated against person's consent record | Evaluated; `RESEARCH` purpose triggers explicit consent gate |
+| **MFA step-up** | Redirects to MFA challenge | Returns `STEP_UP_REQUIRED` — service account call fails; no redirect possible |
+| **Provider ID** | Required for clinical write actions | `PROVIDER_NOT_ACTIVATED` if `x-provider-id` absent on regulated writes |
+| **Assurance level** | Checked against JWT `acr` claim (LOA1–LOA4) | Client Credentials tokens issued at **LOA1** by default. High-sensitivity reads requiring LOA3+ will be denied |
+
+---
+
+### 13.8 Obligation Header Handling
+
+When TSHEPO returns `ALLOW`, Envoy injects obligation headers into the forwarded request. External services **must not rely on receiving these directly** — they are directives to the upstream platform service, not to the caller. However, the final response body will already reflect masking or scoping applied by the registry service.
+
+Common obligations that affect VITO/TUSO/VARAPI responses for service accounts:
+
+| Obligation Header | Typical Value | Effect on Registry Response |
+|---|---|---|
+| `x-mask-fields` | `nin,dob` | NIN and date-of-birth redacted from client records |
+| `x-max-scope` | `TENANT` or `FACILITY` | Results filtered to the declared scope |
+| `x-logging-level` | `STANDARD` or `ENHANCED` | Audit verbosity; `ENHANCED` triggers detailed field-level logging |
+| `x-obligations` | JSON blob | Additional service-specific policy constraints |
+
+---
+
+### 13.9 Error Handling and Retry Guidance
+
+| HTTP Status | Cause | Recommended Action |
+|---|---|---|
+| `401 Unauthorized` (token expired) | JWT `exp` exceeded | Acquire a new token via Client Credentials and retry once |
+| `401 Unauthorized` (step-up required) | Resource requires LOA3+ | Do not retry; log and raise a governance exception |
+| `403 MISSING_HEADERS` | One or more mandatory trust headers absent | Fix the request construction; do not retry without correction |
+| `403 INVALID_PURPOSE` | `x-purpose-of-use` value not permitted for service actor | Change purpose or request a policy exception |
+| `403 FACILITY_SCOPE` | `x-facility-id` not within the tenant's permitted scope | Verify the facility UUID; confirm the service account's scope |
+| `403 CONSENT_REQUIRED` | `RESEARCH` purpose without valid consent record | Obtain consent before accessing the record |
+| `503 Service Unavailable` | Envoy cannot reach TSHEPO (ext_authz timeout) | Retry with exponential backoff; TSHEPO failure blocks all requests (`failure_mode_allow: false`) |
+| `504 Gateway Timeout` | Upstream registry service unresponsive | Retry with backoff; check platform health via `/actuator/health` |
+
+**Retry policy** (recommended):
+- Initial delay: 500ms
+- Backoff multiplier: 2×
+- Maximum retries: 3
+- Maximum delay: 8s
+- Do **not** retry on `403` responses — they indicate a policy decision, not a transient failure.
+
+---
+
+### 13.10 Security Constraints for External Services
+
+| Rule | Enforcement |
+|---|---|
+| Each partner has its own Keycloak client | Shared service accounts are prohibited; each `client_id` is individually audited |
+| `BREAK_GLASS` purpose denied to service accounts | TSHEPO gate 3 hard-denies this combination |
+| `TREATMENT` purpose denied to service accounts | Requires human actor with active clinical session |
+| Snapshot pulls restricted to `SYSTEM_SYNC` purpose | Snapshot rewrite routes (`/api/v1/*/snapshot`) checked at TSHEPO gate 2 |
+| Token lifetime capped at 300 seconds | Configured per client in Keycloak; platform governance controls this ceiling |
+| No PII in BUTANO | External services must never write FHIR resources containing PII — CPID only |
+| All decisions audited | `PolicyEngine` writes tamper-evident audit chain for every M2M call; `client_id` is the audit subject |
+| Trust headers not self-issuable | `x-obligations`, `x-decision`, and obligation headers injected by TSHEPO are stripped from inbound requests by Envoy — callers cannot forge them |

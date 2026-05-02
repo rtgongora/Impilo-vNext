@@ -312,4 +312,8 @@ public class VitoServiceClient {
         headers.set(headerName, headerValue);
         return restTemplate.exchange(baseUrl + path, HttpMethod.GET, new HttpEntity<>(headers), String.class);
     }
+
+    public ResponseEntity<byte[]> rawGetBytes(String path) {
+        return restTemplate.getForEntity(baseUrl + path, byte[].class);
+    }
 }

@@ -341,6 +341,9 @@ public class SecurityConfig {
                             "/internal/v1/registry/coverage/preview")
                             .hasAnyRole(mergeRoleSets(CLINICAL_ROLES, QUEUE_ROLES))
 
+                    // ── VITO client registry (staff / admin) ──────────────
+                    .requestMatchers("/internal/v1/vito/client-registry/**").authenticated()
+
                     // ── All other endpoints — authenticated ───────────────
                     .anyRequest().authenticated()
                 )

@@ -77,6 +77,12 @@
             <artifactId>grpc-server-spring-boot-starter</artifactId>
             <version>${grpc-spring-boot.version}</version>
         </dependency>
+        <!-- Force grpc-api to match grpc-netty-shaded version (starter pulls 1.63 which lacks InternalConfiguratorRegistry) -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-api</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>

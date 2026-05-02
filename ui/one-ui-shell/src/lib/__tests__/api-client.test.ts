@@ -92,7 +92,7 @@ describe("apiClient", () => {
     await apiClient.get("/internal/v1/test");
 
     const [, options] = mockFetch.mock.calls[0];
-    expect(options.headers["X-Tenant-ID"]).toBe("tenant-moh-zw");
+    expect(options.headers["X-Tenant-ID"]).toBe("00000000-0000-4000-8000-000000000001");
   });
 
   it("attaches X-Pod-ID header with default value", async () => {

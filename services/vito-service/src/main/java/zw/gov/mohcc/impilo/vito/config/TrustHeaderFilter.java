@@ -14,6 +14,11 @@ import java.util.List;
  *
  * Required headers (per TSHEPO enforcement contract):
  *   X-Tenant-Id, X-Correlation-Id, X-Actor-Id, X-Actor-Type
+ *
+ * INTERNAL mode: when X-Access-Mode: INTERNAL is present the caller is the
+ * Experience BFF (already authenticated via bearer token). Actor headers are
+ * not required because the BFF enforces identity at the session boundary;
+ * only the routing headers (Tenant, Correlation) are checked.
  */
 @Component
 @Order(2) // After TrustContextFilter (Order 1)
@@ -24,6 +29,11 @@ public class TrustHeaderFilter implements Filter {
             "X-Correlation-Id",
             "X-Actor-Id",
             "X-Actor-Type"
+    );
+
+    private static final List<String> INTERNAL_REQUIRED_HEADERS = List.of(
+            "X-Tenant-Id",
+            "X-Correlation-Id"
     );
 
     private static final List<String> SKIP_PREFIXES = List.of(
@@ -51,8 +61,10 @@ public class TrustHeaderFilter implements Filter {
             }
         }
 
-        // Check mandatory headers
-        for (String header : REQUIRED_HEADERS) {
+        boolean isInternal = "INTERNAL".equalsIgnoreCase(httpReq.getHeader("X-Access-Mode"));
+        List<String> required = isInternal ? INTERNAL_REQUIRED_HEADERS : REQUIRED_HEADERS;
+
+        for (String header : required) {
             String value = httpReq.getHeader(header);
             if (value == null || value.isBlank()) {
                 httpRes.setStatus(400);

@@ -131,6 +131,7 @@ public class AuthSessionController {
                 String accessToken = tokenData.get("access_token").asText();
                 String refreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
                 int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+                int refreshExpiresIn = tokenData.has("refresh_expires_in") ? tokenData.get("refresh_expires_in").asInt() : expiresIn * 6;
 
                 // Decode JWT payload (base64 middle segment)
                 String[] parts = accessToken.split("\\.");
@@ -156,7 +157,7 @@ public class AuthSessionController {
 
                 log.info("Keycloak login successful: user={}, email={}, roles={}", userId, userEmail, roles);
 
-                return buildLoginResponse(accessToken, refreshToken, expiresIn, userId, userEmail, displayName, roles, actorType,
+                return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn, userId, userEmail, displayName, roles, actorType,
                         email, loginMethod, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
@@ -188,7 +189,7 @@ public class AuthSessionController {
 
         // Health OS Identity Doctrine: everyone starts as CITIZEN.
         // Professional capacity is discovered post-login via /linked-ids.
-        return buildLoginResponse(fallbackToken, null, 28800, fallbackUserId, email, email,
+        return buildLoginResponse(fallbackToken, null, 28800, 0, fallbackUserId, email, email,
                 List.of("CITIZEN"), "CITIZEN", email, loginMethod, requestId, correlationId);
     }
 
@@ -260,6 +261,7 @@ public class AuthSessionController {
                 String newAccessToken = tokenData.get("access_token").asText();
                 String newRefreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
                 int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+                int refreshExpiresIn = tokenData.has("refresh_expires_in") ? tokenData.get("refresh_expires_in").asInt() : expiresIn * 6;
 
                 String[] parts = newAccessToken.split("\\.");
                 String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
@@ -283,7 +285,7 @@ public class AuthSessionController {
                 String actorType = determineActorType(roles);
                 log.info("Token refreshed for user={}", userId);
 
-                return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, userId, userEmail,
+                return buildLoginResponse(newAccessToken, newRefreshToken, expiresIn, refreshExpiresIn, userId, userEmail,
                         displayName, roles, actorType, userEmail, null, requestId, correlationId);
             }
         } catch (org.springframework.web.client.HttpClientErrorException e) {
@@ -521,8 +523,9 @@ public class AuthSessionController {
                     String accessToken = tokenData.get("access_token").asText();
                     String refreshToken = tokenData.has("refresh_token") ? tokenData.get("refresh_token").asText() : null;
                     int expiresIn = tokenData.has("expires_in") ? tokenData.get("expires_in").asInt() : 28800;
+                    int refreshExpiresIn = tokenData.has("refresh_expires_in") ? tokenData.get("refresh_expires_in").asInt() : expiresIn * 6;
 
-                    return buildLoginResponse(accessToken, refreshToken, expiresIn,
+                    return buildLoginResponse(accessToken, refreshToken, expiresIn, refreshExpiresIn,
                             userId != null ? userId : UUID.randomUUID().toString(),
                             email, firstName + " " + lastName,
                             List.of(role), "CITIZEN",
@@ -594,7 +597,7 @@ public class AuthSessionController {
     }
 
     private ResponseEntity<Map<String, Object>> buildLoginResponse(
-            String token, String refreshToken, int expiresIn, String userId, String userEmail,
+            String token, String refreshToken, int expiresIn, int refreshExpiresIn, String userId, String userEmail,
             String displayName, List<String> roles, String actorType,
             String loginPrincipal, String loginMethod,
             String requestId, String correlationId) {
@@ -627,7 +630,7 @@ public class AuthSessionController {
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         ResponseEntity.BodyBuilder builder = ResponseEntity.ok();
         if (refreshToken != null && !refreshToken.isBlank()) {
-            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken, expiresIn).toString());
+            builder.header(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken, refreshExpiresIn).toString());
         } else {
             builder.header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString());
         }

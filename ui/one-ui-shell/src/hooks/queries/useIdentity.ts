@@ -102,3 +102,24 @@ export function useRequestAssuranceUpgrade() {
     },
   });
 }
+
+export function useResolveIdentity() {
+  return useMutation({
+    mutationFn: (body: { aliasType: string; aliasValue: string }) =>
+      apiClient.post<ApiResponse<{ healthId: string; resolved: boolean }>>(
+        "/internal/v1/vito/identity/resolve",
+        body,
+      ),
+  });
+}
+
+export function useRotateAlias() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { healthId: string; aliasType: string; newValue: string }) =>
+      apiClient.post<ApiResponse<void>>("/internal/v1/vito/identity/rotate", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["identity"] });
+    },
+  });
+}

@@ -364,6 +364,20 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
   { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },
   { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
+  { path: "/operations/vito/registration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Registration", navZone: "professional" },
+  { path: "/operations/vito/registration/new", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "New Registration", navLabel: "New Registration", navZone: "professional" },
+  { path: "/operations/vito/issuance", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Issuance Queue", navLabel: "Issuance Queue", navZone: "professional" },
+  { path: "/operations/vito/issuance/[requestId]", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Issuance Request", navLabel: "Issuance Request", navZone: "professional" },
+  { path: "/operations/vito/cards", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Smart Cards", navLabel: "Smart Cards", navZone: "professional" },
+  { path: "/operations/vito/cards/pickup", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Card Pickup", navLabel: "Card Pickup", navZone: "professional" },
+  { path: "/operations/vito/match", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Match Review", navLabel: "Match Review", navZone: "professional" },
+  { path: "/operations/vito/dedup", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Deduplication", navLabel: "Deduplication", navZone: "professional" },
+  { path: "/operations/vito/print", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Print & Slips", navLabel: "Print & Slips", navZone: "professional" },
+  { path: "/operations/vito/patient-shares", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Patient Shares", navLabel: "Patient Shares", navZone: "professional" },
+  { path: "/operations/vito/internal-search", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Internal Search", navLabel: "Internal Search", navZone: "professional" },
+  { path: "/operations/vito/biometrics", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Biometrics", navLabel: "Biometrics", navZone: "professional" },
+  { path: "/operations/vito/recovery", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Recovery & SHS", navLabel: "Recovery & SHS", navZone: "professional" },
+  { path: "/operations/vito/registry-admin", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Registry Admin", navLabel: "Registry Admin", navZone: "professional" },
   { path: "/operations/butano", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "SHR Operations", navLabel: "SHR Ops", navZone: "professional" },
   { path: "/operations/assets", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Asset Management", navLabel: "Assets", navZone: "professional" },
   { path: "/operations/equipment", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Equipment Management", navLabel: "Equipment", navZone: "professional" },
@@ -409,7 +423,7 @@ export const ROUTES: RouteDefinition[] = [
 ];
 
 // Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 264;
+export const EXPECTED_ROUTE_COUNT = 278;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -23,6 +23,11 @@ public class StepUpAspect {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attrs != null) {
             HttpServletRequest request = attrs.getRequest();
+
+            if ("INTERNAL".equalsIgnoreCase(request.getHeader("X-Access-Mode"))) {
+                return joinPoint.proceed();
+            }
+
             String stepUpToken = request.getHeader("X-Step-Up-Token");
 
             if (stepUpToken == null || stepUpToken.isBlank()) {
