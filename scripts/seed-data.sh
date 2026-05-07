@@ -90,7 +90,7 @@ fi
 # Wait for each service (Flyway runs on startup; we wait until actuator is UP)
 declare -A SERVICES=(
   [tuso]=8084
-  [vito]=8082
+  [vito]=8092
   [varapi]=8083
   [tshepo]=18081
   [zibo]=8085
