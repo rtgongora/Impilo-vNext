@@ -35,6 +35,7 @@ import { DelegatedPickupScreen } from "./DelegatedPickupScreen";
 import { PrivacyPolicyScreen } from "./PrivacyPolicyScreen";
 import { TermsOfUseScreen } from "./TermsOfUseScreen";
 import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen";
+import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 
 type PersonalTab =
@@ -137,7 +138,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   queue: QueueStatusSection,
   sos: EmergencySOSSection,
   coverage: CoverageSection,
-  consent: ConsentScreen,
+  consent: PatientConsentScreen,
   "comms-prefs": CommunicationPreferencesScreen,
   support: SupportScreen,
   settings: SettingsSection,

@@ -6,7 +6,7 @@
  */
 
 // Configuration
-export { configureAuth, authStore } from "./authStore";
+export { configureAuth, authStore, resolveActorId } from "./authStore";
 export type { AuthState } from "./authStore";
 
 // Keycloak PKCE client

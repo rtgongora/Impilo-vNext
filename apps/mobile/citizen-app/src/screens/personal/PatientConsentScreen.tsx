@@ -27,7 +27,7 @@ const CONSENT_CATEGORIES: { category: string; description: string }[] = [
   { category: "Telehealth Recording", description: "Permit recording of telehealth consultations for quality and records." },
 ];
 
-export function ConsentScreen({ onGoBack }: { onGoBack?: () => void }) {
+export function PatientConsentScreen({ onGoBack }: { onGoBack?: () => void }) {
   const [consents, setConsents] = useState<Consent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);

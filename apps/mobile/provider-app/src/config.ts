@@ -12,14 +12,21 @@ import { configureApiClient } from "@impilo/mobile-api-client";
 import { configureOfflineStorage, MemoryStorageAdapter, openExpoSqliteOfflineAdapter } from "@impilo/mobile-offline";
 import { configureSecureStorage, type SecureStorageAdapter } from "@impilo/mobile-auth";
 
+import * as Linking from "expo-linking";
+
 const extra = Constants.expoConfig?.extra ?? {};
 
 const ENV = {
-  KEYCLOAK_URL: extra.keycloakUrl ?? process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "https://auth.impilo.gov.zw",
+  KEYCLOAK_URL: extra.keycloakUrl ?? process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "http://192.168.100.211:8080",
   KEYCLOAK_REALM: extra.keycloakRealm ?? process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",
   KEYCLOAK_CLIENT_ID: extra.keycloakClientId ?? process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "provider-app",
-  API_BASE_URL: extra.apiBaseUrl ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://api.impilo.gov.zw",
-  REDIRECT_URI: extra.redirectUri ?? process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo.provider://callback",
+  API_BASE_URL: extra.apiBaseUrl ?? process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://192.168.100.211:8000",
+  // Always derive the redirect URI from Linking so it matches the URL that
+  // WebBrowser.openAuthSessionAsync intercepts — Expo Go uses exp://…/--/auth/callback
+  // and standalone builds use impilo-provider://auth/callback.  A hardcoded value
+  // (e.g. "impilo.provider://callback") would both differ from what Linking.createURL
+  // generates at runtime AND use the wrong path, causing the "invalid address" error.
+  REDIRECT_URI: Linking.createURL("auth/callback"),
 };
 
 /**

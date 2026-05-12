@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "light",
-  scheme: "impilo.provider",
+  scheme: "impilo-provider",
   splash: {
     image: "./assets/splash.png",
     resizeMode: "contain",
@@ -64,14 +64,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     keycloakUrl:
-      process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "https://auth.impilo.gov.zw",
+      process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "http://192.168.100.211:8080",
     keycloakRealm: process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",
     keycloakClientId:
       process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "provider-app",
     apiBaseUrl:
-      process.env.EXPO_PUBLIC_API_BASE_URL ?? "https://api.impilo.gov.zw",
+      process.env.EXPO_PUBLIC_API_BASE_URL ?? "http://192.168.100.211:8160",
     redirectUri:
-      process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo.provider://callback",
+      process.env.EXPO_PUBLIC_REDIRECT_URI ?? "impilo-provider://auth/callback",
     eas: {
       projectId: "impilo-provider",
     },

@@ -106,11 +106,12 @@ export const authStore = createStore<AuthState>((set, get) => ({
       const sessionData = storedSession ? JSON.parse(storedSession) : {};
       const tenantId = (await storage.getItem(STORAGE_KEYS.TENANT_ID)) ?? "tenant-moh-zw";
 
+      const actorType = resolveActorType(userInfo);
       const session: SessionContext = {
         tenantId,
         podId: sessionData.podId ?? "national-spine",
-        actorId: userInfo.sub,
-        actorType: resolveActorType(userInfo),
+        actorId: resolveActorId(userInfo),
+        actorType,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         expiresAt: tokens.expiresAt,
@@ -166,11 +167,12 @@ export const authStore = createStore<AuthState>((set, get) => ({
       const storage = getSecureStorage();
       const tenantId = (await storage.getItem(STORAGE_KEYS.TENANT_ID)) ?? "tenant-moh-zw";
 
+      const resolvedActorType = resolveActorType(userInfo);
       const session: SessionContext = {
         tenantId,
         podId: "national-spine",
-        actorId: userInfo.sub,
-        actorType: resolveActorType(userInfo),
+        actorId: resolveActorId(userInfo),
+        actorType: resolvedActorType,
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         expiresAt: tokens.expiresAt,
@@ -304,6 +306,16 @@ function resolveActorType(userInfo: UserInfo): ActorType {
   if (roles.includes("CLINICIAN") || roles.includes("NURSE") || roles.includes("PHARMACIST")) return "PROVIDER";
   if (roles.includes("SYSTEM_ADMIN") || roles.includes("FACILITY_ADMIN") || roles.includes("FINANCE")) return "OPERATOR";
   return "CITIZEN";
+}
+
+/**
+ * Resolves the actor ID from Keycloak user info.
+ * Citizens use their CPID claim (mapped from the Keycloak user attribute) so that
+ * the backend VITO lookup key matches. Non-citizen actors use the Keycloak subject.
+ */
+export function resolveActorId(userInfo: UserInfo): string {
+  const actorType = resolveActorType(userInfo);
+  return actorType === "CITIZEN" ? (userInfo.cpid ?? userInfo.sub) : userInfo.sub;
 }
 
 async function persistSessionData(session: SessionContext): Promise<void> {

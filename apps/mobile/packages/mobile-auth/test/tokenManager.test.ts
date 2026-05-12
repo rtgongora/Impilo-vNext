@@ -50,8 +50,8 @@ describe("TokenManager", () => {
 
   it("setTokens persists to secure storage", async () => {
     await tm.setTokens(mockTokenResponse);
-    expect(await storage.getItem("impilo:auth:access_token")).toBe("access-new");
-    expect(await storage.getItem("impilo:auth:refresh_token")).toBe("refresh-new");
+    expect(await storage.getItem("impilo_auth_access_token")).toBe("access-new");
+    expect(await storage.getItem("impilo_auth_refresh_token")).toBe("refresh-new");
   });
 
   it("getValidToken returns current token when not expired", async () => {
@@ -68,7 +68,7 @@ describe("TokenManager", () => {
     await tm.setTokens(mockTokenResponse);
     await tm.clearTokens();
     expect(tm.getCurrentTokens()).toBeNull();
-    expect(await storage.getItem("impilo:auth:access_token")).toBeNull();
+    expect(await storage.getItem("impilo_auth_access_token")).toBeNull();
   });
 
   it("restoreTokens returns null when no stored tokens", async () => {

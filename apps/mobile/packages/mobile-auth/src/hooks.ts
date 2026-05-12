@@ -26,7 +26,7 @@ export function useAuth(): AuthState {
  * Re-renders only when session changes.
  */
 export function useSession(): {
-  session: SessionContext | null;
+  session: SessionContext | null; 
   isAuthenticated: boolean;
 } {
   const selectSession = useCallback(() => {
