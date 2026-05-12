@@ -31,11 +31,18 @@ public class SnapshotController {
             @RequestHeader("X-Request-ID") String requestId,
             @RequestHeader("X-Correlation-ID") String correlationId,
             @RequestParam(defaultValue = "0") int cursor,
-            @RequestParam(defaultValue = "100") int limit) {
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String status) {
 
         OffsetDateTime asOf = OffsetDateTime.now();
-        Page<ProviderEntity> page = providerRepository.findAll(
-                PageRequest.of(cursor, Math.min(limit, 500), Sort.by("id")));
+        Page<ProviderEntity> page;
+        if (status != null && !status.isBlank()) {
+            page = providerRepository.findByStatus(status,
+                    PageRequest.of(cursor, Math.min(limit, 500), Sort.by("id")));
+        } else {
+            page = providerRepository.findAll(
+                    PageRequest.of(cursor, Math.min(limit, 500), Sort.by("id")));
+        }
 
         List<Map<String, Object>> items = page.getContent().stream()
                 .map(this::toSnapshotItem)
@@ -74,12 +81,22 @@ public class SnapshotController {
 
     private Map<String, Object> toSnapshotItem(ProviderEntity entity) {
         Map<String, Object> item = new LinkedHashMap<>();
-        item.put("id", entity.getProviderRef() != null ? entity.getProviderRef().toString() : null);
-        item.put("type", "Provider");
+        item.put("provider_public_id", entity.getProviderPublicId());
+        item.put("impilo_health_id", entity.getImpiloHealthId() != null
+                ? entity.getImpiloHealthId().toString() : null);
         item.put("given_name", entity.getGivenName());
+        item.put("middle_name", entity.getMiddleName());
         item.put("family_name", entity.getFamilyName());
         item.put("profession", entity.getProfession());
+        item.put("cadre", entity.getCadre());
+        item.put("practice_number", entity.getPracticeNumber());
         item.put("status", entity.getStatus());
+        item.put("licence_status", entity.getLicenceStatus());
+        item.put("primary_council_id", entity.getPrimaryCouncil() != null
+                ? entity.getPrimaryCouncil().getId() : null);
+        item.put("version", entity.getVersion());
+        item.put("updated_at", entity.getUpdatedAt() != null
+                ? entity.getUpdatedAt().toString() : null);
         return item;
     }
 }

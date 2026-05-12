@@ -96,6 +96,12 @@ public class ClientEntity {
     @Column(name = "lifecycle_metadata", columnDefinition = "jsonb")
     private String lifecycleMetadata;
 
+    @Column(name = "source_system", length = 100)
+    private String sourceSystem;
+
+    @Column(name = "source_system_patient_id", length = 255)
+    private String sourceSystemPatientId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -163,6 +169,10 @@ public class ClientEntity {
     public void setMergedIntoCrid(UUID mergedIntoCrid) { this.mergedIntoCrid = mergedIntoCrid; }
     public String getLifecycleMetadata() { return lifecycleMetadata; }
     public void setLifecycleMetadata(String lifecycleMetadata) { this.lifecycleMetadata = lifecycleMetadata; }
+    public String getSourceSystem() { return sourceSystem; }
+    public void setSourceSystem(String sourceSystem) { this.sourceSystem = sourceSystem; }
+    public String getSourceSystemPatientId() { return sourceSystemPatientId; }
+    public void setSourceSystemPatientId(String sourceSystemPatientId) { this.sourceSystemPatientId = sourceSystemPatientId; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
 }

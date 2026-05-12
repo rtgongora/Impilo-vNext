@@ -44,6 +44,9 @@ public class ClientIdentifierEntity {
     @Column(name = "source")
     private String source;
 
+    @Column(name = "source_system", length = 100)
+    private String sourceSystem;
+
     @Column(name = "active_flag", nullable = false)
     private boolean activeFlag = true;
 
@@ -81,6 +84,8 @@ public class ClientIdentifierEntity {
     public void setExpiryDate(OffsetDateTime expiryDate) { this.expiryDate = expiryDate; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+    public String getSourceSystem() { return sourceSystem; }
+    public void setSourceSystem(String sourceSystem) { this.sourceSystem = sourceSystem; }
     public boolean isActiveFlag() { return activeFlag; }
     public void setActiveFlag(boolean activeFlag) { this.activeFlag = activeFlag; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

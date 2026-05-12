@@ -31,12 +31,15 @@ public class SnapshotController {
             @RequestHeader("X-Request-ID") String requestId,
             @RequestHeader("X-Correlation-ID") String correlationId,
             @RequestParam(defaultValue = "0") int cursor,
-            @RequestParam(defaultValue = "100") int limit) {
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String status) {
 
         OffsetDateTime asOf = OffsetDateTime.now();
-        Page<FacilityEntity> page = facilityRepository.findByTenantId(
-                UUID.fromString(tenantId),
-                PageRequest.of(cursor, Math.min(limit, 500), Sort.by("id")));
+        UUID tenantUuid = UUID.fromString(tenantId);
+        PageRequest pageRequest = PageRequest.of(cursor, Math.min(limit, 500), Sort.by("id"));
+        Page<FacilityEntity> page = (status != null && !status.isBlank())
+                ? facilityRepository.findByTenantIdAndStatus(tenantUuid, status, pageRequest)
+                : facilityRepository.findByTenantId(tenantUuid, pageRequest);
 
         List<Map<String, Object>> items = page.getContent().stream()
                 .map(this::toSnapshotItem)
