@@ -1,16 +1,16 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { AppLayout } from "@/components/AppLayout";
-import { PageShell } from "@/components/PageShell";
 
-/** Public-ish claim flow (OTP); not gated to CITIZEN actor type. */
+/** Public patient-share claim flow — no auth, standalone card layout. */
 export default function ShareClaimLayout({ children }: { children: ReactNode }) {
   return (
-    <AppLayout>
-      <PageShell title="Claim shared documents" subtitle="Share-slip service (configure NEXT_PUBLIC_SHARE_SLIP_PUBLIC_URL)">
+    <div className="min-h-screen bg-gray-50 flex items-start justify-center py-12 px-4">
+      <div className="w-full max-w-lg">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold text-gray-900">Claim Shared Health Record</h1>
+          <p className="mt-1 text-sm text-gray-500">Impilo Health OS — secure patient share flow</p>
+        </div>
         {children}
-      </PageShell>
-    </AppLayout>
+      </div>
+    </div>
   );
 }

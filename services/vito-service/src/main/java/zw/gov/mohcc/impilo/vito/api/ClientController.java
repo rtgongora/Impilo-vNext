@@ -74,6 +74,26 @@ public class ClientController {
                                 ctx.correlationId().toString())));
     }
 
+    @GetMapping("/by-impilo-id/{impiloId}")
+    public ResponseEntity<ApiResponse<ClientEntity>> getClientByImpiloId(@PathVariable String impiloId) {
+        TrustContext ctx = TrustContextHolder.require();
+        VisibilityProfile vis = VisibilityContextHolder.current().orElse(null);
+        if (AggregateVisibilityGuard.blocksRowLevelDetail(vis)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    ApiResponse.error("VISIBILITY_AGGREGATE_ONLY",
+                            "Client identity detail is not available under aggregate-only visibility.",
+                            HttpStatus.FORBIDDEN.value(),
+                            ctx.correlationId().toString()));
+        }
+
+        return identityService.findByImpiloId(ctx.tenantId(), impiloId)
+                .map(client -> ResponseEntity.ok(
+                        ApiResponse.ok(client, ctx.correlationId().toString())))
+                .orElse(ResponseEntity.status(404).body(
+                        ApiResponse.error("NOT_FOUND", "Client not found", 404,
+                                ctx.correlationId().toString())));
+    }
+
     @PostMapping("/{healthId}/verify")
     public ResponseEntity<ApiResponse<ClientEntity>> verifyClient(@PathVariable UUID healthId) {
         TrustContext ctx = TrustContextHolder.require();

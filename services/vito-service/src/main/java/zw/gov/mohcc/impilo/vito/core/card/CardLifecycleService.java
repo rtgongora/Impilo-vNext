@@ -75,18 +75,25 @@ public class CardLifecycleService {
         String did = didGenerator.generate(healthId);
         String cardNumber = generateCardNumber();
 
+        String resolvedPublicKey = (publicKey != null && !publicKey.isBlank())
+                ? publicKey
+                : "DEV-PLACEHOLDER-" + UUID.randomUUID();
+        String resolvedRequestedBy = (requestedBy != null && !requestedBy.isBlank())
+                ? requestedBy
+                : "system";
+
         SmartCardEntity card = new SmartCardEntity();
         card.setTenantId(tenantId);
         card.setHealthId(healthId);
         card.setCardNumber(cardNumber);
         card.setDidUri(did);
-        card.setPublicKey(publicKey);
+        card.setPublicKey(resolvedPublicKey);
         card.setStatus(CardStatus.REQUESTED);
-        card.setRequestedBy(requestedBy);
+        card.setRequestedBy(resolvedRequestedBy);
         card.setExpiresAt(OffsetDateTime.now().plusYears(properties.getCard().getExpiryYears()));
 
         card = cardRepository.save(card);
-        recordTransition(card, null, CardStatus.REQUESTED, requestedBy, null);
+        recordTransition(card, null, CardStatus.REQUESTED, resolvedRequestedBy, null);
 
         publishEvent("SMART_CARD", card.getId().toString(), "CARD_REQUESTED",
                 String.format("{\"cardId\":%d,\"healthId\":\"%s\",\"did\":\"%s\"}",

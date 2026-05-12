@@ -1,13 +1,16 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 class AuthSessionControllerTest {
 
@@ -42,5 +45,41 @@ class AuthSessionControllerTest {
         assertEquals(200, response.getStatusCode().value());
         Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
         assertEquals(true, data.get("authenticated"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void buildLoginResponse_refreshCookieUsesRefreshExpiresIn() throws Exception {
+        AuthSessionController controller = new AuthSessionController(new RestTemplate(), null, null, null);
+
+        Method method = AuthSessionController.class.getDeclaredMethod(
+                "buildLoginResponse",
+                String.class, String.class, int.class, int.class,
+                String.class, String.class, String.class,
+                List.class, String.class, String.class, String.class,
+                String.class, String.class);
+        method.setAccessible(true);
+
+        int accessTokenLifetime = 300;
+        int refreshTokenLifetime = 1800;
+
+        ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) method.invoke(
+                controller,
+                "some-token", "some-refresh-token", accessTokenLifetime, refreshTokenLifetime,
+                "user-1", "user@example.com", "User One",
+                List.of("CITIZEN"), "CITIZEN", "user@example.com", "email",
+                "req-1", "corr-1");
+
+        List<String> setCookieHeaders = response.getHeaders().get(HttpHeaders.SET_COOKIE);
+        assertNotNull(setCookieHeaders, "Set-Cookie header must be present");
+        String refreshCookie = setCookieHeaders.stream()
+                .filter(h -> h.startsWith("exp_refresh_token="))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(refreshCookie, "exp_refresh_token cookie must be set");
+        assertTrue(refreshCookie.contains("Max-Age=" + refreshTokenLifetime),
+                "Cookie Max-Age should equal refresh_expires_in (" + refreshTokenLifetime + "), got: " + refreshCookie);
+        assertFalse(refreshCookie.contains("Max-Age=" + accessTokenLifetime),
+                "Cookie Max-Age must NOT equal expires_in (" + accessTokenLifetime + ")");
     }
 }

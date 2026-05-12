@@ -156,6 +156,40 @@ services:
       timeout: 3s
       retries: 5
 
+  # ── TSHEPO-AUTHZ — gRPC ext_authz (port 9090) ─────────────────────
+  tshepo-authz:
+    build:
+      context: ./services/tshepo-authz-service
+      dockerfile: Dockerfile.dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8081
+    mem_limit: 768m
+    ports:
+      - "19090:9090"
+      - "18082:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
   # ── Envoy Gateway ─────────────────────────────────────────────────
   envoy:
     image: envoyproxy/envoy:v1.31-latest
@@ -166,6 +200,8 @@ services:
       - "9901:9901"
     depends_on:
       opa:
+        condition: service_healthy
+      tshepo-authz:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9901 && echo -e 'GET /ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q 'LIVE' <&3"]
@@ -234,7 +270,7 @@ services:
       VITO_HMAC_PEPPER: impilo-dev-hmac-pepper-changeme-in-prod
     mem_limit: 768m
     ports:
-      - "8082:8082"
+      - "8092:8082"
     depends_on:
       postgres:
         condition: service_healthy
@@ -552,6 +588,8 @@ services:
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
       NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
+      API_GATEWAY_URL: http://envoy:10000
+      BFF_URL: http://experience-bff:8160
       HOSTNAME: "0.0.0.0"
     ports:
       - "3000:3000"

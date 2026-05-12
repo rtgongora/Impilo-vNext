@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.vito.api;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -50,10 +52,9 @@ public class PrintJobController {
         Long cardId = ((Number) body.get("cardId")).longValue();
         String template = (String) body.getOrDefault("template", "STANDARD");
 
-        // Validate the card exists and belongs to this tenant
         SmartCardEntity card = cardRepo.findById(cardId)
-                .filter(c -> c.getTenantId().equals(tenantId))
-                .orElseThrow(() -> new IllegalArgumentException("Card not found"));
+                .filter(c -> tenantId == null || c.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found"));
 
         if (card.getStatus() != CardStatus.REQUESTED) {
             return ResponseEntity.badRequest().body(Map.of(

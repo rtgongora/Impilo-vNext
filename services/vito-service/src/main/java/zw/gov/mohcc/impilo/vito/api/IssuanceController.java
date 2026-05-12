@@ -4,6 +4,8 @@ import org.springframework.data.domain.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.shared.auth.*;
+import zw.gov.mohcc.impilo.shared.response.ApiResponse;
+import zw.gov.mohcc.impilo.shared.response.PagedResponse;
 import zw.gov.mohcc.impilo.vito.core.*;
 import zw.gov.mohcc.impilo.vito.core.issuance.IssuanceStateMachineService;
 import zw.gov.mohcc.impilo.vito.persistence.entity.IssuanceRequestEntity;
@@ -100,8 +102,11 @@ public class IssuanceController {
         TrustContext ctx = TrustContextHolder.require();
         UUID tenantId = ctx.tenantId();
         IssuanceState issuanceState = IssuanceState.valueOf(state);
-        return ResponseEntity.ok(issuanceService.listByState(tenantId, issuanceState,
-                PageRequest.of(page, size)));
+        Page<IssuanceRequestEntity> results = issuanceService.listByState(tenantId, issuanceState,
+                PageRequest.of(page, size));
+        return ResponseEntity.ok(ApiResponse.ok(
+                PagedResponse.of(results.getContent(), page, size, results.getTotalElements()),
+                ctx.correlationId().toString()));
     }
 
     @GetMapping("/{requestId}")

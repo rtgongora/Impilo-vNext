@@ -113,6 +113,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (typeof window !== "undefined") {
+      if (token) sessionStorage.setItem("exp:auth_token", token);
+      else sessionStorage.removeItem("exp:auth_token");
       sessionStorage.setItem("exp:auth_user", JSON.stringify(user));
       if (expiresAt) sessionStorage.setItem("exp:expires_at", expiresAt);
       else sessionStorage.removeItem("exp:expires_at");

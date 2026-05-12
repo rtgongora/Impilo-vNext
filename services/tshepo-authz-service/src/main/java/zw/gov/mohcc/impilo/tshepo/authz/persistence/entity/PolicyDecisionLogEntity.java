@@ -33,10 +33,10 @@ public class PolicyDecisionLogEntity {
     @Column(name = "actor_type", length = 32)
     private String actorType;
 
-    @Column(nullable = false, length = 64)
+    @Column(nullable = false, length = 255)
     private String action;
 
-    @Column(name = "resource_type", length = 64)
+    @Column(name = "resource_type", length = 255)
     private String resourceType;
 
     @Column(name = "resource_id")

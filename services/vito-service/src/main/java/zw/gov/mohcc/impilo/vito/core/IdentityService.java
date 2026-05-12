@@ -152,6 +152,11 @@ public class IdentityService {
     }
 
     @Transactional(readOnly = true)
+    public Optional<ClientEntity> findByImpiloId(UUID tenantId, String impiloId) {
+        return clientRepository.findByTenantIdAndImpiloId(tenantId, impiloId);
+    }
+
+    @Transactional(readOnly = true)
     public Page<ClientEntity> listClients(UUID tenantId, IdentityStatus status, Pageable pageable) {
         if (status != null) {
             return clientRepository.findByTenantIdAndStatus(tenantId, status, pageable);

@@ -62,6 +62,9 @@ public final class CompanionHeaders {
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL
     public static final String WORKFLOW_STATE   = "X-Workflow-State";   // e.g. DRAFT, ACTIVE, DISCHARGED
 
+    // ── Step-up authentication ──────────────────────────────────
+    public static final String STEP_UP_TOKEN = "X-Step-Up-Token";
+
     // ── Timeout & Idempotency ───────────────────────────────────
     public static final String CLIENT_TIMEOUT_MS = "X-Client-Timeout-MS";
     public static final String IDEMPOTENCY_KEY   = "Idempotency-Key";

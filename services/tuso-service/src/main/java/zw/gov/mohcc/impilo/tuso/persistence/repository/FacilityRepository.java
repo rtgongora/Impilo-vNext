@@ -30,7 +30,7 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             @Param("name") String name,
             Pageable pageable);
 
-    @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
+    @Query("SELECT f FROM FacilityEntity f WHERE (:tenantId IS NULL OR f.tenantId = :tenantId) " +
            "AND (:query IS NULL OR LOWER(f.name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
@@ -47,7 +47,7 @@ public interface FacilityRepository extends JpaRepository<FacilityEntity, Long> 
             @Param("province") String province,
             Pageable pageable);
 
-    @Query("SELECT f FROM FacilityEntity f WHERE f.tenantId = :tenantId " +
+    @Query("SELECT f FROM FacilityEntity f WHERE (:tenantId IS NULL OR f.tenantId = :tenantId) " +
            "AND (:type IS NULL OR f.facilityType = :type) " +
            "AND (:status IS NULL OR f.status = :status) " +
            "AND (:regulatoryStatus IS NULL OR f.regulatoryStatus = :regulatoryStatus) " +

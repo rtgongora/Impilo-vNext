@@ -12,6 +12,13 @@ const nextConfig = {
   experimental: {
     // Monorepo: trace shared-ui into standalone output (Next 14)
     outputFileTracingRoot: path.join(__dirname, ".."),
+    // Disable client-side router cache for dynamic pages so that
+    // pre-auth prefetch redirects (middleware → /auth/login) are not
+    // reused after the user logs in and navigates to /home.
+    staleTimes: {
+      dynamic: 0,
+      static: 300,
+    },
   },
   eslint: {
     // Merged Experience tree; align lint cleanup in a follow-up pass.
@@ -19,13 +26,17 @@ const nextConfig = {
   },
   async rewrites() {
     const gateway =
-      process.env.NEXT_PUBLIC_API_GATEWAY_URL || "http://localhost:10000";
+      process.env.API_GATEWAY_URL ||
+      process.env.NEXT_PUBLIC_API_GATEWAY_URL ||
+      "http://localhost:10000";
     const bff =
-      process.env.NEXT_PUBLIC_BFF_URL || "http://localhost:8160";
+      process.env.BFF_URL ||
+      process.env.NEXT_PUBLIC_BFF_URL ||
+      "http://localhost:8160";
     return [
       {
         source: "/internal/:path*",
-        destination: `${bff}/internal/:path*`,
+        destination: `${gateway}/internal/:path*`,
       },
       {
         source: "/api/:path*",
