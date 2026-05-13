@@ -37,6 +37,88 @@ class PayerOpsControllerTest {
         assertEquals("{\"id\":\"REM-1\",\"status\":\"ACTIVE\"}", response.getBody());
     }
 
+    @Test
+    void initiatePaymentAttemptForwardsBodyAndIdempotencyKey() {
+        AttemptCapturingClient capturing = new AttemptCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.initiatePaymentAttempt(
+                "PI-9", "{\"reason\":\"manual-retry\"}", "idem-att-7", "req-3", "corr-3");
+
+        assertEquals(201, response.getStatusCode().value());
+        assertEquals("corr-3", response.getHeaders().getFirst(CompanionHeaders.CORRELATION_ID));
+        assertEquals("PI-9", capturing.intentId);
+        assertEquals("{\"reason\":\"manual-retry\"}", capturing.body);
+        assertEquals("idem-att-7", capturing.idempotencyKey);
+    }
+
+    @Test
+    void initiatePaymentAttemptToleratesMissingBodyAndHeader() {
+        AttemptCapturingClient capturing = new AttemptCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.initiatePaymentAttempt(
+                "PI-10", null, null, "req-4", "corr-4");
+
+        assertEquals(201, response.getStatusCode().value());
+        assertEquals("PI-10", capturing.intentId);
+        assertEquals(null, capturing.idempotencyKey);
+    }
+
+    @Test
+    void listPaymentAttemptsForwards() {
+        AttemptListCapturingClient capturing = new AttemptListCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.listPaymentAttempts(
+                "PI-50", "req-5", "corr-5");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("PI-50", capturing.intentId);
+        assertEquals("corr-5", response.getHeaders().getFirst(CompanionHeaders.CORRELATION_ID));
+        assertEquals("{\"data\":[]}", response.getBody());
+    }
+
+    @Test
+    void reselectRailForwardsBody() {
+        ReselectCapturingClient capturing = new ReselectCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.reselectRail(
+                "PI-60", "{\"reason\":\"provider-outage\"}", "req-6", "corr-6");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("PI-60", capturing.intentId);
+        assertEquals("{\"reason\":\"provider-outage\"}", capturing.body);
+    }
+
+    @Test
+    void reselectRailTolersMissingBody() {
+        ReselectCapturingClient capturing = new ReselectCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.reselectRail(
+                "PI-61", null, "req-7", "corr-7");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("PI-61", capturing.intentId);
+        assertEquals(null, capturing.body);
+    }
+
+    @Test
+    void listPaymentIntentsBySourceForwardsQuery() {
+        SourceIntentCapturingClient capturing = new SourceIntentCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.listPaymentIntentsBySource(
+                "COSTA_BILL", null, java.util.List.of("BILL-1", "BILL-2"), "req-8", "corr-8");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("COSTA_BILL", capturing.sourceType);
+        assertEquals(2, capturing.sourceIds.size());
+        assertEquals("{\"data\":[]}", response.getBody());
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -56,6 +138,73 @@ class PayerOpsControllerTest {
         public ResponseEntity<String> issueRemittanceSlip(String intentId) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"id\":\"REM-1\",\"status\":\"ACTIVE\"}");
+        }
+    }
+
+    private static final class AttemptCapturingClient extends MushexServiceClient {
+        String intentId;
+        String body;
+        String idempotencyKey;
+
+        private AttemptCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> initiatePaymentAttempt(String intentId, String requestBody, String idempotencyKey) {
+            this.intentId = intentId;
+            this.body = requestBody;
+            this.idempotencyKey = idempotencyKey;
+            return ResponseEntity.status(201).contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"success\":true,\"data\":{\"id\":\"ATT-1\"}}");
+        }
+    }
+
+    private static final class AttemptListCapturingClient extends MushexServiceClient {
+        String intentId;
+
+        private AttemptListCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> listPaymentAttempts(String intentId) {
+            this.intentId = intentId;
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"data\":[]}");
+        }
+    }
+
+    private static final class ReselectCapturingClient extends MushexServiceClient {
+        String intentId;
+        String body;
+
+        private ReselectCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> reselectRail(String intentId, String requestBody) {
+            this.intentId = intentId;
+            this.body = requestBody;
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"success\":true,\"data\":{\"intentId\":\"" + intentId + "\"}}");
+        }
+    }
+
+    private static final class SourceIntentCapturingClient extends MushexServiceClient {
+        String sourceType;
+        java.util.List<String> sourceIds = java.util.List.of();
+
+        private SourceIntentCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> listPaymentIntentsBySource(String sourceType, String sourceId, java.util.List<String> sourceIds) {
+            this.sourceType = sourceType;
+            this.sourceIds = sourceIds == null ? java.util.List.of() : sourceIds;
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"data\":[]}");
         }
     }
 }

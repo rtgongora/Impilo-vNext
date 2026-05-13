@@ -212,10 +212,10 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 
 | # | App | Port | Purpose | Backend Dependencies |
 |---|-----|------|---------|---------------------|
-| 14 | **mushex-finance-console** | 3017 | Finance console — payments, settlement, ledger | MUSHEX service |
-| 15 | **mushex-ops-console** | 3018 | Finance operations — claims processing | MUSHEX service |
-| 16 | **mushex-payer-portal** | 3016 | Payer/insurer portal — claims review, benefits | MUSHEX service, Coverage |
-| 17 | **costa-console** | — | Costing console — tariffs, billing, exemptions | Costing Engine service |
+| 14 | **mushex-finance-console** | 3017 | _Deprecated reference sidecar. Canonical replacement: `/finance/costa`, `/finance/mushex-platform`, `/finance/billing`, `/finance/payments`, `/finance/settlements`, `/finance/ledger` in `ui/one-ui-shell`. Source retained for parity; see `ui/mushex-finance-console/DEPRECATED.md`._ | MUSHEX service |
+| 15 | **mushex-ops-console** | 3018 | _Deprecated reference sidecar. Canonical replacement: `/finance/payer-ops`, `/finance/payer-claims`, `/finance/reconciliation`, `/finance/refunds` in `ui/one-ui-shell`. Source retained for parity; see `ui/mushex-ops-console/DEPRECATED.md`._ | MUSHEX service |
+| 16 | **mushex-payer-portal** | 3016 | _Deprecated reference sidecar. Canonical replacement: `/finance/payer-claims`, `/finance/payer-ops`, `/finance/mushex-platform` in `ui/one-ui-shell`. Source retained for parity; see `ui/mushex-payer-portal/DEPRECATED.md`._ | MUSHEX service, Coverage |
+| 17 | **costa-console** | — | Costing console — tariffs, billing, exemptions (legacy; canonical entry point is `/finance/costa` in `ui/one-ui-shell`). | Costing Engine service |
 
 ### 2.5 Governance & Terminology UIs
 
@@ -405,3 +405,20 @@ All UIs use **Next.js 14.2.x**, **TypeScript 5.5**, **TailwindCSS 3.4**, **Radix
 | 10000 | Envoy Gateway | Infra |
 
 > **Note:** Unique defaults are defined in [`docs/runbooks/port-allocation.md`](../../runbooks/port-allocation.md) (Phase A0). Override with `SERVER_PORT` when needed.
+
+---
+
+## Doctrine References
+
+The MusheX entries in this catalogue (`mushex-service`, the sidecar UIs `mushex-finance-console`, `mushex-ops-console`, `mushex-payer-portal`, and every "MUSHEX" dependency column entry in section 1) are governed by:
+
+- [`../doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md) — MusheX dual-mode operating doctrine (orchestration gateway vs. direct/default gateway; gateway neutrality; canonical MusheX surfaces in `ui/one-ui-shell`).
+- [`../doctrine/costa-mushex-billing-timing.md`](../doctrine/costa-mushex-billing-timing.md) — costing, billing-timing, and settlement separation between COSTA and MusheX.
+
+The three sidecar UIs above are **deprecated** in favour of `ui/one-ui-shell` finance and wallet surfaces. Each carries a local `DEPRECATED.md` marker that names the canonical replacement pages and BFF route families:
+
+- [`../../ui/mushex-finance-console/DEPRECATED.md`](../../ui/mushex-finance-console/DEPRECATED.md)
+- [`../../ui/mushex-ops-console/DEPRECATED.md`](../../ui/mushex-ops-console/DEPRECATED.md)
+- [`../../ui/mushex-payer-portal/DEPRECATED.md`](../../ui/mushex-payer-portal/DEPRECATED.md)
+
+Catalogue status (`Implemented`) for those three sidecars is preserved here as a historical record; new feature work must not be added to them. Retirement is tracked under audit gap **G-6** in [`../audits/costa-mushex-experience-layer-wiring-audit.md`](../audits/costa-mushex-experience-layer-wiring-audit.md).

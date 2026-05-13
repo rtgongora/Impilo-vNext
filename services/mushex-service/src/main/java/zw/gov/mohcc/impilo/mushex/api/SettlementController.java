@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.mushex.api.dto.SettlementRunRequest;
@@ -14,6 +15,7 @@ import zw.gov.mohcc.impilo.mushex.service.SettlementService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -50,6 +52,20 @@ public class SettlementController {
         Object settlement = settlementService.getSettlement(id);
 
         return ResponseEntity.ok(ApiResponse.ok(settlement, correlationId));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<Object>>> listSettlements(
+            @RequestParam(name = "intent_id", required = false) String intentId,
+            @RequestParam(name = "intent_ids", required = false) List<String> intentIds) {
+        var ctx = TrustContextHolder.require();
+        String correlationId = ctx.correlationId().toString();
+        List<Object> rows = (intentIds != null && !intentIds.isEmpty()
+                ? settlementService.listSettlements(intentIds)
+                : settlementService.listSettlements(intentId)).stream()
+                .map(r -> (Object) r)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(rows, correlationId));
     }
 
     @PostMapping("/{id}/release-payouts")

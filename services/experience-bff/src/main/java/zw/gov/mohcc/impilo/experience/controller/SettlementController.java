@@ -39,6 +39,16 @@ public class SettlementController {
         return forward("get settlement", requestId, correlationId, () -> mushexClient.getSettlement(settlementId));
     }
 
+    @GetMapping
+    public ResponseEntity<String> listSettlements(
+            @RequestParam(name = "intentId", required = false) String intentId,
+            @RequestParam(name = "intentIds", required = false) java.util.List<String> intentIds,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
+    ) {
+        return forward("list settlements", requestId, correlationId, () -> mushexClient.listSettlements(intentId, intentIds));
+    }
+
     @PostMapping("/{settlementId}/release-payouts")
     public ResponseEntity<String> releasePayouts(
             @PathVariable String settlementId,

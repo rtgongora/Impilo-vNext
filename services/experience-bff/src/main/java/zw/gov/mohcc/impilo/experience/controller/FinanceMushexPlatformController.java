@@ -84,6 +84,14 @@ public class FinanceMushexPlatformController {
         return invoke(() -> mushexClient.platformWalletTransactions(walletId), requestId, correlationId);
     }
 
+    @GetMapping("/wallets/{walletId}")
+    public ResponseEntity<String> walletById(@PathVariable String walletId,
+                                             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
+        return invoke(() -> mushexClient.platformWalletById(walletId), requestId, correlationId);
+    }
+
     @GetMapping("/remittance-transfers")
     public ResponseEntity<String> listRemittance(@RequestParam MultiValueMap<String, String> queryParams,
                                                 @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -91,6 +99,14 @@ public class FinanceMushexPlatformController {
         financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
         return invoke(() -> mushexClient.platformListRemittanceTransfers(new LinkedMultiValueMap<>(queryParams)),
                 requestId, correlationId);
+    }
+
+    @GetMapping("/remittance-transfers/{transferId}")
+    public ResponseEntity<String> remittanceById(@PathVariable String transferId,
+                                                 @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                                 @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
+        return invoke(() -> mushexClient.platformRemittanceTransferById(transferId), requestId, correlationId);
     }
 
     @PostMapping("/remittance-transfers")
@@ -111,6 +127,14 @@ public class FinanceMushexPlatformController {
                 requestId, correlationId);
     }
 
+    @GetMapping("/card-profiles/{cardProfileId}")
+    public ResponseEntity<String> cardById(@PathVariable String cardProfileId,
+                                           @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                           @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
+        return invoke(() -> mushexClient.platformCardProfileById(cardProfileId), requestId, correlationId);
+    }
+
     @PostMapping("/card-profiles")
     public ResponseEntity<String> createCard(@RequestBody(required = false) String body,
                                              @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -127,6 +151,14 @@ public class FinanceMushexPlatformController {
         return invoke(mushexClient::platformListReversals, requestId, correlationId);
     }
 
+    @GetMapping("/reversals/{reversalId}")
+    public ResponseEntity<String> reversalById(@PathVariable String reversalId,
+                                               @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                               @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
+        return invoke(() -> mushexClient.platformReversalById(reversalId), requestId, correlationId);
+    }
+
     @PostMapping("/reversals")
     public ResponseEntity<String> createReversal(@RequestBody(required = false) String body,
                                                  @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -134,6 +166,19 @@ public class FinanceMushexPlatformController {
         financePlaneAuthorizationService.assertMushexPlatformAccess("POST");
         return invoke(() -> mushexClient.platformCreateReversal(body != null ? body : "{}"),
                 requestId, correlationId);
+    }
+
+    /**
+     * Phase 2 (real payment rail readiness). Read-only adapter-readiness snapshot from
+     * MusheX. The snapshot is derived from configuration and registry presence only;
+     * it never carries credentials and never causes money movement.
+     * See {@code docs/design/phase-2-adapter-readiness.md}.
+     */
+    @GetMapping("/adapter-readiness")
+    public ResponseEntity<String> adapterReadiness(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                                   @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertMushexPlatformAccess("GET");
+        return invoke(mushexClient::platformAdapterReadiness, requestId, correlationId);
     }
 
     private ResponseEntity<String> invoke(java.util.function.Supplier<ResponseEntity<String>> call,

@@ -19,6 +19,8 @@ export default function FinancePayerClaimDetailPage() {
   const disputeM = useDisputePayerClaim();
   const [disputeJson, setDisputeJson] = useState(DEFAULT_DISPUTE_JSON);
   const [disputeError, setDisputeError] = useState<string | null>(null);
+  const [submitConfirmed, setSubmitConfirmed] = useState(false);
+  const [disputeConfirmed, setDisputeConfirmed] = useState(false);
 
   return (
     <AppLayout>
@@ -56,10 +58,21 @@ export default function FinancePayerClaimDetailPage() {
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-slate-900">Claim actions</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Submit/dispute writes are intentional operations. Confirm each action before sending it to the payer-ops API.
+            </p>
             <div className="mt-3 flex flex-wrap gap-2">
+              <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={submitConfirmed}
+                  onChange={(event) => setSubmitConfirmed(event.target.checked)}
+                />
+                I confirm this submit action is intentional
+              </label>
               <button
                 type="button"
-                disabled={submitM.isPending}
+                disabled={submitM.isPending || !submitConfirmed}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                 onClick={() => submitM.mutate(claimId)}
               >
@@ -77,10 +90,18 @@ export default function FinancePayerClaimDetailPage() {
                 aria-label="Payer claim dispute JSON"
               />
             </label>
+            <label className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={disputeConfirmed}
+                onChange={(event) => setDisputeConfirmed(event.target.checked)}
+              />
+              I confirm this dispute action is intentional
+            </label>
             {disputeError ? <p className="mt-2 text-xs text-red-700">{disputeError}</p> : null}
             <button
               type="button"
-              disabled={disputeM.isPending}
+              disabled={disputeM.isPending || !disputeConfirmed}
               className="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
               onClick={() => {
                 try {

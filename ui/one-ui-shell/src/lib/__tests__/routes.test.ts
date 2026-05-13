@@ -202,6 +202,7 @@ describe("Route Registry", () => {
     const financePaths: Array<[string, string]> = [
       ["/finance/msika-governance", "MSIKA_GOVERNANCE"],
       ["/finance/settlements", "FINANCE"],
+      ["/finance/remittances", "FINANCE"],
       ["/finance/reconciliation", "PAYER_OPS"],
       ["/finance/refunds", "FINANCE"],
       ["/finance/payer-ops", "PAYER_OPS"],
@@ -248,6 +249,68 @@ describe("Route Registry", () => {
       const route = ROUTES.find((r) => r.path === p);
       expect(route?.guard).toBe("workspace");
     }
+  });
+
+  it("canonical COSTA hub and MusheX platform admin pages are registered with FINANCE role (Stage 3.4C / audit gaps G-1, G-2)", () => {
+    // These two pages were added to `one-ui-shell` in Stage 3.2 / 3.3 but only
+    // entered this central registry in Stage 3.4C housekeeping. They must
+    // appear under the same FINANCE role / finance sidebar pattern as the
+    // surrounding pages so that breadcrumbs and the role-guard pick them up.
+    for (const path of ["/finance/costa", "/finance/mushex-platform"]) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route, `route ${path} is missing from ROUTES`).toBeTruthy();
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.sidebar).toBe("finance");
+      expect(route?.layout).toBe("app");
+      expect(route?.navZone).toBe("work");
+    }
+  });
+
+  it("custodial wallet detail page is registered with FINANCE role (Phase 4 / MusheX platform read-to-detail)", () => {
+    // Phase 4 adds a read-only drill-down at /finance/mushex-platform/wallets/[walletId].
+    // The route lives under the same FINANCE role/sidebar pattern as its parent
+    // hub so guards, breadcrumbs, and the route-parity check resolve it correctly.
+    const route = ROUTES.find((r) => r.path === "/finance/mushex-platform/wallets/[walletId]");
+    expect(route, "custodial-wallet detail route is missing from ROUTES").toBeTruthy();
+    expect(route?.guard).toBe("role");
+    expect(route?.requiredRole).toBe("FINANCE");
+    expect(route?.sidebar).toBe("finance");
+    expect(route?.layout).toBe("app");
+    expect(route?.navZone).toBe("work");
+    expect(route?.pageTitle).toBe("Custodial wallet");
+  });
+
+  it("MusheX remittance/card/reversal detail pages are registered with FINANCE role (Phase 4 follow-on)", () => {
+    const cases: Array<[string, string]> = [
+      ["/finance/mushex-platform/remittance/[transferId]", "Remittance transfer"],
+      ["/finance/mushex-platform/cards/[cardId]", "Card profile"],
+      ["/finance/mushex-platform/reversals/[reversalId]", "Reversal record"],
+    ];
+    for (const [path, title] of cases) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route, `route ${path} is missing from ROUTES`).toBeTruthy();
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("FINANCE");
+      expect(route?.sidebar).toBe("finance");
+      expect(route?.layout).toBe("app");
+      expect(route?.navZone).toBe("work");
+      expect(route?.pageTitle).toBe(title);
+    }
+  });
+
+  it("COSTA encounter timeline page is registered with FINANCE role (Phase 5 / COSTA workflow maturity)", () => {
+    // Phase 5 adds a read-only chronological view at /finance/costa/encounter/[encounterId].
+    // The route lives under the same FINANCE role/sidebar pattern as the COSTA
+    // hub so guards, breadcrumbs, and the route-parity check resolve it correctly.
+    const route = ROUTES.find((r) => r.path === "/finance/costa/encounter/[encounterId]");
+    expect(route, "COSTA encounter timeline route is missing from ROUTES").toBeTruthy();
+    expect(route?.guard).toBe("role");
+    expect(route?.requiredRole).toBe("FINANCE");
+    expect(route?.sidebar).toBe("finance");
+    expect(route?.layout).toBe("app");
+    expect(route?.navZone).toBe("work");
+    expect(route?.pageTitle).toBe("COSTA encounter timeline");
   });
 });
 

@@ -15,4 +15,6 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntryEntity, 
     Page<LedgerEntryEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
     List<LedgerEntryEntity> findByIntentId(String intentId);
+
+    List<LedgerEntryEntity> findByTenantIdAndIntentId(UUID tenantId, String intentId);
 }

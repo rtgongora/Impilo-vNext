@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.mushex.api;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.mushex.api.dto.WalletPlatformRequests;
 import zw.gov.mohcc.impilo.mushex.domain.entity.WalletAccountEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.WalletTransactionEntity;
+import zw.gov.mohcc.impilo.mushex.service.PlatformResourceNotFoundException;
 import zw.gov.mohcc.impilo.mushex.service.WalletPlatformService;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.shared.response.ApiResponse;
@@ -29,11 +31,26 @@ public class WalletPlatformController {
         this.walletPlatformService = walletPlatformService;
     }
 
+    @ExceptionHandler(PlatformResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(PlatformResourceNotFoundException ex) {
+        var ctx = TrustContextHolder.require();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error(PlatformResourceNotFoundException.CODE,
+                        ex.getMessage(), 404, ctx.correlationId().toString()));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<WalletAccountEntity>>> list(@RequestParam String ownerRef) {
         var ctx = TrustContextHolder.require();
         List<WalletAccountEntity> rows = walletPlatformService.listForOwner(ownerRef);
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/{walletId}")
+    public ResponseEntity<ApiResponse<WalletAccountEntity>> getById(@PathVariable String walletId) {
+        var ctx = TrustContextHolder.require();
+        WalletAccountEntity row = walletPlatformService.getWallet(walletId);
+        return ResponseEntity.ok(ApiResponse.ok(row, ctx.correlationId().toString()));
     }
 
     @PostMapping

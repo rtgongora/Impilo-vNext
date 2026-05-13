@@ -106,7 +106,15 @@ const EXPECTED_ROUTES = [
   "/finance/claims/[id]",
   "/finance/billing",
   "/finance/payments",
+  "/finance/remittances",
   "/finance/tariffs",
+  "/finance/costa",
+  "/finance/costa/encounter/[encounterId]",
+  "/finance/mushex-platform",
+  "/finance/mushex-platform/wallets/[walletId]",
+  "/finance/mushex-platform/remittance/[transferId]",
+  "/finance/mushex-platform/cards/[cardId]",
+  "/finance/mushex-platform/reversals/[reversalId]",
   "/pharmacy",
   "/pharmacy/dispense",
   "/pharmacy/stock",
@@ -137,6 +145,8 @@ const EXPECTED_ROUTES = [
   "/settings/notifications",
   "/settings/display",
   "/settings/integrations",
+  "/learning",
+  "/learning/catalog",
 ];
 
 function routeToPagePath(route) {

@@ -1,0 +1,83 @@
+# Standalone-native Impilo Fundo minimal values (Phase 5F).
+#
+# Layered overlay for `helm template helm/learning -f helm/learning/values.minimal.yaml`.
+# Demonstrates that learning-service can run as the complete native Fundo LMS
+# without Moodle, Open edX, Canvas, Chamilo, SCORM runtime, xAPI runtime, or
+# any other external LMS. All external-LMS adapter env vars are explicitly
+# blanked. Production security defaults from `values.yaml` are preserved.
+
+replicaCount: 1
+
+# Same image, same port — minimal mode is a configuration overlay, not a
+# different artefact.
+image:
+  repository: impilo/learning-service
+  tag: latest
+
+env:
+  # ── Persistence ────────────────────────────────────────────────────
+  # Datasource is required even in minimal mode — native Fundo needs the
+  # `lrn_course`, `lrn_course_module`, `lrn_course_lesson`,
+  # `lrn_fundo_pathway`, `lrn_fundo_pathway_item`, `lrn_enrolment`,
+  # `lrn_course_progress`, `lrn_assessment`, `lrn_assessment_question`,
+  # `lrn_assessment_attempt` and `lrn_certificate` tables added in V006.
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/impilo_learning
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+
+  # ── Security ───────────────────────────────────────────────────────
+  # Production posture preserved: OAuth2 enabled by default. Operators
+  # may override via `--set env.LEARNING_SECURITY_OAUTH2_ENABLED=false`
+  # ONLY for short-lived demos or air-gapped pilots; never in production.
+  KEYCLOAK_URL: http://keycloak:8080
+  KEYCLOAK_REALM: impilo
+  LEARNING_SECURITY_OAUTH2_ENABLED: "true"
+
+  # ── Native Fundo APIs (always enabled) ────────────────────────────
+  # The native v1.1 Fundo LMS surface
+  # (/internal/v1/learning/v11/catalog, /pathways, /enrolments, /progress,
+  # /assessments/*, /certificates, /subjects/{type}/{id}/record) is
+  # always active when the service is running — there is no feature flag
+  # to disable it because it is the native runtime of Fundo.
+
+  # ── Outbox publisher (configurable) ───────────────────────────────
+  # Kafka outbox publisher remains configurable so minimal mode can be
+  # deployed against a tenant cluster that does or does not have Kafka.
+  # Defaulted ON to match production posture; flip to "false" in
+  # Kafka-less pilots without affecting native Fundo correctness.
+  LEARNING_OUTBOX_PUBLISHER_ENABLED: "true"
+  LEARNING_OUTBOX_DEFAULT_TOPIC: platform.learning.events
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+  # ── External LMS adapters (intentionally blank) ───────────────────
+  # Fundo is the native Impilo vNext LMS. External LMS platforms (Moodle,
+  # Open edX, Canvas, Chamilo, etc.) are OPTIONAL ADAPTERS only and are
+  # NOT required for Fundo to function. The Moodle adapter is the only
+  # one present in code today (kept for parity with the legacy resource
+  # launch flow); the variables below explicitly DISABLE that adapter:
+  MOODLE_WS_TOKEN: ""
+  MOODLE_WS_ENDPOINT_URL: ""
+  FUNDO_WANTSURL_LOGIN_ENABLED: "false"
+  # Fundo launch mode is set to DIRECT and the launch URL template is
+  # blanked — no external launch target is configured in minimal mode.
+  FUNDO_LAUNCH_MODE: DIRECT
+  FUNDO_LAUNCH_URL_TEMPLATE: ""
+  FUNDO_PUBLIC_BASE_URL: ""
+  FUNDO_LOGIN_PATH: ""
+
+  # ── Internal service-to-service keys ─────────────────────────────
+  # Required for varapi / orchestration integration. Leave blank in
+  # standalone-native pilots that do not include those services.
+  VARAPI_TO_LEARNING_INTERNAL_KEY: ""
+  LEARNING_ORCHESTRATION_INTERNAL_KEY: ""
+
+# Lean resources for a minimal-mode pilot. Production deployments should
+# use the defaults from `values.yaml`.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 400m
+    memory: 512Mi

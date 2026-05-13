@@ -49,6 +49,13 @@ const FINANCE_SECTIONS = [
     color: "bg-purple-100 text-purple-600",
   },
   {
+    title: "Remittances",
+    description: "Read remittance rows from the canonical coverage feed",
+    href: "/finance/remittances",
+    icon: ClipboardList,
+    color: "bg-cyan-100 text-cyan-700",
+  },
+  {
     title: "Tariffs",
     description: "Manage service tariff schedules",
     href: "/finance/tariffs",

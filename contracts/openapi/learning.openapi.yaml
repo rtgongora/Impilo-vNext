@@ -1,0 +1,1430 @@
+openapi: 3.0.3
+info:
+  title: Learning Service (Impilo Fundo) — Internal API
+  description: >
+    Internal API surface for **Impilo Fundo**, the **native learning
+    management, certification, in-service training, pre-service training
+    and CPD support capability of Impilo vNext**. Fundo is designed to
+    operate as a complete modern LMS at national scale — its own
+    catalogue, paths, enrolment, progress, assessments, certificates,
+    learning records and analytics — without depending on any external
+    LMS to function.
+
+
+    External LMS platforms (Moodle, Open edX, Canvas, Chamilo, …) may be
+    connected through **optional adapters** where useful, but Fundo must
+    not depend on any external LMS. The existing Moodle orchestration
+    endpoints documented below are one such optional adapter, preserved
+    verbatim for backwards compatibility — not the Fundo runtime.
+
+
+    This contract is **descriptive of the current implementation only** —
+    it documents the endpoints that exist in `services/learning-service`
+    today and does not assert new behaviour, new fields, or future
+    surfaces. Endpoints under `/internal/v1/learning/integrations/**`
+    and `/internal/v1/learning/orchestration/**` are server-to-server
+    only and use shared internal keys (see `securitySchemes`), not
+    end-user JWT.
+
+
+    CPD authority remains with `varapi-service`. The Impilo Fundo brand
+    is the product/UX name; `learning-service` is its technical home.
+  version: 0.1.0
+  contact:
+    name: MoHCC Digital Health Division
+
+servers:
+  - url: http://localhost:10000
+    description: Local Envoy gateway (learning-service is internal-only today; gateway entry is for parity with peer contracts)
+  - url: http://localhost:8235
+    description: Direct service access
+
+tags:
+  - name: Internal
+    description: Read/write endpoints called by the Experience BFF over the internal network. Native Fundo surface.
+  - name: InternalV11
+    description: >
+      Additive **v1.1-compliant** native Fundo read/write surface under `/internal/v1/learning/v11/**`.
+      Enforces platform v1.1 headers and the standard error envelope. Coexists with the legacy
+      `/internal/v1/learning/**` endpoints, which remain unchanged.
+  - name: FundoNativeLMS
+    description: >
+      **Phase 5 native Impilo Fundo LMS surface** — catalogue, course structure, pathways,
+      enrolment, progress, assessment foundation, certificate metadata, and learning record.
+      All endpoints live under `/internal/v1/learning/v11/**` and are governed by the platform
+      v1.1 contract. This is the native LMS runtime — no Moodle, no external LMS dependency.
+  - name: Integration
+    description: Trusted ingress from Varapi after an external-LMS completion webhook (governed CPD candidate creation)
+  - name: Orchestration
+    description: >
+      Server-to-server orchestration (path assignment, prerequisite registration, **optional Moodle
+      adapter relay**). The Moodle endpoints are legacy/optional — Fundo does not depend on Moodle.
+
+paths:
+  /internal/v1/learning/workflow-context:
+    get:
+      tags: [Internal]
+      summary: Resolve the workflow surface for a given app / route / roles
+      description: >
+        Returns the contextual learning surface (resources, hints, role
+        requirements) for the supplied app/route/workflow tuple. Source for
+        the contextual learning panels in the One Experience Shell.
+      operationId: getWorkflowContext
+      parameters:
+        - { name: appCode, in: query, required: true, schema: { type: string } }
+        - { name: routeRef, in: query, required: true, schema: { type: string } }
+        - { name: workflowCode, in: query, required: false, schema: { type: string } }
+        - { name: roles, in: query, required: false, description: "Comma-separated role codes", schema: { type: string } }
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Workflow surface resolved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/helpdesk/{issueType}:
+    get:
+      tags: [Internal]
+      summary: List helpdesk knowledge-base entries for an issue type or topic
+      operationId: listHelpdeskKnowledge
+      parameters:
+        - { name: issueType, in: path, required: true, schema: { type: string } }
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Helpdesk items
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_ItemsList' }
+
+  /internal/v1/learning/search-hits:
+    get:
+      tags: [Internal]
+      summary: Search learning resources
+      operationId: searchLearningResources
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 8 } }
+      responses:
+        '200':
+          description: Paged search results
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_SearchPage' }
+
+  /internal/v1/learning/resource-opened:
+    post:
+      tags: [Internal]
+      summary: Record that a user opened a learning resource (audit + progress)
+      operationId: recordResourceOpened
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ResourceOpenedRequest' }
+      responses:
+        '200':
+          description: Event recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Status' }
+
+  /internal/v1/learning/resources/{resourceId}:
+    get:
+      tags: [Internal]
+      summary: Get the public view of a learning resource by id
+      operationId: getResourceById
+      parameters:
+        - { name: resourceId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Resource public view
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/subject-completions:
+    get:
+      tags: [Internal]
+      summary: List learning completions for a subject (user / provider / etc.)
+      operationId: listSubjectCompletions
+      parameters:
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 25 } }
+      responses:
+        '200':
+          description: Completion rows
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_ItemsList' }
+
+  /internal/v1/learning/v11/subject-completions:
+    get:
+      tags: [InternalV11]
+      summary: List learning completions for a subject — native v1.1 read surface (Phase 3C)
+      description: >
+        Additive **v1.1-compliant** read endpoint for Impilo Fundo. Delegates to
+        the same native facade as the legacy
+        `GET /internal/v1/learning/subject-completions` and never invokes
+        Moodle or any external LMS. Enforces the platform v1.1 contract
+        (companion header enforcement, error envelope, client-timeout
+        enforcement) via the shared tech-companion filter chain. The legacy
+        endpoint remains unchanged.
+
+
+        When `subjectType` / `subjectId` are omitted, or when the
+        `X-Tenant-ID` header is not a valid UUID, the endpoint returns a
+        successful empty page (HTTP 200 with `data.items = []`) rather than
+        a 4xx — the surface is intentionally read-only and side-effect-free.
+      operationId: listSubjectCompletionsV11
+      parameters:
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, default: 25 } }
+      responses:
+        '200':
+          description: Completion rows (v1.1 envelope; may be empty)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_ItemsList' }
+        '400':
+          description: Required v1.1 header missing (`X-Tenant-ID`, `X-Pod-ID`, `X-Request-ID`, `X-Correlation-ID`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '504':
+          description: Client timeout exceeded (`X-Client-Timeout-MS` reached)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/v11/resource-opened-acknowledgements:
+    post:
+      tags: [InternalV11]
+      summary: Acknowledge that a learning resource was opened — native v1.1 write surface (Phase 4A)
+      description: >
+        Additive **v1.1-compliant** write endpoint for Impilo Fundo. Delegates
+        to the same native facade method as the legacy
+        `POST /internal/v1/learning/resource-opened`
+        (`LearningPlatformFacade.recordResourceOpened`) and never invokes
+        Moodle or any external LMS. Enforces the platform v1.1 contract
+        (companion header enforcement, error envelope, client-timeout
+        enforcement, `Idempotency-Key` requirement) via the shared
+        tech-companion filter chain. The legacy endpoint remains unchanged
+        and continues to serve BFF traffic.
+
+
+        **Tolerant inputs.** When `resourceId` is missing or not a valid UUID,
+        or when the `X-Tenant-ID` header is not a valid UUID, the endpoint
+        returns a side-effect-free
+        `{"data": {"status": "acknowledged", "noOp": true, "reason": "..."}}`
+        envelope with HTTP 200 rather than 4xx. This keeps the v1.1 envelope
+        contract honest (2xx for "all headers + idempotency key present"
+        callers) without leaking domain-specific validation through the
+        platform error envelope. Production callers supplying a valid UUID
+        tenant and `resourceId` receive `{"data": {"status": "recorded",
+        "resourceId": "..."}}`.
+      operationId: acknowledgeResourceOpenedV11
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resourceId:
+                  type: string
+                  format: uuid
+                actorId: { type: string }
+                actorType: { type: string }
+                workflowContext:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200':
+          description: Acknowledgement recorded or accepted as no-op (v1.1 envelope)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+        '400':
+          description: Required v1.1 header missing or `Idempotency-Key` absent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Same `Idempotency-Key` reused with a different body (`IDENTITY_CONFLICT`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '504':
+          description: Client timeout exceeded (`X-Client-Timeout-MS` reached)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Phase 5 — Native Impilo Fundo LMS surface
+  #
+  # All endpoints below run on the native LMS schema (V006 / V007) and
+  # never invoke Moodle, Open edX, Canvas, Chamilo, SCORM runtime, xAPI
+  # runtime, or any other external LMS. They are governed by the same
+  # v1.1 platform contract as `subject-completions` and
+  # `resource-opened-acknowledgements` above (companion header
+  # enforcement, error envelope, idempotency, client-timeout
+  # enforcement).
+  # ───────────────────────────────────────────────────────────────────────
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Phase 6 — Native Fundo authoring + delivery layer additions
+  #
+  # Authoring write endpoints (Phase 6A):
+  #   POST   /v11/catalog
+  #   PUT    /v11/catalog/{courseId}
+  #   POST   /v11/courses/{courseId}/modules
+  #   PUT    /v11/modules/{moduleId}
+  #   POST   /v11/modules/{moduleId}/lessons
+  #   PUT    /v11/lessons/{lessonId}
+  #   POST   /v11/pathways
+  #   PUT    /v11/pathways/{pathwayId}
+  #   POST   /v11/pathways/{pathwayId}/items
+  #   POST   /v11/assessments
+  #   PUT    /v11/assessments/{assessmentId}
+  #   POST   /v11/assessments/{assessmentId}/questions
+  #
+  # Cohort report (Phase 6C):
+  #   GET    /v11/reports/cohort-completions
+  #
+  # All write endpoints emit native v1.1 events where applicable; the
+  # `DRAFT → PUBLISHED` course transition emits
+  # `impilo.learning.course.published.v1` (constant reserved in Phase 5D,
+  # finally emitted in Phase 6A). No Moodle / external LMS dependency
+  # is introduced.
+  # ───────────────────────────────────────────────────────────────────────
+
+  /internal/v1/learning/v11/catalog:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Create a native Fundo course (Phase 6A)
+      description: >
+        Creates a new course in the calling tenant's native Fundo catalogue.
+        On `DRAFT → PUBLISHED` status transitions (either at create-time
+        when `status=PUBLISHED` is supplied, or on a subsequent PUT), the
+        service emits a single `impilo.learning.course.published.v1`
+        outbox row in the same transaction.
+      operationId: createFundoCourse
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoCourseUpsert' }
+      responses:
+        '200':
+          description: Course created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Missing required fields (`BAD_REQUEST`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Course code already taken in the tenant (`COURSE_CODE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [FundoNativeLMS]
+      summary: List native Fundo courses (catalogue)
+      description: >
+        Returns published courses for the calling tenant. Supports filter
+        by `status`, `category`, `level`, `cpdEligible`, `mandatory` and
+        `language`. Defaults to `status=PUBLISHED`.
+      operationId: listFundoCatalog
+      parameters:
+        - { name: status,       in: query, required: false, schema: { type: string } }
+        - { name: category,     in: query, required: false, schema: { type: string } }
+        - { name: level,        in: query, required: false, schema: { type: string } }
+        - { name: cpdEligible,  in: query, required: false, schema: { type: boolean } }
+        - { name: mandatory,    in: query, required: false, schema: { type: boolean } }
+        - { name: language,     in: query, required: false, schema: { type: string } }
+        - { name: limit,        in: query, required: false, schema: { type: integer, default: 25, minimum: 1, maximum: 100 } }
+      responses:
+        '200':
+          description: Catalogue page (v1.1 envelope)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/catalog/{courseId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get native Fundo course detail
+      operationId: getFundoCourse
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Course detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Course not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native Fundo course (Phase 6A)
+      description: >
+        Partially updates the course identified by `{courseId}`. Fields
+        omitted from the request body are left unchanged. A `DRAFT →
+        PUBLISHED` status transition emits a single
+        `impilo.learning.course.published.v1` outbox row; re-publishing a
+        course that is already `PUBLISHED` does not re-emit.
+      operationId: updateFundoCourse
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoCourseUpsert' }
+      responses:
+        '200':
+          description: Course updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Course not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Course code already taken in the tenant (`COURSE_CODE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/courses/{courseId}/modules:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Add a module to a native course (Phase 6A)
+      operationId: createFundoModule
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoModuleUpsert' }
+      responses:
+        '200':
+          description: Module created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Course not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Module sequence already used in this course (`MODULE_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/modules/{moduleId}:
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native module (Phase 6A)
+      operationId: updateFundoModule
+      parameters:
+        - { name: moduleId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoModuleUpsert' }
+      responses:
+        '200':
+          description: Module updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Module not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Module sequence already used (`MODULE_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/modules/{moduleId}/lessons:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Add a lesson to a native module (Phase 6A)
+      operationId: createFundoLesson
+      parameters:
+        - { name: moduleId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoLessonUpsert' }
+      responses:
+        '200':
+          description: Lesson created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Module not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Lesson sequence already used (`LESSON_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/lessons/{lessonId}:
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native lesson (Phase 6A)
+      operationId: updateFundoLesson
+      parameters:
+        - { name: lessonId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoLessonUpsert' }
+      responses:
+        '200':
+          description: Lesson updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Lesson not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Lesson sequence already used (`LESSON_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/courses/{courseId}/structure:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get course with its modules and lessons
+      operationId: getFundoCourseStructure
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Course structure
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Course not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/courses/{courseId}/assessments:
+    get:
+      tags: [FundoNativeLMS]
+      summary: List published native assessments for a course
+      operationId: listFundoCourseAssessments
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Assessment list
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/pathways:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Create a native learning pathway (Phase 6A)
+      operationId: createFundoPathway
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoPathwayUpsert' }
+      responses:
+        '200':
+          description: Pathway created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Missing required fields
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Pathway code already taken (`PATHWAY_CODE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [FundoNativeLMS]
+      summary: List native Fundo learning pathways
+      operationId: listFundoPathways
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: limit,  in: query, required: false, schema: { type: integer, default: 25, minimum: 1, maximum: 100 } }
+      responses:
+        '200':
+          description: Pathway list
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/pathways/{pathwayId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get pathway with its ordered course items
+      operationId: getFundoPathway
+      parameters:
+        - { name: pathwayId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Pathway detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Pathway not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native learning pathway (Phase 6A)
+      operationId: updateFundoPathway
+      parameters:
+        - { name: pathwayId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoPathwayUpsert' }
+      responses:
+        '200':
+          description: Pathway updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Pathway not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Pathway code already taken (`PATHWAY_CODE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/pathways/{pathwayId}/items:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Add an ordered course item to a pathway (Phase 6A)
+      operationId: addFundoPathwayItem
+      parameters:
+        - { name: pathwayId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoPathwayItemUpsert' }
+      responses:
+        '200':
+          description: Pathway item created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Pathway or course not found in tenant
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Pathway item sequence already used (`PATHWAY_ITEM_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/enrolments:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Create a native Fundo enrolment (idempotent)
+      description: >
+        Idempotent: a duplicate POST for an existing ENROLLED/IN_PROGRESS
+        `(tenant, subject, course)` triple returns the existing enrolment with
+        `idempotent: true`. Requires platform v1.1 headers including
+        `Idempotency-Key`. Native runtime — no Moodle.
+      operationId: createFundoEnrolment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [courseId, subjectType, subjectId]
+              properties:
+                courseId:       { type: string, format: uuid }
+                subjectType:    { type: string, enum: [PROVIDER, STUDENT, STAFF, FACILITY_TEAM, OTHER] }
+                subjectId:      { type: string }
+                pathwayId:      { type: string, format: uuid, nullable: true }
+                enrolmentType:  { type: string, enum: [SELF, ASSIGNED, COHORT, SYSTEM], default: SELF }
+                assignedBy:     { type: string, nullable: true }
+                dueAt:          { type: string, format: date-time, nullable: true }
+      responses:
+        '200':
+          description: Enrolment created or returned idempotently
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Invalid input
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '404':
+          description: Course not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [FundoNativeLMS]
+      summary: List enrolments for a subject
+      operationId: listFundoEnrolments
+      parameters:
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId,   in: query, required: false, schema: { type: string } }
+        - { name: limit,       in: query, required: false, schema: { type: integer, default: 25, minimum: 1, maximum: 100 } }
+      responses:
+        '200':
+          description: Enrolment list
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/enrolments/{enrolmentId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get one enrolment
+      operationId: getFundoEnrolment
+      parameters:
+        - { name: enrolmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Enrolment detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/enrolments/{enrolmentId}/cancel:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Cancel an active enrolment
+      operationId: cancelFundoEnrolment
+      parameters:
+        - { name: enrolmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { reason: { type: string } }
+      responses:
+        '200':
+          description: Cancelled (idempotent for already-cancelled/completed)
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/enrolments/{enrolmentId}/progress:
+    get:
+      tags: [FundoNativeLMS]
+      summary: List progress rows for one enrolment
+      operationId: getFundoEnrolmentProgress
+      parameters:
+        - { name: enrolmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Progress rows
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/enrolments/{enrolmentId}/certificate:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Issue a native Fundo certificate for a completed enrolment
+      description: >
+        Conservative issuance: only enrolments with status `COMPLETED` may
+        produce certificates. Repeat calls for the same enrolment return the
+        existing certificate with `idempotent: true`. This is ordinary
+        certificate **metadata** — not a signed credential. Signed /
+        regulator-verifiable credentials remain out of scope and the
+        responsibility of `credential-verification-service` in a later phase.
+      operationId: issueFundoCertificate
+      parameters:
+        - { name: enrolmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Certificate issued or returned idempotently
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Enrolment not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Enrolment not COMPLETED
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/progress:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Record native progress (lesson, module, or course scope)
+      description: >
+        Records a single progress write against an enrolment. Emits the
+        v1.1 compliant outbox events
+        `impilo.learning.progress.started.v1` and
+        `impilo.learning.progress.completed.v1`. Setting both `moduleId`
+        and `lessonId` to null treats the write as a course-aggregate
+        update; reaching 100 % on the aggregate transitions the enrolment
+        to COMPLETED and emits `impilo.learning.course.completed.v1`.
+      operationId: recordFundoProgress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enrolmentId, progressPercent]
+              properties:
+                enrolmentId:       { type: string, format: uuid }
+                moduleId:          { type: string, format: uuid, nullable: true }
+                lessonId:          { type: string, format: uuid, nullable: true }
+                progressPercent:   { type: integer, minimum: 0, maximum: 100 }
+                score:             { type: integer, nullable: true }
+      responses:
+        '200':
+          description: Progress recorded
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Invalid input
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '404':
+          description: Enrolment / lesson / module not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Enrolment not active
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [FundoNativeLMS]
+      summary: List progress rows for a subject
+      operationId: listFundoProgress
+      parameters:
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId,   in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Progress rows
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/assessments:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Create a native assessment (Phase 6A)
+      operationId: createFundoAssessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoAssessmentUpsert' }
+      responses:
+        '200':
+          description: Assessment created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Missing required fields
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '404':
+          description: Course not found in tenant
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/assessments/{assessmentId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get assessment with its questions (correct answers omitted)
+      operationId: getFundoAssessment
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Assessment detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native assessment (Phase 6A)
+      operationId: updateFundoAssessment
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoAssessmentUpsert' }
+      responses:
+        '200':
+          description: Assessment updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/assessments/{assessmentId}/questions:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Add a question to a native assessment (Phase 6A)
+      operationId: addFundoAssessmentQuestion
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoQuestionUpsert' }
+      responses:
+        '200':
+          description: Question created
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Assessment not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Question sequence already used (`QUESTION_SEQUENCE_TAKEN`)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/assessments/{assessmentId}/attempts:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Submit a native assessment attempt
+      description: >
+        Records an attempt with simple objective scoring for
+        `MULTIPLE_CHOICE` and `TRUE_FALSE` question types only. Attempts
+        that include `SHORT_ANSWER`, `MATCHING` or `CASE_PROMPT` questions
+        are accepted with `score=null` and `passed=null` (pending manual
+        review). Emits `impilo.learning.assessment.attempt.submitted.v1`.
+      operationId: submitFundoAssessmentAttempt
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subjectType, subjectId]
+              properties:
+                enrolmentId:  { type: string, format: uuid, nullable: true }
+                subjectType:  { type: string }
+                subjectId:    { type: string }
+                answers:
+                  type: object
+                  additionalProperties: true
+                  description: 'Map of questionId → answer.'
+      responses:
+        '200':
+          description: Attempt recorded
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Assessment not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Maximum attempts reached
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/certificates:
+    get:
+      tags: [FundoNativeLMS]
+      summary: List certificates for a subject
+      operationId: listFundoCertificates
+      parameters:
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: subjectId,   in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: Certificate list
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/certificates/{certificateId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get a certificate
+      operationId: getFundoCertificate
+      parameters:
+        - { name: certificateId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Certificate detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/reports/cohort-completions:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Trainer / supervisor cohort completion report (Phase 6C)
+      description: >
+        Aggregates per-course enrolment, in-progress, completed,
+        cancelled and certificate counts for the calling tenant. Optional
+        filters: `pathwayId` (restrict to the pathway's member courses)
+        or `courseId` (single-course detail). With no filter the report
+        covers up to 50 published courses — callers handling larger
+        catalogues should narrow with `pathwayId`. Read-only; emits no
+        events.
+      operationId: getFundoCohortCompletionsReport
+      parameters:
+        - { name: pathwayId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: courseId,  in: query, required: false, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Cohort completion roll-up
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/subjects/{subjectType}/{subjectId}/record:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get the native Fundo learning record / transcript for a subject
+      description: >
+        Aggregates enrolments, progress summary, completed courses, certificates,
+        assessment attempt summary, and CPD-eligible completions for the subject.
+        CPD points are exposed as **evidence only** — the canonical CPD ledger
+        remains `varapi-service`; Fundo does not award CPD points.
+      operationId: getFundoLearningRecord
+      parameters:
+        - { name: subjectType, in: path, required: true, schema: { type: string } }
+        - { name: subjectId,   in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Learning record
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/subject-profile:
+    post:
+      tags: [Internal]
+      summary: Upsert a subject's learning profile (link/update Fundo user reference and metadata)
+      operationId: upsertSubjectProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubjectProfileUpsertRequest' }
+      responses:
+        '200':
+          description: Profile upserted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/integrations/varapi-fundo-completion:
+    post:
+      tags: [Integration]
+      summary: Ingest a Fundo course completion forwarded from Varapi
+      description: >
+        Called by `varapi-service` after a Fundo webhook produces a governed
+        CPD candidate. Authenticated by a shared internal key supplied via the
+        `X-Impilo-Learning-Internal-Key` header (not OAuth/JWT). Records the
+        learning-side completion fact only — the CPD credit decision remains
+        authoritative in Varapi.
+      operationId: ingestVarapiFundoCompletion
+      security:
+        - integrationKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VarapiFundoCompletionPayload' }
+      responses:
+        '200':
+          description: Completion ingested
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Map_StringObject' }
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Bad or missing internal key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/orchestration/assign-path:
+    post:
+      tags: [Orchestration]
+      summary: Assign a learning path to a subject (orchestration trigger)
+      description: >
+        Server-to-server orchestration. Authenticated by a shared internal
+        key supplied via the `X-Impilo-Learning-Orchestration-Key` header.
+      operationId: assignLearningPath
+      security:
+        - orchestrationKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssignPathRequest' }
+      responses:
+        '200':
+          description: Path assigned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Map_StringObject' }
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Bad or missing orchestration key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/orchestration/register-prerequisite:
+    post:
+      tags: [Orchestration]
+      summary: Register a workflow-level learning prerequisite for a subject
+      operationId: registerLearningPrerequisite
+      security:
+        - orchestrationKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterPrerequisiteRequest' }
+      responses:
+        '200':
+          description: Prerequisite recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Map_StringObject' }
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Bad or missing orchestration key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/orchestration/moodle/site-info:
+    post:
+      tags: [Orchestration]
+      summary: Relay Moodle Web Service `core_webservice_get_site_info`
+      description: >
+        Relays the Moodle Web Service site-info call when Moodle integration
+        is configured. Returns `501 NOT IMPLEMENTED` when Moodle Web Service
+        is not configured for this deployment.
+      operationId: moodleSiteInfo
+      security:
+        - orchestrationKey: []
+      responses:
+        '200':
+          description: Site info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+        '401':
+          description: Bad or missing orchestration key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '501':
+          description: Moodle Web Service not configured
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502':
+          description: Moodle call failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/orchestration/moodle/activity-completion-status:
+    post:
+      tags: [Orchestration]
+      summary: Relay Moodle Web Service `core_completion_get_activities_completion_status`
+      description: >
+        Relays the Moodle activity-completion call and, when tenant/subject
+        identifiers are supplied, ingests the response as a completion
+        snapshot via `LearningPlatformFacade.ingestMoodleActivityCompletionResponse`.
+      operationId: moodleActivityCompletion
+      security:
+        - orchestrationKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MoodleActivityCompletionRequest' }
+      responses:
+        '200':
+          description: Moodle response (and optional sync result)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MoodleActivityCompletionResponse' }
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401':
+          description: Bad or missing orchestration key
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '501':
+          description: Moodle Web Service not configured
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502':
+          description: Moodle call failed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Used by the default security chain when `learning.security.oauth2-enabled=true`.
+        Compose dev environments run with this disabled (see
+        `ops/runtime/docker-compose.operations.yml`); Helm defaults to true.
+    integrationKey:
+      type: apiKey
+      in: header
+      name: X-Impilo-Learning-Internal-Key
+      description: >
+        Shared internal key for trusted ingress from `varapi-service` after a
+        Fundo webhook creates a governed CPD candidate.
+    orchestrationKey:
+      type: apiKey
+      in: header
+      name: X-Impilo-Learning-Orchestration-Key
+      description: >
+        Shared internal key for server-to-server orchestration jobs (Tshepo /
+        Varapi schedulers, Moodle Web Service relays).
+
+  schemas:
+    # ── Generic response wrappers ──────────────────────────────────────────
+    ApiEnvelope_Map:
+      type: object
+      properties:
+        data:
+          type: object
+          additionalProperties: true
+      required: [data]
+
+    ApiEnvelope_ItemsList:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+          required: [items]
+      required: [data]
+
+    ApiEnvelope_SearchPage:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            results:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            page: { type: integer }
+            size: { type: integer }
+            totalElements: { type: integer }
+            totalPages: { type: integer }
+          required: [results, page, size, totalElements, totalPages]
+      required: [data]
+
+    ApiEnvelope_Status:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            status: { type: string }
+          required: [status]
+      required: [data]
+
+    Map_StringObject:
+      type: object
+      additionalProperties: true
+      description: >
+        Free-form JSON map returned by the integration and orchestration
+        endpoints. The exact field set is implementation-defined and may
+        evolve; consumers should treat it as a loosely-typed bag.
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+
+    # ── Request bodies ────────────────────────────────────────────────────
+    ResourceOpenedRequest:
+      type: object
+      properties:
+        resourceId: { type: string, format: uuid }
+        workflowContext:
+          type: object
+          additionalProperties: true
+      required: [resourceId]
+
+    SubjectProfileUpsertRequest:
+      type: object
+      description: >
+        `fundoUserRef` and `metadata` are both **patch-style**: presence of
+        the key triggers an update (including to `null`); absence leaves the
+        existing value unchanged.
+      properties:
+        subjectType: { type: string }
+        subjectId: { type: string }
+        fundoUserRef: { type: string, nullable: true }
+        metadata:
+          type: object
+          additionalProperties: true
+      required: [subjectType, subjectId]
+
+    VarapiFundoCompletionPayload:
+      type: object
+      description: >
+        Mirrors `zw.gov.mohcc.impilo.learning.api.dto.VarapiFundoCompletionPayload`.
+      properties:
+        tenantId: { type: string, format: uuid }
+        providerPublicId: { type: string }
+        councilId: { type: integer, format: int64, nullable: true }
+        courseId: { type: string }
+        courseName: { type: string, nullable: true }
+        completedAt: { type: string, format: date-time }
+        creditsSuggested: { type: integer, format: int32 }
+        externalRef: { type: string }
+        varapiFundoCandidateId: { type: integer, format: int64 }
+      required: [tenantId, providerPublicId, courseId, completedAt, externalRef, varapiFundoCandidateId]
+
+    AssignPathRequest:
+      type: object
+      properties:
+        tenantId: { type: string, format: uuid }
+        subjectType: { type: string }
+        subjectId: { type: string }
+        pathId: { type: string, format: uuid }
+        assignedByActorId: { type: string, nullable: true }
+        correlationId: { type: string, nullable: true }
+        metadata:
+          type: object
+          additionalProperties: true
+      required: [tenantId, subjectType, subjectId, pathId]
+
+    RegisterPrerequisiteRequest:
+      type: object
+      description: >
+        Exactly one of `resourceId` or `pathId` is meaningful at a time;
+        both are technically optional in the current implementation, which
+        accepts whichever is supplied.
+      properties:
+        tenantId: { type: string, format: uuid }
+        subjectType: { type: string }
+        subjectId: { type: string }
+        workflowCode: { type: string, nullable: true }
+        resourceId: { type: string, format: uuid, nullable: true }
+        pathId: { type: string, format: uuid, nullable: true }
+        actorId: { type: string, nullable: true }
+        correlationId: { type: string, nullable: true }
+        extra:
+          type: object
+          additionalProperties: true
+      required: [tenantId, subjectType, subjectId]
+
+    MoodleActivityCompletionRequest:
+      type: object
+      properties:
+        courseId: { type: string }
+        moodleUserId: { type: string }
+        tenantId: { type: string, format: uuid, nullable: true }
+        subjectType: { type: string, nullable: true }
+        subjectId: { type: string, nullable: true }
+        correlationId: { type: string, nullable: true }
+      required: [courseId, moodleUserId]
+
+    MoodleActivityCompletionResponse:
+      type: object
+      properties:
+        tenantId: { type: string, format: uuid }
+        moodle:
+          type: object
+          additionalProperties: true
+          description: Raw Moodle Web Service response body
+        sync:
+          type: object
+          additionalProperties: true
+          description: Optional sync result emitted by the facade when tenant/subject identifiers are supplied
+
+    # ─── Phase 6A authoring DTOs (native Fundo only — no Moodle) ───────────
+
+    FundoCourseUpsert:
+      type: object
+      description: >
+        Course create/update payload. On create, `code` and `title` are
+        required. On update, every field is optional (partial patch);
+        omitted fields are left unchanged.
+      properties:
+        code: { type: string, nullable: true, description: "Required on create" }
+        title: { type: string, nullable: true, description: "Required on create" }
+        description: { type: string, nullable: true }
+        category: { type: string, nullable: true }
+        level: { type: string, nullable: true }
+        status: { type: string, nullable: true, description: "DRAFT | PUBLISHED | ARCHIVED" }
+        language: { type: string, nullable: true }
+        estimatedDurationMinutes: { type: integer, nullable: true }
+        mandatory: { type: boolean, nullable: true }
+        cpdEligible: { type: boolean, nullable: true }
+        cpdPoints: { type: integer, nullable: true }
+
+    FundoModuleUpsert:
+      type: object
+      properties:
+        title: { type: string, nullable: true, description: "Required on create" }
+        description: { type: string, nullable: true }
+        sequence: { type: integer, nullable: true, description: "Auto-assigned when omitted" }
+        status: { type: string, nullable: true }
+
+    FundoLessonUpsert:
+      type: object
+      properties:
+        title: { type: string, nullable: true, description: "Required on create" }
+        contentType: { type: string, nullable: true, description: "Required on create. TEXT | VIDEO | DOCUMENT | LINK | INTERACTIVE | PRACTICAL_TASK" }
+        contentBody: { type: string, nullable: true }
+        contentRef: { type: string, nullable: true }
+        estimatedDurationMinutes: { type: integer, nullable: true }
+        sequence: { type: integer, nullable: true }
+        required: { type: boolean, nullable: true }
+        status: { type: string, nullable: true }
+
+    FundoPathwayUpsert:
+      type: object
+      properties:
+        code: { type: string, nullable: true, description: "Required on create" }
+        title: { type: string, nullable: true, description: "Required on create" }
+        description: { type: string, nullable: true }
+        targetCadres: { type: string, nullable: true }
+        targetRoles: { type: string, nullable: true }
+        targetFacilityLevels: { type: string, nullable: true }
+        status: { type: string, nullable: true }
+
+    FundoPathwayItemUpsert:
+      type: object
+      required: [courseId]
+      properties:
+        courseId: { type: string, format: uuid }
+        sequence: { type: integer, nullable: true, description: "Auto-assigned when omitted" }
+        required: { type: boolean, nullable: true }
+        prerequisiteCourseId: { type: string, format: uuid, nullable: true }
+
+    FundoAssessmentUpsert:
+      type: object
+      properties:
+        courseId: { type: string, format: uuid, nullable: true, description: "Required on create" }
+        moduleId: { type: string, format: uuid, nullable: true }
+        title: { type: string, nullable: true, description: "Required on create" }
+        description: { type: string, nullable: true }
+        assessmentType: { type: string, nullable: true, description: "Required on create. QUIZ | PRACTICAL_CHECKLIST | CASE_REVIEW" }
+        passMark: { type: integer, nullable: true }
+        maxAttempts: { type: integer, nullable: true }
+        status: { type: string, nullable: true }
+
+    FundoQuestionUpsert:
+      type: object
+      required: [questionType, prompt]
+      properties:
+        questionType: { type: string, description: "MULTIPLE_CHOICE | TRUE_FALSE | SHORT_ANSWER | MATCHING | CASE_PROMPT" }
+        prompt: { type: string }
+        optionsJson: { type: string, nullable: true }
+        correctAnswerJson: { type: string, nullable: true }
+        sequence: { type: integer, nullable: true, description: "Auto-assigned when omitted" }
+        points: { type: integer, nullable: true, default: 1 }

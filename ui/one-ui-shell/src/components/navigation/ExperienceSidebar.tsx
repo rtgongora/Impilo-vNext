@@ -22,6 +22,7 @@ import {
   FileText,
   FolderOpen,
   FlaskConical,
+  GraduationCap,
   Heart,
   HeartHandshake,
   IdCard,
@@ -126,6 +127,7 @@ const ZONES: SidebarZone[] = [
     label: "My Professional",
     items: [
       { href: "/professional", label: "Professional Profile", icon: Stethoscope },
+      { href: "/learning", label: "Impilo Fundo", icon: GraduationCap },
       { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
       { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck, requiredRoles: ["SYSTEM_ADMIN", "HIE_ADMIN"] },
       { href: "/registry", label: "Registry", icon: Building2 },

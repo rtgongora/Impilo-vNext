@@ -1,0 +1,64 @@
+replicaCount: 2
+
+image:
+  repository: impilo/learning-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8235
+
+env:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/impilo_learning
+  SPRING_DATASOURCE_USERNAME: impilo
+  SPRING_DATASOURCE_PASSWORD: impilo
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  KEYCLOAK_URL: http://keycloak:8080
+  KEYCLOAK_REALM: impilo
+  # Production posture (Phase 2 — Open Question 6 approved):
+  # secure-by-default in Kubernetes. Operators must ensure the Keycloak
+  # realm issues tokens with an audience that learning-service accepts
+  # before flipping environments to this chart.
+  LEARNING_SECURITY_OAUTH2_ENABLED: "true"
+  # Transactional outbox → Kafka publisher (Phase 2, single topic per Open Question 2).
+  LEARNING_OUTBOX_PUBLISHER_ENABLED: "true"
+  LEARNING_OUTBOX_DEFAULT_TOPIC: platform.learning.events
+  # Impilo Fundo runtime config — Fundo is the native vNext LMS and operates
+  # standalone without any external LMS. Mirrors application.yml defaults.
+  FUNDO_PUBLIC_BASE_URL: https://fundo.impilo.local
+  FUNDO_WANTSURL_LOGIN_ENABLED: "false"
+  FUNDO_LOGIN_PATH: /login/index.php
+  FUNDO_LAUNCH_MODE: DIRECT
+  # Optional external-LMS adapter toggles (Moodle). Fundo does NOT depend on
+  # any external LMS; these knobs only activate the legacy/optional adapter
+  # path. Leave blank to run Fundo standalone.
+  # The following are sensitive — inject via `--set` or sealed secrets in production.
+  # Leaving the values blank so the chart never embeds real keys.
+  VARAPI_TO_LEARNING_INTERNAL_KEY: ""
+  LEARNING_ORCHESTRATION_INTERNAL_KEY: ""
+  MOODLE_WS_TOKEN: ""
+  MOODLE_WS_ENDPOINT_URL: ""
+  # Optional OTLP trace export (set when a collector is available)
+  # OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "http://otel-collector:4318/v1/traces"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8235
+  initialDelaySeconds: 40
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: 8235
+  initialDelaySeconds: 20

@@ -43,6 +43,18 @@ public class RemittanceTransferService {
                 ctx.tenantId(), senderRef);
     }
 
+    public RemittanceRequestEntity getById(String remittanceRequestId) {
+        TrustContext ctx = TrustContextHolder.require();
+        RemittanceRequestEntity row = remittanceRequestRepository.findById(remittanceRequestId)
+                .orElseThrow(() -> new PlatformResourceNotFoundException(
+                        "Remittance transfer not found: " + remittanceRequestId));
+        if (!ctx.tenantId().equals(row.getTenantId())) {
+            throw new PlatformResourceNotFoundException(
+                    "Remittance transfer not found: " + remittanceRequestId);
+        }
+        return row;
+    }
+
     @Transactional
     public RemittanceRequestEntity createRequest(String remittanceCode,
                                                  String senderRef,

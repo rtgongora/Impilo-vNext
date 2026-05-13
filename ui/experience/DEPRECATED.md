@@ -13,3 +13,8 @@ All new work belongs in **`ui/one-ui-shell`**. Runtime and compose use the **`on
 service/image name (not the retired `experience-ui` **service** name). Keycloak may still
 use the **`experience-ui` OIDC *client id*** for that same web layer — that is identity
 wiring, not a second UX stack.
+
+Retirement of this folder is tracked as **RR-04** in
+[`docs/retirement/retirement-readiness-ledger.md`](../../docs/retirement/retirement-readiness-ledger.md);
+the telemetry signals required to satisfy the retirement criteria are defined in
+[`docs/retirement/telemetry-signals.md`](../../docs/retirement/telemetry-signals.md).

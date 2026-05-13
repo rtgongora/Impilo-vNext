@@ -13,7 +13,19 @@ public interface PaymentAttemptRepository extends JpaRepository<PaymentAttemptEn
     List<PaymentAttemptEntity> findByIntentId(String intentId);
 
     /**
+     * Phase 3 follow-on — chronological list for the {@code GET /payment-intents/{id}/attempts}
+     * read endpoint and the equivalent BFF passthrough.
+     */
+    List<PaymentAttemptEntity> findByIntentIdOrderByRequestedAtAsc(String intentId);
+
+    /**
      * Find an attempt by the external adapter reference (webhook correlation).
      */
     Optional<PaymentAttemptEntity> findByAdapterRef(String adapterRef);
+
+    /**
+     * Find a previously-created attempt by (intent, caller idempotency key).
+     * Used by {@code PaymentAttemptService} (Phase 3) to short-circuit replays.
+     */
+    Optional<PaymentAttemptEntity> findByIntentIdAndIdempotencyKey(String intentId, String idempotencyKey);
 }

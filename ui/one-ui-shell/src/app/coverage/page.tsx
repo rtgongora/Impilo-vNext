@@ -18,8 +18,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useCoverageClaims,
+  useCoverageAppealsList,
+  useCoverageContributionsList,
   useCoveragePlans,
+  useCoveragePreauthsList,
   useCoverageRemittances,
+  useCoverageUtilizationList,
   useCreateCoverageClaim,
   useEnrollCoverageMember,
   type CoverageClaim,
@@ -55,6 +59,40 @@ function formatCoverageCurrency(value: number, currency = "USD") {
     currency,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function readUnknownString(row: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "string" && value.trim().length > 0) return value;
+  }
+  return "";
+}
+
+function readUnknownNumber(row: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "number") return value;
+    if (typeof value === "string" && value.trim().length > 0) {
+      const parsed = Number(value);
+      if (!Number.isNaN(parsed)) return parsed;
+    }
+  }
+  return 0;
+}
+
+function statusClass(status: string) {
+  if (status === "ACTIVE" || status === "PAID" || status === "APPROVED" || status === "UPHELD") {
+    return "bg-green-100 text-green-700";
+  }
+  if (status === "REJECTED" || status === "DENIED" || status === "OVERTURNED") {
+    return "bg-red-100 text-red-700";
+  }
+  return "bg-amber-100 text-amber-700";
 }
 
 const ELIGIBILITY_SUMMARY_KEYS = new Set(["result_code", "result_message"]);
@@ -544,6 +582,8 @@ function MembershipTab() {
 // ── PREAUTH TAB ──────────────────────────────────────────────────
 function PreauthTab() {
   const [showForm, setShowForm] = useState(false);
+  const preauthListQ = useCoveragePreauthsList();
+  const preauthRows = (preauthListQ.data ?? []).map(asRecord);
   const create = useMutation({
     mutationFn: (body: Record<string, string>) => apiClient.post("/internal/v1/coverage/preauth", body),
     onSuccess: () => setShowForm(false),
@@ -558,6 +598,65 @@ function PreauthTab() {
           <Plus className="w-4 h-4" /> New Pre-Auth
         </button>
       </div>
+      <p className="text-sm text-gray-500">
+        Read rows from <code className="text-xs">GET /internal/v1/coverage/preauths</code>. Create form continues to use{" "}
+        <code className="text-xs">POST /internal/v1/coverage/preauth</code>.
+      </p>
+
+      {preauthListQ.isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        </div>
+      ) : preauthListQ.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load pre-authorization rows.
+        </div>
+      ) : preauthRows.length === 0 ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-500">
+          No pre-authorization rows returned by the coverage service.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-3 py-2 font-medium text-gray-600">Preauth</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Type</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Requested</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {preauthRows.map((row, idx) => {
+                const id = readUnknownString(row, "id", "preauth_id", "preauthId") || `row-${idx}`;
+                const status =
+                  readUnknownString(row, "status", "decision", "result", "state").toUpperCase() || "UNKNOWN";
+                return (
+                  <tr key={`${id}-${idx}`}>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {readUnknownString(row, "coverage_id", "coverageId", "member_id", "memberId") || "—"}
+                    </td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {readUnknownString(row, "request_type", "requestType", "type", "service_type", "serviceType") ||
+                        "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(status)}`}>{status}</span>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-gray-500">
+                      {formatCoverageDate(
+                        readUnknownString(row, "requested_at", "requestedAt", "created_at", "createdAt"),
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {showForm && (
         <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">Pre-Authorization Request</h4>
@@ -595,25 +694,69 @@ function PreauthTab() {
 
 // ── CONTRIBUTIONS TAB ────────────────────────────────────────────
 function ContributionsTab() {
+  const contributionsQ = useCoverageContributionsList();
+  const contributionRows = (contributionsQ.data ?? []).map(asRecord);
   return (
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">Contributions & Premiums</h3>
-      <p className="text-sm text-gray-500">Track member premium payments, contribution periods, and payment status.</p>
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          {([["PAID", "green"], ["DUE", "amber"], ["OVERDUE", "red"], ["WAIVED", "gray"]] as const).map(([status, color]) => (
-            <div key={status} className={`bg-${color}-50 rounded-lg p-3 text-center`}>
-              <p className={`text-lg font-bold text-${color}-700`}>—</p>
-              <p className={`text-[10px] text-${color}-600`}>{status}</p>
-            </div>
-          ))}
+      <p className="text-sm text-gray-500">
+        Read rows from <code className="text-xs">GET /internal/v1/coverage/contributions</code>.
+      </p>
+
+      {contributionsQ.isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
         </div>
-        <p className="text-xs text-gray-400">Lifecycle: DUE → PAID / OVERDUE → WAIVED / REFUNDED</p>
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <CreditCard className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">No contribution records yet</p>
-      </div>
+      ) : contributionsQ.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load contribution rows.
+        </div>
+      ) : contributionRows.length === 0 ? (
+        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <CreditCard className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-400 text-sm">No contribution records yet</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-3 py-2 font-medium text-gray-600">Contribution</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Member</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Period</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Amount</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {contributionRows.map((row, idx) => {
+                const id = readUnknownString(row, "id", "contribution_id", "contributionId") || `row-${idx}`;
+                const status = readUnknownString(row, "status", "payment_status", "state").toUpperCase() || "UNKNOWN";
+                const currency = readUnknownString(row, "currency") || "USD";
+                const start = readUnknownString(row, "period_start", "periodStart", "contribution_start");
+                const end = readUnknownString(row, "period_end", "periodEnd", "contribution_end");
+                return (
+                  <tr key={`${id}-${idx}`}>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {readUnknownString(row, "member_id", "memberId", "coverage_id", "coverageId") || "—"}
+                    </td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {start || end ? `${start || "?"} → ${end || "?"}` : "—"}
+                    </td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {formatCoverageCurrency(readUnknownNumber(row, "amount", "total_amount", "paid_amount"), currency)}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(status)}`}>{status}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -621,6 +764,8 @@ function ContributionsTab() {
 // ── APPEALS TAB ──────────────────────────────────────────────────
 function AppealsTab() {
   const [showForm, setShowForm] = useState(false);
+  const appealsQ = useCoverageAppealsList();
+  const appealRows = (appealsQ.data ?? []).map(asRecord);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -630,6 +775,57 @@ function AppealsTab() {
           <Plus className="w-4 h-4" /> File Appeal
         </button>
       </div>
+      <p className="text-sm text-gray-500">
+        Read rows from <code className="text-xs">GET /internal/v1/coverage/appeals</code>.
+      </p>
+      {appealsQ.isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        </div>
+      ) : appealsQ.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load appeal rows.
+        </div>
+      ) : appealRows.length === 0 ? (
+        <div className="bg-white rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
+          No appeal rows returned by the coverage service.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-3 py-2 font-medium text-gray-600">Appeal</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Claim</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Filed</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {appealRows.map((row, idx) => {
+                const id = readUnknownString(row, "id", "appeal_id", "appealId") || `row-${idx}`;
+                const status = readUnknownString(row, "status", "decision", "state").toUpperCase() || "UNKNOWN";
+                return (
+                  <tr key={`${id}-${idx}`}>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-700">{id}</td>
+                    <td className="px-3 py-2 text-gray-700">{readUnknownString(row, "claim_id", "claimId") || "—"}</td>
+                    <td className="px-3 py-2 text-gray-700">
+                      {readUnknownString(row, "coverage_id", "coverageId", "member_id", "memberId") || "—"}
+                    </td>
+                    <td className="px-3 py-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs ${statusClass(status)}`}>{status}</span>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-gray-500">
+                      {formatCoverageDate(readUnknownString(row, "filed_at", "filedAt", "created_at", "createdAt"))}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
       {showForm && (
         <div className="bg-white rounded-lg border border-amber-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Appeal</h4>
@@ -679,6 +875,8 @@ function ContractingTab() {
 
 // ── PAYER INTELLIGENCE TAB ───────────────────────────────────────
 function IntelligenceTab() {
+  const utilizationQ = useCoverageUtilizationList();
+  const utilizationRows = (utilizationQ.data ?? []).map(asRecord);
   const { data: remittances = [], isLoading } = useCoverageRemittances();
   const n = remittances.length;
   const total = remittances.reduce((s, r) => s + r.amount, 0);
@@ -689,7 +887,9 @@ function IntelligenceTab() {
     <div className="space-y-6">
       <h3 className="text-base font-semibold text-gray-900">Payer Intelligence & Analytics</h3>
       <p className="text-sm text-gray-500">
-        Fraud, loss ratio, and timing KPIs need a reporting service. Below is a simple slice derived only from remittance rows already loaded for coverage operations.
+        Remittance snapshot plus utilization rows from{" "}
+        <code className="text-xs">GET /internal/v1/coverage/utilization</code>. Fraud and MLR KPIs still require a
+        dedicated reporting service.
       </p>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
@@ -705,11 +905,56 @@ function IntelligenceTab() {
           <p className="text-xs text-gray-500">Avg remittance</p>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
-          <p className="text-2xl font-bold text-amber-700">—</p>
-          <p className="text-xs text-gray-500">Fraud / MLR / timing</p>
-          <p className="text-[10px] text-gray-400 mt-1">Not in BFF</p>
+          <p className="text-2xl font-bold text-amber-700">{utilizationQ.isLoading ? "…" : utilizationRows.length}</p>
+          <p className="text-xs text-gray-500">Utilization rows</p>
+          <p className="text-[10px] text-gray-400 mt-1">BFF coverage utilization list</p>
         </div>
       </div>
+      {utilizationQ.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load utilization rows.
+        </div>
+      ) : null}
+      {!utilizationQ.isLoading && !utilizationQ.isError && utilizationRows.length > 0 ? (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-3 py-2 font-medium text-gray-600">Metric</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Value</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Period</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {utilizationRows.slice(0, 25).map((row, idx) => (
+                <tr key={`${readUnknownString(row, "id", "metric_id", "metricId") || "metric"}-${idx}`}>
+                  <td className="px-3 py-2 text-gray-700">
+                    {readUnknownString(row, "metric", "metric_name", "metricName", "name") || "—"}
+                  </td>
+                  <td className="px-3 py-2 text-gray-700">
+                    {readUnknownString(row, "value", "metric_value", "metricValue") ||
+                      String(readUnknownNumber(row, "value", "metric_value", "metricValue"))}
+                  </td>
+                  <td className="px-3 py-2 text-gray-700">
+                    {readUnknownString(row, "coverage_id", "coverageId", "scheme_id", "schemeId") || "—"}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-gray-500">
+                    {readUnknownString(row, "period", "period_label", "periodLabel") ||
+                      [
+                        readUnknownString(row, "period_start", "periodStart"),
+                        readUnknownString(row, "period_end", "periodEnd"),
+                      ]
+                        .filter(Boolean)
+                        .join(" → ") ||
+                      "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
       <div className="bg-white rounded-lg border border-gray-200 p-5">
         <h4 className="text-sm font-semibold text-gray-900 mb-2">Future analytics domains</h4>
         <p className="text-xs text-gray-600">

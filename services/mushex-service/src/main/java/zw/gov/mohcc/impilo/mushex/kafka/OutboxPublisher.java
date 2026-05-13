@@ -61,6 +61,9 @@ public class OutboxPublisher {
             case "WALLET_CREATED" -> "mushex.wallet.created";
             case "WALLET_TRANSACTION_RECORDED" -> "mushex.wallet.transaction.recorded";
             case "REMITTANCE_REQUESTED" -> "mushex.remittance.requested";
+            case "ATTEMPT_INITIATED" -> "mushex.payment.attempt.initiated";
+            case "ATTEMPT_FAILED_PRE_INITIATION" -> "mushex.payment.attempt.failed";
+            case "ATTEMPT_RESELECTED" -> "mushex.payment.attempt.reselected";
             default -> "mushex.events";
         };
     }

@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.mushex.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,18 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.integration.CredentialVerificationClient;
 import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionPolicy;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionRequest;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionResult;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -81,6 +87,7 @@ public class PaymentIntentService {
     private final ProviderContractClient providerContractClient;
     private final MusheWalletAdapter musheWalletAdapter;
     private final MushexProperties mushexProperties;
+    private final RailSelectionPolicy railSelectionPolicy;
 
     public PaymentIntentService(PaymentIntentRepository intentRepository,
                                 EventOutboxRepository outboxRepository,
@@ -89,7 +96,8 @@ public class PaymentIntentService {
                                 CredentialVerificationClient credentialVerificationClient,
                                 ProviderContractClient providerContractClient,
                                 MusheWalletAdapter musheWalletAdapter,
-                                MushexProperties mushexProperties) {
+                                MushexProperties mushexProperties,
+                                RailSelectionPolicy railSelectionPolicy) {
         this.intentRepository = intentRepository;
         this.outboxRepository = outboxRepository;
         this.receiptService = receiptService;
@@ -98,11 +106,18 @@ public class PaymentIntentService {
         this.providerContractClient = providerContractClient;
         this.musheWalletAdapter = musheWalletAdapter;
         this.mushexProperties = mushexProperties;
+        this.railSelectionPolicy = railSelectionPolicy;
     }
 
     /**
      * Create a new payment intent. If an intent with the same idempotency key already
      * exists, the existing intent is returned without creating a duplicate.
+     *
+     * <p>This 7-arg legacy method preserves the existing wire shape for callers that have
+     * not yet started supplying rail-selection inputs. It delegates to
+     * {@link #createIntent(SourceType, String, BigDecimal, String, UUID, String, String, RailSelectionRequest)}
+     * with a {@code null} selection request — the policy then applies the deployment-default
+     * rail (see {@code docs/design/g4-rail-selection-policy.md}).
      */
     @Transactional
     public PaymentIntentEntity createIntent(SourceType sourceType,
@@ -112,6 +127,29 @@ public class PaymentIntentService {
                                             UUID facilityId,
                                             String idempotencyKey,
                                             String metadata) {
+        return createIntent(sourceType, sourceId, amount, currency, facilityId, idempotencyKey, metadata, null);
+    }
+
+    /**
+     * Create a new payment intent with optional caller-supplied rail-selection inputs.
+     * See {@code docs/design/g4-rail-selection-policy.md} for the full algorithm.
+     *
+     * @param selectionRequest optional. {@code null} means "use the deployment default";
+     *                         a non-null instance carries the caller's preferred rail,
+     *                         fallback policy and direct-gateway preference. The
+     *                         {@code impiloSimulation} flag on the request is overridden
+     *                         with the in-metadata {@code impilo_simulation} value if the
+     *                         latter is true.
+     */
+    @Transactional
+    public PaymentIntentEntity createIntent(SourceType sourceType,
+                                            String sourceId,
+                                            BigDecimal amount,
+                                            String currency,
+                                            UUID facilityId,
+                                            String idempotencyKey,
+                                            String metadata,
+                                            RailSelectionRequest selectionRequest) {
         TrustContext ctx = TrustContextHolder.require();
 
         UUID facility = facilityId != null ? facilityId : ctx.facilityId();
@@ -122,8 +160,9 @@ public class PaymentIntentService {
             return existing.get();
         }
 
+        boolean isImpiloSim = isImpiloSimulation(metadata);
         boolean simBypass = mushexProperties.getAdapters().getSandbox().isBypassCredentialCheckForSimulation()
-                && this.isImpiloSimulation(metadata);
+                && isImpiloSim;
 
         CredentialVerificationClient.CredentialVerificationResult cred;
         if (simBypass) {
@@ -153,6 +192,9 @@ public class PaymentIntentService {
             }
         }
 
+        RailSelectionResult selection = runRailSelection(selectionRequest, sourceType, amount, currency, facility, isImpiloSim);
+        String mergedMetadata = mergeRailSelectionIntoMetadata(metadata, selection);
+
         PaymentIntentEntity intent = new PaymentIntentEntity();
         intent.setIntentId(UlidGenerator.generate());
         intent.setTenantId(ctx.tenantId());
@@ -164,7 +206,7 @@ public class PaymentIntentService {
         intent.setCurrency(currency);
         intent.setStatus(IntentStatus.CREATED);
         intent.setIdempotencyKey(idempotencyKey);
-        intent.setMetadata(metadata);
+        intent.setMetadata(mergedMetadata);
         intent.setIntentType(parseIntentTypeFromMetadata(metadata));
         intent.setExpiresAt(OffsetDateTime.now().plusHours(24));
         if (cred.verificationRef() != null && !cred.verificationRef().isBlank()) {
@@ -175,22 +217,109 @@ public class PaymentIntentService {
 
         applySimulationOutcomeOnCreateIfEnabled(intent, metadata);
 
-        log.info("Created payment intent: id={}, source={}/{}, amount={} {}, status={}",
-                intent.getIntentId(), sourceType, sourceId, amount, currency, intent.getStatus());
+        log.info("Created payment intent: id={}, source={}/{}, amount={} {}, status={}, rail={}, railReason={}",
+                intent.getIntentId(), sourceType, sourceId, amount, currency, intent.getStatus(),
+                selection.effectiveRail(), selection.reason());
 
-        publishEvent("PAYMENT_INTENT", intent.getIntentId(), "INTENT_CREATED",
-                Map.of(
-                        "intentId", intent.getIntentId(),
-                        "sourceType", sourceType.name(),
-                        "sourceId", sourceId,
-                        "amount", amount.toPlainString(),
-                        "currency", currency,
-                        "facilityId", intent.getFacilityId().toString(),
-                        "status", intent.getStatus().name()
-                ),
-                ctx.tenantId());
+        Map<String, Object> outboxPayload = new LinkedHashMap<>();
+        outboxPayload.put("intentId", intent.getIntentId());
+        outboxPayload.put("sourceType", sourceType.name());
+        outboxPayload.put("sourceId", sourceId);
+        outboxPayload.put("amount", amount.toPlainString());
+        outboxPayload.put("currency", currency);
+        outboxPayload.put("facilityId", intent.getFacilityId().toString());
+        outboxPayload.put("status", intent.getStatus().name());
+        outboxPayload.put("effectiveRail", selection.effectiveRail().name());
+        outboxPayload.put("preferredRail",
+                selection.preferredRail() != null ? selection.preferredRail().name() : "NONE");
+        outboxPayload.put("railSelectionReason", selection.reason().name());
+
+        publishEvent("PAYMENT_INTENT", intent.getIntentId(), "INTENT_CREATED", outboxPayload, ctx.tenantId());
 
         return intent;
+    }
+
+    /**
+     * Run the rail-selection policy. The caller's {@code selectionRequest} is honoured
+     * as supplied, except that the {@code impiloSimulation} flag is forced to {@code true}
+     * whenever the request metadata also signals an Impilo simulation; this keeps the
+     * safety guarantee that simulation runs never auto-route to a non-SANDBOX rail.
+     */
+    private RailSelectionResult runRailSelection(RailSelectionRequest request,
+                                                 SourceType sourceType,
+                                                 BigDecimal amount,
+                                                 String currency,
+                                                 UUID facility,
+                                                 boolean isImpiloSim) {
+        RailSelectionRequest effective;
+        if (request == null) {
+            effective = RailSelectionRequest.empty(sourceType, amount, currency, facility, isImpiloSim);
+        } else if (isImpiloSim && !request.impiloSimulation()) {
+            effective = new RailSelectionRequest(
+                    request.preferredRailAdapter(),
+                    request.allowFallback(),
+                    request.directGatewayAllowed(),
+                    request.sourceType() != null ? request.sourceType() : sourceType,
+                    request.amount() != null ? request.amount() : amount,
+                    request.currency() != null ? request.currency() : currency,
+                    request.facilityId() != null ? request.facilityId() : facility,
+                    true);
+        } else {
+            effective = request;
+        }
+        return railSelectionPolicy.select(effective);
+    }
+
+    /**
+     * Merge the rail-selection result into the caller-supplied metadata JSON under the
+     * reserved {@code rail_selection} key. Defensive against:
+     * <ul>
+     *   <li>{@code null}/blank metadata — produces a fresh object with only {@code rail_selection}.</li>
+     *   <li>Non-object metadata (string/array/number) — preserves the original; rail-selection
+     *       is then visible only on the outbox event.</li>
+     *   <li>Mocked {@link ObjectMapper} returning {@code null} for {@code readTree} / {@code createObjectNode}
+     *       — preserves the original metadata so this method never throws.</li>
+     * </ul>
+     */
+    private String mergeRailSelectionIntoMetadata(String inboundMetadata, RailSelectionResult result) {
+        try {
+            JsonNode parsed = null;
+            if (inboundMetadata != null && !inboundMetadata.isBlank()) {
+                parsed = objectMapper.readTree(inboundMetadata);
+            }
+            ObjectNode root;
+            if (parsed == null) {
+                root = objectMapper.createObjectNode();
+            } else if (parsed instanceof ObjectNode obj) {
+                root = obj;
+            } else {
+                log.warn("Inbound payment-intent metadata is not a JSON object; rail_selection recorded only on outbox");
+                return inboundMetadata;
+            }
+            if (root == null) {
+                return inboundMetadata;
+            }
+            ObjectNode rs = objectMapper.createObjectNode();
+            rs.put("effective_rail", result.effectiveRail().name());
+            if (result.preferredRail() != null) {
+                rs.put("preferred_rail", result.preferredRail().name());
+            } else {
+                rs.putNull("preferred_rail");
+            }
+            rs.put("fallback_applied", result.fallbackApplied());
+            rs.put("direct_gateway_requested", result.directGatewayRequested());
+            rs.put("reason", result.reason().name());
+            if (result.reasonDetail() != null) {
+                rs.put("reason_detail", result.reasonDetail());
+            }
+            rs.put("selected_at", OffsetDateTime.now().toString());
+            rs.put("selection_version", "1");
+            root.set("rail_selection", rs);
+            return objectMapper.writeValueAsString(root);
+        } catch (Exception e) {
+            log.warn("Failed to merge rail_selection into intent metadata; preserving original: {}", e.getMessage());
+            return inboundMetadata;
+        }
     }
 
     private PaymentIntentType parseIntentTypeFromMetadata(String metadata) {
@@ -269,10 +398,12 @@ public class PaymentIntentService {
 
     /**
      * Fetch a payment intent by ID, throwing if not found.
+     * Throws {@link IntentNotFoundException} (a subtype of {@link IllegalArgumentException}
+     * for backward compatibility) so the controller can map to HTTP 404 cleanly.
      */
     public PaymentIntentEntity getIntent(String intentId) {
         return intentRepository.findById(intentId)
-                .orElseThrow(() -> new IllegalArgumentException("Payment intent not found: " + intentId));
+                .orElseThrow(() -> new IntentNotFoundException(intentId));
     }
 
     /**
@@ -280,6 +411,19 @@ public class PaymentIntentService {
      */
     public List<PaymentIntentEntity> findBySource(SourceType sourceType, String sourceId) {
         return intentRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
+    }
+
+    public List<PaymentIntentEntity> findByTenantAndSource(UUID tenantId, SourceType sourceType, String sourceId) {
+        return intentRepository.findByTenantIdAndSourceTypeAndSourceIdOrderByCreatedAtAsc(
+                tenantId, sourceType, sourceId);
+    }
+
+    public List<PaymentIntentEntity> findByTenantAndSourceIds(UUID tenantId, SourceType sourceType, Collection<String> sourceIds) {
+        if (sourceIds == null || sourceIds.isEmpty()) {
+            return List.of();
+        }
+        return intentRepository.findByTenantIdAndSourceTypeAndSourceIdInOrderByCreatedAtAsc(
+                tenantId, sourceType, sourceIds);
     }
 
     public String findIntentIdBySource(SourceType sourceType, String sourceId) {

@@ -18,6 +18,28 @@ export function usePayerOpsPaymentIntent(intentId: string | undefined) {
   });
 }
 
+export function usePayerOpsPaymentIntentsBySource(
+  sourceType: string | undefined,
+  sourceIds: string[] | undefined,
+  enabled: boolean,
+) {
+  const ids = (sourceIds ?? []).filter((id) => id && id.trim().length > 0);
+  const query = new URLSearchParams();
+  if (sourceType) query.set("sourceType", sourceType);
+  for (const id of ids) {
+    query.append("sourceIds", id);
+  }
+  const suffix = query.toString();
+  return useQuery<FinancePayerOpsJson>({
+    queryKey: ["finance", "payer-ops", "intents-by-source", sourceType ?? null, ids.join(",")],
+    queryFn: () =>
+      apiClient.get<FinancePayerOpsJson>(
+        `/internal/v1/finance/payer-ops/payment-intents${suffix ? `?${suffix}` : ""}`,
+      ),
+    enabled: enabled && Boolean(sourceType) && ids.length > 0,
+  });
+}
+
 export function usePayerOpsReceipts(intentId: string | undefined) {
   return useQuery<FinancePayerOpsJson>({
     queryKey: ["finance", "payer-ops", "receipts", intentId],
@@ -60,6 +82,71 @@ export function usePayerOpsClaimRemittance() {
   return useMutation<FinancePayerOpsJson, unknown, unknown>({
     mutationFn: (body: unknown) =>
       apiClient.post<FinancePayerOpsJson>("/internal/v1/finance/payer-ops/remittance/claim", body),
+  });
+}
+
+/**
+ * Phase 3 follow-on — read-only chronological list of attempts persisted for an intent.
+ */
+export function usePayerOpsAttempts(intentId: string | undefined) {
+  return useQuery<FinancePayerOpsJson>({
+    queryKey: ["finance", "payer-ops", "attempts", intentId],
+    queryFn: () =>
+      apiClient.get<FinancePayerOpsJson>(
+        `/internal/v1/finance/payer-ops/payment-intents/${encodeURIComponent(String(intentId))}/attempts`,
+      ),
+    enabled: Boolean(intentId),
+  });
+}
+
+export interface InitiateAttemptArgs {
+  intentId: string;
+  idempotencyKey?: string;
+  reason?: string;
+}
+
+/**
+ * Phase 3 — initiate a payment attempt for an existing intent. The MusheX safety gate
+ * (config + adapter.liveCapable()) ensures no real money moves until both an operator
+ * opt-in and a real provider integration are in place; today every adapter is a stub.
+ */
+export function usePayerOpsInitiateAttempt() {
+  const qc = useQueryClient();
+  return useMutation<FinancePayerOpsJson, unknown, InitiateAttemptArgs>({
+    mutationFn: ({ intentId, idempotencyKey, reason }) =>
+      apiClient.post<FinancePayerOpsJson>(
+        `/internal/v1/finance/payer-ops/payment-intents/${encodeURIComponent(intentId)}/attempts`,
+        { idempotencyKey, reason },
+        idempotencyKey ? { extraHeaders: { "X-Idempotency-Key": idempotencyKey } } : undefined,
+      ),
+    onSuccess: (_, args) => {
+      void qc.invalidateQueries({ queryKey: ["finance", "payer-ops", "intent", args.intentId] });
+      void qc.invalidateQueries({ queryKey: ["finance", "payer-ops", "attempts", args.intentId] });
+    },
+  });
+}
+
+export interface ReselectArgs {
+  intentId: string;
+  reason?: string;
+}
+
+/**
+ * Phase 3 follow-on — re-run rail selection for an existing intent. No money moves;
+ * only the persisted {@code metadata.rail_selection} changes and the previous value is
+ * preserved on {@code metadata.rail_selection.history[]}.
+ */
+export function usePayerOpsReselect() {
+  const qc = useQueryClient();
+  return useMutation<FinancePayerOpsJson, unknown, ReselectArgs>({
+    mutationFn: ({ intentId, reason }) =>
+      apiClient.post<FinancePayerOpsJson>(
+        `/internal/v1/finance/payer-ops/payment-intents/${encodeURIComponent(intentId)}/attempts/reselect`,
+        { reason },
+      ),
+    onSuccess: (_, args) => {
+      void qc.invalidateQueries({ queryKey: ["finance", "payer-ops", "intent", args.intentId] });
+    },
   });
 }
 

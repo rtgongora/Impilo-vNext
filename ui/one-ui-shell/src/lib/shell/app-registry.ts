@@ -23,7 +23,7 @@ export const SHELL_APPS: AppDefinition[] = [
   {
     id: "app-learning",
     appCode: "learning",
-    name: "Learning",
+    name: "Impilo Fundo",
     description: "Fundo courses, SOPs, and role-aware training",
     icon: "GraduationCap",
     category: "citizen",
@@ -597,6 +597,22 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     label: "MusheX settlements",
     keywords: ["settlements", "mushex", "payment handoff", "receivables"],
     action: { type: "navigate", href: "/finance/settlements" },
+    requiredRole: "FINANCE",
+  },
+  {
+    id: "cmd-finance-mushex-platform",
+    label: "MusheX platform admin",
+    keywords: [
+      "mushex",
+      "mushex platform",
+      "platform admin",
+      "custodial wallet",
+      "remittance transfer",
+      "card profile",
+      "reversal",
+      "gateway",
+    ],
+    action: { type: "navigate", href: "/finance/mushex-platform" },
     requiredRole: "FINANCE",
   },
   {

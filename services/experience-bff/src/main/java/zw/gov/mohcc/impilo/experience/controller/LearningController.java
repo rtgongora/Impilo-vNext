@@ -86,4 +86,53 @@ public class LearningController {
         JsonNode payload = n != null ? n : JsonNodeFactory.instance.objectNode().put("status", "skipped");
         return ResponseEntity.ok(Map.of("data", payload));
     }
+
+    /**
+     * Phase 6B — One Experience Shell delivery layer BFF surface for the
+     * Phase 5B native Fundo catalogue. Thin passthrough that forwards the
+     * tenant context and the optional filters to {@code learning-service},
+     * returns the {@code {"data": ...}} envelope unmodified, and falls back
+     * to an empty items list when the upstream is unavailable so the shell
+     * can render a graceful empty state instead of a hard failure.
+     */
+    @GetMapping("/v11/catalog")
+    public ResponseEntity<Map<String, Object>> v11Catalog(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) Boolean cpdEligible,
+            @RequestParam(required = false) Boolean mandatory,
+            @RequestParam(required = false) String language,
+            @RequestParam(defaultValue = "25") int limit) {
+        JsonNode n = learningClient.getV11Catalog(status, category, level, cpdEligible, mandatory, language, limit);
+        if (n != null) {
+            return ResponseEntity.ok(Map.of("data", n));
+        }
+        JsonNodeFactory f = JsonNodeFactory.instance;
+        return ResponseEntity.ok(Map.of(
+                "data", f.objectNode().put("limit", limit).set("items", f.arrayNode())));
+    }
+
+    @GetMapping("/v11/catalog/{courseId}")
+    public ResponseEntity<Map<String, Object>> v11Course(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId) {
+        JsonNode n = learningClient.getV11Course(courseId);
+        if (n == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(Map.of("data", n));
+    }
+
+    @GetMapping("/v11/courses/{courseId}/structure")
+    public ResponseEntity<Map<String, Object>> v11CourseStructure(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId) {
+        JsonNode n = learningClient.getV11CourseStructure(courseId);
+        if (n == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(Map.of("data", n));
+    }
 }

@@ -8,12 +8,15 @@ import { PageShell } from "@/components/PageShell";
 import { FinancePayerOpsReconciliationNotice } from "@/components/FinanceAccessNotice";
 import {
   usePayerOpsAdapters,
+  usePayerOpsAttempts,
   usePayerOpsCancelIntent,
   usePayerOpsClaimRemittance,
   usePayerOpsFraudFlags,
+  usePayerOpsInitiateAttempt,
   usePayerOpsIssueRemittanceSlip,
   usePayerOpsPaymentIntent,
   usePayerOpsReceipts,
+  usePayerOpsReselect,
   usePayerOpsReviewApprove,
   usePayerOpsReviewReject,
   usePayerOpsReviews,
@@ -30,6 +33,14 @@ export default function FinancePayerOpsPage() {
   const cancelM = usePayerOpsCancelIntent();
   const slipM = usePayerOpsIssueRemittanceSlip();
   const claimM = usePayerOpsClaimRemittance();
+  const initiateM = usePayerOpsInitiateAttempt();
+  const reselectM = usePayerOpsReselect();
+  const attemptsQ = usePayerOpsAttempts(activeIntentId);
+
+  const [attemptIdempotency, setAttemptIdempotency] = useState("");
+  const [attemptReason, setAttemptReason] = useState("");
+  const [reselectReason, setReselectReason] = useState("");
+  const [showInitiateConfirm, setShowInitiateConfirm] = useState(false);
 
   const [adaptersArmed, setAdaptersArmed] = useState(false);
   const adaptersQ = usePayerOpsAdapters(adaptersArmed);
@@ -164,6 +175,173 @@ export default function FinancePayerOpsPage() {
               </pre>
             ) : (
               <p className="mt-2 text-xs text-slate-500">Uses the same intent id after load.</p>
+            )}
+
+            <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Payment attempts (Phase 3)
+            </h3>
+            <p className="text-xs text-slate-500">
+              POST{" "}
+              <code className="text-[11px]">
+                /internal/v1/finance/payer-ops/payment-intents/&#123;intentId&#125;/attempts
+              </code>{" "}
+              — honours the rail recorded on the intent. The MusheX safety gate prevents real
+              providers from being called until an operator opts the rail in
+              <em> and</em> a real provider client is wired in
+              (every adapter today is a stub).
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 items-end">
+              <label className="text-xs text-slate-600">
+                Idempotency key (optional)
+                <input
+                  type="text"
+                  value={attemptIdempotency}
+                  onChange={(e) => setAttemptIdempotency(e.target.value)}
+                  placeholder="e.g. retry-2026-05-13"
+                  className="mt-1 block min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                  aria-label="Attempt idempotency key"
+                />
+              </label>
+              <label className="text-xs text-slate-600">
+                Reason (optional)
+                <input
+                  type="text"
+                  value={attemptReason}
+                  onChange={(e) => setAttemptReason(e.target.value)}
+                  placeholder="audit note"
+                  className="mt-1 block min-w-[200px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  aria-label="Attempt reason"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={initiateM.isPending || !activeIntentId}
+                className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+                onClick={() => setShowInitiateConfirm(true)}
+              >
+                Initiate attempt…
+              </button>
+            </div>
+            {showInitiateConfirm ? (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Confirm initiate payment attempt"
+                className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"
+              >
+                <p className="font-medium">Confirm initiate attempt</p>
+                <p className="mt-1">
+                  This calls MusheX <code>initiateAttempt</code> for intent{" "}
+                  <code className="font-mono">{activeIntentId}</code>. The safety gate will refuse
+                  to invoke a real provider until both the operator config flags AND the
+                  adapter&apos;s <code>liveCapable()</code> are true. Today, every adapter is a
+                  stub, so attempts on real rails persist as <code>INITIATED</code>+<code>BLOCKED_NOT_LIVE_CAPABLE</code>
+                  with no money movement.
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-800"
+                    onClick={() => {
+                      if (!activeIntentId) {
+                        setShowInitiateConfirm(false);
+                        return;
+                      }
+                      initiateM.mutate({
+                        intentId: activeIntentId,
+                        idempotencyKey: attemptIdempotency.trim() || undefined,
+                        reason: attemptReason.trim() || undefined,
+                      });
+                      setShowInitiateConfirm(false);
+                    }}
+                  >
+                    Confirm and initiate
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-slate-200 px-3 py-2 text-xs hover:bg-slate-100"
+                    onClick={() => setShowInitiateConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {initiateM.isError ? (
+              <p className="mt-2 text-xs text-red-700">Initiate attempt request failed.</p>
+            ) : null}
+            {initiateM.data != null ? (
+              <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
+                {JSON.stringify(initiateM.data, null, 2)}
+              </pre>
+            ) : null}
+
+            <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Reselect rail
+            </h3>
+            <p className="text-xs text-slate-500">
+              POST{" "}
+              <code className="text-[11px]">
+                /internal/v1/finance/payer-ops/payment-intents/&#123;intentId&#125;/attempts/reselect
+              </code>{" "}
+              — re-runs RailSelectionPolicy. No money moves; the previous selection is preserved on
+              <code className="ml-1">metadata.rail_selection.history[]</code>.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 items-end">
+              <label className="text-xs text-slate-600 flex-1 min-w-[220px]">
+                Reason (optional)
+                <input
+                  type="text"
+                  value={reselectReason}
+                  onChange={(e) => setReselectReason(e.target.value)}
+                  placeholder="why reselect"
+                  className="mt-1 block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  aria-label="Reselect reason"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={reselectM.isPending || !activeIntentId}
+                className="rounded-lg border border-indigo-300 px-3 py-2 text-sm text-indigo-800 hover:bg-indigo-50 disabled:opacity-50"
+                onClick={() => {
+                  if (!activeIntentId) return;
+                  reselectM.mutate({
+                    intentId: activeIntentId,
+                    reason: reselectReason.trim() || undefined,
+                  });
+                }}
+              >
+                Reselect rail
+              </button>
+            </div>
+            {reselectM.isError ? (
+              <p className="mt-2 text-xs text-red-700">Reselect request failed.</p>
+            ) : null}
+            {reselectM.data != null ? (
+              <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
+                {JSON.stringify(reselectM.data, null, 2)}
+              </pre>
+            ) : null}
+
+            <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Attempts history
+            </h3>
+            <p className="text-xs text-slate-500">
+              GET{" "}
+              <code className="text-[11px]">
+                /internal/v1/finance/payer-ops/payment-intents/&#123;intentId&#125;/attempts
+              </code>
+            </p>
+            {attemptsQ.isLoading ? (
+              <p className="mt-2 text-sm text-slate-500">Loading attempts…</p>
+            ) : attemptsQ.isError ? (
+              <p className="mt-2 text-sm text-red-700">Attempts request failed.</p>
+            ) : attemptsQ.data ? (
+              <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
+                {JSON.stringify(attemptsQ.data, null, 2)}
+              </pre>
+            ) : (
+              <p className="mt-2 text-xs text-slate-500">Load an intent to see its attempts.</p>
             )}
           </section>
 

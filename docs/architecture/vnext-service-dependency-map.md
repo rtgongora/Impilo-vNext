@@ -456,3 +456,14 @@ Critical path latency budget:
 4. BUTANO                  → Mask/redact affected resources
 5. Audit                   → tshepo-audit logs revocation evidence
 ```
+
+---
+
+## Doctrine References
+
+The MusheX dependencies shown above (`mushex-service` Ring 1 fan-in/fan-out, finance-flow row, and the kernel event bus rows `kernel.mushex.payment.*` / `kernel.mushex.claim.*`) are governed by:
+
+- [`../doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md) — MusheX dual-mode operating doctrine (orchestration gateway vs. direct/default gateway; gateway neutrality; health-sector envelope).
+- [`../doctrine/costa-mushex-billing-timing.md`](../doctrine/costa-mushex-billing-timing.md) — costing, billing-timing, and settlement separation between COSTA and MusheX.
+
+Dependency-map rows for MusheX should be read with those doctrines as the controlling principle: MusheX is neutral about which rail moves the money but always carries the health-sector envelope, regardless of whether it acts as an orchestrator or as the direct/default gateway.

@@ -427,7 +427,14 @@ class ClaimServiceTest {
             super(paymentIntentRepository, outboxRepository, new ReceiptService(receiptRepository, paymentIntentRepository, objectMapper), objectMapper,
                     (tenantId, providerId) -> new CredentialVerificationClient.CredentialVerificationResult(
                             true, "VALID", "test-verification-ref", null),
-                    (t, p, pay) -> true, mock(MusheWalletAdapter.class), new MushexProperties());
+                    (t, p, pay) -> true, mock(MusheWalletAdapter.class), new MushexProperties(),
+                    // RecordingPaymentIntentService overrides createIntent so the policy is never invoked,
+                    // but the constructor still requires a non-null instance.
+                    request -> new zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionResult(
+                            zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType.SANDBOX,
+                            null, false, false,
+                            zw.gov.mohcc.impilo.mushex.domain.enums.RailSelectionReason.DEFAULT_NO_PREFERENCE,
+                            "test stub"));
         }
 
         @Override

@@ -1,5 +1,13 @@
 /**
  * FinanceSection — Balance, pending charges, and transaction history.
+ *
+ * Audit gap: `G-3` (closed in Stage 3.4B). Balance and transactions now come
+ * from the canonical Mushe Wallet plane via `financeService` (no more dead
+ * `/internal/v1/mobile/citizen/finance/**` calls). Pending charges remain a
+ * read-only "no pending charges" surface until a COSTA-backed route is wired
+ * in a future stage.
+ *
+ * Doctrine: `docs/doctrine/mushex-gateway-neutrality.md`.
  */
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, RefreshControl, StyleSheet, FlatList, ScrollView } from "react-native";
@@ -11,6 +19,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
+import { ApiError } from "@impilo/mobile-api-client";
 import {
   fetchBalance,
   fetchPendingCharges,
@@ -55,7 +64,17 @@ export function FinanceSection() {
   }, [load]);
 
   if (isLoading) return <LoadingSpinner size="md" />;
-  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
+  if (error) {
+    const { title, message } = describeError(error);
+    return (
+      <ErrorState
+        title={title}
+        message={message}
+        correlationId={error instanceof ApiError ? error.correlationId : undefined}
+        onRetry={load}
+      />
+    );
+  }
 
   return (
     <ScrollView
@@ -153,6 +172,25 @@ export function FinanceSection() {
       )}
     </ScrollView>
   );
+}
+
+/**
+ * Maps a finance/wallet error onto a user-facing `(title, message)` pair.
+ * Branches on the BFF's stable `WALLET_UPSTREAM_UNAVAILABLE` code so the
+ * citizen sees an explicit "wallet unavailable" message rather than a
+ * generic failure (see `docs/doctrine/mushex-gateway-neutrality.md`).
+ */
+function describeError(err: unknown): { title: string; message: string } {
+  if (err instanceof ApiError && err.code === "WALLET_UPSTREAM_UNAVAILABLE") {
+    return {
+      title: "Wallet temporarily unavailable",
+      message: "We can't reach the wallet service right now. Please try again in a few minutes.",
+    };
+  }
+  if (err instanceof Error) {
+    return { title: "Error", message: err.message };
+  }
+  return { title: "Error", message: String(err) };
 }
 
 const styles = StyleSheet.create({

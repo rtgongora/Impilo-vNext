@@ -52,6 +52,22 @@ public class PaymentAttemptEntity {
     @Column(name = "raw_summary", columnDefinition = "jsonb")
     private String rawSummary;
 
+    /**
+     * Caller-supplied idempotency key (Phase 3). Nullable; when non-null the
+     * partial unique index {@code idx_mushex_attempts_intent_idempotency}
+     * guarantees at-most-one attempt per (intent_id, idempotency_key) pair.
+     */
+    @Column(name = "idempotency_key", length = 120)
+    private String idempotencyKey;
+
+    /**
+     * JSONB audit record of the rail-enforcement decision made at attempt time.
+     * See {@code docs/design/phase-3-attempt-time-rail-enforcement-implementation.md}.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "enforcement_metadata", columnDefinition = "jsonb")
+    private String enforcementMetadata;
+
     @PrePersist
     protected void onCreate() {
         if (this.requestedAt == null) {
@@ -129,5 +145,21 @@ public class PaymentAttemptEntity {
 
     public void setRawSummary(String rawSummary) {
         this.rawSummary = rawSummary;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public String getEnforcementMetadata() {
+        return enforcementMetadata;
+    }
+
+    public void setEnforcementMetadata(String enforcementMetadata) {
+        this.enforcementMetadata = enforcementMetadata;
     }
 }

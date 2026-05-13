@@ -15,6 +15,7 @@ public class MushexProperties {
     private Remittance remittance = new Remittance();
     private StepUp stepUp = new StepUp();
     private Adapters adapters = new Adapters();
+    private RailSelection railSelection = new RailSelection();
 
     public Outbox getOutbox() { return outbox; }
     public void setOutbox(Outbox outbox) { this.outbox = outbox; }
@@ -28,6 +29,8 @@ public class MushexProperties {
     public void setStepUp(StepUp stepUp) { this.stepUp = stepUp; }
     public Adapters getAdapters() { return adapters; }
     public void setAdapters(Adapters adapters) { this.adapters = adapters; }
+    public RailSelection getRailSelection() { return railSelection; }
+    public void setRailSelection(RailSelection railSelection) { this.railSelection = railSelection; }
 
     public static class Outbox {
         private long pollIntervalMs = 2000;
@@ -79,9 +82,68 @@ public class MushexProperties {
 
     public static class Adapters {
         private Sandbox sandbox = new Sandbox();
+        private RealRail mobileMoney = new RealRail();
+        private RealRail bankTransfer = new RealRail();
+        private RealRail cardGateway = new RealRail();
 
         public Sandbox getSandbox() { return sandbox; }
         public void setSandbox(Sandbox sandbox) { this.sandbox = sandbox; }
+        public RealRail getMobileMoney() { return mobileMoney; }
+        public void setMobileMoney(RealRail mobileMoney) { this.mobileMoney = mobileMoney; }
+        public RealRail getBankTransfer() { return bankTransfer; }
+        public void setBankTransfer(RealRail bankTransfer) { this.bankTransfer = bankTransfer; }
+        public RealRail getCardGateway() { return cardGateway; }
+        public void setCardGateway(RealRail cardGateway) { this.cardGateway = cardGateway; }
+    }
+
+    /**
+     * Conservative per-rail readiness flags for real-money adapters
+     * (MOBILE_MONEY, BANK_TRANSFER, CARD_GATEWAY). These properties never carry
+     * actual credentials; they are operator-set booleans that signal intent.
+     *
+     * <p>Defaults are {@code enabled=false} and {@code credentialsConfigured=false}
+     * — production deployments must explicitly opt in per environment.
+     */
+    public static class RealRail {
+        private boolean enabled = false;
+        private boolean credentialsConfigured = false;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public boolean isCredentialsConfigured() { return credentialsConfigured; }
+        public void setCredentialsConfigured(boolean credentialsConfigured) {
+            this.credentialsConfigured = credentialsConfigured;
+        }
+    }
+
+    /**
+     * Rail-selection policy configuration. See {@code docs/design/g4-rail-selection-policy.md}.
+     *
+     * <p>Defaults are deliberately conservative for production:
+     * <ul>
+     *   <li>{@code enabled=true} — rail-selection metadata is computed and recorded on every intent.</li>
+     *   <li>{@code defaultRail=SANDBOX} — when callers do not preference a rail, never accidentally route to a real external gateway.</li>
+     *   <li>{@code allowDirectGateway=false} — Mode A (direct gateway) is opt-in per environment.</li>
+     *   <li>{@code allowSandboxFallback=true} — operators may disable this to force hard rejection of unavailable preferred rails.</li>
+     * </ul>
+     */
+    public static class RailSelection {
+        private boolean enabled = true;
+        private zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType defaultRail =
+                zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType.SANDBOX;
+        private boolean allowDirectGateway = false;
+        private boolean allowSandboxFallback = true;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType getDefaultRail() { return defaultRail; }
+        public void setDefaultRail(zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType defaultRail) {
+            this.defaultRail = defaultRail;
+        }
+        public boolean isAllowDirectGateway() { return allowDirectGateway; }
+        public void setAllowDirectGateway(boolean allowDirectGateway) { this.allowDirectGateway = allowDirectGateway; }
+        public boolean isAllowSandboxFallback() { return allowSandboxFallback; }
+        public void setAllowSandboxFallback(boolean allowSandboxFallback) { this.allowSandboxFallback = allowSandboxFallback; }
     }
 
     public static class Sandbox {

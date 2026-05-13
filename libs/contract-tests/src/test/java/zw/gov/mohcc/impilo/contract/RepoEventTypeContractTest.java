@@ -77,7 +77,36 @@ class RepoEventTypeContractTest {
                 Arguments.of("developer-portal", "impilo.developer-portal.apikey.rotated.v1"),
 
                 // schema-registry-service (wave 16)
-                Arguments.of("schema-registry", "impilo.schema-registry.schema.registered.v1")
+                Arguments.of("schema-registry", "impilo.schema-registry.schema.registered.v1"),
+
+                // learning-service / Impilo Fundo (Phase 4B dual-emit migration)
+                // Dual-emitted alongside the legacy dotted-lowercase strings below.
+                // Both rows are produced from a single LearningPlatformFacade write so
+                // existing consumers continue to receive the legacy event type while
+                // new consumers can subscribe to the v1.1-compliant names. A future
+                // phase will retire the legacy strings once all consumers migrate.
+                Arguments.of("learning", "impilo.learning.completion.recorded.v1"),
+                Arguments.of("learning", "impilo.learning.fundo.sync.completed.v1"),
+                Arguments.of("learning", "impilo.learning.resource.opened.v1"),
+                Arguments.of("learning", "impilo.learning.path.assigned.v1"),
+                Arguments.of("learning", "impilo.learning.prerequisite.registered.v1"),
+                Arguments.of("learning", "impilo.learning.moodle.ws.completion.ingested.v1"),
+                Arguments.of("learning", "impilo.learning.fundo.link.established.v1"),
+
+                // learning-service / Impilo Fundo (Phase 5D native LMS events)
+                // Brand-new native LMS surface — there is no legacy event-type
+                // counterpart to dual-emit because the underlying domain concepts
+                // (course/module/lesson/enrolment/assessment/certificate) did not
+                // exist before Phase 5. Emitted via FundoOutboxAppender against
+                // the existing lrn_event_outbox table.
+                Arguments.of("learning", "impilo.learning.course.published.v1"),
+                Arguments.of("learning", "impilo.learning.course.completed.v1"),
+                Arguments.of("learning", "impilo.learning.enrolment.created.v1"),
+                Arguments.of("learning", "impilo.learning.enrolment.cancelled.v1"),
+                Arguments.of("learning", "impilo.learning.progress.started.v1"),
+                Arguments.of("learning", "impilo.learning.progress.completed.v1"),
+                Arguments.of("learning", "impilo.learning.assessment.attempt.submitted.v1"),
+                Arguments.of("learning", "impilo.learning.certificate.issued.v1")
         );
     }
 
@@ -150,7 +179,23 @@ class RepoEventTypeContractTest {
                 Arguments.of("tshepo-identity", "MAPPING_CREATED"),
 
                 // tshepo-audit-service (wave 9) — uppercase enum-style
-                Arguments.of("tshepo-audit", "AUTHZ_DECISION")
+                Arguments.of("tshepo-audit", "AUTHZ_DECISION"),
+
+                // learning-service / Impilo Fundo — legacy dotted-lowercase strings.
+                // Phase 2: introduced as the v1.1 migration backlog. Phase 4B:
+                // additive dual-emit is now active — every write that produces
+                // one of these rows also produces a row carrying the v1.1
+                // equivalent (see compliantEventTypes() above for the matching
+                // pair list). These legacy strings remain emitted byte-for-byte
+                // until every downstream consumer has migrated; a future phase
+                // will drop them and switch to single v1.1 emission.
+                Arguments.of("learning", "learning.completion.recorded"),
+                Arguments.of("learning", "fundo.sync.completed"),
+                Arguments.of("learning", "learning.resource.opened"),
+                Arguments.of("learning", "learning.path.assigned"),
+                Arguments.of("learning", "learning.prerequisite.registered"),
+                Arguments.of("learning", "moodle.ws.completion.ingested"),
+                Arguments.of("learning", "fundo.link.established")
         );
     }
 
