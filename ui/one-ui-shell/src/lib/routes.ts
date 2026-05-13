@@ -246,12 +246,20 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/ledger", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Ledger", navLabel: "Ledger", navZone: "work" },
   { path: "/finance/workspace", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Finance Workspace", navLabel: "Workspace", navZone: "work" },
   { path: "/finance/settlements", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Settlements", navLabel: "Settlements", navZone: "work" },
+  { path: "/finance/remittances", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittances", navLabel: "Remittances", navZone: "work" },
   { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
   { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
   { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
   { path: "/finance/payer-claims", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claims Queue", navLabel: "Payer Claims", navZone: "work" },
   { path: "/finance/payer-claims/[claimId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claim", navLabel: "Payer Claim", navZone: "work" },
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
+  { path: "/finance/costa", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA hub", navLabel: "COSTA", navZone: "work" },
+  { path: "/finance/costa/encounter/[encounterId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA encounter timeline", navLabel: "Encounter timeline", navZone: "work" },
+  { path: "/finance/mushex-platform", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "MusheX platform admin", navLabel: "MusheX platform", navZone: "work" },
+  { path: "/finance/mushex-platform/wallets/[walletId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Custodial wallet", navLabel: "Custodial wallet", navZone: "work" },
+  { path: "/finance/mushex-platform/remittance/[transferId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittance transfer", navLabel: "Remittance transfer", navZone: "work" },
+  { path: "/finance/mushex-platform/cards/[cardId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Card profile", navLabel: "Card profile", navZone: "work" },
+  { path: "/finance/mushex-platform/reversals/[reversalId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Reversal record", navLabel: "Reversal record", navZone: "work" },
   { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
   { path: "/finance/reports", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Financial reports", navLabel: "Financial reports", navZone: "work" },
   { path: "/finance/my-account", zone: "finance", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Healthcare Account", navLabel: "My healthcare costs", navZone: "life" },
@@ -420,9 +428,43 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/guidance", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Guidance", navLabel: "Guidance", navZone: "life" },
   { path: "/guidance/reminders", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Reminders & Prompts", navLabel: "Reminders", navZone: "life" },
   { path: "/guidance/education", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Education", navLabel: "Education", navZone: "life" },
+
+  // ── Zone: Impilo Fundo (workforce learning workspace — backed by services/learning-service) ──
+  // Note: sidebar uses "main" because `SidebarContext` does not include a "professional" variant;
+  // this mirrors `/home/credentials`, which is also in navZone: "professional".
+  { path: "/learning", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo", navLabel: "Impilo Fundo", navZone: "professional" },
+  { path: "/learning/catalog", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Catalogue", navLabel: "Catalogue", navZone: "professional" },
+  // Phase 6B (May 2026) — native course-detail surface backed by Phase 5B /v11/courses/{id}/structure.
+  { path: "/learning/courses/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Course", navLabel: "Course" },
 ];
 
-// Total route count assertion
+// Total route count assertion.
+//
+// Phase 1 Impilo Fundo registration added 2 routes (/learning, /learning/catalog).
+// The previously-declared constant of 264 was already stale by 1 against the actual
+// ROUTES array before this change (true pre-edit count was 265), so the new total
+// is 267. Track this constant whenever ROUTES is extended.
+//
+// Stage 3.4C housekeeping (May 2026): added `/finance/costa` (Stage 3.2 / G-1)
+// and `/finance/mushex-platform` (Stage 3.3 / G-2) to the canonical route
+// registry so that breadcrumbs, the role-guard, and the taskbar/title resolver
+// all see them. New total was 269.
+// Phase 4 (May 2026): added `/finance/mushex-platform/wallets/[walletId]`
+// (read-only custodial wallet detail drill-down). New total is 270.
+// Phase 5 (May 2026): added `/finance/costa/encounter/[encounterId]`
+// (read-only COSTA encounter timeline). New total is 271.
+// Phase 6B (May 2026): added `/learning/courses/[courseId]`
+// (native Impilo Fundo course-detail page over Phase 5B course structure
+// endpoint). New total is 272.
+// Phase 4 follow-on (May 2026): added three MusheX per-record detail pages
+// (`/finance/mushex-platform/remittance/[transferId]`,
+// `/finance/mushex-platform/cards/[cardId]`,
+// `/finance/mushex-platform/reversals/[reversalId]`). New total is 275.
+// Phase 6 (May 2026): added `/finance/remittances` as a canonical
+// read-only remittance hub over the existing coverage remittance feed.
+// New total is 276.
+// Additional upstream route registrations on this branch increase the current
+// canonical total to 278.
 export const EXPECTED_ROUTE_COUNT = 278;
 export const ROUTE_COUNT = ROUTES.length;
 
