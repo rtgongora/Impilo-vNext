@@ -4,20 +4,17 @@
  * COSTA encounter timeline — read-only Phase 5 slice.
  * Route: /finance/costa/encounter/[encounterId] | pageTitle: "COSTA encounter timeline"
  *
- * Merges the two encounter-scoped COSTA signals that are already exposed by
+ * Merges encounter-scoped COSTA + MusheX read signals already exposed by
  * the BFF into a single chronological view:
  *
  *   - Service-access decisions  (via `useServiceAccessDecisionsList`)
  *   - Cost events / charge sheet rows  (via `useCostaIntelCostEvents`)
+ *   - Invoice lifecycle rows      (via billing-workspace lifecycle)
+ *   - MusheX source-list intents  (via payer-ops source list)
+ *   - MusheX settlements          (via settlement filter-by-intents)
+ *   - Subsidy/write-off rows      (via billing-workspace subsidies list)
  *
- * The page is the first read-only step of the wider "estimate → charge sheet
- * → invoice → payment" timeline asked for in Phase 5 of the MusheX/COSTA
- * roadmap. It is honest about what cannot be shown yet:
- *   - Invoices (no backend list-by-encounter endpoint exists yet);
- *   - MusheX payment intents (no list-by-sourceType+sourceId endpoint exists yet);
- *   - Settlement linkage (downstream of the missing intent list).
- *
- * No write actions. No fabricated rows. Reuses existing hooks; no new BFF route.
+ * No write actions. No fabricated rows. Reuses existing hooks.
  *
  * Doctrine: {@link ../../../../../../../docs/doctrine/mushex-gateway-neutrality.md}
  * Phase 5 design: {@link ../../../../../../../docs/design/phase-5-costa-encounter-timeline.md}
@@ -32,6 +29,7 @@ import {
   Clock,
   CreditCard,
   FileText,
+  HandCoins,
   Layers,
   Loader2,
   Receipt,
@@ -40,7 +38,10 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCostaIntelCostEvents } from "@/hooks/queries/useCostaIntel";
-import { useFinanceBillingInvoicesForEncounter } from "@/hooks/queries/useFinanceBillingWorkspace";
+import {
+  useFinanceBillingInvoicesForEncounter,
+  useFinanceBillingSubsidiesForEncounter,
+} from "@/hooks/queries/useFinanceBillingWorkspace";
 import { usePayerOpsPaymentIntentsBySource } from "@/hooks/queries/useFinancePayerOps";
 import { useFinanceSettlementsByIntentIds } from "@/hooks/queries/useFinanceSettlements";
 import {
@@ -48,7 +49,7 @@ import {
   type ServiceAccessDecisionRow,
 } from "@/hooks/queries/useServiceAccessDecisions";
 
-type TimelineKind = "DECISION" | "COST_EVENT" | "INVOICE" | "INTENT" | "SETTLEMENT";
+type TimelineKind = "DECISION" | "COST_EVENT" | "INVOICE" | "INTENT" | "SETTLEMENT" | "SUBSIDY";
 
 interface TimelineRow {
   kind: TimelineKind;
@@ -226,6 +227,30 @@ function settlementToRow(raw: unknown): TimelineRow | null {
   };
 }
 
+function subsidyToRow(raw: unknown): TimelineRow | null {
+  if (raw == null || typeof raw !== "object") return null;
+  const row = raw as Record<string, unknown>;
+  const billId = asString(row.bill_id);
+  if (!billId) return null;
+  const subsidyAmount = asString(row.subsidy_amount);
+  const writeOffAmount = asString(row.write_off_amount);
+  const detailParts = [
+    `Bill ${billId}`,
+    `Write-off: ${writeOffAmount ?? "0.00"}`,
+    `Status: ${asString(row.bill_status) ?? "—"}`,
+  ];
+  return {
+    kind: "SUBSIDY",
+    timestamp: asString(row.finalized_at) ?? asString(row.created_at),
+    label: `Subsidy allocation ${billId}`,
+    detail: detailParts.join(" · "),
+    badge: "SUBSIDY",
+    status: asString(row.bill_status),
+    amount: subsidyAmount ?? "0.00",
+    raw: row,
+  };
+}
+
 function compareTimestamps(a: TimelineRow, b: TimelineRow): number {
   if (a.timestamp === b.timestamp) return 0;
   if (!a.timestamp) return 1; // null timestamps sink to the bottom
@@ -245,6 +270,9 @@ function statusBadgeChrome(kind: TimelineKind, status: string | undefined): stri
   }
   if (kind === "SETTLEMENT") {
     return "bg-cyan-100 text-cyan-800 border-cyan-200";
+  }
+  if (kind === "SUBSIDY") {
+    return "bg-amber-100 text-amber-800 border-amber-200";
   }
   const s = (status ?? "").toUpperCase();
   if (s === "GRANTED" || s === "APPROVED" || s === "AUTHORISED") {
@@ -272,6 +300,7 @@ export default function CostaEncounterTimelinePage() {
   const decisionsQ = useServiceAccessDecisionsList(encounterId);
   const costEventsQ = useCostaIntelCostEvents(encounterId, patientCpid);
   const invoicesQ = useFinanceBillingInvoicesForEncounter(encounterId, Boolean(encounterId));
+  const subsidiesQ = useFinanceBillingSubsidiesForEncounter(encounterId, Boolean(encounterId));
 
   const decisionRows = (decisionsQ.data ?? []).map(decisionToRow);
   const costEventRows = (costEventsQ.data ?? [])
@@ -294,8 +323,11 @@ export default function CostaEncounterTimelinePage() {
   const settlementRows = extractRows(settlementsQ.data)
     .map(settlementToRow)
     .filter((row): row is TimelineRow => row !== null);
+  const subsidyRows = extractRows(subsidiesQ.data)
+    .map(subsidyToRow)
+    .filter((row): row is TimelineRow => row !== null);
 
-  const timeline = [...decisionRows, ...costEventRows, ...invoiceRows, ...intentRows, ...settlementRows].sort(compareTimestamps);
+  const timeline = [...decisionRows, ...costEventRows, ...invoiceRows, ...intentRows, ...settlementRows, ...subsidyRows].sort(compareTimestamps);
 
   const handoffQuery = new URLSearchParams();
   if (patientId) handoffQuery.set("patientId", patientId);
@@ -303,8 +335,8 @@ export default function CostaEncounterTimelinePage() {
   const handoffSuffix = handoffQuery.toString() ? `?${handoffQuery.toString()}` : "";
 
   const isLoading =
-    decisionsQ.isLoading || costEventsQ.isLoading || invoicesQ.isLoading || sourceIntentsQ.isLoading || settlementsQ.isLoading;
-  const hasError = decisionsQ.isError || costEventsQ.isError || invoicesQ.isError || sourceIntentsQ.isError || settlementsQ.isError;
+    decisionsQ.isLoading || costEventsQ.isLoading || invoicesQ.isLoading || sourceIntentsQ.isLoading || settlementsQ.isLoading || subsidiesQ.isLoading;
+  const hasError = decisionsQ.isError || costEventsQ.isError || invoicesQ.isError || sourceIntentsQ.isError || settlementsQ.isError || subsidiesQ.isError;
   const isEmpty =
     !isLoading &&
     !hasError &&
@@ -312,7 +344,8 @@ export default function CostaEncounterTimelinePage() {
     costEventRows.length === 0 &&
     invoiceRows.length === 0 &&
     intentRows.length === 0 &&
-    settlementRows.length === 0;
+    settlementRows.length === 0 &&
+    subsidyRows.length === 0;
 
   return (
     <AppLayout>
@@ -396,6 +429,10 @@ export default function CostaEncounterTimelinePage() {
                   <code className="mx-1 text-[10px]">
                     /internal/v1/finance/settlements?intentIds=…
                   </code>
+                  and
+                  <code className="mx-1 text-[10px]">
+                    /internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=…
+                  </code>
                   . Sorted chronologically; rows without a timestamp sink to the bottom.
                 </p>
 
@@ -412,7 +449,7 @@ export default function CostaEncounterTimelinePage() {
                 )}
                 {isEmpty && (
                   <p className="mt-3 text-xs text-slate-500">
-                    No service-access decisions, cost events, invoices, intents, or settlements returned for this encounter.
+                    No service-access decisions, cost events, invoices, intents, settlements, or subsidy rows returned for this encounter.
                   </p>
                 )}
 
@@ -448,6 +485,8 @@ export default function CostaEncounterTimelinePage() {
                                   <CreditCard className="h-3 w-3" />
                                 ) : row.kind === "SETTLEMENT" ? (
                                   <Wallet className="h-3 w-3" />
+                                ) : row.kind === "SUBSIDY" ? (
+                                  <HandCoins className="h-3 w-3" />
                                 ) : (
                                   <Receipt className="h-3 w-3" />
                                 )}
@@ -459,6 +498,8 @@ export default function CostaEncounterTimelinePage() {
                                       ? "Intent"
                                       : row.kind === "SETTLEMENT"
                                         ? "Settlement"
+                                      : row.kind === "SUBSIDY"
+                                        ? "Subsidy"
                                         : "Invoice"}
                               </span>
                             </td>

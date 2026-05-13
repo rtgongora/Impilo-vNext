@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Implemented for Slices 6A–6D; Slice 6E (subsidies) deferred behind product/API decision |
+| Status | Implemented for Slices 6A–6E |
 | Predecessors | [`phase-4-mushex-platform-detail.md`](../design/phase-4-mushex-platform-detail.md), [`phase-5-costa-encounter-timeline.md`](../design/phase-5-costa-encounter-timeline.md) |
 | Doctrine | [`docs/doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md) |
 | Audit register | [`costa-mushex-experience-layer-wiring-audit.md`](costa-mushex-experience-layer-wiring-audit.md) |
@@ -108,10 +108,10 @@ These four are the natural Phase 6 additive read-only slice: they have an existi
 - Read-only.
 - Safety: same as Slice 6B.
 
-### Slice 6E — subsidies (deferred, requires product decision)
+### Slice 6E — subsidies (implemented as read-only lifecycle surface)
 
-- A subsidy UI cannot be built safely until a backend concept exists (or a product decision merges subsidies into the existing exemption / cost-event / coverage flows).
-- This slice is **deferred** under the "requires product decision" stop condition in the autonomy rules.
+- A first-class read route is now available on COSTA lifecycle (`/costa/v1/finance/lifecycle/subsidies`) and surfaced through billing-workspace.
+- Canonical UI surfaces consume this route read-only (`/finance/costa` and `/finance/costa/encounter/[encounterId]`).
 
 ## 5. What this batch does and does not do
 
@@ -167,6 +167,16 @@ Phase 6 follow-on implementation completed the previously queued UI slices while
   - Data source is existing BFF route `GET /internal/v1/coverage/remittances`.
   - Route metadata/parity were updated (`routes.ts`, `route-parity-check.mjs`) and `/finance` now links to the remittances hub.
 
-## 9. Remaining deferred slice
+## 9. Implementation update (Slice 6E)
 
-- **Slice 6E (subsidies)** remains deferred. There is still no first-class subsidy backend contract in this layer; implementing a UI without a defined source-of-truth would violate the no-fabrication doctrine and requires product/API direction first.
+Slice 6E is now implemented as an additive read-only subsidy surface over existing COSTA bill split truth:
+
+- New COSTA endpoint: `GET /costa/v1/finance/lifecycle/subsidies?encounter_id=...`
+  - Returns encounter-scoped rows with `bill_id`, `invoice_id`, `subsidy_amount`, `write_off_amount`, `currency`, `bill_status`, timestamps, and `trace_summary`.
+  - Includes only bills where `subsidy_payable > 0` or `write_off > 0`.
+- New BFF passthrough: `GET /internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=...`
+- Canonical UI wiring:
+  - `/finance/costa` now shows a read-only "Subsidies & exemptions" card.
+  - `/finance/costa/encounter/[encounterId]` timeline now includes `SUBSIDY` rows merged with decisions, cost events, invoices, intents, and settlements.
+
+Safety posture remains unchanged: no subsidy write actions, no schema migration, no fabricated subsidy rows.

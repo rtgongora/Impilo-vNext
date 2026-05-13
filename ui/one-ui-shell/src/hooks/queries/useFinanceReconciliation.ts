@@ -50,3 +50,17 @@ export function useReconciliationMatch() {
     },
   });
 }
+
+export function useReconciliationTripleMatch(encounterId: string, enabled: boolean) {
+  const q = new URLSearchParams();
+  if (encounterId) q.set("encounterId", encounterId);
+  const suffix = q.toString();
+  return useQuery<FinanceReconJson>({
+    queryKey: ["finance", "reconciliation", "triple-match", encounterId],
+    queryFn: () =>
+      apiClient.get<FinanceReconJson>(
+        `/internal/v1/finance/reconciliation/triple-match${suffix ? `?${suffix}` : ""}`,
+      ),
+    enabled: enabled && encounterId.trim().length > 0,
+  });
+}

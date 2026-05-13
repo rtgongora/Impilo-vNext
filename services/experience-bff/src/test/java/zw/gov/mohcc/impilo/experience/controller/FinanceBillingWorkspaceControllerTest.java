@@ -44,5 +44,21 @@ class FinanceBillingWorkspaceControllerTest {
         assertEquals("req-1", response.getHeaders().getFirst(CompanionHeaders.REQUEST_ID));
         assertEquals("corr-1", response.getHeaders().getFirst(CompanionHeaders.CORRELATION_ID));
     }
+
+    @Test
+    void listSubsidiesByEncounter_forwardsToFinanceLifecycleWithEncounterQuery() {
+        when(costaServiceClient.financeLifecycleGet(contains("/subsidies?encounter_id=ENC-9")))
+                .thenReturn(ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("{\"data\":[]}"));
+
+        ResponseEntity<String> response = controller.listSubsidiesByEncounter("ENC-9", "req-9", "corr-9");
+
+        verify(authorizationService).assertBillingWorkspaceAccess("GET");
+        verify(costaServiceClient).financeLifecycleGet(contains("/subsidies?encounter_id=ENC-9"));
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("req-9", response.getHeaders().getFirst(CompanionHeaders.REQUEST_ID));
+        assertEquals("corr-9", response.getHeaders().getFirst(CompanionHeaders.CORRELATION_ID));
+    }
 }
 

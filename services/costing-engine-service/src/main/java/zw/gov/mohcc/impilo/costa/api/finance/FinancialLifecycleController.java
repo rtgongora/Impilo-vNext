@@ -35,6 +35,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 /**
  * Read APIs for enriched invoices, invoice lines, and MusheX-linked payment allocations.
@@ -137,6 +138,47 @@ public class FinancialLifecycleController {
 
         rows.sort(Comparator.comparing(
                 r -> ((InvoiceEntity) r.get("invoice")).getIssuedAt(),
+                Comparator.nullsLast(Comparator.naturalOrder())));
+        return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/subsidies")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> listSubsidiesByEncounter(
+            @RequestParam(name = "encounter_id") String encounterId) {
+        var ctx = TrustContextHolder.require();
+        if (encounterId == null || encounterId.isBlank()) {
+            throw new IllegalArgumentException("encounter_id is required");
+        }
+
+        var bills = billHeaderRepository.findByEncounterId(encounterId).stream()
+                .filter(b -> ctx.tenantId().equals(b.getTenantId()))
+                .toList();
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (var bill : bills) {
+            BigDecimal subsidy = bill.getSubsidyPayable() == null ? BigDecimal.ZERO : bill.getSubsidyPayable();
+            BigDecimal writeOff = bill.getWriteOff() == null ? BigDecimal.ZERO : bill.getWriteOff();
+            if (subsidy.compareTo(BigDecimal.ZERO) <= 0 && writeOff.compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+            Optional<InvoiceEntity> invoiceOpt = invoiceRepository.findByBillId(bill.getBillId());
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("encounter_id", encounterId);
+            row.put("bill_id", bill.getBillId());
+            row.put("invoice_id", invoiceOpt.map(InvoiceEntity::getInvoiceId).orElse(null));
+            row.put("subsidy_amount", subsidy);
+            row.put("write_off_amount", writeOff);
+            row.put("currency", bill.getCurrency());
+            row.put("bill_status", bill.getStatus());
+            row.put("created_at", bill.getCreatedAt());
+            row.put("finalized_at", bill.getFinalizedAt());
+            row.put("trace_summary", bill.getTraceSummary());
+            rows.add(row);
+        }
+
+        rows.sort(Comparator.comparing(
+                r -> (java.time.OffsetDateTime) r.get("finalized_at"),
                 Comparator.nullsLast(Comparator.naturalOrder())));
         return ResponseEntity.ok(ApiResponse.ok(rows, ctx.correlationId().toString()));
     }

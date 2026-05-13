@@ -126,3 +126,10 @@ All four of those operational steps are intentionally outside the scope of an "a
 | 7F | Add a CI guard that fails the build if a new file is added under any deprecated folder. | One small `.github/workflows` check. | Low; protects the ledger from drift. |
 
 Each slice is independently scoped and can land in its own batch without coupling to the others.
+
+## 5. Implementation update (Phase 7 follow-on)
+
+- **7B/7C support landed:** query templates for `SIDECAR_UI` and `LEGACY_WEB_SHELL` now live in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md), so dashboards can be wired from stable patterns instead of ad-hoc queries.
+- **7D implemented:** Experience BFF now increments `impilo.legacy.route.requests{route_family="mobile_citizen_wallet"}` inside `WellnessServiceProxyController` for inbound legacy wallet-path traffic.
+- **7E implemented:** first parity sweep published at [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md).
+- **7F implemented:** CI guard workflow [`.github/workflows/deprecated-surface-guard.yml`](../../.github/workflows/deprecated-surface-guard.yml) fails when a PR adds new files under deprecated folders.

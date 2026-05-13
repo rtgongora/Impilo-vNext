@@ -9,6 +9,7 @@ import { FinancePayerOpsReconciliationNotice } from "@/components/FinanceAccessN
 import {
   useReconciliationImportStatement,
   useReconciliationMatch,
+  useReconciliationTripleMatch,
   useReconciliationUnmatched,
 } from "@/hooks/queries/useFinanceReconciliation";
 
@@ -34,6 +35,9 @@ export default function FinanceReconciliationPage() {
   const [reconId, setReconId] = useState("");
   const [matchIntentId, setMatchIntentId] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
+  const [encounterId, setEncounterId] = useState("");
+  const [tripleArmed, setTripleArmed] = useState(false);
+  const tripleQ = useReconciliationTripleMatch(encounterId, tripleArmed);
 
   const unmatchedSummary = useMemo(() => {
     const d = unmatchedQ.data;
@@ -201,6 +205,46 @@ export default function FinanceReconciliationPage() {
               <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
                 {JSON.stringify(matchM.data, null, 2)}
               </pre>
+            ) : null}
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900">Triple-source match (intent ⇄ settlement ⇄ invoice)</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              GET <code className="text-[11px]">/internal/v1/finance/reconciliation/triple-match?encounterId=…</code>.
+            </p>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <label className="text-xs text-slate-600">
+                Encounter id
+                <input
+                  type="text"
+                  className="mt-1 block min-w-[220px] rounded-lg border border-slate-200 px-2 py-1.5 text-sm font-mono"
+                  value={encounterId}
+                  onChange={(e) => setEncounterId(e.target.value)}
+                  aria-label="Triple match encounter id"
+                />
+              </label>
+              <button
+                type="button"
+                disabled={!encounterId.trim()}
+                className="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 disabled:opacity-50"
+                onClick={() => setTripleArmed(true)}
+              >
+                Fetch triple match
+              </button>
+            </div>
+            {tripleQ.isLoading ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading triple-source rows…
+              </p>
+            ) : tripleQ.isError ? (
+              <p className="mt-3 text-sm text-red-700">Triple-source request failed.</p>
+            ) : tripleQ.data && typeof tripleQ.data === "object" ? (
+              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px] text-slate-800">
+                {JSON.stringify(tripleQ.data, null, 2)}
+              </pre>
+            ) : tripleArmed ? (
+              <p className="mt-3 text-xs text-slate-500">No triple-source rows returned.</p>
             ) : null}
           </div>
 

@@ -115,5 +115,44 @@ class FinancialLifecycleControllerTest {
         assertEquals("PI-1", row.get("mushex_intent_id"));
         assertEquals("PENDING", String.valueOf(row.get("payment_status")));
     }
+
+    @Test
+    void listSubsidiesByEncounter_returnsOnlyRowsWithSubsidyOrWriteOff() {
+        BillHeaderEntity withSubsidy = new BillHeaderEntity();
+        withSubsidy.setBillId("BILL-S");
+        withSubsidy.setEncounterId("ENC-S");
+        withSubsidy.setTenantId(tenantId);
+        withSubsidy.setCurrency("USD");
+        withSubsidy.setSubsidyPayable(new BigDecimal("12.50"));
+        withSubsidy.setWriteOff(new BigDecimal("1.50"));
+        withSubsidy.setFinalizedAt(OffsetDateTime.parse("2026-05-13T10:00:00Z"));
+
+        BillHeaderEntity noSubsidy = new BillHeaderEntity();
+        noSubsidy.setBillId("BILL-0");
+        noSubsidy.setEncounterId("ENC-S");
+        noSubsidy.setTenantId(tenantId);
+        noSubsidy.setSubsidyPayable(BigDecimal.ZERO);
+        noSubsidy.setWriteOff(BigDecimal.ZERO);
+
+        InvoiceEntity invoice = new InvoiceEntity();
+        invoice.setInvoiceId("INV-S");
+        invoice.setBillId("BILL-S");
+        invoice.setTenantId(tenantId);
+
+        when(billHeaderRepository.findByEncounterId("ENC-S")).thenReturn(List.of(withSubsidy, noSubsidy));
+        when(invoiceRepository.findByBillId("BILL-S")).thenReturn(Optional.of(invoice));
+
+        var response = controller.listSubsidiesByEncounter("ENC-S");
+
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        List<?> rows = (List<?>) response.getBody().data();
+        assertEquals(1, rows.size());
+        @SuppressWarnings("unchecked")
+        var row = (java.util.Map<String, Object>) rows.get(0);
+        assertEquals("BILL-S", row.get("bill_id"));
+        assertEquals("INV-S", row.get("invoice_id"));
+        assertEquals(new BigDecimal("12.50"), row.get("subsidy_amount"));
+    }
 }
 

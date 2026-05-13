@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Audit complete; first concrete deliverable is the cross-service outbox event catalogue (see § 5). Operational dashboard wiring deferred to follow-on slices. |
+| Status | Implemented through slices 8A–8F (repository-owned scope). |
 | Predecessors | Phase 6 / 7 audits and ledgers. |
 | Doctrine | [`docs/doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md), [`docs/doctrine/costa-mushex-billing-timing.md`](../doctrine/costa-mushex-billing-timing.md) |
 | Companion | [`mushex-costa-outbox-event-catalogue.md`](./mushex-costa-outbox-event-catalogue.md) |
@@ -107,15 +107,23 @@ The catalogue is **definitional**: it does not configure dashboards, alerts, or 
 
 | Slice id | What | Risk |
 | -------- | ---- | ---- |
-| 8A (**this batch**) | Cross-service outbox event catalogue. | None (documentation). |
-| 8B | Convention test in each service (`mushex-service`, `costing-engine-service`) that asserts every event type produced by `publishEvent(...)` call-sites maps to a non-default topic in `routeTopic(...)`. | Low (test addition only). |
-| 8C | Finance-plane operations runbook. | None (documentation). |
-| 8D | Audit-page query parameter to scope audit rows by aggregate id (intent id, wallet id, invoice id). | Medium — needs a small additive BFF change and a UI change; design needed. |
-| 8E | COSTA-invoice ⇄ MusheX-intent ⇄ rail-settlement triple reconciliation join. | High — needs a new backend endpoint and a triple-source UI. Same blocker as the deferred Phase 5 list-by-source endpoint. |
-| 8F | Per-topic consumer map (who subscribes to which event topic). | Low if compose / k8s manifests already encode this; medium if not. |
+| 8A | Cross-service outbox event catalogue. | Implemented |
+| 8B | Convention test in each service (`mushex-service`, `costing-engine-service`) that asserts event types are explicitly routed (or intentionally defaulted, for MusheX). | Implemented |
+| 8C | Finance-plane operations runbook. | Implemented |
+| 8D | Audit-page aggregate scoping filter (`aggregateType`, `aggregateId`) through BFF + UI. | Implemented |
+| 8E | COSTA-invoice ⇄ MusheX-intent ⇄ rail-settlement triple reconciliation join endpoint + UI read panel. | Implemented |
+| 8F | Per-topic consumer map (who subscribes to which event topic). | Implemented |
 
 ## 8. Doctrine alignment
 
 - *Health-focused* — preserved; this batch produces only documentation infrastructure.
 - *No fabricated data* — preserved; the catalogue lists only the event types actually emitted by current code (the `publishEvent` call-sites and `routeTopic` switches were read directly).
 - *No deletion / no breakage / additive-only* — preserved.
+
+## 9. Implementation update (8B–8F)
+
+- **8B:** Added outbox routing convention tests in MusheX and COSTA; COSTA mapping now includes `PAYMENT_CANCELLED` on `costa.payment.status_changed` (no silent default fallback).
+- **8C:** Added finance-plane operator runbook at [`docs/runbooks/finance-plane-operations-runbook.md`](../runbooks/finance-plane-operations-runbook.md).
+- **8D:** Added aggregate filters to BFF audit list endpoint and canonical `/admin/audit` UI.
+- **8E:** Added BFF `GET /internal/v1/finance/reconciliation/triple-match?encounterId=...` plus canonical UI section in `/finance/reconciliation`.
+- **8F:** Added topic consumer map at [`phase-8-topic-consumer-map.md`](./phase-8-topic-consumer-map.md).

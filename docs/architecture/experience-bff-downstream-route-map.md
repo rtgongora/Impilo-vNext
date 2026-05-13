@@ -116,7 +116,7 @@ The Impilo citizen app now reaches the wallet through the canonical `WalletContr
 
 The wallet owner is implied by the `x-actor-id` trust header that the mobile API client (`@impilo/mobile-api-client`) injects from the Keycloak session — there is no `patientId` query parameter on the canonical plane. The mobile API client's `ApiError.fromResponse` was upgraded in the same stage to parse the BFF v1.2 nested error envelope (`{ error: { code, message } }`), so the stable `WALLET_UPSTREAM_UNAVAILABLE` code reaches `WalletSection` and `FinanceSection`, which surface an honest "Wallet temporarily unavailable" `ErrorState` (no fabricated `balance = 0`).
 
-**Legacy retirement deferred.** The `WellnessServiceProxyController` whitelist entry for `/internal/v1/mobile/citizen/wallet/**` and the `CitizenMyLifeController` wallet endpoints in `wellness-service` are intentionally retained so older mobile builds continue to function during rollout. Their removal is a follow-up item; it should run only after telemetry confirms that no installed mobile client still hits the legacy path. New mobile builds resolve the wallet through the canonical plane on day one.
+**Legacy retirement deferred.** The `WellnessServiceProxyController` whitelist entry for `/internal/v1/mobile/citizen/wallet/**` and the `CitizenMyLifeController` wallet endpoints in `wellness-service` are intentionally retained so older mobile builds continue to function during rollout. Their removal is a follow-up item; it should run only after telemetry confirms that no installed mobile client still hits the legacy path. New mobile builds resolve the wallet through the canonical plane on day one. Phase 7D adds additive telemetry for this retirement tail: inbound legacy wallet-path hits now increment `impilo.legacy.route.requests{route_family=mobile_citizen_wallet}` inside Experience BFF.
 
 ## MusheX payment-intents — rail-selection on create (Stage 3.5, audit gap G-4 closed)
 
@@ -159,12 +159,14 @@ Key safety properties:
 
 The canonical web consumer is the read-only "Platform routing & gateway readiness" table on [`/finance/mushex-platform`](../../ui/one-ui-shell/src/app/finance/mushex-platform/page.tsx); see [`docs/design/phase-2-adapter-readiness.md`](../design/phase-2-adapter-readiness.md) for the full state machine and the future-hooks (`DEGRADED`, tenant-scoping, runtime health probing) deferred for later stages.
 
-## COSTA finance lifecycle — encounter invoice listing (Phase 5 follow-on, audit gap G-10)
+## COSTA finance lifecycle — encounter invoice/subsidy listing (Phase 5 + Phase 6E, audit gaps G-10/G-11)
 
 Phase 5 follow-on adds one additive billing-workspace passthrough:
 
 - `GET /internal/v1/finance/billing-workspace/lifecycle/invoices?encounterId=...`
   → `GET /costa/v1/finance/lifecycle/invoices?encounter_id=...`
+- `GET /internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=...`
+  → `GET /costa/v1/finance/lifecycle/subsidies?encounter_id=...`
 
 Phase 5 remaining slice adds two additive MusheX passthroughs for timeline fan-in:
 
@@ -173,11 +175,14 @@ Phase 5 remaining slice adds two additive MusheX passthroughs for timeline fan-i
 - `GET /internal/v1/finance/settlements?intentIds=...`
   → `GET /mushex/v1/settlements?intent_ids=...`
 
-The upstream endpoint returns encounter invoice rows enriched with invoice payload, `mushex_intent_id` signal (from COSTA handoff), and latest payment signal fields (`payment_status`, `paid_at`). The canonical consumer is the read-only timeline at [`/finance/costa/encounter/[encounterId]`](../../ui/one-ui-shell/src/app/finance/costa/encounter/%5BencounterId%5D/page.tsx), which merges these invoice rows with existing service-access and cost-event rows.
+The upstream endpoints return encounter invoice rows enriched with invoice payload, `mushex_intent_id` signal (from COSTA handoff), and latest payment signal fields (`payment_status`, `paid_at`), plus subsidy/write-off rows derived from bill headers (`subsidy_amount`, `write_off_amount`, `trace_summary`). The canonical consumer is the read-only timeline at [`/finance/costa/encounter/[encounterId]`](../../ui/one-ui-shell/src/app/finance/costa/encounter/%5BencounterId%5D/page.tsx), which merges invoice and subsidy rows with existing service-access, cost-event, intent, and settlement rows.
 
-## Coverage / claims / remittance surface coherence (Phase 6, audit gap G-11)
+## Coverage / claims / remittance / subsidy surface coherence (Phase 6, audit gap G-11)
 
-Phase 6 does not add new BFF routes; it wires existing endpoints into canonical one-ui-shell surfaces:
+Phase 6 adds one billing-workspace read passthrough for subsidies and wires existing endpoints into canonical one-ui-shell surfaces:
+
+- `/finance/costa` and `/finance/costa/encounter/[encounterId]` now consume:
+  - `GET /internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=...`
 
 - `/coverage` tabs now consume:
   - `GET /internal/v1/coverage/preauths`
@@ -190,6 +195,18 @@ Phase 6 does not add new BFF routes; it wires existing endpoints into canonical 
   - `POST /internal/v1/finance/payer-claims/{claimId}/submit`
   - `POST /internal/v1/finance/payer-claims/{claimId}/dispute`
   - but now requires explicit UI confirmation in the canonical `/finance/payer-claims/[claimId]` surface.
+
+## Audit and reconciliation coherence (Phase 8, audit gap G-13)
+
+- Audit list endpoint now supports aggregate scoping:
+  - `GET /internal/v1/admin/audit?page=...&size=...&aggregateType=...&aggregateId=...`
+  - BFF forwards `aggregateType` as `eventType` and `aggregateId` as `subjectRef` into the Tshepo audit query.
+- Reconciliation now has an additive read-join endpoint:
+  - `GET /internal/v1/finance/reconciliation/triple-match?encounterId=...`
+  - BFF fan-in:
+    - COSTA lifecycle invoices by encounter
+    - MusheX payment intents by source (`COSTA_BILL` + bill ids)
+    - MusheX settlements by intent ids
 
 ## Related
 

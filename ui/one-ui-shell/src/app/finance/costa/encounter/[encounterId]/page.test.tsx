@@ -107,6 +107,21 @@ vi.mock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
     isLoading: false,
     isError: false,
   }),
+  useFinanceBillingSubsidiesForEncounter: (): QueryShape<{ data: unknown[] }> => ({
+    data: {
+      data: [
+        {
+          bill_id: "BILL-1",
+          subsidy_amount: "25.00",
+          write_off_amount: "5.00",
+          bill_status: "FINALIZED",
+          finalized_at: "2026-05-10T10:08:00Z",
+        },
+      ],
+    },
+    isLoading: false,
+    isError: false,
+  }),
 }));
 
 vi.mock("@/hooks/queries/useFinancePayerOps", () => ({
@@ -156,7 +171,7 @@ describe("CostaEncounterTimelinePage", () => {
     expect(within(identitySection as HTMLElement).getByText("pat-123")).toBeInTheDocument();
   });
 
-  it("merges decisions, cost events, invoices, intents, and settlements into one chronological table, sinking null-timestamp rows", () => {
+  it("merges decisions, cost events, invoices, intents, settlements, and subsidy rows into one chronological table, sinking null-timestamp rows", () => {
     render(<CostaEncounterTimelinePage />);
 
     const section = screen
@@ -164,17 +179,18 @@ describe("CostaEncounterTimelinePage", () => {
       .closest("section");
     expect(section).not.toBeNull();
     const rows = within(section as HTMLElement).getAllByRole("row");
-    // 1 header + 6 body rows (2 decisions + 1 cost event + 1 invoice + 1 intent + 1 settlement)
-    expect(rows.length).toBe(7);
+    // 1 header + 7 body rows (2 decisions + 1 cost event + 1 invoice + 1 intent + 1 subsidy + 1 settlement)
+    expect(rows.length).toBe(8);
 
-    // Body rows in chronological order: decision-1 -> cost-event -> invoice -> intent -> settlement -> null timestamp decision.
+    // Body rows in chronological order: decision-1 -> cost-event -> invoice -> intent -> subsidy -> settlement -> null timestamp decision.
     const bodyTexts = rows.slice(1).map((r) => r.textContent ?? "");
     expect(bodyTexts[0]).toMatch(/09:00[\s\S]*Decision[\s\S]*Consultation[\s\S]*150[\s\S]*GRANTED/);
     expect(bodyTexts[1]).toMatch(/09:30[\s\S]*Cost event[\s\S]*Consultation fee[\s\S]*150\.00[\s\S]*CAPTURED/);
     expect(bodyTexts[2]).toMatch(/10:00[\s\S]*Invoice[\s\S]*INV-001[\s\S]*150\.00[\s\S]*ISSUED/);
     expect(bodyTexts[3]).toMatch(/10:05[\s\S]*Intent[\s\S]*intent-1[\s\S]*150\.00[\s\S]*PENDING/);
-    expect(bodyTexts[4]).toMatch(/10:10[\s\S]*Settlement[\s\S]*SET-1[\s\S]*COMPUTED/);
-    expect(bodyTexts[5]).toMatch(/—[\s\S]*Decision[\s\S]*MRI scan[\s\S]*DEFERRED/);
+    expect(bodyTexts[4]).toMatch(/10:08[\s\S]*Subsidy[\s\S]*BILL-1[\s\S]*25\.00[\s\S]*SUBSIDY/);
+    expect(bodyTexts[5]).toMatch(/10:10[\s\S]*Settlement[\s\S]*SET-1[\s\S]*COMPUTED/);
+    expect(bodyTexts[6]).toMatch(/—[\s\S]*Decision[\s\S]*MRI scan[\s\S]*DEFERRED/);
   });
 
   it("renders the BFF routes used by both timeline sources (no hidden endpoints)", () => {
@@ -197,6 +213,9 @@ describe("CostaEncounterTimelinePage", () => {
       scope.getByText("/internal/v1/finance/payer-ops/payment-intents?sourceType=COSTA_BILL&sourceIds=…"),
     ).toBeInTheDocument();
     expect(scope.getByText("/internal/v1/finance/settlements?intentIds=…")).toBeInTheDocument();
+    expect(
+      scope.getByText("/internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=…"),
+    ).toBeInTheDocument();
   });
 
   it("renders the gap card naming settlement detail granularity as the remaining timeline gap", () => {
@@ -231,6 +250,7 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     }));
     vi.doMock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
       useFinanceBillingInvoicesForEncounter: () => ({ data: [], isLoading: false, isError: false }),
+      useFinanceBillingSubsidiesForEncounter: () => ({ data: [], isLoading: false, isError: false }),
     }));
     vi.doMock("@/hooks/queries/useFinancePayerOps", () => ({
       usePayerOpsPaymentIntentsBySource: () => ({ data: [], isLoading: false, isError: false }),
@@ -242,7 +262,7 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     render(<Page />);
     expect(
       screen.getByText(
-        "No service-access decisions, cost events, invoices, intents, or settlements returned for this encounter.",
+        "No service-access decisions, cost events, invoices, intents, settlements, or subsidy rows returned for this encounter.",
       ),
     ).toBeInTheDocument();
   });
@@ -266,6 +286,7 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     }));
     vi.doMock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
       useFinanceBillingInvoicesForEncounter: () => ({ data: [], isLoading: false, isError: false }),
+      useFinanceBillingSubsidiesForEncounter: () => ({ data: [], isLoading: false, isError: false }),
     }));
     vi.doMock("@/hooks/queries/useFinancePayerOps", () => ({
       usePayerOpsPaymentIntentsBySource: () => ({ data: [], isLoading: false, isError: false }),

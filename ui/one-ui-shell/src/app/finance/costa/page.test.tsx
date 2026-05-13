@@ -133,6 +133,16 @@ vi.mock("@/hooks/queries/useServiceAccessDecisions", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
+  useFinanceBillingSubsidiesForEncounter: (): QueryShape<{ data: unknown[] }> => ({
+    data: {
+      data: [{ bill_id: "BILL-1", subsidy_amount: "10.00" }],
+    },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 describe("FinanceCostaPage", () => {
   it("renders the COSTA hub header and the canonical section titles", () => {
     render(<FinanceCostaPage />);
@@ -144,6 +154,7 @@ describe("FinanceCostaPage", () => {
     expect(screen.getByText("Cost estimates")).toBeInTheDocument();
     expect(screen.getByText("Charge sheets")).toBeInTheDocument();
     expect(screen.getByText("Service access decisions")).toBeInTheDocument();
+    expect(screen.getByText("Subsidies & exemptions")).toBeInTheDocument();
     expect(screen.getByText("Invoice & payment handoff (MusheX)")).toBeInTheDocument();
     expect(screen.getByText("Related finance surfaces")).toBeInTheDocument();
     expect(screen.getByText("Controlled actions")).toBeInTheDocument();
@@ -177,6 +188,10 @@ describe("FinanceCostaPage", () => {
     expect(
       within(decisionsCard as HTMLElement).getByText(/recorded for/),
     ).toBeInTheDocument();
+
+    const subsidiesCard = screen.getByRole("heading", { name: "Subsidies & exemptions" }).closest("section");
+    expect(subsidiesCard).not.toBeNull();
+    expect(within(subsidiesCard as HTMLElement).getByText(/subsidy row/)).toBeInTheDocument();
   });
 
   it("keeps encounter and patient context on every linked finance surface", () => {
@@ -247,6 +262,14 @@ describe("FinanceCostaPage — graceful unavailable states", () => {
         data: null,
       }),
     }));
+    vi.doMock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
+      useFinanceBillingSubsidiesForEncounter: () => ({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new Error("503 Service Unavailable"),
+      }),
+    }));
 
     const { default: ReimportedFinanceCostaPage } = await import("./page");
     render(<ReimportedFinanceCostaPage />);
@@ -256,5 +279,6 @@ describe("FinanceCostaPage — graceful unavailable states", () => {
     expect(screen.getByText(/Could not load tariff library from COSTA/)).toBeInTheDocument();
     expect(screen.getByText(/Could not load cost events from COSTA/)).toBeInTheDocument();
     expect(screen.getByText(/Could not load service-access decisions from COSTA/)).toBeInTheDocument();
+    expect(screen.getByText(/Could not load subsidy rows from COSTA/)).toBeInTheDocument();
   });
 });

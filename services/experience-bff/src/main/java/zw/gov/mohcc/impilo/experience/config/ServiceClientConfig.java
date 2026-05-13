@@ -240,7 +240,9 @@ public class ServiceClientConfig {
                 forwardHeader(inbound, request, CompanionHeaders.TEMPORARY_PROVIDER_PUBLIC_ID);
                 forwardHeader(inbound, request, CompanionHeaders.PATIENT_SHARE_CORRELATION_ID);
                 forwardHeader(inbound, request, CompanionHeaders.EXTERNAL_PROVIDER_TRUST_LEVEL);
-                forwardHeader(inbound, request, CompanionHeaders.STEP_UP_TOKEN);
+                // Keep forwarding step-up token even when older companion-header artifacts
+                // do not expose the constant yet.
+                forwardHeader(inbound, request, "X-Step-Up-Token");
             }
             request.getHeaders().set(CompanionHeaders.ACCESS_MODE, "INTERNAL");
             return execution.execute(request, body);

@@ -6,7 +6,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Created (Phase 7, first slice). Lists current deprecations and their gating evidence. |
+| Status | Active (Phase 7 follow-on). Ledger + telemetry definitions + parity audit + CI/file-growth guard in place. |
 | Companion | [`telemetry-signals.md`](telemetry-signals.md) — defines the telemetry signals each entry must satisfy before retirement. |
 | Predecessor audit | [`docs/audits/costa-mushex-experience-layer-wiring-audit.md`](../audits/costa-mushex-experience-layer-wiring-audit.md) (audit gaps G-3, G-6 in particular). |
 
@@ -49,7 +49,7 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | G-6 in [`costa-mushex-experience-layer-wiring-audit.md`](../audits/costa-mushex-experience-layer-wiring-audit.md) |
 | Canonical replacement | `ui/one-ui-shell` finance pages: `/finance/settlements`, `/finance/reconciliation`, `/finance/refunds`, `/finance/ledger`, `/finance/costa`, `/finance/mushex-platform` |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-finance-console/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI and no other repository depends on its artefacts. (c) All canonical replacement pages are at parity with the sidecar's last-shipped behaviour. |
-| Current evidence | Not collected yet — no per-route telemetry source has been wired to a dashboard the ledger can cite. See `telemetry-signals.md § SIDECAR_UI`. |
+| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
 | Blockers | (1) telemetry source missing; (2) parity audit against canonical pages has not been run as a fresh sweep since Stage 3.3. |
 
 ### RR-02 — `ui/mushex-ops-console` (sidecar UI)
@@ -61,7 +61,7 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | G-6 |
 | Canonical replacement | `ui/one-ui-shell` finance + admin pages, including `/finance/mushex-platform`, `/finance/payer-ops`, `/finance/reconciliation`, `/admin/audit/**`. |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-ops-console/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI. (c) Canonical replacement parity confirmed. |
-| Current evidence | Not collected yet — same telemetry signal as RR-01. |
+| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
 | Blockers | Same as RR-01. |
 
 ### RR-03 — `ui/mushex-payer-portal` (sidecar UI)
@@ -73,7 +73,7 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | G-6 |
 | Canonical replacement | `ui/one-ui-shell` finance pages: `/finance/payer-claims`, `/finance/payer-ops`, `/finance/refunds`. |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-payer-portal/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI. (c) Canonical replacement parity confirmed. |
-| Current evidence | Not collected yet — same telemetry signal as RR-01. |
+| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
 | Blockers | Same as RR-01. |
 
 ### RR-04 — `ui/experience` (legacy web shell — pre-`one-ui-shell`)
@@ -85,7 +85,7 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | Doctrine reference: `docs/doctrine/health-os-doctrine.md`. No active audit gap row, but every canonical page should now live in `one-ui-shell`. |
 | Canonical replacement | `ui/one-ui-shell` (entire shell). |
 | Retirement criteria | (a) No reverse imports from `ui/one-ui-shell` to `ui/experience`. (b) Telemetry confirms zero traffic to any `ui/experience` page in production for **30 consecutive days**. (c) Build artefacts are removed from any deployable target. |
-| Current evidence | Not collected. |
+| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
 | Blockers | (1) telemetry source missing; (2) explicit per-page parity walk-through has not been run. |
 
 ### RR-05 — `ui/ehr` (legacy clinical web shell — pre-`one-ui-shell`)
@@ -97,7 +97,7 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | Doctrine reference: `docs/doctrine/health-os-doctrine.md`. |
 | Canonical replacement | `ui/one-ui-shell` `/ehr/**` pages. |
 | Retirement criteria | Same shape as RR-04. |
-| Current evidence | Not collected. |
+| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
 | Blockers | Same as RR-04. |
 
 ### RR-06 — Legacy mobile-citizen wallet routes (wellness-proxy whitelist + `CitizenMyLifeController` wallet endpoints)
@@ -109,8 +109,8 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 | Audit gap | G-3 (retirement tail) |
 | Canonical replacement | `/internal/v1/wallet/me` and `/internal/v1/wallet/me/transactions` on the Experience BFF (wired into `apps/mobile/citizen-app/src/services/walletService.ts` in Stage 3.4B). |
 | Retirement criteria | (a) Mobile-citizen app analytics confirm zero calls to the legacy wellness-proxy wallet path **and** to the legacy `CitizenMyLifeController` wallet endpoints for **at least the duration of the slowest documented mobile-build adoption window** (typically 60 days, but the figure must come from the mobile rollout doctrine, not from this ledger). (b) The `walletService.ts` retirement test asserts no fallback to legacy paths. (c) Server-side BFF logs confirm no inbound traffic on the legacy paths. |
-| Current evidence | Stage 3.4B test [`walletService.legacyPath.test.ts`](../../apps/mobile/citizen-app/src/services/__tests__) (if present) asserts the new wallet plane is used; no production telemetry has been linked here. |
-| Blockers | (1) mobile-build adoption telemetry source not yet linked; (2) BFF-side inbound counters for the legacy paths not yet linked. |
+| Current evidence | Stage 3.4B mobile tests for canonical wallet-plane usage plus explicit metric instrumentation in Experience BFF (`impilo.legacy.route.requests`, `route_family=mobile_citizen_wallet`) added in Phase 7D. |
+| Blockers | (1) mobile-build adoption telemetry source not yet linked; (2) dashboard/query evidence snapshots for the new counter are not yet attached. |
 
 ### RR-07 — `costa-console` sidecar (if/when it is identified)
 
@@ -147,4 +147,6 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 - [`docs/doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md) — doctrine deferral table; rows aligned with G-3, G-6.
 - [`docs/architecture/vnext-component-catalog.md`](../architecture/vnext-component-catalog.md) — inline deprecation markers added in Phase 1.
 - [`telemetry-signals.md`](telemetry-signals.md) — defines the telemetry signals each ledger criterion depends on.
+- [`telemetry-query-recipes.md`](telemetry-query-recipes.md) — copy-ready query templates for `SIDECAR_UI` and `LEGACY_WEB_SHELL`.
+- [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md) — first parity sweep evidence for RR-01..RR-07.
 - The per-sidecar `DEPRECATED.md` files (`ui/mushex-finance-console`, `ui/mushex-ops-console`, `ui/mushex-payer-portal`, `ui/experience`, `ui/ehr`).

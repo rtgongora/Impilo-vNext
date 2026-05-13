@@ -23,6 +23,7 @@ import {
   ClipboardList,
   CreditCard,
   FileText,
+  HandCoins,
   Loader2,
   Receipt,
   Scale,
@@ -39,6 +40,7 @@ import {
   useCostaIntelInvoiceFromEstimate,
   useCostaIntelTariffLists,
 } from "@/hooks/queries/useCostaIntel";
+import { useFinanceBillingSubsidiesForEncounter } from "@/hooks/queries/useFinanceBillingWorkspace";
 import {
   useRegisterServiceAccessDecision,
   useServiceAccessDecisionsList,
@@ -48,6 +50,17 @@ interface RelatedLink {
   href: string;
   label: string;
   description: string;
+}
+
+function extractRows(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    if (Array.isArray(obj.data)) return obj.data;
+    if (Array.isArray(obj.items)) return obj.items;
+    if (Array.isArray(obj.content)) return obj.content;
+  }
+  return [];
 }
 
 const INVOICE_HANDOFF_LINKS: RelatedLink[] = [
@@ -137,6 +150,7 @@ export default function FinanceCostaPage() {
   const tariffsQ = useCostaIntelTariffLists();
   const costEventsQ = useCostaIntelCostEvents(encounterId, patientCpid);
   const decisionsQ = useServiceAccessDecisionsList(encounterId);
+  const subsidiesQ = useFinanceBillingSubsidiesForEncounter(encounterId ?? "", Boolean(encounterId));
   const registerDecisionM = useRegisterServiceAccessDecision();
   const issueInvoiceM = useCostaIntelInvoiceFromEstimate();
   const [decisionReason, setDecisionReason] = useState("");
@@ -174,6 +188,7 @@ export default function FinanceCostaPage() {
 
   const costEvents = costEventsQ.data ?? [];
   const decisions = decisionsQ.data ?? [];
+  const subsidies = extractRows(subsidiesQ.data);
 
   const actions = [
     encounterId && patientId
@@ -403,6 +418,49 @@ export default function FinanceCostaPage() {
                       </Link>
                     ) : null}
                   </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ── Subsidies / exemptions ─────────────────────────────── */}
+            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                  <HandCoins className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-sm font-semibold text-slate-900">Subsidies & exemptions</h2>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Read-only subsidy and write-off rows derived from COSTA billing lifecycle, scoped by encounter.
+                  </p>
+                  {!encounterId ? (
+                    <p className="mt-3 text-xs text-slate-500">
+                      Open this page with an encounter to view subsidy allocations and exemptions for that episode.
+                    </p>
+                  ) : subsidiesQ.isLoading ? (
+                    <p className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading subsidy rows…
+                    </p>
+                  ) : subsidiesQ.isError ? (
+                    <p className="mt-3 flex items-center gap-2 text-xs text-red-700">
+                      <AlertCircle className="h-3.5 w-3.5" /> Could not load subsidy rows from COSTA.
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-xs text-slate-700">
+                      <span className="font-medium">{subsidies.length}</span> subsidy row{subsidies.length === 1 ? "" : "s"} for
+                      encounter <span className="font-mono">{encounterId}</span>
+                    </p>
+                  )}
+                  {encounterId ? (
+                    <Link
+                      href={`/finance/costa/encounter/${encodeURIComponent(encounterId)}${
+                        handoffParams.toString() ? `?${handoffParams.toString()}` : ""
+                      }`}
+                      className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    >
+                      View subsidy timeline rows →
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </section>

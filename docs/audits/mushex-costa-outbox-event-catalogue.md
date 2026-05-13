@@ -65,6 +65,7 @@ A reviewer adding a new dedicated topic for any of the above must update both th
 | `INVOICE_ISSUED` | `costa.invoice.issued` | `INVOICE` | `invoiceId`, `billId`, `amount`, `issuedAt` | invoice issue path |
 | `PAYMENT_INTENT_CREATED` | `costa.payment.intent.created` | `INVOICE` | `invoiceId`, `intentId`, `requestedAmount` | `PaymentIntegrationService` |
 | `PAYMENT_STATUS_CHANGED` | `costa.payment.status_changed` | `INVOICE` | `invoiceId`, `intentId`, `oldStatus`, `newStatus` | `PaymentIntegrationService` |
+| `PAYMENT_CANCELLED` | `costa.payment.status_changed` | `PAYMENT` | `paymentId`, `billId`, `reason` | `PaymentIntegrationService#cancelPayment` |
 | `PAYMENT_ALLOCATED` | `costa.payment.allocated` | `INVOICE` | `invoiceId`, `paymentId`, `allocatedAmount` | `PaymentAllocationService` |
 | `CHARGE_CREATED` | `costa.charge.created` | `CHARGE` | `chargeId`, `billId`, `amount`, `tariffLineId` | `ChargeRecordService` |
 | `INVOICE_REFUND_APPLIED` | `costa.invoice.refund_applied` | `INVOICE` | `invoiceId`, `refundId`, `appliedAmount` | refund flow |
