@@ -563,3 +563,49 @@ The `LearningLegacyEmissionRetirementTest` unit test exercises both modes plus a
 - **Signed / regulator-verifiable credentials** — still the responsibility of `credential-verification-service`, untouched in Phase 6.
 
 
+## Native LMS completion increment (post-Phase 6 extension)
+
+Impilo Fundo is the native learning management, certification, in-service training, pre-service training and CPD support capability of Impilo vNext. It is designed to operate as a complete modern LMS at national scale, with its own catalogue, learning pathways, enrolment, progress tracking, assessments, certificates, learning records, analytics and workforce capability dashboards. External LMS platforms may be connected through optional adapters where useful, but Fundo must not depend on any external LMS to function.
+
+This increment extends the native LMS scope with:
+
+- learner dashboard aggregation (`/internal/v1/learning/v11/my-learning`)
+- enrolment start and lesson-open actions (`/enrolments/{id}/start`, `/lessons/{id}/open`)
+- assessment attempt retrieval (`GET /assessments/{id}/attempts`, `GET /attempts/{id}`)
+- trainer/supervisor report endpoints (`/reports/overview`, `/reports/course-completions`, `/reports/overdue-learning`, `/reports/assessment-performance`)
+- CPD evidence endpoints (`/cpd/evidence`, `/cpd/eligible-completions`)
+- One Experience learning routes for learner journey, assessment attempt UX, certificate UX, CPD evidence, reports, and authoring shell scaffolding.
+
+Standalone-native operation remains the default doctrine:
+
+- no new Moodle dependency is introduced;
+- Moodle adapter code remains optional/legacy and untouched by native learner-journey logic;
+- CPD endpoints expose evidence/eligibility only and do not duplicate the Varapi CPD authority ledger;
+- certificate issuance remains ordinary metadata (no signed credential issuance in this increment).
+
+Impilo Fundo now provides native LMS capability for catalogue, authoring, pathways, enrolment, progress, assessments, certificates, CPD evidence, learner records and supervisor reporting. Advanced mobile/offline support, rich content authoring, full council CPD workflows and signed credential issuance remain future phases.
+
+## Production-grade hardening increment
+
+The latest hardening increment closes the largest product-experience gaps without introducing any external LMS dependency:
+
+- Learner course-player behavior is now reinforced around enrolment detail and lesson pages (current lesson selection, previous/next navigation, lesson render by content type, progress updates, assessment prompts, and completion-aware certificate prompt).
+- Native assessment taking now supports clearer objective-question inputs (`MULTIPLE_CHOICE`, `TRUE_FALSE`), explicit manual-review treatment for non-objective responses, and attempt-history visibility.
+- Authoring surfaces are now functional forms (not empty shells) for course metadata + module/lesson creation, pathway metadata + ordered item authoring, and assessment metadata + question add/update.
+- Supervisor reporting pages now expose practical filters (`courseId`, `subjectType`, `status`, `limit`) and bounded result lists for safer operational usage.
+- Learner transcript is now surfaced in One UI (`/learning/record`) using the existing native learning-record endpoint.
+
+This still preserves all architecture boundaries:
+
+- no Moodle or external LMS dependency in native Fundo flows;
+- no expansion of Moodle adapter functionality;
+- no VARAPI CPD-ledger duplication (CPD remains evidence/eligibility only);
+- no credential-verification dependency for ordinary certificate metadata issuance.
+
+### Additional rollout-completion items implemented
+
+- **Mobile provider Fundo shell + offline-ready reads**: provider clinical tools now include a dedicated Fundo learning shell for my-learning snapshot, catalogue, course detail, lesson read/open, and lesson completion actions. Read paths use secure local cache fallback for offline continuity.
+- **Assessment moderation and manual marking**: native LMS now includes pending-review listing and manual review write APIs (`/assessments/{id}/pending-reviews`, `/attempts/{id}/manual-review`) with rubric/feedback persistence and reviewed-event emission.
+- **Richer lesson authoring**: lesson upsert supports `contentFormat` (`PLAIN_TEXT|MARKDOWN|STRUCTURED_BLOCKS`) and `contentBlocksJson`; One UI authoring forms now expose structured block JSON and rubric authoring fields.
+- **Operational rollout evidence pack**: production evidence checklist is now tracked in `docs/learning/PRODUCTION_ROLLOUT_EVIDENCE.md`, including UAT sign-off matrix, SLO targets, and required failure-mode drill records.
+- **CI Helm gate with real Helm binary**: CI workflow now installs Helm and enforces `helm template` rendering for default and minimal learning chart values before merge.

@@ -103,9 +103,11 @@ class RepoEventTypeContractTest {
                 Arguments.of("learning", "impilo.learning.course.completed.v1"),
                 Arguments.of("learning", "impilo.learning.enrolment.created.v1"),
                 Arguments.of("learning", "impilo.learning.enrolment.cancelled.v1"),
+                Arguments.of("learning", "impilo.learning.lesson.opened.v1"),
                 Arguments.of("learning", "impilo.learning.progress.started.v1"),
                 Arguments.of("learning", "impilo.learning.progress.completed.v1"),
                 Arguments.of("learning", "impilo.learning.assessment.attempt.submitted.v1"),
+                Arguments.of("learning", "impilo.learning.assessment.attempt.reviewed.v1"),
                 Arguments.of("learning", "impilo.learning.certificate.issued.v1")
         );
     }

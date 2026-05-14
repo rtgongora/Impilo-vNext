@@ -121,6 +121,32 @@ public class FundoEnrolmentService {
         return Optional.of(toView(e));
     }
 
+    @Transactional
+    public Optional<Map<String, Object>> start(UUID tenantId, UUID enrolmentId) {
+        Optional<EnrolmentEntity> row = enrolmentRepository.findByTenantIdAndId(tenantId, enrolmentId);
+        if (row.isEmpty()) return Optional.empty();
+        EnrolmentEntity e = row.get();
+        if ("CANCELLED".equals(e.getStatus()) || "EXPIRED".equals(e.getStatus())) {
+            return Optional.of(toView(e));
+        }
+        if ("ENROLLED".equals(e.getStatus())) {
+            e.setStatus("IN_PROGRESS");
+            enrolmentRepository.save(e);
+            outbox.append(
+                    "FundoEnrolment",
+                    e.getId().toString(),
+                    FundoNativeEventTypes.PROGRESS_STARTED,
+                    Map.of(
+                            "tenantId", e.getTenantId().toString(),
+                            "subjectType", e.getSubjectType(),
+                            "subjectId", e.getSubjectId(),
+                            "courseId", e.getCourseId().toString(),
+                            "enrolmentId", e.getId().toString(),
+                            "startedVia", "enrolment_start"));
+        }
+        return Optional.of(toView(e));
+    }
+
     public static Map<String, Object> toView(EnrolmentEntity e) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", e.getId().toString());

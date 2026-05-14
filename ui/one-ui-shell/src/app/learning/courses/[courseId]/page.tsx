@@ -6,6 +6,8 @@ import { ArrowLeft, BadgeCheck, BookOpenCheck, CheckCircle2, Clock, GraduationCa
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
+import { useCreateFundoEnrolment } from "@/hooks/queries/useFundoLms";
+import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 
 /**
  * Phase 6B — native Impilo Fundo course detail page. Renders the Phase 5B
@@ -16,6 +18,8 @@ export default function LearningCourseDetailPage() {
   const params = useParams<{ courseId: string }>();
   const courseId = typeof params?.courseId === "string" ? params.courseId : undefined;
   const { data, isLoading, isError } = useFundoCourseStructure(courseId);
+  const createEnrolment = useCreateFundoEnrolment();
+  const subject = useLearningSubject();
 
   const structure = data?.data?.structure;
   const titleText = structure?.title ?? "Impilo Fundo Course";
@@ -81,6 +85,24 @@ export default function LearningCourseDetailPage() {
               {structure.description ? (
                 <p className="mt-3 text-sm text-gray-700">{structure.description}</p>
               ) : null}
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() =>
+                    createEnrolment.mutate({
+                      courseId: structure.id,
+                      subjectType: subject.subjectType,
+                      subjectId: subject.subjectId,
+                      enrolmentType: "SELF",
+                    })
+                  }
+                  className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+                >
+                  Enrol / Continue
+                </button>
+                <Link href="/learning/my-learning" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+                  View my learning
+                </Link>
+              </div>
             </div>
 
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">

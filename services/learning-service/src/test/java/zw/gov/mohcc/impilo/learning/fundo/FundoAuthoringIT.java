@@ -140,10 +140,10 @@ class FundoAuthoringIT {
 
             authoring.createLesson(TENANT, moduleId,
                     new FundoAuthoringService.LessonUpsert(
-                            "Lesson 1", "TEXT", "body", null, 5, null, null, null));
+                            "Lesson 1", "TEXT", "body", null, "PLAIN_TEXT", null, 5, null, null, null));
             authoring.createLesson(TENANT, moduleId,
                     new FundoAuthoringService.LessonUpsert(
-                            "Lesson 2", "TEXT", "body 2", null, 5, null, null, null));
+                            "Lesson 2", "TEXT", "body 2", null, "PLAIN_TEXT", null, 5, null, null, null));
 
             // Publish the course so the structure read returns it.
             authoring.updateCourse(TENANT, courseId,
@@ -223,12 +223,12 @@ class FundoAuthoringIT {
             assertThat(authoring.addQuestion(TENANT, assessmentId,
                     new FundoAuthoringService.QuestionUpsert(
                             "TRUE_FALSE", "Native Fundo is standalone-capable.",
-                            "[\"true\",\"false\"]", "\"true\"", 1, 1)).isOk()).isTrue();
+                            "[\"true\",\"false\"]", "\"true\"", null, 1, 1)).isOk()).isTrue();
 
             FundoAuthoringService.AuthoringResult<Map<String, Object>> dup = authoring.addQuestion(
                     TENANT, assessmentId,
                     new FundoAuthoringService.QuestionUpsert(
-                            "TRUE_FALSE", "Question 2", null, null, 1, 1));
+                            "TRUE_FALSE", "Question 2", null, null, null, 1, 1));
             assertThat(dup.kind()).isEqualTo(FundoAuthoringService.AuthoringResult.Kind.CONFLICT);
         }
 

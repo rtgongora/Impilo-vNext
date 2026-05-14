@@ -98,6 +98,9 @@ public class FundoAssessmentService {
         attempt.setAttemptNo((int) existingAttempts + 1);
         attempt.setScore(result.score());
         attempt.setPassed(result.passed(assessment.getPassMark()));
+        attempt.setManualReviewStatus(result.requiresManualReview() ? "PENDING_MANUAL_REVIEW" : "AUTO_GRADED");
+        attempt.setManualReviewScore(result.score());
+        attempt.setManualReviewPassed(result.passed(assessment.getPassMark()));
         attempt.setSubmittedAt(OffsetDateTime.now());
         attemptRepository.save(attempt);
 
@@ -115,6 +118,50 @@ public class FundoAssessmentService {
                         "assessmentType", assessment.getAssessmentType()));
 
         return toAttemptView(attempt);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPendingManualReviews(UUID tenantId, UUID assessmentId, Integer limit) {
+        int max = Math.max(1, Math.min(limit == null ? 100 : limit, 500));
+        return attemptRepository
+                .findByTenantIdAndAssessmentIdAndManualReviewStatusOrderBySubmittedAtDesc(
+                        tenantId, assessmentId, "PENDING_MANUAL_REVIEW")
+                .stream()
+                .limit(max)
+                .map(FundoAssessmentService::toAttemptView)
+                .toList();
+    }
+
+    @Transactional
+    public Optional<Map<String, Object>> recordManualReview(
+            UUID tenantId, UUID attemptId, ManualReviewUpdate review) {
+        Optional<AssessmentAttemptEntity> row = attemptRepository.findByTenantIdAndId(tenantId, attemptId);
+        if (row.isEmpty()) return Optional.empty();
+        AssessmentAttemptEntity attempt = row.get();
+        attempt.setManualReviewStatus("REVIEWED");
+        if (review.score() != null) {
+            attempt.setManualReviewScore(review.score());
+            attempt.setScore(review.score());
+        }
+        if (review.passed() != null) {
+            attempt.setManualReviewPassed(review.passed());
+            attempt.setPassed(review.passed());
+        }
+        attempt.setReviewerId(review.reviewerId());
+        attempt.setReviewedAt(OffsetDateTime.now());
+        attempt.setRubricAppliedJson(review.rubricAppliedJson());
+        attempt.setFeedbackText(review.feedbackText());
+        attemptRepository.save(attempt);
+        outbox.append("FundoAssessmentAttempt", attempt.getId().toString(),
+                FundoNativeEventTypes.ASSESSMENT_ATTEMPT_REVIEWED,
+                Map.of(
+                        "tenantId", tenantId.toString(),
+                        "assessmentId", attempt.getAssessmentId().toString(),
+                        "attemptId", attempt.getId().toString(),
+                        "reviewerId", review.reviewerId() == null ? "unknown" : review.reviewerId(),
+                        "score", attempt.getScore() == null ? -1 : attempt.getScore(),
+                        "passed", attempt.getPassed() == null ? "PENDING" : attempt.getPassed().toString()));
+        return Optional.of(toAttemptView(attempt));
     }
 
     private ScoreResult scoreAttempt(List<AssessmentQuestionEntity> questions, Map<String, Object> answers) {
@@ -161,6 +208,22 @@ public class FundoAssessmentService {
                 .stream().map(FundoAssessmentService::toAttemptView).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> attemptsForAssessment(
+            UUID tenantId, UUID assessmentId, String subjectType, String subjectId) {
+        return attemptRepository
+                .findByAssessmentIdAndSubjectTypeAndSubjectIdOrderByAttemptNoDesc(assessmentId, subjectType, subjectId)
+                .stream()
+                .filter(a -> tenantId.equals(a.getTenantId()))
+                .map(FundoAssessmentService::toAttemptView)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Map<String, Object>> getAttempt(UUID tenantId, UUID attemptId) {
+        return attemptRepository.findByTenantIdAndId(tenantId, attemptId).map(FundoAssessmentService::toAttemptView);
+    }
+
     public static Map<String, Object> toAssessmentView(AssessmentEntity a) {
         Map<String, Object> v = new LinkedHashMap<>();
         v.put("id", a.getId().toString());
@@ -181,6 +244,7 @@ public class FundoAssessmentService {
         v.put("type", q.getQuestionType());
         v.put("prompt", q.getPrompt());
         v.put("optionsJson", q.getOptionsJson());
+        v.put("rubricJson", q.getRubricJson());
         v.put("sequence", q.getSequenceNo());
         v.put("points", q.getPoints());
         return v;
@@ -196,6 +260,13 @@ public class FundoAssessmentService {
         v.put("attemptNo", a.getAttemptNo());
         v.put("score", a.getScore());
         v.put("passed", a.getPassed());
+        v.put("manualReviewStatus", a.getManualReviewStatus());
+        v.put("manualReviewScore", a.getManualReviewScore());
+        v.put("manualReviewPassed", a.getManualReviewPassed());
+        v.put("reviewerId", a.getReviewerId());
+        v.put("reviewedAt", a.getReviewedAt() == null ? null : a.getReviewedAt().toString());
+        v.put("rubricAppliedJson", a.getRubricAppliedJson());
+        v.put("feedbackText", a.getFeedbackText());
         v.put("submittedAt", a.getSubmittedAt() == null ? null : a.getSubmittedAt().toString());
         return v;
     }
@@ -206,9 +277,16 @@ public class FundoAssessmentService {
             String subjectId,
             Map<String, Object> answers) {}
 
-    private record ScoreResult(Integer score, boolean objectiveOnly) {
-        static ScoreResult pending() { return new ScoreResult(null, false); }
-        static ScoreResult scored(int percent) { return new ScoreResult(percent, true); }
+    public record ManualReviewUpdate(
+            Integer score,
+            Boolean passed,
+            String reviewerId,
+            String rubricAppliedJson,
+            String feedbackText) {}
+
+    private record ScoreResult(Integer score, boolean objectiveOnly, boolean requiresManualReview) {
+        static ScoreResult pending() { return new ScoreResult(null, false, true); }
+        static ScoreResult scored(int percent) { return new ScoreResult(percent, true, false); }
         Boolean passed(int passMark) {
             if (score == null || !objectiveOnly) return null;
             return score >= passMark;

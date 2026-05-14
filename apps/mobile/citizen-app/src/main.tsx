@@ -60,9 +60,14 @@ import * as Crypto from "expo-crypto";
       
       const bytes = new Uint8Array(data);
 
-      // 1. Prefer digestBufferAsync (returns ArrayBuffer)
-      if (typeof Crypto.digestBufferAsync === 'function') {
-        return await Crypto.digestBufferAsync(Crypto.CryptoDigestAlgorithm.SHA256, bytes);
+      // 1. Prefer digestBufferAsync (returns ArrayBuffer) when available at runtime.
+      const digestBufferAsync = (
+        Crypto as unknown as {
+          digestBufferAsync?: (algo: unknown, data: Uint8Array) => Promise<ArrayBuffer>;
+        }
+      ).digestBufferAsync;
+      if (typeof digestBufferAsync === "function") {
+        return await digestBufferAsync(Crypto.CryptoDigestAlgorithm.SHA256, bytes);
       }
       
       // 2. Fallback to digestAsync/digestStringAsync (returns hex string)

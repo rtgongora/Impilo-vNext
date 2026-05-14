@@ -115,7 +115,7 @@ public class FundoAuthoringController {
         }
         return respond("lesson", authoring.updateLesson(tenantId, lid,
                 body == null ? new FundoAuthoringService.LessonUpsert(
-                        null, null, null, null, null, null, null, null) : body));
+                        null, null, null, null, null, null, null, null, null, null) : body));
     }
 
     // ── Pathway ───────────────────────────────────────────────
@@ -188,6 +188,20 @@ public class FundoAuthoringController {
             return FundoV11Support.notFound("ASSESSMENT_NOT_FOUND", "Assessment not found");
         }
         return respond("question", authoring.addQuestion(tenantId, aid, body));
+    }
+
+    @PutMapping("/assessments/{assessmentId}/questions/{questionId}")
+    public ResponseEntity<Map<String, Object>> updateQuestion(
+            @PathVariable String assessmentId,
+            @PathVariable String questionId,
+            @RequestBody(required = false) FundoAuthoringService.QuestionUpsert body) {
+        UUID tenantId = currentTenant();
+        UUID aid = FundoV11Support.tryParseUuid(assessmentId);
+        UUID qid = FundoV11Support.tryParseUuid(questionId);
+        if (tenantId == null || aid == null || qid == null) {
+            return FundoV11Support.notFound("QUESTION_NOT_FOUND", "Question not found");
+        }
+        return respond("question", authoring.updateQuestion(tenantId, aid, qid, body));
     }
 
     // ── helpers ──────────────────────────────────────────────

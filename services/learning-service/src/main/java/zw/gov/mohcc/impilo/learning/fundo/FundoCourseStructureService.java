@@ -72,6 +72,8 @@ public class FundoCourseStructureService {
         v.put("contentType", l.getContentType());
         v.put("contentBody", l.getContentBody());
         v.put("contentRef", l.getContentRef());
+        v.put("contentFormat", l.getContentFormat());
+        v.put("contentBlocksJson", l.getContentBlocksJson());
         v.put("estimatedDurationMinutes", l.getEstimatedDurationMinutes());
         v.put("sequence", l.getSequenceNo());
         v.put("required", l.isRequired());

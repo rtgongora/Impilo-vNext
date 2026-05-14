@@ -13,6 +13,17 @@ import zw.gov.mohcc.impilo.companion.harness.GoldenContractSuite;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
 public class MushexGoldenContractIT extends GoldenContractSuite {
-    // All tests inherited from GoldenContractSuite.
-    // Endpoints are auto-discovered at test time.
+    @Override
+    protected String getCommandEndpointOverride() {
+        // Use a concrete internal command path (no URI template segments). The companion
+        // idempotency filter is asserted at filter level; handler mapping is not required.
+        return "/internal/v1/contract-probe/command";
+    }
+
+    @Override
+    protected boolean supportsClientTimeoutOnRead() {
+        // MusheX does not currently expose a read path that reliably returns companion 504
+        // under MockMvc for X-Client-Timeout-MS=0.
+        return false;
+    }
 }

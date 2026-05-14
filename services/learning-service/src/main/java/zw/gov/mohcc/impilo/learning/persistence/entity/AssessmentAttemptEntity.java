@@ -49,6 +49,27 @@ public class AssessmentAttemptEntity {
     @Column(name = "submitted_at")
     private OffsetDateTime submittedAt;
 
+    @Column(name = "manual_review_status", nullable = false, length = 32)
+    private String manualReviewStatus = "PENDING_AUTO";
+
+    @Column(name = "manual_review_score")
+    private Integer manualReviewScore;
+
+    @Column(name = "manual_review_passed")
+    private Boolean manualReviewPassed;
+
+    @Column(name = "reviewer_id", length = 255)
+    private String reviewerId;
+
+    @Column(name = "reviewed_at")
+    private OffsetDateTime reviewedAt;
+
+    @Column(name = "rubric_applied_json", columnDefinition = "TEXT")
+    private String rubricAppliedJson;
+
+    @Column(name = "feedback_text", columnDefinition = "TEXT")
+    private String feedbackText;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -78,5 +99,19 @@ public class AssessmentAttemptEntity {
     public void setPassed(Boolean passed) { this.passed = passed; }
     public OffsetDateTime getSubmittedAt() { return submittedAt; }
     public void setSubmittedAt(OffsetDateTime submittedAt) { this.submittedAt = submittedAt; }
+    public String getManualReviewStatus() { return manualReviewStatus; }
+    public void setManualReviewStatus(String manualReviewStatus) { this.manualReviewStatus = manualReviewStatus; }
+    public Integer getManualReviewScore() { return manualReviewScore; }
+    public void setManualReviewScore(Integer manualReviewScore) { this.manualReviewScore = manualReviewScore; }
+    public Boolean getManualReviewPassed() { return manualReviewPassed; }
+    public void setManualReviewPassed(Boolean manualReviewPassed) { this.manualReviewPassed = manualReviewPassed; }
+    public String getReviewerId() { return reviewerId; }
+    public void setReviewerId(String reviewerId) { this.reviewerId = reviewerId; }
+    public OffsetDateTime getReviewedAt() { return reviewedAt; }
+    public void setReviewedAt(OffsetDateTime reviewedAt) { this.reviewedAt = reviewedAt; }
+    public String getRubricAppliedJson() { return rubricAppliedJson; }
+    public void setRubricAppliedJson(String rubricAppliedJson) { this.rubricAppliedJson = rubricAppliedJson; }
+    public String getFeedbackText() { return feedbackText; }
+    public void setFeedbackText(String feedbackText) { this.feedbackText = feedbackText; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

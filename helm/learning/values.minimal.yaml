@@ -35,8 +35,9 @@ env:
 
   # ── Native Fundo APIs (always enabled) ────────────────────────────
   # The native v1.1 Fundo LMS surface
-  # (/internal/v1/learning/v11/catalog, /pathways, /enrolments, /progress,
-  # /assessments/*, /certificates, /subjects/{type}/{id}/record) is
+  # (/internal/v1/learning/v11/catalog, /my-learning, /pathways, /enrolments,
+  # /lessons/*/open, /progress, /assessments/*, /certificates, /cpd/*,
+  # /reports/*, /subjects/{type}/{id}/record) is
   # always active when the service is running — there is no feature flag
   # to disable it because it is the native runtime of Fundo.
 

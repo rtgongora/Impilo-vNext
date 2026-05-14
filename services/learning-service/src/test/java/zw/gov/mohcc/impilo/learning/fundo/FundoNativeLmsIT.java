@@ -76,6 +76,8 @@ class FundoNativeLmsIT {
     @Autowired private FundoAssessmentService assessmentService;
     @Autowired private FundoCertificateService certificateService;
     @Autowired private FundoLearningRecordService recordService;
+    @Autowired private FundoLearnerJourneyService learnerJourneyService;
+    @Autowired private FundoReportService reportService;
 
     /**
      * The standalone-mode guarantee: {@link MoodleWebServiceClient} is a
@@ -309,6 +311,15 @@ class FundoNativeLmsIT {
             assertThat(list).hasSize(2);
         }
 
+        @Test
+        @DisplayName("Start transitions ENROLLED to IN_PROGRESS")
+        void startTransition() {
+            Map<String, Object> created = enrolmentService.create(req(courseA, "USER-START"));
+            UUID id = UUID.fromString((String) created.get("id"));
+            Map<String, Object> started = enrolmentService.start(TENANT, id).orElseThrow();
+            assertThat(started.get("status")).isEqualTo("IN_PROGRESS");
+        }
+
         private FundoEnrolmentService.EnrolmentRequest req(CourseEntity course, String subject) {
             return new FundoEnrolmentService.EnrolmentRequest(
                     TENANT, "PROVIDER", subject, course.getId(), null, "SELF", null, null);
@@ -346,6 +357,17 @@ class FundoNativeLmsIT {
             assertThat(eventsOfType(FundoNativeEventTypes.COURSE_COMPLETED)).hasSize(1);
             Map<String, Object> after = enrolmentService.get(TENANT, enrolmentId).orElseThrow();
             assertThat(after.get("status")).isEqualTo("COMPLETED");
+        }
+
+        @Test
+        @DisplayName("Opening lesson records lesson-opened event and last access")
+        void openLessonTracksAccess() {
+            Map<String, Object> enrol = enrolmentService.create(req(courseA, "PROG-OPEN"));
+            UUID enrolmentId = UUID.fromString((String) enrol.get("id"));
+            Map<String, Object> progress = progressService.openLesson(TENANT, lessonA11.getId(), enrolmentId);
+            assertThat(progress.get("lessonId")).isEqualTo(lessonA11.getId().toString());
+            assertThat(progress.get("lastAccessedAt")).isNotNull();
+            assertThat(eventsOfType(FundoNativeEventTypes.LESSON_OPENED)).hasSize(1);
         }
 
         private FundoEnrolmentService.EnrolmentRequest req(CourseEntity course, String subject) {
@@ -454,6 +476,33 @@ class FundoNativeLmsIT {
         private FundoEnrolmentService.EnrolmentRequest reqProvider(CourseEntity course, String subject) {
             return new FundoEnrolmentService.EnrolmentRequest(
                     TENANT, "PROVIDER", subject, course.getId(), null, "SELF", null, null);
+        }
+    }
+
+    @Nested
+    @DisplayName("Learner dashboard and reports")
+    class DashboardReports {
+        @Test
+        @DisplayName("My-learning aggregates enrolled, recommended, and CPD evidence sections")
+        void myLearningAggregate() {
+            enrolmentService.create(new FundoEnrolmentService.EnrolmentRequest(
+                    TENANT, "PROVIDER", "DASH-1", courseA.getId(), null, "SELF", null, null));
+            Map<String, Object> dashboard = learnerJourneyService.myLearning(TENANT, "PROVIDER", "DASH-1");
+            List<Map<String, Object>> enrolled = cast(dashboard.get("enrolled"));
+            List<Map<String, Object>> recommended = cast(dashboard.get("recommended"));
+            assertThat(enrolled).isNotEmpty();
+            assertThat(recommended).isNotEmpty();
+            assertThat(dashboard).containsKeys("certificates", "cpdEligibleCompletions");
+        }
+
+        @Test
+        @DisplayName("Overview and assessment reports return native rollups")
+        void reportsReturnData() {
+            Map<String, Object> overview = reportService.overview(TENANT);
+            assertThat(overview).containsKeys("publishedCourses", "totalEnrolments", "completed");
+            Map<String, Object> assessmentPerf = reportService.assessmentPerformance(TENANT, courseA.getId(), null, 100);
+            List<Map<String, Object>> items = cast(assessmentPerf.get("items"));
+            assertThat(items).isNotNull();
         }
     }
 

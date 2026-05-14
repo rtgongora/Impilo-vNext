@@ -20,18 +20,29 @@ import {
  * unavailable (empty state, no hard error surfaced to the user).
  */
 export default function LearningCataloguePage() {
+  const [search, setSearch] = useState<string>("");
+  const [status, setStatus] = useState<string>("PUBLISHED");
   const [category, setCategory] = useState<string>("");
+  const [level, setLevel] = useState<string>("");
+  const [language, setLanguage] = useState<string>("");
   const [cpdOnly, setCpdOnly] = useState<boolean>(false);
   const [mandatoryOnly, setMandatoryOnly] = useState<boolean>(false);
 
   const { data, isLoading, isError } = useFundoCatalog({
+    status: status || undefined,
     category: category || undefined,
+    level: level || undefined,
+    language: language || undefined,
     cpdEligible: cpdOnly || undefined,
     mandatory: mandatoryOnly || undefined,
     limit: 50,
   });
 
-  const items: FundoCourseSummary[] = data?.data?.items ?? [];
+  const items: FundoCourseSummary[] = (data?.data?.items ?? []).filter((c) => {
+    if (!search) return true;
+    const target = `${c.code} ${c.title} ${c.description ?? ""}`.toLowerCase();
+    return target.includes(search.toLowerCase());
+  });
 
   return (
     <AppLayout>
@@ -51,6 +62,30 @@ export default function LearningCataloguePage() {
 
         <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-4">
           <label className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="font-medium text-gray-800">Search</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search title/code"
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              aria-label="Search catalogue"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="font-medium text-gray-800">Status</span>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              aria-label="Filter by status"
+            >
+              <option value="PUBLISHED">PUBLISHED</option>
+              <option value="DRAFT">DRAFT</option>
+              <option value="ARCHIVED">ARCHIVED</option>
+            </select>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
             <span className="font-medium text-gray-800">Category</span>
             <input
               type="text"
@@ -59,6 +94,28 @@ export default function LearningCataloguePage() {
               placeholder="e.g. EHR_BASICS"
               className="rounded border border-gray-300 px-2 py-1 text-sm"
               aria-label="Filter by category"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="font-medium text-gray-800">Level</span>
+            <input
+              type="text"
+              value={level}
+              onChange={(e) => setLevel(e.target.value)}
+              placeholder="e.g. INTRODUCTORY"
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              aria-label="Filter by level"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="font-medium text-gray-800">Language</span>
+            <input
+              type="text"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              placeholder="e.g. en"
+              className="rounded border border-gray-300 px-2 py-1 text-sm"
+              aria-label="Filter by language"
             />
           </label>
           <label className="inline-flex items-center gap-2 text-sm text-gray-700">

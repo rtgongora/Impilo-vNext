@@ -102,6 +102,33 @@ jobs:
             docs/reports/completeness-report.md
           retention-days: 14
 
+  learning-rollout-readiness:
+    name: Learning rollout readiness gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
+
+      - name: Helm render validation (learning chart)
+        run: |
+          helm template helm/learning
+          helm template helm/learning -f helm/learning/values.minimal.yaml
+
+      - name: Run learning OpenAPI + rollout evidence checks
+        working-directory: scripts/completeness
+        run: |
+          npm ci
+          npm run lint-learning-openapi-local
+          npm run check-lms-rollout-evidence
+
   parity-matrix-check:
     name: Parity matrix up-to-date
     runs-on: ubuntu-latest

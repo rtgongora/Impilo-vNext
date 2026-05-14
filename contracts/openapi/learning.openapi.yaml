@@ -733,6 +733,61 @@ paths:
           description: Enrolment not COMPLETED
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
+  /internal/v1/learning/v11/my-learning:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Native learner dashboard aggregate
+      operationId: getFundoMyLearning
+      parameters:
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Learner dashboard sections (enrolled/in-progress/completed/overdue/recommended/pathways/certificates/CPD evidence)
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/enrolments/{enrolmentId}/start:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Mark an enrolment started / in-progress
+      operationId: startFundoEnrolment
+      parameters:
+        - { name: enrolmentId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Enrolment started (or already active)
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Enrolment not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/lessons/{lessonId}/open:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Open a lesson and record access timestamp
+      operationId: openFundoLesson
+      parameters:
+        - { name: lessonId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enrolmentId]
+              properties:
+                enrolmentId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Lesson access recorded
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '400':
+          description: Invalid input
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Enrolment not active
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
   /internal/v1/learning/v11/progress:
     post:
       tags: [FundoNativeLMS]
@@ -861,6 +916,30 @@ paths:
           description: Question sequence already used (`QUESTION_SEQUENCE_TAKEN`)
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
+  /internal/v1/learning/v11/assessments/{assessmentId}/questions/{questionId}:
+    put:
+      tags: [FundoNativeLMS]
+      summary: Update a native assessment question
+      operationId: updateFundoAssessmentQuestion
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FundoQuestionUpsert' }
+      responses:
+        '200':
+          description: Question updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Assessment or question not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: Question sequence already used
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
   /internal/v1/learning/v11/assessments/{assessmentId}/attempts:
     post:
       tags: [FundoNativeLMS]
@@ -898,6 +977,73 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '409':
           description: Maximum attempts reached
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [FundoNativeLMS]
+      summary: List attempts for assessment and subject
+      operationId: listFundoAssessmentAttempts
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Attempt list
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/attempts/{attemptId}:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Get one native assessment attempt
+      operationId: getFundoAssessmentAttempt
+      parameters:
+        - { name: attemptId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Attempt detail
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Attempt not found
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /internal/v1/learning/v11/assessments/{assessmentId}/pending-reviews:
+    get:
+      tags: [FundoNativeLMS]
+      summary: List attempts requiring manual marking/moderation
+      operationId: listFundoAssessmentPendingReviews
+      parameters:
+        - { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200':
+          description: Pending manual-review attempts
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/attempts/{attemptId}/manual-review:
+    post:
+      tags: [FundoNativeLMS]
+      summary: Apply manual review score/pass/fail with rubric evidence
+      operationId: reviewFundoAssessmentAttempt
+      parameters:
+        - { name: attemptId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score: { type: integer, nullable: true }
+                passed: { type: boolean, nullable: true }
+                reviewerId: { type: string, nullable: true }
+                rubricAppliedJson: { type: string, nullable: true }
+                feedbackText: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Attempt manual review persisted
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+        '404':
+          description: Attempt not found
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
   /internal/v1/learning/v11/certificates:
@@ -947,6 +1093,86 @@ paths:
       responses:
         '200':
           description: Cohort completion roll-up
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/reports/overview:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Trainer/supervisor overview roll-up
+      operationId: getFundoReportOverview
+      responses:
+        '200':
+          description: Overview metrics
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/reports/course-completions:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Course completion report
+      operationId: getFundoCourseCompletionsReport
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200':
+          description: Course completion report
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/reports/overdue-learning:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Overdue learning report
+      operationId: getFundoOverdueLearningReport
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: status, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200':
+          description: Overdue enrolment rows
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/reports/assessment-performance:
+    get:
+      tags: [FundoNativeLMS]
+      summary: Assessment performance report
+      operationId: getFundoAssessmentPerformanceReport
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: subjectType, in: query, required: false, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200':
+          description: Attempt volume, pass-rate, and scoring indicators
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/cpd/evidence:
+    get:
+      tags: [FundoNativeLMS]
+      summary: CPD evidence surface (not CPD authority ledger)
+      operationId: getFundoCpdEvidence
+      parameters:
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: CPD-eligible completion evidence
+          content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
+
+  /internal/v1/learning/v11/cpd/eligible-completions:
+    get:
+      tags: [FundoNativeLMS]
+      summary: CPD-eligible completion rows
+      operationId: getFundoCpdEligibleCompletions
+      parameters:
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: CPD-eligible completion rows
           content: { application/json: { schema: { $ref: '#/components/schemas/ApiEnvelope_Map' } } }
 
   /internal/v1/learning/v11/subjects/{subjectType}/{subjectId}/record:
@@ -1381,6 +1607,8 @@ components:
         contentType: { type: string, nullable: true, description: "Required on create. TEXT | VIDEO | DOCUMENT | LINK | INTERACTIVE | PRACTICAL_TASK" }
         contentBody: { type: string, nullable: true }
         contentRef: { type: string, nullable: true }
+        contentFormat: { type: string, nullable: true, description: "PLAIN_TEXT | MARKDOWN | STRUCTURED_BLOCKS" }
+        contentBlocksJson: { type: string, nullable: true, description: "Structured block content JSON for richer authoring." }
         estimatedDurationMinutes: { type: integer, nullable: true }
         sequence: { type: integer, nullable: true }
         required: { type: boolean, nullable: true }
@@ -1426,5 +1654,6 @@ components:
         prompt: { type: string }
         optionsJson: { type: string, nullable: true }
         correctAnswerJson: { type: string, nullable: true }
+        rubricJson: { type: string, nullable: true, description: "Rubric criteria for manual marking/moderation." }
         sequence: { type: integer, nullable: true, description: "Auto-assigned when omitted" }
         points: { type: integer, nullable: true, default: 1 }

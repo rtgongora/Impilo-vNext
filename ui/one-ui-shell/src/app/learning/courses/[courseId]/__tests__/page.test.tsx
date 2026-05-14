@@ -81,6 +81,14 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
   useFundoCourseStructure: () => structureState,
 }));
 
+vi.mock("@/hooks/queries/useFundoLms", () => ({
+  useCreateFundoEnrolment: () => ({ mutate: vi.fn() }),
+}));
+
+vi.mock("@/components/learning/LearningSubjectPicker", () => ({
+  useLearningSubject: () => ({ subjectType: "PROVIDER", subjectId: "SUBJECT-1" }),
+}));
+
 function setState(state: Partial<typeof structureState>) {
   Object.assign(structureState, state);
 }

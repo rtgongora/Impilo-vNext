@@ -436,6 +436,33 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/learning/catalog", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Catalogue", navLabel: "Catalogue", navZone: "professional" },
   // Phase 6B (May 2026) — native course-detail surface backed by Phase 5B /v11/courses/{id}/structure.
   { path: "/learning/courses/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Course", navLabel: "Course" },
+  { path: "/learning/my-learning", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Learning", navLabel: "My Learning", navZone: "professional" },
+  { path: "/learning/enrolments/[enrolmentId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Enrolment Player", navLabel: "Enrolment" },
+  { path: "/learning/enrolments/[enrolmentId]/lessons/[lessonId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Lesson Player", navLabel: "Lesson" },
+  { path: "/learning/pathways", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Pathways", navLabel: "Pathways", navZone: "professional" },
+  { path: "/learning/pathways/[pathwayId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Pathway Detail", navLabel: "Pathway" },
+  { path: "/learning/record", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Record", navLabel: "Transcript", navZone: "professional" },
+  { path: "/learning/assessments/[assessmentId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment", navLabel: "Assessment" },
+  { path: "/learning/assessments/[assessmentId]/attempt", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment Attempt", navLabel: "Attempt" },
+  { path: "/learning/attempts/[attemptId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Attempt Result", navLabel: "Attempt Result" },
+  { path: "/learning/certificates", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Certificates", navLabel: "Certificates", navZone: "professional" },
+  { path: "/learning/certificates/[certificateId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Certificate Detail", navLabel: "Certificate" },
+  { path: "/learning/cpd", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CPD Evidence", navLabel: "CPD Evidence", navZone: "professional" },
+  { path: "/learning/reports", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Reports", navLabel: "Reports", navZone: "professional" },
+  { path: "/learning/reports/cohorts", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Cohort Report", navLabel: "Cohorts" },
+  { path: "/learning/reports/courses", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Course Report", navLabel: "Courses" },
+  { path: "/learning/reports/overdue", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Overdue Learning", navLabel: "Overdue" },
+  { path: "/learning/reports/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment Report", navLabel: "Assessments" },
+  { path: "/learning/admin", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Fundo Admin", navLabel: "Fundo Admin", navZone: "professional" },
+  { path: "/learning/admin/courses", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Courses", navLabel: "Admin Courses" },
+  { path: "/learning/admin/courses/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Course", navLabel: "New Course" },
+  { path: "/learning/admin/courses/[courseId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Course", navLabel: "Edit Course" },
+  { path: "/learning/admin/pathways", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Pathways", navLabel: "Admin Pathways" },
+  { path: "/learning/admin/pathways/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Pathway", navLabel: "New Pathway" },
+  { path: "/learning/admin/pathways/[pathwayId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Pathway", navLabel: "Edit Pathway" },
+  { path: "/learning/admin/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Assessments", navLabel: "Admin Assessments" },
+  { path: "/learning/admin/assessments/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Assessment", navLabel: "New Assessment" },
+  { path: "/learning/admin/assessments/[assessmentId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Assessment", navLabel: "Edit Assessment" },
 ];
 
 // Total route count assertion.
@@ -465,7 +492,7 @@ export const ROUTES: RouteDefinition[] = [
 // New total is 276.
 // Additional upstream route registrations on this branch increase the current
 // canonical total to 278.
-export const EXPECTED_ROUTE_COUNT = 278;
+export const EXPECTED_ROUTE_COUNT = 317;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

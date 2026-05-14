@@ -22,9 +22,11 @@ public final class FundoNativeEventTypes {
     public static final String COURSE_PUBLISHED                = "impilo.learning.course.published.v1";
     public static final String ENROLMENT_CREATED               = "impilo.learning.enrolment.created.v1";
     public static final String ENROLMENT_CANCELLED             = "impilo.learning.enrolment.cancelled.v1";
+    public static final String LESSON_OPENED                   = "impilo.learning.lesson.opened.v1";
     public static final String PROGRESS_STARTED                = "impilo.learning.progress.started.v1";
     public static final String PROGRESS_COMPLETED              = "impilo.learning.progress.completed.v1";
     public static final String ASSESSMENT_ATTEMPT_SUBMITTED    = "impilo.learning.assessment.attempt.submitted.v1";
+    public static final String ASSESSMENT_ATTEMPT_REVIEWED     = "impilo.learning.assessment.attempt.reviewed.v1";
     public static final String CERTIFICATE_ISSUED             = "impilo.learning.certificate.issued.v1";
     public static final String COURSE_COMPLETED               = "impilo.learning.course.completed.v1";
 }

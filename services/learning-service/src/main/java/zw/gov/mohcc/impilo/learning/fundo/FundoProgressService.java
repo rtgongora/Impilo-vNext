@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.learning.persistence.entity.CourseLessonEntity;
@@ -109,6 +110,10 @@ public class FundoProgressService {
             emit(FundoNativeEventTypes.PROGRESS_COMPLETED, row, enrolment, "COMPLETED");
         }
 
+        if (update.lessonId() != null) {
+            reconcileAggregateCompletion(tenantId, enrolment, now);
+        }
+
         boolean enrolmentChanged = false;
         if ("STARTED".equals(row.getStatus()) && "ENROLLED".equals(enrolment.getStatus())) {
             enrolment.setStatus("IN_PROGRESS");
@@ -146,6 +151,115 @@ public class FundoProgressService {
     public List<Map<String, Object>> listForSubject(UUID tenantId, String subjectType, String subjectId) {
         return progressRepository.findByTenantIdAndSubjectTypeAndSubjectId(tenantId, subjectType, subjectId)
                 .stream().map(FundoProgressService::toView).toList();
+    }
+
+    @Transactional
+    public Map<String, Object> openLesson(UUID tenantId, UUID lessonId, UUID enrolmentId) {
+        if (enrolmentId == null) {
+            throw new IllegalArgumentException("enrolment_required");
+        }
+        EnrolmentEntity enrolment = enrolmentRepository
+                .findByTenantIdAndId(tenantId, enrolmentId)
+                .orElseThrow(() -> new IllegalArgumentException("enrolment_not_found"));
+        if ("CANCELLED".equals(enrolment.getStatus()) || "EXPIRED".equals(enrolment.getStatus())) {
+            throw new IllegalStateException("enrolment_not_active");
+        }
+        CourseLessonEntity lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("lesson_not_found"));
+
+        CourseProgressEntity row = progressRepository
+                .findByEnrolmentIdAndLessonId(enrolment.getId(), lessonId)
+                .orElseGet(() -> {
+                    CourseProgressEntity p = newRow(enrolment, tenantId);
+                    p.setLessonId(lessonId);
+                    p.setModuleId(lesson.getModuleId());
+                    p.setProgressPercent(0);
+                    return p;
+                });
+        OffsetDateTime now = OffsetDateTime.now();
+        if (row.getStartedAt() == null) {
+            row.setStartedAt(now);
+            row.setStatus("STARTED");
+            emit(FundoNativeEventTypes.PROGRESS_STARTED, row, enrolment, "STARTED");
+        }
+        row.setLastAccessedAt(now);
+        progressRepository.save(row);
+
+        if ("ENROLLED".equals(enrolment.getStatus())) {
+            enrolment.setStatus("IN_PROGRESS");
+            enrolmentRepository.save(enrolment);
+        }
+
+        outbox.append(
+                "FundoLesson",
+                lessonId.toString(),
+                FundoNativeEventTypes.LESSON_OPENED,
+                Map.of(
+                        "tenantId", tenantId.toString(),
+                        "courseId", enrolment.getCourseId().toString(),
+                        "enrolmentId", enrolment.getId().toString(),
+                        "lessonId", lessonId.toString(),
+                        "moduleId", lesson.getModuleId().toString(),
+                        "subjectType", enrolment.getSubjectType(),
+                        "subjectId", enrolment.getSubjectId()));
+        reconcileAggregateCompletion(tenantId, enrolment, now);
+        return toView(row);
+    }
+
+    private void reconcileAggregateCompletion(UUID tenantId, EnrolmentEntity enrolment, OffsetDateTime now) {
+        List<CourseModuleEntity> modules = moduleRepository.findByCourseIdOrderBySequenceNoAsc(enrolment.getCourseId());
+        if (modules.isEmpty()) return;
+        List<UUID> moduleIds = modules.stream().map(CourseModuleEntity::getId).toList();
+        List<CourseLessonEntity> requiredLessons = lessonRepository
+                .findByModuleIdInOrderBySequenceNoAsc(moduleIds)
+                .stream()
+                .filter(CourseLessonEntity::isRequired)
+                .collect(Collectors.toList());
+        if (requiredLessons.isEmpty()) return;
+
+        int completed = 0;
+        for (CourseLessonEntity lesson : requiredLessons) {
+            Optional<CourseProgressEntity> row = progressRepository.findByEnrolmentIdAndLessonId(enrolment.getId(), lesson.getId());
+            if (row.isPresent() && "COMPLETED".equals(row.get().getStatus())) {
+                completed++;
+            }
+        }
+        int percent = (int) Math.round((completed * 100.0) / requiredLessons.size());
+        CourseProgressEntity aggregate = progressRepository
+                .findByEnrolmentIdAndModuleIdIsNullAndLessonIdIsNull(enrolment.getId())
+                .orElseGet(() -> newRow(enrolment, tenantId));
+        String previousStatus = aggregate.getStatus();
+        if (aggregate.getStartedAt() == null && percent > 0) {
+            aggregate.setStartedAt(now);
+        }
+        aggregate.setLastAccessedAt(now);
+        aggregate.setProgressPercent(percent);
+        if (percent >= 100) {
+            aggregate.setStatus("COMPLETED");
+            if (aggregate.getCompletedAt() == null) aggregate.setCompletedAt(now);
+        } else if (percent > 0) {
+            aggregate.setStatus("STARTED");
+        }
+        progressRepository.save(aggregate);
+        if (!"STARTED".equals(previousStatus) && "STARTED".equals(aggregate.getStatus())) {
+            emit(FundoNativeEventTypes.PROGRESS_STARTED, aggregate, enrolment, "STARTED");
+        }
+        if (!"COMPLETED".equals(previousStatus) && "COMPLETED".equals(aggregate.getStatus())) {
+            emit(FundoNativeEventTypes.PROGRESS_COMPLETED, aggregate, enrolment, "COMPLETED");
+        }
+        if ("COMPLETED".equals(aggregate.getStatus()) && !"COMPLETED".equals(enrolment.getStatus())) {
+            enrolment.setStatus("COMPLETED");
+            enrolment.setCompletedAt(now);
+            enrolmentRepository.save(enrolment);
+            outbox.append("FundoEnrolment", enrolment.getId().toString(),
+                    FundoNativeEventTypes.COURSE_COMPLETED,
+                    Map.of(
+                            "tenantId", enrolment.getTenantId().toString(),
+                            "subjectType", enrolment.getSubjectType(),
+                            "subjectId", enrolment.getSubjectId(),
+                            "courseId", enrolment.getCourseId().toString(),
+                            "enrolmentId", enrolment.getId().toString()));
+        }
     }
 
     private CourseProgressEntity newRow(EnrolmentEntity enrolment, UUID tenantId) {

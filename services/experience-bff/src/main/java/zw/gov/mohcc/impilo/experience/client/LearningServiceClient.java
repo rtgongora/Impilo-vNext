@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -226,6 +227,62 @@ public class LearningServiceClient {
             return unwrapData(res.getBody());
         } catch (Exception e) {
             log.debug("Learning subject-profile failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getV11(String relativePath, Map<String, Object> queryParams) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath);
+        if (queryParams != null) {
+            queryParams.forEach((k, v) -> {
+                if (v != null && !v.toString().isBlank()) {
+                    b.queryParam(k, v);
+                }
+            });
+        }
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 GET {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode postV11(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 POST {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode putV11(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 PUT {} failed: {}", relativePath, e.getMessage());
             return null;
         }
     }

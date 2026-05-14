@@ -128,6 +128,19 @@ public class FundoEnrolmentController {
                 .orElseGet(() -> FundoV11Support.notFound("ENROLMENT_NOT_FOUND", "Enrolment not found"));
     }
 
+    @PostMapping("/enrolments/{enrolmentId}/start")
+    public ResponseEntity<Map<String, Object>> start(@PathVariable String enrolmentId) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = FundoV11Support.requireTenantOrNull(ctx);
+        UUID eid = FundoV11Support.tryParseUuid(enrolmentId);
+        if (tenantId == null || eid == null) {
+            return FundoV11Support.notFound("ENROLMENT_NOT_FOUND", "Enrolment not found");
+        }
+        return enrolmentService.start(tenantId, eid)
+                .map(v -> FundoV11Support.dataEnvelope("enrolment", v))
+                .orElseGet(() -> FundoV11Support.notFound("ENROLMENT_NOT_FOUND", "Enrolment not found"));
+    }
+
     @GetMapping("/enrolments/{enrolmentId}/progress")
     public ResponseEntity<Map<String, Object>> progressByEnrolment(@PathVariable String enrolmentId) {
         RequestContext ctx = RequestContextHolder.require();

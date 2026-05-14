@@ -259,6 +259,17 @@ export function ProviderDashboardScreen() {
           <Pressable
             style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
             onPress={() => {
+              appStore.getState().setClinicalToolsInitialTab("learning");
+              setProviderTab("tools");
+            }}
+            testID="launch-fundo-learning"
+          >
+            <Ionicons name="school-outline" size={16} color="#1E40AF" />
+            <Text style={styles.supportChipText}>Fundo</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.supportChip, { opacity: pressed ? 0.88 : 1 }]}
+            onPress={() => {
               appStore.getState().setSupervisorEntryTab("escalations");
               setMode("supervisor");
             }}

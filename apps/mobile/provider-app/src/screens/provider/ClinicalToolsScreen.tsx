@@ -29,6 +29,7 @@ import { DeveloperHubScreen } from "./DeveloperHubScreen";
 import { ProfessionalSettingsHubScreen } from "./ProfessionalSettingsHubScreen";
 import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
 import { TelemedicineScreen } from "./TelemedicineScreen";
+import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type ToolTab =
@@ -54,7 +55,8 @@ type ToolTab =
   | "developer_hub"
   | "prof_settings"
   | "prof_channels"
-  | "telemedicine";
+  | "telemedicine"
+  | "learning";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -71,6 +73,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "developer_hub", label: "Dev" },
   { id: "prof_settings", label: "Prefs" },
   { id: "prof_channels", label: "CX+" },
+  { id: "learning", label: "Learning" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -122,6 +125,7 @@ export function ClinicalToolsScreen() {
         {tab === "developer_hub" && <DeveloperHubScreen />}
         {tab === "prof_settings" && <ProfessionalSettingsHubScreen />}
         {tab === "prof_channels" && <ProfessionalChannelsHubScreen />}
+        {tab === "learning" && <FundoLearningShellScreen />}
       </ScrollView>
     </Screen>
   );

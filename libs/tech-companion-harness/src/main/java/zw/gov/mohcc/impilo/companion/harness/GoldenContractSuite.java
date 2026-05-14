@@ -101,6 +101,7 @@ public abstract class GoldenContractSuite {
         return true;
     }
 
+
     // ── Backwards-compatible override points (Wave 5 API) ───────────
 
     /**

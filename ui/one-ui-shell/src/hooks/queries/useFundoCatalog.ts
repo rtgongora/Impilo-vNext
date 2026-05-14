@@ -63,6 +63,7 @@ export interface FundoCourseStructureResponse {
 }
 
 export interface FundoCatalogFilters {
+  status?: string;
   category?: string;
   level?: string;
   cpdEligible?: boolean;
@@ -73,6 +74,7 @@ export interface FundoCatalogFilters {
 
 function buildQuery(f: FundoCatalogFilters): string {
   const sp = new URLSearchParams();
+  if (f.status) sp.set("status", f.status);
   if (f.category) sp.set("category", f.category);
   if (f.level) sp.set("level", f.level);
   if (f.cpdEligible !== undefined) sp.set("cpdEligible", String(f.cpdEligible));

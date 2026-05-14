@@ -227,6 +227,8 @@ public class FundoAuthoringService {
         l.setContentType(req.contentType());
         l.setContentBody(req.contentBody());
         l.setContentRef(req.contentRef());
+        l.setContentFormat(isBlank(req.contentFormat()) ? "PLAIN_TEXT" : req.contentFormat());
+        l.setContentBlocksJson(req.contentBlocksJson());
         l.setEstimatedDurationMinutes(req.estimatedDurationMinutes());
         l.setSequenceNo(sequence);
         l.setRequired(req.required() == null ? true : req.required());
@@ -245,6 +247,8 @@ public class FundoAuthoringService {
         if (req.contentType() != null) l.setContentType(req.contentType());
         if (req.contentBody() != null) l.setContentBody(req.contentBody());
         if (req.contentRef() != null) l.setContentRef(req.contentRef());
+        if (req.contentFormat() != null) l.setContentFormat(req.contentFormat());
+        if (req.contentBlocksJson() != null) l.setContentBlocksJson(req.contentBlocksJson());
         if (req.estimatedDurationMinutes() != null) l.setEstimatedDurationMinutes(req.estimatedDurationMinutes());
         if (req.required() != null) l.setRequired(req.required());
         if (req.status() != null) l.setStatus(req.status());
@@ -422,10 +426,45 @@ public class FundoAuthoringService {
         q.setPrompt(req.prompt());
         q.setOptionsJson(req.optionsJson());
         q.setCorrectAnswerJson(req.correctAnswerJson());
+        q.setRubricJson(req.rubricJson());
         q.setSequenceNo(sequence);
         q.setPoints(req.points() == null ? 1 : req.points());
         questionRepository.save(q);
 
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("id", q.getId().toString());
+        v.put("assessmentId", assessmentId.toString());
+        v.put("questionType", q.getQuestionType());
+        v.put("prompt", q.getPrompt());
+        v.put("sequence", q.getSequenceNo());
+        v.put("points", q.getPoints());
+        return AuthoringResult.ok(v);
+    }
+
+    @Transactional
+    public AuthoringResult<Map<String, Object>> updateQuestion(
+            UUID tenantId, UUID assessmentId, UUID questionId, QuestionUpsert req) {
+        Optional<AssessmentEntity> assessment = assessmentRepository.findByTenantIdAndId(tenantId, assessmentId);
+        if (assessment.isEmpty()) return AuthoringResult.notFound("ASSESSMENT_NOT_FOUND", "Assessment not found");
+        Optional<AssessmentQuestionEntity> row = questionRepository.findById(questionId)
+                .filter(q -> q.getAssessmentId().equals(assessmentId));
+        if (row.isEmpty()) return AuthoringResult.notFound("QUESTION_NOT_FOUND", "Question not found");
+        if (req == null) return AuthoringResult.badRequest("BAD_REQUEST", "Question payload is required");
+
+        AssessmentQuestionEntity q = row.get();
+        if (req.questionType() != null) q.setQuestionType(req.questionType());
+        if (req.prompt() != null) q.setPrompt(req.prompt());
+        if (req.optionsJson() != null) q.setOptionsJson(req.optionsJson());
+        if (req.correctAnswerJson() != null) q.setCorrectAnswerJson(req.correctAnswerJson());
+        if (req.rubricJson() != null) q.setRubricJson(req.rubricJson());
+        if (req.points() != null) q.setPoints(req.points());
+        if (req.sequence() != null && req.sequence() != q.getSequenceNo()) {
+            if (questionSequenceTaken(assessmentId, req.sequence())) {
+                return AuthoringResult.conflict("QUESTION_SEQUENCE_TAKEN", "Question sequence already used");
+            }
+            q.setSequenceNo(req.sequence());
+        }
+        questionRepository.save(q);
         Map<String, Object> v = new LinkedHashMap<>();
         v.put("id", q.getId().toString());
         v.put("assessmentId", assessmentId.toString());
@@ -495,6 +534,8 @@ public class FundoAuthoringService {
             String contentType,
             String contentBody,
             String contentRef,
+            String contentFormat,
+            String contentBlocksJson,
             Integer estimatedDurationMinutes,
             Integer sequence,
             Boolean required,
@@ -530,6 +571,7 @@ public class FundoAuthoringService {
             String prompt,
             String optionsJson,
             String correctAnswerJson,
+            String rubricJson,
             Integer sequence,
             Integer points) {}
 

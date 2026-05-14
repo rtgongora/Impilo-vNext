@@ -42,6 +42,9 @@ public class AssessmentQuestionEntity {
     @Column(name = "points", nullable = false)
     private int points = 1;
 
+    @Column(name = "rubric_json", columnDefinition = "TEXT")
+    private String rubricJson;
+
     @PrePersist
     void prePersist() { if (id == null) id = UUID.randomUUID(); }
 
@@ -61,4 +64,6 @@ public class AssessmentQuestionEntity {
     public void setSequenceNo(int sequenceNo) { this.sequenceNo = sequenceNo; }
     public int getPoints() { return points; }
     public void setPoints(int points) { this.points = points; }
+    public String getRubricJson() { return rubricJson; }
+    public void setRubricJson(String rubricJson) { this.rubricJson = rubricJson; }
 }

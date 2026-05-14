@@ -41,6 +41,12 @@ public class CourseLessonEntity {
     @Column(name = "content_ref", length = 1024)
     private String contentRef;
 
+    @Column(name = "content_format", nullable = false, length = 32)
+    private String contentFormat = "PLAIN_TEXT";
+
+    @Column(name = "content_blocks_json", columnDefinition = "TEXT")
+    private String contentBlocksJson;
+
     @Column(name = "estimated_duration_minutes")
     private Integer estimatedDurationMinutes;
 
@@ -84,6 +90,10 @@ public class CourseLessonEntity {
     public void setContentBody(String contentBody) { this.contentBody = contentBody; }
     public String getContentRef() { return contentRef; }
     public void setContentRef(String contentRef) { this.contentRef = contentRef; }
+    public String getContentFormat() { return contentFormat; }
+    public void setContentFormat(String contentFormat) { this.contentFormat = contentFormat; }
+    public String getContentBlocksJson() { return contentBlocksJson; }
+    public void setContentBlocksJson(String contentBlocksJson) { this.contentBlocksJson = contentBlocksJson; }
     public Integer getEstimatedDurationMinutes() { return estimatedDurationMinutes; }
     public void setEstimatedDurationMinutes(Integer m) { this.estimatedDurationMinutes = m; }
     public int getSequenceNo() { return sequenceNo; }
