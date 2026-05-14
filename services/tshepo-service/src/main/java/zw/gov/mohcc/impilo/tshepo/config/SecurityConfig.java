@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/authorize", "/v1/authorize/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             );
 
         if (issuerUri != null && !issuerUri.isBlank()) {

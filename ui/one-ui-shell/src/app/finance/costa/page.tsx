@@ -72,7 +72,7 @@ const INVOICE_HANDOFF_LINKS: RelatedLink[] = [
   {
     href: "/finance/payments",
     label: "Payments",
-    description: "Patient and facility payment ledger reached via the finance plane.",
+    description: "Patient and facility payment ledger reached via the enterprise plane (finance domain).",
   },
   {
     href: "/finance/settlements",
@@ -115,7 +115,7 @@ const RELATED_FINANCE_LINKS: RelatedLink[] = [
   {
     href: "/finance/ledger",
     label: "General ledger",
-    description: "Posting, period close, and trial balance views for the finance plane.",
+    description: "Posting, period close, and trial balance views for the enterprise plane (finance domain).",
   },
   {
     href: "/finance/reports",
@@ -220,7 +220,7 @@ export default function FinanceCostaPage() {
 
         <div className="space-y-6">
           <WorkflowHeader
-            badge="COSTA finance plane"
+            badge="COSTA enterprise plane (finance domain)"
             badgeIcon={Sparkles}
             title="COSTA owns tariffs, cost estimates, charge sheets, and service-access decisions before billing and MusheX settlement take over."
             description="Estimates and decisions captured here flow into invoices, claims, and the MusheX payment intent state machine. This hub is read-only — open the linked surfaces below to act on the data."
@@ -498,7 +498,7 @@ export default function FinanceCostaPage() {
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-slate-900">Related finance surfaces</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Other finance-plane routes that depend on, or feed back into, COSTA.
+              Other enterprise-plane finance-domain routes that depend on, or feed back into, COSTA.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {RELATED_FINANCE_LINKS.map((item) => (

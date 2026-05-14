@@ -116,7 +116,7 @@ graph TB
             ZIBO["ZIBO :8085<br/>Terminology"]
             MSIKA["MSIKA :8086<br/>Product & Service"]
         end
-        subgraph FIN["Finance Plane"]
+        subgraph FIN["Enterprise Plane (finance domain)"]
             MUSHEX["MUSHEX :8087<br/>Finance Engine"]
         end
         subgraph HR["Health Record"]
@@ -218,7 +218,7 @@ graph TB
 ```
 
 **Notes:**
-- **Ring 0 (Kernel)** has zero outbound dependencies to Ring 1+. All registries, trust, finance, and health record live here.
+- **Ring 0 (Kernel)** has zero outbound dependencies to Ring 1+. All registries, trust, enterprise-finance, and health record live here.
 - **Ring 1 (Clinical)** depends on Ring 0 only — PCT, OROS, Pharmacy, Costing, Marketplace, Coverage.
 - **Ring 2 (Supply/Data/Integration)** depends on Ring 0 + Ring 1 — supply chain, analytics, interoperability, workflow.
 - **⬡ = skeleton** services that exist in the repo but have only scaffolding (no business logic yet).

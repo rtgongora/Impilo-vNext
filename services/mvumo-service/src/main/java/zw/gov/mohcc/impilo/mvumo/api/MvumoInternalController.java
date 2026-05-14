@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.mvumo.api;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.mvumo.domain.ConsentRequestState;
 import zw.gov.mohcc.impilo.mvumo.engine.ConsentRequirementEngine;
 import zw.gov.mohcc.impilo.mvumo.service.CommunicationPreferenceService;
@@ -226,7 +228,11 @@ public class MvumoInternalController {
 
     @PostMapping("/evaluate")
     public ResponseEntity<ApiResponse<Map<String, Object>>> evaluate(@RequestBody Map<String, Object> body) {
-        return ok(mvumoService.evaluateConsentDecisionStub(body));
+        Map<String, Object> result = mvumoService.evaluateConsentDecision(body);
+        if (isConsentDenied(result)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Consent policy denied");
+        }
+        return ok(result);
     }
 
     @PostMapping("/requirements/evaluate")
@@ -263,30 +269,66 @@ public class MvumoInternalController {
 
     @PostMapping("/remote-sessions/{id}/verify")
     public ResponseEntity<ApiResponse<Map<String, Object>>> remoteVerify(
-            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return remoteSessionAction(id, body);
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Ref", required = false) String actorRef,
+            @RequestHeader(value = "X-Purpose-Of-Use", required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Correlation-Id", required = false) String correlationId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String actor = requiredTrustHeader(firstString(actorId, actorRef), "X-Actor-Id");
+        String purpose = requiredTrustHeader(purposeOfUse, "X-Purpose-Of-Use");
+        String correlation = requiredTrustHeader(correlationId, "X-Correlation-Id");
+        return ok(mvumoService.remoteVerify(
+                parseTenant(tenant), id, actor, purpose, correlation, body));
     }
 
     @PostMapping("/remote-sessions/{id}/grant")
     public ResponseEntity<ApiResponse<Map<String, Object>>> remoteGrant(
-            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return remoteSessionAction(id, body);
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Ref", required = false) String actorRef,
+            @RequestHeader(value = "X-Purpose-Of-Use", required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Correlation-Id", required = false) String correlationId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String actor = requiredTrustHeader(firstString(actorId, actorRef), "X-Actor-Id");
+        String purpose = requiredTrustHeader(purposeOfUse, "X-Purpose-Of-Use");
+        String correlation = requiredTrustHeader(correlationId, "X-Correlation-Id");
+        return ok(mvumoService.remoteGrant(
+                parseTenant(tenant), id, actor, purpose, correlation, body));
     }
 
     @PostMapping("/remote-sessions/{id}/refuse")
     public ResponseEntity<ApiResponse<Map<String, Object>>> remoteRefuse(
-            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return remoteSessionAction(id, body);
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Ref", required = false) String actorRef,
+            @RequestHeader(value = "X-Purpose-Of-Use", required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Correlation-Id", required = false) String correlationId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String actor = requiredTrustHeader(firstString(actorId, actorRef), "X-Actor-Id");
+        String purpose = requiredTrustHeader(purposeOfUse, "X-Purpose-Of-Use");
+        String correlation = requiredTrustHeader(correlationId, "X-Correlation-Id");
+        return ok(mvumoService.remoteRefuse(
+                parseTenant(tenant), id, actor, purpose, correlation, body));
     }
 
     @PostMapping("/remote-sessions/{id}/withdraw")
     public ResponseEntity<ApiResponse<Map<String, Object>>> remoteWithdraw(
-            @PathVariable UUID id, @RequestBody(required = false) Map<String, Object> body) {
-        return remoteSessionAction(id, body);
-    }
-
-    private static ResponseEntity<ApiResponse<Map<String, Object>>> remoteSessionAction(UUID id, Map<String, Object> body) {
-        return ok(Map.of("sessionId", id.toString(), "status", "stub", "body", body != null ? body : Map.of()));
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestHeader(value = "X-Actor-Id", required = false) String actorId,
+            @RequestHeader(value = "X-Actor-Ref", required = false) String actorRef,
+            @RequestHeader(value = "X-Purpose-Of-Use", required = false) String purposeOfUse,
+            @RequestHeader(value = "X-Correlation-Id", required = false) String correlationId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String actor = requiredTrustHeader(firstString(actorId, actorRef), "X-Actor-Id");
+        String purpose = requiredTrustHeader(purposeOfUse, "X-Purpose-Of-Use");
+        String correlation = requiredTrustHeader(correlationId, "X-Correlation-Id");
+        return ok(mvumoService.remoteWithdraw(
+                parseTenant(tenant), id, actor, purpose, correlation, body));
     }
 
     @PostMapping("/offline-sync")
@@ -307,13 +349,18 @@ public class MvumoInternalController {
     }
 
     @PostMapping("/templates")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> postTemplate() {
-        return ok(Map.of("status", "Use tenant-specific template authoring pipeline (Zibo + workflow) — not yet implemented"));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> postTemplate(
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @RequestBody Map<String, Object> body) {
+        return ok(mvumoService.createTemplate(parseTenant(tenant), body));
     }
 
     @PutMapping("/templates/{id}")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> putTemplate() {
-        return ok(Map.of("status", "not implemented"));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> putTemplate(
+            @RequestHeader(value = "X-Tenant-ID", required = false) String tenant,
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> body) {
+        return ok(mvumoService.updateTemplate(parseTenant(tenant), id, body));
     }
 
     @GetMapping("/audit/{consentId}")
@@ -337,6 +384,14 @@ public class MvumoInternalController {
             return header;
         }
         return "system";
+    }
+
+    private static String requiredTrustHeader(String value, String headerName) {
+        String normalized = firstString(value);
+        if (normalized == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, headerName + " is required");
+        }
+        return normalized;
     }
 
     private static String sourceChannelFrom(Map<String, Object> body, String fallback) {
@@ -372,5 +427,31 @@ public class MvumoInternalController {
 
     private static <T> ResponseEntity<ApiResponse<T>> ok(T data) {
         return ResponseEntity.ok(ApiResponse.ok(data, java.util.UUID.randomUUID().toString()));
+    }
+
+    private static boolean isConsentDenied(Map<String, Object> result) {
+        if (result == null) {
+            return false;
+        }
+        String verdict = firstString(result.get("decision"), result.get("verdict"), result.get("status"));
+        return verdict != null
+                && ("deny".equalsIgnoreCase(verdict)
+                || "denied".equalsIgnoreCase(verdict)
+                || "forbidden".equalsIgnoreCase(verdict)
+                || "reject".equalsIgnoreCase(verdict)
+                || "rejected".equalsIgnoreCase(verdict));
+    }
+
+    private static String firstString(Object... values) {
+        for (Object value : values) {
+            if (value == null) {
+                continue;
+            }
+            String s = value.toString().trim();
+            if (!s.isEmpty()) {
+                return s;
+            }
+        }
+        return null;
     }
 }

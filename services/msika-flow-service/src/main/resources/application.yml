@@ -64,7 +64,7 @@ msika-flow:
     max-claim-attempts-per-hour: 5
   biometric-policy:
     enabled: ${MSIKA_FLOW_BIOMETRIC_POLICY_ENABLED:false}
-    tshepo-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
   routing:
     default-mode: INTERNAL
   pricing:

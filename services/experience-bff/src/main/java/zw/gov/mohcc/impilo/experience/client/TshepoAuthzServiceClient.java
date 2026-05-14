@@ -152,7 +152,7 @@ public class TshepoAuthzServiceClient {
     }
 
     /**
-     * Synthetic ext_authz for Experience finance plane (billing workspace or MusheX platform).
+     * Synthetic ext_authz for Experience enterprise-domain finance routes (billing workspace or MusheX platform).
      * Resource type is derived from the last path segment (see tshepo-authz V007).
      */
     public boolean financePlaneAllowed(String httpMethod, String syntheticPath) {

@@ -23,7 +23,7 @@ env:
   SPRING_DATA_REDIS_HOST: redis.impilo-data.svc.cluster.local
   SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka.impilo-data.svc.cluster.local:9092
   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: https://auth.impilo.gov.zw/realms/impilo
-  TSHEPO_BASE_URL: http://tshepo-service.impilo-trust.svc.cluster.local:8081
+  TSHEPO_BASE_URL: http://tshepo-authz.impilo-trust.svc.cluster.local:8081
   VITO_BASE_URL: http://vito-service.impilo-registry.svc.cluster.local:8082
   VARAPI_BASE_URL: http://varapi-service.impilo-registry.svc.cluster.local:8083
   TUSO_BASE_URL: http://tuso-service.impilo-registry.svc.cluster.local:8084

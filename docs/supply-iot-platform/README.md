@@ -23,7 +23,7 @@ its sensors are reporting).
 
 ## Architecture Position
 
-These services sit in the **Integration/Ops plane** as consolidated Ring-2 services:
+These services sit in the **Integration Plane** (`platform-ops` domain) as consolidated Ring-2 services:
 
 ```
 ┌─────────────────────────────────────────────────────┐

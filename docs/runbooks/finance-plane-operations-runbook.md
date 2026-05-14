@@ -1,14 +1,14 @@
-# Finance plane operations runbook (Phase 8C)
+# Enterprise finance-domain operations runbook (Phase 8C)
 
 | Field | Value |
 | ----- | ----- |
 | Status | Implemented (Phase 8C) |
-| Scope | MusheX + COSTA finance-plane eventing, audit scope checks, and reconciliation cycle operations |
+| Scope | MusheX + COSTA enterprise-plane finance-domain eventing, audit scope checks, and reconciliation cycle operations |
 | Inputs | [`mushex-costa-outbox-event-catalogue.md`](../audits/mushex-costa-outbox-event-catalogue.md), reconciliation/audit canonical routes |
 
 ## 1. Purpose
 
-Provide a single operator-facing runbook for finance-plane event health checks and daily reconciliation execution without requiring codebase greps.
+Provide a single operator-facing runbook for enterprise-plane finance-domain event health checks and daily reconciliation execution without requiring codebase greps.
 
 ## 2. Topic health checks
 

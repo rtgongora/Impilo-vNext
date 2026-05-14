@@ -1,0 +1,85 @@
+# System of Record Map
+
+| Service ID | Primary plane | System-of-record responsibilities |
+|---|---|---|
+| `ai-model-registry-service` | data | Ai Model Registry canonical records |
+| `asset-registry-service` | integration | Asset Registry canonical records |
+| `audit-ledger-service` | integration | Audit Ledger canonical records |
+| `butano-fhir` | clinical | Butano Fhir canonical records |
+| `butano-service` | clinical | Butano canonical records |
+| `campaigns-service` | data | Campaigns canonical records |
+| `card-print-agent` | integration | Card Print Agent canonical records |
+| `channels-service` | integration | Channels canonical records |
+| `clinical-knowledge-platform-service` | clinical | Clinical Knowledge Platform canonical records |
+| `community-service` | experience | Community canonical records |
+| `connector-fhir-adapter` | integration | Connector Fhir Adapter canonical records |
+| `costing-engine-service` | enterprise | Costing Engine canonical records |
+| `coverage-service` | enterprise | Coverage canonical records |
+| `credential-verification-service` | enterprise | Credential Verification canonical records |
+| `data-access-governance-service` | data | Data Access Governance canonical records |
+| `data-governance-service` | data | Data Governance canonical records |
+| `data-ingestion-service` | data | Data Ingestion canonical records |
+| `data-pipeline-service` | data | Data Pipeline canonical records |
+| `data-warehouse-service` | data | Data Warehouse canonical records |
+| `developer-portal-service` | integration | Developer Portal canonical records |
+| `dispatch-service` | integration | Dispatch canonical records |
+| `document-service` | clinical | Document canonical records |
+| `experience-bff` | experience | Experience Bff canonical records |
+| `fhir-gateway-service` | clinical | Fhir Gateway canonical records |
+| `forms-service` | clinical | Forms canonical records |
+| `general-ledger-service` | enterprise | General Ledger canonical records |
+| `guidance-service` | clinical | Guidance canonical records |
+| `hr-payroll-service` | enterprise | Hr Payroll canonical records |
+| `identity-assurance-service` | trust | Identity Assurance canonical records |
+| `indawo-service` | registry | Indawo canonical records |
+| `inpatient-service` | clinical | Inpatient canonical records |
+| `integration-hub` | integration | Integration Hub canonical records |
+| `inventory-elmis-adapter` | clinical | Inventory Elmis Adapter canonical records |
+| `inventory-service` | clinical | Inventory canonical records |
+| `iot-ingestion-service` | integration | Iot Ingestion canonical records |
+| `jobs-service` | integration | Jobs canonical records |
+| `landela-adapter-service` | integration | Landela Adapter canonical records |
+| `learning-service` | experience | Learning canonical records |
+| `msika-flow-service` | enterprise | Msika Flow canonical records |
+| `msika-service` | enterprise | Msika canonical records |
+| `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |
+| `mushex-service` | enterprise | Mushex canonical records |
+| `mvumo-service` | trust | Mvumo canonical records |
+| `national-data-repository-service` | data | National Data Repository canonical records |
+| `ndr-service` | data | Ndr canonical records |
+| `notification-service` | integration | Notification canonical records |
+| `observability-service` | integration | Observability canonical records |
+| `offline-edge-service` | integration | Offline Edge canonical records |
+| `offline-sync-service` | integration | Offline Sync canonical records |
+| `oros-service` | clinical | Oros canonical records |
+| `pacs-adapter-service` | clinical | Pacs Adapter canonical records |
+| `pct-service` | clinical | Pct canonical records |
+| `pharmacy-elmis-adapter` | clinical | Pharmacy Elmis Adapter canonical records |
+| `pharmacy-service` | clinical | Pharmacy canonical records |
+| `procurement-service` | enterprise | Procurement canonical records |
+| `product-registry-service` | registry | Product Registry canonical records |
+| `reporting-service` | data | Reporting canonical records |
+| `rules-service` | clinical | Rules canonical records |
+| `scheduling-service` | clinical | Scheduling canonical records |
+| `schema-registry-service` | integration | Schema Registry canonical records |
+| `search-service` | data | Search canonical records |
+| `security-hardening-service` | integration | Security Hardening canonical records |
+| `share-slip-service` | enterprise | Share Slip canonical records |
+| `simba-service` | clinical | Simba canonical records |
+| `support-service` | integration | Support canonical records |
+| `surveillance-service` | data | Surveillance canonical records |
+| `tshepo-audit-service` | trust | Tshepo Audit canonical records |
+| `tshepo-authz-service` | trust | Tshepo Authz canonical records |
+| `tshepo-consent-service` | trust | Tshepo Consent canonical records |
+| `tshepo-identity-service` | trust | Tshepo Identity canonical records |
+| `tshepo-keys-service` | trust | Tshepo Keys canonical records |
+| `tshepo-offline-service` | trust | Tshepo Offline canonical records |
+| `tshepo-service` | trust | Tshepo canonical records |
+| `tuso-service` | registry | Tuso canonical records |
+| `ubomi-service` | registry | Ubomi canonical records |
+| `varapi-service` | registry | Varapi canonical records |
+| `vito-service` | registry | Vito canonical records |
+| `wellness-service` | experience | Wellness canonical records |
+| `workflow-service` | integration | Workflow canonical records |
+| `workforce-governance-service` | enterprise | Workforce Governance canonical records |
+| `zibo-service` | registry | Zibo canonical records |

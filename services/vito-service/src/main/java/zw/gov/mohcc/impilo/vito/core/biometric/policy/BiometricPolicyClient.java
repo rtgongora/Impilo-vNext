@@ -36,7 +36,7 @@ public class BiometricPolicyClient {
 
     public BiometricPolicyClient(
             @Value("${vito.biometric.policy-enabled:true}") boolean policyEnabled,
-            @Value("${vito.biometric.tshepo-policy-base-url:http://localhost:8079}") String tshepoPolicyBaseUrl) {
+            @Value("${vito.biometric.tshepo-policy-base-url:http://localhost:8081}") String tshepoPolicyBaseUrl) {
         this.policyEnabled = policyEnabled;
         this.tshepoPolicyBaseUrl = trimSlash(tshepoPolicyBaseUrl);
     }
@@ -108,7 +108,7 @@ public class BiometricPolicyClient {
 
     private static String trimSlash(String base) {
         if (base == null || base.isBlank()) {
-            return "http://localhost:8079";
+            return "http://localhost:8081";
         }
         return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }

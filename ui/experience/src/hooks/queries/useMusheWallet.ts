@@ -1,5 +1,5 @@
 /**
- * Experience UI — Mushe Wallet (Finance Plane) Query Hooks
+ * Experience UI — Mushe Wallet (Enterprise Plane, finance domain) Query Hooks
  *
  * Covers wallet CRUD, transactions, merchant payments, holds,
  * funding sources, deposits, and smart card lifecycle management.

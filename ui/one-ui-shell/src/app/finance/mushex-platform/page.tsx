@@ -92,7 +92,7 @@ const RELATED_MUSHEX_LINKS: RelatedLink[] = [
   {
     href: "/finance/ledger",
     label: "General ledger",
-    description: "Posting, period close, and trial balance for the finance plane.",
+    description: "Posting, period close, and trial balance for the enterprise plane (finance domain).",
   },
   {
     href: "/wallet",
@@ -234,7 +234,7 @@ export default function FinanceMushexPlatformPage() {
 
         <div className="space-y-6">
           <WorkflowHeader
-            badge="MusheX finance plane"
+            badge="MusheX enterprise plane (finance domain)"
             badgeIcon={Shield}
             title="MusheX platform administration is read-only here; write operations stay on the backend."
             description="This hub surfaces the live shapes of the MusheX platform admin APIs — custodial wallets, remittance transfers, card profiles, and reversal records — so finance administrators can see what is wired without leaving the canonical web shell. Writes (create wallet, credit/debit, create remittance, create card, create reversal) are deliberately not exposed in this stage."
@@ -618,7 +618,7 @@ export default function FinanceMushexPlatformPage() {
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-slate-900">Related MusheX finance surfaces</h2>
             <p className="mt-1 text-xs text-slate-500">
-              Other canonical finance-plane routes that consume or feed MusheX state.
+              Other canonical enterprise-plane finance-domain routes that consume or feed MusheX state.
             </p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {RELATED_MUSHEX_LINKS.map((item) => (

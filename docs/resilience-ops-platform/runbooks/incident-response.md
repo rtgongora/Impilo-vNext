@@ -9,7 +9,7 @@ This runbook covers triage, escalation, and resolution for incidents affecting I
 |-------|-----------|---------------|------------|
 | SEV-1 | Clinical workflow blocked (Ring 1 down) | 15 min | On-call SRE + Engineering Lead |
 | SEV-2 | Degraded service (elevated errors, high latency) | 30 min | On-call SRE |
-| SEV-3 | Non-critical service issue (ops plane, batch jobs) | 4 hours | Team lead |
+| SEV-3 | Non-critical service issue (integration plane, platform-ops domain, batch jobs) | 4 hours | Team lead |
 | SEV-4 | Minor issue, no user impact | Next business day | Ticket assignment |
 
 ## Triage Procedure

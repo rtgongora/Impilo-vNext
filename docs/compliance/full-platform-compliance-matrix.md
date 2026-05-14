@@ -56,7 +56,7 @@
 | butano-service | services/butano-service | Y | Y | N | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | PARTIAL | Legacy /v1/ routes; needs /internal/v1 wrapper |
 | ubomi-service | services/ubomi-service | Y | Y | N | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | PARTIAL | Legacy routes; needs /internal/v1 wrapper |
 
-## Ring 3 — Finance Plane
+## Ring 3 — Enterprise Plane (finance domain)
 
 | service_name | module_path | has_pom | has_code | has_internal_v1 | has_external_v1 | four_header_enforcement | idempotency_on_commands | golden_contract_test | outbox_present | outbox_v11_columns_present | event_envelope_emission | snapshot_endpoint_present | federation_authority_enforced | consistency_class_declared | health_endpoint_present | status | blockers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -64,7 +64,7 @@
 | costing-engine-service | services/costing-engine-service | Y | Y | N | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | PARTIAL | Legacy routes; needs /internal/v1 wrapper |
 | coverage-service | services/coverage-service | Y | Y | Y | N | Y (tc) | Y (tc) | Y | Y | Y (init) | Y | N | N | N | Y (actuator) | COMPLIANT | — |
 
-## Ring 4 — Integration / Operations Plane
+## Ring 4 — Integration Plane (platform-ops domain)
 
 | service_name | module_path | has_pom | has_code | has_internal_v1 | has_external_v1 | four_header_enforcement | idempotency_on_commands | golden_contract_test | outbox_present | outbox_v11_columns_present | event_envelope_emission | snapshot_endpoint_present | federation_authority_enforced | consistency_class_declared | health_endpoint_present | status | blockers |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|

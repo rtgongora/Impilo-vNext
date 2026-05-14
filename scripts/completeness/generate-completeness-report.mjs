@@ -368,7 +368,7 @@ function main() {
     rows.push({
       maven_module: module,
       product_names: s.product_names || [],
-      plane: s.plane,
+      primary_plane: s.primary_plane ?? s.plane,
       sovereign_group: s.sovereign_group,
       implementation_gaps: implementationGaps,
       implementation_gap_count: implementationGaps.length,
@@ -456,7 +456,7 @@ function main() {
     .slice(0, 40)
     .map((r) => ({
       maven_module: r.maven_module,
-      plane: r.plane,
+      primary_plane: r.primary_plane,
       implementation_gap_count: r.implementation_gap_count,
       implementation_gaps: r.implementation_gaps,
       composite_score: r.composite_score,

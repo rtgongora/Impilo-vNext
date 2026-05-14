@@ -135,6 +135,55 @@ public class MvumoService {
     }
 
     @Transactional
+    public Map<String, Object> createTemplate(UUID tenantId, Map<String, Object> body) {
+        Map<String, Object> b = body != null ? body : Map.of();
+        String templateKey = requireNonBlank(b, "templateKey");
+        ConsentTemplateEntity entity = new ConsentTemplateEntity();
+        entity.setTenantId(tenantId);
+        entity.setTemplateKey(templateKey);
+        entity.setLanguage(firstNonBlank(b.get("language"), "en"));
+        entity.setConsentType(requireNonBlank(b, "consentType"));
+        entity.setRequiredAssurance(firstNonBlank(b.get("requiredAssurance"), "L1_SIMPLE_DIGITAL"));
+        entity.setTitle(requireNonBlank(b, "title"));
+        entity.setBodyMarkdown(requireNonBlank(b, "bodyMarkdown"));
+        entity.setAllowedMethodsJson(jsonStringOrDefault(b.get("allowedMethodsJson"), "[]"));
+        entity.setZiboConceptCode(firstNonBlank(b.get("ziboConceptCode")));
+        entity.setRemoteAllowed(booleanOrDefault(b.get("remoteAllowed"), true));
+        entity.setOfflineAllowed(booleanOrDefault(b.get("offlineAllowed"), true));
+        entity.setVersion(resolveCreateVersion(tenantId, templateKey, b.get("version")));
+        return toTemplateView(templateRepository.save(entity));
+    }
+
+    @Transactional
+    public Map<String, Object> updateTemplate(UUID tenantId, UUID id, Map<String, Object> body) {
+        ConsentTemplateEntity current = templateRepository
+                .findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Template not found for tenant"));
+        Map<String, Object> b = body != null ? body : Map.of();
+
+        current.setRetiredAt(Instant.now());
+        templateRepository.save(current);
+
+        ConsentTemplateEntity next = new ConsentTemplateEntity();
+        next.setTenantId(tenantId);
+        next.setTemplateKey(firstNonBlank(b.get("templateKey"), current.getTemplateKey()));
+        next.setVersion(current.getVersion() + 1);
+        next.setLanguage(firstNonBlank(b.get("language"), current.getLanguage()));
+        next.setConsentType(firstNonBlank(b.get("consentType"), current.getConsentType()));
+        next.setRequiredAssurance(firstNonBlank(b.get("requiredAssurance"), current.getRequiredAssurance()));
+        next.setTitle(firstNonBlank(b.get("title"), current.getTitle()));
+        next.setBodyMarkdown(firstNonBlank(b.get("bodyMarkdown"), current.getBodyMarkdown()));
+        next.setAllowedMethodsJson(jsonStringOrDefault(b.get("allowedMethodsJson"), current.getAllowedMethodsJson()));
+        next.setZiboConceptCode(firstNonBlank(b.get("ziboConceptCode"), current.getZiboConceptCode()));
+        next.setRemoteAllowed(booleanOrDefault(b.get("remoteAllowed"), current.isRemoteAllowed()));
+        next.setOfflineAllowed(booleanOrDefault(b.get("offlineAllowed"), current.isOfflineAllowed()));
+        if (b.get("effectiveFrom") != null && !b.get("effectiveFrom").toString().isBlank()) {
+            next.setEffectiveFrom(Instant.parse(b.get("effectiveFrom").toString()));
+        }
+        return toTemplateView(templateRepository.save(next));
+    }
+
+    @Transactional
     public Map<String, Object> createConsentRequest(UUID tenantId, Map<String, Object> body) {
         var e = new ConsentRequestEntity();
         e.setTenantId(tenantId);
@@ -276,7 +325,7 @@ public class MvumoService {
                 }
             } catch (Exception ex) {
                 throw new ResponseStatusException(
-                        HttpStatus.BAD_GATEWAY,
+                        HttpStatus.SERVICE_UNAVAILABLE,
                         "Failed to create consent directive in tshepo-consent-service: " + ex.getMessage());
             }
         }
@@ -317,7 +366,7 @@ public class MvumoService {
                 tshepoConsentClient.revokeDirective(e.getTshepoConsentId(), reason);
             } catch (Exception ex) {
                 throw new ResponseStatusException(
-                        HttpStatus.BAD_GATEWAY,
+                        HttpStatus.SERVICE_UNAVAILABLE,
                         "Failed to revoke consent in tshepo-consent-service: " + ex.getMessage());
             }
         }
@@ -422,6 +471,105 @@ public class MvumoService {
                 "expiresAt", s.getExpiresAt().toString());
     }
 
+    @Transactional
+    public Map<String, Object> remoteVerify(
+            UUID tenantId,
+            UUID sessionId,
+            String actorRef,
+            String purposeOfUse,
+            String correlationId,
+            Map<String, Object> body) {
+        var session = sessionRepository
+                .findByIdAndTenantId(sessionId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
+        ConsentRequestEntity request = requestRepository
+                .findByIdAndTenantId(session.getConsentRequestId(), tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consent request not found"));
+        ensureNotExpired(session);
+        String providedToken = firstNonBlank(body != null ? body.get("token") : null, body != null ? body.get("sessionToken") : null);
+        if (providedToken == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "token/sessionToken is required");
+        }
+        if (!sha256Hex(providedToken).equals(session.getTokenHash())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Remote session token is invalid");
+        }
+        session.setOpenCount(session.getOpenCount() + 1);
+        session.setLastOpenAt(Instant.now());
+        session.setState("VERIFIED");
+        sessionRepository.save(session);
+        Map<String, Object> event = trustEventBody(actorRef, purposeOfUse, correlationId, body, "remote-verify");
+        appendEvent(tenantId, request, "REMOTE_SESSION_VERIFIED", event);
+        return remoteSessionView(session, request);
+    }
+
+    @Transactional
+    public Map<String, Object> remoteGrant(
+            UUID tenantId,
+            UUID sessionId,
+            String actorRef,
+            String purposeOfUse,
+            String correlationId,
+            Map<String, Object> body) {
+        var session = requiredVerifiedSession(tenantId, sessionId);
+        Map<String, Object> command = new HashMap<>(body != null ? body : Map.of());
+        command.putIfAbsent("grantedByRef", actorRef);
+        command.putIfAbsent("reason", firstNonBlank(body != null ? body.get("reason") : null, "remote-session-grant"));
+        ConsentRequestEntity request = requestRepository
+                .findByIdAndTenantId(session.getConsentRequestId(), tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consent request not found"));
+        transition(tenantId, request.getId(), ConsentRequestState.GRANTED, command);
+        session.setState("GRANTED");
+        session.setLastOpenAt(Instant.now());
+        sessionRepository.save(session);
+        appendEvent(tenantId, request, "REMOTE_SESSION_GRANTED", trustEventBody(actorRef, purposeOfUse, correlationId, body, "remote-grant"));
+        return remoteSessionView(session, request);
+    }
+
+    @Transactional
+    public Map<String, Object> remoteRefuse(
+            UUID tenantId,
+            UUID sessionId,
+            String actorRef,
+            String purposeOfUse,
+            String correlationId,
+            Map<String, Object> body) {
+        var session = requiredVerifiedSession(tenantId, sessionId);
+        Map<String, Object> command = new HashMap<>(body != null ? body : Map.of());
+        command.putIfAbsent("reason", firstNonBlank(body != null ? body.get("reason") : null, "remote-session-refuse"));
+        command.putIfAbsent("refusedReason", firstNonBlank(body != null ? body.get("refusedReason") : null, "remote-session-refuse"));
+        ConsentRequestEntity request = requestRepository
+                .findByIdAndTenantId(session.getConsentRequestId(), tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consent request not found"));
+        transition(tenantId, request.getId(), ConsentRequestState.REFUSED, command);
+        session.setState("REFUSED");
+        session.setLastOpenAt(Instant.now());
+        sessionRepository.save(session);
+        appendEvent(tenantId, request, "REMOTE_SESSION_REFUSED", trustEventBody(actorRef, purposeOfUse, correlationId, body, "remote-refuse"));
+        return remoteSessionView(session, request);
+    }
+
+    @Transactional
+    public Map<String, Object> remoteWithdraw(
+            UUID tenantId,
+            UUID sessionId,
+            String actorRef,
+            String purposeOfUse,
+            String correlationId,
+            Map<String, Object> body) {
+        var session = requiredVerifiedSession(tenantId, sessionId);
+        Map<String, Object> command = new HashMap<>(body != null ? body : Map.of());
+        command.putIfAbsent("reason", firstNonBlank(body != null ? body.get("reason") : null, "remote-session-withdraw"));
+        ConsentRequestEntity request = requestRepository
+                .findByIdAndTenantId(session.getConsentRequestId(), tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Consent request not found"));
+        transition(tenantId, request.getId(), ConsentRequestState.WITHDRAWN, command);
+        session.setState("WITHDRAWN");
+        session.setLastOpenAt(Instant.now());
+        sessionRepository.save(session);
+        appendEvent(tenantId, request, "REMOTE_SESSION_WITHDRAWN", trustEventBody(actorRef, purposeOfUse, correlationId, body, "remote-withdraw"));
+        return remoteSessionView(session, request);
+    }
+
     public Map<String, Object> evaluateRequirements(ConsentRequirementEngine.RequirementEvaluationRequest req) {
         var r = requirementEngine.evaluate(req);
         return Map.of(
@@ -437,10 +585,55 @@ public class MvumoService {
                 "rationale", r.rationale());
     }
 
-    public Map<String, Object> evaluateConsentDecisionStub(Map<String, Object> body) {
-        return Map.of(
-                "valid", false,
-                "detail", "Stub: delegate to tshepo-consent-service /v1/consent/evaluate for enforcement decisions.");
+    public Map<String, Object> evaluateConsentDecision(Map<String, Object> body) {
+        Map<String, Object> b = body != null ? body : Map.of();
+
+        Object tenantRaw = b.get("tenantId");
+        UUID tenantId;
+        if (tenantRaw == null || tenantRaw.toString().isBlank()) {
+            tenantId = TenantIds.PLATFORM;
+        } else {
+            tenantId = UUID.fromString(tenantRaw.toString());
+        }
+
+        String actorId = firstNonBlank(
+                b.get("actorId"),
+                b.get("actorRef"),
+                b.get("actor_id"));
+        String subjectRef = firstNonBlank(
+                b.get("subjectRef"),
+                b.get("subjectPatientRef"),
+                b.get("patientRef"),
+                b.get("subject_ref"));
+        String purpose = firstNonBlank(
+                b.get("purpose"),
+                b.get("purposeOfUse"),
+                b.get("purpose_of_use"));
+        String scope = firstNonBlank(
+                b.get("scope"),
+                b.get("resourceScope"),
+                b.get("resource_scope"));
+
+        if (actorId == null || subjectRef == null) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "actorId/actorRef and subjectRef/subjectPatientRef are required");
+        }
+
+        if (purpose == null) {
+            purpose = "TREATMENT";
+        }
+        if (scope == null) {
+            scope = "clinical-data";
+        }
+
+        try {
+            return tshepoConsentClient.evaluateDirective(tenantId, actorId, subjectRef, purpose, scope);
+        } catch (Exception ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Consent evaluation delegation failed: " + ex.getMessage());
+        }
     }
 
     @Transactional
@@ -506,5 +699,98 @@ public class MvumoService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    private static String firstNonBlank(Object... values) {
+        for (Object v : values) {
+            if (v == null) {
+                continue;
+            }
+            String s = v.toString().trim();
+            if (!s.isEmpty()) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    private int resolveCreateVersion(UUID tenantId, String templateKey, Object rawVersion) {
+        if (rawVersion instanceof Number number && number.intValue() > 0) {
+            return number.intValue();
+        }
+        return templateRepository
+                .findTopByTenantIdAndTemplateKeyOrderByVersionDesc(tenantId, templateKey)
+                .map(ConsentTemplateEntity::getVersion)
+                .orElse(0) + 1;
+    }
+
+    private static String requireNonBlank(Map<String, Object> body, String field) {
+        String value = firstNonBlank(body.get(field));
+        if (value == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " is required");
+        }
+        return value;
+    }
+
+    private static boolean booleanOrDefault(Object raw, boolean fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        if (raw instanceof Boolean b) {
+            return b;
+        }
+        return Boolean.parseBoolean(raw.toString());
+    }
+
+    private static String jsonStringOrDefault(Object raw, String fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        String value = raw.toString().trim();
+        return value.isEmpty() ? fallback : value;
+    }
+
+    private RemoteConsentSessionEntity requiredVerifiedSession(UUID tenantId, UUID sessionId) {
+        RemoteConsentSessionEntity session = sessionRepository
+                .findByIdAndTenantId(sessionId, tenantId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Session not found"));
+        ensureNotExpired(session);
+        if (!"VERIFIED".equalsIgnoreCase(session.getState())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Session must be VERIFIED before action");
+        }
+        return session;
+    }
+
+    private static void ensureNotExpired(RemoteConsentSessionEntity session) {
+        if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(Instant.now())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Remote session expired");
+        }
+    }
+
+    private Map<String, Object> remoteSessionView(RemoteConsentSessionEntity session, ConsentRequestEntity request) {
+        return Map.of(
+                "sessionId", session.getId().toString(),
+                "consentRequestId", request.getId().toString(),
+                "sessionState", session.getState(),
+                "consentState", request.getState(),
+                "channel", session.getChannel(),
+                "expiresAt", session.getExpiresAt().toString());
+    }
+
+    private static Map<String, Object> trustEventBody(
+            String actorRef,
+            String purposeOfUse,
+            String correlationId,
+            Map<String, Object> body,
+            String operation) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("operation", operation);
+        event.put("actorRef", actorRef);
+        event.put("purposeOfUse", purposeOfUse);
+        event.put("correlationId", correlationId);
+        if (body != null && !body.isEmpty()) {
+            event.put("payload", body);
+        }
+        return event;
     }
 }

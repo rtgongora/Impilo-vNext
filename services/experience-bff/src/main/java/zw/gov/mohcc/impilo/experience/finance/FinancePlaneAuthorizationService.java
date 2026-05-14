@@ -11,7 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
 
 /**
- * Optional Tshepo PDP gate for finance plane BFF routes (synthetic paths map to
+ * Optional Tshepo PDP gate for enterprise-plane finance-domain BFF routes (synthetic paths map to
  * {@code billing-workspace} and {@code mushex-platform} resource types; see tshepo-authz V007).
  */
 @Component
@@ -62,10 +62,10 @@ public class FinancePlaneAuthorizationService {
         boolean allowed = tshepoAuthzServiceClient.financePlaneAllowed(method, syntheticPath);
         if (!allowed && !tshepoPdpFallbackAllow) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Tshepo PDP denied finance plane access (" + label + ")");
+                    "Tshepo PDP denied enterprise finance-domain access (" + label + ")");
         }
         if (!allowed) {
-            log.warn("Tshepo PDP denied finance plane ({}) — proceeding due to tshepo-pdp-fallback-allow=true", label);
+            log.warn("Tshepo PDP denied enterprise finance-domain access ({}) — proceeding due to tshepo-pdp-fallback-allow=true", label);
         }
     }
 

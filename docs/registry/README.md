@@ -1,27 +1,27 @@
-# Service registry (Phase A1)
+# Service Registry (Production Baseline)
 
 | File | Role |
 |------|------|
-| [`services-registry.yaml`](./services-registry.yaml) | **Source of truth** — Maven modules, planes, sovereign membership, default HTTP ports, product names. |
-| [`services-index.md`](./services-index.md) | **Generated** table for quick reading (do not edit by hand). |
+| [`services-registry.yaml`](./services-registry.yaml) | **Source of truth** — canonical seven-plane ownership, domains, SoR boundaries, dependency contracts, and readiness fields. |
+| [`services-index.md`](./services-index.md) | **Generated** full service index (do not edit by hand). |
+| [`service-plane-map.md`](./service-plane-map.md) | Generated one-primary-plane map. |
+| [`service-ownership-matrix.md`](./service-ownership-matrix.md) | Generated ownership and SoR matrix. |
+| [`service-readiness-register.md`](./service-readiness-register.md) | Generated production readiness register. |
+| [`system-of-record-map.md`](./system-of-record-map.md) | Generated SoR responsibilities map. |
+| [`forbidden-responsibilities-map.md`](./forbidden-responsibilities-map.md) | Generated anti-responsibility map. |
+| [`cross-plane-contract-map.md`](./cross-plane-contract-map.md) | Generated upstream/downstream contract map. |
 
-## Regenerate the index
+## Regenerate registry artifacts
 
 ```bash
 cd scripts/registry
 npm install
-npm run generate
-```
-
-## Refresh YAML from seed data (optional)
-
-`scripts/registry/seed-registry.mjs` rebuilds `services-registry.yaml` from embedded structured data (useful after bulk renames). **It overwrites the YAML file** — commit or diff first.
-
-```bash
-cd scripts/registry
 node seed-registry.mjs
-npm run generate
+node generate-service-index.mjs
+node generate-architecture-registers.mjs
 ```
+
+`scripts/registry/seed-registry.mjs` builds `services-registry.yaml` from Maven reactor + curated legacy metadata and applies canonical field mapping.
 
 ## Related
 

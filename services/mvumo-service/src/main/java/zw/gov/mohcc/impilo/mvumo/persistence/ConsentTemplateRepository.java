@@ -12,4 +12,6 @@ public interface ConsentTemplateRepository extends JpaRepository<ConsentTemplate
             UUID tenantId);
 
     Optional<ConsentTemplateEntity> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    Optional<ConsentTemplateEntity> findTopByTenantIdAndTemplateKeyOrderByVersionDesc(UUID tenantId, String templateKey);
 }

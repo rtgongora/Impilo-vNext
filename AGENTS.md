@@ -31,14 +31,27 @@ docs/           Architecture docs, runbooks, ADRs, acceptance packs
 tests/          Integration tests
 ```
 
-**Seven architectural planes** (see `README.md`):
-- **Trust & Governance**: TSHEPO (PDP, port 8081), Envoy ext_authz (PEP), Audit, Consent
-- **Registry Spine**: VITO (clients, 8082), VARAPI (providers, 8083), TUSO (facilities, 8084), ZIBO (terminology, 8085)
-- **Clinical Execution**: BUTANO/HAPI FHIR (SHR, 8090), PCT (8088), OROS (8089), Pharmacy (8096), Inpatient (8121)
-- **Finance**: MUSheX (8102), Costing Engine
-- **Integration/Ops**: Integration Hub, Offline Sync (8095), Document Service (8093), Notification (8200), Jobs (8109)
-- **Experience**: **Impilo web experience** (orchestration layer, port **3000** — built from `ui/one-ui-shell`, Compose service `one-ui-shell`); thin or legacy consoles: Ops Console (3001), EHR stub (3002), Portal (3003)
-- **Enterprise Resource**: General Ledger, HR & Payroll, Procurement
+**Canonical seven architectural planes** (source of truth: `docs/architecture/planes/00-production-plane-doctrine.md`):
+- **trust** — Trust, Identity Assurance & Governance Plane
+- **registry** — Registry & Sovereign Identity Spine
+- **clinical** — Clinical Execution & Shared Health Record Plane
+- **data** — Data, Intelligence & Public Health Plane
+- **integration** — Integration, Interoperability & Edge Plane
+- **experience** — Experience, Workflow & Orchestration Plane
+- **enterprise** — Enterprise Resource & Market Operations Plane
+
+### Architecture guardrails (mandatory)
+
+- Do not invent new plane names.
+- Do not create duplicate system-of-record functionality.
+- Do not move service folders by plane unless explicitly approved.
+- Do not treat `secondary_planes` as ownership.
+- Do not add mocks/stubs to production execution paths.
+- Before adding a feature, check `docs/registry/services-registry.yaml` and `docs/registry/system-of-record-map.md`.
+- Before creating a new service, prove no existing service already owns the capability.
+- Backend work is incomplete until wired through BFF/API contracts and surfaced in the relevant experience layer.
+- Frontend work is incomplete until backed by real APIs and real service logic.
+- All production routes must have authz, audit, error handling, observability, and tests.
 
 Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md)
 

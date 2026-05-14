@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   name: impilo-finance
   labels:
-    plane: finance
+    plane: enterprise
     part-of: impilo-vnext

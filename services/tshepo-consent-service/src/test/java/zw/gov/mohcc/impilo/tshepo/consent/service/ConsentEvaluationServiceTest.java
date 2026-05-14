@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.tshepo.consent.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveEntity;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveRepository;
+import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentAuditRepository;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
 
 import java.time.Instant;
@@ -43,6 +45,12 @@ class ConsentEvaluationServiceTest {
 
     @Mock
     private ConsentCacheService cacheService;
+
+    @Mock
+    private ConsentAuditRepository consentAuditRepository;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private ConsentEvaluationService evaluationService;
@@ -360,6 +368,7 @@ class ConsentEvaluationServiceTest {
 
             assertThat(decision.permitted()).isFalse();
             assertThat(decision.reason()).isEqualTo("CONSENT_DENIED");
+            verify(consentAuditRepository).save(any());
         }
     }
 

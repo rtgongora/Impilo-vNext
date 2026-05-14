@@ -27,7 +27,7 @@ public class ProviderBiometricPolicyClient {
 
     public ProviderBiometricPolicyClient(
             @Value("${varapi.biometric.policy-enabled:true}") boolean policyEnabled,
-            @Value("${varapi.biometric.tshepo-policy-base-url:http://localhost:8079}") String tshepoPolicyBaseUrl) {
+            @Value("${varapi.biometric.tshepo-policy-base-url:http://localhost:8081}") String tshepoPolicyBaseUrl) {
         this.policyEnabled = policyEnabled;
         this.tshepoPolicyBaseUrl = trim(tshepoPolicyBaseUrl);
     }
@@ -74,7 +74,7 @@ public class ProviderBiometricPolicyClient {
 
     private static String trim(String u) {
         if (u == null || u.isBlank()) {
-            return "http://localhost:8079";
+            return "http://localhost:8081";
         }
         return u.endsWith("/") ? u.substring(0, u.length() - 1) : u;
     }

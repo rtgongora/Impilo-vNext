@@ -404,7 +404,7 @@
 
 ## Sovereign Service 9 — MUSheX (Payments)
 
-> Port 8088 · Finance Plane
+> Port 8088 · Enterprise Plane (finance domain)
 > Payment orchestration, claims switching, wallet, reconciliation.
 
 ### Skeleton
@@ -453,7 +453,7 @@
 
 ---
 
-## Finance Plane (non-sovereign)
+## Enterprise Plane (finance domain, non-sovereign)
 
 ### Costing Engine Service
 - [x] Flyway V001, Helm chart
@@ -463,7 +463,7 @@
 
 ---
 
-## Integration / Ops Plane
+## Integration Plane (platform-ops domain)
 
 ### Inventory Service
 - [x] Flyway V001, Helm chart

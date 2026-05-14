@@ -65,18 +65,21 @@ function main() {
     "",
     "## Services & agents",
     "",
-    "| Maven module | ID | Plane | Sovereign | Group | Protocol | HTTP port | Product names |",
-    "|--------------|-----|-------|-----------|-------|----------|-----------|---------------|"
+    "| ID | Maven module | Primary plane | Domain | Secondary planes | Sovereign group | Product names | Protocol | Port | SoR responsibilities | Forbidden responsibilities | Consumes from | Exposes to | Impl status | Frontend wiring | API contract | Authz/Audit | Observability | Production status |",
+    "|----|--------------|---------------|--------|------------------|-----------------|---------------|----------|------|----------------------|----------------------------|---------------|------------|-------------|-----------------|-------------|-------------|---------------|-------------------|"
   );
 
   for (const e of services) {
     const names = (e.product_names ?? []).length ? e.product_names.join(", ") : "—";
-    const sg = e.sovereign_group ?? "—";
-    const sov = e.sovereign ? "yes" : "—";
+    const sg = e.sovereign_group ?? (e.sovereign ? "yes" : "—");
     const port = e.default_http_port != null ? String(e.default_http_port) : "—";
+    const sec = (e.secondary_planes ?? []).length ? e.secondary_planes.join(", ") : "—";
+    const sor = (e.system_of_record_for ?? []).length ? e.system_of_record_for.join("; ") : "—";
+    const forb = (e.forbidden_responsibilities ?? []).length ? e.forbidden_responsibilities.join("; ") : "—";
+    const upstream = (e.consumes_from ?? []).length ? e.consumes_from.join(", ") : "—";
+    const downstream = (e.exposes_to ?? []).length ? e.exposes_to.join(", ") : "—";
     lines.push(
-      `| \`${e.maven_module ?? ""}\` | \`${e.id ?? ""}\` | ${e.plane ?? ""} | ${sov} | ${sg} | ` +
-        `${e.primary_protocol ?? ""} | ${port} | ${names} |`
+      `| \`${e.id ?? ""}\` | \`${e.maven_module ?? ""}\` | ${e.primary_plane ?? e.plane ?? ""} | ${e.domain ?? "—"} | ${sec} | ${sg} | ${names} | ${e.primary_protocol ?? ""} | ${port} | ${sor} | ${forb} | ${upstream} | ${downstream} | ${e.implementation_status ?? "—"} | ${e.frontend_wiring_status ?? "—"} | ${e.api_contract_status ?? "—"} | ${e.authz_audit_status ?? "—"} | ${e.observability_status ?? "—"} | ${e.production_status ?? "—"} |`
     );
   }
 

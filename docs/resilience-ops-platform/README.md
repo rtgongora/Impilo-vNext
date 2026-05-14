@@ -1,6 +1,6 @@
 # Resilience & Operations Platform
 
-The Resilience & Operations Platform provides the operational backbone for Impilo vNext. It lives in the **Integration/Ops Plane** (Ring 2) and is designed with a critical constraint: **no sync dependencies into Ring 1 (Clinical Execution)**.
+The Resilience & Operations Platform provides the operational backbone for Impilo vNext. It lives in the **Integration Plane** (`platform-ops` domain, Ring 2) and is designed with a critical constraint: **no sync dependencies into Ring 1 (Clinical Execution)**.
 
 ## Services
 

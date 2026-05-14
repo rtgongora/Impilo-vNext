@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: impilo-trust
   labels:
-    plane: trust-governance
+    plane: trust
     part-of: impilo-vnext
     istio-injection: enabled
 ---
@@ -13,7 +13,7 @@ kind: Namespace
 metadata:
   name: impilo-registry
   labels:
-    plane: registry-spine
+    plane: registry
     part-of: impilo-vnext
     istio-injection: enabled
 ---
@@ -22,7 +22,7 @@ kind: Namespace
 metadata:
   name: impilo-clinical
   labels:
-    plane: clinical-execution
+    plane: clinical
     part-of: impilo-vnext
     istio-injection: enabled
 ---
@@ -31,7 +31,7 @@ kind: Namespace
 metadata:
   name: impilo-finance
   labels:
-    plane: finance
+    plane: enterprise
     part-of: impilo-vnext
     istio-injection: enabled
 ---
@@ -40,7 +40,7 @@ kind: Namespace
 metadata:
   name: impilo-ops
   labels:
-    plane: integration-ops
+    plane: integration
     part-of: impilo-vnext
     istio-injection: enabled
 ---
@@ -57,7 +57,7 @@ kind: Namespace
 metadata:
   name: impilo-data
   labels:
-    plane: data-platform
+    plane: data
     part-of: impilo-vnext
 ---
 apiVersion: v1
@@ -65,5 +65,5 @@ kind: Namespace
 metadata:
   name: impilo-monitoring
   labels:
-    plane: observability
+    plane: integration
     part-of: impilo-vnext

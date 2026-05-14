@@ -12,15 +12,17 @@ Certain future ecosystem-facing artefacts may later be extracted and separately 
 
 Seven architectural planes:
 
-| Plane | Services |
+| Canonical Plane | Services |
 |-------|----------|
-| **Trust & Governance** | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
-| **Registry Spine** | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
-| **Clinical Execution** | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
-| **Finance** | Costing Engine, MUSheX (Payments/Claims) |
-| **Integration/Ops** | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
-| **Experience** | **Impilo web experience** (single orchestration layer on **3000** — zones WORK / EHR / CONTROL / MY PROFESSIONAL / MY LIFE; shipped as `one-ui-shell`), Ops Console, EHR, Portal — **Experience BFF** (`:8160`) aggregates sovereign APIs (e.g. PCT longitudinal summary + **Mvumo** `consentSummary` for chart banner/summary; see `docs/architecture/patient-care-consent-surface.md`) |
-| **Enterprise Resource Plane** | General Ledger, HR & Payroll, Procurement, enterprise reporting, and control surfaces |
+| **trust** (Trust, Identity Assurance & Governance) | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
+| **registry** (Registry & Sovereign Identity Spine) | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
+| **clinical** (Clinical Execution & Shared Health Record) | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
+| **data** (Data, Intelligence & Public Health) | NDR, Data Warehouse, Reporting, Surveillance, Search |
+| **integration** (Integration, Interoperability & Edge) | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
+| **experience** (Experience, Workflow & Orchestration) | **Impilo web experience** (single orchestration layer on **3000** shipped as `one-ui-shell`), mobile journeys, and **Experience BFF** (`:8160`) orchestration |
+| **enterprise** (Enterprise Resource & Market Operations) | Costing Engine, MUSheX, Coverage, Claims/Billing flows, General Ledger, HR & Payroll, Procurement, marketplace operations |
+
+Canonical doctrine and ownership maps are maintained under `docs/architecture/planes/` and `docs/registry/`.
 
 ## Deployment Model
 

@@ -64,6 +64,8 @@ grpc:
 # ── TSHEPO Authz configuration ────────────────────────────────────────────
 tshepo:
   authz:
+    legacy-policy:
+      base-url: ${TSHEPO_LEGACY_SERVICE_URL:http://localhost:8079}
     # Rate limiting
     rate-limit:
       max-requests-per-minute: 600

@@ -152,7 +152,7 @@ const ZONES: SidebarZone[] = [
         { href: "/search", label: "Search", icon: Search },
         { href: "/guidance", label: "Guidance", icon: Lightbulb },
         { href: "/citizen", label: "Citizen services", icon: IdCard },
-        // Health OS Finance Plane: Mushe digital wallet
+        // Health OS Enterprise Plane (finance domain): Mushe digital wallet
         { href: "/wallet", label: "My Wallet", icon: Wallet },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
