@@ -47,6 +47,11 @@ surv:
     poll-interval-ms: 2000
   v11:
     emit-mode: LEGACY_ONLY
+  kafka:
+    topics:
+      encounter-completed: ${SURV_KAFKA_TOPICS_ENCOUNTER_COMPLETED:clinical.pct.encounter.completed}
+      death-recorded: ${SURV_KAFKA_TOPICS_DEATH_RECORDED:clinical.pct.death.recorded}
+      alert: ${SURV_KAFKA_TOPICS_ALERT:analytics.surveillance.alert}
 
 management:
   endpoints:

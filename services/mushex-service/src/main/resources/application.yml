@@ -103,7 +103,7 @@ mushex:
     cross-facility-dashboard: true
   adapters:
     sandbox:
-      enabled: true
+      enabled: ${MUSHEX_SANDBOX_ENABLED:false}
       simulate-delay-ms: 500
-      bypass-credential-check-for-simulation: true
-      apply-simulation-outcome-on-create: true
+      bypass-credential-check-for-simulation: ${MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK:false}
+      apply-simulation-outcome-on-create: ${MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME:false}

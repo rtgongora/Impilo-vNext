@@ -99,6 +99,23 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 
 ---
 
+## 5b. Contract Parity Closure Findings (Final Hardening)
+
+The previously tracked parity drifts on the four target rails are now closed in
+runtime defaults and documented contracts.
+
+| Rail | Listener/Consumer | Producer Literal | Parity Status |
+|---|---|---|---|
+| Surveillance clinical encounter intake | `clinical.pct.encounter.completed`, `clinical.pct.death.recorded` | canonical clinical rails active in PCT bridge path | Fixed |
+| Data pipeline clinical journey/result rails | `clinical.pct.journey.completed`, `clinical.oros.result.available` | canonical clinical rails active | Fixed |
+| Data pipeline kernel client rail | `kernel.vito.client.registered` | bridged from VITO identity rail during closure window | Fixed |
+| Reporting aggregate rail | `analytics.reporting.aggregate` | explicit data-pipeline producer contract and emit path | Fixed |
+
+Phase traceability and rollback semantics remain in
+`docs/architecture/EVENT_CONTRACT_PARITY_CONVERGENCE_PLAN.md`.
+
+---
+
 ## 6. Outbox publishers (starting points for full matrices)
 
 Each file maps **outbox `eventType`** (or aggregate) → **Kafka topic**. Tests often assert the routing table.
@@ -215,6 +232,7 @@ Machine-readable anchors (incrementally enrich payloads under `components/messag
 - [`campaigns-outbound.asyncapi.yaml`](../../contracts/asyncapi/campaigns-outbound.asyncapi.yaml) — `impilo.campaigns.*`
 - [`document-store.asyncapi.yaml`](../../contracts/asyncapi/document-store.asyncapi.yaml) — `docstore.*`
 - [`data-ingestion-bronze.asyncapi.yaml`](../../contracts/asyncapi/data-ingestion-bronze.asyncapi.yaml) — topic pattern consumer
+- [`data-pipeline-reporting-aggregate.asyncapi.yaml`](../../contracts/asyncapi/data-pipeline-reporting-aggregate.asyncapi.yaml) — `analytics.reporting.aggregate`
 
 Conventions: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
 

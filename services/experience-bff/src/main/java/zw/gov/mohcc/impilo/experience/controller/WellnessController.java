@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -39,9 +40,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Wellness programs list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure("WELLNESS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -60,9 +59,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Wellness program get failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", Map.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure("WELLNESS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -80,8 +77,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Wellness enrollment failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "ENROLL_FAILED", "message", e.getMessage())));
+            return upstreamFailure("ENROLL_FAILED", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -97,9 +93,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Wellness enrollments list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure("WELLNESS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -116,9 +110,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Wellness challenges list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure("WELLNESS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -135,8 +127,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Wellness challenge join failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "JOIN_FAILED", "message", e.getMessage())));
+            return upstreamFailure("JOIN_FAILED", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -154,9 +145,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Wellness goals list failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", new Object[0],
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure("WELLNESS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -172,8 +161,7 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Wellness goal creation failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "CREATE_FAILED", "message", e.getMessage())));
+            return upstreamFailure("CREATE_FAILED", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -190,8 +178,17 @@ public class WellnessController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Wellness goal update failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "UPDATE_FAILED", "message", e.getMessage())));
+            return upstreamFailure("UPDATE_FAILED", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code,
+            String message,
+            String requestId,
+            String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Wellness service unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

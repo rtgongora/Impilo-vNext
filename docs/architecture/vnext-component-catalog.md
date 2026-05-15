@@ -1,5 +1,8 @@
 # Impilo vNext — Component Catalog
 
+> Canonical service ownership and Ring/Plane classification are maintained in `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md` and `docs/architecture/services-registry.yaml`.  
+> This catalog remains a supporting inventory snapshot.
+
 **Date**: 2026-03-26
 **Version**: 1.1
 **Status**: Living document — updated as components evolve

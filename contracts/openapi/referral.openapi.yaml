@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info:
+  title: Referral Service API
+  version: 0.1.0
+  description: Initial API scaffold for referral orchestration.
+paths:
+  /internal/v1/health:
+    get:
+      summary: Referral service health probe
+      operationId: getReferralHealth
+      tags: [Health]
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok

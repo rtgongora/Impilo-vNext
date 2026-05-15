@@ -1,0 +1,36 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo — Data Pipeline reporting aggregate rail
+  version: '0.1.0'
+  description: |
+    Documents the producer contract for `analytics.reporting.aggregate` emitted
+    from `data-pipeline-service` outbox publisher (`EVENT_INGESTED` secondary rail)
+    and consumed by `reporting-service`.
+defaultContentType: application/json
+
+channels:
+  analytics.reporting.aggregate:
+    description: Aggregate-ready analytics envelope emitted by data-pipeline-service.
+    publish:
+      operationId: publishReportingAggregate
+      message:
+        $ref: '#/components/messages/ReportingAggregate'
+    subscribe:
+      operationId: consumeReportingAggregate
+      message:
+        $ref: '#/components/messages/ReportingAggregate'
+
+components:
+  messages:
+    ReportingAggregate:
+      summary: Pipeline ingested-event aggregate projection payload
+      payload:
+        type: object
+        properties:
+          eventId: { type: string }
+          sourceId: { type: string }
+          eventType: { type: string }
+          aggregateType: { type: string }
+          aggregateId: { type: string }
+          occurredAt: { type: string, format: date-time }
+          tenantId: { type: string, format: uuid }

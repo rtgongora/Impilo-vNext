@@ -55,3 +55,7 @@ impilo:
 reporting:
   outbox:
     poll-interval-ms: 2000
+  kafka:
+    topics:
+      aggregate: ${REPORTING_KAFKA_TOPICS_AGGREGATE:analytics.reporting.aggregate}
+      surveillance-event: ${REPORTING_KAFKA_TOPICS_SURVEILLANCE_EVENT:analytics.surveillance.event}

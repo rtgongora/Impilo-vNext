@@ -18,6 +18,11 @@ info:
     services. All events use the v1.1 EventEnvelope wrapper defined in
     `libs/shared-kernel-java`.
 
+    This v3 catalog is the canonical topology/taxonomy target. Some currently
+    implemented Java producer and listener literals remain in transitional topic
+    namespaces (for example `pct.*`, `oros.*`, `impilo.vito.*`) and are tracked
+    in `contracts/asyncapi/` and `docs/architecture/kafka-event-catalog.md`.
+
     ## Bus Topology
 
     Events flow through 6 logical Kafka channels:

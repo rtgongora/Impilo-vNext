@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: Workforce Governance Service API
+  version: 1.0.0
+  description: Contract for governance structures, assignments, and onboarding workflows.
+servers:
+  - url: http://localhost:8165
+paths:
+  /v1/internal/governance/organisations:
+    get:
+      summary: List organisations
+      responses:
+        '200':
+          description: Organisations returned
+    post:
+      summary: Create organisation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          description: Organisation created
+  /v1/internal/governance/assignments/search:
+    get:
+      summary: Search assignments
+      responses:
+        '200':
+          description: Assignment search results
+  /v1/internal/governance/onboarding/single-facility:
+    post:
+      summary: Onboard user to single facility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Onboarding completed
+  /v1/internal/governance/summaries/facility/{facilityId}:
+    get:
+      summary: Get facility governance summary
+      parameters:
+        - in: path
+          name: facilityId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Facility summary returned

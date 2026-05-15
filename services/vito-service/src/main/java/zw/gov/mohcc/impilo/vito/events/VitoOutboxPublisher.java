@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.vito.events;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,16 +33,24 @@ import java.util.List;
 public class VitoOutboxPublisher extends CompanionOutboxPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(VitoOutboxPublisher.class);
+    private static final String V11_IDENTITY_TOPIC = "impilo.vito.identity";
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitKernelClientRegisteredEnabled;
+    private final String kernelClientRegisteredTopic;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public VitoOutboxPublisher(EventOutboxRepository outboxRepository,
                                 KafkaTemplate<String, String> kafkaTemplate,
-                                @Value("${vito.v11.emit-mode:#{null}}") String ymlEmitMode) {
+                                @Value("${vito.v11.emit-mode:#{null}}") String ymlEmitMode,
+                                @Value("${vito.outbox.dual-emit-kernel-client-registered-enabled:false}") boolean dualEmitKernelClientRegisteredEnabled,
+                                @Value("${vito.outbox.kernel-client-registered-topic:kernel.vito.client.registered}") String kernelClientRegisteredTopic) {
         super(new DualEmitPolicy(ymlEmitMode), new EventTopicRegistry("vito"));
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitKernelClientRegisteredEnabled = dualEmitKernelClientRegisteredEnabled;
+        this.kernelClientRegisteredTopic = kernelClientRegisteredTopic;
         log.info("VitoOutboxPublisher initialized with effective emit-mode={}", effectiveEmitMode());
     }
 
@@ -64,6 +74,12 @@ public class VitoOutboxPublisher extends CompanionOutboxPublisher {
     @Override
     protected void sendToKafka(String topic, String key, String value) {
         kafkaTemplate.send(topic, key, value);
+        if (dualEmitKernelClientRegisteredEnabled
+                && V11_IDENTITY_TOPIC.equals(topic)
+                && shouldEmitKernelClientRegisteredAlias(value)
+                && !kernelClientRegisteredTopic.equals(topic)) {
+            kafkaTemplate.send(kernelClientRegisteredTopic, key, value);
+        }
     }
 
     @Override
@@ -90,5 +106,24 @@ public class VitoOutboxPublisher extends CompanionOutboxPublisher {
     @Override
     protected String resolveV11Topic(OutboxRow row) {
         return VitoEventMapper.resolveV11Topic(row.aggregateType());
+    }
+
+    private boolean shouldEmitKernelClientRegisteredAlias(String payload) {
+        try {
+            JsonNode root = objectMapper.readTree(payload);
+            String eventType = root.path("event_type").asText(null);
+            if (eventType == null || eventType.isBlank()) {
+                eventType = root.path("eventType").asText(null);
+            }
+            if (eventType == null || eventType.isBlank()) {
+                return false;
+            }
+            return eventType.contains(".client.created.")
+                    || eventType.contains(".client.registered.")
+                    || eventType.contains(".client.completed.");
+        } catch (Exception ex) {
+            log.debug("Skipping kernel.vito.client.registered alias emit due to unparseable payload", ex);
+            return false;
+        }
     }
 }

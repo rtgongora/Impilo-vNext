@@ -83,6 +83,7 @@ const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
 const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const PUBLIC_HEALTH_ROLES = ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 
 /**
  * Returns true when the user should see citizen-only experience.
@@ -112,10 +113,14 @@ const ZONES: SidebarZone[] = [
       { href: "/clinical-tools", label: "Clinical References", icon: BookMarked, requiredRoles: CLINICAL_ROLES },
       { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
+      { href: "/telemedicine", label: "Telemedicine", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/communication/secure-messaging", label: "Secure Messaging", icon: MessageSquare, requiredRoles: QUEUE_ROLES },
+      { href: "/beds", label: "Bed Management", icon: Building2, requiredRoles: CLINICAL_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
       { href: "/inventory", label: "Inventory", icon: Package },
       { href: "/enterprise", label: "Enterprise resources", icon: Boxes },
+      { href: "/erp", label: "Institutional ERP", icon: Wallet, requiredRoles: FINANCE_ROLES },
       { href: "/marketplace", label: "Marketplace", icon: BriefcaseBusiness },
       { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
       // Absorbed sidecars: oros-web → /lab
@@ -131,6 +136,8 @@ const ZONES: SidebarZone[] = [
       { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
       { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck, requiredRoles: ["SYSTEM_ADMIN", "HIE_ADMIN"] },
       { href: "/registry", label: "Registry", icon: Building2 },
+      { href: "/public-health", label: "Public Health", icon: Heart, requiredRoles: PUBLIC_HEALTH_ROLES },
+      { href: "/operations/facility-operations", label: "Facility Operations", icon: Building2, requiredRoles: ADMIN_ROLES },
       { href: "/organization-admin", label: "Org administration", icon: BriefcaseBusiness, requiredRoles: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"] },
       { href: "/reports", label: "Reports", icon: FileBarChart2 },
       { href: "/admin", label: "Administration", icon: Shield, requiredRoles: ADMIN_ROLES },
@@ -149,6 +156,7 @@ const ZONES: SidebarZone[] = [
         { href: "/home", label: "Home", icon: LayoutDashboard },
         // Health OS §2a: Intelligent experience layer
         { href: "/ask", label: "Ask", icon: MessageSquare },
+        { href: "/intelligence", label: "Intelligence", icon: Sparkles },
         { href: "/search", label: "Search", icon: Search },
         { href: "/guidance", label: "Guidance", icon: Lightbulb },
         { href: "/citizen", label: "Citizen services", icon: IdCard },

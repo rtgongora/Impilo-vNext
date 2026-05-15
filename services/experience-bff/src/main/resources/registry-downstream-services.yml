@@ -17,7 +17,8 @@ impilo:
       msika-service: http://localhost:8086
       ubomi-service: http://localhost:8087
       indawo-service: http://localhost:8150
-      product-registry-service: http://localhost:8097
+      # Deprecated alias compatibility only: freeze 2026-05-15, cutover 2026-09-30, sunset 2026-12-31
+      product-registry-service: http://localhost:8086
       butano-service: http://localhost:8090
       butano-fhir: http://localhost:8289
       fhir-gateway-service: http://localhost:8091
@@ -71,4 +72,5 @@ impilo:
       offline-edge-service: http://localhost:8360
       developer-portal-service: http://localhost:8370
       schema-registry-service: http://localhost:8371
-      wellness-service: http://localhost:8161
+      # Deprecated alias compatibility only: freeze 2026-05-15, cutover 2026-09-30, sunset 2026-12-31
+      wellness-service: http://localhost:8125

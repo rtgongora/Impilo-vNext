@@ -195,6 +195,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/system-monitor", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "System Monitor", navLabel: "System Monitor", navZone: "professional" },
   { path: "/admin/integration-status", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Integration Status", navLabel: "Integrations", navZone: "professional" },
   { path: "/admin/sidecar-retirement", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Sidecar Retirement", navLabel: "Sidecar Retirement", navZone: "professional" },
+  { path: "/dags", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Access Governance", navLabel: "DAGS", navZone: "professional" },
+  { path: "/dags/policy", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Access Policy", navLabel: "DAGS Policy", navZone: "professional" },
 
   // ── Administrative plane landings (operational context: registry_admin / organization_admin) ──
   { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
@@ -371,6 +373,7 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
   { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },
+  { path: "/operations/facility-operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Operations", navLabel: "Facility Operations", navZone: "professional" },
   { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
   { path: "/operations/vito/registration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Registration", navZone: "professional" },
   { path: "/operations/vito/registration/new", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "New Registration", navLabel: "New Registration", navZone: "professional" },
@@ -492,7 +495,7 @@ export const ROUTES: RouteDefinition[] = [
 // New total is 276.
 // Additional upstream route registrations on this branch increase the current
 // canonical total to 278.
-export const EXPECTED_ROUTE_COUNT = 317;
+export const EXPECTED_ROUTE_COUNT = 319;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

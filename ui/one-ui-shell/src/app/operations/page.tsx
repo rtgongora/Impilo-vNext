@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 const SECTIONS = [
+  { href: "/operations/facility-operations", label: "Facility Operations", description: "Operational dashboard for district view, patient flow, and resources", Icon: Settings2 },
   { href: "/operations/vito", label: "Identity Operations", description: "VITO client registry: dedup, issuance queue, match review, card management", Icon: Users },
   { href: "/operations/butano", label: "SHR Operations", description: "BUTANO reconciliation, FHIR stats, trigger management", Icon: Database },
   { href: "/operations/assets", label: "Asset Management", description: "Track, assign, and lifecycle-manage organizational assets", Icon: Package },

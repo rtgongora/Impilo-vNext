@@ -24,6 +24,14 @@ Seven architectural planes:
 
 Canonical doctrine and ownership maps are maintained under `docs/architecture/planes/` and `docs/registry/`.
 
+Canonical service governance and classification references:
+
+- `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md`
+- `docs/architecture/services-registry.yaml`
+- `docs/architecture/service-update-policy.md`
+- `docs/architecture/ring-plane-taxonomy.md`
+- `docs/architecture/service-boundary-violations.md`
+
 ## Deployment Model
 
 Impilo is designed as a hybrid, federated platform: centrally governed where national truth is required, and locally executable where service continuity is required.

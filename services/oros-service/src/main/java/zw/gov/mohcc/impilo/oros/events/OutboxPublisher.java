@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.oros.events;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,8 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitCanonicalEnabled;
+    private final String canonicalResultAvailableTopic;
 
     /**
      * Constructs the OutboxPublisher with the outbox repository and Kafka template.
@@ -57,9 +60,13 @@ public class OutboxPublisher {
      * @param kafkaTemplate    Kafka template for publishing events
      */
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${oros.outbox.dual-emit-canonical-enabled:false}") boolean dualEmitCanonicalEnabled,
+                           @Value("${oros.outbox.canonical-topics.result-available:clinical.oros.result.available}") String canonicalResultAvailableTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitCanonicalEnabled = dualEmitCanonicalEnabled;
+        this.canonicalResultAvailableTopic = canonicalResultAvailableTopic;
     }
 
     /**
@@ -91,6 +98,10 @@ public class OutboxPublisher {
                 String payload = event.getPayload();
 
                 kafkaTemplate.send(topic, key, payload);
+                String canonicalTopic = resolveCanonicalCompanionTopic(event.getEventType());
+                if (canonicalTopic != null && !canonicalTopic.equals(topic)) {
+                    kafkaTemplate.send(canonicalTopic, key, payload);
+                }
 
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
@@ -153,6 +164,16 @@ public class OutboxPublisher {
                 }
                 yield "oros.events";
             }
+        };
+    }
+
+    private String resolveCanonicalCompanionTopic(String eventType) {
+        if (!dualEmitCanonicalEnabled || eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "RESULT_AVAILABLE", "RESULT_POSTED" -> canonicalResultAvailableTopic;
+            default -> null;
         };
     }
 }

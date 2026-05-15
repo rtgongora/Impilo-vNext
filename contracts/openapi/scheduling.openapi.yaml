@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: Scheduling Service API
+  version: 1.0.0
+  description: Contract for scheduling slot discovery and reservation flows.
+servers:
+  - url: http://localhost:8128
+paths:
+  /v1/health:
+    get:
+      summary: Health probe
+      responses:
+        '200':
+          description: Service is healthy
+  /v1/slots:
+    get:
+      summary: List available slots
+      parameters:
+        - in: query
+          name: facilityId
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Slots returned
+  /v1/slots/reserve:
+    post:
+      summary: Reserve a slot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Slot reserved
+  /v1/slots/release:
+    post:
+      summary: Release a reservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Reservation released

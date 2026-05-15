@@ -59,6 +59,7 @@
         <module>fhir-gateway-service</module>
         <module>pct-service</module>
         <module>scheduling-service</module>
+        <module>referral-service</module>
         <module>simba-service</module>
         <module>oros-service</module>
         <module>pharmacy-service</module>
@@ -123,6 +124,7 @@
         <module>data-ingestion-service</module>
         <module>data-governance-service</module>
         <module>ndr-service</module>
+        <module>analytics-pipeline-service</module>
         <!-- Supply & IoT Platform — Asset Registry + Dispatch + IoT Ingestion -->
         <module>asset-registry-service</module>
         <module>dispatch-service</module>
@@ -159,6 +161,10 @@
         <module>../libs/ops-instrumentation</module>
         <!-- Offline SDK (entitlement verifier + local queue format) -->
         <module>../libs/offline-sdk</module>
+        <!-- New approved libraries -->
+        <module>../libs/supply-planning</module>
+        <module>../libs/vault-kms</module>
+        <module>../libs/chaos-testing</module>
         <!-- Contract Tests (schema compatibility + event envelope validator) -->
         <module>../libs/contract-tests</module>
         <!-- Developer & Governance Platform -->

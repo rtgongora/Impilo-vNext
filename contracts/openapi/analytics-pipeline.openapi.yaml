@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info:
+  title: Analytics Pipeline Service API
+  version: 0.1.0
+  description: Initial API scaffold for analytics pipeline orchestration.
+paths:
+  /internal/v1/health:
+    get:
+      summary: Analytics pipeline service health probe
+      operationId: getAnalyticsPipelineHealth
+      tags: [Health]
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok

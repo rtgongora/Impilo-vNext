@@ -217,6 +217,47 @@ jobs:
             docs/reports/completeness-report.md
           retention-days: 14
 
+  architecture-registry-advisory:
+    name: Service Registry Validation (Advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validator dependencies
+        run: pip install pyyaml
+
+      - name: Run architecture registry validation in advisory mode
+        env:
+          SERVICE_REGISTRY_VALIDATION_MODE: advisory
+          OPENAPI_LEGACY_DEADLINE: 2026-10-31
+        run: python scripts/architecture/validate-service-registry.py
+
+  architecture-registry-soft-gate-readiness:
+    name: Service Registry Soft-Gate Readiness (Advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validator dependencies
+        run: pip install pyyaml
+
+      - name: Run registry validator in soft mode with contract-closure readiness policy
+        env:
+          SERVICE_REGISTRY_VALIDATION_MODE: soft
+          SERVICE_REGISTRY_REQUIRE_SOFT_GATE_CONTRACT_CLOSURE: 'true'
+          OPENAPI_LEGACY_DEADLINE: 2026-10-31
+        run: python scripts/architecture/validate-service-registry.py
+
   learning-rollout-readiness:
     name: Learning rollout readiness gates
     runs-on: ubuntu-latest

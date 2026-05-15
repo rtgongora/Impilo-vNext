@@ -165,7 +165,7 @@ public class ServiceClientConfig {
             if (channelsBaseUrl == null) channelsBaseUrl = "http://localhost:8290";
             if (dispatchBaseUrl == null) dispatchBaseUrl = "http://localhost:8291";
             if (supportBaseUrl == null) supportBaseUrl = "http://localhost:8292";
-            if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8293";
+            if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8125";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
         }

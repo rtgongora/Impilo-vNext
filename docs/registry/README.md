@@ -1,5 +1,17 @@
 # Service Registry (Production Baseline)
 
+## Canonical Service Architecture Register
+
+The canonical architecture source of truth now lives under `docs/architecture/`:
+
+- `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md`
+- `docs/architecture/services-registry.yaml`
+- `docs/architecture/service-update-policy.md`
+- `docs/architecture/ring-plane-taxonomy.md`
+- `docs/architecture/service-boundary-violations.md`
+
+This `docs/registry/` area remains useful for generated support artifacts and historical baselines.
+
 | File | Role |
 |------|------|
 | [`services-registry.yaml`](./services-registry.yaml) | **Source of truth** — canonical seven-plane ownership, domains, SoR boundaries, dependency contracts, and readiness fields. |

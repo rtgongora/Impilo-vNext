@@ -66,6 +66,11 @@ springdoc:
 pct:
   outbox:
     poll-interval-ms: 2000
+    dual-emit-canonical-enabled: ${PCT_OUTBOX_DUAL_EMIT_CANONICAL_ENABLED:false}
+    canonical-topics:
+      journey-completed: ${PCT_OUTBOX_CANONICAL_TOPIC_JOURNEY_COMPLETED:clinical.pct.journey.completed}
+      encounter-completed: ${PCT_OUTBOX_CANONICAL_TOPIC_ENCOUNTER_COMPLETED:clinical.pct.encounter.completed}
+      death-recorded: ${PCT_OUTBOX_CANONICAL_TOPIC_DEATH_RECORDED:clinical.pct.death.recorded}
   queue:
     default-sla-minutes: 30
   discharge:

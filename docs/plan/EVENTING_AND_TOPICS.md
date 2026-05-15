@@ -182,6 +182,18 @@ Where:
 - `{aggregate}`: domain aggregate (e.g., `client`, `journey`, `order`, `payment`)
 - `{action}`: past-tense verb (e.g., `created`, `updated`, `merged`, `placed`)
 
+### 3.2a Runtime Parity Note
+
+The targeted parity rails for surveillance, data-pipeline, and reporting now run
+with canonical defaults aligned to this taxonomy model (`clinical.*`, `kernel.*`,
+and `analytics.reporting.aggregate`).
+
+Authoritative reconciliation references:
+
+- `docs/architecture/kafka-event-catalog.md`
+- `contracts/asyncapi/README.md`
+- `contracts/async/README.md`
+
 ### 3.3 Complete Topic Catalog
 
 #### Trust Channel (trust.*)
