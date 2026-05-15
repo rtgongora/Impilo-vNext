@@ -20,7 +20,6 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -339,8 +338,7 @@ class WalletControllerTest {
     // ── Non-wallet payment methods are unaffected by the gate ─────────
 
     @Test
-    void pay_cashMethod_unaffectedByGate_returnsCreatedEvenWhenFallbackDisabled() {
-        // CASH never touches MusheWalletServiceClient — the 503 gate must NOT fire.
+    void pay_cashMethodReturnsNotImplementedUntilRailIsWired() {
         StubMusheWalletClient stub = StubMusheWalletClient.throwing();
         WalletController controller = new WalletController(stub, fallbackDisabled());
 
@@ -348,11 +346,11 @@ class WalletControllerTest {
                 REQ, CORR, ACTOR, null,
                 Map.of("method", "CASH", "amount", 3.5, "reference", "INV-CASH"));
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
         Map<String, Object> body = response.getBody();
         assertNotNull(body);
-        // No error envelope — receipt was produced for the non-wallet path.
-        assertNull(body.get("error"));
+        Map<?, ?> error = assertInstanceOf(Map.class, body.get("error"));
+        assertEquals("PAYMENT_METHOD_UNAVAILABLE", error.get("code"));
     }
 
     // ── Validation paths are untouched by the gate ────────────────────
@@ -371,6 +369,8 @@ class WalletControllerTest {
         assertNotNull(body);
         Map<?, ?> error = assertInstanceOf(Map.class, body.get("error"));
         assertEquals("VALIDATION", error.get("code"));
+        Map<?, ?> meta = assertInstanceOf(Map.class, body.get("meta"));
+        assertEquals(REQ, meta.get("request_id"));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────

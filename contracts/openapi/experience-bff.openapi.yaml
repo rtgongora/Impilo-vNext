@@ -7,6 +7,13 @@ info:
 tags:
   - name: Health
   - name: Summary
+  - name: Data-Public-Health
+  - name: Data-Reporting
+  - name: Data-AI
+  - name: Data-Governance
+  - name: Enterprise-Marketplace
+  - name: Enterprise-Coverage
+  - name: Enterprise-Mobile-Billing
   - name: ERP-GL
   - name: ERP-HR
   - name: ERP-Procurement
@@ -67,6 +74,198 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/accounts/seed:
+    post:
+      operationId: bffErpGlAccountsSeed
+      tags: [ERP-GL]
+      summary: Seed GL account templates
+      responses:
+        '200':
+          description: Seed response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/periods/open:
+    get:
+      operationId: bffErpGlOpenPeriods
+      tags: [ERP-GL]
+      summary: List open GL periods
+      responses:
+        '200':
+          description: Open period list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/journals:
+    get:
+      operationId: bffErpGlJournalsList
+      tags: [ERP-GL]
+      summary: List GL journals for period
+      responses:
+        '200':
+          description: Journal list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffErpGlJournalCreate
+      tags: [ERP-GL]
+      summary: Create GL journal entry
+      responses:
+        '200':
+          description: Journal created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/journals/{entryId}/post:
+    post:
+      operationId: bffErpGlJournalPost
+      tags: [ERP-GL]
+      summary: Post GL journal entry
+      parameters:
+        - name: entryId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Journal posted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/trial-balance:
+    get:
+      operationId: bffErpGlTrialBalance
+      tags: [ERP-GL]
+      summary: Trial balance by period
+      responses:
+        '200':
+          description: Trial balance payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/financial-statements/income-statement:
+    get:
+      operationId: bffErpGlIncomeStatement
+      tags: [ERP-GL]
+      summary: Income statement by period
+      responses:
+        '200':
+          description: Income statement payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/financial-statements/balance-sheet:
+    get:
+      operationId: bffErpGlBalanceSheet
+      tags: [ERP-GL]
+      summary: Balance sheet by period
+      responses:
+        '200':
+          description: Balance sheet payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/erp/gl/budgets:
+    get:
+      operationId: bffErpGlBudgetsList
+      tags: [ERP-GL]
+      summary: List GL budgets by fiscal year
+      responses:
+        '200':
+          description: Budget list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `GL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /internal/v1/erp/hr/employees:
     get:
       operationId: bffErpHrEmployees
@@ -82,6 +281,13 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+        '502':
+          description: `HR_PAYROLL_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /internal/v1/erp/procurement/suppliers:
     get:
       operationId: bffErpProcSuppliers
@@ -97,6 +303,398 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+        '502':
+          description: `PROCUREMENT_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/patient-accounts/{cpid}:
+    get:
+      operationId: bffFinancePatientAccountGet
+      tags: [ERP-GL]
+      summary: Patient account snapshot via COSTA
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Patient account payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/payment-plans:
+    get:
+      operationId: bffFinancePaymentPlanList
+      tags: [ERP-GL]
+      summary: List patient payment plans via COSTA
+      parameters:
+        - name: patient_cpid
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment plan list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffFinancePaymentPlanCreate
+      tags: [ERP-GL]
+      summary: Create patient payment plan via COSTA
+      responses:
+        '200':
+          description: Payment plan created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/payment-plans/{id}:
+    get:
+      operationId: bffFinancePaymentPlanGet
+      tags: [ERP-GL]
+      summary: Get patient payment plan via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment plan payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/payment-plans/{id}/pay:
+    put:
+      operationId: bffFinancePaymentPlanInstallmentPay
+      tags: [ERP-GL]
+      summary: Pay payment plan installment via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Installment payment response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/documents:
+    get:
+      operationId: bffFinanceDocumentList
+      tags: [ERP-GL]
+      summary: List financial documents via COSTA
+      responses:
+        '200':
+          description: Financial document list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/documents/generate:
+    post:
+      operationId: bffFinanceDocumentGenerate
+      tags: [ERP-GL]
+      summary: Generate financial document via COSTA
+      responses:
+        '200':
+          description: Document generated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/documents/{id}:
+    get:
+      operationId: bffFinanceDocumentGet
+      tags: [ERP-GL]
+      summary: Get financial document via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Financial document payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/service-access-decisions:
+    get:
+      operationId: bffFinanceServiceAccessDecisionList
+      tags: [ERP-GL]
+      summary: List service access decisions via COSTA
+      responses:
+        '200':
+          description: Service access decision list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffFinanceServiceAccessDecisionCreate
+      tags: [ERP-GL]
+      summary: Create service access decision via COSTA
+      responses:
+        '200':
+          description: Service access decision created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/service-access-decisions/{id}:
+    get:
+      operationId: bffFinanceServiceAccessDecisionGet
+      tags: [ERP-GL]
+      summary: Get service access decision via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Service access decision payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/reconciliation/triple-match:
+    get:
+      operationId: bffFinanceReconciliationTripleMatch
+      tags: [ERP-GL]
+      summary: Build triple-match reconciliation projection (COSTA bills + MusheX intents + settlements)
+      parameters:
+        - name: encounterId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Triple-match projection built
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: `ENCOUNTER_REQUIRED` validation failure
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `RECONCILIATION_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/reconciliation/import-statement:
+    post:
+      operationId: bffFinanceReconciliationImportStatement
+      tags: [ERP-GL]
+      summary: Import reconciliation statement
+      responses:
+        '200':
+          description: Statement import response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/reconciliation/unmatched:
+    get:
+      operationId: bffFinanceReconciliationUnmatchedList
+      tags: [ERP-GL]
+      summary: List unmatched reconciliation items
+      responses:
+        '200':
+          description: Unmatched reconciliation list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/reconciliation/match:
+    post:
+      operationId: bffFinanceReconciliationMatch
+      tags: [ERP-GL]
+      summary: Match reconciliation entry
+      responses:
+        '200':
+          description: Reconciliation match response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/billing/{id}:
+    get:
+      operationId: bffFinanceBillingDetail
+      tags: [ERP-GL]
+      summary: Get bill detail via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bill detail payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/finance/billing/{id}/payment:
+    post:
+      operationId: bffFinanceBillingPaymentIntentCreate
+      tags: [ERP-GL]
+      summary: Create payment intent for bill via COSTA
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Validation failure (`MISSING_AMOUNT`)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COSTA_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /internal/v1/asset-registry/fixed-assets/{assetId}/details:
     get:
       operationId: bffFixedAssetDetails
@@ -112,6 +710,1024 @@ paths:
       responses:
         '200':
           description: Detail payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/marketplace/orders:
+    get:
+      operationId: bffMarketplaceOrdersList
+      tags: [Enterprise-Marketplace]
+      summary: List marketplace orders
+      responses:
+        '501':
+          description: `MARKETPLACE_ROUTE_UNAVAILABLE` explicit unavailable response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffMarketplaceCreateOrder
+      tags: [Enterprise-Marketplace]
+      summary: Create marketplace order via msika-flow-service
+      responses:
+        '201':
+          description: Order created upstream
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `MSIKA_FLOW_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/marketplace/orders/{id}:
+    get:
+      operationId: bffMarketplaceOrderGet
+      tags: [Enterprise-Marketplace]
+      summary: Get marketplace order by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Marketplace order payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `MSIKA_FLOW_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/marketplace/catalog:
+    get:
+      operationId: bffMarketplaceCatalogList
+      tags: [Enterprise-Marketplace]
+      summary: List marketplace catalog entries
+      responses:
+        '200':
+          description: Catalog response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `MSIKA_SERVICE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/marketplace/vendors:
+    get:
+      operationId: bffMarketplaceVendorsList
+      tags: [Enterprise-Marketplace]
+      summary: List marketplace vendors
+      responses:
+        '200':
+          description: Vendor list response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `MSIKA_FLOW_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/marketplace/bookings:
+    get:
+      operationId: bffMarketplaceBookingsList
+      tags: [Enterprise-Marketplace]
+      summary: List marketplace bookings
+      responses:
+        '501':
+          description: `MARKETPLACE_ROUTE_UNAVAILABLE` explicit unavailable response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/provider-contracts:
+    get:
+      operationId: bffProviderContractsList
+      tags: [Enterprise-Coverage]
+      summary: List provider contracts via coverage-service
+      responses:
+        '200':
+          description: Provider contract list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffProviderContractsCreate
+      tags: [Enterprise-Coverage]
+      summary: Create provider contract via coverage-service
+      responses:
+        '201':
+          description: Provider contract created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/provider-contracts/{id}:
+    delete:
+      operationId: bffProviderContractsSuspend
+      tags: [Enterprise-Coverage]
+      summary: Suspend provider contract via coverage-service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider contract suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/provider-contracts/{id}/reinstate:
+    post:
+      operationId: bffProviderContractsReinstate
+      tags: [Enterprise-Coverage]
+      summary: Reinstate provider contract via coverage-service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider contract reinstated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/provider-networks:
+    get:
+      operationId: bffProviderNetworksList
+      tags: [Enterprise-Coverage]
+      summary: List provider networks via coverage-service
+      responses:
+        '200':
+          description: Provider network list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffProviderNetworksCreate
+      tags: [Enterprise-Coverage]
+      summary: Create provider network via coverage-service
+      responses:
+        '201':
+          description: Provider network created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/provider-networks/{id}/members:
+    get:
+      operationId: bffProviderNetworkMembersList
+      tags: [Enterprise-Coverage]
+      summary: List provider network members via coverage-service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider network member list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffProviderNetworkMembersAdd
+      tags: [Enterprise-Coverage]
+      summary: Add provider network member via coverage-service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Provider network member added
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/provider-networks/{id}/members/{providerId}:
+    delete:
+      operationId: bffProviderNetworkMembersRemove
+      tags: [Enterprise-Coverage]
+      summary: Remove provider network member via coverage-service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: providerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider network member removed
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `COVERAGE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/wallet/pay:
+    post:
+      operationId: bffWalletPay
+      tags: [ERP-GL]
+      summary: Execute wallet payment flow
+      responses:
+        '201':
+          description: Wallet debit/payment created (MUSHE_WALLET success path)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Validation failure (`VALIDATION`)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '501':
+          description: `PAYMENT_METHOD_UNAVAILABLE` explicit unavailable response for non-wired rails
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '503':
+          description: `WALLET_UPSTREAM_UNAVAILABLE` wallet upstream unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/billing/charges:
+    get:
+      operationId: bffMobileProviderBillingCharges
+      tags: [Enterprise-Mobile-Billing]
+      summary: Mobile billing charges surface
+      responses:
+        '501':
+          description: `BILLING_ROUTE_UNAVAILABLE` explicit unavailable response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/billing/charge:
+    post:
+      operationId: bffMobileProviderBillingChargeCapture
+      tags: [Enterprise-Mobile-Billing]
+      summary: Mobile billing charge capture surface
+      responses:
+        '501':
+          description: `BILLING_ROUTE_UNAVAILABLE` explicit unavailable response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/signals:
+    get:
+      operationId: bffPublicHealthSignalsList
+      tags: [Data-Public-Health]
+      summary: List surveillance signal definitions
+      responses:
+        '200':
+          description: Signal list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffPublicHealthSignalCreate
+      tags: [Data-Public-Health]
+      summary: Create surveillance signal
+      responses:
+        '201':
+          description: Signal created upstream
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `SURVEILLANCE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/cases:
+    get:
+      operationId: bffPublicHealthCasesList
+      tags: [Data-Public-Health]
+      summary: List surveillance cases
+      responses:
+        '200':
+          description: Case list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/alerts:
+    get:
+      operationId: bffPublicHealthAlertsList
+      tags: [Data-Public-Health]
+      summary: List surveillance alerts
+      responses:
+        '200':
+          description: Alert list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/counters:
+    get:
+      operationId: bffPublicHealthCountersGet
+      tags: [Data-Public-Health]
+      summary: Get surveillance counters
+      responses:
+        '200':
+          description: Counter snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/campaigns:
+    get:
+      operationId: bffPublicHealthCampaignsList
+      tags: [Data-Public-Health]
+      summary: List campaigns
+      responses:
+        '200':
+          description: Campaign list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffPublicHealthCampaignCreate
+      tags: [Data-Public-Health]
+      summary: Create campaign
+      responses:
+        '201':
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `CAMPAIGNS_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/weekly-idsr:
+    get:
+      operationId: bffPublicHealthWeeklyIdsr
+      tags: [Data-Public-Health]
+      summary: Weekly IDSR aggregate feed
+      responses:
+        '200':
+          description: Weekly aggregate payload from sovereign public-health lifecycle endpoint
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/outbreaks:
+    post:
+      operationId: bffPublicHealthOutbreakCreate
+      tags: [Data-Public-Health]
+      summary: Create outbreak incident
+      responses:
+        '201':
+          description: Outbreak lifecycle event created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/field-operations:
+    post:
+      operationId: bffPublicHealthFieldOperationCreate
+      tags: [Data-Public-Health]
+      summary: Create field operation task
+      responses:
+        '202':
+          description: Field operation lifecycle event accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/inspections:
+    post:
+      operationId: bffPublicHealthInspectionCreateCompatibility
+      tags: [Data-Public-Health]
+      summary: Compatibility alias for site-registry inspection schedule
+      responses:
+        '201':
+          description: Inspection scheduled
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/admin/reports/jobs:
+    get:
+      operationId: bffAdminReportJobsList
+      tags: [Data-Reporting]
+      summary: List tenant report jobs
+      responses:
+        '200':
+          description: Report job list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `REPORTING_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/reports/{id}:
+    get:
+      operationId: bffReportJobGet
+      tags: [Data-Reporting]
+      summary: Retrieve report job by run id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report job payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          description: `REPORT_JOB_NOT_FOUND` typed response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `REPORTING_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/reports/generate:
+    post:
+      operationId: bffReportJobGenerate
+      tags: [Data-Reporting]
+      summary: Create report job
+      responses:
+        '201':
+          description: Report job created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `REPORTING_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/models:
+    get:
+      operationId: bffAiModelsList
+      tags: [Data-AI]
+      summary: List AI models
+      responses:
+        '200':
+          description: AI model list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffAiModelCreate
+      tags: [Data-AI]
+      summary: Create AI model
+      responses:
+        '201':
+          description: AI model created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/models/{modelId}:
+    get:
+      operationId: bffAiModelGet
+      tags: [Data-AI]
+      summary: Get AI model
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI model payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/models/{modelId}/approve:
+    post:
+      operationId: bffAiModelApprove
+      tags: [Data-AI]
+      summary: Approve AI model
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI model approval response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/models/{modelId}/withdraw:
+    post:
+      operationId: bffAiModelWithdraw
+      tags: [Data-AI]
+      summary: Withdraw AI model
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: AI model withdrawal response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/models/{modelId}/versions:
+    post:
+      operationId: bffAiModelVersionCreate
+      tags: [Data-AI]
+      summary: Create AI model version
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: AI model version created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/inference-records:
+    get:
+      operationId: bffAiInferenceRecordsList
+      tags: [Data-AI]
+      summary: List AI inference records
+      responses:
+        '200':
+          description: Inference record list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffAiInferenceRecordCreate
+      tags: [Data-AI]
+      summary: Record AI inference event
+      responses:
+        '201':
+          description: Inference event recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai/drift-events:
+    get:
+      operationId: bffAiDriftEventsList
+      tags: [Data-AI]
+      summary: List AI drift events
+      responses:
+        '200':
+          description: Drift event list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffAiDriftEventCreate
+      tags: [Data-AI]
+      summary: Record AI drift event
+      responses:
+        '201':
+          description: Drift event recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: `MODEL_ID_REQUIRED` validation response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ai-governance/models:
+    $ref: '#/paths/~1internal~1v1~1ai~1models'
+
+  /internal/v1/ai-governance/models/{modelId}:
+    $ref: '#/paths/~1internal~1v1~1ai~1models~1{modelId}'
+
+  /internal/v1/ai-governance/models/{modelId}/approve:
+    $ref: '#/paths/~1internal~1v1~1ai~1models~1{modelId}~1approve'
+
+  /internal/v1/ai-governance/models/{modelId}/withdraw:
+    $ref: '#/paths/~1internal~1v1~1ai~1models~1{modelId}~1withdraw'
+
+  /internal/v1/ai-governance/models/{modelId}/versions:
+    $ref: '#/paths/~1internal~1v1~1ai~1models~1{modelId}~1versions'
+
+  /internal/v1/ai-governance/inference-records:
+    $ref: '#/paths/~1internal~1v1~1ai~1inference-records'
+
+  /internal/v1/ai-governance/drift-events:
+    $ref: '#/paths/~1internal~1v1~1ai~1drift-events'
+        '400':
+          description: `MODEL_ID_REQUIRED` validation response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `AI_MODEL_REGISTRY_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/governance/summary:
+    get:
+      operationId: bffMobileGovernanceSummary
+      tags: [Data-Governance]
+      summary: Provider governance summary for mobile
+      responses:
+        '200':
+          description: Governance summary
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `DATA_GOVERNANCE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/governance/incidents:
+    get:
+      operationId: bffMobileGovernanceIncidents
+      tags: [Data-Governance]
+      summary: Provider governance incidents feed
+      responses:
+        '200':
+          description: Governance incidents
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `DATA_GOVERNANCE_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/governance/communication/notifications:
+    get:
+      operationId: bffMobileGovernanceNotifications
+      tags: [Data-Governance]
+      summary: Provider governance notification stream
+      responses:
+        '200':
+          description: Notification payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '502':
+          description: `NOTIFICATIONS_UNAVAILABLE` typed fail-close response
           content:
             application/json:
               schema:

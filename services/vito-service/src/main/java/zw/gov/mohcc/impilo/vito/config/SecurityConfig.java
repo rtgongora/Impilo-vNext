@@ -58,7 +58,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             );
 
         if (issuerUri != null && !issuerUri.isBlank()) {

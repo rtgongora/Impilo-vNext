@@ -7,7 +7,7 @@
 | `audit-ledger-service` | `audit-ledger-service` | integration | platform-ops | — |
 | `butano-fhir` | `butano-fhir` | clinical | care-delivery | — |
 | `butano-service` | `butano-service` | clinical | care-delivery | — |
-| `campaigns-service` | `campaigns-service` | data | intelligence | — |
+| `campaigns-service` | `campaigns-service` | data | public-health-campaigns | clinical, experience, integration, registry, trust |
 | `card-print-agent` | `card-print-agent` | integration | interoperability | — |
 | `channels-service` | `channels-service` | integration | interoperability | — |
 | `clinical-knowledge-platform-service` | `clinical-knowledge-platform-service` | clinical | clinical-knowledge | — |
@@ -65,9 +65,9 @@
 | `search-service` | `search-service` | data | intelligence | — |
 | `security-hardening-service` | `security-hardening-service` | integration | platform-ops | — |
 | `share-slip-service` | `share-slip-service` | enterprise | finance | — |
-| `simba-service` | `simba-service` | clinical | care-delivery | — |
+| `simba-service` | `simba-service` | clinical | wellness-lifestyle-orchestration | experience, data, integration, registry, trust |
 | `support-service` | `support-service` | integration | platform-ops | — |
-| `surveillance-service` | `surveillance-service` | data | intelligence | — |
+| `surveillance-service` | `surveillance-service` | data | public-health-surveillance | clinical, experience, integration, registry, trust |
 | `tshepo-audit-service` | `tshepo-audit-service` | trust | identity-governance | — |
 | `tshepo-authz-service` | `tshepo-authz-service` | trust | identity-governance | — |
 | `tshepo-consent-service` | `tshepo-consent-service` | trust | identity-governance | — |
@@ -79,7 +79,7 @@
 | `ubomi-service` | `ubomi-service` | registry | registry-spine | — |
 | `varapi-service` | `varapi-service` | registry | registry-spine | — |
 | `vito-service` | `vito-service` | registry | registry-spine | — |
-| `wellness-service` | `wellness-service` | experience | workflow-orchestration | — |
+| `wellness-service` | `wellness-service` | clinical | wellness-preventive-care | experience, data, registry, trust |
 | `workflow-service` | `workflow-service` | integration | interoperability | — |
 | `workforce-governance-service` | `workforce-governance-service` | enterprise | workforce-operations | — |
 | `zibo-service` | `zibo-service` | registry | terminology | — |

@@ -565,6 +565,12 @@ paths:
         - $ref: '#/components/parameters/X-Actor-Type'
         - $ref: '#/components/parameters/X-Purpose-Of-Use'
         - $ref: '#/components/parameters/X-Shift-Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartEncounterRequest'
       responses:
         '201':
           description: Encounter started
@@ -638,6 +644,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseEncounter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/encounters/{id}/pathway-protocol:
+    patch:
+      operationId: updateEncounterPathwayProtocol
+      summary: Update encounter pathway/protocol references
+      description: |
+        Updates linkage metadata for care pathway/protocol selection on an encounter.
+        Pathway execution remains owned by guidance/rules/clinical-knowledge services.
+      tags: [Encounter]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Encounter ID
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/X-Tenant-Id'
+        - $ref: '#/components/parameters/X-Correlation-Id'
+        - $ref: '#/components/parameters/X-Actor-Id'
+        - $ref: '#/components/parameters/X-Actor-Type'
+        - $ref: '#/components/parameters/X-Purpose-Of-Use'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEncounterPathwayProtocolRequest'
+      responses:
+        '200':
+          description: Encounter pathway/protocol updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseEncounter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1848,6 +1895,51 @@ components:
           format: date-time
           description: Task due date
 
+    StartEncounterRequest:
+      type: object
+      required: [encounterType]
+      properties:
+        encounterType:
+          type: string
+          description: Encounter type (CONSULTATION, TELEHEALTH, EMERGENCY, etc.)
+        encounterContext:
+          type: string
+          enum: [outpatient, emergency, inpatient, community, virtual, procedure, procedure_room, operating_room]
+        entryPoint:
+          type: string
+          enum: [scheduled_appointment, walk_in, emergency_arrival, referral, community_outreach, virtual_request, inpatient_admission, transfer]
+        modality:
+          type: string
+          enum: [in_person, virtual, hybrid]
+        virtualMode:
+          type: string
+          enum: [async, chat, audio, video, scheduled, board]
+        careSetting:
+          type: string
+          enum: [facility, community, home, mobile_outreach, virtual]
+        priority:
+          type: string
+          enum: [routine, urgent, emergency]
+        triageCategory:
+          type: string
+          description: Optional triage category token (for example P1, RED, YELLOW)
+        pathwayRef:
+          type: string
+          description: Optional care-pathway reference identifier
+        protocolRef:
+          type: string
+          description: Optional care-protocol reference identifier
+
+    UpdateEncounterPathwayProtocolRequest:
+      type: object
+      properties:
+        pathwayRef:
+          type: string
+          description: Optional care-pathway reference identifier
+        protocolRef:
+          type: string
+          description: Optional care-protocol reference identifier
+
     # -- Domain Schemas --
     WorkSession:
       type: object
@@ -2044,6 +2136,30 @@ components:
         type:
           type: string
           example: "AMB"
+        encounterContext:
+          type: string
+          enum: [outpatient, emergency, inpatient, community, virtual, procedure, procedure_room, operating_room]
+        entryPoint:
+          type: string
+        modality:
+          type: string
+          enum: [in_person, virtual, hybrid]
+        virtualMode:
+          type: string
+          nullable: true
+        careSetting:
+          type: string
+        priority:
+          type: string
+        triageCategory:
+          type: string
+          nullable: true
+        pathwayRef:
+          type: string
+          nullable: true
+        protocolRef:
+          type: string
+          nullable: true
         status:
           type: string
           enum: [IN_PROGRESS, COMPLETED, CANCELLED]

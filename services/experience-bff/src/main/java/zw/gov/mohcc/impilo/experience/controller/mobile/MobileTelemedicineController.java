@@ -8,6 +8,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -43,11 +44,31 @@ public class MobileTelemedicineController {
             try {
                 JsonNode data = pctClient.getPatientTelehealthSessions(patientId, status, page, size);
                 if (data != null) {
-                    return ResponseEntity.ok(Map.of("data", data));
+                    return ResponseEntity.ok(Map.of(
+                            "data", data,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
-            } catch (Exception ignored) {}
+                return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine list payload returned", requestId, correlationId);
+            } catch (Exception e) {
+                return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            }
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        if (facilityId != null && !facilityId.isBlank()) {
+            try {
+                JsonNode data = pctClient.listTelehealthSessions(facilityId, status, page, size);
+                if (data != null) {
+                    return ResponseEntity.ok(Map.of(
+                            "data", data,
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+                return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine list payload returned", requestId, correlationId);
+            } catch (Exception e) {
+                return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", "MISSING_FILTER", "message", "patient_id or facility_id query parameter is required"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     /**
@@ -62,10 +83,11 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody Map<String, Object> body) {
+        if (body == null || body.isEmpty()) {
+            return badRequest("INVALID_PAYLOAD", "Request body is required", requestId, correlationId);
+        }
 
-        UUID sessionId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-
         String sessionType = body.getOrDefault("session_type", "VIDEO").toString();
         String patientId = body.get("patient_id") != null ? body.get("patient_id").toString() : null;
         String providerId = body.get("provider_id") != null ? body.get("provider_id").toString() : null;
@@ -75,11 +97,20 @@ public class MobileTelemedicineController {
         String scheduledAt = body.get("scheduled_at") != null ? body.get("scheduled_at").toString() : null;
         String notes = body.get("notes") != null ? body.get("notes").toString() : null;
 
-        OffsetDateTime scheduled = scheduledAt != null
-                ? OffsetDateTime.parse(scheduledAt)
-                : now.plusHours(1);
+        if (patientId == null || patientId.isBlank()) {
+            return badRequest("MISSING_PATIENT_ID", "patient_id is required", requestId, correlationId);
+        }
+        if (providerId == null || providerId.isBlank()) {
+            return badRequest("MISSING_PROVIDER_ID", "provider_id is required", requestId, correlationId);
+        }
 
-        // Delegate to PCT
+        OffsetDateTime scheduled;
+        try {
+            scheduled = scheduledAt != null ? OffsetDateTime.parse(scheduledAt) : now.plusHours(1);
+        } catch (DateTimeParseException e) {
+            return badRequest("INVALID_SCHEDULED_AT", "scheduled_at must be an ISO-8601 datetime", requestId, correlationId);
+        }
+
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("sessionType", sessionType);
@@ -91,32 +122,15 @@ public class MobileTelemedicineController {
             pctBody.put("scheduledAt", scheduled.toString());
             if (notes != null) pctBody.put("notes", notes);
             JsonNode result = pctClient.requestTelehealthSession(pctBody);
-            if (result != null && result.has("id")) {
-                sessionId = UUID.fromString(result.get("id").asText());
+            if (result != null) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                        "data", result,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
-        } catch (Exception ignored) {}
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("session_type", sessionType);
-        attributes.put("status", "SCHEDULED");
-        attributes.put("patient_id", patientId);
-        attributes.put("provider_id", providerId);
-        attributes.put("facility_id", facilityId);
-        attributes.put("encounter_id", encounterId);
-        attributes.put("referral_id", referralId);
-        attributes.put("scheduled_at", scheduled);
-        attributes.put("room_url", "session-" + sessionId);
-        attributes.put("notes", notes);
-        attributes.put("created_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", sessionId.toString(),
-                "type", "TelemedicineSession",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine create payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/sessions/{id}/join")
@@ -131,10 +145,14 @@ public class MobileTelemedicineController {
         try {
             JsonNode data = pctClient.joinTelehealthSession(id.toString());
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine join payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/sessions/{id}/end")
@@ -149,9 +167,27 @@ public class MobileTelemedicineController {
         try {
             JsonNode data = pctClient.endTelehealthSession(id.toString(), body);
             if (data != null) {
-                return ResponseEntity.ok(Map.of("data", data));
+                return ResponseEntity.ok(Map.of(
+                        "data", data,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine end payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> badRequest(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Telemedicine upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

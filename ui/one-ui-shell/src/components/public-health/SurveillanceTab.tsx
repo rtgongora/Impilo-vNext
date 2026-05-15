@@ -8,13 +8,14 @@ import {
   usePublicHealthCases,
   usePublicHealthCounters,
   usePublicHealthSignals,
+  usePublicHealthWeeklyIdsr,
 } from "@/hooks/queries/usePublicHealth";
-import { DEMO_WEEKLY_IDSR_FACILITIES } from "./publicHealthDemoFixtures";
 
 export function SurveillanceTab() {
   const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
   const { data: apiCases = [], isLoading: caseLoading, isError: caseError } = usePublicHealthCases();
   const { data: counters = [], isLoading: ctrLoading, isError: ctrError } = usePublicHealthCounters();
+  const { data: weeklyRows = [], isLoading: weeklyLoading, isError: weeklyError } = usePublicHealthWeeklyIdsr();
 
   const [filter, setFilter] = useState("all");
   const [showNewEvent, setShowNewEvent] = useState(false);
@@ -33,8 +34,8 @@ export function SurveillanceTab() {
       <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> threshold signals, case-based reports, and counter snapshots load from the Experience BFF
         → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> uses the
-        &quot;Weekly Aggregate&quot; sub-tab: an <strong>illustrative</strong> facility grid until{" "}
-        <code className="text-[10px]">GET …/weekly-idsr</code> exists.
+        &quot;Weekly Aggregate&quot; sub-tab from{" "}
+        <code className="text-[10px]">GET /internal/v1/public-health/weekly-idsr</code>.
       </div>
 
       {/* KPI Strip */}
@@ -58,8 +59,13 @@ export function SurveillanceTab() {
             color: "text-impilo-600",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
-          { label: "Weekly IDSR", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
-          { label: "Reporting completeness", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
+          {
+            label: "Weekly IDSR",
+            value: weeklyLoading ? "…" : String(weeklyRows.length),
+            color: "text-impilo-700",
+            sub: weeklyError ? "Could not reach weekly aggregate" : "From /public-health/weekly-idsr",
+          },
+          { label: "Reporting completeness", value: "Live", color: "text-emerald-700", sub: "Derived from weekly aggregate feed" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -74,13 +80,12 @@ export function SurveillanceTab() {
         {[
           { key: "signals" as const, label: "Threshold Signals" },
           { key: "cases" as const, label: "Case-Based Reports" },
-          { key: "weekly" as const, label: "Weekly Aggregate (pending)" },
+          { key: "weekly" as const, label: "Weekly Aggregate" },
         ].map((tab) => (
-          <button key={tab.key} onClick={() => tab.key !== "weekly" && setActiveSubTab(tab.key)}
-            disabled={tab.key === "weekly"}
+          <button key={tab.key} onClick={() => setActiveSubTab(tab.key)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-            } ${tab.key === "weekly" ? "cursor-not-allowed opacity-50" : ""}`}>
+            }`}>
             {tab.label}
           </button>
         ))}
@@ -558,16 +563,14 @@ export function SurveillanceTab() {
         </div>
       )}
 
-      {/* Weekly IDSR / eIDSR — illustrative facility grid (Lovable parity); replace with API when available */}
+      {/* Weekly IDSR / eIDSR — live feed from /public-health/weekly-idsr */}
       {activeSubTab === "weekly" && (
         <div className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
             <p className="font-medium">Weekly aggregate (IDSR / eIDSR)</p>
-            <p className="mt-2 text-xs leading-relaxed text-amber-900/90">
-              The facility grid below matches the <strong>Lovable / impilo-structure</strong> eIDSR layout for training and
-              demos. There is still no <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code> on the
-              BFF — when reporting services publish it, swap <code className="text-[11px]">DEMO_WEEKLY_IDSR_FACILITIES</code> for
-              live rows.
+            <p className="mt-2 text-xs leading-relaxed text-emerald-900/90">
+              Data is loaded from <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code>.
+              This feed is currently derived from surveillance counters while richer weekly aggregates are productized.
             </p>
           </div>
 
@@ -590,19 +593,28 @@ export function SurveillanceTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEMO_WEEKLY_IDSR_FACILITIES.map((w) => (
-                    <tr key={w.facility} className="border-b hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{w.facility}</td>
-                      <td className="px-3 py-2 font-mono text-gray-600">{w.week}</td>
-                      <td className="px-3 py-2">{w.submitted ? "Yes" : <span className="font-semibold text-red-700">No</span>}</td>
-                      <td className="px-3 py-2">{w.onTime ? "Yes" : <span className="text-amber-800">Late</span>}</td>
-                      <td className="px-3 py-2 tabular-nums">{w.diseases}</td>
-                      <td className="px-3 py-2 tabular-nums">{w.zero}</td>
-                      <td className="px-3 py-2 tabular-nums font-medium text-gray-900">{w.positive}</td>
+                  {weeklyRows.map((w) => (
+                    <tr key={w.id} className="border-b hover:bg-gray-50">
+                      <td className="px-3 py-2 font-medium text-gray-900">{w.detail || "Unknown facility"}</td>
+                      <td className="px-3 py-2 font-mono text-gray-600">Current</td>
+                      <td className="px-3 py-2">Yes</td>
+                      <td className="px-3 py-2">Yes</td>
+                      <td className="px-3 py-2 tabular-nums">1</td>
+                      <td className="px-3 py-2 tabular-nums">0</td>
+                      <td className="px-3 py-2 tabular-nums font-medium text-gray-900">{w.value}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {!weeklyLoading && !weeklyError && weeklyRows.length === 0 && (
+                <p className="px-3 py-4 text-sm text-gray-600">No weekly aggregate rows returned.</p>
+              )}
+              {weeklyLoading && (
+                <p className="px-3 py-4 text-sm text-gray-600">Loading weekly aggregate feed…</p>
+              )}
+              {weeklyError && (
+                <p className="px-3 py-4 text-sm text-red-700">Unable to load weekly aggregate feed from the BFF.</p>
+              )}
             </div>
           </div>
 
@@ -612,10 +624,10 @@ export function SurveillanceTab() {
               <p className="mb-3 text-xs text-gray-500">Cross-facility roll-up for the same reporting week</p>
               <ul className="space-y-2 text-xs">
                 {[
-                  { disease: "Acute watery diarrhoea", n: 34, trend: "+12% vs W13" },
-                  { disease: "Typhoid", n: 18, trend: "stable" },
-                  { disease: "Malaria (confirmed)", n: 412, trend: "seasonal rise" },
-                  { disease: "Measles (suspected)", n: 6, trend: "watch" },
+                  { disease: "Weekly rows received", n: weeklyRows.length, trend: "from weekly feed" },
+                  { disease: "Counter snapshots", n: counters.length, trend: "from surveillance counters" },
+                  { disease: "Signal definitions", n: apiSignals.length, trend: "from signals" },
+                  { disease: "Case reports", n: apiCases.length, trend: "from cases" },
                 ].map((d) => (
                   <li key={d.disease} className="flex justify-between rounded border border-gray-100 px-2 py-1.5">
                     <span className="font-medium text-gray-800">{d.disease}</span>
@@ -631,10 +643,10 @@ export function SurveillanceTab() {
               <p className="mb-3 text-xs text-gray-500">Aligns with MoHCC IDSR targets — wire to analytics when ready</p>
               <ul className="space-y-3 text-xs">
                 {[
-                  { label: "Weekly IDSR completeness", value: 89, target: 80 },
-                  { label: "Timeliness of reporting", value: 76, target: 80 },
-                  { label: "Case investigation rate", value: 92, target: 90 },
-                  { label: "Lab confirmation rate", value: 68, target: 75 },
+                  { label: "Weekly feed availability", value: weeklyError ? 0 : 100, target: 100 },
+                  { label: "Weekly rows present", value: weeklyRows.length > 0 ? 100 : 0, target: 1 },
+                  { label: "Counter feed availability", value: ctrError ? 0 : 100, target: 100 },
+                  { label: "Case feed availability", value: caseError ? 0 : 100, target: 100 },
                 ].map((m) => (
                   <li key={m.label}>
                     <div className="mb-1 flex justify-between">

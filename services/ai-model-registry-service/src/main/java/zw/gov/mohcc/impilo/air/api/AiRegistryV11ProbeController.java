@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.air.api;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,9 @@ import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 @RestController
 @RequestMapping("/internal/v1")
 public class AiRegistryV11ProbeController {
+
+    @Value("${air.probe.test-command-enabled:false}")
+    private boolean testCommandEnabled;
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
@@ -30,6 +34,10 @@ public class AiRegistryV11ProbeController {
 
     @PostMapping("/test-command")
     public ResponseEntity<Map<String, Object>> testCommand(@RequestBody Map<String, Object> payload) {
+        if (!testCommandEnabled) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", Map.of("code", "ROUTE_DISABLED", "message", "test-command route is disabled")));
+        }
         var ctx = RequestContextHolder.require();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("service", "ai-model-registry-service");

@@ -38,7 +38,7 @@ public class ReferralsController {
             @NotBlank String reason,
             String urgency,
             String clinical_summary,
-            @NotBlank String referred_by,
+            String referred_by,
             String referred_by_name
     ) {}
 
@@ -138,6 +138,7 @@ public class ReferralsController {
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateReferralRequest request) {
 
@@ -151,7 +152,7 @@ public class ReferralsController {
         referralData.put("reason", request.reason());
         referralData.put("urgency", request.urgency() != null ? request.urgency() : "ROUTINE");
         referralData.put("clinical_summary", request.clinical_summary());
-        referralData.put("referred_by", request.referred_by());
+        referralData.put("referred_by", request.referred_by() != null ? request.referred_by() : actorId);
         referralData.put("referred_by_name", request.referred_by_name());
         referralData.put("tenant_id", tenantId);
 

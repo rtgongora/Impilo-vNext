@@ -174,12 +174,10 @@ public class WalletController {
         String merchantRef = str(body, "merchantRef", "facilityId");
 
         if (amount <= 0) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "VALIDATION", "message", "amount must be positive")));
+            return validationFailure("VALIDATION", "amount must be positive", requestId, correlationId);
         }
         if (method == null || method.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "VALIDATION", "message", "payment method is required")));
+            return validationFailure("VALIDATION", "payment method is required", requestId, correlationId);
         }
 
         // Try Mushe for wallet payments
@@ -218,11 +216,22 @@ public class WalletController {
                 if (bal < amount) {
                     return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of(
                             "error", Map.of("code", "INSUFFICIENT_FUNDS",
-                                    "message", "Wallet balance ($" + String.format("%.2f", bal) + ") is less than payment amount ($" + String.format("%.2f", amount) + ")")));
+                                    "message", "Wallet balance ($" + String.format("%.2f", bal) + ") is less than payment amount ($" + String.format("%.2f", amount) + ")"),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
                 wallet.put("balance", bal - amount);
                 wallet.put("availableBalance", bal - amount);
             }
+        }
+
+        // Non-wallet methods are currently not wired to production payment rails.
+        // Fail closed instead of synthesizing successful financial transactions.
+        if (!"MUSHE_WALLET".equals(method)) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                    "error", Map.of(
+                            "code", "PAYMENT_METHOD_UNAVAILABLE",
+                            "message", "Requested payment method is not yet wired to a production payment rail"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
         // Create transaction record
@@ -444,6 +453,15 @@ public class WalletController {
                 "error", Map.of(
                         "code", UPSTREAM_UNAVAILABLE_CODE,
                         "message", UPSTREAM_UNAVAILABLE_MESSAGE),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> validationFailure(String code,
+                                                                  String message,
+                                                                  String requestId,
+                                                                  String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", code, "message", message),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 

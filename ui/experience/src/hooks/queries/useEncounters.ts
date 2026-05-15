@@ -75,3 +75,23 @@ export function useCloseEncounter() {
     },
   });
 }
+
+export function useUpdateEncounterPathwayProtocol() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    EncounterResponse,
+    unknown,
+    { id: string; pathway_ref?: string | null; protocol_ref?: string | null }
+  >({
+    mutationFn: ({ id, pathway_ref, protocol_ref }) =>
+      apiClient.patch<EncounterResponse>(`/internal/v1/encounters/${id}/pathway-protocol`, {
+        pathway_ref: pathway_ref ?? null,
+        protocol_ref: protocol_ref ?? null,
+      }),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["encounters", vars.id] });
+      queryClient.invalidateQueries({ queryKey: ["encounters"] });
+    },
+  });
+}

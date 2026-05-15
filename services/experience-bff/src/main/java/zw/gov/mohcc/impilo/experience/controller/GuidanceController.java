@@ -45,16 +45,12 @@ public class GuidanceController {
             String question = (String) body.getOrDefault("question", "");
             boolean personalized = Boolean.TRUE.equals(body.get("personalized"));
             JsonNode result = guidanceClient.ask(question, personalized);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Guidance ask failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", Map.of(
-                    "response", "The guidance service is temporarily unavailable. Please try again.",
-                    "confidence", 0.0,
-                    "sources", new Object[0],
-                    "followUpPrompts", new Object[0],
-                    "personalized", false
-            )));
+            return upstreamFailure("GUIDANCE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -66,10 +62,12 @@ public class GuidanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode result = guidanceClient.getReminders();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : new Object[0]));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Reminders fetch failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("GUIDANCE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -78,15 +76,18 @@ public class GuidanceController {
     public ResponseEntity<Map<String, Object>> getEducation(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "all") String domain,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
             JsonNode result = guidanceClient.getEducation(domain, page, size);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : new Object[0]));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Education fetch failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("GUIDANCE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -95,16 +96,19 @@ public class GuidanceController {
     public ResponseEntity<Map<String, Object>> search(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam String q,
             @RequestParam(defaultValue = "all") String domain,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
             JsonNode result = guidanceClient.search(q, domain, page, size);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : new Object[0]));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Guidance search failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("GUIDANCE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -113,14 +117,24 @@ public class GuidanceController {
     public ResponseEntity<Map<String, Object>> consentStatus(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(CompanionHeaders.SUBJECT_ID) String subjectId) {
         try {
             JsonNode consents = consentClient.listConsents(subjectId, "ACTIVE", 0, 1);
             boolean hasConsent = consents != null && consents.isArray() && !consents.isEmpty();
-            return ResponseEntity.ok(Map.of("data", Map.of("guidanceConsent", hasConsent)));
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("guidanceConsent", hasConsent),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Consent check failed for subject {}: {}", subjectId, e.getMessage());
-            return ResponseEntity.ok(Map.of("data", Map.of("guidanceConsent", true)));
+            return upstreamFailure("CONSENT_SERVICE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(502).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Guidance upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

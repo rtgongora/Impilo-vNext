@@ -133,7 +133,9 @@ export function FieldOperationsTab() {
           : null,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setFieldSubmitting(false);
+      setFieldError("Field operations service is unavailable. Activity was not saved.");
+      return;
     }
     setFieldSubmitting(false);
     setFieldSubmitted(true);
@@ -155,11 +157,11 @@ export function FieldOperationsTab() {
         </div>
         <button
           type="button"
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+          onClick={() => setShowNewForm((s) => !s)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
         >
           <Plus className="w-4 h-4" />
-          Record New Field Activity (pending)
+          Record New Field Activity
         </button>
       </div>
 
@@ -404,7 +406,7 @@ export function FieldOperationsTab() {
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 flex items-center gap-2 text-xs text-gray-600">
         <Radio className="h-3.5 w-3.5 shrink-0" />
-        Data forms / comms KPIs will appear when public-health BFF exposes field operations endpoints.
+        Field operation submissions are live; roster/task/GPS dashboards still require dedicated workforce and telemetry APIs.
       </div>
 
       <div className="flex gap-1 border-b border-gray-200">

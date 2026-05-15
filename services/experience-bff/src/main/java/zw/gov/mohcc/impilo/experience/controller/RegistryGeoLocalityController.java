@@ -38,7 +38,7 @@ public class RegistryGeoLocalityController {
             return ok(requestId, correlationId, data != null ? data : List.of());
         } catch (Exception e) {
             log.warn("ZW districts proxy failed: {}", e.getMessage());
-            return ok(requestId, correlationId, List.of());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -52,7 +52,7 @@ public class RegistryGeoLocalityController {
             return ok(requestId, correlationId, data != null ? data : List.of());
         } catch (Exception e) {
             log.warn("ZW wards proxy failed: {}", e.getMessage());
-            return ok(requestId, correlationId, List.of());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -66,9 +66,7 @@ public class RegistryGeoLocalityController {
             return ok(requestId, correlationId, data != null ? data : Map.of());
         } catch (Exception e) {
             log.warn("ZW geo bulk failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                    "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -84,7 +82,7 @@ public class RegistryGeoLocalityController {
             return ok(requestId, correlationId, data != null ? data : List.of());
         } catch (Exception e) {
             log.warn("Locality search proxy failed: {}", e.getMessage());
-            return ok(requestId, correlationId, List.of());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -96,7 +94,7 @@ public class RegistryGeoLocalityController {
             JsonNode data = tusoClient.listPendingLocalityProposals();
             return ok(requestId, correlationId, data != null ? data : List.of());
         } catch (Exception e) {
-            return ok(requestId, correlationId, List.of());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -111,9 +109,7 @@ public class RegistryGeoLocalityController {
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                    "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -127,9 +123,7 @@ public class RegistryGeoLocalityController {
             JsonNode data = tusoClient.approveLocalityProposal(id, body != null ? body : Map.of());
             return ok(requestId, correlationId, data != null ? data : Map.of());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "error", Map.of("code", "APPROVE_FAILED", "message", e.getMessage()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure(requestId, correlationId, "APPROVE_FAILED", e.getMessage());
         }
     }
 
@@ -143,9 +137,7 @@ public class RegistryGeoLocalityController {
             JsonNode data = tusoClient.rejectLocalityProposal(id, body != null ? body : Map.of());
             return ok(requestId, correlationId, data != null ? data : Map.of());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                    "error", Map.of("code", "REJECT_FAILED", "message", e.getMessage()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure(requestId, correlationId, "REJECT_FAILED", e.getMessage());
         }
     }
 
@@ -155,5 +147,12 @@ public class RegistryGeoLocalityController {
         body.put("data", data);
         body.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(body);
+    }
+
+    private static ResponseEntity<Map<String, Object>> upstreamFailure(
+            String requestId, String correlationId, String code, String message) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Registry upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

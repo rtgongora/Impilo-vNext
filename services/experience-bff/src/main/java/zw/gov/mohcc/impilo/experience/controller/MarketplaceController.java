@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MsikaFlowServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MsikaServiceClient;
@@ -52,9 +52,10 @@ public class MarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Marketplace order list is not yet exposed on msika-flow-service (no tenant-scoped GET /v1/orders); use order id or vendor-scoped flows.");
+        return unavailable501(
+                "MARKETPLACE_ROUTE_UNAVAILABLE",
+                "Marketplace order list is not yet exposed on msika-flow-service (no tenant-scoped GET /v1/orders); use order id or vendor-scoped flows.",
+                requestId, correlationId);
     }
 
     @GetMapping("/catalog")
@@ -75,12 +76,17 @@ public class MarketplaceController {
         params.add("page", "0");
         params.add("size", "50");
 
-        ResponseEntity<String> result = msikaServiceClient.search(params);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result.getBody());
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        try {
+            ResponseEntity<String> result = msikaServiceClient.search(params);
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
+        } catch (Exception e) {
+            return unavailable502(
+                    "MSIKA_SERVICE_UNAVAILABLE",
+                    "Unable to load marketplace catalog while msika-service is unavailable",
+                    requestId, correlationId);
+        }
     }
 
     @GetMapping("/vendors")
@@ -89,14 +95,17 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        ResponseEntity<String> result = msikaFlowClient.listVendors(null);
-
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., tenantId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result.getBody());
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+        try {
+            ResponseEntity<String> result = msikaFlowClient.listVendors(null);
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
+        } catch (Exception e) {
+            return unavailable502(
+                    "MSIKA_FLOW_UNAVAILABLE",
+                    "Unable to load marketplace vendors while msika-flow-service is unavailable",
+                    requestId, correlationId);
+        }
     }
 
     @GetMapping("/bookings")
@@ -104,9 +113,10 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Marketplace bookings list is not exposed on msika-flow-service (bookings are POST-only today).");
+        return unavailable501(
+                "MARKETPLACE_ROUTE_UNAVAILABLE",
+                "Marketplace bookings list is not exposed on msika-flow-service (bookings are POST-only today).",
+                requestId, correlationId);
     }
 
     @GetMapping("/orders/{id}")
@@ -116,16 +126,17 @@ public class MarketplaceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
-
-        // MarketplaceOrder order = marketplaceOrderRepository.findByIdAndTenantId(id, tenantId)
-        //         .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + id));
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result.getBody());
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-
-        return ResponseEntity.ok(response);
+        try {
+            ResponseEntity<String> result = msikaFlowClient.getOrder(id.toString());
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
+        } catch (Exception e) {
+            return unavailable502(
+                    "MSIKA_FLOW_UNAVAILABLE",
+                    "Unable to fetch marketplace order while msika-flow-service is unavailable",
+                    requestId, correlationId);
+        }
     }
 
     @PostMapping("/orders")
@@ -148,25 +159,41 @@ public class MarketplaceController {
 
         try {
             ResponseEntity<String> result = msikaFlowClient.createOrder(orderBody);
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", result.getBody());
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
         } catch (Exception e) {
-            log.info("MSIKA Flow unavailable — local marketplace order fallback: {}", e.getMessage());
-            String syntheticId = "ord-" + UUID.randomUUID().toString().substring(0, 8);
-            Map<String, Object> attrs = new LinkedHashMap<>();
-            attrs.put("order_number", request.order_number());
-            attrs.put("facility_id", request.facility_id());
-            attrs.put("status", "SUBMITTED");
-            attrs.put("ordered_by", request.ordered_by());
-            Map<String, Object> data = new LinkedHashMap<>();
-            data.put("id", syntheticId);
-            data.put("type", "MarketplaceOrder");
-            data.put("attributes", attrs);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                    "data", data,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            log.warn("MSIKA Flow unavailable for order create: {}", e.getMessage());
+            return unavailable502(
+                    "MSIKA_FLOW_UNAVAILABLE",
+                    "Unable to create marketplace order while msika-flow-service is unavailable",
+                    requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> envelope(ResponseEntity<String> upstream, String requestId, String correlationId) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", upstream.getBody());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.status(upstream.getStatusCode()).body(response);
+    }
+
+    private ResponseEntity<Map<String, Object>> envelope(HttpStatusCodeException upstream, String requestId, String correlationId) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", upstream.getResponseBodyAsString());
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.status(upstream.getStatusCode()).body(response);
+    }
+
+    private ResponseEntity<Map<String, Object>> unavailable502(String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> unavailable501(String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

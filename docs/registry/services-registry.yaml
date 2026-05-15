@@ -216,8 +216,13 @@ services:
     maven_module: campaigns-service
     primary_plane: data
     plane: data
-    domain: intelligence
-    secondary_planes: []
+    domain: public-health-campaigns
+    secondary_planes:
+      - clinical
+      - experience
+      - integration
+      - registry
+      - trust
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
@@ -226,15 +231,19 @@ services:
       - Campaigns
     owner_team: TBD
     system_of_record_for:
-      - Campaigns canonical records
+      - public-health campaign definitions
+      - campaign outreach plans and schedules
+      - campaign execution state and coverage metrics
     consumes_from:
       - tshepo-authz-service
     exposes_to:
       - experience-bff
       - integration-hub
     forbidden_responsibilities:
-      - must-not-handle-care-transaction-orchestration
-      - must-not-bypass-consent-governance
+      - must-not-own-individual-clinical-encounter-record
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-bypass-data-governance-or-consent-policy
+      - must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1896,8 +1905,13 @@ services:
     maven_module: simba-service
     primary_plane: clinical
     plane: clinical
-    domain: care-delivery
-    secondary_planes: []
+    domain: wellness-lifestyle-orchestration
+    secondary_planes:
+      - experience
+      - data
+      - integration
+      - registry
+      - trust
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
@@ -1906,15 +1920,31 @@ services:
       - Simba
     owner_team: TBD
     system_of_record_for:
-      - Simba canonical records
+      - wellness journeys
+      - lifestyle plans
+      - self-care plans
+      - preventive care workflows
+      - wellness goals
+      - habit tracking workflows
+      - coaching and nudge workflows
+      - wellness programme participation
+      - longitudinal wellness progress
     consumes_from:
       - tshepo-authz-service
     exposes_to:
       - experience-bff
       - integration-hub
     forbidden_responsibilities:
-      - must-not-act-as-identity-source-of-record
-      - must-not-own-enterprise-ledgering
+      - must-not-own-clinical-encounter-lifecycle
+      - must-not-own-acute-care-orders-or-results
+      - must-not-own-prescription-dispensing
+      - must-not-own-inpatient-care-state
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-own-provider-identity-source-of-truth
+      - must-not-own-facility-registry
+      - must-not-own-consent-policy-authority
+      - must-not-own-payment-ledgers
+      - must-not-own-public-health-surveillance-source-of-truth
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1954,8 +1984,13 @@ services:
     maven_module: surveillance-service
     primary_plane: data
     plane: data
-    domain: intelligence
-    secondary_planes: []
+    domain: public-health-surveillance
+    secondary_planes:
+      - clinical
+      - experience
+      - integration
+      - registry
+      - trust
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
@@ -1964,15 +1999,19 @@ services:
       - Surveillance
     owner_team: TBD
     system_of_record_for:
-      - Surveillance canonical records
+      - public-health surveillance signals and case aggregates
+      - surveillance alert definitions and epidemiological counters
+      - notifiable event monitoring telemetry
     consumes_from:
       - tshepo-authz-service
     exposes_to:
       - experience-bff
       - integration-hub
     forbidden_responsibilities:
-      - must-not-handle-care-transaction-orchestration
-      - must-not-bypass-consent-governance
+      - must-not-own-individual-clinical-encounter-record
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-bypass-data-governance-or-consent-policy
+      - must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -2294,10 +2333,14 @@ services:
     observability_status: partial
   - id: wellness-service
     maven_module: wellness-service
-    primary_plane: experience
-    plane: experience
-    domain: workflow-orchestration
-    secondary_planes: []
+    primary_plane: clinical
+    plane: clinical
+    domain: wellness-preventive-care
+    secondary_planes:
+      - experience
+      - data
+      - registry
+      - trust
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
@@ -2306,18 +2349,28 @@ services:
       - Wellness
     owner_team: TBD
     system_of_record_for:
-      - Wellness canonical records
+      - patient-linked wellness activities
+      - screening prompts
+      - wellness records
+      - wellness goals
+      - lifestyle and preventive-care activities
+      - adherence support activities
     consumes_from:
       - tshepo-authz-service
-      - multiple-domain-services-via-bff
+      - simba-service
     exposes_to:
-      - web-mobile-experience
+      - experience-bff
+      - integration-hub
     forbidden_responsibilities:
-      - must-not-own-domain-source-data
-      - must-not-bypass-bff-authz-audit-controls
+      - must-not-own-public-health-surveillance-source-of-truth
+      - must-not-own-clinical-encounter-lifecycle
+      - must-not-own-marketplace-or-payment-ledgers
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-own-provider-identity-source-of-truth
+      - must-not-own-facility-registry
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
-    frontend_wiring_status: wired
+    frontend_wiring_status: unknown-or-partial
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial

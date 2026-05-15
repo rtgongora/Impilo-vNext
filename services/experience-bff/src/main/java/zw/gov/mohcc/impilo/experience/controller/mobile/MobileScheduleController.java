@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -35,7 +36,16 @@ public class MobileScheduleController {
             if (data != null) {
                 return ResponseEntity.ok(Map.of("data", data));
             }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("TUSO_UNAVAILABLE", "No schedule payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("TUSO_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Mobile schedule upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

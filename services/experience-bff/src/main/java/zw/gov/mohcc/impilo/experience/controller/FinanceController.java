@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -73,7 +74,7 @@ public class FinanceController {
             return ResponseEntity.ok(buildPagedResponse(resources, costaData));
         } catch (Exception e) {
             log.error("Failed to fetch billing from COSTA: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -104,8 +105,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", resource));
         } catch (Exception e) {
             log.error("Failed to fetch bill detail from COSTA: {}", e.getMessage());
-            return ResponseEntity.status(404).body(Map.of(
-                    "error", Map.of("code", "NOT_FOUND", "message", "Bill not found")));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to fetch bill detail", requestId, correlationId);
         }
     }
 
@@ -127,8 +127,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
         } catch (Exception e) {
             log.error("Failed to submit bill {} for approval: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "SUBMIT_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to submit bill for approval", requestId, correlationId);
         }
     }
 
@@ -150,8 +149,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
         } catch (Exception e) {
             log.error("Failed to approve bill {}: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "APPROVE_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to approve bill", requestId, correlationId);
         }
     }
 
@@ -171,8 +169,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", toBillingResource(result)));
         } catch (Exception e) {
             log.error("Failed to finalize bill {}: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "FINALIZE_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to finalize bill", requestId, correlationId);
         }
     }
 
@@ -199,8 +196,7 @@ public class FinanceController {
             return ResponseEntity.status(201).body(Map.of("data", resource));
         } catch (Exception e) {
             log.error("Failed to issue invoice for bill {}: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "INVOICE_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to issue invoice", requestId, correlationId);
         }
     }
 
@@ -222,16 +218,14 @@ public class FinanceController {
             String paymentType = body.getOrDefault("paymentType", "FULL");
             String amount = body.get("amount");
             if (amount == null || amount.isBlank()) {
-                return ResponseEntity.status(400).body(Map.of(
-                        "error", Map.of("code", "MISSING_AMOUNT", "message", "amount is required")));
+                return validationFailure("MISSING_AMOUNT", "amount is required", requestId, correlationId);
             }
             JsonNode result = costaClient.createPaymentIntent(id, paymentType, amount);
             ObjectNode resource = toPaymentResource(result);
             return ResponseEntity.status(201).body(Map.of("data", resource));
         } catch (Exception e) {
             log.error("Failed to create payment intent for bill {}: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "PAYMENT_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to create payment intent", requestId, correlationId);
         }
     }
 
@@ -257,7 +251,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", resources));
         } catch (Exception e) {
             log.error("Failed to fetch payments for bill {}: {}", id, e.getMessage());
-            return ResponseEntity.ok(Map.of("data", objectMapper.createArrayNode()));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -277,8 +271,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", toPaymentResource(result)));
         } catch (Exception e) {
             log.error("Failed to cancel payment {} for bill {}: {}", paymentId, id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "CANCEL_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to cancel payment", requestId, correlationId);
         }
     }
 
@@ -298,12 +291,10 @@ public class FinanceController {
             String amount = body.get("amount");
             String reason = body.get("reason");
             if (amount == null || amount.isBlank()) {
-                return ResponseEntity.status(400).body(Map.of(
-                        "error", Map.of("code", "MISSING_AMOUNT", "message", "amount is required")));
+                return validationFailure("MISSING_AMOUNT", "amount is required", requestId, correlationId);
             }
             if (reason == null || reason.isBlank()) {
-                return ResponseEntity.status(400).body(Map.of(
-                        "error", Map.of("code", "MISSING_REASON", "message", "reason is required")));
+                return validationFailure("MISSING_REASON", "reason is required", requestId, correlationId);
             }
             String reasonCode = body.get("reasonCode");
             String refundType = body.getOrDefault("refundType", "PARTIAL");
@@ -311,8 +302,7 @@ public class FinanceController {
             return ResponseEntity.status(201).body(Map.of("data", toRefundResource(result)));
         } catch (Exception e) {
             log.error("Failed to create refund for bill {}: {}", id, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of(
-                    "error", Map.of("code", "REFUND_FAILED", "message", e.getMessage())));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to create refund", requestId, correlationId);
         }
     }
 
@@ -338,7 +328,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", resources));
         } catch (Exception e) {
             log.error("Failed to fetch refunds for bill {}: {}", id, e.getMessage());
-            return ResponseEntity.ok(Map.of("data", objectMapper.createArrayNode()));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -370,7 +360,7 @@ public class FinanceController {
             return ResponseEntity.ok(buildPagedResponse(resources, costaData));
         } catch (Exception e) {
             log.error("Failed to fetch tariffs from COSTA: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -400,7 +390,7 @@ public class FinanceController {
             return ResponseEntity.ok(buildPagedResponse(resources, costaData));
         } catch (Exception e) {
             log.error("Failed to fetch payments from COSTA: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -430,7 +420,7 @@ public class FinanceController {
             return ResponseEntity.ok(buildPagedResponse(resources, costaData));
         } catch (Exception e) {
             log.error("Failed to fetch claims from COSTA: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0]));
+            return upstreamFailure("COSTA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -517,8 +507,7 @@ public class FinanceController {
             return ResponseEntity.ok(Map.of("data", resource));
         } catch (Exception e) {
             log.error("Failed to fetch claim detail from COSTA: {}", e.getMessage());
-            return ResponseEntity.status(404).body(Map.of(
-                    "error", Map.of("code", "NOT_FOUND", "message", "Claim not found")));
+            return upstreamFailure("COSTA_UNAVAILABLE", "Unable to fetch claim detail", requestId, correlationId);
         }
     }
 
@@ -723,5 +712,19 @@ public class FinanceController {
         if (node == null || !node.has(field) || node.get(field).isNull()) return defaultValue;
         String val = node.get(field).asText("");
         return val.isEmpty() ? defaultValue : val;
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Finance upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> validationFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

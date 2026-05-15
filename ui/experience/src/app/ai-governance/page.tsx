@@ -75,7 +75,14 @@ export default function AiModelRegistryPage() {
 
   const modelsQ = useAiModels(0, 100);
   const infQ = useAiInferenceRecords(0, 100);
-  const driftQ = useAiDriftEvents(0, 100);
+  const firstModelId = useMemo(() => {
+    const rows = (modelsQ.data ?? []).map(asRecord);
+    if (rows.length === 0) {
+      return undefined;
+    }
+    return readStr(rows[0], "id", "modelId", "model_id") || undefined;
+  }, [modelsQ.data]);
+  const driftQ = useAiDriftEvents(0, 100, firstModelId);
   const registerM = useRegisterAiModel();
   const approveM = useApproveAiModel();
   const withdrawM = useWithdrawAiModel();
@@ -228,7 +235,7 @@ export default function AiModelRegistryPage() {
                 </div>
                 {registerM.isError && (
                   <p className="text-xs text-red-700">
-                    Registration failed — ensure BFF exposes POST /internal/v1/ai/models.
+                    Registration failed — AI registry route is unavailable or rejected the request.
                   </p>
                 )}
               </div>
@@ -242,7 +249,7 @@ export default function AiModelRegistryPage() {
               )}
               {modelsQ.isError && (
                 <p className="p-6 text-sm text-red-700">
-                  Could not load models. Wire GET /internal/v1/ai/models on the experience BFF.
+                  Could not load models from the AI registry BFF route.
                 </p>
               )}
               {!modelsQ.isLoading && !modelsQ.isError && (
@@ -328,7 +335,7 @@ export default function AiModelRegistryPage() {
             )}
             {infQ.isError && (
               <p className="p-6 text-sm text-red-700">
-                Could not load inference records. Wire GET /internal/v1/ai/inference-records.
+                Could not load inference records from the AI registry BFF route.
               </p>
             )}
             {!infQ.isLoading && !infQ.isError && (
@@ -392,7 +399,7 @@ export default function AiModelRegistryPage() {
             )}
             {driftQ.isError && (
               <p className="p-6 text-sm text-red-700">
-                Could not load drift events. Wire GET /internal/v1/ai/drift-events.
+                Could not load drift events from the AI registry BFF route.
               </p>
             )}
             {!driftQ.isLoading && !driftQ.isError && (

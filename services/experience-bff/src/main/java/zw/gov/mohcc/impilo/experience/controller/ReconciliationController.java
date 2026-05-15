@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -74,11 +75,8 @@ public class ReconciliationController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId
     ) {
         if (encounterId == null || encounterId.isBlank()) {
-            return ResponseEntity.badRequest()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header(CompanionHeaders.REQUEST_ID, requestId)
-                    .header(CompanionHeaders.CORRELATION_ID, correlationId)
-                    .body("{\"data\":[],\"error\":{\"code\":\"ENCOUNTER_REQUIRED\",\"message\":\"encounterId is required\"}}");
+            return typedEnvelope(HttpStatus.BAD_REQUEST, "ENCOUNTER_REQUIRED", "encounterId is required",
+                    requestId, correlationId, null);
         }
         try {
             ResponseEntity<String> invoiceResp =
@@ -153,11 +151,8 @@ public class ReconciliationController {
                     .body(objectMapper.writeValueAsString(envelope));
         } catch (Exception exception) {
             log.warn("Reconciliation triple-match failed: {}", exception.getMessage());
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header(CompanionHeaders.REQUEST_ID, requestId)
-                    .header(CompanionHeaders.CORRELATION_ID, correlationId)
-                    .body("{\"data\":[],\"meta\":{\"encounter_id\":\"" + encounterId + "\"}}");
+            return typedEnvelope(HttpStatus.BAD_GATEWAY, "RECONCILIATION_UNAVAILABLE",
+                    "Unable to build reconciliation triple-match", requestId, correlationId, encounterId);
         }
     }
 
@@ -222,5 +217,37 @@ public class ReconciliationController {
 
     private String encode(String value) {
         return java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private ResponseEntity<String> typedEnvelope(HttpStatus status,
+                                                 String code,
+                                                 String message,
+                                                 String requestId,
+                                                 String correlationId,
+                                                 String encounterId) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        if (encounterId != null && !encounterId.isBlank()) {
+            meta.put("encounter_id", encounterId);
+        }
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("error", Map.of("code", code, "message", message));
+        payload.put("meta", meta);
+
+        try {
+            return ResponseEntity.status(status)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(CompanionHeaders.REQUEST_ID, requestId)
+                    .header(CompanionHeaders.CORRELATION_ID, correlationId)
+                    .body(objectMapper.writeValueAsString(payload));
+        } catch (Exception serializationException) {
+            return ResponseEntity.status(status)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header(CompanionHeaders.REQUEST_ID, requestId)
+                    .header(CompanionHeaders.CORRELATION_ID, correlationId)
+                    .body("{\"error\":{\"code\":\"" + code + "\",\"message\":\"" + message + "\"}}");
+        }
     }
 }

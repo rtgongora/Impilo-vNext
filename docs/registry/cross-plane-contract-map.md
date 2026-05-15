@@ -79,7 +79,7 @@
 | `ubomi-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
 | `varapi-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
 | `vito-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
-| `wellness-service` | experience | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience |
+| `wellness-service` | clinical | tshepo-authz-service, simba-service | experience-bff, integration-hub |
 | `workflow-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `workforce-governance-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `zibo-service` | registry | tshepo-authz-service | experience-bff, integration-hub |

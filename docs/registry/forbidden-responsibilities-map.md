@@ -7,7 +7,7 @@
 | `audit-ledger-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `butano-fhir` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
 | `butano-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
-| `campaigns-service` | data | must-not-handle-care-transaction-orchestration, must-not-bypass-consent-governance |
+| `campaigns-service` | data | must-not-own-individual-clinical-encounter-record, must-not-own-patient-identity-source-of-truth, must-not-bypass-data-governance-or-consent-policy, must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries |
 | `card-print-agent` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `channels-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `clinical-knowledge-platform-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
@@ -65,9 +65,9 @@
 | `search-service` | data | must-not-handle-care-transaction-orchestration, must-not-bypass-consent-governance |
 | `security-hardening-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `share-slip-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
-| `simba-service` | clinical | must-not-act-as-identity-source-of-record, must-not-own-enterprise-ledgering |
+| `simba-service` | clinical | must-not-own-clinical-encounter-lifecycle, must-not-own-acute-care-orders-or-results, must-not-own-prescription-dispensing, must-not-own-inpatient-care-state, must-not-own-patient-identity-source-of-truth, must-not-own-provider-identity-source-of-truth, must-not-own-facility-registry, must-not-own-consent-policy-authority, must-not-own-payment-ledgers, must-not-own-public-health-surveillance-source-of-truth |
 | `support-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
-| `surveillance-service` | data | must-not-handle-care-transaction-orchestration, must-not-bypass-consent-governance |
+| `surveillance-service` | data | must-not-own-individual-clinical-encounter-record, must-not-own-patient-identity-source-of-truth, must-not-bypass-data-governance-or-consent-policy, must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries |
 | `tshepo-audit-service` | trust | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
 | `tshepo-authz-service` | trust | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
 | `tshepo-consent-service` | trust | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
@@ -79,7 +79,7 @@
 | `ubomi-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
 | `varapi-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
 | `vito-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |
-| `wellness-service` | experience | must-not-own-domain-source-data, must-not-bypass-bff-authz-audit-controls |
+| `wellness-service` | clinical | must-not-own-public-health-surveillance-source-of-truth, must-not-own-clinical-encounter-lifecycle, must-not-own-marketplace-or-payment-ledgers, must-not-own-patient-identity-source-of-truth, must-not-own-provider-identity-source-of-truth, must-not-own-facility-registry |
 | `workflow-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `workforce-governance-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `zibo-service` | registry | must-not-authorize-access-decisions, must-not-own-clinical-encounters |

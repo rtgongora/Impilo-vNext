@@ -1,0 +1,355 @@
+name: registry-e2e
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "45432:5432"
+    volumes:
+      - ../../scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
+      - ../../scripts/seed/03-seed-vito.sql:/docker-entrypoint-initdb.d/03-seed-vito.sql
+      - ../../scripts/seed/04-seed-varapi.sql:/docker-entrypoint-initdb.d/04-seed-varapi.sql
+      - ../../scripts/seed/05-seed-tshepo.sql:/docker-entrypoint-initdb.d/05-seed-tshepo.sql
+      - ../../scripts/seed/06-seed-zibo.sql:/docker-entrypoint-initdb.d/06-seed-zibo.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U impilo"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "46379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  kafka:
+    image: apache/kafka:3.7.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: "impilo-registry-e2e-cluster-01"
+    ports:
+      - "49092:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 20s
+      retries: 15
+      start_period: 90s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command: start-dev --import-realm --health-enabled=true
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: impilo
+      KC_DB_PASSWORD: changeme
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "48480:8080"
+    volumes:
+      - ../../tools/auth/impilo-realm.json:/opt/keycloak/data/import/impilo-realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\":\"UP\"\\|200' <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  tshepo-authz:
+    build:
+      context: ../../services/tshepo-authz-service
+      dockerfile: Dockerfile.dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8081
+    ports:
+      - "48081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  vito:
+    build:
+      context: ../../services/vito-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8082
+    ports:
+      - "48082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  varapi:
+    build:
+      context: ../../services/varapi-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8083
+    ports:
+      - "48083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  tuso:
+    build:
+      context: ../../services/tuso-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8084
+      IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "true"
+    ports:
+      - "48084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8084/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  zibo:
+    build:
+      context: ../../services/zibo-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8085
+    ports:
+      - "48085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8085/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  msika:
+    build:
+      context: ../../services/msika-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8086
+    ports:
+      - "48086:8086"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8086/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  ubomi:
+    build:
+      context: ../../services/ubomi-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: changeme
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: impilo
+      SERVER_PORT: 8087
+    ports:
+      - "48087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8087/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  experience-bff:
+    build:
+      context: ../../services/experience-bff
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: 8160
+      IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+      IMPILO_BFF_FACILITIES_MODE: live
+      TUSO_BASE_URL: http://tuso:8084
+      VITO_BASE_URL: http://vito:8082
+      VARAPI_BASE_URL: http://varapi:8083
+      ZIBO_BASE_URL: http://zibo:8085
+      MSIKA_BASE_URL: http://msika:8086
+      TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz:8081
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/experience
+      SPRING_DATASOURCE_USERNAME: impilo
+      SPRING_DATASOURCE_PASSWORD: changeme
+    ports:
+      - "48160:8160"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      tuso:
+        condition: service_healthy
+      vito:
+        condition: service_healthy
+      varapi:
+        condition: service_healthy
+      zibo:
+        condition: service_healthy
+      msika:
+        condition: service_healthy
+      tshepo-authz:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 90s

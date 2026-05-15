@@ -3,13 +3,14 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
-import java.time.LocalDate;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Provider Activation BFF Controller — bridges the experience shell to VARAPI
@@ -52,9 +53,6 @@ public class ProviderActivationController {
      * registration number, status, and licensure expiry — everything the experience
      * shell needs to render the role activation selector and enforce graduated friction.</p>
      *
-     * <p>Falls back to structured placeholder data if VARAPI is unreachable, ensuring
-     * the experience shell can still render the provider activation UI during development.</p>
-     *
      * @param tenantId      mandatory tenant context (X-Tenant-ID)
      * @param requestId     unique request identifier (X-Request-ID)
      * @param correlationId correlation chain identifier (X-Correlation-ID)
@@ -72,65 +70,22 @@ public class ProviderActivationController {
                 tenantId, actorId, requestId);
 
         try {
-            // Attempt to resolve provider identities from VARAPI via the actor's Health ID.
-            // VARAPI currently supports lookup by provider ID; actor-to-provider mapping
-            // will be routed through VITO identity resolution in production.
-            // For now, delegate to VARAPI and fall back to placeholder if unavailable.
-            JsonNode result = varapiClient.getProvider(actorId);
+            JsonNode result = varapiClient.getProviderByHealthId(actorId);
             if (result != null) {
                 Map<String, Object> response = new LinkedHashMap<>();
                 response.put("data", result);
                 response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
                 return ResponseEntity.ok(response);
             }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", Map.of("code", "PROVIDER_NOT_FOUND", "message", "No provider profile found for actor"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("VARAPI lookup failed for actorId={}, returning placeholder data: {}",
+            log.warn("VARAPI lookup failed for actorId={}: {}",
                     actorId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-
-        // Placeholder: realistic provider identity shapes for development
-        List<Map<String, Object>> providers = List.of(
-                createProviderEntry(
-                        "PRV-2024-00147",
-                        "Dr. Tatenda Moyo",
-                        "MEDICAL_PRACTITIONER",
-                        "MDCZ-MP-2019-4521",
-                        "ACTIVE",
-                        LocalDate.now().plusMonths(8)
-                ),
-                createProviderEntry(
-                        "PRV-2024-00148",
-                        "Dr. Tatenda Moyo",
-                        "SPECIALIST_PHYSICIAN",
-                        "MDCZ-SP-2021-0087",
-                        "ACTIVE",
-                        LocalDate.now().plusMonths(14)
-                )
-        );
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", providers);
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId,
-                "source", "PLACEHOLDER",
-                "actorId", actorId
-        ));
-        return ResponseEntity.ok(response);
-    }
-
-    // -- Helper methods -------------------------------------------------------
-
-    private Map<String, Object> createProviderEntry(String providerId, String displayName,
-                                                     String cadre, String registrationNumber,
-                                                     String status, LocalDate licensureExpiry) {
-        Map<String, Object> provider = new LinkedHashMap<>();
-        provider.put("providerId", providerId);
-        provider.put("displayName", displayName);
-        provider.put("cadre", cadre);
-        provider.put("registrationNumber", registrationNumber);
-        provider.put("status", status);
-        provider.put("licensureExpiry", licensureExpiry.toString());
-        return provider;
     }
 }

@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +19,6 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Public Health BFF Controller — bridges experience UI to
@@ -89,34 +89,14 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createSignal(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
-        try {
-            JsonNode result = restTemplate.postForEntity(
-                            surveillanceUrl + "/internal/v1/signals", body, JsonNode.class)
-                    .getBody();
-            return ResponseEntity.status(201)
-                    .body(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
-        } catch (Exception e) {
-            log.error("Signal creation failed: {}", e.getMessage());
-            return ResponseEntity.status(400)
-                    .body(Map.of("error", Map.of("code", "FAILED", "message", e.getMessage())));
-        }
+        return proxyPost(surveillanceUrl + "/internal/v1/signals", requestId, body, 201);
     }
 
     @PostMapping("/ingest")
     public ResponseEntity<Map<String, Object>> ingestEvent(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
-        try {
-            JsonNode result = restTemplate.postForEntity(
-                            surveillanceUrl + "/internal/v1/ingest", body, JsonNode.class)
-                    .getBody();
-            return ResponseEntity.status(202)
-                    .body(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
-        } catch (Exception e) {
-            log.error("Ingest failed: {}", e.getMessage());
-            return ResponseEntity.status(400)
-                    .body(Map.of("error", Map.of("code", "INGEST_FAILED", "message", e.getMessage())));
-        }
+        return proxyPost(surveillanceUrl + "/internal/v1/ingest", requestId, body, 202);
     }
 
     // ── Campaigns ────────────────────────────────────────────────
@@ -130,13 +110,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createCampaign(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
-        try {
-            JsonNode result = restTemplate.postForEntity(campaignsUrl + "/internal/v1/campaigns", body, JsonNode.class).getBody();
-            return ResponseEntity.status(201).body(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
-        } catch (Exception e) {
-            log.error("Campaign creation failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "FAILED", "message", e.getMessage())));
-        }
+        return proxyPost(campaignsUrl + "/internal/v1/campaigns", requestId, body, 201);
     }
 
     @GetMapping("/campaigns/{id}")
@@ -148,27 +122,13 @@ public class PublicHealthController {
     @PostMapping("/campaigns/{id}/dispatch")
     public ResponseEntity<Map<String, Object>> dispatchCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        try {
-            JsonNode result = restTemplate.postForEntity(campaignsUrl + "/internal/v1/campaigns/" + id + "/dispatch", Map.of(), JsonNode.class).getBody();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "DISPATCH_FAILED", "message", e.getMessage())));
-        }
+        return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/dispatch", requestId, Map.of(), 200);
     }
 
     @PostMapping("/campaigns/{id}/close")
     public ResponseEntity<Map<String, Object>> closeCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        try {
-            JsonNode result = restTemplate.postForEntity(
-                            campaignsUrl + "/internal/v1/campaigns/" + id + "/close", Map.of(), JsonNode.class)
-                    .getBody();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of(), "meta", Map.of("request_id", requestId)));
-        } catch (Exception e) {
-            log.error("Campaign close failed: {}", e.getMessage());
-            return ResponseEntity.status(400)
-                    .body(Map.of("error", Map.of("code", "CLOSE_FAILED", "message", e.getMessage())));
-        }
+        return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/close", requestId, Map.of(), 200);
     }
 
     // ── Indawo Sites ─────────────────────────────────────────────
@@ -273,6 +233,14 @@ public class PublicHealthController {
         return proxyPost(indawoUrl + "/internal/v1/site-registry/inspections", requestId, body, 201);
     }
 
+    @PostMapping("/inspections")
+    public ResponseEntity<Map<String, Object>> scheduleInspectionCompatibility(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body
+    ) {
+        return scheduleInspection(requestId, body);
+    }
+
     @PostMapping("/site-registry/inspections/{inspectionId}/record")
     public ResponseEntity<Map<String, Object>> recordInspection(
             @PathVariable String inspectionId,
@@ -335,7 +303,9 @@ public class PublicHealthController {
             return ResponseEntity.status(201).body(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             log.warn("Public health proxy multipart failed: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "FAILED", "message", e.getMessage())));
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId)));
         }
     }
 
@@ -370,27 +340,109 @@ public class PublicHealthController {
         return proxy(indawoUrl + "/internal/v1/site-registry/dashboard/summary", requestId);
     }
 
+    @GetMapping("/weekly-idsr")
+    public ResponseEntity<Map<String, Object>> weeklyIdsr(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestParam(required = false) String from,
+            @RequestParam(required = false) String to) {
+        StringBuilder url = new StringBuilder(surveillanceUrl + "/internal/v1/public-health/weekly-idsr");
+        boolean first = true;
+        if (from != null && !from.isBlank()) {
+            url.append(first ? "?" : "&")
+                    .append("from=")
+                    .append(URLEncoder.encode(from, StandardCharsets.UTF_8));
+            first = false;
+        }
+        if (to != null && !to.isBlank()) {
+            url.append(first ? "?" : "&")
+                    .append("to=")
+                    .append(URLEncoder.encode(to, StandardCharsets.UTF_8));
+        }
+        return proxy(url.toString(), requestId);
+    }
+
+    @PostMapping("/outbreaks")
+    public ResponseEntity<Map<String, Object>> createOutbreak(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> payload = Map.of(
+                "name", text(body.get("name"), "Outbreak"),
+                "description", text(body.get("description"), "Outbreak signal raised from public-health operation"),
+                "eventType", text(body.get("eventType"), "OUTBREAK"),
+                "conditionField", text(body.get("conditionField"), "syndrome_code"),
+                "threshold", intValue(body.get("threshold"), 1),
+                "windowHours", intValue(body.get("windowHours"), 24),
+                "severity", text(body.get("severity"), "HIGH"));
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/outbreaks", requestId, payload, 201);
+    }
+
+    @PostMapping("/field-operations")
+    public ResponseEntity<Map<String, Object>> createFieldOperation(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> payload = Map.of(
+                "facilityId", body.get("facility_id"),
+                "operationType", text(body.get("operation_type"), "FIELD_OPERATION"),
+                "status", text(body.get("status"), "PLANNED"),
+                "occurredOn", text(body.get("occurred_on"), ""),
+                "details", body);
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/field-operations", requestId, payload, 202);
+    }
+
     // ── Helper ───────────────────────────────────────────────────
 
     private ResponseEntity<Map<String, Object>> proxy(String url, String requestId) {
         try {
             JsonNode result = restTemplate.getForEntity(url, JsonNode.class).getBody();
-            Object data = result != null && result.has("data") ? result.get("data") : (result != null ? result : new Object[0]);
+            if (result == null) {
+                throw new IllegalStateException("Upstream returned empty response body");
+            }
+            Object data = result.has("data") ? result.get("data") : result;
             return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             log.warn("Public health proxy failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return ResponseEntity.status(502).body(Map.of(
+                    "error", Map.of("code", "PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId)));
         }
     }
 
     private ResponseEntity<Map<String, Object>> proxyPost(String url, String requestId, Map<String, Object> body, int expectedStatus) {
         try {
             JsonNode result = restTemplate.postForEntity(url, body, JsonNode.class).getBody();
-            Object data = result != null && result.has("data") ? result.get("data") : (result != null ? result : Map.of());
+            if (result == null) {
+                throw new IllegalStateException("Upstream returned empty response body");
+            }
+            Object data = result.has("data") ? result.get("data") : result;
             return ResponseEntity.status(expectedStatus).body(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             log.warn("Public health proxy POST failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "FAILED", "message", e.getMessage())));
+            return ResponseEntity.status(502).body(Map.of(
+                    "error", Map.of("code", "PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId)));
         }
     }
+
+    private int intValue(Object raw, int fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        if (raw instanceof Number number) {
+            return number.intValue();
+        }
+        try {
+            return Integer.parseInt(raw.toString());
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
+    }
+
+    private String text(Object raw, String fallback) {
+        if (raw == null) {
+            return fallback;
+        }
+        String value = raw.toString().trim();
+        return value.isEmpty() ? fallback : value;
+    }
+
 }

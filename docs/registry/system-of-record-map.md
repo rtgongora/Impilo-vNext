@@ -7,7 +7,7 @@
 | `audit-ledger-service` | integration | Audit Ledger canonical records |
 | `butano-fhir` | clinical | Butano Fhir canonical records |
 | `butano-service` | clinical | Butano canonical records |
-| `campaigns-service` | data | Campaigns canonical records |
+| `campaigns-service` | data | public-health campaign definitions, campaign outreach plans and schedules, campaign execution state and coverage metrics |
 | `card-print-agent` | integration | Card Print Agent canonical records |
 | `channels-service` | integration | Channels canonical records |
 | `clinical-knowledge-platform-service` | clinical | Clinical Knowledge Platform canonical records |
@@ -45,8 +45,8 @@
 | `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |
 | `mushex-service` | enterprise | Mushex canonical records |
 | `mvumo-service` | trust | Mvumo canonical records |
-| `national-data-repository-service` | data | National Data Repository canonical records |
-| `ndr-service` | data | Ndr canonical records |
+| `national-data-repository-service` | data | NDR dataset catalog and query facade (transitional; merge target with `ndr-service`) |
+| `ndr-service` | data | Canonical NDR ingest + governed bronze/gold query runtime (primary during consolidation) |
 | `notification-service` | integration | Notification canonical records |
 | `observability-service` | integration | Observability canonical records |
 | `offline-edge-service` | integration | Offline Edge canonical records |
@@ -65,9 +65,9 @@
 | `search-service` | data | Search canonical records |
 | `security-hardening-service` | integration | Security Hardening canonical records |
 | `share-slip-service` | enterprise | Share Slip canonical records |
-| `simba-service` | clinical | Simba canonical records |
+| `simba-service` | clinical | wellness journeys, lifestyle plans, self-care plans, preventive care workflows, wellness goals, habit tracking workflows, coaching and nudge workflows, wellness programme participation, longitudinal wellness progress |
 | `support-service` | integration | Support canonical records |
-| `surveillance-service` | data | Surveillance canonical records |
+| `surveillance-service` | data | public-health surveillance signals and case aggregates, surveillance alert definitions and epidemiological counters, notifiable event monitoring telemetry |
 | `tshepo-audit-service` | trust | Tshepo Audit canonical records |
 | `tshepo-authz-service` | trust | Tshepo Authz canonical records |
 | `tshepo-consent-service` | trust | Tshepo Consent canonical records |
@@ -79,7 +79,7 @@
 | `ubomi-service` | registry | Ubomi canonical records |
 | `varapi-service` | registry | Varapi canonical records |
 | `vito-service` | registry | Vito canonical records |
-| `wellness-service` | experience | Wellness canonical records |
+| `wellness-service` | clinical | patient-linked wellness activities, screening prompts, wellness records, wellness goals, lifestyle and preventive-care activities, adherence support activities |
 | `workflow-service` | integration | Workflow canonical records |
 | `workforce-governance-service` | enterprise | Workforce Governance canonical records |
 | `zibo-service` | registry | Zibo canonical records |

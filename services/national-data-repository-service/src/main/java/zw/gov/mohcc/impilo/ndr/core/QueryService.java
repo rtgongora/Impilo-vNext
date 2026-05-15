@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.ndr.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,11 @@ public class QueryService {
     private static final Logger log = LoggerFactory.getLogger(QueryService.class);
 
     private final MaterializedViewRepository viewRepository;
+    private final ObjectMapper objectMapper;
 
-    public QueryService(MaterializedViewRepository viewRepository) {
+    public QueryService(MaterializedViewRepository viewRepository, ObjectMapper objectMapper) {
         this.viewRepository = viewRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -41,9 +45,20 @@ public class QueryService {
     }
 
     private boolean matchesFilters(String rowDataJson, Map<String, String> filters) {
+        JsonNode row;
+        try {
+            row = objectMapper.readTree(rowDataJson);
+        } catch (Exception e) {
+            log.warn("Skipping malformed materialized row during filter evaluation: {}", e.getMessage());
+            return false;
+        }
+
         for (Map.Entry<String, String> filter : filters.entrySet()) {
-            if (!rowDataJson.contains("\"" + filter.getKey() + "\"")
-                    || !rowDataJson.contains(filter.getValue())) {
+            JsonNode value = row.get(filter.getKey());
+            if (value == null || value.isNull()) {
+                return false;
+            }
+            if (!filter.getValue().equalsIgnoreCase(value.asText())) {
                 return false;
             }
         }

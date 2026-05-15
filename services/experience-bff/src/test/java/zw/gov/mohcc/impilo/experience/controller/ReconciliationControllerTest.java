@@ -53,6 +53,18 @@ class ReconciliationControllerTest {
         org.junit.jupiter.api.Assertions.assertTrue(body.contains("\"mushex_intent_id\":\"PI-1\""));
     }
 
+    @Test
+    void tripleMatchFailClosesWhenUpstreamUnavailable() {
+        ReconciliationController controller = new ReconciliationController(new StubMushexClient(), new FailingCostaClient());
+
+        ResponseEntity<String> response = controller.tripleMatch("ENC-2", "req-4", "corr-4");
+
+        assertEquals(502, response.getStatusCode().value());
+        String body = response.getBody();
+        org.junit.jupiter.api.Assertions.assertNotNull(body);
+        org.junit.jupiter.api.Assertions.assertTrue(body.contains("\"code\":\"RECONCILIATION_UNAVAILABLE\""));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         // Pass all nulls — the compact constructor defaults every field to localhost URLs
         return ServiceClientConfig.testServiceEndpoints();
@@ -97,6 +109,17 @@ class ReconciliationControllerTest {
         public ResponseEntity<String> financeLifecycleGet(String relativePath) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"data\":[{\"invoice_id\":\"INV-1\",\"bill_id\":\"BILL-1\"}]}");
+        }
+    }
+
+    private static final class FailingCostaClient extends CostaServiceClient {
+        private FailingCostaClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> financeLifecycleGet(String relativePath) {
+            throw new RuntimeException("costa unavailable");
         }
     }
 }

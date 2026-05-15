@@ -42,11 +42,11 @@ public class ProviderFinancingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = coverageClient.listProviderContracts(provider_id, payer_id, status);
-            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+            return ResponseEntity.ok(Map.of("data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("listContracts: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return coverageUnavailable("Provider contracts unavailable", requestId, correlationId);
         }
     }
 
@@ -61,7 +61,7 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("createContract: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "CONTRACT_CREATE_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Provider contract create unavailable", requestId, correlationId);
         }
     }
 
@@ -87,7 +87,7 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("suspendContract: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "SUSPEND_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Provider contract suspend unavailable", requestId, correlationId);
         }
     }
 
@@ -102,7 +102,7 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("reinstateContract: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "REINSTATE_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Provider contract reinstate unavailable", requestId, correlationId);
         }
     }
 
@@ -114,11 +114,11 @@ public class ProviderFinancingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = coverageClient.listProviderNetworks(payer_id, status);
-            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+            return ResponseEntity.ok(Map.of("data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("listNetworks: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return coverageUnavailable("Provider networks unavailable", requestId, correlationId);
         }
     }
 
@@ -133,7 +133,7 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("createNetwork: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "NETWORK_CREATE_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Provider network create unavailable", requestId, correlationId);
         }
     }
 
@@ -144,10 +144,10 @@ public class ProviderFinancingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = coverageClient.listNetworkMembers(networkId);
-            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+            return ResponseEntity.ok(Map.of("data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return coverageUnavailable("Network members unavailable", requestId, correlationId);
         }
     }
 
@@ -163,7 +163,7 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("addNetworkMember: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "MEMBER_ADD_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Network member add unavailable", requestId, correlationId);
         }
     }
 
@@ -179,7 +179,13 @@ public class ProviderFinancingController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("removeNetworkMember: {}", e.getMessage());
-            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "MEMBER_REMOVE_FAILED", "message", e.getMessage())));
+            return coverageUnavailable("Network member remove unavailable", requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> coverageUnavailable(String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", "COVERAGE_UNAVAILABLE", "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

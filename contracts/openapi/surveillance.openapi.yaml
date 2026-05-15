@@ -32,6 +32,12 @@ tags:
     description: Telemetry and event ingest
   - name: Internal-Signals
     description: Epidemiological signals
+  - name: Internal-Cases
+    description: Case-based surveillance
+  - name: Internal-Alerts
+    description: Counters and alert definitions
+  - name: Internal-Public-Health
+    description: Sovereign public-health lifecycle APIs
 
 paths:
   /internal/v1/ingest:
@@ -47,7 +53,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        "202":
           description: Ingest accepted
           content:
             application/json:
@@ -58,6 +64,18 @@ paths:
           description: Invalid payload
 
   /internal/v1/signals:
+    get:
+      operationId: surveillanceListSignals
+      tags: [Internal-Signals]
+      summary: List active signal definitions
+      responses:
+        "200":
+          description: Signal list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
     post:
       operationId: surveillanceCreateSignal
       tags: [Internal-Signals]
@@ -70,13 +88,167 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        "201":
           description: Signal stored
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+
+  /internal/v1/cases:
+    get:
+      operationId: surveillanceListCases
+      tags: [Internal-Cases]
+      summary: List surveillance cases
+      responses:
+        "200":
+          description: Case list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/surveillance/counters:
+    get:
+      operationId: surveillanceGetCounters
+      tags: [Internal-Alerts]
+      summary: Get surveillance counters
+      responses:
+        "200":
+          description: Counter snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: surveillanceUpdateCounters
+      tags: [Internal-Alerts]
+      summary: Upsert surveillance counter values
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Counters updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/surveillance/alerts:
+    get:
+      operationId: surveillanceListAlerts
+      tags: [Internal-Alerts]
+      summary: List triggered surveillance alerts
+      responses:
+        "200":
+          description: Alert list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/surveillance/alerts/definitions:
+    get:
+      operationId: surveillanceListAlertDefinitions
+      tags: [Internal-Alerts]
+      summary: List alert definitions
+      responses:
+        "200":
+          description: Alert definition list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: surveillanceCreateAlertDefinition
+      tags: [Internal-Alerts]
+      summary: Create alert definition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Alert definition created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/weekly-idsr:
+    get:
+      operationId: surveillanceWeeklyIdsr
+      tags: [Internal-Public-Health]
+      summary: Weekly IDSR aggregate lifecycle endpoint
+      responses:
+        "200":
+          description: Weekly aggregate payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/public-health/outbreaks:
+    post:
+      operationId: surveillanceCreateOutbreak
+      tags: [Internal-Public-Health]
+      summary: Record outbreak lifecycle event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Outbreak lifecycle accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid payload
+
+  /internal/v1/public-health/field-operations:
+    post:
+      operationId: surveillanceCreateFieldOperation
+      tags: [Internal-Public-Health]
+      summary: Record field operation lifecycle event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "202":
+          description: Field operation accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Invalid payload
 
 components:
   securitySchemes:

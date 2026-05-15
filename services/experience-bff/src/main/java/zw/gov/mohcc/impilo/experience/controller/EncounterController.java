@@ -8,16 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /**
- * Encounter management — proxies PCT; falls back to local state when PCT is unavailable.
+ * Encounter management — proxies canonical PCT encounter workflow.
  */
 @RestController
 @RequestMapping("/internal/v1/encounters")
@@ -26,21 +23,31 @@ public class EncounterController {
     private static final Logger log = LoggerFactory.getLogger(EncounterController.class);
 
     private final PctServiceClient pctClient;
-    private final CostaServiceClient costaClient;
-    private static final List<Map<String, Object>> LOCAL_ENCOUNTERS = new CopyOnWriteArrayList<>();
 
-    public EncounterController(PctServiceClient pctClient, CostaServiceClient costaClient) {
+    public EncounterController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
-        this.costaClient = costaClient;
     }
 
     public record CreateEncounterRequest(
             @JsonProperty("patient_id") String patientId,
             @JsonProperty("facility_id") String facilityId,
             @JsonProperty("encounter_type") String encounterType,
+            @JsonProperty("encounter_context") String encounterContext,
+            @JsonProperty("entry_point") String entryPoint,
+            @JsonProperty("modality") String modality,
+            @JsonProperty("virtual_mode") String virtualMode,
+            @JsonProperty("care_setting") String careSetting,
+            @JsonProperty("priority") String priority,
+            @JsonProperty("triage_category") String triageCategory,
+            @JsonProperty("pathway_ref") String pathwayRef,
+            @JsonProperty("protocol_ref") String protocolRef,
             @JsonProperty("chief_complaint") String chiefComplaint,
             @JsonProperty("journey_id") String journeyId,
             @JsonProperty("cpid") String cpid) {}
+
+    public record UpdateEncounterPathwayProtocolRequest(
+            @JsonProperty("pathway_ref") String pathwayRef,
+            @JsonProperty("protocol_ref") String protocolRef) {}
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> listEncounters(
@@ -51,30 +58,24 @@ public class EncounterController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "patient_id") String patientId) {
 
-        // Try PCT
-        if (patientId != null && !patientId.isBlank()) {
-            try {
-                JsonNode pctData = pctClient.getPatientTimeline(patientId);
-                if (pctData != null) {
-                    return ResponseEntity.ok(Map.of(
-                            "data", pctData,
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                }
-            } catch (Exception e) {
-                log.debug("PCT unavailable for encounter list: {}", e.getMessage());
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_PATIENT_ID", "message", "patient_id query parameter is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
-        // Fallback
-        List<Map<String, Object>> filtered = LOCAL_ENCOUNTERS;
-        if (patientId != null) {
-            filtered = filtered.stream()
-                    .filter(e -> patientId.equals(((Map<?, ?>) e.get("attributes")).get("patientId")))
-                    .collect(Collectors.toList());
+        try {
+            JsonNode pctData = pctClient.getPatientTimeline(patientId);
+            if (pctData == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No encounter list payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", pctData,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT unavailable for encounter list: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of(
-                "data", filtered,
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping("/{id}")
@@ -83,7 +84,6 @@ public class EncounterController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        // Try PCT (numeric IDs)
         try {
             long encId = Long.parseLong(id.trim());
             JsonNode data = pctClient.getEncounter(encId);
@@ -92,24 +92,15 @@ public class EncounterController {
                         "data", data,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
-        } catch (NumberFormatException ignored) {
-            // Non-numeric ID — look up in local store
+            return upstreamFailure("PCT_UNAVAILABLE", "No encounter payload returned", requestId, correlationId);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_ENCOUNTER_ID", "message", "Encounter id must be the numeric PCT encounter id"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.debug("PCT getEncounter failed: {}", e.getMessage());
+            log.warn("PCT getEncounter failed: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-
-        // Fallback: local
-        return LOCAL_ENCOUNTERS.stream()
-                .filter(e -> e.get("id").equals(id))
-                .findFirst()
-                .map(e -> {
-                    Map<String, Object> r = new LinkedHashMap<>();
-                    r.put("data", e);
-                    r.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                    return ResponseEntity.ok(r);
-                })
-                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", Map.of("code", "NOT_FOUND", "message", "Encounter not found"))));
     }
 
     @PostMapping
@@ -122,51 +113,43 @@ public class EncounterController {
             @RequestBody CreateEncounterRequest body) {
 
         String patientId = body.patientId();
-        String facilityId = body.facilityId();
         String encounterType = body.encounterType();
-        String chiefComplaint = body.chiefComplaint();
         String journeyId = body.journeyId();
-        String cpid = body.cpid();
 
         if (patientId == null || patientId.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message", "patient_id is required")));
         }
 
-        // Try PCT
-        if (journeyId != null && !journeyId.isBlank()) {
-            try {
-                JsonNode pctEnc = pctClient.startEncounter(journeyId, encounterType);
-                if (pctEnc != null) {
-                    return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                            "data", pctEnc,
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                }
-            } catch (Exception e) {
-                log.info("PCT startEncounter failed — using local fallback: {}", e.getMessage());
-            }
+        if (journeyId == null || journeyId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_JOURNEY_ID", "message", "journey_id is required for canonical encounter start"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
 
-        // Fallback: create local encounter
-        String id = "enc-" + UUID.randomUUID().toString().substring(0, 8);
-        String now = OffsetDateTime.now().toString();
-
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("patientId", patientId);
-        attrs.put("facilityId", facilityId);
-        attrs.put("encounterType", encounterType != null ? encounterType : "OUTPATIENT");
-        attrs.put("chiefComplaint", chiefComplaint);
-        attrs.put("status", "IN_PROGRESS");
-        attrs.put("startedAt", now);
-        attrs.put("cpid", cpid);
-
-        Map<String, Object> encounter = Map.of("id", id, "type", "Encounter", "attributes", attrs);
-        LOCAL_ENCOUNTERS.add(encounter);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", encounter);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        try {
+            JsonNode pctEnc = pctClient.startEncounter(
+                    journeyId,
+                    encounterType,
+                    body.encounterContext(),
+                    body.entryPoint(),
+                    body.modality(),
+                    body.virtualMode(),
+                    body.careSetting(),
+                    body.priority(),
+                    body.triageCategory(),
+                    body.pathwayRef(),
+                    body.protocolRef());
+            if (pctEnc == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No encounter create payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", pctEnc,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT startEncounter failed: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/{id}/close")
@@ -178,17 +161,51 @@ public class EncounterController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
 
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "COMPLETED");
-        attrs.put("closedAt", OffsetDateTime.now().toString());
-        if (body != null && body.get("diagnosis") != null) {
-            attrs.put("diagnosis", body.get("diagnosis"));
+        try {
+            long encId = Long.parseLong(id.trim());
+            JsonNode pct = pctClient.completeEncounter(encId);
+            if (pct == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No encounter close payload returned", requestId, correlationId);
+            }
+            Map<String, Object> meta = new LinkedHashMap<>(Map.of(
+                    "request_id", requestId,
+                    "correlation_id", correlationId));
+            return ResponseEntity.ok(Map.of(
+                    "data", pct,
+                    "meta", meta));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_ENCOUNTER_ID", "message", "Encounter id must be the numeric PCT encounter id"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("PCT completeEncounter failed: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
 
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "Encounter", "attributes", attrs));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+    @PatchMapping("/{id}/pathway-protocol")
+    public ResponseEntity<Map<String, Object>> updateEncounterPathwayProtocol(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody UpdateEncounterPathwayProtocolRequest body) {
+        try {
+            long encounterId = Long.parseLong(id.trim());
+            JsonNode pct = pctClient.updateEncounterPathwayProtocol(
+                    encounterId, body.pathwayRef(), body.protocolRef());
+            if (pct == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No encounter pathway/protocol payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", pct,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_ENCOUNTER_ID", "message", "Encounter id must be the numeric PCT encounter id"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/{id}/discharge")
@@ -199,19 +216,35 @@ public class EncounterController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            long encounterId = Long.parseLong(id.trim());
+            String requestedJourneyId = body == null ? null : strVal(body, "journey_id", "journeyId");
+            String dischargeType = body == null ? null : strVal(body, "discharge_type", "dischargeType", "outcome");
+            JsonNode encounter = pctClient.getEncounter(encounterId);
+            if (encounter == null || encounter.get("journeyId") == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "Encounter payload missing journey linkage", requestId, correlationId);
+            }
+            String journeyId = encounter.get("journeyId").asText();
+            if (requestedJourneyId != null && !requestedJourneyId.isBlank() && !requestedJourneyId.equals(journeyId)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", Map.of("code", "ENCOUNTER_JOURNEY_MISMATCH", "message", "encounter_id and journey_id do not match"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
 
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "DISCHARGED");
-        attrs.put("dischargedAt", OffsetDateTime.now().toString());
-        if (body != null) {
-            attrs.put("dischargeType", body.getOrDefault("discharge_type", "ROUTINE"));
-            attrs.put("treatmentSummary", body.get("treatment_summary"));
+            JsonNode discharge = pctClient.startDischarge(journeyId, dischargeType != null ? dischargeType : "CLINICAL");
+            if (discharge == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No discharge payload returned", requestId, correlationId);
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", discharge,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "journey_id", journeyId)));
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_ENCOUNTER_ID", "message", "Encounter id must be the numeric PCT encounter id"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception ex) {
+            return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
         }
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id, "type", "Encounter", "attributes", attrs));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
     }
 
     private static String strVal(Map<String, Object> map, String... keys) {
@@ -220,5 +253,12 @@ public class EncounterController {
             if (v != null) return v.toString();
         }
         return null;
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Encounter upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

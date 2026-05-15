@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -13,8 +14,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Facility registry proxy — delegates to TUSO when available, falls back to
- * seeded Zimbabwe health facilities so the UI always has data to display.
+ * Facility registry proxy.
+ *
+ * <p>Production mode is fail-closed on upstream unavailability (no synthetic
+ * facility records in live mode). Stub mode remains explicit for test-only
+ * deterministic harness usage.</p>
  */
 @RestController
 @RequestMapping("/internal/v1/facilities")
@@ -77,7 +81,10 @@ public class FacilityController {
                     )
             ));
             } catch (Exception e) {
-                log.warn("TUSO facility search failed, using seed: {}", e.getMessage());
+                log.warn("TUSO facility search failed in live mode: {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
         }
 
@@ -139,8 +146,12 @@ public class FacilityController {
                 }
             } catch (NumberFormatException ignored) {
             } catch (Exception e) {
-                log.debug("TUSO facility get miss for id={}: {}", id, e.getMessage());
+                log.warn("TUSO facility get failed in live mode for id={}: {}", id, e.getMessage());
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", Map.of("code", "TUSO_UNAVAILABLE", "message", e.getMessage()),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         return SEEDED_FACILITIES.stream()

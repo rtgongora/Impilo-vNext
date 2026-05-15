@@ -3,7 +3,9 @@ package zw.gov.mohcc.impilo.experience.controller.mobile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.*;
 
 /**
@@ -14,7 +16,10 @@ import java.util.*;
 @RequestMapping("/internal/v1/mobile/provider/notices")
 public class MobileNoticesController {
 
-    public MobileNoticesController() {
+    private final VarapiServiceClient varapiClient;
+
+    public MobileNoticesController(VarapiServiceClient varapiClient) {
+        this.varapiClient = varapiClient;
     }
 
     @GetMapping
@@ -25,6 +30,15 @@ public class MobileNoticesController {
             @RequestHeader("X-Actor-ID") String actorId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode notices = varapiClient.getProviderNotices(actorId);
+            return ResponseEntity.ok(Map.of(
+                    "data", notices != null ? notices : List.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "page", page, "size", size)));
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 }

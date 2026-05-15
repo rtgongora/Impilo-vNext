@@ -131,7 +131,9 @@ export function OutbreaksTab() {
           : null,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setSubmitting(false);
+      setError("Outbreak service is unavailable. The event was not saved.");
+      return;
     }
     setSubmitting(false);
     setSubmitted(true);
@@ -153,17 +155,17 @@ export function OutbreaksTab() {
         </div>
         <button
           type="button"
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+          onClick={() => setShowForm((s) => !s)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
         >
           <Plus className="w-4 h-4" />
-          Record New Event (pending)
+          Record New Event
         </button>
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
-        New outbreak and incident creation stays disabled until the Experience BFF exposes a governed outbreak write
-        endpoint. Live case visibility remains available below from surveillance-service.
+        New outbreak submissions are routed to a governed BFF endpoint and fail closed on upstream errors.
+        Live case visibility remains available below from surveillance-service.
       </div>
 
       {/* Success banner */}

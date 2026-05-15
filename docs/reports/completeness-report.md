@@ -1,6 +1,6 @@
 # Service completeness report (Phase A2)
 
-Generated: 2026-05-14T10:21:06.739Z
+Generated: 2026-05-15T05:26:10.204Z
 
 | Module | Composite | backend | bff | contract | api_docs | kafka | ui_hooks | ui_pages |
 |--------|-----------|---------|-----|----------|----------|-------|----------|----------|

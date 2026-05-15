@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,8 @@ public class QueueController {
 
     private final PctServiceClient pctClient;
     private final TshepoAuditServiceClient tshepoAuditServiceClient;
+    @Value("${impilo.bff.queue.allow-local-fallback:false}")
+    private boolean allowLocalFallback;
 
     public QueueController(PctServiceClient pctClient, TshepoAuditServiceClient tshepoAuditServiceClient) {
         this.pctClient = pctClient;
@@ -66,6 +69,9 @@ public class QueueController {
             @RequestParam(required = false, name = "workspace_id") String workspaceId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, name = "queue_type") String queueType) {
+        if ((queueId == null || queueId.isBlank()) && (facilityId == null || facilityId.isBlank())) {
+            return validation("facility_id or queue_id is required");
+        }
 
         // Try PCT
         try {
@@ -92,6 +98,17 @@ public class QueueController {
             }
         } catch (Exception e) {
             log.debug("PCT unavailable for queue list: {}", e.getMessage());
+            if (!allowLocalFallback) {
+                return upstreamUnavailable("PCT_UNAVAILABLE",
+                        "Queue entries are currently unavailable because pct-service could not be reached",
+                        requestId, correlationId);
+            }
+        }
+
+        if (!allowLocalFallback) {
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue entries are currently unavailable because pct-service returned no payload",
+                    requestId, correlationId);
         }
 
         // Fallback: return local queue entries filtered by facility
@@ -152,6 +169,17 @@ public class QueueController {
             }
         } catch (Exception e) {
             log.info("PCT unavailable — creating local queue entry: {}", e.getMessage());
+            if (!allowLocalFallback) {
+                return upstreamUnavailable("PCT_UNAVAILABLE",
+                        "Queue entry could not be created because pct-service is unavailable",
+                        requestId, correlationId);
+            }
+        }
+
+        if (!allowLocalFallback) {
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue entry could not be created because pct-service did not return a queue item",
+                    requestId, correlationId);
         }
 
         // Fallback: create local queue entry
@@ -397,6 +425,17 @@ public class QueueController {
             }
         } catch (Exception e) {
             log.debug("PCT unavailable for queue status update: {}", e.getMessage());
+            if (!allowLocalFallback) {
+                return upstreamUnavailable("PCT_UNAVAILABLE",
+                        "Queue status update is unavailable because pct-service could not be reached",
+                        requestId, correlationId);
+            }
+        }
+
+        if (!allowLocalFallback) {
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue status update is unavailable because pct-service returned no payload",
+                    requestId, correlationId);
         }
 
         // Fallback: update local entry
@@ -413,13 +452,8 @@ public class QueueController {
             }
         }
 
-        // Entry not found in local store — return a synthetic response
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", newStatus);
-        attrs.put("updatedAt", OffsetDateTime.now().toString());
-        publishQueueAuditToTshepo(id, "STATUS_SYNTHETIC", newStatus, auditDetail);
-        return ResponseEntity.ok(Map.of(
-                "data", Map.of("id", id, "type", "queue_entry", "attributes", attrs),
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", Map.of("code", "QUEUE_ENTRY_NOT_FOUND", "message", "Queue entry was not found"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -437,6 +471,17 @@ public class QueueController {
             }
         } catch (Exception e) {
             log.debug("PCT unavailable for queue definitions: {}", e.getMessage());
+            if (!allowLocalFallback) {
+                return upstreamUnavailable("PCT_UNAVAILABLE",
+                        "Queue definitions are unavailable because pct-service could not be reached",
+                        requestId, correlationId);
+            }
+        }
+
+        if (!allowLocalFallback) {
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue definitions are unavailable because pct-service returned no payload",
+                    requestId, correlationId);
         }
         // Fallback: return default queue definitions
         return ResponseEntity.ok(Map.of(
@@ -475,7 +520,18 @@ public class QueueController {
                 }
             } catch (Exception e) {
                 log.debug("PCT aggregate queue stats failed for facility {}: {}", facilityId, e.getMessage());
+                if (!allowLocalFallback) {
+                    return upstreamUnavailable("PCT_UNAVAILABLE",
+                            "Queue statistics are unavailable because pct-service could not be reached",
+                            requestId, correlationId);
+                }
             }
+        }
+
+        if (!allowLocalFallback) {
+            return upstreamUnavailable("PCT_UNAVAILABLE",
+                    "Queue statistics are unavailable because pct-service returned no payload",
+                    requestId, correlationId);
         }
 
         final String fid = facilityId != null ? facilityId.trim() : "";
@@ -568,5 +624,17 @@ public class QueueController {
             case "LOW" -> -10;
             default -> 0;
         };
+    }
+
+    private static ResponseEntity<Map<String, Object>> upstreamUnavailable(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static ResponseEntity<Map<String, Object>> validation(String message) {
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", Map.of("code", "VALIDATION", "message", message)));
     }
 }

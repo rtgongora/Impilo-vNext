@@ -49,6 +49,17 @@ class CoverageControllerTest {
         assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
+    @Test
+    void listPlansReturnsBadGatewayWhenCoverageUnavailable() {
+        CoverageController controller = new CoverageController(new FailingCoverageClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.listPlans(null, "req-4", "corr-4");
+        assertEquals(502, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("COVERAGE_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+        assertEquals("req-4", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -72,6 +83,15 @@ class CoverageControllerTest {
 
         @Override public JsonNode checkEligibility(Map<String, Object> body) {
             return mapper.createObjectNode().put("eligible", true);
+        }
+    }
+
+    private static final class FailingCoverageClient extends CoverageServiceClient {
+        FailingCoverageClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override
+        public JsonNode listPlans() {
+            throw new RuntimeException("coverage unavailable");
         }
     }
 }

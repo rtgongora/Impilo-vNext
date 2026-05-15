@@ -81,8 +81,10 @@ public class AiGovernanceController {
             return ResponseEntity.ok(metaEnvelope(data, requestId, correlationId));
         } catch (Exception e) {
             log.error("Deactivate governance rule failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", Map.of("code", "RULE_DEACTIVATE_FAILED", "message", e.getMessage())));
+            return failClose("AI_GOVERNANCE_UNAVAILABLE",
+                    "Unable to deactivate governance rule while data-governance-service is unavailable",
+                    requestId,
+                    correlationId);
         }
     }
 
@@ -151,7 +153,11 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return ResponseEntity.ok(metaEnvelope(List.of(), requestId, correlationId));
+        return notImplemented(
+                "AI_GOVERNANCE_ROUTE_UNAVAILABLE",
+                "AI governance incidents feed is not yet wired to a sovereign upstream source",
+                requestId,
+                correlationId);
     }
 
     @PostMapping("/incidents")
@@ -160,8 +166,11 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(metaEnvelope(Map.of("status", "accepted"), requestId, correlationId));
+        return notImplemented(
+                "AI_GOVERNANCE_ROUTE_UNAVAILABLE",
+                "AI governance incident write path is not yet wired to a sovereign upstream source",
+                requestId,
+                correlationId);
     }
 
     // ── Audit ───────────────────────────────────────────────────────
@@ -173,7 +182,11 @@ public class AiGovernanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(metaEnvelope(List.of(), requestId, correlationId));
+        return notImplemented(
+                "AI_GOVERNANCE_ROUTE_UNAVAILABLE",
+                "AI governance audit trail route is not yet wired to a sovereign upstream source",
+                requestId,
+                correlationId);
     }
 
     // ── Proxy Helpers ───────────────────────────────────────────────
@@ -185,7 +198,11 @@ public class AiGovernanceController {
             return ResponseEntity.ok(metaEnvelope(data, requestId, correlationId));
         } catch (Exception e) {
             log.warn("AI governance GET proxy failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.ok(metaEnvelope(new Object[0], requestId, correlationId));
+            return failClose(
+                    "AI_GOVERNANCE_UNAVAILABLE",
+                    "AI governance read path is unavailable while data-governance-service is unreachable",
+                    requestId,
+                    correlationId);
         }
     }
 
@@ -198,13 +215,18 @@ public class AiGovernanceController {
             return ResponseEntity.status(successCode).body(metaEnvelope(data, requestId, correlationId));
         } catch (Exception e) {
             log.error("AI governance POST proxy failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", Map.of("code", "AI_GOVERNANCE_OPERATION_FAILED", "message", e.getMessage())));
+            return failClose(
+                    "AI_GOVERNANCE_UNAVAILABLE",
+                    "AI governance write path is unavailable while data-governance-service is unreachable",
+                    requestId,
+                    correlationId);
         }
     }
 
     private Object normalizePayload(JsonNode result) {
-        if (result == null) return new Object[0];
+        if (result == null || result.isNull()) {
+            throw new IllegalStateException("data-governance-service returned empty response body");
+        }
         if (result.has("data")) return result.get("data");
         return result;
     }
@@ -216,5 +238,15 @@ public class AiGovernanceController {
         return response;
     }
 
-    
+    private ResponseEntity<Map<String, Object>> failClose(String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> notImplemented(String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
 }

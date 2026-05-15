@@ -49,26 +49,30 @@ public class GoldMaterializerService {
     /**
      * Materialize a single bronze event JSON into gold tables.
      * Called by the controller for on-demand materialization.
-     * Returns: number of gold records upserted (0 if event type not mapped).
+     * Returns: materialization outcome including status and records upserted.
      */
     @Transactional
-    public int materializeEvent(String envelopeJson, UUID tenantId, String eventId, String eventType) {
+    public MaterializationOutcome materializeEvent(String envelopeJson, UUID tenantId, String eventId, String eventType) {
         try {
             JsonNode envelope = objectMapper.readTree(envelopeJson);
             JsonNode data = envelope.has("data") ? envelope.get("data") : envelope;
+            int upserted;
 
             if (eventType.contains("encounter")) {
-                return upsertEncounter(data, tenantId, eventId, eventType);
+                upserted = upsertEncounter(data, tenantId, eventId, eventType);
+                return new MaterializationOutcome(upserted, "MATERIALIZED");
             } else if (eventType.contains("medication") || eventType.contains("prescription") || eventType.contains("dispense")) {
-                return upsertMedication(data, tenantId, eventId, eventType);
+                upserted = upsertMedication(data, tenantId, eventId, eventType);
+                return new MaterializationOutcome(upserted, "MATERIALIZED");
             } else if (eventType.contains("lab") || eventType.contains("observation") || eventType.contains("diagnostic")) {
-                return upsertLab(data, tenantId, eventId, eventType);
+                upserted = upsertLab(data, tenantId, eventId, eventType);
+                return new MaterializationOutcome(upserted, "MATERIALIZED");
             }
 
-            return 0;
+            return new MaterializationOutcome(0, "NO_MAPPED_TARGET");
         } catch (JsonProcessingException e) {
             log.warn("Failed to parse envelope JSON for materialization [eventId={}]: {}", eventId, e.getMessage());
-            return 0;
+            return new MaterializationOutcome(0, "INVALID_ENVELOPE");
         }
     }
 
@@ -206,4 +210,6 @@ public class GoldMaterializerService {
             return null;
         }
     }
+
+    public record MaterializationOutcome(int upsertedCount, String status) {}
 }

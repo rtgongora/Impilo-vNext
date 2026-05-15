@@ -291,6 +291,16 @@ export function usePublicHealthCounters() {
   });
 }
 
+export function usePublicHealthWeeklyIdsr() {
+  return useQuery({
+    queryKey: ["public-health-weekly-idsr"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/weekly-idsr");
+      return parseCountersPayload(response.data);
+    },
+  });
+}
+
 export function usePublicHealthCampaigns() {
   return useQuery({
     queryKey: ["public-health-campaigns"],

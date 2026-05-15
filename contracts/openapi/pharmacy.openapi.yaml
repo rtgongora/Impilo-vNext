@@ -26,6 +26,8 @@ security:
   - bearerAuth: []
 
 tags:
+  - name: Prescriptions
+    description: Canonical prescription write/read/cancel/refill lifecycle
   - name: Worklist
     description: Pharmacy dispensing worklist
   - name: Dispense Orders
@@ -44,6 +46,225 @@ tags:
     description: Internal integration endpoints (OROS, MUSHEX callbacks)
 
 paths:
+  # ── Prescriptions ─────────────────────────────────────────────────────────
+  /v1/prescriptions:
+    post:
+      operationId: createPrescription
+      summary: Create prescription
+      description: |
+        Creates a canonical prescription record in pharmacy-service. This endpoint
+        is used by Experience prescribing flows (web/mobile) and must not return
+        synthetic success.
+      tags: [Prescriptions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrescriptionCreateRequest"
+      responses:
+        "201":
+          description: Prescription created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrescriptionResource"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/prescriptions/patient/{cpid}:
+    get:
+      operationId: listPatientPrescriptions
+      summary: List prescriptions by patient
+      tags: [Prescriptions]
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, DISPENSED, CANCELLED, PENDING]
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+      responses:
+        "200":
+          description: Prescription list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/PrescriptionResource"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/prescriptions/{id}:
+    get:
+      operationId: getPrescription
+      summary: Get prescription by ID
+      tags: [Prescriptions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Prescription found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrescriptionResource"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/prescriptions/{id}/cancel:
+    post:
+      operationId: cancelPrescription
+      summary: Cancel active prescription
+      tags: [Prescriptions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PrescriptionCancelRequest"
+      responses:
+        "200":
+          description: Prescription cancelled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrescriptionResource"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/prescriptions/{id}/refill:
+    post:
+      operationId: requestPrescriptionRefill
+      summary: Request refill for prescription
+      tags: [Prescriptions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Refill requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/prescriptions/{id}/dispense:
+    post:
+      operationId: markPrescriptionDispensed
+      summary: Mark prescription as dispensed
+      tags: [Prescriptions]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dispensed_by:
+                  type: string
+      responses:
+        "200":
+          description: Prescription dispensed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ApiResponse"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/PrescriptionResource"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
   # ── Worklist ──────────────────────────────────────────────────────────────
   /v1/worklists:
     get:
@@ -965,6 +1186,123 @@ components:
         - STAT
         - ASAP
       description: Dispense priority level
+
+    PrescriptionStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - DISPENSED
+        - CANCELLED
+
+    PrescriptionCreateRequest:
+      type: object
+      required:
+        - patient_id
+        - medication_name
+        - dosage
+        - frequency
+        - prescribed_by
+      properties:
+        patient_id:
+          type: string
+        encounter_id:
+          type: string
+        facility_id:
+          type: string
+          format: uuid
+        medication_name:
+          type: string
+        generic_name:
+          type: string
+        dosage:
+          type: string
+        route:
+          type: string
+        frequency:
+          type: string
+        duration:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+        instructions:
+          type: string
+        indication:
+          type: string
+        prescribed_by:
+          type: string
+
+    PrescriptionCancelRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+    PrescriptionResource:
+      type: object
+      required:
+        - id
+        - type
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [prescription]
+        attributes:
+          type: object
+          properties:
+            patient_id:
+              type: string
+            encounter_id:
+              type: string
+            facility_id:
+              type: string
+            medication_name:
+              type: string
+            generic_name:
+              type: string
+            dosage:
+              type: string
+            route:
+              type: string
+            frequency:
+              type: string
+            duration:
+              type: string
+            quantity:
+              type: integer
+            instructions:
+              type: string
+            indication:
+              type: string
+            prescribed_by:
+              type: string
+            status:
+              $ref: "#/components/schemas/PrescriptionStatus"
+            cancel_reason:
+              type: string
+            cancelled_by:
+              type: string
+            cancelled_at:
+              type: string
+              format: date-time
+            dispensed_by:
+              type: string
+            dispensed_at:
+              type: string
+              format: date-time
+            refill_requested_at:
+              type: string
+              format: date-time
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
 
     ItemStatus:
       type: string

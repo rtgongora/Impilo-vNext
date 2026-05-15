@@ -36,8 +36,8 @@ class QueryControllerTest {
     private static final String TEST_BEARER = "Bearer ndr-test-token";
 
     @Test
-    @DisplayName("POST /internal/v1/query returns 200 with results")
-    void queryReturns200() throws Exception {
+    @DisplayName("POST /internal/v1/query returns conflict with canonical runtime owner")
+    void queryReturnsConflictOwnerMoved() throws Exception {
         String idempotencyKey = "query-1-" + System.nanoTime();
 
         mockMvc.perform(post("/internal/v1/query")
@@ -49,15 +49,15 @@ class QueryControllerTest {
                         .header("Idempotency-Key", idempotencyKey)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"datasetKey\":\"facility_summary\",\"filters\":{}}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datasetKey").value("facility_summary"))
-                .andExpect(jsonPath("$.totalRows").isNumber())
-                .andExpect(jsonPath("$.rows").isArray());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("NDR_RUNTIME_OWNER_CONFLICT"))
+                .andExpect(jsonPath("$.error.details.runtime_owner").value("ndr-service"))
+                .andExpect(jsonPath("$.error.details.requested_dataset_key").value("facility_summary"));
     }
 
     @Test
-    @DisplayName("POST /internal/v1/query returns empty rows for unknown dataset")
-    void queryUnknownDataset() throws Exception {
+    @DisplayName("POST /internal/v1/query is conflict for unknown dataset too")
+    void queryUnknownDatasetAlsoConflict() throws Exception {
         String idempotencyKey = "query-2-" + System.nanoTime();
 
         mockMvc.perform(post("/internal/v1/query")
@@ -69,8 +69,8 @@ class QueryControllerTest {
                         .header("Idempotency-Key", idempotencyKey)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"datasetKey\":\"no_such_key\",\"filters\":{}}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalRows").value(0))
-                .andExpect(jsonPath("$.rows").isEmpty());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error.code").value("NDR_RUNTIME_OWNER_CONFLICT"))
+                .andExpect(jsonPath("$.error.details.requested_dataset_key").value("no_such_key"));
     }
 }

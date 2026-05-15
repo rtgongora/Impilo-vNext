@@ -121,7 +121,9 @@ export function CampaignsTab() {
         budgetAllocated: Number(campForm.budgetAllocated) || 0,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setCampSubmitting(false);
+      setCampFormError("Campaign service is unavailable. The campaign was not saved.");
+      return;
     }
     setCampSubmitting(false);
     setCampSubmitted(true);

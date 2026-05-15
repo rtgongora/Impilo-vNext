@@ -40,7 +40,7 @@ public class OmnichannelController {
             return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             log.warn("Community omnichannel callbacks unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of(), "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
         }
     }
 
@@ -52,9 +52,12 @@ public class OmnichannelController {
 
         Map<String, Object> callbackData = new LinkedHashMap<>(body);
         callbackData.put("tenantId", tenantId);
-        JsonNode result = communityClient.createVisit(callbackData);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.createVisit(callbackData);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     @PostMapping("/callbacks/{id}/complete")
@@ -64,9 +67,12 @@ public class OmnichannelController {
             @RequestBody(required = false) Map<String, String> body) {
 
         Map<String, Object> completeData = body != null ? new LinkedHashMap<>(body) : new LinkedHashMap<>();
-        communityClient.completeVisit(id.toString(), completeData);
-
-        return ResponseEntity.ok(Map.of("data", Map.of("id", id.toString(), "status", "COMPLETED"), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.completeVisit(id.toString(), completeData);
+            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of("id", id.toString(), "status", "COMPLETED"), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     // ── Channel Configs ──────────────────────────────────────────
@@ -75,8 +81,12 @@ public class OmnichannelController {
     public ResponseEntity<Map<String, Object>> listChannels(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        JsonNode result = communityClient.listUnits();
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listUnits();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     // ── SMS Journeys ─────────────────────────────────────────────
@@ -85,8 +95,12 @@ public class OmnichannelController {
     public ResponseEntity<Map<String, Object>> listSmsJourneys(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        JsonNode result = communityClient.listUnits();
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listUnits();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     @PostMapping("/sms-journeys")
@@ -96,8 +110,12 @@ public class OmnichannelController {
             @RequestBody Map<String, String> body) {
         Map<String, Object> journeyData = new LinkedHashMap<>(body);
         journeyData.put("tenantId", tenantId);
-        JsonNode result = communityClient.createUnit(journeyData);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.createUnit(journeyData);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     // ── USSD Menus ───────────────────────────────────────────────
@@ -106,8 +124,12 @@ public class OmnichannelController {
     public ResponseEntity<Map<String, Object>> listUssdMenus(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        JsonNode result = communityClient.listUnits();
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listUnits();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     // ── IVR Flows ────────────────────────────────────────────────
@@ -116,8 +138,12 @@ public class OmnichannelController {
     public ResponseEntity<Map<String, Object>> listIvrFlows(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        JsonNode result = communityClient.listUnits();
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listUnits();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     // ── Disclosure Rules ─────────────────────────────────────────
@@ -126,8 +152,12 @@ public class OmnichannelController {
     public ResponseEntity<Map<String, Object>> listDisclosureRules(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
-        JsonNode result = communityClient.listUnits();
-        return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.listUnits();
+            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
     }
 
     @PostMapping("/disclosure-rules")
@@ -137,7 +167,17 @@ public class OmnichannelController {
             @RequestBody Map<String, String> body) {
         Map<String, Object> ruleData = new LinkedHashMap<>(body);
         ruleData.put("tenantId", tenantId);
-        JsonNode result = communityClient.createUnit(ruleData);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        try {
+            JsonNode result = communityClient.createUnit(ruleData);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result, "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("COMMUNITY_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(String code, String message, String requestId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Omnichannel upstream unavailable"),
+                "meta", Map.of("request_id", requestId)));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.api.dto.StartEncounterRequest;
+import zw.gov.mohcc.impilo.pct.api.dto.UpdateEncounterPathwayProtocolRequest;
 import zw.gov.mohcc.impilo.pct.core.EncounterService;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EncounterEntity;
 import zw.gov.mohcc.impilo.pct.persistence.entity.JourneyEntity;
@@ -59,7 +60,18 @@ public class EncounterController {
             @Valid @RequestBody StartEncounterRequest request) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
-        EncounterEntity encounter = encounterService.startEncounter(id, request.encounterType());
+        EncounterEntity encounter = encounterService.startEncounter(
+                id,
+                request.encounterType(),
+                request.encounterContext(),
+                request.entryPoint(),
+                request.modality(),
+                request.virtualMode(),
+                request.careSetting(),
+                request.priority(),
+                request.triageCategory(),
+                request.pathwayRef(),
+                request.protocolRef());
 
         return ResponseEntity.ok(ApiResponse.ok(encounter, correlationId));
     }
@@ -76,6 +88,19 @@ public class EncounterController {
 
         EncounterEntity encounter = encounterService.completeEncounter(id);
 
+        return ResponseEntity.ok(ApiResponse.ok(encounter, correlationId));
+    }
+
+    /**
+     * Update encounter pathway/protocol references.
+     */
+    @PatchMapping("/encounters/{id}/pathway-protocol")
+    public ResponseEntity<ApiResponse<EncounterEntity>> updateEncounterPathwayProtocol(
+            @PathVariable Long id,
+            @RequestBody UpdateEncounterPathwayProtocolRequest request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        EncounterEntity encounter = encounterService.updateEncounterPathwayProtocol(
+                id, request.pathwayRef(), request.protocolRef());
         return ResponseEntity.ok(ApiResponse.ok(encounter, correlationId));
     }
 

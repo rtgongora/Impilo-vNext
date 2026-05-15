@@ -54,7 +54,7 @@ public class SecurityConfig {
                 // All OROS business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
                 // Everything else requires authentication
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
             );
 
         if (issuerUri != null && !issuerUri.isBlank()) {

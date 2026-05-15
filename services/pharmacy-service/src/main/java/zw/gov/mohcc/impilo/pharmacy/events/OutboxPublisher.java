@@ -145,6 +145,13 @@ public class OutboxPublisher {
 
             case "RECONCILE_RESOLVED" -> "pharmacy.reconcile.updated";
 
+            case "PRESCRIPTION_CREATED",
+                 "PRESCRIPTION_REFILL_REQUESTED" -> "pharmacy.prescription.updated";
+
+            case "PRESCRIPTION_CANCELLED" -> "pharmacy.prescription.cancelled";
+
+            case "PRESCRIPTION_DISPENSED" -> "pharmacy.prescription.dispensed";
+
             default -> "pharmacy.events";
         };
     }

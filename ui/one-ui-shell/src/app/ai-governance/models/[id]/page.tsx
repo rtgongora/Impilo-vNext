@@ -246,7 +246,7 @@ export default function AiModelDetailPage() {
                 </div>
                 {addVersionM.isError && (
                   <p className="text-xs text-red-700">
-                    POST /internal/v1/ai/models/{"{id}"}/versions must be implemented on the BFF.
+                    Could not create version. The AI registry BFF route is unavailable or rejected the request.
                   </p>
                 )}
               </div>

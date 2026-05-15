@@ -13,11 +13,10 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Staffing surfaces: roster from recorded shifts, on-call assignments and swap workflow.
- * Delegates to TusoServiceClient with local fallbacks when TUSO is unreachable (dev / integration).
+ * Delegates to TUSO and fails closed on upstream dependency errors.
  */
 @RestController
 @RequestMapping("/internal/v1/staffing")
@@ -26,8 +25,6 @@ public class StaffingController {
     private static final Logger log = LoggerFactory.getLogger(StaffingController.class);
 
     private final TusoServiceClient tusoClient;
-
-    private static final List<Map<String, Object>> LOCAL_SWAPS = new CopyOnWriteArrayList<>();
 
     public StaffingController(TusoServiceClient tusoClient) {
         this.tusoClient = tusoClient;
@@ -62,10 +59,7 @@ public class StaffingController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.warn("TUSO roster-week unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of(
-                    "data", List.of(),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "week_start", weekStartParam)));
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
     }
 
@@ -88,16 +82,10 @@ public class StaffingController {
             }
         } catch (Exception e) {
             log.warn("TUSO on-call unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
-        List<Map<String, Object>> stub = List.of(Map.of(
-                "id", "stub-oncall-1",
-                "type", "OnCallAssignment",
-                "attributes", Map.of(
-                        "providerName", "Dr. Stub",
-                        "status", "ASSIGNED",
-                        "weekStart", weekStartParam)));
         return ResponseEntity.ok(Map.of(
-                "data", stub,
+                "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
                         "week_start", weekStartParam)));
     }
@@ -118,21 +106,10 @@ public class StaffingController {
             }
         } catch (Exception e) {
             log.warn("TUSO swap list unavailable: {}", e.getMessage());
-        }
-        if (LOCAL_SWAPS.isEmpty()) {
-            List<Map<String, Object>> seed = List.of(Map.of(
-                    "id", "stub-swap-seed",
-                    "type", "OnCallSwapRequest",
-                    "attributes", new LinkedHashMap<>(Map.of(
-                            "status", "PENDING",
-                            "requestorName", "Dr. Seed",
-                            "requesteeName", "Dr. Partner"))));
-            return ResponseEntity.ok(Map.of(
-                    "data", seed,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
         return ResponseEntity.ok(Map.of(
-                "data", new ArrayList<>(LOCAL_SWAPS),
+                "data", List.of(),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -161,28 +138,10 @@ public class StaffingController {
                 return ResponseEntity.status(201).body(response);
             }
         } catch (Exception e) {
-            log.info("TUSO create swap unavailable — local fallback: {}", e.getMessage());
+            log.warn("TUSO create swap unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
-
-        String id = UUID.randomUUID().toString();
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", "PENDING");
-        attrs.put("facility_id", body.facility_id());
-        attrs.put("requestor_name", body.requestor_name());
-        attrs.put("requestee_name", body.requestee_name());
-        attrs.put("original_date", body.original_date());
-        attrs.put("swap_date", body.swap_date());
-        attrs.put("specialty", body.specialty());
-        Map<String, Object> row = new LinkedHashMap<>();
-        row.put("id", id);
-        row.put("type", "OnCallSwapRequest");
-        row.put("attributes", attrs);
-        LOCAL_SWAPS.add(row);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", row);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(201).body(response);
+        return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", "Swap request was not persisted");
     }
 
     @PatchMapping("/on-call/swaps/{id}")
@@ -208,29 +167,16 @@ public class StaffingController {
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
-            log.info("TUSO patch swap unavailable — local fallback: {}", e.getMessage());
+            log.warn("TUSO patch swap unavailable: {}", e.getMessage());
+            return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", e.getMessage());
         }
+        return upstreamFailure(requestId, correlationId, "TUSO_UNAVAILABLE", "Swap update was not persisted");
+    }
 
-        for (Map<String, Object> row : LOCAL_SWAPS) {
-            if (id.toString().equals(String.valueOf(row.get("id")))) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> attrs = (Map<String, Object>) row.get("attributes");
-                attrs.put("status", normalized);
-                Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", row);
-                response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-                return ResponseEntity.ok(response);
-            }
-        }
-
-        Map<String, Object> attrs = new LinkedHashMap<>();
-        attrs.put("status", normalized);
-        Map<String, Object> synthetic = Map.of(
-                "id", id.toString(),
-                "type", "OnCallSwapRequest",
-                "attributes", attrs);
-        return ResponseEntity.ok(Map.of(
-                "data", synthetic,
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String requestId, String correlationId, String code, String message) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Upstream unavailable"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

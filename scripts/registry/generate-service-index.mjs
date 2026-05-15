@@ -29,13 +29,13 @@ function main() {
     (a.maven_module ?? "").localeCompare(b.maven_module ?? "")
   );
 
-  const now = new Date().toISOString().replace(/\.\d{3}Z$/, " UTC");
+  const generated = "deterministic-registry-generation";
 
   const lines = [
     "# Impilo service index (generated)",
     "",
     `**Registry version:** \`${version}\`  `,
-    `**Generated:** ${now}  `,
+    `**Generated:** ${generated}  `,
     "**Source:** [`services-registry.yaml`](./services-registry.yaml)  ",
     "",
     "Regenerate:",

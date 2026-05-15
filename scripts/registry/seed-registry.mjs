@@ -101,6 +101,107 @@ const LEGACY = new Map(
   ]
 );
 
+const DOCTRINE_OVERRIDES = new Map(
+  [
+    [
+      "simba-service",
+      {
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "wellness-lifestyle-orchestration",
+        secondary_planes: ["experience", "data", "integration", "registry", "trust"],
+        system_of_record_for: [
+          "wellness journeys",
+          "lifestyle plans",
+          "self-care plans",
+          "preventive care workflows",
+          "wellness goals",
+          "habit tracking workflows",
+          "coaching and nudge workflows",
+          "wellness programme participation",
+          "longitudinal wellness progress",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-clinical-encounter-lifecycle",
+          "must-not-own-acute-care-orders-or-results",
+          "must-not-own-prescription-dispensing",
+          "must-not-own-inpatient-care-state",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-own-provider-identity-source-of-truth",
+          "must-not-own-facility-registry",
+          "must-not-own-consent-policy-authority",
+          "must-not-own-payment-ledgers",
+          "must-not-own-public-health-surveillance-source-of-truth",
+        ],
+      },
+    ],
+    [
+      "wellness-service",
+      {
+        primary_plane: "clinical",
+        plane: "clinical",
+        domain: "wellness-preventive-care",
+        secondary_planes: ["experience", "data", "registry", "trust"],
+        system_of_record_for: [
+          "patient-linked wellness activities",
+          "screening prompts",
+          "wellness records",
+          "wellness goals",
+          "lifestyle and preventive-care activities",
+          "adherence support activities",
+        ],
+        consumes_from: ["tshepo-authz-service", "simba-service"],
+        exposes_to: ["experience-bff", "integration-hub"],
+        forbidden_responsibilities: [
+          "must-not-own-public-health-surveillance-source-of-truth",
+          "must-not-own-clinical-encounter-lifecycle",
+          "must-not-own-marketplace-or-payment-ledgers",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-own-provider-identity-source-of-truth",
+          "must-not-own-facility-registry",
+        ],
+        frontend_wiring_status: "unknown-or-partial",
+      },
+    ],
+    [
+      "surveillance-service",
+      {
+        domain: "public-health-surveillance",
+        secondary_planes: ["clinical", "experience", "integration", "registry", "trust"],
+        system_of_record_for: [
+          "public-health surveillance signals and case aggregates",
+          "surveillance alert definitions and epidemiological counters",
+          "notifiable event monitoring telemetry",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-individual-clinical-encounter-record",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-bypass-data-governance-or-consent-policy",
+          "must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries",
+        ],
+      },
+    ],
+    [
+      "campaigns-service",
+      {
+        domain: "public-health-campaigns",
+        secondary_planes: ["clinical", "experience", "integration", "registry", "trust"],
+        system_of_record_for: [
+          "public-health campaign definitions",
+          "campaign outreach plans and schedules",
+          "campaign execution state and coverage metrics",
+        ],
+        forbidden_responsibilities: [
+          "must-not-own-individual-clinical-encounter-record",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-bypass-data-governance-or-consent-policy",
+          "must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries",
+        ],
+      },
+    ],
+  ]
+);
+
 function parseServiceModules() {
   const pomText = fs.readFileSync(POM, "utf8");
   const modules = [...pomText.matchAll(/<module>([^<]+)<\/module>/g)].map((m) => m[1].trim());
@@ -199,7 +300,7 @@ function enrichService(module) {
   if (mapping.primary_plane === "experience") consumesFrom.push("multiple-domain-services-via-bff");
   const exposesTo = mapping.primary_plane === "experience" ? ["web-mobile-experience"] : ["experience-bff", "integration-hub"];
 
-  return {
+  const base = {
     id,
     maven_module: module,
     primary_plane: mapping.primary_plane,
@@ -223,6 +324,8 @@ function enrichService(module) {
     authz_audit_status: "partial",
     observability_status: "partial",
   };
+  const override = DOCTRINE_OVERRIDES.get(module);
+  return override ? { ...base, ...override } : base;
 }
 
 const services = parseServiceModules().map(enrichService);

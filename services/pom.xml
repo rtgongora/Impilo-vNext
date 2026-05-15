@@ -69,6 +69,7 @@
         <module>inventory-elmis-adapter</module>
         <module>product-registry-service</module>
         <module>mushex-service</module>
+        <module>mushe-wallet-service</module>
         <module>costing-engine-service</module>
         <module>document-service</module>
         <module>pacs-adapter-service</module>

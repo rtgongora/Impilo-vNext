@@ -1,6 +1,7 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -43,7 +44,7 @@ public class DataAccessGovernanceController {
             JsonNode data = dagsClient.listPolicies();
             return ResponseEntity.ok(envelope(data, requestId, correlationId));
         } catch (Exception e) {
-            return ResponseEntity.ok(envelope(new Object[0], requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -61,8 +62,7 @@ public class DataAccessGovernanceController {
             Map<String, Object> response = envelope(data, requestId, correlationId);
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    errorEnvelope("Failed to create policy", requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -83,7 +83,7 @@ public class DataAccessGovernanceController {
             JsonNode data = dagsClient.listAccessRequests(status, page, Math.min(size, 200));
             return ResponseEntity.ok(envelope(data, requestId, correlationId));
         } catch (Exception e) {
-            return ResponseEntity.ok(envelope(new Object[0], requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -101,8 +101,7 @@ public class DataAccessGovernanceController {
             Map<String, Object> response = envelope(data, requestId, correlationId);
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    errorEnvelope("Failed to submit access request", requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -120,8 +119,7 @@ public class DataAccessGovernanceController {
             JsonNode data = dagsClient.approveAccessRequest(id, body != null ? body : Map.of());
             return ResponseEntity.ok(envelope(data, requestId, correlationId));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    errorEnvelope("Failed to approve access request", requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -139,8 +137,7 @@ public class DataAccessGovernanceController {
             JsonNode data = dagsClient.denyAccessRequest(id, body != null ? body : Map.of());
             return ResponseEntity.ok(envelope(data, requestId, correlationId));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    errorEnvelope("Failed to deny access request", requestId, correlationId));
+            return upstreamFailure("DAGS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -164,5 +161,12 @@ public class DataAccessGovernanceController {
                 "correlation_id", correlationId
         ));
         return response;
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Access governance upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

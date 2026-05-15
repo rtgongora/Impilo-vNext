@@ -23,5 +23,87 @@ paths:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/ndr/ingest/events:
+    post:
+      operationId: ndrIngestEvent
+      summary: Ingest bronze event into NDR
+      tags: [NDR]
+      responses:
+        '202':
+          description: Event accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '422':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ndr/query/bronze:
+    get:
+      operationId: ndrQueryBronze
+      summary: Query bronze NDR events (governance enforced)
+      tags: [NDR]
+      responses:
+        '200':
+          description: Query result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Missing purpose-of-use
+        '403':
+          description: Governance deny
+        '503':
+          description: Governance unavailable
+
+  /internal/v1/ndr/build/gold/encounters:
+    post:
+      operationId: ndrBuildGoldEncounters
+      summary: Build gold encounter projections
+      tags: [NDR]
+      responses:
+        '202':
+          description: Build accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/ndr/query/gold/encounters:
+    get:
+      operationId: ndrQueryGoldEncounters
+      summary: Query gold encounter projections (governance enforced)
+      tags: [NDR]
+      responses:
+        '200':
+          description: Query result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Missing purpose-of-use
+        '403':
+          description: Governance deny
+        '503':
+          description: Governance unavailable
+
 components:
   schemas: {}

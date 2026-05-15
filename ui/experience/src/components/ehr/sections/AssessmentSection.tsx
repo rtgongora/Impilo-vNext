@@ -7,7 +7,7 @@
  * - Examination panel (general, CVS, respiratory, abdominal, neurological -- all coded, zero free-text)
  * - ICD-10 coded assessment entry, problem list, differential diagnosis, clinical reasoning
  *
- * Uses mock data; production would integrate with VITO / HAPI FHIR.
+ * Uses live triage/vitals/history hooks; unsupported prototype tabs are explicitly gated.
  */
 
 import { useState } from "react";
@@ -210,7 +210,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
         <div className="p-4">
           <p className="font-medium text-sm">{history.presentingComplaint}</p>
           <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5">
-            R50.9 -- Fever, unspecified
+            {history.presentingComplaintCode ? history.presentingComplaintCode : "Code unavailable"}
           </span>
         </div>
       </div>
@@ -226,14 +226,14 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
         <div className="p-4">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Site", value: "Generalised body aches" },
-              { label: "Onset", value: "3 days ago, gradual" },
-              { label: "Character", value: "Continuous, dull" },
-              { label: "Radiation", value: "None" },
-              { label: "Associated Sx", value: "Chills, headache, myalgia" },
-              { label: "Timing", value: "Worse at night" },
-              { label: "Exacerbating", value: "Activity" },
-              { label: "Severity", value: "7/10" },
+              { label: "Site", value: history.hpi?.site ?? "--" },
+              { label: "Onset", value: history.hpi?.onset ?? "--" },
+              { label: "Character", value: history.hpi?.character ?? "--" },
+              { label: "Radiation", value: history.hpi?.radiation ?? "--" },
+              { label: "Associated Sx", value: history.hpi?.associatedSymptoms ?? "--" },
+              { label: "Timing", value: history.hpi?.timing ?? "--" },
+              { label: "Exacerbating", value: history.hpi?.exacerbating ?? "--" },
+              { label: "Severity", value: history.hpi?.severity ?? "--" },
             ].map((item) => (
               <div key={item.label} className="p-2.5 bg-gray-50 rounded-lg">
                 <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -752,7 +752,12 @@ export function AssessmentSection() {
       {activeTab === "cadre-history" && <CadreHistoryForm config={cadreConfig} />}
       {activeTab === "cadre-exam" && <CadreExamForm config={cadreConfig} />}
       {activeTab === "history" && <HistoryPanel history={history} isLoading={historyLoading} />}
-      {activeTab === "examination" && <ExaminationPanel />}
+      {activeTab === "examination" && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Full structured examination capture is not yet wired to a production backend API.
+          This prototype tab is intentionally disabled in production mode.
+        </div>
+      )}
       {activeTab === "labs" && <LabResultsSystem patientId={patientId} />}
       {activeTab === "timeline" && <PatientTimeline patientId={patientId} />}
     </div>

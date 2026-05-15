@@ -19,6 +19,10 @@ spring:
 
 impilo:
   bff:
+    queue:
+      # Keep deterministic integration harness behavior in JVM tests.
+      # Production default remains fail-closed (property defaults to false).
+      allow-local-fallback: true
     citizen-longtail:
       mode: stub
       failure-policy: stub_fallback

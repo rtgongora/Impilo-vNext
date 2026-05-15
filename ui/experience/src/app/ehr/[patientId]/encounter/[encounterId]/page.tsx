@@ -5,7 +5,7 @@
  * Route: /ehr/[patientId]/encounter/[encounterId] | pageTitle: "Encounter"
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -41,7 +41,7 @@ import {
 } from "@/lib/clinical-forms";
 import { usePatient } from "@/hooks/queries/usePatients";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
-import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
+import { useEncounter, useCloseEncounter, useUpdateEncounterPathwayProtocol } from "@/hooks/queries/useEncounters";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
@@ -84,6 +84,7 @@ export default function EncounterPage() {
   const { data: patientData } = usePatient(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
+  const updatePathwayProtocol = useUpdateEncounterPathwayProtocol();
 
   // Fetch existing triage for this encounter
   const { data: triageData } = useQuery<ApiResponse<Array<{ id: string; attributes: Record<string, unknown> }>>>({
@@ -133,6 +134,12 @@ export default function EncounterPage() {
 
   const encounter = encounterData?.data;
 
+  useEffect(() => {
+    const attrs = encounter?.attributes;
+    setPathwayRef(String(attrs?.pathwayRef ?? ""));
+    setProtocolRef(String(attrs?.protocolRef ?? ""));
+  }, [encounter?.attributes]);
+
   // Vitals form state
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
@@ -159,6 +166,10 @@ export default function EncounterPage() {
   const [noteError, setNoteError] = useState<string | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [pathwayRef, setPathwayRef] = useState("");
+  const [protocolRef, setProtocolRef] = useState("");
+  const [pathwaySaved, setPathwaySaved] = useState(false);
+  const [pathwayError, setPathwayError] = useState<string | null>(null);
   /** WHO DAK–aligned structured ANC form takes primary column; journey moves to side rail. */
   const [structuredFormFocus, setStructuredFormFocus] = useState(false);
 
@@ -354,6 +365,21 @@ export default function EncounterPage() {
         },
       },
     );
+  }
+
+  async function handleUpdatePathwayProtocol() {
+    setPathwaySaved(false);
+    setPathwayError(null);
+    try {
+      await updatePathwayProtocol.mutateAsync({
+        id: encounterId,
+        pathway_ref: pathwayRef.trim() || null,
+        protocol_ref: protocolRef.trim() || null,
+      });
+      setPathwaySaved(true);
+    } catch {
+      setPathwayError("Unable to update pathway/protocol linkage. Guidance services may be unavailable.");
+    }
   }
 
   return (
@@ -559,6 +585,55 @@ export default function EncounterPage() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">Care pathway and protocol</h3>
+                  <p className="text-xs text-gray-500">
+                    Link this encounter to a clinical pathway/protocol reference. Decision-support execution remains owned by guidance/rules/clinical-knowledge services.
+                  </p>
+                </div>
+                {pathwaySaved && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Updated
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Pathway reference</label>
+                  <input
+                    value={pathwayRef}
+                    onChange={(e) => setPathwayRef(e.target.value)}
+                    disabled={!isActive}
+                    placeholder="e.g. PATH-SEPSIS-01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Protocol reference</label>
+                  <input
+                    value={protocolRef}
+                    onChange={(e) => setProtocolRef(e.target.value)}
+                    disabled={!isActive}
+                    placeholder="e.g. PROTO-CRIT-01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                  />
+                </div>
+              </div>
+              {pathwayError && <p className="mt-2 text-xs text-red-600">{pathwayError}</p>}
+              {isActive && (
+                <button
+                  onClick={handleUpdatePathwayProtocol}
+                  disabled={updatePathwayProtocol.isPending}
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-impilo-600 text-white text-xs font-medium rounded-lg hover:bg-impilo-700 disabled:opacity-50"
+                >
+                  {updatePathwayProtocol.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                  Update pathway/protocol
+                </button>
+              )}
             </div>
 
             {/* Existing Triage Display — show when triage already recorded */}

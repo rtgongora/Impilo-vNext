@@ -78,6 +78,93 @@ paths:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/campaigns/{id}:
+    get:
+      operationId: campaignsGet
+      tags: [Internal-Campaigns]
+      summary: Get campaign by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campaign payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/campaigns/{id}/close:
+    post:
+      operationId: campaignsClose
+      tags: [Internal-Campaigns]
+      summary: Close campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campaign closed
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/campaigns/{id}/enroll:
+    post:
+      operationId: campaignsEnroll
+      tags: [Internal-Campaigns]
+      summary: Enroll participant in campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Enrollment response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/campaigns/{id}/dispatch:
+    post:
+      operationId: campaignsDispatch
+      tags: [Internal-Campaigns]
+      summary: Dispatch campaign to target channels
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dispatch accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
 components:
   securitySchemes:
     bearerAuth:

@@ -55,13 +55,8 @@ public class MobileLabController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateLabOrderRequest request) {
-
-        UUID labOrderId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
         String priority = request.priority() != null ? request.priority() : "ROUTINE";
 
-        // Delegate to OROS sovereign service
-        String orosOrderId = null;
         try {
             List<Map<String, Object>> items = List.of(Map.of(
                     "code", request.test_code(),
@@ -71,39 +66,17 @@ public class MobileLabController {
             JsonNode orosData = orosClient.placeOrder(
                     "LAB", priority, request.patient_id(), request.encounter_id(),
                     request.clinical_notes(), items);
-            if (orosData != null && orosData.has("orderId")) {
-                orosOrderId = orosData.get("orderId").asText();
+            if (orosData == null) {
+                return upstreamFailure("OROS_UNAVAILABLE", "No order payload returned", requestId, correlationId);
             }
-            log.info("OROS order placed from mobile: {} for lab order {}", orosOrderId, labOrderId);
+            log.info("OROS order placed from mobile lab flow");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", orosData,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            log.warn("OROS delegation from mobile lab failed (non-blocking): {}", e.getMessage());
+            log.warn("OROS delegation from mobile lab failed: {}", e.getMessage());
+            return upstreamFailure("OROS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("test_code", request.test_code());
-        attributes.put("test_name", request.test_name());
-        attributes.put("priority", priority);
-        attributes.put("clinical_notes", request.clinical_notes());
-        attributes.put("specimen_type", request.specimen_type());
-        attributes.put("status", "ORDERED");
-        attributes.put("ordered_at", now);
-        attributes.put("created_at", now);
-        if (orosOrderId != null) attributes.put("oros_order_id", orosOrderId);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", labOrderId.toString(),
-                "type", "LabOrder",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping
@@ -121,9 +94,14 @@ public class MobileLabController {
                 if (data != null) {
                     return ResponseEntity.ok(Map.of("data", data));
                 }
-            } catch (Exception ignored) {}
+                return upstreamFailure("OROS_UNAVAILABLE", "No order list payload returned", requestId, correlationId);
+            } catch (Exception e) {
+                return upstreamFailure("OROS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+            }
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", "MISSING_PATIENT_ID", "message", "patient_id query parameter is required"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping("/{id}")
@@ -137,8 +115,10 @@ public class MobileLabController {
             if (data != null) {
                 return ResponseEntity.ok(Map.of("data", data));
             }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("OROS_UNAVAILABLE", "No order payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("OROS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/{id}/cancel")
@@ -156,7 +136,16 @@ public class MobileLabController {
             if (data != null) {
                 return ResponseEntity.ok(Map.of("data", data));
             }
-        } catch (Exception ignored) {}
-        return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("OROS_UNAVAILABLE", "No cancel payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("OROS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Mobile lab upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

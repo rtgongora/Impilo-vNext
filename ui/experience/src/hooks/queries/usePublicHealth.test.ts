@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractPublicHealthList } from "./usePublicHealth";
+import { extractPublicHealthList, parseCountersPayload } from "./usePublicHealth";
 
 describe("extractPublicHealthList", () => {
   it("returns arrays as-is", () => {
@@ -22,5 +22,17 @@ describe("extractPublicHealthList", () => {
 
   it("falls back to nested data array", () => {
     expect(extractPublicHealthList({ data: [{ a: 1 }] }, ["items"])).toEqual([{ a: 1 }]);
+  });
+});
+
+describe("parseCountersPayload", () => {
+  it("normalizes weekly idsr counters from bff payload", () => {
+    const rows = parseCountersPayload({
+      counters: [{ facility_id: "fac-1", syndrome_code: "AWD", count_date: "2026-05-10", event_count: 7 }],
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.label).toBe("AWD");
+    expect(rows[0]?.value).toBe("7");
+    expect(rows[0]?.detail).toContain("2026-05-10");
   });
 });

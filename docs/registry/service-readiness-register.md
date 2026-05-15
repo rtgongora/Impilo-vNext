@@ -2,9 +2,9 @@
 
 | Service ID | Implementation | API Contract | Frontend Wiring | Mock/Stub | Security/Audit | Observability | Test Status | Production readiness | Blockers |
 |---|---|---|---|---|---|---|---|---|---|
-| `ai-model-registry-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `ai-model-registry-service` | implemented-or-partial | partial | wired-via-experience-bff | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `asset-registry-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `audit-ledger-service` | implemented | substantial | partial-admin-only | no-known-prod-stub | substantial | substantial | substantial (immutability/hash-chain/correlation tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: trust-plane ownership/operational contract still cross-plane; blocker-2: admin/BFF forensic workflow coverage incomplete; blocker-3: end-to-end trust evidence replay tests absent. next: formal cross-plane trust evidence contract + E2E replay suite |
+| `audit-ledger-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `butano-fhir` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `butano-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `campaigns-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
@@ -30,7 +30,7 @@
 | `general-ledger-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `guidance-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `hr-payroll-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `identity-assurance-service` | implemented | substantial | partial-bff-admin | no-known-prod-stub | substantial | substantial | substantial (controller/service/golden-contract tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: no proven end-to-end break-glass + authz handshake in CI; blocker-2: admin/BFF operational surfacing incomplete; blocker-3: trust-plane ownership boundary with TSHEPO decomposition not closed. next: add integrated authz-attestation test path and finalise trust ownership contract |
+| `identity-assurance-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `indawo-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `inpatient-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `integration-hub` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
@@ -44,7 +44,7 @@
 | `msika-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `mushe-wallet-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `mushex-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `mvumo-service` | implemented | substantial (static + runtime OpenAPI) | wired | no-known-prod-stub | substantial | substantial | substantial (controller + service + integration + runtime harness scripts) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: runtime full-stack harness is wired in CI but local execution evidence is currently blocked by unavailable Docker daemon in this environment; blocker-2: BFF/admin trust surfaces for remote-session/template lifecycle not fully mapped in UI flows; blocker-3: trust envelope/header convergence with TSHEPO services remains partial. completed: remote-session verify/grant/refuse/withdraw + template create/update + cross-service integration evidence + runtime harness definitions |
+| `mvumo-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `national-data-repository-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `ndr-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `notification-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
@@ -63,23 +63,77 @@
 | `scheduling-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `schema-registry-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `search-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `security-hardening-service` | implemented-or-partial | substantial | partial-admin-only | no-known-prod-stub | substantial | substantial | substantial (service/api tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: trust governance ownership unresolved (integration-plane host, trust-plane dependency); blocker-2: TSHEPO control-loop integration tests not in CI; blocker-3: operator runbooks for trust incident linkage incomplete. next: formal trust governance ownership ADR and CI scenario coverage |
+| `security-hardening-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `share-slip-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `simba-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `support-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `surveillance-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `tshepo-audit-service` | implemented | substantial | partial-admin | no-known-prod-stub | substantial | substantial | substantial (chain/export/query tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: canonical `/internal/v1` parity incomplete versus legacy `/v1`; blocker-2: BFF/admin forensic route conformity incomplete; blocker-3: cross-service propagation E2E tests missing. next: publish compatibility matrix and complete canonical route migration |
-| `tshepo-authz-service` | implemented | substantial (updated OpenAPI incl. deprecated compatibility routes) | wired-via-envoy-bff | no-known-prod-stub | substantial | substantial | substantial (policy/risk/break-glass + compatibility proxy tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: CI-grade runtime full-stack trust job still needs first successful CI execution evidence; blocker-2: temporary policy compatibility proxy still depends on legacy tshepo-service while migration completes; blocker-3: management/ops APIs still mixed legacy versioning. next: complete direct canonical policy ownership and remove compatibility proxy after retirement checklist gates pass |
-| `tshepo-consent-service` | implemented | substantial | wired-via-authz-and-mvumo | no-known-prod-stub | substantial | substantial | substantial (evaluation/crud/share-link tests + denial-audit assertions) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: canonical internal route parity incomplete; blocker-2: full denial propagation E2E across authz/mvumo not in CI; blocker-3: external consumer compatibility inventory incomplete. completed: consent denial audit persistence on evaluable consent ids |
-| `tshepo-identity-service` | implemented | substantial | partial-bff | no-known-prod-stub | substantial | substantial | substantial (resolution/token/reconciliation tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: canonical `/internal/v1` parity incomplete; blocker-2: dependent trust services lack integrated trust-context propagation tests; blocker-3: onboarding constraints for new consumers not codified. next: complete canonical API parity and add trust integration suite |
-| `tshepo-keys-service` | implemented | substantial | partial-service-to-service | no-known-prod-stub | substantial | substantial | substantial (jwks/signing/rotation tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: route governance still legacy-heavy; blocker-2: operational rotation drill automation not evidenced; blocker-3: dependency hardening evidence for key lifecycle ops incomplete. next: canonical route parity and automated rotation drills |
-| `tshepo-offline-service` | implemented | substantial | partial-bff | no-known-prod-stub | substantial | substantial | substantial (capability/rules/reconciliation tests) | PARTIAL WITH EXPLICIT BLOCKERS | blocker-1: replay/reconcile end-to-end trust validation incomplete; blocker-2: canonical route harmonisation pending; blocker-3: downstream dependent-service integration evidence incomplete. next: execute integrated replay drills and route parity closure |
-| `tshepo-service` | implemented-or-partial | legacy-v1-and-mixed | compatibility-only | unknown-review-required | substantial (for constrained compatibility posture) | substantial (legacy usage telemetry added) | substantial (security + route inventory guards + telemetry tests) | LEGACY/COMPATIBILITY CONSTRAINED | constrained by ADR and technical gates: authenticated default auth, legacy deprecation telemetry (`/v1/*`), route inventory guard tests, and usage API (`/internal/v1/legacy/route-usage`). checklist-driven retirement now tracked in `docs/architecture/tshepo-legacy-retirement-checklist.md`; remaining blocker: zero-usage window and full compatibility route decommission not complete |
+| `tshepo-audit-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-authz-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-consent-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-identity-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-keys-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-offline-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `tshepo-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `tuso-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `ubomi-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `varapi-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `vito-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
-| `wellness-service` | implemented-or-partial | partial | wired | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+| `wellness-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `workflow-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `workforce-governance-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
 | `zibo-service` | implemented-or-partial | partial | unknown-or-partial | requires-audit | partial | partial | requires-audit | baseline-assessed | see mock-and-stub-register.md and gap-remediation-plan.md |
+
+## Enterprise Pass Delta (2026-05-15)
+
+- Enterprise verdict remains **PARTIAL WITH EXPLICIT BLOCKERS**.
+- `coverage-service` production authz posture remediated to authenticated non-actuator routes.
+- `experience-bff` enterprise route hardening advanced:
+  - marketplace order-create synthetic fallback removed.
+  - provider financing list routes fail-close on coverage upstream failures.
+  - mobile provider billing shortcuts now explicit unavailable (`501`) rather than fake success.
+
+## Enterprise Second-Pass Delta (2026-05-15)
+
+- Enterprise verdict remains **PARTIAL WITH EXPLICIT BLOCKERS** (not READY).
+- Added enterprise runtime proof harness scripts:
+  - `test/integration/enterprise-fullstack-runtime.sh`
+  - `test/integration/enterprise-fullstack-runtime.ps1`
+- `experience-bff` long-tail enterprise controller parity hardened with typed fail-close envelopes:
+  - `ErpHrBffController` (`HR_PAYROLL_UNAVAILABLE`, 502)
+  - `ErpProcurementBffController` (`PROCUREMENT_UNAVAILABLE`, 502)
+  - `PatientAccountFinanceBffController` (`COSTA_UNAVAILABLE`, 502)
+  - `PaymentPlanFinanceBffController` (`COSTA_UNAVAILABLE`, 502)
+  - `FinancialDocumentFinanceBffController` (`COSTA_UNAVAILABLE`, 502)
+  - `ServiceAccessDecisionFinanceBffController` (`COSTA_UNAVAILABLE`, 502)
+  - `ReconciliationController` triple-match (`RECONCILIATION_UNAVAILABLE`, 502)
+  - `FinanceController` lifecycle/detail/payment/refund/claim-detail operational failures (`COSTA_UNAVAILABLE`, 502) with explicit typed `400` validation envelopes retained.
+- Added focused controller regression tests for the above long-tail routes.
+
+## Enterprise Parity Remediation Wave (2026-05-15)
+
+- Enterprise verdict remains **PARTIAL WITH EXPLICIT BLOCKERS** (not READY).
+- `experience-bff` enterprise P0 controller parity tightened:
+  - `MarketplaceController` now uses explicit typed `501 MARKETPLACE_ROUTE_UNAVAILABLE` for unsupported list surfaces and stops masking upstream statuses on catalog/vendor/order-detail reads.
+  - `ProviderFinancingController` now returns consistent typed `502 COVERAGE_UNAVAILABLE` fail-close envelopes (including mutation routes), with request/correlation metadata.
+  - `ErpGlBffController` now exposes canonical envelope + typed `502 GL_UNAVAILABLE` fail-close behavior across `/internal/v1/erp/gl/*`.
+  - `WalletController` non-wallet payment methods now explicitly return `501 PAYMENT_METHOD_UNAVAILABLE` (no synthetic payment success for unwired rails).
+- Added controller regression coverage for ERP GL fail-close and expanded marketplace/provider-financing/wallet parity assertions.
+
+## Data Plane Readiness Delta (2026-05-15)
+
+- Data verdict remains **PARTIAL WITH EXPLICIT BLOCKERS** (not READY).
+- `experience-bff` data/public-health hardening:
+  - added fail-close behavior for `AiGovernanceController`, `AdminReportJobController`, `ReportJobController`, and `MobileGovernanceController`.
+  - wired `/internal/v1/public-health/weekly-idsr`, `/outbreaks`, and `/field-operations` to surveillance backends with typed fail-close behavior.
+  - added bounded AI registry BFF orchestration surface under `/internal/v1/ai/*`.
+- `data-warehouse-service` tenant-scope hardening:
+  - `/internal/v1/gold/query` now enforces tenant-scoped repository access.
+- OpenAPI convergence advanced for:
+  - `experience-bff` Data-plane route family,
+  - `surveillance-service`,
+  - `campaigns-service`,
+  - `ndr-service`,
+  - `national-data-repository-service`.
+- Runtime ownership update:
+  - `ndr-service` is now the canonical runtime query owner; `national-data-repository-service` `/internal/v1/query` explicitly returns owner-conflict/deprecation signaling while structural consolidation remains pending.

@@ -44,6 +44,17 @@ public class EncounterService {
     private final JourneyStateMachine journeyStateMachine;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private static final Set<String> ACTIVE_ENCOUNTER_STATES = Set.of("STARTED", "ON_HOLD");
+    private static final Set<String> ALLOWED_MODALITIES = Set.of("in_person", "virtual", "hybrid");
+    private static final Set<String> ALLOWED_VIRTUAL_MODES = Set.of("async", "chat", "audio", "video", "scheduled", "board");
+    private static final Set<String> ALLOWED_CONTEXTS = Set.of(
+            "outpatient", "emergency", "inpatient", "community", "virtual",
+            "procedure", "procedure_room", "operating_room");
+    private static final Set<String> ALLOWED_ENTRY_POINTS = Set.of(
+            "scheduled_appointment", "walk_in", "emergency_arrival", "referral", "community_outreach",
+            "virtual_request", "inpatient_admission", "transfer");
+    private static final Set<String> ALLOWED_CARE_SETTINGS = Set.of("facility", "community", "home", "mobile_outreach", "virtual");
+    private static final Set<String> ALLOWED_PRIORITIES = Set.of("routine", "urgent", "emergency");
 
     public EncounterService(EncounterRepository encounterRepository,
                             JourneyRepository journeyRepository,
@@ -71,11 +82,23 @@ public class EncounterService {
      * @throws IllegalArgumentException if the journey is not found
      */
     @Transactional
-    public EncounterEntity startEncounter(String journeyId, String encounterType) {
+    public EncounterEntity startEncounter(String journeyId,
+                                          String encounterType,
+                                          String encounterContext,
+                                          String entryPoint,
+                                          String modality,
+                                          String virtualMode,
+                                          String careSetting,
+                                          String priority,
+                                          String triageCategory,
+                                          String pathwayRef,
+                                          String protocolRef) {
         TrustContext ctx = TrustContextHolder.require();
 
         JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalArgumentException("Journey not found: " + journeyId));
+
+        ensureNoActiveEncounter(ctx.tenantId(), journeyId);
 
         EncounterEntity encounter = new EncounterEntity();
         encounter.setTenantId(ctx.tenantId());
@@ -85,6 +108,17 @@ public class EncounterService {
         encounter.setFacilityId(ctx.facilityId());
         encounter.setWorkspaceId(ctx.workspaceId());
         encounter.setEncounterType(encounterType);
+        encounter.setEncounterContext(normalizeEncounterContext(encounterContext, encounterType));
+        encounter.setEntryPoint(normalizeEntryPoint(entryPoint, journey));
+        String normalizedModality = normalizeModality(modality);
+        String normalizedVirtualMode = normalizeVirtualMode(virtualMode, normalizedModality);
+        encounter.setModality(normalizedModality);
+        encounter.setVirtualMode(normalizedVirtualMode);
+        encounter.setCareSetting(normalizeCareSetting(careSetting, normalizedModality));
+        encounter.setPriority(normalizePriority(priority));
+        encounter.setTriageCategory(normalizeOptionalUpperToken(triageCategory, "triage category"));
+        encounter.setPathwayRef(normalizeOptionalReference(pathwayRef));
+        encounter.setProtocolRef(normalizeOptionalReference(protocolRef));
         encounter.setStatus("STARTED");
         encounter.setAssignedProviderId(ctx.actorId());
         encounter.setStartedAt(OffsetDateTime.now());
@@ -105,6 +139,15 @@ public class EncounterService {
         payload.put("journeyId", journeyId);
         payload.put("patientCpid", journey.getPatientCpid());
         payload.put("encounterType", encounterType);
+        payload.put("encounterContext", encounter.getEncounterContext());
+        payload.put("entryPoint", encounter.getEntryPoint());
+        payload.put("modality", encounter.getModality());
+        payload.put("virtualMode", encounter.getVirtualMode());
+        payload.put("careSetting", encounter.getCareSetting());
+        payload.put("priority", encounter.getPriority());
+        payload.put("triageCategory", encounter.getTriageCategory());
+        payload.put("pathwayRef", encounter.getPathwayRef());
+        payload.put("protocolRef", encounter.getProtocolRef());
         payload.put("assignedProvider", ctx.actorId());
         payload.put("workspaceId", ctx.workspaceId() != null ? ctx.workspaceId().toString() : null);
         payload.put("facilityId", ctx.facilityId().toString());
@@ -116,6 +159,162 @@ public class EncounterService {
                 encounter.getEncounterRef(), journeyId, encounterType, ctx.actorId());
 
         return encounter;
+    }
+
+    private String normalizeModality(String modality) {
+        String normalized = modality == null || modality.isBlank()
+                ? "in_person"
+                : modality.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_MODALITIES.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid encounter modality: " + modality);
+        }
+        return normalized;
+    }
+
+    private String normalizeVirtualMode(String virtualMode, String modality) {
+        if ("in_person".equals(modality)) {
+            return null;
+        }
+        if (virtualMode == null || virtualMode.isBlank()) {
+            return "video";
+        }
+        String normalized = virtualMode.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_VIRTUAL_MODES.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid virtual mode: " + virtualMode);
+        }
+        return normalized;
+    }
+
+    private String normalizeEncounterContext(String encounterContext, String encounterType) {
+        String derivedDefault = deriveContextFromEncounterType(encounterType);
+        String normalized = encounterContext == null || encounterContext.isBlank()
+                ? derivedDefault
+                : encounterContext.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_CONTEXTS.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid encounter context: " + encounterContext);
+        }
+        return normalized;
+    }
+
+    private String normalizeEntryPoint(String entryPoint, JourneyEntity journey) {
+        String normalized = entryPoint == null || entryPoint.isBlank()
+                ? deriveEntryPointFromJourney(journey)
+                : entryPoint.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_ENTRY_POINTS.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid encounter entry point: " + entryPoint);
+        }
+        return normalized;
+    }
+
+    private String normalizeCareSetting(String careSetting, String modality) {
+        String defaultSetting = "virtual".equals(modality) ? "virtual" : "facility";
+        String normalized = careSetting == null || careSetting.isBlank()
+                ? defaultSetting
+                : careSetting.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_CARE_SETTINGS.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid encounter care setting: " + careSetting);
+        }
+        return normalized;
+    }
+
+    private String normalizePriority(String priority) {
+        String normalized = priority == null || priority.isBlank()
+                ? "routine"
+                : priority.trim().toLowerCase(Locale.ROOT);
+        if (!ALLOWED_PRIORITIES.contains(normalized)) {
+            throw new IllegalArgumentException("Invalid encounter priority: " + priority);
+        }
+        return normalized;
+    }
+
+    private String normalizeOptionalUpperToken(String rawValue, String label) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+        String normalized = rawValue.trim().toUpperCase(Locale.ROOT);
+        if (normalized.length() > 32) {
+            throw new IllegalArgumentException("Encounter " + label + " is too long");
+        }
+        return normalized;
+    }
+
+    private String normalizeOptionalReference(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+        String normalized = rawValue.trim();
+        if (normalized.length() > 128) {
+            throw new IllegalArgumentException("Encounter pathway/protocol reference is too long");
+        }
+        return normalized;
+    }
+
+    private String deriveContextFromEncounterType(String encounterType) {
+        if (encounterType == null || encounterType.isBlank()) {
+            return "outpatient";
+        }
+        String upper = encounterType.trim().toUpperCase(Locale.ROOT);
+        if (upper.contains("OPERATING_ROOM") || upper.contains("THEATRE") || upper.contains("OR_")) return "operating_room";
+        if (upper.contains("PROCEDURE_ROOM")) return "procedure_room";
+        if (upper.contains("PROCEDURE") || upper.contains("SURGERY")) return "procedure";
+        if (upper.contains("EMERGENCY") || upper.contains("CASUALTY")) return "emergency";
+        if (upper.contains("INPATIENT") || upper.contains("WARD")) return "inpatient";
+        if (upper.contains("HOME") || upper.contains("COMMUNITY") || upper.contains("OUTREACH")) return "community";
+        if (upper.contains("TELE") || upper.contains("VIRTUAL")) return "virtual";
+        return "outpatient";
+    }
+
+    /**
+     * Updates pathway/protocol linkage for an active or historical encounter.
+     *
+     * <p>Only linkage metadata is updated here; pathway execution remains owned by
+     * guidance/rules/clinical-knowledge services.</p>
+     */
+    @Transactional
+    public EncounterEntity updateEncounterPathwayProtocol(Long encounterId, String pathwayRef, String protocolRef) {
+        EncounterEntity encounter = encounterRepository.findById(encounterId)
+                .orElseThrow(() -> new IllegalArgumentException("Encounter not found: " + encounterId));
+
+        encounter.setPathwayRef(normalizeOptionalReference(pathwayRef));
+        encounter.setProtocolRef(normalizeOptionalReference(protocolRef));
+        encounter = encounterRepository.save(encounter);
+
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        String encounterRefStr = encounter.getEncounterRef().toString();
+        payload.put("eventId", encounterRefStr + ":ENCOUNTER_PATHWAY_PROTOCOL_UPDATED");
+        payload.put("tenantId", ctx.tenantId().toString());
+        payload.put("encounterRef", encounterRefStr);
+        payload.put("journeyId", encounter.getJourneyId());
+        payload.put("pathwayRef", encounter.getPathwayRef());
+        payload.put("protocolRef", encounter.getProtocolRef());
+        payload.put("updatedAt", OffsetDateTime.now().toString());
+        writeOutbox("ENCOUNTER", encounterRefStr,
+                "ENCOUNTER_PATHWAY_PROTOCOL_UPDATED", toJson(payload));
+
+        return encounter;
+    }
+
+    private String deriveEntryPointFromJourney(JourneyEntity journey) {
+        String referralId = journey.getReferralId();
+        String referralSource = journey.getReferralSource() == null ? "" : journey.getReferralSource().trim().toUpperCase(Locale.ROOT);
+        if (referralId != null && !referralId.isBlank()) return "referral";
+        if (referralSource.contains("EMERGENCY") || referralSource.contains("CASUALTY")) return "emergency_arrival";
+        if (referralSource.contains("COMMUNITY") || referralSource.contains("OUTREACH")) return "community_outreach";
+        if (referralSource.contains("TRANSFER")) return "transfer";
+        if (referralSource.contains("APPOINTMENT") || referralSource.contains("BOOKING") || referralSource.contains("SCHEDULED")) {
+            return "scheduled_appointment";
+        }
+        return "walk_in";
+    }
+
+    private void ensureNoActiveEncounter(UUID tenantId, String journeyId) {
+        List<EncounterEntity> encounters = encounterRepository.findByTenantIdAndJourneyId(tenantId, journeyId);
+        boolean hasActive = encounters.stream().anyMatch(encounter ->
+                ACTIVE_ENCOUNTER_STATES.contains(encounter.getStatus() == null ? "" : encounter.getStatus().toUpperCase(Locale.ROOT)));
+        if (hasActive) {
+            throw new IllegalStateException("Encounter already active for journey: " + journeyId);
+        }
     }
 
     /**

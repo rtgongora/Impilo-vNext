@@ -44,6 +44,7 @@ class ServiceAccessDecisionFinanceBffControllerTest {
 
         mockMvc().perform(post("/internal/v1/finance/service-access-decisions")
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header(CompanionHeaders.REQUEST_ID, "req-x")
                         .header(CompanionHeaders.CORRELATION_ID, "corr-x")
                         .content("{\"access_status\":\"EXEMPT\"}"))
                 .andExpect(status().isOk())
@@ -54,11 +55,27 @@ class ServiceAccessDecisionFinanceBffControllerTest {
     }
 
     @Test
+    void createFailClosesWithTypedBadGatewayWhenCostaUnavailable() throws Exception {
+        when(costaClient.postServiceAccessDecision(any())).thenThrow(new RuntimeException("costa unavailable"));
+
+        mockMvc().perform(post("/internal/v1/finance/service-access-decisions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(CompanionHeaders.REQUEST_ID, "req-err")
+                        .header(CompanionHeaders.CORRELATION_ID, "corr-err")
+                        .content("{\"access_status\":\"EXEMPT\"}"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error.code").value("COSTA_UNAVAILABLE"))
+                .andExpect(jsonPath("$.meta.request_id").value("req-err"))
+                .andExpect(jsonPath("$.meta.correlation_id").value("corr-err"));
+    }
+
+    @Test
     void listForwardsEncounterQuery() throws Exception {
         when(costaClient.getServiceAccessDecisions("enc-1")).thenReturn(objectMapper.readTree("[{\"id\":\"1\"}]"));
 
         mockMvc().perform(get("/internal/v1/finance/service-access-decisions")
                         .param("encounter_id", "enc-1")
+                        .header(CompanionHeaders.REQUEST_ID, "r2")
                         .header(CompanionHeaders.CORRELATION_ID, "c2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].id").value("1"));
@@ -73,6 +90,7 @@ class ServiceAccessDecisionFinanceBffControllerTest {
                 objectMapper.readTree("{\"service_access_decision_id\":\"abc\"}"));
 
         mockMvc().perform(get("/internal/v1/finance/service-access-decisions/abc")
+                        .header(CompanionHeaders.REQUEST_ID, "r3")
                         .header(CompanionHeaders.CORRELATION_ID, "c3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.service_access_decision_id").value("abc"));

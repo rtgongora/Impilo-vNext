@@ -39,7 +39,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -65,7 +65,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -79,7 +79,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -159,7 +159,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -173,7 +173,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -187,7 +187,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -201,7 +201,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -215,7 +215,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -243,7 +243,7 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -274,7 +274,14 @@ public class CoverageController {
             return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
-            return ResponseEntity.ok(Map.of("data", new Object[0], "meta", Map.of("request_id", requestId)));
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Coverage upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

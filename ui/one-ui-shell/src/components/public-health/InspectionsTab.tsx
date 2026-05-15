@@ -111,7 +111,7 @@ export function InspectionsTab() {
     setInspSubmitting(true);
     setInspError(null);
     try {
-      await apiClient.post("/internal/v1/public-health/inspections", {
+      await apiClient.post("/internal/v1/public-health/site-registry/inspections", {
         ...inspForm,
         overallScore: Number(inspForm.overallScore) || 0,
         criticalFindings: Number(inspForm.criticalFindings) || 0,
@@ -119,7 +119,9 @@ export function InspectionsTab() {
         minorFindings: Number(inspForm.minorFindings) || 0,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setInspSubmitting(false);
+      setInspError("Failed to submit inspection. Please verify the BFF and site-registry service are available.");
+      return;
     }
     setInspSubmitting(false);
     setInspSubmitted(true);
@@ -141,11 +143,11 @@ export function InspectionsTab() {
         </div>
         <button
           type="button"
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+          onClick={() => setShowNewForm((s) => !s)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700"
         >
           <Plus className="w-4 h-4" />
-          Record New Inspection (pending)
+          Record New Inspection
         </button>
       </div>
 
@@ -328,8 +330,8 @@ export function InspectionsTab() {
 
       <div className="rounded-lg border border-violet-200 bg-violet-50/90 p-3 text-xs text-violet-950">
         <strong>Live:</strong> registered premises from <code className="text-[10px]">GET /internal/v1/public-health/sites</code>.
-        <strong className="ml-1">Demo:</strong> inspection register, enforcement, and compliance tiles match Lovable /
-        impilo-structure workflows — not saved until inspections APIs are wired on the BFF.
+        <strong className="ml-1">Live write:</strong> inspection submissions call
+        <code className="text-[10px]"> POST /internal/v1/public-health/site-registry/inspections</code> through the BFF.
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">

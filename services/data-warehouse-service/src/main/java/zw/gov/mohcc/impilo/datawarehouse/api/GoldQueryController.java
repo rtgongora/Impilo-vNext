@@ -58,19 +58,19 @@ public class GoldQueryController {
 
         return switch (dataset) {
             case "encounters" -> {
-                Page<GoldEncounterEntity> results = encounterRepository.findAll(pageable);
+                Page<GoldEncounterEntity> results = encounterRepository.findAllByTenantId(tenantId, pageable);
                 yield ResponseEntity.ok(new GoldQueryResponse(dataset, results.getContent(),
                         results.hasNext() ? String.valueOf(page + 1) : null,
                         results.getTotalElements()));
             }
             case "medications" -> {
-                Page<GoldMedicationEntity> results = medicationRepository.findAll(pageable);
+                Page<GoldMedicationEntity> results = medicationRepository.findAllByTenantId(tenantId, pageable);
                 yield ResponseEntity.ok(new GoldQueryResponse(dataset, results.getContent(),
                         results.hasNext() ? String.valueOf(page + 1) : null,
                         results.getTotalElements()));
             }
             case "labs" -> {
-                Page<GoldLabEntity> results = labRepository.findAll(pageable);
+                Page<GoldLabEntity> results = labRepository.findAllByTenantId(tenantId, pageable);
                 yield ResponseEntity.ok(new GoldQueryResponse(dataset, results.getContent(),
                         results.hasNext() ? String.valueOf(page + 1) : null,
                         results.getTotalElements()));

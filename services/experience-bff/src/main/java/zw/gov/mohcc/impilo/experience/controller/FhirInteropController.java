@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -34,10 +35,12 @@ public class FhirInteropController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode result = fhirClient.getCapabilityStatement();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("FHIR metadata fetch failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", Map.of("status", "unavailable")));
+            return upstreamFailure("FHIR_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -49,10 +52,12 @@ public class FhirInteropController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode result = fhirClient.searchResource(resourceType, params);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("FHIR search {}: {}", resourceType, e.getMessage());
-            return ResponseEntity.ok(Map.of("data", Map.of()));
+            return upstreamFailure("FHIR_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -64,10 +69,24 @@ public class FhirInteropController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode result = fhirClient.getResource(resourceType, id);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : Map.of()));
+            if (result == null || result.isNull() || (result.isObject() && result.isEmpty())) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", Map.of("code", "FHIR_RESOURCE_NOT_FOUND", "message", "FHIR resource not found"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", result,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("FHIR read {}/{}: {}", resourceType, id, e.getMessage());
-            return ResponseEntity.status(404).body(Map.of("error", Map.of("code", "NOT_FOUND", "message", "Resource not found")));
+            return upstreamFailure("FHIR_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "FHIR gateway unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

@@ -23,5 +23,65 @@ paths:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/datasets:
+    get:
+      operationId: ndrDatasetsList
+      tags: [NDR-National]
+      summary: List dataset definitions and versions
+      responses:
+        '200':
+          description: Dataset listing
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: ndrDatasetCreate
+      tags: [NDR-National]
+      summary: Register dataset definition
+      responses:
+        '201':
+          description: Dataset created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/datasets/{key}/versions:
+    post:
+      operationId: ndrDatasetVersionCreate
+      tags: [NDR-National]
+      summary: Create dataset version
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Dataset version created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/query:
+    post:
+      operationId: ndrDatasetQuery
+      tags: [NDR-National]
+      summary: Deprecated runtime query endpoint (ownership moved to ndr-service)
+      responses:
+        '409':
+          description: Runtime owner conflict; use ndr-service query endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
 components:
   schemas: {}

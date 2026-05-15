@@ -212,15 +212,18 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/billing/charges")
     public ResponseEntity<Map<String, Object>> getCharges(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String encounterId) {
-        // Previously: jdbc.queryForList on bill_lines table
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of(
+                        "code", "BILLING_ROUTE_UNAVAILABLE",
+                        "message", "Mobile provider billing charges are not yet wired to a production billing service")));
     }
 
     @PostMapping("/billing/charge")
     public ResponseEntity<Map<String, Object>> captureCharge(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // Previously: jdbc.update INSERT INTO bill_lines
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
+                "error", Map.of(
+                        "code", "BILLING_ROUTE_UNAVAILABLE",
+                        "message", "Mobile provider charge capture is not yet wired to a production billing service")));
     }
 
     // ── Reports ─────────────────────────────────────────────────────
