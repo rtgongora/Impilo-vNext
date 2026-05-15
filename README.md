@@ -14,13 +14,13 @@ Seven architectural planes:
 
 | Canonical Plane | Services |
 |-------|----------|
-| **trust** (Trust, Identity Assurance & Governance) | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
-| **registry** (Registry & Sovereign Identity Spine) | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
-| **clinical** (Clinical Execution & Shared Health Record) | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
-| **data** (Data, Intelligence & Public Health) | NDR, Data Warehouse, Reporting, Surveillance, Search |
-| **integration** (Integration, Interoperability & Edge) | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
-| **experience** (Experience, Workflow & Orchestration) | **Impilo web experience** (single orchestration layer on **3000** shipped as `one-ui-shell`), mobile journeys, and **Experience BFF** (`:8160`) orchestration |
-| **enterprise** (Enterprise Resource & Market Operations) | Costing Engine, MUSheX, Coverage, Claims/Billing flows, General Ledger, HR & Payroll, Procurement, marketplace operations |
+| **Trust** (Trust, Identity Assurance & Governance) | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
+| **Registry** (Registry & Sovereign Identity Spine) | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
+| **Clinical** (Clinical Execution & Shared Health Record) | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
+| **Data** (Data, Intelligence & Public Health) | NDR, Data Warehouse, Reporting, Surveillance, Search |
+| **Integration** (Integration, Interoperability & Edge) | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
+| **Experience** (Experience, Workflow & Orchestration) | **Impilo web experience** (single orchestration layer on **3000** shipped as `one-ui-shell`), mobile journeys, and **Experience BFF** (`:8160`) orchestration |
+| **Enterprise** (Enterprise Resource & Market Operations) | Costing Engine, MUSheX, Coverage, Claims/Billing flows, General Ledger, HR & Payroll, Procurement, marketplace operations |
 
 Canonical doctrine and ownership maps are maintained under `docs/architecture/planes/` and `docs/registry/`.
 
