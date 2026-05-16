@@ -31,3 +31,12 @@
 - `nompilo-analytics-reporting-assistant.md`
 - `nompilo-fundo-learning-assistant.md`
 - `nompilo-support-escalation-model.md`
+- `ui-current-state-audit.md`
+- `ui-experience-doctrine.md`
+- `nompilo-command-ui-pattern.md`
+- `role-aware-workspaces.md`
+- `transaction-context-panel.md`
+- `accessibility-ui-patterns.md`
+- `mobile-kiosk-ui-patterns.md`
+- `ui-route-journey-map.md`
+- `ui-refinement-implementation-summary.md`

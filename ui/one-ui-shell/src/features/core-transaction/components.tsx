@@ -133,6 +133,40 @@ export function JourneyBlockerPanel({ transaction }: { transaction: CoreTransact
   );
 }
 
+export function TransactionContextPanel({ transaction }: { transaction: CoreTransactionView }) {
+  return panel(
+    "Transaction Context",
+    <div className="space-y-1.5 text-xs">
+      <p>
+        <span className="font-semibold text-slate-700">Type/State:</span> {transaction.transaction.type} /{" "}
+        {transaction.transaction.currentState}
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Journeys:</span> {transaction.journeys.person.currentStage} |{" "}
+        {transaction.journeys.provider.currentStage} | {transaction.journeys.platform.currentStage}
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Trust:</span> {transaction.trustContext.accessStatus} (
+        {transaction.trustContext.consentStatus})
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Payment/Access:</span> {transaction.financialContext.paymentStatus}
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Sync:</span> {transaction.offlineSyncStatus}
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Blockers:</span>{" "}
+        {transaction.failureModes.length ? transaction.failureModes.join(", ") : "none"}
+      </p>
+      <p>
+        <span className="font-semibold text-slate-700">Source of truth:</span> Experience BFF composition only; sovereign
+        services remain authoritative.
+      </p>
+    </div>,
+  );
+}
+
 export function JourneyNextActionPanel({ transaction }: { transaction: CoreTransactionView }) {
   return panel(
     "Journey Next Actions",
@@ -339,7 +373,7 @@ export function NompiloLoginBriefingCard({ transaction }: { transaction: CoreTra
 export function NompiloCommandResultCard({ transaction }: { transaction: CoreTransactionView }) {
   return panel(
     "Nompilo Command Result",
-    "Nompilo composes guidance only. Source services remain authoritative for truth.",
+    `Latest intent context: ${transaction.nompiloCommand.recentCommands[0] ?? "ASK_WORKFLOW_HELP"}. Nompilo composes guidance only; source services remain authoritative for truth.`,
   );
 }
 
@@ -386,6 +420,7 @@ export function CoreTransactionShell({
         <NompiloCompanionButton />
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
+        <TransactionContextPanel transaction={transaction} />
         <ClientIdentityBanner transaction={transaction} />
         <ProviderWorkspaceBanner transaction={transaction} />
         <TrustContextBanner transaction={transaction} />

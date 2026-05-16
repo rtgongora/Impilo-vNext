@@ -47,4 +47,17 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  .impilo-high-contrast body {
+    filter: contrast(1.2) saturate(1.1);
+  }
+
+  .impilo-large-text {
+    font-size: 1.06em;
+  }
+
+  .impilo-low-bandwidth * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

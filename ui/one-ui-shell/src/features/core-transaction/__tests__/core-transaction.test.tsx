@@ -19,6 +19,7 @@ import {
   NompiloSupportEscalationPanel,
   NompiloWellnessEventResults,
   NompiloCommandResultCard,
+  TransactionContextPanel,
 } from "../components";
 import {
   accessibilityAssistanceRequestedTransaction,
@@ -130,6 +131,7 @@ describe("core transaction composed view and rendering", () => {
     render(<CoreTransactionShell transaction={facilityWalkInTransaction} status="ready" />);
     expect(screen.getByText("Transaction Timeline")).toBeInTheDocument();
     expect(screen.getByText("Next Actions")).toBeInTheDocument();
+    expect(screen.getByText("Transaction Context")).toBeInTheDocument();
   });
 
   it("renders failure and offline sync status", () => {
@@ -163,6 +165,12 @@ describe("core transaction composed view and rendering", () => {
   it("renders platform journey monitor", () => {
     render(<PlatformJourneyMonitor transaction={offlineSyncPendingTransaction} />);
     expect(screen.getByText("Platform Journey")).toBeInTheDocument();
+  });
+
+  it("renders standalone transaction context panel", () => {
+    render(<TransactionContextPanel transaction={facilityWalkInTransaction} />);
+    expect(screen.getByText("Transaction Context")).toBeInTheDocument();
+    expect(screen.getByText(/Source of truth/i)).toBeInTheDocument();
   });
 
   it("renders pre-service payment gate and failed payment guidance", () => {

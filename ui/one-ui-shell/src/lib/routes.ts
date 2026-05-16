@@ -500,8 +500,8 @@ export const ROUTES: RouteDefinition[] = [
 // read-only remittance hub over the existing coverage remittance feed.
 // New total is 276.
 // Additional upstream route registrations on this branch increase the current
-// canonical total to 278.
-export const EXPECTED_ROUTE_COUNT = 321;
+// canonical total to 326.
+export const EXPECTED_ROUTE_COUNT = 326;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

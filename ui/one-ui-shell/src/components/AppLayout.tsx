@@ -13,9 +13,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Home, Menu } from "lucide-react";
 import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
+import { RoleJourneyNavigation } from "./navigation/RoleJourneyNavigation";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { OperationalContextStrip } from "./experience/OperationalContextStrip";
+import { NompiloGlobalCommandBar } from "./intelligent/NompiloGlobalCommandBar";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
+import { AccessibilityToolbar } from "./accessibility/AccessibilityToolbar";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -101,6 +104,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           </div>
         </header>
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+          <div className="space-y-2">
+            <NompiloGlobalCommandBar />
+            <RoleJourneyNavigation />
+            <AccessibilityToolbar />
+          </div>
+        </div>
         <OperationalContextStrip />
         <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
       </div>
