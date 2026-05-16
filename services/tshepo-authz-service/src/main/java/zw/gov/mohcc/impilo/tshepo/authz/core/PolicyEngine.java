@@ -23,6 +23,7 @@ import zw.gov.mohcc.impilo.tshepo.contracts.enums.Verdict;
 import zw.gov.mohcc.impilo.tshepo.contracts.headers.TrustHeaders;
 
 import java.util.*;
+import java.time.Instant;
 
 /**
  * Policy Decision Point (PDP) for the Impilo platform.
@@ -412,6 +413,44 @@ public class PolicyEngine {
                 int maxRisk = ((Number) conditions.get("max_risk_score")).intValue();
                 // We don't have the risk score in the rule evaluation context directly,
                 // but the overall engine will have caught blocked devices already
+            }
+
+            // responsibility scope check
+            if (conditions.containsKey("allowed_scope_refs")) {
+                List<String> allowedScopes = (List<String>) conditions.get("allowed_scope_refs");
+                Set<String> requestScopes = new HashSet<>();
+                if (request.facilityId() != null) requestScopes.add(request.facilityId().toString());
+                if (request.workspaceId() != null) requestScopes.add(request.workspaceId().toString());
+                if (request.departmentId() != null) requestScopes.add(request.departmentId());
+                if (request.wardId() != null) requestScopes.add(request.wardId());
+                if (request.programmeId() != null) requestScopes.add(request.programmeId());
+                if (request.subjectId() != null) requestScopes.add(request.subjectId());
+                boolean scopeMatch = requestScopes.stream().anyMatch(allowedScopes::contains);
+                if (!scopeMatch) {
+                    log.debug("Condition failed: request scopes {} not in allowed_scope_refs {}", requestScopes, allowedScopes);
+                    return false;
+                }
+            }
+
+            // account assurance state check
+            if (Boolean.TRUE.equals(conditions.get("account_assurance_required"))) {
+                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
+                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
+                if (!verified) {
+                    log.debug("Condition failed: account assurance required but got {}", request.assuranceLevel());
+                    return false;
+                }
+            }
+
+            // verification grace period check
+            if (conditions.containsKey("verification_grace_expiry_epoch_ms")) {
+                long expiryEpochMs = ((Number) conditions.get("verification_grace_expiry_epoch_ms")).longValue();
+                String assuranceLevel = request.assuranceLevel() == null ? "" : request.assuranceLevel().toUpperCase(Locale.ROOT);
+                boolean verified = assuranceLevel.contains("VERIFIED") || assuranceLevel.contains("REGISTRY");
+                if (!verified && Instant.now().toEpochMilli() > expiryEpochMs) {
+                    log.debug("Condition failed: verification grace expired for actor {}", request.actorId());
+                    return false;
+                }
             }
 
             return true;

@@ -60,6 +60,7 @@ public class PublicHealthController {
 
     @GetMapping("/signals")
     public ResponseEntity<Map<String, Object>> listSignals(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/signals", requestId);
     }
 
@@ -67,6 +68,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> listCases(
             @RequestParam(required = false) String status,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         String url = surveillanceUrl + "/internal/v1/cases";
         if (status != null && !status.isBlank()) {
             url += "?status=" + URLEncoder.encode(status, StandardCharsets.UTF_8);
@@ -76,6 +78,7 @@ public class PublicHealthController {
 
     @GetMapping("/alerts")
     public ResponseEntity<Map<String, Object>> listAlerts(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/surveillance/alerts", requestId);
     }
 
@@ -83,6 +86,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> acknowledgeAlert(
             @PathVariable String alertId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
         return proxyPost(
                 surveillanceUrl + "/internal/v1/surveillance/alerts/" + URLEncoder.encode(alertId, StandardCharsets.UTF_8) + "/acknowledge",
                 requestId,
@@ -95,6 +99,7 @@ public class PublicHealthController {
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         StringBuilder url = new StringBuilder(surveillanceUrl + "/internal/v1/surveillance/counters");
         boolean first = true;
         if (from != null && !from.isBlank()) {
@@ -115,6 +120,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createSignal(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         return proxyPost(surveillanceUrl + "/internal/v1/signals", requestId, body, 201);
     }
 
@@ -122,6 +128,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> ingestEvent(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         return proxyPost(surveillanceUrl + "/internal/v1/ingest", requestId, body, 202);
     }
 
@@ -129,6 +136,7 @@ public class PublicHealthController {
 
     @GetMapping("/campaigns")
     public ResponseEntity<Map<String, Object>> listCampaigns(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(campaignsUrl + "/internal/v1/campaigns", requestId);
     }
 
@@ -136,24 +144,28 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createCampaign(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         return proxyPost(campaignsUrl + "/internal/v1/campaigns", requestId, body, 201);
     }
 
     @GetMapping("/campaigns/{id}")
     public ResponseEntity<Map<String, Object>> getCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(campaignsUrl + "/internal/v1/campaigns/" + id, requestId);
     }
 
     @PostMapping("/campaigns/{id}/dispatch")
     public ResponseEntity<Map<String, Object>> dispatchCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
         return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/dispatch", requestId, Map.of(), 200);
     }
 
     @PostMapping("/campaigns/{id}/close")
     public ResponseEntity<Map<String, Object>> closeCampaign(
             @PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
         return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/close", requestId, Map.of(), 200);
     }
 
@@ -161,11 +173,13 @@ public class PublicHealthController {
 
     @GetMapping("/sites")
     public ResponseEntity<Map<String, Object>> listSites(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/sites", requestId);
     }
 
     @GetMapping("/sites/{id}")
     public ResponseEntity<Map<String, Object>> getSite(@PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/sites/" + id, requestId);
     }
 
@@ -182,6 +196,7 @@ public class PublicHealthController {
             @RequestParam(defaultValue = "20") int size,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedRead();
         String url = indawoUrl + "/internal/v1/site-registry/sites";
         var b = org.springframework.web.util.UriComponentsBuilder.fromHttpUrl(url)
                 .queryParam("page", page)
@@ -199,6 +214,7 @@ public class PublicHealthController {
             @PathVariable String siteId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/site-registry/sites/" + siteId, requestId);
     }
 
@@ -207,6 +223,7 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/applications", requestId, body, 201);
     }
 
@@ -215,6 +232,7 @@ public class PublicHealthController {
             @PathVariable String applicationId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/applications/" + applicationId + "/submit", requestId, Map.of(), 200);
     }
 
@@ -224,6 +242,7 @@ public class PublicHealthController {
             @RequestParam(defaultValue = "Applicant") String applicantName,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedMutate();
         String url = org.springframework.web.util.UriComponentsBuilder
                 .fromHttpUrl(indawoUrl + "/internal/v1/site-registry/sites/" + siteId + "/renewals")
                 .queryParam("applicantName", applicantName)
@@ -237,6 +256,7 @@ public class PublicHealthController {
             @RequestParam(name = "site_category", required = false) String siteCategory,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedRead();
         var b = org.springframework.web.util.UriComponentsBuilder.fromHttpUrl(indawoUrl + "/internal/v1/site-registry/checklist-templates")
                 .queryParam("inspection_type", inspectionType);
         if (siteCategory != null && !siteCategory.isBlank()) b.queryParam("site_category", siteCategory);
@@ -248,6 +268,7 @@ public class PublicHealthController {
             @PathVariable String templateId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId
     ) {
+        governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/site-registry/checklist-templates/" + templateId, requestId);
     }
 
@@ -256,7 +277,24 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/inspections", requestId, body, 201);
+    }
+
+    @GetMapping("/site-registry/inspections")
+    public ResponseEntity<Map<String, Object>> listRegistryInspections(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        governance.assertGovernedRead();
+        var b = org.springframework.web.util.UriComponentsBuilder
+                .fromHttpUrl(indawoUrl + "/internal/v1/site-registry/inspections")
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return proxy(b.toUriString(), requestId);
     }
 
     @PostMapping("/inspections")
@@ -273,6 +311,7 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/inspections/" + inspectionId + "/record", requestId, body, 200);
     }
 
@@ -282,7 +321,24 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/compliance-actions/" + actionId, requestId, body, 200);
+    }
+
+    @GetMapping("/site-registry/compliance-actions")
+    public ResponseEntity<Map<String, Object>> listRegistryComplianceActions(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        governance.assertGovernedRead();
+        var b = org.springframework.web.util.UriComponentsBuilder
+                .fromHttpUrl(indawoUrl + "/internal/v1/site-registry/compliance-actions")
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return proxy(b.toUriString(), requestId);
     }
 
     @PostMapping("/site-registry/licences")
@@ -290,6 +346,7 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/licences", requestId, body, 201);
     }
 
@@ -298,7 +355,24 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/enforcement-cases", requestId, body, 201);
+    }
+
+    @GetMapping("/site-registry/enforcement-cases")
+    public ResponseEntity<Map<String, Object>> listRegistryEnforcementCases(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        governance.assertGovernedRead();
+        var b = org.springframework.web.util.UriComponentsBuilder
+                .fromHttpUrl(indawoUrl + "/internal/v1/site-registry/enforcement-cases")
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        return proxy(b.toUriString(), requestId);
     }
 
     @PostMapping(value = "/site-registry/documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -310,6 +384,7 @@ public class PublicHealthController {
             @RequestPart(value = "applicationId", required = false) String applicationId,
             @RequestPart(value = "notes", required = false) String notes
     ) {
+        governance.assertGovernedMutate();
         try {
             String url = indawoUrl + "/internal/v1/site-registry/documents";
 
@@ -341,6 +416,7 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/documents/" + documentId + "/verify", requestId, body, 200);
     }
 
@@ -349,6 +425,7 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/assignments", requestId, body, 201);
     }
 
@@ -358,11 +435,13 @@ public class PublicHealthController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body
     ) {
+        governance.assertGovernedMutate();
         return proxyPost(indawoUrl + "/internal/v1/site-registry/assignments/" + assignmentId, requestId, body, 200);
     }
 
     @GetMapping("/site-registry/dashboard/summary")
     public ResponseEntity<Map<String, Object>> dashboardSummary(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/site-registry/dashboard/summary", requestId);
     }
 
@@ -435,17 +514,207 @@ public class PublicHealthController {
 
     @GetMapping("/map-markers")
     public ResponseEntity<Map<String, Object>> mapMarkers(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/public-health/map-markers", requestId);
     }
 
     @PostMapping("/nompilo/situation-summary")
     public ResponseEntity<Map<String, Object>> nompiloSituationSummary(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/situation-summary", requestId, Map.of(), 200);
+    }
+
+    @PostMapping("/nompilo/ask")
+    public ResponseEntity<Map<String, Object>> nompiloAsk(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedRead();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/ask", requestId, body, 200);
+    }
+
+    @PostMapping("/nompilo/briefing")
+    public ResponseEntity<Map<String, Object>> nompiloBriefing(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedRead();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/briefing", requestId, body, 200);
+    }
+
+    @GetMapping("/intelligence/alert-rules")
+    public ResponseEntity<Map<String, Object>> listAlertRules(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/intelligence/alert-rules", requestId);
+    }
+
+    @PostMapping("/intelligence/alert-rules")
+    public ResponseEntity<Map<String, Object>> createAlertRule(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/intelligence/alert-rules", requestId, body, 201);
+    }
+
+    @PostMapping("/intelligence/alert-rules/{ruleId}/toggle")
+    public ResponseEntity<Map<String, Object>> toggleAlertRule(
+            @PathVariable String ruleId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/alert-rules/"
+                        + URLEncoder.encode(ruleId, StandardCharsets.UTF_8) + "/toggle",
+                requestId,
+                body,
+                200);
+    }
+
+    @GetMapping("/intelligence/data-sources")
+    public ResponseEntity<Map<String, Object>> listDataSources(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/intelligence/data-sources", requestId);
+    }
+
+    @PostMapping("/intelligence/data-sources")
+    public ResponseEntity<Map<String, Object>> upsertDataSource(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/intelligence/data-sources", requestId, body, 201);
+    }
+
+    @PostMapping("/intelligence/data-sources/{sourceId}/heartbeat")
+    public ResponseEntity<Map<String, Object>> heartbeatDataSource(
+            @PathVariable String sourceId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/data-sources/"
+                        + URLEncoder.encode(sourceId, StandardCharsets.UTF_8) + "/heartbeat",
+                requestId,
+                body,
+                200);
+    }
+
+    @GetMapping("/intelligence/data-quality-issues")
+    public ResponseEntity<Map<String, Object>> listDataQualityIssues(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/intelligence/data-quality-issues", requestId);
+    }
+
+    @PostMapping("/intelligence/data-quality-issues")
+    public ResponseEntity<Map<String, Object>> createDataQualityIssue(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/intelligence/data-quality-issues", requestId, body, 201);
+    }
+
+    @PostMapping("/intelligence/data-quality-issues/{issueId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveDataQualityIssue(
+            @PathVariable String issueId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/data-quality-issues/"
+                        + URLEncoder.encode(issueId, StandardCharsets.UTF_8) + "/resolve",
+                requestId,
+                body,
+                200);
+    }
+
+    @PostMapping("/intelligence/rules/{ruleId}/conditions")
+    public ResponseEntity<Map<String, Object>> createRuleCondition(
+            @PathVariable String ruleId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/rules/"
+                        + URLEncoder.encode(ruleId, StandardCharsets.UTF_8) + "/conditions",
+                requestId,
+                body,
+                201);
+    }
+
+    @PostMapping("/intelligence/rules/{ruleId}/test")
+    public ResponseEntity<Map<String, Object>> testRule(
+            @PathVariable String ruleId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/rules/"
+                        + URLEncoder.encode(ruleId, StandardCharsets.UTF_8) + "/test",
+                requestId,
+                Map.of(),
+                200);
+    }
+
+    @PostMapping("/intelligence/evaluate")
+    public ResponseEntity<Map<String, Object>> evaluateRule(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/intelligence/evaluate", requestId, body, 200);
+    }
+
+    @GetMapping("/intelligence/triggers")
+    public ResponseEntity<Map<String, Object>> listRuleTriggers(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/intelligence/triggers", requestId);
+    }
+
+    @GetMapping("/intelligence/alerts")
+    public ResponseEntity<Map<String, Object>> listIntelligenceAlerts(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/intelligence/alerts", requestId);
+    }
+
+    @PostMapping("/intelligence/alerts/{alertId}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeIntelligenceAlert(
+            @PathVariable String alertId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/alerts/"
+                        + URLEncoder.encode(alertId, StandardCharsets.UTF_8) + "/acknowledge",
+                requestId,
+                Map.of(),
+                200);
+    }
+
+    @PostMapping("/intelligence/alerts/{alertId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveIntelligenceAlert(
+            @PathVariable String alertId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/intelligence/alerts/"
+                        + URLEncoder.encode(alertId, StandardCharsets.UTF_8) + "/resolve",
+                requestId,
+                Map.of(),
+                200);
+    }
+
+    @PostMapping("/inspections/schedules")
+    public ResponseEntity<Map<String, Object>> scheduleInspection(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/inspections/schedules", requestId, body, 201);
+    }
+
+    @GetMapping("/inspections/schedules")
+    public ResponseEntity<Map<String, Object>> listInspectionSchedules(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/inspections/schedules", requestId);
     }
 
     @GetMapping("/outbreaks")
     public ResponseEntity<Map<String, Object>> listOutbreaks(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/public-health/outbreaks", requestId);
     }
 
@@ -493,6 +762,7 @@ public class PublicHealthController {
 
     @GetMapping("/field-tasks")
     public ResponseEntity<Map<String, Object>> listFieldTasks(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/public-health/field-tasks", requestId);
     }
 
@@ -520,6 +790,7 @@ public class PublicHealthController {
 
     @GetMapping("/investigations")
     public ResponseEntity<Map<String, Object>> listInvestigations(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/public-health/investigations", requestId);
     }
 
@@ -527,6 +798,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> openInvestigation(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/investigations", requestId, body, 201);
     }
 
@@ -535,6 +807,7 @@ public class PublicHealthController {
             @PathVariable String investigationId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         return proxyPost(
                 surveillanceUrl + "/internal/v1/public-health/investigations/"
                         + URLEncoder.encode(investigationId, StandardCharsets.UTF_8) + "/status",
@@ -545,6 +818,7 @@ public class PublicHealthController {
 
     @GetMapping("/reports/briefs")
     public ResponseEntity<Map<String, Object>> listBriefs(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
         return proxy(surveillanceUrl + "/internal/v1/public-health/reports/briefs", requestId);
     }
 
@@ -720,6 +994,7 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createFieldOperation(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
         Object facilityId = firstPresent(body, "facility_id", "facilityId", "linkedSiteId", "siteId");
         Object operationType = firstPresent(body, "operation_type", "operationType", "activityType");
         Object occurredOn = firstPresent(body, "occurred_on", "occurredOn", "activityDate");

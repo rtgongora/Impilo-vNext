@@ -32,6 +32,7 @@ public class PublicHealthOperationsHomeService {
     private final InvestigationRepository investigationRepository;
     private final IntelligenceBriefRepository briefRepository;
     private final EnvironmentalComplaintRepository complaintRepository;
+    private final PublicHealthIntelligenceService intelligenceService;
 
     public PublicHealthOperationsHomeService(
             SignalRepository signalRepository,
@@ -41,7 +42,8 @@ public class PublicHealthOperationsHomeService {
             FieldTaskRepository fieldTaskRepository,
             InvestigationRepository investigationRepository,
             IntelligenceBriefRepository briefRepository,
-            EnvironmentalComplaintRepository complaintRepository) {
+            EnvironmentalComplaintRepository complaintRepository,
+            PublicHealthIntelligenceService intelligenceService) {
         this.signalRepository = signalRepository;
         this.caseRepository = caseRepository;
         this.alertEventRepository = alertEventRepository;
@@ -50,6 +52,7 @@ public class PublicHealthOperationsHomeService {
         this.investigationRepository = investigationRepository;
         this.briefRepository = briefRepository;
         this.complaintRepository = complaintRepository;
+        this.intelligenceService = intelligenceService;
     }
 
     @Transactional(readOnly = true)
@@ -68,6 +71,7 @@ public class PublicHealthOperationsHomeService {
                 tenantId, InvestigationStatus.CLOSED);
         long draftBriefs = briefRepository.countByTenantIdAndStatus(tenantId, BriefStatus.DRAFT);
         long openComplaints = complaintRepository.countByTenantIdAndStatusNot(tenantId, ComplaintStatus.CLOSED);
+        Map<String, Long> intelligenceKpis = intelligenceService.intelligenceKpis(tenantId);
 
         Map<String, Object> kpis = new LinkedHashMap<>();
         kpis.put("active_signals", activeSignals);
@@ -79,6 +83,9 @@ public class PublicHealthOperationsHomeService {
         kpis.put("open_investigations", openInvestigations);
         kpis.put("draft_briefs", draftBriefs);
         kpis.put("open_complaints", openComplaints);
+        kpis.put("active_alert_rules", intelligenceKpis.getOrDefault("active_alert_rules", 0L));
+        kpis.put("stale_data_sources", intelligenceKpis.getOrDefault("stale_data_sources", 0L));
+        kpis.put("open_data_quality_issues", intelligenceKpis.getOrDefault("open_data_quality_issues", 0L));
 
         List<Map<String, Object>> priorityWorklist = buildPriorityWorklist(tenantId);
         List<Map<String, Object>> mapMarkers = buildMapMarkers(tenantId);
@@ -133,9 +140,15 @@ public class PublicHealthOperationsHomeService {
         if (((Number) kpis.getOrDefault("field_tasks_open", 0)).longValue() > 0) {
             suggestions.add("Assign or complete pending field tasks on the task board.");
         }
+        if (((Number) kpis.getOrDefault("open_data_quality_issues", 0)).longValue() > 0) {
+            suggestions.add("Resolve open data quality issues and generate district follow-up tasks.");
+        }
+        if (((Number) kpis.getOrDefault("stale_data_sources", 0)).longValue() > 0) {
+            suggestions.add("Investigate stale data-source feeds and confirm upstream sync health.");
+        }
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("source", "DETERMINISTIC_OPERATIONS_HOME");
+        result.put("source", "HYBRID_RULES_AND_OPERATIONS");
         result.put("message", message);
         result.put("suggestions", suggestions);
         result.put("kpis", kpis);

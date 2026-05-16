@@ -45,6 +45,9 @@ spring:
 surv:
   outbox:
     poll-interval-ms: 2000
+  llm:
+    enabled: ${LLM_ENABLED:true}
+    base-url: ${LLM_ORCHESTRATION_BASE_URL:http://localhost:8265}
   v11:
     emit-mode: LEGACY_ONLY
   kafka:

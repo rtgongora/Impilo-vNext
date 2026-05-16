@@ -13,7 +13,11 @@ import {
 } from "lucide-react";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import {
+  useLlmProviderHealth,
   useNompiloPublicHealthSummary,
+  usePublicHealthAlertRules,
+  usePublicHealthDataQualityIssues,
+  usePublicHealthDataSources,
   usePublicHealthOperationsHome,
 } from "@/hooks/queries/usePublicHealth";
 import { formatPublicHealthCompact } from "./publicHealthDashboardUtils";
@@ -23,6 +27,10 @@ import { PublicHealthReportsPanel } from "./PublicHealthReportsPanel";
 export function PublicHealthDashboard() {
   const homeQ = usePublicHealthOperationsHome();
   const nompiloQ = useNompiloPublicHealthSummary();
+  const rulesQ = usePublicHealthAlertRules();
+  const sourcesQ = usePublicHealthDataSources();
+  const dqQ = usePublicHealthDataQualityIssues();
+  const providerHealthQ = useLlmProviderHealth();
 
   const home = homeQ.data;
   const kpis = home?.kpis ?? {};
@@ -103,12 +111,61 @@ export function PublicHealthDashboard() {
             <PublicHealthMapPanel />
             <PublicHealthReportsPanel />
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h4 className="text-sm font-semibold text-gray-900">Alert rules</h4>
+              <p className="mt-1 text-xs text-gray-500">{rulesQ.data?.length ?? 0} configured</p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h4 className="text-sm font-semibold text-gray-900">Data sources</h4>
+              <p className="mt-1 text-xs text-gray-500">
+                {(sourcesQ.data ?? []).filter((s) => s.healthStatus !== "HEALTHY").length} unhealthy / {(sourcesQ.data ?? []).length} total
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white p-4">
+              <h4 className="text-sm font-semibold text-gray-900">Data quality issues</h4>
+              <p className="mt-1 text-xs text-gray-500">
+                {(dqQ.data ?? []).filter((i) => i.status.toUpperCase() === "OPEN").length} open
+              </p>
+            </div>
+          </div>
         </>
       )}
 
       {nompiloQ.data?.message && (
-        <NompiloHint message={nompiloQ.data.message} suggestions={nompiloQ.data.suggestions} />
+        <div className="space-y-2">
+          <NompiloHint message={nompiloQ.data.message} suggestions={nompiloQ.data.suggestions} />
+          <div className="rounded-lg border border-violet-200 bg-violet-50/70 p-3 text-xs text-violet-900">
+            <p>
+              Provider: <strong>{nompiloQ.data.provider}</strong> · fallback:{" "}
+              <strong>{nompiloQ.data.fallbackUsed ? "yes" : "no"}</strong> · deterministic-only:{" "}
+              <strong>{nompiloQ.data.deterministicOnly ? "yes" : "no"}</strong>
+            </p>
+            <p>
+              Confidence: <strong>{nompiloQ.data.confidence.toFixed(2)}</strong> · approval required:{" "}
+              <strong>{nompiloQ.data.requiresHumanApproval ? "yes" : "no"}</strong>
+              {nompiloQ.data.auditRef ? <> · audit ref: <strong>{nompiloQ.data.auditRef}</strong></> : null}
+            </p>
+          </div>
+        </div>
       )}
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <h4 className="text-sm font-semibold text-gray-900">LLM provider operations</h4>
+        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
+          {(providerHealthQ.data ?? []).map((provider) => (
+            <div key={provider.provider} className="rounded border border-gray-200 p-2 text-xs">
+              <p className="font-medium text-gray-900">{provider.provider}</p>
+              <p className="text-gray-600">
+                enabled {provider.enabled ? "yes" : "no"} · healthy {provider.healthy ? "yes" : "no"} · avg latency {provider.avgLatencyMs}ms
+              </p>
+              <p className="text-gray-500">last error: {provider.lastError || "none"}</p>
+            </div>
+          ))}
+        </div>
+        {providerHealthQ.isPending && <p className="mt-2 text-xs text-gray-500">Loading provider health…</p>}
+      </div>
     </div>
   );
 }

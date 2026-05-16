@@ -120,6 +120,57 @@ export interface PublicHealthSite {
   operationalStatus: string;
 }
 
+export interface PublicHealthInspectionRow {
+  inspectionId: string;
+  siteId: string;
+  siteName: string;
+  siteType: string;
+  inspectionType: string;
+  scheduledDate: string;
+  actualDate: string;
+  status: string;
+  outcome: string;
+  scorePercent: number;
+  criticalFailCount: number;
+}
+
+export interface PublicHealthComplianceActionRow {
+  actionId: string;
+  siteId: string;
+  siteName: string;
+  siteType: string;
+  actionType: string;
+  ownerRef: string;
+  dueDate: string;
+  status: string;
+}
+
+export interface PublicHealthEnforcementCaseRow {
+  caseId: string;
+  siteId: string;
+  siteName: string;
+  siteType: string;
+  triggerType: string;
+  status: string;
+  recommendation: string;
+  authorityRoute: string;
+}
+
+export interface PublicHealthInspectionSchedule {
+  id: string;
+  siteId: string;
+  inspectionType: string;
+  scheduledAt: string;
+  responsibleRef: string;
+  priority: string;
+  reason: string;
+  scopeRef: string;
+  recurrenceRule: string;
+  notes: string;
+  notificationPreference: string;
+  status: string;
+}
+
 export interface CreatePublicHealthSignalPayload {
   name: string;
   description?: string;
@@ -245,6 +296,69 @@ function normalizeSite(resource: unknown): PublicHealthSite {
   };
 }
 
+function normalizeInspectionRow(resource: unknown): PublicHealthInspectionRow {
+  const r = getAttributes(resource);
+  return {
+    inspectionId: readString(r, "inspectionId", "inspection_id", "id"),
+    siteId: readString(r, "siteId", "site_id"),
+    siteName: readString(r, "siteName", "site_name") || "Unknown site",
+    siteType: readString(r, "siteType", "site_type") || "Unknown",
+    inspectionType: readString(r, "inspectionType", "inspection_type") || "Routine",
+    scheduledDate: readString(r, "scheduledDate", "scheduled_date"),
+    actualDate: readString(r, "actualDate", "actual_date"),
+    status: readString(r, "status") || "SCHEDULED",
+    outcome: readString(r, "outcome") || "—",
+    scorePercent: readNumber(r, "scorePercent", "score_percent"),
+    criticalFailCount: readNumber(r, "criticalFailCount", "critical_fail_count"),
+  };
+}
+
+function normalizeComplianceActionRow(resource: unknown): PublicHealthComplianceActionRow {
+  const r = getAttributes(resource);
+  return {
+    actionId: readString(r, "actionId", "action_id", "id"),
+    siteId: readString(r, "siteId", "site_id"),
+    siteName: readString(r, "siteName", "site_name") || "Unknown site",
+    siteType: readString(r, "siteType", "site_type") || "Unknown",
+    actionType: readString(r, "actionType", "action_type") || "RECTIFY_FINDING",
+    ownerRef: readString(r, "ownerRef", "owner_ref") || "—",
+    dueDate: readString(r, "dueDate", "due_date"),
+    status: readString(r, "status") || "OPEN",
+  };
+}
+
+function normalizeEnforcementCaseRow(resource: unknown): PublicHealthEnforcementCaseRow {
+  const r = getAttributes(resource);
+  return {
+    caseId: readString(r, "caseId", "case_id", "id"),
+    siteId: readString(r, "siteId", "site_id"),
+    siteName: readString(r, "siteName", "site_name") || "Unknown site",
+    siteType: readString(r, "siteType", "site_type") || "Unknown",
+    triggerType: readString(r, "triggerType", "trigger_type") || "INSPECTION_FAILURE",
+    status: readString(r, "status") || "OPEN",
+    recommendation: readString(r, "recommendation") || "—",
+    authorityRoute: readString(r, "authorityRoute", "authority_route") || "—",
+  };
+}
+
+function normalizeInspectionSchedule(resource: unknown): PublicHealthInspectionSchedule {
+  const r = getAttributes(resource);
+  return {
+    id: readString(r, "id"),
+    siteId: readString(r, "siteId", "site_id"),
+    inspectionType: readString(r, "inspectionType", "inspection_type") || "GENERAL",
+    scheduledAt: readString(r, "scheduledAt", "scheduled_at"),
+    responsibleRef: readString(r, "responsibleRef", "responsible_ref"),
+    priority: readString(r, "priority") || "MEDIUM",
+    reason: readString(r, "reason"),
+    scopeRef: readString(r, "scopeRef", "scope_ref"),
+    recurrenceRule: readString(r, "recurrenceRule", "recurrence_rule"),
+    notes: readString(r, "notes"),
+    notificationPreference: readString(r, "notificationPreference", "notification_preference"),
+    status: readString(r, "status") || "SCHEDULED",
+  };
+}
+
 export function usePublicHealthSignals() {
   return useQuery({
     queryKey: ["public-health-signals"],
@@ -366,12 +480,78 @@ export function usePublicHealthSites() {
   });
 }
 
+export function usePublicHealthSiteRegistryInspections(status?: string) {
+  return useQuery({
+    queryKey: ["public-health-site-registry-inspections", status ?? ""],
+    queryFn: async () => {
+      const q = status ? `?status=${encodeURIComponent(status)}&size=100` : "?size=100";
+      const response = await apiClient.get<{ data: unknown }>(`/internal/v1/public-health/site-registry/inspections${q}`);
+      return parseRegistryInspectionPayload(unwrapEnvelope(response.data));
+    },
+  });
+}
+
+export function usePublicHealthSiteRegistryComplianceActions(status?: string) {
+  return useQuery({
+    queryKey: ["public-health-site-registry-compliance-actions", status ?? ""],
+    queryFn: async () => {
+      const q = status ? `?status=${encodeURIComponent(status)}&size=100` : "?size=100";
+      const response = await apiClient.get<{ data: unknown }>(`/internal/v1/public-health/site-registry/compliance-actions${q}`);
+      return parseRegistryCompliancePayload(unwrapEnvelope(response.data));
+    },
+  });
+}
+
+export function usePublicHealthSiteRegistryEnforcementCases(status?: string) {
+  return useQuery({
+    queryKey: ["public-health-site-registry-enforcement-cases", status ?? ""],
+    queryFn: async () => {
+      const q = status ? `?status=${encodeURIComponent(status)}&size=100` : "?size=100";
+      const response = await apiClient.get<{ data: unknown }>(`/internal/v1/public-health/site-registry/enforcement-cases${q}`);
+      return parseRegistryEnforcementPayload(unwrapEnvelope(response.data));
+    },
+  });
+}
+
+export function parseRegistryInspectionPayload(raw: unknown): PublicHealthInspectionRow[] {
+  return extractPublicHealthList(raw, ["items"]).map(normalizeInspectionRow);
+}
+
+export function parseRegistryCompliancePayload(raw: unknown): PublicHealthComplianceActionRow[] {
+  return extractPublicHealthList(raw, ["items"]).map(normalizeComplianceActionRow);
+}
+
+export function parseRegistryEnforcementPayload(raw: unknown): PublicHealthEnforcementCaseRow[] {
+  return extractPublicHealthList(raw, ["items"]).map(normalizeEnforcementCaseRow);
+}
+
+export function usePublicHealthInspectionSchedules() {
+  return useQuery({
+    queryKey: ["public-health-inspection-schedules"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/inspections/schedules");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeInspectionSchedule);
+    },
+  });
+}
+
 export function useCreatePublicHealthCampaign() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: Record<string, string>) => apiClient.post("/internal/v1/public-health/campaigns", body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["public-health-campaigns"] });
+    },
+  });
+}
+
+export function useCreatePublicHealthInspectionSchedule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/public-health/inspections/schedules", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-inspection-schedules"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-site-registry-inspections"] });
     },
   });
 }
@@ -472,6 +652,45 @@ export interface NompiloPhSummary {
   message: string;
   suggestions: string[];
   source: string;
+  provider: string;
+  fallbackUsed: boolean;
+  deterministicOnly: boolean;
+  confidence: number;
+  requiresHumanApproval: boolean;
+  auditRef: string;
+}
+
+export interface LlmProviderHealth {
+  provider: string;
+  enabled: boolean;
+  healthy: boolean;
+  avgLatencyMs: number;
+  lastSuccessAt: string;
+  lastFailureAt: string;
+  lastError: string;
+}
+
+export interface PublicHealthAlertRule {
+  id: string;
+  title: string;
+  active: boolean;
+  thresholdValue: number;
+}
+
+export interface PublicHealthDataSourceStatus {
+  id: string;
+  sourceName: string;
+  healthStatus: string;
+  latencySeconds: number;
+  errorCount24h: number;
+}
+
+export interface PublicHealthDataQualityIssue {
+  id: string;
+  issueType: string;
+  severity: string;
+  title: string;
+  status: string;
 }
 
 function normalizeOutbreak(resource: unknown): PublicHealthOutbreak {
@@ -668,13 +887,108 @@ export function useNompiloPublicHealthSummary() {
       );
       const record = asRecord(unwrapEnvelope(response.data));
       const suggestions = record.suggestions;
+      const structured = asRecord(record.structuredOutput);
       return {
-        message: readString(record, "message"),
-        suggestions: Array.isArray(suggestions) ? (suggestions as string[]) : [],
-        source: readString(record, "source") || "DETERMINISTIC_OPERATIONS_HOME",
+        message: readString(record, "message", "content") || readString(structured, "summary"),
+        suggestions:
+          Array.isArray(suggestions) && suggestions.length > 0
+            ? (suggestions as string[])
+            : (Array.isArray(structured.recommendedActions) ? (structured.recommendedActions as string[]) : []),
+        source: readString(record, "source") || "HYBRID_LLM_OR_DETERMINISTIC",
+        provider: readString(record, "provider") || "deterministic",
+        fallbackUsed: readBoolean(record, "fallbackUsed"),
+        deterministicOnly: readBoolean(record, "deterministicOnly"),
+        confidence: readNumber(structured, "confidence"),
+        requiresHumanApproval: readBoolean(record, "requiresHumanApproval") || readBoolean(structured, "requiresHumanApproval"),
+        auditRef: readString(record, "auditRef"),
       } satisfies NompiloPhSummary;
     },
     staleTime: 60_000,
+  });
+}
+
+export function useLlmProviderHealth() {
+  return useQuery({
+    queryKey: ["llm-provider-health"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/llm/providers/health");
+      const rows = extractPublicHealthList(unwrapEnvelope(response.data), ["items"]);
+      return rows.map((row) => {
+        const r = asRecord(row);
+        return {
+          provider: readString(r, "provider"),
+          enabled: readBoolean(r, "enabled"),
+          healthy: readBoolean(r, "healthy"),
+          avgLatencyMs: readNumber(r, "avgLatencyMs", "avg_latency_ms"),
+          lastSuccessAt: readString(r, "lastSuccessAt", "last_success_at"),
+          lastFailureAt: readString(r, "lastFailureAt", "last_failure_at"),
+          lastError: readString(r, "lastError", "last_error"),
+        } satisfies LlmProviderHealth;
+      });
+    },
+    staleTime: 30_000,
+  });
+}
+
+function normalizeAlertRule(resource: unknown): PublicHealthAlertRule {
+  const r = getAttributes(resource);
+  return {
+    id: String((asRecord(resource).id ?? r.id ?? "")),
+    title: readString(r, "title") || "Alert rule",
+    active: readBoolean(r, "active"),
+    thresholdValue: readNumber(r, "thresholdValue", "threshold_value"),
+  };
+}
+
+function normalizeDataSource(resource: unknown): PublicHealthDataSourceStatus {
+  const r = getAttributes(resource);
+  return {
+    id: String((asRecord(resource).id ?? r.id ?? "")),
+    sourceName: readString(r, "sourceName", "source_name") || "Data source",
+    healthStatus: readString(r, "healthStatus", "health_status") || "HEALTHY",
+    latencySeconds: readNumber(r, "latencySeconds", "latency_seconds"),
+    errorCount24h: readNumber(r, "errorCount24h", "error_count_24h"),
+  };
+}
+
+function normalizeDataQualityIssue(resource: unknown): PublicHealthDataQualityIssue {
+  const r = getAttributes(resource);
+  return {
+    id: String((asRecord(resource).id ?? r.id ?? "")),
+    issueType: readString(r, "issueType", "issue_type") || "DATA_QUALITY",
+    severity: readString(r, "severity") || "MEDIUM",
+    title: readString(r, "title") || "Issue",
+    status: readString(r, "status") || "OPEN",
+  };
+}
+
+export function usePublicHealthAlertRules() {
+  return useQuery({
+    queryKey: ["public-health-intelligence-alert-rules"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/intelligence/alert-rules");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeAlertRule);
+    },
+  });
+}
+
+export function usePublicHealthDataSources() {
+  return useQuery({
+    queryKey: ["public-health-intelligence-data-sources"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/intelligence/data-sources");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeDataSource);
+    },
+  });
+}
+
+export function usePublicHealthDataQualityIssues() {
+  return useQuery({
+    queryKey: ["public-health-intelligence-data-quality-issues"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/intelligence/data-quality-issues");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeDataQualityIssue);
+    },
   });
 }
 

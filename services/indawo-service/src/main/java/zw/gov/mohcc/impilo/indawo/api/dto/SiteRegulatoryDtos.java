@@ -30,6 +30,42 @@ public final class SiteRegulatoryDtos {
             LocalDate licenceExpiryDate
     ) {}
 
+    public record InspectionRegisterRow(
+            UUID inspectionId,
+            UUID siteId,
+            String siteName,
+            String siteType,
+            String inspectionType,
+            LocalDate scheduledDate,
+            LocalDate actualDate,
+            String status,
+            String outcome,
+            BigDecimal scorePercent,
+            Integer criticalFailCount
+    ) {}
+
+    public record ComplianceActionRow(
+            UUID actionId,
+            UUID siteId,
+            String siteName,
+            String siteType,
+            String actionType,
+            String ownerRef,
+            LocalDate dueDate,
+            String status
+    ) {}
+
+    public record EnforcementCaseRow(
+            UUID caseId,
+            UUID siteId,
+            String siteName,
+            String siteType,
+            String triggerType,
+            String status,
+            String recommendation,
+            String authorityRoute
+    ) {}
+
     // ---------------------------------------------------------------------
     // Profile (site + operational lifecycle)
     // ---------------------------------------------------------------------

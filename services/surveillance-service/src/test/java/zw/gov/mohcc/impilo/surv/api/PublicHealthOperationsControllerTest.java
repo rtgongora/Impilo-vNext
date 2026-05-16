@@ -33,6 +33,9 @@ class PublicHealthOperationsControllerTest {
     @Mock private PublicHealthOperationsHomeService operationsHomeService;
     @Mock private PublicHealthContextService contextService;
     @Mock private EnvironmentalComplaintService environmentalComplaintService;
+    @Mock private PublicHealthIntelligenceService intelligenceService;
+    @Mock private NompiloPublicHealthOrchestrator nompiloOrchestrator;
+    @Mock private PublicHealthIntelligenceRuleEngineService ruleEngineService;
 
     @AfterEach
     void tearDown() {
@@ -139,7 +142,10 @@ class PublicHealthOperationsControllerTest {
                 intelligenceBriefService,
                 operationsHomeService,
                 contextService,
-                environmentalComplaintService);
+                environmentalComplaintService,
+                intelligenceService,
+                nompiloOrchestrator,
+                ruleEngineService);
     }
 
     private void setContext() {

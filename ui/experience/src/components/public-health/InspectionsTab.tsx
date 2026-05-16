@@ -11,9 +11,15 @@ import {
   Plus,
   Shield,
   Star,
-  X,
 } from "lucide-react";
-import { usePublicHealthSites } from "@/hooks/queries/usePublicHealth";
+import {
+  useCreatePublicHealthInspectionSchedule,
+  usePublicHealthInspectionSchedules,
+  usePublicHealthSiteRegistryComplianceActions,
+  usePublicHealthSiteRegistryEnforcementCases,
+  usePublicHealthSiteRegistryInspections,
+  usePublicHealthSites,
+} from "@/hooks/queries/usePublicHealth";
 import { apiClient } from "@/lib/api-client";
 
 const INSPECTION_TYPES = [
@@ -57,6 +63,20 @@ interface NewInspection {
   photoReferences: string;
 }
 
+interface ScheduleMiniForm {
+  siteId: string;
+  inspectionType: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  responsibleOfficerOrTeam: string;
+  priority: string;
+  reason: string;
+  scope: string;
+  recurrence: string;
+  notes: string;
+  notificationPreference: string;
+}
+
 const EMPTY_INSPECTION: NewInspection = {
   inspectionType: "",
   premisesName: "",
@@ -78,46 +98,99 @@ const EMPTY_INSPECTION: NewInspection = {
   photoReferences: "",
 };
 
-/**
- * Inspections & enforcement — live **premises (Indawo)** plus **demonstration** register / enforcement / compliance
- * (Lovable-style depth until BFF exposes persisted inspections).
- */
+const EMPTY_SCHEDULE: ScheduleMiniForm = {
+  siteId: "",
+  inspectionType: "ROUTINE",
+  scheduledDate: new Date().toISOString().slice(0, 10),
+  scheduledTime: "09:00",
+  responsibleOfficerOrTeam: "",
+  priority: "MEDIUM",
+  reason: "",
+  scope: "SITE",
+  recurrence: "",
+  notes: "",
+  notificationPreference: "IN_APP",
+};
+
+/** Inspections & enforcement backed by site-registry APIs. */
 export function InspectionsTab() {
   const [activeSubTab, setActiveSubTab] = useState<"premises" | "inspections" | "enforcement" | "compliance">("premises");
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [selectedInspection, setSelectedInspection] = useState<string | null>(null);
   const { data: sites = [], isLoading, isError } = usePublicHealthSites();
+  const inspectionsQ = usePublicHealthSiteRegistryInspections();
+  const enforcementQ = usePublicHealthSiteRegistryEnforcementCases();
+  const complianceQ = usePublicHealthSiteRegistryComplianceActions();
+  const schedulesQ = usePublicHealthInspectionSchedules();
+  const createSchedule = useCreatePublicHealthInspectionSchedule();
 
   const [showNewForm, setShowNewForm] = useState(false);
   const [inspForm, setInspForm] = useState<NewInspection>(EMPTY_INSPECTION);
   const [inspSubmitting, setInspSubmitting] = useState(false);
   const [inspSubmitted, setInspSubmitted] = useState(false);
+  const [sessionSubmissions, setSessionSubmissions] = useState(0);
   const [inspError, setInspError] = useState<string | null>(null);
+  const [scheduleForm, setScheduleForm] = useState<ScheduleMiniForm>(EMPTY_SCHEDULE);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [scheduleSuccess, setScheduleSuccess] = useState(false);
+  const activeSites = sites.filter((s) => s.operationalStatus.toUpperCase() === "ACTIVE").length;
+  const uniqueSiteTypes = new Set(sites.map((s) => s.siteType)).size;
+  const uniqueJurisdictions = new Set(sites.map((s) => s.jurisdiction)).size;
 
   function updateInsp(field: keyof NewInspection, value: string) {
     setInspForm((f) => ({ ...f, [field]: value }));
   }
 
+  function updateSchedule(field: keyof ScheduleMiniForm, value: string) {
+    setScheduleForm((f) => ({ ...f, [field]: value }));
+  }
+
+  async function submitSchedule(form: ScheduleMiniForm) {
+    const scheduledAt = `${form.scheduledDate}T${form.scheduledTime}:00Z`;
+    await createSchedule.mutateAsync({
+      siteId: form.siteId,
+      inspectionType: form.inspectionType,
+      scheduledAt,
+      responsibleOfficerOrTeam: form.responsibleOfficerOrTeam,
+      priority: form.priority,
+      reason: form.reason,
+      scope: form.scope,
+      recurrence: form.recurrence || null,
+      notes: form.notes || null,
+      notificationPreference: form.notificationPreference,
+    });
+  }
+
   async function handleInspSubmit() {
-    if (!inspForm.inspectionType || !inspForm.premisesName || !inspForm.inspectorName) {
-      setInspError("Inspection type, premises name, and inspector name are required.");
+    const selectedSite = sites.find((s) => s.name.toLowerCase() === inspForm.premisesName.toLowerCase());
+    if (!inspForm.inspectionType || !selectedSite || !inspForm.inspectorName) {
+      setInspError("Inspection type, inspector, and an existing premises are required.");
       return;
     }
     setInspSubmitting(true);
     setInspError(null);
     try {
-      await apiClient.post("/internal/v1/public-health/site-registry/inspections", {
-        ...inspForm,
-        overallScore: Number(inspForm.overallScore) || 0,
-        criticalFindings: Number(inspForm.criticalFindings) || 0,
-        majorFindings: Number(inspForm.majorFindings) || 0,
-        minorFindings: Number(inspForm.minorFindings) || 0,
+      await submitSchedule({
+        ...EMPTY_SCHEDULE,
+        siteId: selectedSite.id,
+        inspectionType: inspForm.inspectionType.toUpperCase().replaceAll(" ", "_"),
+        scheduledDate: inspForm.inspectionDate || EMPTY_SCHEDULE.scheduledDate,
+        scheduledTime: "09:00",
+        responsibleOfficerOrTeam: `${inspForm.inspectorName}${inspForm.inspectorDesignation ? ` (${inspForm.inspectorDesignation})` : ""}`,
+        priority: Number(inspForm.criticalFindings || 0) > 0 ? "HIGH" : "MEDIUM",
+        reason: inspForm.findingsNarrative || inspForm.correctiveActions || "Inspection workflow submission",
+        scope: inspForm.ward || inspForm.district || inspForm.province || "SITE",
+        notes: inspForm.photoReferences,
+        notificationPreference: "IN_APP",
       });
     } catch {
       setInspSubmitting(false);
-      setInspError("Inspection service is unavailable. The report was not saved.");
+      setInspError("Failed to submit inspection schedule. Verify the public-health scheduling API is available.");
       return;
     }
     setInspSubmitting(false);
     setInspSubmitted(true);
+    setSessionSubmissions((n) => n + 1);
     setInspForm(EMPTY_INSPECTION);
     setTimeout(() => { setInspSubmitted(false); setShowNewForm(false); }, 3000);
   }
@@ -323,17 +396,17 @@ export function InspectionsTab() {
 
       <div className="rounded-lg border border-violet-200 bg-violet-50/90 p-3 text-xs text-violet-950">
         <strong>Live:</strong> registered premises from <code className="text-[10px]">GET /internal/v1/public-health/sites</code>.
-        <strong className="ml-1">Live write:</strong> inspection submissions call
-        <code className="text-[10px]"> POST /internal/v1/public-health/site-registry/inspections</code>.
+        <strong className="ml-1">Live write:</strong> inspection scheduling uses
+        <code className="text-[10px]"> POST /internal/v1/public-health/inspections/schedules</code> through the BFF.
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
-          { label: "Registered premises", value: isLoading ? "…" : String(sites.length), Icon: MapPin, tone: "text-violet-800" },
-          { label: "Inspections endpoint", value: "live", Icon: ClipboardCheck, tone: "text-impilo-700" },
-          { label: "Enforcement endpoint", value: "—", Icon: AlertTriangle, tone: "text-red-700" },
-          { label: "Compliance endpoint", value: "—", Icon: Star, tone: "text-amber-800" },
-          { label: "Write endpoint", value: "available", Icon: FileText, tone: "text-gray-800" },
+          { label: "Registered premises", value: String(sites.length), Icon: ClipboardCheck, tone: "text-violet-800" },
+          { label: "Active premises", value: String(activeSites), Icon: Calendar, tone: "text-impilo-700" },
+          { label: "Site types", value: String(uniqueSiteTypes), Icon: AlertTriangle, tone: "text-red-700" },
+          { label: "Jurisdictions", value: String(uniqueJurisdictions), Icon: Star, tone: "text-amber-800" },
+          { label: "Submissions this session", value: String(sessionSubmissions), Icon: FileText, tone: "text-gray-800" },
         ].map((k) => {
           const I = k.Icon;
           return (
@@ -355,20 +428,19 @@ export function InspectionsTab() {
       <div className="flex flex-wrap gap-1 border-b border-gray-200">
         {[
           { key: "premises" as const, label: "Premises (Indawo)" },
-          { key: "inspections" as const, label: "Inspection register (pending)" },
-          { key: "enforcement" as const, label: "Enforcement (pending)" },
-          { key: "compliance" as const, label: "Compliance overview (pending)" },
+          { key: "inspections" as const, label: "Inspection register" },
+          { key: "enforcement" as const, label: "Enforcement" },
+          { key: "compliance" as const, label: "Compliance overview" },
         ].map((tab) => (
           <button
             key={tab.key}
             type="button"
-            onClick={() => tab.key === "premises" && setActiveSubTab(tab.key)}
-            disabled={tab.key !== "premises"}
+            onClick={() => setActiveSubTab(tab.key)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key
                 ? "border-amber-600 text-amber-600"
                 : "border-transparent text-gray-500 hover:text-gray-700"
-            } ${tab.key !== "premises" ? "cursor-not-allowed opacity-50" : ""}`}
+            }`}
           >
             {tab.label}
           </button>
@@ -414,28 +486,307 @@ export function InspectionsTab() {
 
       {activeSubTab === "inspections" && (
         <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
-          <h4 className="text-sm font-semibold text-gray-900">Inspection register</h4>
-          <p className="text-xs text-gray-600">
-            This tab is intentionally disabled in production mode until inspection register read/write endpoints are exposed.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900">Inspection register</h4>
+              <p className="text-xs text-gray-500">GET /internal/v1/public-health/site-registry/inspections</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowScheduleForm((s) => !s)}
+              className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700"
+            >
+              <Plus className="h-3.5 w-3.5" /> Schedule inspection
+            </button>
+          </div>
+
+          {showScheduleForm && (
+            <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-4 text-sm">
+              <h5 className="mb-3 font-semibold text-gray-900">Schedule new inspection</h5>
+              {scheduleError && <p className="mb-2 rounded border border-red-200 bg-red-50 p-2 text-xs text-red-700">{scheduleError}</p>}
+              {scheduleSuccess && (
+                <p className="mb-2 rounded border border-green-200 bg-green-50 p-2 text-xs text-green-700">
+                  Inspection schedule created successfully.
+                </p>
+              )}
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Site / premises</span>
+                  <select
+                    value={scheduleForm.siteId}
+                    onChange={(e) => updateSchedule("siteId", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  >
+                    <option value="">Select site...</option>
+                    {sites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Inspection type</span>
+                  <select
+                    value={scheduleForm.inspectionType}
+                    onChange={(e) => updateSchedule("inspectionType", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  >
+                    <option value="ROUTINE">Routine</option>
+                    <option value="AD_HOC_COMPLAINT">Ad-hoc / complaint-driven</option>
+                    <option value="FOLLOW_UP">Follow-up</option>
+                    <option value="LICENSING_ASSESSMENT">Licensing assessment</option>
+                    <option value="OUTBREAK_INVESTIGATION">Outbreak investigation</option>
+                  </select>
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Scheduled date</span>
+                  <input
+                    type="date"
+                    value={scheduleForm.scheduledDate}
+                    onChange={(e) => updateSchedule("scheduledDate", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Scheduled time</span>
+                  <input
+                    type="time"
+                    value={scheduleForm.scheduledTime}
+                    onChange={(e) => updateSchedule("scheduledTime", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Responsible officer/team</span>
+                  <input
+                    value={scheduleForm.responsibleOfficerOrTeam}
+                    onChange={(e) => updateSchedule("responsibleOfficerOrTeam", e.target.value)}
+                    placeholder="EHO Team A"
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Priority</span>
+                  <select
+                    value={scheduleForm.priority}
+                    onChange={(e) => updateSchedule("priority", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Scope</span>
+                  <input
+                    value={scheduleForm.scope}
+                    onChange={(e) => updateSchedule("scope", e.target.value)}
+                    placeholder="District / site scope"
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Recurrence</span>
+                  <input
+                    value={scheduleForm.recurrence}
+                    onChange={(e) => updateSchedule("recurrence", e.target.value)}
+                    placeholder="e.g. WEEKLY"
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs">
+                  <span className="font-medium text-gray-600">Notification preference</span>
+                  <select
+                    value={scheduleForm.notificationPreference}
+                    onChange={(e) => updateSchedule("notificationPreference", e.target.value)}
+                    className="mt-1 h-8 w-full rounded border border-gray-300 px-2 text-xs"
+                  >
+                    <option value="IN_APP">In-app</option>
+                    <option value="SMS">SMS</option>
+                    <option value="EMAIL">Email</option>
+                  </select>
+                </label>
+                <label className="block text-xs sm:col-span-3">
+                  <span className="font-medium text-gray-600">Reason</span>
+                  <textarea
+                    value={scheduleForm.reason}
+                    onChange={(e) => updateSchedule("reason", e.target.value)}
+                    placeholder="Why this inspection should be scheduled..."
+                    className="mt-1 min-h-[48px] w-full rounded border border-gray-300 p-2 text-xs"
+                  />
+                </label>
+                <label className="block text-xs sm:col-span-3">
+                  <span className="font-medium text-gray-600">Notes</span>
+                  <textarea
+                    value={scheduleForm.notes}
+                    onChange={(e) => updateSchedule("notes", e.target.value)}
+                    placeholder="Specific areas to inspect…"
+                    className="mt-1 min-h-[48px] w-full rounded border border-gray-300 p-2 text-xs"
+                  />
+                </label>
+              </div>
+              <div className="mt-3 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScheduleForm(EMPTY_SCHEDULE)}
+                  className="rounded border border-gray-300 px-3 py-1.5 text-xs text-gray-700 hover:bg-white"
+                >
+                  Save draft
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!scheduleForm.siteId || !scheduleForm.scheduledDate) {
+                      setScheduleError("Site and schedule date are required.");
+                      return;
+                    }
+                    setScheduleError(null);
+                    try {
+                      await submitSchedule(scheduleForm);
+                      setScheduleSuccess(true);
+                      setSessionSubmissions((n) => n + 1);
+                      setScheduleForm(EMPTY_SCHEDULE);
+                      setTimeout(() => setScheduleSuccess(false), 2500);
+                    } catch {
+                      setScheduleError("Unable to create inspection schedule.");
+                    }
+                  }}
+                  disabled={createSchedule.isPending}
+                  className="rounded bg-violet-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+                >
+                  {createSchedule.isPending ? "Submitting..." : "Submit schedule"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded border border-gray-200 bg-gray-50 p-3">
+            <p className="mb-2 text-xs font-semibold text-gray-700">Recent schedules</p>
+            {(schedulesQ.data ?? []).slice(0, 5).map((schedule) => (
+              <div key={schedule.id} className="flex items-center justify-between border-t border-gray-200 py-1 text-[11px] text-gray-700 first:border-t-0">
+                <span>{schedule.inspectionType.replaceAll("_", " ")}</span>
+                <span>{schedule.scheduledAt || "—"}</span>
+                <span>{schedule.status}</span>
+              </div>
+            ))}
+            {schedulesQ.isPending && <p className="text-[11px] text-gray-500">Loading schedules…</p>}
+            {schedulesQ.isError && <p className="text-[11px] text-red-600">Schedule list unavailable.</p>}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[720px] text-xs">
+              <thead>
+                <tr className="border-b bg-gray-50 text-left">
+                  <th className="px-2 py-2 font-medium text-gray-600">ID</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Site</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Type</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Inspector</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Date</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Status</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Score</th>
+                  <th className="px-2 py-2 font-medium text-gray-600">Critical</th>
+                  <th className="px-2 py-2 font-medium text-gray-600" />
+                </tr>
+              </thead>
+              <tbody>
+                {(inspectionsQ.data ?? []).map((row) => (
+                  <tr key={row.inspectionId} className="border-b hover:bg-gray-50">
+                    <td className="px-2 py-2 font-mono">{row.inspectionId}</td>
+                    <td className="px-2 py-2">
+                      <p className="font-medium text-gray-900">{row.siteName}</p>
+                      <p className="text-[10px] text-gray-500">{row.siteType}</p>
+                    </td>
+                    <td className="px-2 py-2 text-gray-700">{row.inspectionType}</td>
+                    <td className="px-2 py-2">—</td>
+                    <td className="px-2 py-2 text-gray-600">{row.actualDate || row.scheduledDate || "—"}</td>
+                    <td className="px-2 py-2">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] capitalize text-slate-800">
+                        {row.status.replaceAll("_", " ")}
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 tabular-nums">{row.scorePercent > 0 ? `${row.scorePercent}%` : "—"}</td>
+                    <td className="px-2 py-2">
+                      {row.criticalFailCount > 0 ? <span className="font-semibold text-red-700">{row.criticalFailCount}</span> : "0"}
+                    </td>
+                    <td className="px-2 py-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedInspection(selectedInspection === row.inspectionId ? null : row.inspectionId)}
+                        className="rounded border border-gray-300 px-2 py-1 text-[10px] font-medium hover:bg-gray-50"
+                      >
+                        {selectedInspection === row.inspectionId ? "Close" : "Details"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {inspectionsQ.isPending && <p className="text-xs text-gray-500">Loading inspection register…</p>}
+          {inspectionsQ.isError && <p className="text-xs text-red-600">Inspection register failed to load.</p>}
+
+          {selectedInspection && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-xs text-gray-800">
+              <p className="font-semibold">Findings & follow-up — {selectedInspection}</p>
+              <p className="mt-1 text-gray-600">
+                Wire checklist, photos, and improvement notices to persistence when the inspections service is available.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {activeSubTab === "enforcement" && (
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h4 className="mb-2 text-sm font-semibold text-gray-900">Enforcement actions</h4>
-          <p className="text-xs text-gray-600">
-            Enforcement workflows are disabled until authoritative enforcement endpoints are wired through the BFF.
-          </p>
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">Enforcement actions</h4>
+          <div className="space-y-3">
+            {(enforcementQ.data ?? []).map((e) => (
+              <div key={e.caseId} className="rounded-lg border border-amber-200 bg-amber-50/40 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] text-gray-600">{e.caseId}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      e.status.toUpperCase() === "OPEN" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-900"
+                    }`}
+                  >
+                    {e.status}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-medium text-gray-900">{e.siteName}</p>
+                <p className="text-xs text-gray-700">{e.triggerType}</p>
+                <p className="mt-2 text-[10px] text-gray-600">
+                  {e.recommendation || "No recommendation"} · route {e.authorityRoute || "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+          {enforcementQ.isPending && <p className="mt-3 text-xs text-gray-500">Loading enforcement cases…</p>}
+          {enforcementQ.isError && <p className="mt-3 text-xs text-red-600">Enforcement cases failed to load.</p>}
         </div>
       )}
 
       {activeSubTab === "compliance" && (
         <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h4 className="mb-2 text-sm font-semibold text-gray-900">Compliance overview</h4>
-          <p className="text-xs text-gray-600">
-            Compliance analytics are unavailable until production compliance aggregation APIs are provided.
-          </p>
+          <h4 className="mb-3 text-sm font-semibold text-gray-900">Compliance actions</h4>
+          <div className="space-y-3">
+            {(complianceQ.data ?? []).map((action) => (
+              <div key={action.actionId} className="rounded-lg border border-gray-200 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] text-gray-600">{action.actionId}</span>
+                  <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] text-violet-800">{action.status}</span>
+                </div>
+                <p className="mt-1 text-sm font-medium text-gray-900">{action.siteName}</p>
+                <p className="text-xs text-gray-600">{action.actionType} · owner {action.ownerRef || "—"}</p>
+                <p className="text-[10px] text-gray-500">Due: {action.dueDate || "—"}</p>
+              </div>
+            ))}
+          </div>
+          {complianceQ.isPending && <p className="mt-3 text-xs text-gray-500">Loading compliance actions…</p>}
+          {complianceQ.isError && <p className="mt-3 text-xs text-red-600">Compliance actions failed to load.</p>}
         </div>
       )}
     </div>

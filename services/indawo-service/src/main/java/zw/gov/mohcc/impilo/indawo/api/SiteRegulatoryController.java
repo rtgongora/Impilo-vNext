@@ -123,6 +123,16 @@ public class SiteRegulatoryController {
         return ResponseEntity.ok(ApiResponse.ok(regulatoryService.recordInspectionOutcome(inspectionId, request), ctx.correlationId()));
     }
 
+    @GetMapping("/inspections")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('INSPECTOR','ENVIRONMENTAL_HEALTH_OFFICER','PUBLIC_HEALTH_OFFICER','ENV_HEALTH','SYSTEM_ADMIN','DEVELOPER')")
+    public ResponseEntity<ApiResponse<List<SiteRegulatoryDtos.InspectionRegisterRow>>> listInspections(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        RequestContext ctx = RequestContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(regulatoryService.listInspectionRegister(status, size), ctx.correlationId()));
+    }
+
     @PostMapping("/compliance-actions/{actionId}")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SITE_OPERATOR','INSPECTOR','ENVIRONMENTAL_HEALTH_OFFICER','REGULATORY_REVIEWER','LICENSING_OFFICER','REGISTRY_ADMIN','SYSTEM_ADMIN','DEVELOPER')")
     public ResponseEntity<ApiResponse<SiteRegulatoryDtos.SiteRegulatoryProfileResponse>> updateComplianceAction(
@@ -131,6 +141,16 @@ public class SiteRegulatoryController {
     ) {
         RequestContext ctx = RequestContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(regulatoryService.updateComplianceAction(actionId, request), ctx.correlationId()));
+    }
+
+    @GetMapping("/compliance-actions")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SITE_OPERATOR','INSPECTOR','ENVIRONMENTAL_HEALTH_OFFICER','REGULATORY_REVIEWER','LICENSING_OFFICER','REGISTRY_ADMIN','SYSTEM_ADMIN','DEVELOPER')")
+    public ResponseEntity<ApiResponse<List<SiteRegulatoryDtos.ComplianceActionRow>>> listComplianceActions(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        RequestContext ctx = RequestContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(regulatoryService.listComplianceActions(status, size), ctx.correlationId()));
     }
 
     @PostMapping("/licences")
@@ -151,6 +171,16 @@ public class SiteRegulatoryController {
         RequestContext ctx = RequestContextHolder.require();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(regulatoryService.openEnforcementCase(request), ctx.correlationId()));
+    }
+
+    @GetMapping("/enforcement-cases")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('INSPECTOR','ENVIRONMENTAL_HEALTH_OFFICER','REGULATORY_REVIEWER','LICENSING_OFFICER','REGISTRY_ADMIN','SYSTEM_ADMIN','DEVELOPER')")
+    public ResponseEntity<ApiResponse<List<SiteRegulatoryDtos.EnforcementCaseRow>>> listEnforcementCases(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "100") int size
+    ) {
+        RequestContext ctx = RequestContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(regulatoryService.listEnforcementCases(status, size), ctx.correlationId()));
     }
 
     // ── Documents (upload + verification) ─────────────────────────

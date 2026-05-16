@@ -648,6 +648,78 @@ public class SiteRegulatoryService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public List<SiteRegulatoryDtos.InspectionRegisterRow> listInspectionRegister(String status, int size) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        var page = PageRequest.of(0, Math.max(1, Math.min(size, 200)));
+        List<SiteInspectionEntity> inspections = normalize(status) == null
+                ? inspectionRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, page)
+                : inspectionRepository.findByTenantIdAndStatusIgnoreCaseOrderByCreatedAtDesc(tenantId, status, page);
+        Map<UUID, SiteEntity> sitesById = hydrateSites(inspections.stream().map(SiteInspectionEntity::getSiteId).toList());
+        return inspections.stream().map(i -> {
+            SiteEntity site = sitesById.get(i.getSiteId());
+            return new SiteRegulatoryDtos.InspectionRegisterRow(
+                    i.getInspectionId(),
+                    i.getSiteId(),
+                    site != null ? site.getName() : "Unknown site",
+                    site != null ? site.getType() : "Unknown",
+                    i.getInspectionType(),
+                    i.getScheduledDate(),
+                    i.getActualDate(),
+                    i.getStatus(),
+                    i.getOutcome(),
+                    i.getScorePercent(),
+                    i.getCriticalFailCount());
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SiteRegulatoryDtos.ComplianceActionRow> listComplianceActions(String status, int size) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        var page = PageRequest.of(0, Math.max(1, Math.min(size, 200)));
+        List<SiteComplianceActionEntity> actions = normalize(status) == null
+                ? actionRepository.findByTenantIdOrderByUpdatedAtDesc(tenantId, page)
+                : actionRepository.findByTenantIdAndStatusIgnoreCaseOrderByUpdatedAtDesc(tenantId, status, page);
+        Map<UUID, SiteEntity> sitesById = hydrateSites(actions.stream().map(SiteComplianceActionEntity::getSiteId).toList());
+        return actions.stream().map(a -> {
+            SiteEntity site = sitesById.get(a.getSiteId());
+            return new SiteRegulatoryDtos.ComplianceActionRow(
+                    a.getActionId(),
+                    a.getSiteId(),
+                    site != null ? site.getName() : "Unknown site",
+                    site != null ? site.getType() : "Unknown",
+                    a.getActionType(),
+                    a.getOwnerRef(),
+                    a.getDueDate(),
+                    a.getStatus());
+        }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SiteRegulatoryDtos.EnforcementCaseRow> listEnforcementCases(String status, int size) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        var page = PageRequest.of(0, Math.max(1, Math.min(size, 200)));
+        List<SiteEnforcementCaseEntity> cases = normalize(status) == null
+                ? caseRepository.findByTenantIdOrderByOpenedAtDesc(tenantId, page)
+                : caseRepository.findByTenantIdAndStatusIgnoreCaseOrderByOpenedAtDesc(tenantId, status, page);
+        Map<UUID, SiteEntity> sitesById = hydrateSites(cases.stream().map(SiteEnforcementCaseEntity::getSiteId).toList());
+        return cases.stream().map(c -> {
+            SiteEntity site = sitesById.get(c.getSiteId());
+            return new SiteRegulatoryDtos.EnforcementCaseRow(
+                    c.getCaseId(),
+                    c.getSiteId(),
+                    site != null ? site.getName() : "Unknown site",
+                    site != null ? site.getType() : "Unknown",
+                    c.getTriggerType(),
+                    c.getStatus(),
+                    c.getRecommendation(),
+                    c.getAuthorityRoute());
+        }).toList();
+    }
+
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
@@ -778,6 +850,17 @@ public class SiteRegulatoryService {
         if (s == null) return null;
         String t = s.trim();
         return t.isEmpty() ? null : t;
+    }
+
+    private Map<UUID, SiteEntity> hydrateSites(List<UUID> siteIds) {
+        Map<UUID, SiteEntity> sitesById = new HashMap<>();
+        for (UUID siteId : siteIds) {
+            if (siteId == null || sitesById.containsKey(siteId)) {
+                continue;
+            }
+            siteRepository.findById(siteId).ifPresent(site -> sitesById.put(siteId, site));
+        }
+        return sitesById;
     }
 
     private SiteRegulatoryDtos.SiteView toSiteView(SiteEntity s) {

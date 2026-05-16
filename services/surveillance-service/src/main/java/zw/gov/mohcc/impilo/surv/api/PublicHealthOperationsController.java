@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.surv.core.*;
 import zw.gov.mohcc.impilo.surv.persistence.entity.*;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,9 @@ public class PublicHealthOperationsController {
     private final PublicHealthOperationsHomeService operationsHomeService;
     private final PublicHealthContextService contextService;
     private final EnvironmentalComplaintService environmentalComplaintService;
+    private final PublicHealthIntelligenceService intelligenceService;
+    private final NompiloPublicHealthOrchestrator nompiloOrchestrator;
+    private final PublicHealthIntelligenceRuleEngineService ruleEngineService;
 
     public PublicHealthOperationsController(
             CounterService counterService,
@@ -45,7 +49,10 @@ public class PublicHealthOperationsController {
             IntelligenceBriefService intelligenceBriefService,
             PublicHealthOperationsHomeService operationsHomeService,
             PublicHealthContextService contextService,
-            EnvironmentalComplaintService environmentalComplaintService) {
+            EnvironmentalComplaintService environmentalComplaintService,
+            PublicHealthIntelligenceService intelligenceService,
+            NompiloPublicHealthOrchestrator nompiloOrchestrator,
+            PublicHealthIntelligenceRuleEngineService ruleEngineService) {
         this.counterService = counterService;
         this.ingestService = ingestService;
         this.objectMapper = objectMapper;
@@ -56,6 +63,9 @@ public class PublicHealthOperationsController {
         this.operationsHomeService = operationsHomeService;
         this.contextService = contextService;
         this.environmentalComplaintService = environmentalComplaintService;
+        this.intelligenceService = intelligenceService;
+        this.nompiloOrchestrator = nompiloOrchestrator;
+        this.ruleEngineService = ruleEngineService;
     }
 
     @GetMapping("/context")
@@ -86,7 +96,21 @@ public class PublicHealthOperationsController {
     public ResponseEntity<?> nompiloSituationSummary() {
         RequestContext ctx = RequestContextHolder.require();
         UUID tenantId = UUID.fromString(ctx.tenantId());
-        return ResponseEntity.ok(operationsHomeService.buildNompiloSummary(tenantId));
+        return ResponseEntity.ok(nompiloOrchestrator.briefing(tenantId, ctx.podId(), "Summarise the public health situation today"));
+    }
+
+    @PostMapping("/nompilo/ask")
+    public ResponseEntity<?> nompiloAsk(@RequestBody NompiloAskRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        return ResponseEntity.ok(nompiloOrchestrator.ask(tenantId, ctx.podId(), request.prompt()));
+    }
+
+    @PostMapping("/nompilo/briefing")
+    public ResponseEntity<?> nompiloBriefing(@RequestBody NompiloBriefingRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        return ResponseEntity.ok(nompiloOrchestrator.briefing(tenantId, ctx.podId(), request.topic()));
     }
 
     @GetMapping("/weekly-idsr")
@@ -438,6 +462,211 @@ public class PublicHealthOperationsController {
         }
     }
 
+    @GetMapping("/intelligence/alert-rules")
+    public ResponseEntity<?> listAlertRules() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<PhAlertRuleEntity> items = intelligenceService.listAlertRules(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
+    @PostMapping("/intelligence/alert-rules")
+    public ResponseEntity<?> createAlertRule(@RequestBody AlertRuleRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        PhAlertRuleEntity entity = intelligenceService.createAlertRule(
+                tenantId,
+                ctx.podId(),
+                request.ruleKey(),
+                request.title(),
+                request.description(),
+                request.thresholdValue(),
+                request.comparisonOperator());
+        return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+    }
+
+    @PostMapping("/intelligence/alert-rules/{ruleId}/toggle")
+    public ResponseEntity<?> toggleAlertRule(@PathVariable Long ruleId, @RequestBody ToggleRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        try {
+            return ResponseEntity.ok(intelligenceService.toggleAlertRule(tenantId, ruleId, request.active()));
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ctx, ex.getMessage());
+        }
+    }
+
+    @GetMapping("/intelligence/data-sources")
+    public ResponseEntity<?> listDataSources() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<PhDataSourceStatusEntity> items = intelligenceService.listDataSources(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
+    @PostMapping("/intelligence/data-sources")
+    public ResponseEntity<?> upsertDataSource(@RequestBody DataSourceRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        PhDataSourceStatusEntity entity = intelligenceService.upsertDataSource(
+                tenantId,
+                ctx.podId(),
+                request.sourceKey(),
+                request.sourceName(),
+                request.healthStatus(),
+                request.latencySeconds(),
+                request.errorCount24h(),
+                request.details());
+        return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+    }
+
+    @PostMapping("/intelligence/data-sources/{sourceId}/heartbeat")
+    public ResponseEntity<?> heartbeatDataSource(@PathVariable Long sourceId, @RequestBody DataSourceHeartbeatRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        try {
+            return ResponseEntity.ok(intelligenceService.heartbeatDataSource(
+                    tenantId,
+                    sourceId,
+                    request.healthStatus(),
+                    request.latencySeconds(),
+                    request.errorCount24h(),
+                    request.details()));
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ctx, ex.getMessage());
+        }
+    }
+
+    @GetMapping("/intelligence/data-quality-issues")
+    public ResponseEntity<?> listDataQualityIssues() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<PhDataQualityIssueEntity> items = intelligenceService.listDataQualityIssues(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
+    @PostMapping("/intelligence/data-quality-issues")
+    public ResponseEntity<?> createDataQualityIssue(@RequestBody DataQualityIssueRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        PhDataQualityIssueEntity entity = intelligenceService.createDataQualityIssue(
+                tenantId,
+                ctx.podId(),
+                request.issueType(),
+                request.severity(),
+                request.title(),
+                request.description(),
+                request.scopeRef());
+        return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+    }
+
+    @PostMapping("/intelligence/data-quality-issues/{issueId}/resolve")
+    public ResponseEntity<?> resolveDataQualityIssue(@PathVariable Long issueId, @RequestBody ResolveIssueRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        try {
+            return ResponseEntity.ok(intelligenceService.resolveDataQualityIssue(tenantId, issueId, request.resolutionNotes()));
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ctx, ex.getMessage());
+        }
+    }
+
+    @PostMapping("/intelligence/rules/{ruleId}/conditions")
+    public ResponseEntity<?> createIntelligenceRuleCondition(@PathVariable Long ruleId, @RequestBody RuleConditionRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        IntelligenceRuleConditionEntity condition = ruleEngineService.createRuleCondition(
+                tenantId, ruleId, request.metricKey(), request.comparisonOperator(), request.thresholdValue(), request.scopeRef());
+        return ResponseEntity.status(HttpStatus.CREATED).body(condition);
+    }
+
+    @PostMapping("/intelligence/rules/{ruleId}/test")
+    public ResponseEntity<?> testIntelligenceRule(@PathVariable Long ruleId) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        return ResponseEntity.ok(ruleEngineService.evaluateRule(tenantId, ruleId, "MANUAL_TEST"));
+    }
+
+    @PostMapping("/intelligence/evaluate")
+    public ResponseEntity<?> evaluateIntelligenceRule(@RequestBody EvaluateIntelligenceRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        if (request.ruleId() == null) {
+            return badRequest(ctx, "rule_id is required");
+        }
+        return ResponseEntity.ok(ruleEngineService.evaluateRule(tenantId, request.ruleId(), "MANUAL"));
+    }
+
+    @GetMapping("/intelligence/triggers")
+    public ResponseEntity<?> listIntelligenceTriggers() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<IntelligenceTriggerHistoryEntity> items = ruleEngineService.listTriggers(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
+    @GetMapping("/intelligence/alerts")
+    public ResponseEntity<?> listIntelligenceAlerts() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<IntelligenceAlertEntity> items = ruleEngineService.listAlerts(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
+    @PostMapping("/intelligence/alerts/{alertId}/acknowledge")
+    public ResponseEntity<?> acknowledgeIntelligenceAlert(@PathVariable Long alertId) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        try {
+            return ResponseEntity.ok(ruleEngineService.acknowledgeAlert(tenantId, alertId));
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ctx, ex.getMessage());
+        }
+    }
+
+    @PostMapping("/intelligence/alerts/{alertId}/resolve")
+    public ResponseEntity<?> resolveIntelligenceAlert(@PathVariable Long alertId) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        try {
+            return ResponseEntity.ok(ruleEngineService.resolveAlert(tenantId, alertId));
+        } catch (IllegalArgumentException ex) {
+            return badRequest(ctx, ex.getMessage());
+        }
+    }
+
+    @PostMapping("/inspections/schedules")
+    public ResponseEntity<?> createInspectionSchedule(@RequestBody InspectionScheduleRequest request) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        if (request.siteId() == null || request.scheduledAt() == null) {
+            return badRequest(ctx, "site_id and scheduled_at are required");
+        }
+        InspectionScheduleEntity entity = ruleEngineService.scheduleInspection(
+                tenantId,
+                ctx.podId(),
+                request.siteId(),
+                request.inspectionType(),
+                request.scheduledAt(),
+                request.responsibleOfficerOrTeam(),
+                request.priority(),
+                request.reason(),
+                request.scope(),
+                request.recurrence(),
+                request.notes(),
+                request.notificationPreference());
+        ruleEngineService.onInspectionRecorded(tenantId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+    }
+
+    @GetMapping("/inspections/schedules")
+    public ResponseEntity<?> listInspectionSchedules() {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+        List<InspectionScheduleEntity> items = ruleEngineService.listInspectionSchedules(tenantId);
+        return ResponseEntity.ok(Map.of("items", items, "total_elements", items.size()));
+    }
+
     private Map<String, Object> outbreakResponse(OutbreakEventEntity outbreak) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("outbreak_id", outbreak.getId());
@@ -585,6 +814,62 @@ public class PublicHealthOperationsController {
 
     public record BriefExportRequest(String format) {
     }
+
+    public record AlertRuleRequest(
+            String ruleKey,
+            String title,
+            String description,
+            double thresholdValue,
+            String comparisonOperator) {}
+
+    public record ToggleRequest(boolean active) {}
+
+    public record DataSourceRequest(
+            String sourceKey,
+            String sourceName,
+            String healthStatus,
+            long latencySeconds,
+            int errorCount24h,
+            String details) {}
+
+    public record DataSourceHeartbeatRequest(
+            String healthStatus,
+            long latencySeconds,
+            int errorCount24h,
+            String details) {}
+
+    public record DataQualityIssueRequest(
+            String issueType,
+            String severity,
+            String title,
+            String description,
+            String scopeRef) {}
+
+    public record ResolveIssueRequest(String resolutionNotes) {}
+
+    public record NompiloAskRequest(String prompt) {}
+
+    public record NompiloBriefingRequest(String topic) {}
+
+    public record RuleConditionRequest(
+            String metricKey,
+            String comparisonOperator,
+            double thresholdValue,
+            String scopeRef) {}
+
+    public record EvaluateIntelligenceRequest(Long ruleId) {}
+
+    public record InspectionScheduleRequest(
+            UUID siteId,
+            String inspectionType,
+            OffsetDateTime scheduledAt,
+            String responsibleOfficerOrTeam,
+            String priority,
+            String reason,
+            String scope,
+            String recurrence,
+            String notes,
+            String notificationPreference) {}
 
     public record FileComplaintRequest(
             String category,

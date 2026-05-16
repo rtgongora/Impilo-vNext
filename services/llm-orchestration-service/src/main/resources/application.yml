@@ -1,0 +1,84 @@
+server:
+  port: 8265
+
+spring:
+  application:
+    name: llm-orchestration-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/llm_orchestration
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: llm
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: llm
+    create-schemas: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+llm:
+  security:
+    oauth2-enabled: true
+  enabled: ${LLM_ENABLED:true}
+  default-provider: ${LLM_DEFAULT_PROVIDER:gemini}
+  allowed-providers: ${LLM_ALLOWED_PROVIDERS:gemini,openai,anthropic,deepseek,deterministic,mock}
+  fallback-provider: ${LLM_FALLBACK_PROVIDER:deterministic}
+  provider-routing-mode: ${LLM_PROVIDER_ROUTING_MODE:capability_then_priority}
+  require-human-approval-for-high-risk-actions: ${LLM_REQUIRE_HUMAN_APPROVAL_FOR_HIGH_RISK_ACTIONS:true}
+  audit-enabled: ${LLM_AUDIT_ENABLED:true}
+  tool-calling-enabled: ${LLM_TOOL_CALLING_ENABLED:true}
+  structured-outputs-enabled: ${LLM_STRUCTURED_OUTPUTS_ENABLED:true}
+  timeout-ms: ${LLM_TIMEOUT_MS:30000}
+  max-output-tokens: ${LLM_MAX_OUTPUT_TOKENS:2048}
+  retry-max-attempts: ${LLM_RETRY_MAX_ATTEMPTS:2}
+  retry-backoff-ms: ${LLM_RETRY_BACKOFF_MS:500}
+  gemini:
+    enabled: ${LLM_GEMINI_ENABLED:true}
+    api-key: ${LLM_GEMINI_API_KEY:}
+    model: ${LLM_GEMINI_MODEL:gemini-3-flash-preview}
+    base-url: ${LLM_GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+    priority: ${LLM_GEMINI_PRIORITY:1}
+  openai:
+    enabled: ${LLM_OPENAI_ENABLED:true}
+    api-key: ${LLM_OPENAI_API_KEY:}
+    model: ${LLM_OPENAI_MODEL:gpt-5.1}
+    base-url: ${LLM_OPENAI_BASE_URL:https://api.openai.com}
+    priority: ${LLM_OPENAI_PRIORITY:2}
+  anthropic:
+    enabled: ${LLM_ANTHROPIC_ENABLED:true}
+    api-key: ${LLM_ANTHROPIC_API_KEY:}
+    model: ${LLM_ANTHROPIC_MODEL:claude-sonnet-4.5}
+    base-url: ${LLM_ANTHROPIC_BASE_URL:https://api.anthropic.com}
+    priority: ${LLM_ANTHROPIC_PRIORITY:3}
+  deepseek:
+    enabled: ${LLM_DEEPSEEK_ENABLED:true}
+    api-key: ${LLM_DEEPSEEK_API_KEY:}
+    model: ${LLM_DEEPSEEK_MODEL:deepseek-v4-flash}
+    base-url: ${LLM_DEEPSEEK_BASE_URL:https://api.deepseek.com}
+    priority: ${LLM_DEEPSEEK_PRIORITY:4}
+  deterministic:
+    enabled: ${LLM_DETERMINISTIC_ENABLED:true}
+    model: deterministic
+    priority: 5
+  mock:
+    enabled: ${LLM_MOCK_ENABLED:true}
+    model: mock
+    priority: 6
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
