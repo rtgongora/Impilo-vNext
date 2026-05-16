@@ -172,6 +172,18 @@ public class TshepoAuthzServiceClient {
         return syntheticAuthorizeVerdict("POST", "/internal/v1/telemedicine-break-glass-override");
     }
 
+    public boolean publicHealthGovernedReadAllowed() {
+        return syntheticAuthorizeVerdict("GET", "/internal/v1/public-health-governed-read");
+    }
+
+    public boolean publicHealthGovernedMutateAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/public-health-governed-mutate");
+    }
+
+    public boolean publicHealthGovernedExportAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/public-health-governed-export");
+    }
+
     /**
      * Synthetic ext_authz for Experience enterprise-domain finance routes (billing workspace or MusheX platform).
      * Resource type is derived from the last path segment (see tshepo-authz V007).

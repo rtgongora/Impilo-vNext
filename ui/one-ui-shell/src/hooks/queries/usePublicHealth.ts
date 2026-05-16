@@ -7,6 +7,11 @@ function asRecord(value: unknown): UnknownRecord {
   return value && typeof value === "object" ? (value as UnknownRecord) : {};
 }
 
+function unwrapEnvelope(value: unknown): unknown {
+  const record = asRecord(value);
+  return record.data ?? value;
+}
+
 /**
  * Unwraps BFF `data` payloads that mirror upstream services:
  * surveillance uses `items`, counters use `counters`, alerts use `alerts`,
@@ -113,6 +118,22 @@ export interface PublicHealthSite {
   siteType: string;
   jurisdiction: string;
   operationalStatus: string;
+}
+
+export interface CreatePublicHealthSignalPayload {
+  name: string;
+  description?: string;
+  eventType: string;
+  conditionField?: string;
+  threshold: number;
+  windowHours: number;
+  severity: string;
+}
+
+export interface IngestPublicHealthEventPayload {
+  eventType: string;
+  payload: string;
+  facilityId?: string | null;
 }
 
 export function normalizeSignal(resource: unknown): PublicHealthSignal {
@@ -281,6 +302,26 @@ export function parseCountersPayload(raw: unknown): PublicHealthCounter[] {
   );
 }
 
+/** Normalizes weekly IDSR aggregate payloads (BFF GET /public-health/weekly-idsr). */
+export function parseWeeklyIdsrPayload(raw: unknown): PublicHealthCounter[] {
+  const rows = extractPublicHealthList(raw, ["rows", "items", "counters"]);
+  if (rows.length > 0) {
+    return rows.map((row) => {
+      const r = asRecord(row);
+      const syndrome = readString(r, "syndromeCode", "syndrome_code", "label") || "Syndrome";
+      const district = readString(r, "district", "facility", "facility_id");
+      const weekStart = readString(r, "weekStart", "week_start", "count_date");
+      return normalizeCounter({
+        id: readString(r, "id") || `${syndrome}-${district}-${weekStart}`,
+        label: syndrome,
+        value: String(readNumber(r, "total", "event_count", "count", "value")),
+        detail: [district, weekStart].filter(Boolean).join(" · "),
+      });
+    });
+  }
+  return parseCountersPayload(raw);
+}
+
 export function usePublicHealthCounters() {
   return useQuery({
     queryKey: ["public-health-counters"],
@@ -296,7 +337,7 @@ export function usePublicHealthWeeklyIdsr() {
     queryKey: ["public-health-weekly-idsr"],
     queryFn: async () => {
       const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/weekly-idsr");
-      return parseCountersPayload(response.data);
+      return parseWeeklyIdsrPayload(response.data);
     },
   });
 }
@@ -335,6 +376,43 @@ export function useCreatePublicHealthCampaign() {
   });
 }
 
+export function useCreatePublicHealthSignal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CreatePublicHealthSignalPayload) =>
+      apiClient.post("/internal/v1/public-health/signals", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-signals"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-counters"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-weekly-idsr"] });
+    },
+  });
+}
+
+export function useAcknowledgePublicHealthAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) =>
+      apiClient.post(`/internal/v1/public-health/alerts/${encodeURIComponent(alertId)}/acknowledge`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-alerts"] });
+    },
+  });
+}
+
+export function useIngestPublicHealthEvent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: IngestPublicHealthEventPayload) => apiClient.post("/internal/v1/public-health/ingest", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-counters"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-weekly-idsr"] });
+    },
+  });
+}
+
 export function useDispatchPublicHealthCampaign() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -342,6 +420,443 @@ export function useDispatchPublicHealthCampaign() {
       apiClient.post(`/internal/v1/public-health/campaigns/${encodeURIComponent(campaignId)}/dispatch`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["public-health-campaigns"] });
+    },
+  });
+}
+
+export interface PublicHealthOperationsHome {
+  reportType: string;
+  kpis: Record<string, number>;
+  priorityWorklist: Array<{ type: string; id: string; label: string; priority: string }>;
+  mapMarkerCount: number;
+}
+
+export interface PublicHealthOutbreak {
+  id: string;
+  name: string;
+  lifecycleStatus: string;
+  severity: string;
+  province: string;
+  district: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface PublicHealthFieldTask {
+  id: string;
+  title: string;
+  status: string;
+  taskType: string;
+  assignedTo: string;
+  facilityId: string;
+}
+
+export interface PublicHealthMapMarker {
+  id: string;
+  markerType: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+  status: string;
+}
+
+export interface PublicHealthBrief {
+  id: string;
+  title: string;
+  briefType: string;
+  status: string;
+  summaryMarkdown: string;
+}
+
+export interface NompiloPhSummary {
+  message: string;
+  suggestions: string[];
+  source: string;
+}
+
+function normalizeOutbreak(resource: unknown): PublicHealthOutbreak {
+  const record = getAttributes(resource);
+  const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id ?? record.outbreak_id ?? record.outbreakId;
+  return {
+    id: idVal != null ? String(idVal) : "",
+    name: readString(record, "name", "title") || "Outbreak",
+    lifecycleStatus: readString(record, "lifecycle_status", "lifecycleStatus") || "RECORDED",
+    severity: readString(record, "severity") || "HIGH",
+    province: readString(record, "province") || "—",
+    district: readString(record, "district") || "—",
+    latitude: readNumber(record, "latitude") || undefined,
+    longitude: readNumber(record, "longitude") || undefined,
+  };
+}
+
+function normalizeFieldTask(resource: unknown): PublicHealthFieldTask {
+  const record = getAttributes(resource);
+  const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id ?? record.task_id ?? record.taskId;
+  return {
+    id: idVal != null ? String(idVal) : "",
+    title: readString(record, "title") || "Field task",
+    status: readString(record, "status") || "PLANNED",
+    taskType: readString(record, "task_type", "taskType") || "FIELD_OPERATION",
+    assignedTo: readString(record, "assigned_to", "assignedTo") || "—",
+    facilityId: readString(record, "facility_id", "facilityId") || "—",
+  };
+}
+
+function normalizeMapMarker(resource: unknown): PublicHealthMapMarker {
+  const record = getAttributes(resource);
+  return {
+    id: String(record.id ?? ""),
+    markerType: readString(record, "marker_type", "markerType") || "unknown",
+    label: readString(record, "label") || "Marker",
+    latitude: readNumber(record, "latitude"),
+    longitude: readNumber(record, "longitude"),
+    status: readString(record, "status") || "—",
+  };
+}
+
+function normalizeBrief(resource: unknown): PublicHealthBrief {
+  const record = getAttributes(resource);
+  const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id ?? record.brief_id ?? record.briefId;
+  return {
+    id: idVal != null ? String(idVal) : "",
+    title: readString(record, "title") || "Brief",
+    briefType: readString(record, "brief_type", "briefType") || "SITUATION",
+    status: readString(record, "status") || "DRAFT",
+    summaryMarkdown: readString(record, "summary_markdown", "summaryMarkdown") || "",
+  };
+}
+
+function normalizeOperationsHome(raw: unknown): PublicHealthOperationsHome {
+  const record = asRecord(raw);
+  const kpisRaw = asRecord(record.kpis);
+  const kpis: Record<string, number> = {};
+  for (const [key, value] of Object.entries(kpisRaw)) {
+    kpis[key] = readNumber(kpisRaw, key);
+  }
+  const worklist = extractPublicHealthList(record, ["priority_worklist", "priorityWorklist"]).map((item) => {
+    const r = asRecord(item);
+    return {
+      type: readString(r, "type"),
+      id: String(r.id ?? ""),
+      label: readString(r, "label"),
+      priority: readString(r, "priority"),
+    };
+  });
+  return {
+    reportType: readString(record, "report_type", "reportType") || "OPERATIONS_HOME",
+    kpis,
+    priorityWorklist: worklist,
+    mapMarkerCount: readNumber(record, "map_marker_count", "mapMarkerCount"),
+  };
+}
+
+export function usePublicHealthOperationsHome() {
+  return useQuery({
+    queryKey: ["public-health-operations-home"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/operations-home");
+      return normalizeOperationsHome(unwrapEnvelope(response.data));
+    },
+  });
+}
+
+export function usePublicHealthOutbreaks() {
+  return useQuery({
+    queryKey: ["public-health-outbreaks"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/outbreaks");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeOutbreak);
+    },
+  });
+}
+
+export function useTransitionPublicHealthOutbreak() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ outbreakId, lifecycleStatus }: { outbreakId: string; lifecycleStatus: string }) =>
+      apiClient.post(
+        `/internal/v1/public-health/outbreaks/${encodeURIComponent(outbreakId)}/transition`,
+        { lifecycle_status: lifecycleStatus },
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-outbreaks"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
+export function usePublicHealthFieldTasks() {
+  return useQuery({
+    queryKey: ["public-health-field-tasks"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/field-tasks");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeFieldTask);
+    },
+  });
+}
+
+export function useTransitionPublicHealthFieldTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, status, assignedTo }: { taskId: string; status: string; assignedTo?: string }) =>
+      apiClient.post(`/internal/v1/public-health/field-tasks/${encodeURIComponent(taskId)}/transition`, {
+        status,
+        assigned_to: assignedTo,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-field-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-map-markers"] });
+    },
+  });
+}
+
+export function usePublicHealthMapMarkers() {
+  return useQuery({
+    queryKey: ["public-health-map-markers"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/map-markers");
+      const record = asRecord(unwrapEnvelope(response.data));
+      return extractPublicHealthList(record, ["markers"]).map(normalizeMapMarker);
+    },
+  });
+}
+
+export function usePublicHealthBriefs() {
+  return useQuery({
+    queryKey: ["public-health-briefs"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/reports/briefs");
+      return extractPublicHealthList(unwrapEnvelope(response.data), ["items"]).map(normalizeBrief);
+    },
+  });
+}
+
+export function useGeneratePublicHealthBrief() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { title?: string; briefType?: string }) =>
+      apiClient.post("/internal/v1/public-health/reports/briefs/generate", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-briefs"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
+export function usePublishPublicHealthBrief() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (briefId: string) =>
+      apiClient.post(`/internal/v1/public-health/reports/briefs/${encodeURIComponent(briefId)}/publish`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-briefs"] });
+    },
+  });
+}
+
+export function useNompiloPublicHealthSummary() {
+  return useQuery({
+    queryKey: ["public-health-nompilo-summary"],
+    queryFn: async () => {
+      const response = await apiClient.post<{ data: unknown }>(
+        "/internal/v1/public-health/nompilo/situation-summary",
+        {},
+      );
+      const record = asRecord(unwrapEnvelope(response.data));
+      const suggestions = record.suggestions;
+      return {
+        message: readString(record, "message"),
+        suggestions: Array.isArray(suggestions) ? (suggestions as string[]) : [],
+        source: readString(record, "source") || "DETERMINISTIC_OPERATIONS_HOME",
+      } satisfies NompiloPhSummary;
+    },
+    staleTime: 60_000,
+  });
+}
+
+function invalidatePhLifecycle(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["public-health-outbreaks"] });
+  queryClient.invalidateQueries({ queryKey: ["public-health-field-tasks"] });
+  queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+  queryClient.invalidateQueries({ queryKey: ["public-health-map-markers"] });
+}
+
+export interface PublicHealthComplaint {
+  id: string;
+  title: string;
+  category: string;
+  status: string;
+  province: string;
+  district: string;
+}
+
+export interface PublicHealthContext {
+  activeJurisdictionPack: string;
+  jurisdictionPacks: Array<{ id: string; label: string; description: string }>;
+  workspaceId: string;
+  recommendedPurposeOfUse: string;
+  visibilityProfile: string;
+}
+
+export interface PublicHealthPreferences {
+  jurisdictionPack: string;
+}
+
+const COMPLAINT_TRANSITIONS: Record<string, string> = {
+  RECEIVED: "TRIAGED",
+  TRIAGED: "INVESTIGATING",
+  INVESTIGATING: "RESOLVED",
+  RESOLVED: "CLOSED",
+};
+
+export { COMPLAINT_TRANSITIONS };
+
+function normalizeComplaint(resource: unknown): PublicHealthComplaint {
+  const record = getAttributes(resource);
+  const outer = asRecord(resource);
+  const idVal = outer.id ?? record.id ?? record.complaint_id ?? record.complaintId;
+  return {
+    id: idVal != null ? String(idVal) : "",
+    title: readString(record, "title") || "Complaint",
+    category: readString(record, "category") || "NUISANCE",
+    status: readString(record, "status") || "RECEIVED",
+    province: readString(record, "province") || "—",
+    district: readString(record, "district") || "—",
+  };
+}
+
+export function usePublicHealthContext(jurisdictionPack?: string) {
+  return useQuery({
+    queryKey: ["public-health-context", jurisdictionPack ?? ""],
+    queryFn: async () => {
+      const q = jurisdictionPack ? `?jurisdiction_pack=${encodeURIComponent(jurisdictionPack)}` : "";
+      const response = await apiClient.get<{ data: unknown }>(`/internal/v1/public-health/context${q}`);
+      const record = asRecord(unwrapEnvelope(response.data));
+      const packs = extractPublicHealthList(record, ["jurisdiction_packs", "jurisdictionPacks"]).map((p) => {
+        const r = asRecord(p);
+        return {
+          id: readString(r, "id"),
+          label: readString(r, "label"),
+          description: readString(r, "description"),
+        };
+      });
+      return {
+        activeJurisdictionPack: readString(record, "active_jurisdiction_pack", "activeJurisdictionPack") || "national",
+        jurisdictionPacks: packs,
+        workspaceId: readString(record, "workspace_id", "workspaceId"),
+        recommendedPurposeOfUse: readString(record, "recommended_purpose_of_use", "recommendedPurposeOfUse") || "PUBLIC_HEALTH",
+        visibilityProfile: readString(record, "visibility_profile", "visibilityProfile"),
+      } satisfies PublicHealthContext;
+    },
+  });
+}
+
+export function usePublicHealthPreferences() {
+  return useQuery({
+    queryKey: ["public-health-preferences"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/preferences");
+      const record = asRecord(unwrapEnvelope(response.data));
+      return {
+        jurisdictionPack: readString(record, "jurisdiction_pack", "jurisdictionPack") || "national",
+      } satisfies PublicHealthPreferences;
+    },
+  });
+}
+
+export function useSavePublicHealthPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { jurisdictionPack: string }) =>
+      apiClient.put("/internal/v1/public-health/preferences", {
+        jurisdiction_pack: body.jurisdictionPack,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-preferences"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-context"] });
+    },
+  });
+}
+
+export function usePublicHealthComplaints() {
+  return useQuery({
+    queryKey: ["public-health-complaints"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/complaints");
+      return extractPublicHealthList(response.data, ["items"]).map(normalizeComplaint);
+    },
+  });
+}
+
+export function useFilePublicHealthComplaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/public-health/complaints", body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-complaints"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
+export function useTransitionPublicHealthComplaint() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ complaintId, status }: { complaintId: string; status: string }) =>
+      apiClient.post(`/internal/v1/public-health/complaints/${encodeURIComponent(complaintId)}/transition`, {
+        status,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["public-health-complaints"] });
+      queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
+export function useCreatePublicHealthOutbreak() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/public-health/outbreaks", body),
+    onSuccess: () => invalidatePhLifecycle(queryClient),
+  });
+}
+
+export function useEvaluatePublicHealthBriefExport() {
+  return useMutation({
+    mutationFn: ({ briefId, format }: { briefId: string; format: "PDF" | "CSV" }) =>
+      apiClient.post(`/internal/v1/public-health/reports/briefs/${encodeURIComponent(briefId)}/exports/evaluate`, {
+        format,
+        purpose: "PUBLIC_HEALTH",
+      }),
+  });
+}
+
+export interface PublicHealthBriefExportResult {
+  fileName: string;
+  contentType: string;
+  contentBase64: string;
+  format: string;
+}
+
+export function useExportPublicHealthBrief() {
+  return useMutation({
+    mutationFn: async ({ briefId, format }: { briefId: string; format: "PDF" | "CSV" }) => {
+      const response = await apiClient.post<{ data: unknown }>(
+        `/internal/v1/public-health/reports/briefs/${encodeURIComponent(briefId)}/exports`,
+        { format, purpose: "PUBLIC_HEALTH" },
+      );
+      const root = asRecord(unwrapEnvelope(response.data));
+      const exportRecord = asRecord(root.export);
+      return {
+        fileName: readString(exportRecord, "file_name", "fileName") || `brief-${briefId}.${format.toLowerCase()}`,
+        contentType: readString(exportRecord, "content_type", "contentType") || "application/octet-stream",
+        contentBase64: readString(exportRecord, "content_base64", "contentBase64"),
+        format: readString(exportRecord, "format") || format,
+      } satisfies PublicHealthBriefExportResult;
     },
   });
 }

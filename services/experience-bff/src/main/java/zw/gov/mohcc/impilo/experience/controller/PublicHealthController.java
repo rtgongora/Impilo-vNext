@@ -14,10 +14,14 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.DataGovernanceServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
+import zw.gov.mohcc.impilo.experience.publichealth.PublicHealthGovernanceService;
+import zw.gov.mohcc.impilo.experience.publichealth.PublicHealthPreferenceService;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -33,12 +37,23 @@ public class PublicHealthController {
     private final String surveillanceUrl;
     private final String campaignsUrl;
     private final String indawoUrl;
+    private final PublicHealthGovernanceService governance;
+    private final PublicHealthPreferenceService preferenceService;
+    private final DataGovernanceServiceClient dataGovernanceServiceClient;
 
-    public PublicHealthController(RestTemplate serviceRestTemplate, ServiceClientConfig.ServiceEndpoints endpoints) {
+    public PublicHealthController(
+            RestTemplate serviceRestTemplate,
+            ServiceClientConfig.ServiceEndpoints endpoints,
+            PublicHealthGovernanceService governance,
+            PublicHealthPreferenceService preferenceService,
+            DataGovernanceServiceClient dataGovernanceServiceClient) {
         this.restTemplate = serviceRestTemplate;
         this.surveillanceUrl = endpoints.surveillanceBaseUrl();
         this.campaignsUrl = endpoints.campaignsBaseUrl();
         this.indawoUrl = endpoints.indawoBaseUrl();
+        this.governance = governance;
+        this.preferenceService = preferenceService;
+        this.dataGovernanceServiceClient = dataGovernanceServiceClient;
     }
 
     // ── Surveillance ─────────────────────────────────────────────
@@ -62,6 +77,17 @@ public class PublicHealthController {
     @GetMapping("/alerts")
     public ResponseEntity<Map<String, Object>> listAlerts(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
         return proxy(surveillanceUrl + "/internal/v1/surveillance/alerts", requestId);
+    }
+
+    @PostMapping("/alerts/{alertId}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeAlert(
+            @PathVariable String alertId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/surveillance/alerts/" + URLEncoder.encode(alertId, StandardCharsets.UTF_8) + "/acknowledge",
+                requestId,
+                Map.of(),
+                200);
     }
 
     @GetMapping("/counters")
@@ -340,11 +366,318 @@ public class PublicHealthController {
         return proxy(indawoUrl + "/internal/v1/site-registry/dashboard/summary", requestId);
     }
 
+    @GetMapping("/context")
+    public ResponseEntity<Map<String, Object>> workspaceContext(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(value = CompanionHeaders.WORKSPACE_ID, required = false) String workspaceId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestParam(required = false) String jurisdiction_pack) {
+        governance.assertGovernedRead();
+        String effectivePack = jurisdiction_pack;
+        if ((effectivePack == null || effectivePack.isBlank()) && actorId != null && !actorId.isBlank()) {
+            effectivePack = preferenceService.loadJurisdictionPack(tenantId, actorId);
+        }
+        StringBuilder url = new StringBuilder(surveillanceUrl + "/internal/v1/public-health/context");
+        boolean first = true;
+        if (effectivePack != null && !effectivePack.isBlank()) {
+            url.append("?jurisdiction_pack=").append(URLEncoder.encode(effectivePack, StandardCharsets.UTF_8));
+            first = false;
+        }
+        if (workspaceId != null && !workspaceId.isBlank()) {
+            url.append(first ? "?" : "&").append("workspace_id=").append(URLEncoder.encode(workspaceId, StandardCharsets.UTF_8));
+            first = false;
+        }
+        if (facilityId != null && !facilityId.isBlank()) {
+            url.append(first ? "?" : "&").append("facility_id=").append(URLEncoder.encode(facilityId, StandardCharsets.UTF_8));
+        }
+        return proxy(url.toString(), requestId);
+    }
+
+    @GetMapping("/preferences")
+    public ResponseEntity<Map<String, Object>> getPreferences(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        String pack = (actorId == null || actorId.isBlank())
+                ? "national"
+                : preferenceService.loadJurisdictionPack(tenantId, actorId);
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("jurisdiction_pack", pack != null ? pack : "national"),
+                "meta", Map.of("request_id", requestId)));
+    }
+
+    @PutMapping("/preferences")
+    public ResponseEntity<Map<String, Object>> putPreferences(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        if (actorId == null || actorId.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "X-Actor-ID header is required"),
+                    "meta", Map.of("request_id", requestId)));
+        }
+        String pack = body.get("jurisdiction_pack") == null ? null : String.valueOf(body.get("jurisdiction_pack"));
+        return ResponseEntity.ok(Map.of(
+                "data", preferenceService.saveJurisdictionPack(tenantId, actorId, pack),
+                "meta", Map.of("request_id", requestId)));
+    }
+
+    @GetMapping("/operations-home")
+    public ResponseEntity<Map<String, Object>> operationsHome(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/operations-home", requestId);
+    }
+
+    @GetMapping("/map-markers")
+    public ResponseEntity<Map<String, Object>> mapMarkers(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(surveillanceUrl + "/internal/v1/public-health/map-markers", requestId);
+    }
+
+    @PostMapping("/nompilo/situation-summary")
+    public ResponseEntity<Map<String, Object>> nompiloSituationSummary(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/situation-summary", requestId, Map.of(), 200);
+    }
+
+    @GetMapping("/outbreaks")
+    public ResponseEntity<Map<String, Object>> listOutbreaks(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(surveillanceUrl + "/internal/v1/public-health/outbreaks", requestId);
+    }
+
+    @GetMapping("/complaints")
+    public ResponseEntity<Map<String, Object>> listComplaints(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return proxy(surveillanceUrl + "/internal/v1/public-health/complaints", requestId);
+    }
+
+    @PostMapping("/complaints")
+    public ResponseEntity<Map<String, Object>> fileComplaint(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/complaints", requestId, body, 201);
+    }
+
+    @PostMapping("/complaints/{complaintId}/transition")
+    public ResponseEntity<Map<String, Object>> transitionComplaint(
+            @PathVariable String complaintId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/complaints/"
+                        + URLEncoder.encode(complaintId, StandardCharsets.UTF_8) + "/transition",
+                requestId,
+                body,
+                200);
+    }
+
+    @PostMapping("/outbreaks/{outbreakId}/transition")
+    public ResponseEntity<Map<String, Object>> transitionOutbreak(
+            @PathVariable String outbreakId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/outbreaks/"
+                        + URLEncoder.encode(outbreakId, StandardCharsets.UTF_8) + "/transition",
+                requestId,
+                body,
+                200);
+    }
+
+    @GetMapping("/field-tasks")
+    public ResponseEntity<Map<String, Object>> listFieldTasks(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(surveillanceUrl + "/internal/v1/public-health/field-tasks", requestId);
+    }
+
+    @PostMapping("/field-tasks")
+    public ResponseEntity<Map<String, Object>> createFieldTask(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/field-tasks", requestId, body, 201);
+    }
+
+    @PostMapping("/field-tasks/{taskId}/transition")
+    public ResponseEntity<Map<String, Object>> transitionFieldTask(
+            @PathVariable String taskId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/field-tasks/"
+                        + URLEncoder.encode(taskId, StandardCharsets.UTF_8) + "/transition",
+                requestId,
+                body,
+                200);
+    }
+
+    @GetMapping("/investigations")
+    public ResponseEntity<Map<String, Object>> listInvestigations(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(surveillanceUrl + "/internal/v1/public-health/investigations", requestId);
+    }
+
+    @PostMapping("/investigations")
+    public ResponseEntity<Map<String, Object>> openInvestigation(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/investigations", requestId, body, 201);
+    }
+
+    @PostMapping("/investigations/{investigationId}/status")
+    public ResponseEntity<Map<String, Object>> updateInvestigationStatus(
+            @PathVariable String investigationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/investigations/"
+                        + URLEncoder.encode(investigationId, StandardCharsets.UTF_8) + "/status",
+                requestId,
+                body,
+                200);
+    }
+
+    @GetMapping("/reports/briefs")
+    public ResponseEntity<Map<String, Object>> listBriefs(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        return proxy(surveillanceUrl + "/internal/v1/public-health/reports/briefs", requestId);
+    }
+
+    @PostMapping("/reports/briefs/generate")
+    public ResponseEntity<Map<String, Object>> generateBrief(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedExport();
+        return proxyPost(surveillanceUrl + "/internal/v1/public-health/reports/briefs/generate", requestId, body, 201);
+    }
+
+    @PostMapping("/reports/briefs/{briefId}/publish")
+    public ResponseEntity<Map<String, Object>> publishBrief(
+            @PathVariable String briefId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedExport();
+        return proxyPost(
+                surveillanceUrl + "/internal/v1/public-health/reports/briefs/"
+                        + URLEncoder.encode(briefId, StandardCharsets.UTF_8) + "/publish",
+                requestId,
+                Map.of(),
+                200);
+    }
+
+    @PostMapping("/reports/briefs/{briefId}/exports/evaluate")
+    public ResponseEntity<Map<String, Object>> evaluateBriefExport(
+            @PathVariable String briefId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedExport();
+        String format = text(firstPresent(body, "format", "file_format"), "PDF").toUpperCase();
+        String dataset = "public-health.intelligence-briefs";
+        Map<String, Object> exportRequest = new LinkedHashMap<>();
+        exportRequest.put("dataset", dataset);
+        exportRequest.put("resource_type", "intelligence_brief");
+        exportRequest.put("resource_id", briefId);
+        exportRequest.put("format", format);
+        exportRequest.put("purpose", text(body.get("purpose"), "PUBLIC_HEALTH"));
+        exportRequest.put("requested_by", "public-health-bff");
+        exportRequest.put("constraints", Map.of("max_rows", 1));
+        Object dgResult = dataGovernanceServiceClient.createExport(exportRequest);
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of(
+                        "governance", dgResult,
+                        "brief_id", briefId,
+                        "format", format,
+                        "allowed", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/reports/briefs/{briefId}/exports")
+    public ResponseEntity<Map<String, Object>> exportBrief(
+            @PathVariable String briefId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedExport();
+        String format = text(firstPresent(body, "format", "file_format"), "PDF").toUpperCase();
+        String dataset = "public-health.intelligence-briefs";
+        Map<String, Object> exportRequest = new LinkedHashMap<>();
+        exportRequest.put("dataset", dataset);
+        exportRequest.put("resource_type", "intelligence_brief");
+        exportRequest.put("resource_id", briefId);
+        exportRequest.put("format", format);
+        exportRequest.put("purpose", text(body.get("purpose"), "PUBLIC_HEALTH"));
+        exportRequest.put("requested_by", "public-health-bff");
+        exportRequest.put("constraints", Map.of("max_rows", 1));
+        try {
+            Object dgResultRaw = dataGovernanceServiceClient.createExport(exportRequest);
+            Object dgResult = dgResultRaw != null ? dgResultRaw : Map.of("status", "EVALUATED");
+            JsonNode exportPayload = restTemplate.postForEntity(
+                    surveillanceUrl + "/internal/v1/public-health/reports/briefs/"
+                            + URLEncoder.encode(briefId, StandardCharsets.UTF_8) + "/exports",
+                    Map.of("format", format),
+                    JsonNode.class).getBody();
+            if (exportPayload == null) {
+                throw new IllegalStateException("Brief export payload empty");
+            }
+            Object briefExport = exportPayload.has("data") ? exportPayload.get("data") : exportPayload;
+            governance.audit(
+                    tenantId,
+                    correlationId,
+                    purposeOfUse,
+                    facilityId,
+                    "PUBLIC_HEALTH_BRIEF_EXPORT",
+                    "EXPORT",
+                    "SUCCESS",
+                    "INTELLIGENCE_BRIEF",
+                    briefId,
+                    Map.of(
+                            "format", format,
+                            "request_id", requestId,
+                            "actor_id", actorId != null ? actorId : "unknown"));
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of(
+                            "governance", dgResult,
+                            "export", briefExport),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Public health brief export failed: {}", e.getMessage());
+            governance.audit(
+                    tenantId,
+                    correlationId,
+                    purposeOfUse,
+                    facilityId,
+                    "PUBLIC_HEALTH_BRIEF_EXPORT",
+                    "EXPORT",
+                    "ERROR",
+                    "INTELLIGENCE_BRIEF",
+                    briefId,
+                    Map.of(
+                            "format", format,
+                            "request_id", requestId,
+                            "error_message", e.getMessage() != null ? e.getMessage() : "unknown"));
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of(
+                            "code", "PUBLIC_HEALTH_EXPORT_UNAVAILABLE",
+                            "message", "Unable to produce brief export while upstream services are unavailable"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
     @GetMapping("/weekly-idsr")
     public ResponseEntity<Map<String, Object>> weeklyIdsr(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to) {
+        governance.assertGovernedExport();
         StringBuilder url = new StringBuilder(surveillanceUrl + "/internal/v1/public-health/weekly-idsr");
         boolean first = true;
         if (from != null && !from.isBlank()) {
@@ -365,14 +698,21 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createOutbreak(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
-        Map<String, Object> payload = Map.of(
-                "name", text(body.get("name"), "Outbreak"),
-                "description", text(body.get("description"), "Outbreak signal raised from public-health operation"),
-                "eventType", text(body.get("eventType"), "OUTBREAK"),
-                "conditionField", text(body.get("conditionField"), "syndrome_code"),
-                "threshold", intValue(body.get("threshold"), 1),
-                "windowHours", intValue(body.get("windowHours"), 24),
-                "severity", text(body.get("severity"), "HIGH"));
+        governance.assertGovernedMutate();
+        Object severityRaw = firstPresent(body, "severity", "severityLevel", "riskAssessment");
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("name", text(body.get("name"), "Outbreak"));
+        payload.put("description", text(body.get("description"), "Outbreak signal raised from public-health operation"));
+        payload.put("eventType", text(firstPresent(body, "eventType", "event_type", "type"), "OUTBREAK"));
+        payload.put("conditionField", text(firstPresent(body, "conditionField", "condition_field"), "syndrome_code"));
+        payload.put("threshold", intValue(body.get("threshold"), 1));
+        payload.put("windowHours", intValue(firstPresent(body, "windowHours", "window_hours"), 24));
+        payload.put("severity", normalizeSeverity(text(severityRaw, "HIGH")));
+        putIfPresent(payload, "province", firstPresent(body, "province"));
+        putIfPresent(payload, "district", firstPresent(body, "district"));
+        putIfPresent(payload, "facilityId", firstPresent(body, "facilityId", "facility_id", "linkedSiteId"));
+        putIfPresent(payload, "latitude", parseDoubleField(firstPresent(body, "latitude", "gpsLat", "gps_lat")));
+        putIfPresent(payload, "longitude", parseDoubleField(firstPresent(body, "longitude", "gpsLng", "gps_lng")));
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/outbreaks", requestId, payload, 201);
     }
 
@@ -380,11 +720,14 @@ public class PublicHealthController {
     public ResponseEntity<Map<String, Object>> createFieldOperation(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
+        Object facilityId = firstPresent(body, "facility_id", "facilityId", "linkedSiteId", "siteId");
+        Object operationType = firstPresent(body, "operation_type", "operationType", "activityType");
+        Object occurredOn = firstPresent(body, "occurred_on", "occurredOn", "activityDate");
         Map<String, Object> payload = Map.of(
-                "facilityId", body.get("facility_id"),
-                "operationType", text(body.get("operation_type"), "FIELD_OPERATION"),
+                "facilityId", facilityId,
+                "operationType", text(operationType, "FIELD_OPERATION"),
                 "status", text(body.get("status"), "PLANNED"),
-                "occurredOn", text(body.get("occurred_on"), ""),
+                "occurredOn", text(occurredOn, ""),
                 "details", body);
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/field-operations", requestId, payload, 202);
     }
@@ -443,6 +786,43 @@ public class PublicHealthController {
         }
         String value = raw.toString().trim();
         return value.isEmpty() ? fallback : value;
+    }
+
+    private Object firstPresent(Map<String, Object> body, String... keys) {
+        for (String key : keys) {
+            if (body.containsKey(key) && body.get(key) != null) {
+                return body.get(key);
+            }
+        }
+        return null;
+    }
+
+    private void putIfPresent(Map<String, Object> target, String key, Object value) {
+        if (value != null) {
+            target.put(key, value);
+        }
+    }
+
+    private Double parseDoubleField(Object raw) {
+        if (raw == null) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(raw.toString());
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private String normalizeSeverity(String raw) {
+        String value = raw == null ? "" : raw.trim().toUpperCase();
+        return switch (value) {
+            case "GRADE_0", "INFORMATIONAL", "INFO" -> "INFORMATIONAL";
+            case "GRADE_1", "WATCH", "LOW" -> "WATCH";
+            case "GRADE_2", "ALERT", "MEDIUM", "MODERATE" -> "ALERT";
+            case "GRADE_3", "EMERGENCY", "HIGH", "CRITICAL" -> "EMERGENCY";
+            default -> "ALERT";
+        };
     }
 
 }

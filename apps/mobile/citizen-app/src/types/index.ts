@@ -2,7 +2,14 @@
  * Citizen App Types — Domain models for citizen-facing features.
  */
 
-export type CitizenTab = "home" | "personal" | "social" | "marketplace" | "messaging" | "telehealth";
+export type CitizenTab =
+  | "home"
+  | "personal"
+  | "social"
+  | "marketplace"
+  | "messaging"
+  | "telehealth"
+  | "public_health";
 
 export interface CitizenProfile {
   cpid: string;

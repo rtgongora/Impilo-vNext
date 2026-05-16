@@ -11,7 +11,7 @@ import { TabBar } from "@impilo/mobile-design-system";
 import { OutreachDashboardScreen } from "../screens/outreach/OutreachDashboardScreen";
 import { HouseholdListScreen } from "../screens/outreach/HouseholdListScreen";
 import { ScreeningScreen } from "../screens/outreach/ScreeningScreen";
-import { FollowUpScreen } from "../screens/outreach/FollowUpScreen";
+import { PublicHealthFieldTasksScreen } from "../screens/provider/PublicHealthFieldTasksScreen";
 
 const ACCENT = "#1E40AF";
 
@@ -40,7 +40,7 @@ export function OutreachTabs() {
       case "screenings":
         return <ScreeningScreen />;
       case "schedule":
-        return <FollowUpScreen />;
+        return <PublicHealthFieldTasksScreen />;
       default:
         return <OutreachDashboardScreen />;
     }

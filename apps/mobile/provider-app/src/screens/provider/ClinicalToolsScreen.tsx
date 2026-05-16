@@ -28,6 +28,7 @@ import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
 import { DeveloperHubScreen } from "./DeveloperHubScreen";
 import { ProfessionalSettingsHubScreen } from "./ProfessionalSettingsHubScreen";
 import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
+import { PublicHealthFieldTasksScreen } from "./PublicHealthFieldTasksScreen";
 import { TelemedicineScreen } from "./TelemedicineScreen";
 import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
@@ -60,7 +61,8 @@ type ToolTab =
   | "telemedicine"
   | "learning"
   | "core_transaction"
-  | "workflow_dispatch";
+  | "workflow_dispatch"
+  | "ph_field_tasks";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -80,6 +82,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "learning", label: "Learning" },
   { id: "core_transaction", label: "Core Tx" },
   { id: "workflow_dispatch", label: "Flow/Ops" },
+  { id: "ph_field_tasks", label: "PH Field" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -134,6 +137,7 @@ export function ClinicalToolsScreen() {
         {tab === "learning" && <FundoLearningShellScreen />}
         {tab === "core_transaction" && <CoreTransactionJourneyShellScreen />}
         {tab === "workflow_dispatch" && <WorkflowDispatchOpsScreen />}
+        {tab === "ph_field_tasks" && <PublicHealthFieldTasksScreen />}
       </ScrollView>
     </Screen>
   );

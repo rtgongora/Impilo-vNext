@@ -30,15 +30,20 @@ import {
   type PublicHealthActiveTab,
   publicHealthTabFromSearchParam,
 } from "./publicHealthTabParams";
+import {
+  usePublicHealthContext,
+  usePublicHealthPreferences,
+  useSavePublicHealthPreferences,
+} from "@/hooks/queries/usePublicHealth";
 
-const JURISDICTION_PACKS = [
-  { id: "city_health", label: "City Health Pack", description: "Urban municipal public health operations", Icon: Building, color: "bg-impilo-500", activeIn: "Harare, Bulawayo, Mutare, Gweru, Kwekwe, Masvingo" },
-  { id: "rdc_health", label: "Rural District Council Health Pack", description: "Rural public health operations and community health", Icon: TreePine, color: "bg-green-500", activeIn: "62 Rural District Councils" },
-  { id: "provincial", label: "Provincial Public Health Oversight Pack", description: "Provincial surveillance, coordination, and oversight", Icon: Globe, color: "bg-purple-500", activeIn: "All 10 Provinces" },
-  { id: "national", label: "National Public Health Oversight Pack", description: "National surveillance, policy, and coordination", Icon: Shield, color: "bg-red-500", activeIn: "National" },
-  { id: "port_health", label: "Port Health Pack", description: "Border and port of entry health operations", Icon: Ship, color: "bg-indigo-500", activeIn: "14 Ports of Entry" },
-  { id: "school_health", label: "School Health Pack", description: "School-based health services and inspections", Icon: School, color: "bg-amber-500", activeIn: "1,284 Schools" },
-];
+const PACK_ICONS: Record<string, { Icon: typeof Building; color: string; activeIn: string }> = {
+  city_health: { Icon: Building, color: "bg-impilo-500", activeIn: "Urban municipalities" },
+  rdc_health: { Icon: TreePine, color: "bg-green-500", activeIn: "Rural district councils" },
+  provincial: { Icon: Globe, color: "bg-purple-500", activeIn: "Provincial oversight" },
+  national: { Icon: Shield, color: "bg-red-500", activeIn: "National" },
+  port_health: { Icon: Ship, color: "bg-indigo-500", activeIn: "Ports of entry" },
+  school_health: { Icon: School, color: "bg-amber-500", activeIn: "School health" },
+};
 
 const TABS: { key: PublicHealthActiveTab; label: string; Icon: typeof Activity }[] = [
   { key: "dashboard", label: "Dashboard", Icon: Activity },
@@ -55,12 +60,42 @@ export default function PublicHealthPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  const [activePack, setActivePack] = useState("city_health");
+  const [activePack, setActivePack] = useState("national");
   const [activeTab, setActiveTab] = useState<PublicHealthActiveTab>("dashboard");
+  const preferencesQ = usePublicHealthPreferences();
+  const savePreferences = useSavePublicHealthPreferences();
+  const contextQ = usePublicHealthContext(activePack);
+
+  const jurisdictionPacks =
+    contextQ.data?.jurisdictionPacks.map((p) => ({
+      id: p.id,
+      label: p.label,
+      description: p.description,
+      Icon: PACK_ICONS[p.id]?.Icon ?? Building,
+      color: PACK_ICONS[p.id]?.color ?? "bg-impilo-500",
+      activeIn: PACK_ICONS[p.id]?.activeIn ?? p.description,
+    })) ?? [];
 
   useEffect(() => {
     setActiveTab(publicHealthTabFromSearchParam(searchParams.get("tab")));
   }, [searchParams]);
+
+  useEffect(() => {
+    if (preferencesQ.data?.jurisdictionPack) {
+      setActivePack(preferencesQ.data.jurisdictionPack);
+    }
+  }, [preferencesQ.data?.jurisdictionPack]);
+
+  useEffect(() => {
+    if (contextQ.data?.activeJurisdictionPack) {
+      setActivePack(contextQ.data.activeJurisdictionPack);
+    }
+  }, [contextQ.data?.activeJurisdictionPack]);
+
+  function onSelectPack(packId: string) {
+    setActivePack(packId);
+    savePreferences.mutate({ jurisdictionPack: packId });
+  }
 
   function goToTab(next: PublicHealthActiveTab) {
     setActiveTab(next);
@@ -84,12 +119,27 @@ export default function PublicHealthPage() {
             <Settings className="h-4 w-4 text-impilo-500" />
             <h3 className="text-sm font-semibold text-impilo-800">Active Jurisdiction Pack</h3>
           </div>
-          <p className="text-xs text-impilo-600 mb-3">Same platform capabilities, configured per jurisdiction</p>
+          <p className="text-xs text-impilo-600 mb-3">
+            Workspace context from <code className="text-[10px]">GET /public-health/context</code>
+            {contextQ.data?.visibilityProfile ? ` · ${contextQ.data.visibilityProfile}` : ""}
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {JURISDICTION_PACKS.map(pack => (
+            {(jurisdictionPacks.length > 0
+              ? jurisdictionPacks
+              : [
+                  {
+                    id: "national",
+                    label: "National",
+                    description: "National pack",
+                    Icon: Shield,
+                    color: "bg-red-500",
+                    activeIn: "National",
+                  },
+                ]
+            ).map((pack) => (
               <button
                 key={pack.id}
-                onClick={() => setActivePack(pack.id)}
+                onClick={() => onSelectPack(pack.id)}
                 className={`p-3 rounded-lg border text-left transition-all ${
                   activePack === pack.id
                     ? "border-impilo-400 bg-white ring-2 ring-impilo-200"

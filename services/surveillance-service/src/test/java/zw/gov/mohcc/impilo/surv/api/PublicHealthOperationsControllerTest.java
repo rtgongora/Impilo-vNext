@@ -8,11 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
-import zw.gov.mohcc.impilo.surv.core.CounterService;
-import zw.gov.mohcc.impilo.surv.core.IngestService;
-import zw.gov.mohcc.impilo.surv.core.Severity;
-import zw.gov.mohcc.impilo.surv.core.SignalService;
-import zw.gov.mohcc.impilo.surv.persistence.entity.SignalEntity;
+import zw.gov.mohcc.impilo.surv.core.*;
+import zw.gov.mohcc.impilo.surv.persistence.entity.FieldTaskEntity;
+import zw.gov.mohcc.impilo.surv.persistence.entity.OutbreakEventEntity;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,8 +25,14 @@ import static org.mockito.Mockito.when;
 class PublicHealthOperationsControllerTest {
 
     @Mock private CounterService counterService;
-    @Mock private SignalService signalService;
     @Mock private IngestService ingestService;
+    @Mock private OutbreakEventService outbreakEventService;
+    @Mock private FieldTaskService fieldTaskService;
+    @Mock private InvestigationService investigationService;
+    @Mock private IntelligenceBriefService intelligenceBriefService;
+    @Mock private PublicHealthOperationsHomeService operationsHomeService;
+    @Mock private PublicHealthContextService contextService;
+    @Mock private EnvironmentalComplaintService environmentalComplaintService;
 
     @AfterEach
     void tearDown() {
@@ -38,8 +42,7 @@ class PublicHealthOperationsControllerTest {
     @Test
     void weeklyIdsrReturnsDerivedAggregate() {
         setContext();
-        PublicHealthOperationsController controller =
-                new PublicHealthOperationsController(counterService, signalService, ingestService, new ObjectMapper());
+        PublicHealthOperationsController controller = controller();
 
         zw.gov.mohcc.impilo.surv.persistence.entity.DailyCounterEntity c1 = new zw.gov.mohcc.impilo.surv.persistence.entity.DailyCounterEntity();
         c1.setSyndromeCode("CHOLERA");
@@ -61,19 +64,22 @@ class PublicHealthOperationsControllerTest {
     @Test
     void recordOutbreakCreatesLifecycleEvent() {
         setContext();
-        PublicHealthOperationsController controller =
-                new PublicHealthOperationsController(counterService, signalService, ingestService, new ObjectMapper());
+        PublicHealthOperationsController controller = controller();
 
-        SignalEntity signal = new SignalEntity();
-        signal.setId(42L);
-        signal.setName("cholera");
-        signal.setEventType("OUTBREAK");
-        signal.setSeverity(Severity.CRITICAL);
-        when(signalService.createSignal(any(), anyString(), any(), anyString(), anyString(), anyString(), anyString(), anyInt(), anyInt(), any()))
-                .thenReturn(signal);
+        OutbreakEventEntity outbreak = new OutbreakEventEntity();
+        outbreak.setId(42L);
+        outbreak.setName("cholera");
+        outbreak.setEventType("OUTBREAK");
+        outbreak.setSeverity(Severity.CRITICAL);
+        outbreak.setLifecycleStatus(OutbreakLifecycleStatus.RECORDED);
+        outbreak.setSignalId(99L);
+        when(outbreakEventService.recordOutbreak(any(), anyString(), any(), anyString(), any(), any(), any(), anyInt(), anyInt(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(outbreak);
 
         var response = controller.recordOutbreak(
-                new PublicHealthOperationsController.CreateOutbreakRequest("cholera", "cluster", "OUTBREAK", "syndrome_code", 1, 24, "CRITICAL"));
+                new PublicHealthOperationsController.CreateOutbreakRequest(
+                        "cholera", "cluster", "OUTBREAK", "syndrome_code", 1, 24, "CRITICAL",
+                        null, null, null, null, null));
 
         assertThat(response.getStatusCode().value()).isEqualTo(201);
         Map<?, ?> body = (Map<?, ?>) response.getBody();
@@ -84,10 +90,14 @@ class PublicHealthOperationsControllerTest {
     @Test
     void recordFieldOperationAcceptsAndReturnsLifecycleEnvelope() {
         setContext();
-        PublicHealthOperationsController controller =
-                new PublicHealthOperationsController(counterService, signalService, ingestService, new ObjectMapper());
+        PublicHealthOperationsController controller = controller();
         when(ingestService.ingest(any(), anyString(), any(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(new IngestService.IngestResult(3, 2, 1));
+        FieldTaskEntity task = new FieldTaskEntity();
+        task.setId(7L);
+        task.setStatus(FieldTaskStatus.PLANNED);
+        when(fieldTaskService.createTask(any(), anyString(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(task);
 
         var response = controller.recordFieldOperation(
                 new PublicHealthOperationsController.CreateFieldOperationRequest(
@@ -99,9 +109,37 @@ class PublicHealthOperationsControllerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(202);
         Map<?, ?> body = (Map<?, ?>) response.getBody();
-        assertThat(body.get("lifecycle_status")).isEqualTo("ACCEPTED");
+        assertThat(body.get("lifecycle_status")).isEqualTo("PLANNED");
         assertThat(body.get("signals_matched")).isEqualTo(3);
         assertThat(body.get("cases_opened")).isEqualTo(1);
+    }
+
+    @Test
+    void operationsHomeReturnsAggregate() {
+        setContext();
+        when(operationsHomeService.buildHome(any(UUID.class))).thenReturn(Map.of(
+                "report_type", "OPERATIONS_HOME",
+                "kpis", Map.of("active_signals", 2)));
+
+        var response = controller().operationsHome();
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertThat(body.get("report_type")).isEqualTo("OPERATIONS_HOME");
+    }
+
+    private PublicHealthOperationsController controller() {
+        return new PublicHealthOperationsController(
+                counterService,
+                ingestService,
+                new ObjectMapper(),
+                outbreakEventService,
+                fieldTaskService,
+                investigationService,
+                intelligenceBriefService,
+                operationsHomeService,
+                contextService,
+                environmentalComplaintService);
     }
 
     private void setContext() {

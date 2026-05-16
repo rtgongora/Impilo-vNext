@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractPublicHealthList } from "./usePublicHealth";
+import { extractPublicHealthList, parseWeeklyIdsrPayload } from "./usePublicHealth";
 
 describe("extractPublicHealthList", () => {
   it("returns arrays as-is", () => {
@@ -22,5 +22,17 @@ describe("extractPublicHealthList", () => {
 
   it("falls back to nested data array", () => {
     expect(extractPublicHealthList({ data: [{ a: 1 }] }, ["items"])).toEqual([{ a: 1 }]);
+  });
+});
+
+describe("parseWeeklyIdsrPayload", () => {
+  it("normalizes rows payload from weekly idsr endpoint", () => {
+    const rows = parseWeeklyIdsrPayload({
+      rows: [{ syndromeCode: "MEASLES", district: "Mutare", weekStart: "2026-05-10", total: 4 }],
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.label).toBe("MEASLES");
+    expect(rows[0]?.value).toBe("4");
+    expect(rows[0]?.detail).toContain("Mutare");
   });
 });

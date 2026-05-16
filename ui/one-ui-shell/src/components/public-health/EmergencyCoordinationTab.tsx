@@ -39,7 +39,10 @@ export function EmergencyCoordinationTab() {
   const logAction = useLogEmergencyAction();
   const endEmergency = useEndEmergency();
 
-  const rows = (data?.data ?? []) as EmergencyActivationRow[];
+  const rows = useMemo(
+    () => ((data?.data ?? []) as EmergencyActivationRow[]),
+    [data?.data],
+  );
   const activeRows = useMemo(
     () => rows.filter((r) => asString(r.status).toUpperCase() === "ACTIVE"),
     [rows],

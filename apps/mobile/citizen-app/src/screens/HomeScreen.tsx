@@ -33,7 +33,7 @@ const QUICK_ACTIONS = [
   { id: "message",  label: "Message", icon: "chatbubble-outline",  tab: "messaging",   color: "#7C3AED", bg: "#EDE9FE" },
   { id: "telehealth", label: "Video", icon: "videocam-outline",   tab: "telehealth",  color: "#0891B2", bg: "#CFFAFE" },
   { id: "records",  label: "Records", icon: "folder-outline",     tab: "personal",    color: "#D97706", bg: "#FEF3C7" },
-  { id: "find",     label: "Find",    icon: "search-outline",     tab: "marketplace", color: "#DC2626", bg: "#FEE2E2" },
+  { id: "public-health", label: "Public Health", icon: "pulse-outline", tab: "public_health", color: "#0369A1", bg: "#E0F2FE" },
 ] as const;
 
 export function HomeScreen() {

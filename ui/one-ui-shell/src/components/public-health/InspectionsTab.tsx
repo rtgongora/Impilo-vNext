@@ -11,7 +11,6 @@ import {
   Plus,
   Shield,
   Star,
-  X,
 } from "lucide-react";
 import { usePublicHealthSites } from "@/hooks/queries/usePublicHealth";
 import { apiClient } from "@/lib/api-client";
