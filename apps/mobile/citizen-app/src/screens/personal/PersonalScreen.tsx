@@ -37,6 +37,7 @@ import { TermsOfUseScreen } from "./TermsOfUseScreen";
 import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen";
 import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
+import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 
 type PersonalTab =
   | "profile"
@@ -69,6 +70,7 @@ type PersonalTab =
   | "claim"
   | "verify"
   | "delegated-pickup"
+  | "nhume-track"
   | "comms-prefs"
   | "privacy"
   | "terms"
@@ -111,6 +113,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "claim", label: "Claim", icon: "download" },
   { id: "verify", label: "Verify", icon: "shield-checkmark" },
   { id: "delegated-pickup", label: "Pickup", icon: "car" },
+  { id: "nhume-track", label: "Track Delivery", icon: "navigate" },
   { id: "privacy", label: "Privacy", icon: "lock-closed" },
   { id: "terms", label: "Terms", icon: "document-text" },
 ];
@@ -149,6 +152,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   claim: ClaimSharedDocumentsScreen,
   verify: VerifyCredentialScreen,
   "delegated-pickup": DelegatedPickupScreen,
+  "nhume-track": NhumeTrackingScreen,
   privacy: PrivacyPolicyScreen,
   terms: TermsOfUseScreen,
 };

@@ -12,6 +12,7 @@ import { ProviderTabs } from "./ProviderTabs";
 import { OutreachTabs } from "./OutreachTabs";
 import { SupervisorTabs } from "./SupervisorTabs";
 import { OfflineTabs } from "./OfflineTabs";
+import { CourierTabs } from "./CourierTabs";
 import { ModeSwitcher } from "./ModeSwitcher";
 import type { AppMode } from "../types";
 
@@ -28,6 +29,8 @@ export function ModeRouter() {
         return <SupervisorTabs />;
       case "offline":
         return <OfflineTabs />;
+      case "courier":
+        return <CourierTabs />;
       default:
         return <ProviderTabs />;
     }

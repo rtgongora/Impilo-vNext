@@ -17,6 +17,7 @@ const MODE_LABELS: Record<AppMode, string> = {
   outreach: "Outreach",
   supervisor: "Supervisor",
   offline: "Offline Edge",
+  courier: "Courier (Nhume)",
 };
 
 const MODE_ROLES: Record<AppMode, string[]> = {
@@ -24,6 +25,10 @@ const MODE_ROLES: Record<AppMode, string[]> = {
   outreach: ["provider", "clinician", "community_health_worker"],
   supervisor: ["supervisor", "facility_manager", "admin"],
   offline: ["provider", "clinician", "community_health_worker"],
+  // Couriers, CHW delivery agents, facility runners, drone/robot operators
+  // all unlock the Nhume courier mode. Trust-Layer policies further restrict
+  // which deliveries each can act on.
+  courier: ["courier", "driver", "facility_runner", "community_health_worker", "drone_operator", "robot_operator", "provider"],
 };
 
 function getAvailableModes(roles: string[]): AppMode[] {

@@ -131,6 +131,8 @@
         <module>asset-registry-service</module>
         <module>dispatch-service</module>
         <module>iot-ingestion-service</module>
+        <!-- Nhume — Dispatch, Delivery, Fleet Tracking & Last-Mile Logistics -->
+        <module>nhume-service</module>
         <!-- Resilience & Operations Platform -->
         <module>support-service</module>
         <module>audit-ledger-service</module>

@@ -1,0 +1,19 @@
+package zw.gov.mohcc.impilo.nhume.domain;
+
+public enum RequestSource {
+    CITIZEN_APP,
+    PROVIDER_APP,
+    WEB_PORTAL,
+    FACILITY_OPERATIONS,
+    PHARMACY,
+    LABORATORY,
+    MARKETPLACE,
+    TELEHEALTH,
+    PUBLIC_HEALTH,
+    PROGRAMME_DISTRIBUTION,
+    PARTNER_SYSTEM,
+    API_INTEGRATION,
+    ADMIN_ENTRY,
+    BATCH_UPLOAD,
+    NOMPILO_WORKFLOW
+}
