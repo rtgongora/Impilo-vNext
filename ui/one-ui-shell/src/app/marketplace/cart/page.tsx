@@ -86,6 +86,16 @@ export default function MarketplaceCartPage() {
                 <Wallet className="w-4 h-4 text-impilo-500" />
                 <p className="text-sm font-semibold text-gray-900">How would you like to pay?</p>
               </div>
+              <select
+                value={paymentMethod}
+                onChange={(event) => setPaymentMethod(event.target.value)}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+                aria-label="Payment method"
+              >
+                <option value="MUSHE_WALLET">Mushe Wallet</option>
+                <option value="CARD">Card</option>
+                <option value="BANK_TRANSFER">Bank transfer</option>
+              </select>
               {paymentMethod === "MUSHE_WALLET" && (
                 <p className="text-xs text-impilo-600 bg-impilo-50 rounded-lg px-3 py-2">
                   Payment will be deducted from your Mushe Health Wallet. Ensure you have sufficient balance.

@@ -50,13 +50,22 @@ public class NotificationController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = client.listNotifications(recipientId);
+            JsonNode content = (data != null && data.has("content")) ? data.get("content") : data;
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : new Object[0],
+                    "data", content != null ? content : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Notification list failed: {}", e.getMessage());
             return upstreamFailure("NOTIFICATIONS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    @GetMapping("/inbox")
+    public ResponseEntity<Map<String, Object>> listInbox(
+            @RequestParam(required = false) String recipientId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return list(recipientId, requestId, correlationId);
     }
 
     @PatchMapping("/{id}/read")
@@ -75,12 +84,82 @@ public class NotificationController {
         }
     }
 
-    @GetMapping("/preferences")
-    public ResponseEntity<Map<String, Object>> getPreferences(
+    @PostMapping("/{id}/read")
+    public ResponseEntity<Map<String, Object>> markAsReadPost(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return markAsRead(id, requestId, correlationId);
+    }
+
+    @PatchMapping("/inbox/{id}/read")
+    public ResponseEntity<Map<String, Object>> markInboxAsRead(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return markAsRead(id, requestId, correlationId);
+    }
+
+    @PostMapping("/inbox/{id}/read")
+    public ResponseEntity<Map<String, Object>> markInboxAsReadPost(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return markAsRead(id, requestId, correlationId);
+    }
+
+    @PostMapping("/read-all")
+    public ResponseEntity<Map<String, Object>> readAll(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = client.getPreferences();
+            JsonNode data = client.markAllAsRead();
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of("updated", 0),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Notification mark-all-read failed: {}", e.getMessage());
+            return upstreamFailure("NOTIFICATIONS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/inbox/read-all")
+    public ResponseEntity<Map<String, Object>> inboxReadAll(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return readAll(requestId, correlationId);
+    }
+
+    @GetMapping("/inbox/unread-count")
+    public ResponseEntity<Map<String, Object>> unreadCount(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.unreadCount();
+            Object count = 0;
+            if (data != null && data.has("count")) {
+                count = data.get("count").asLong();
+            } else if (data != null && data.has("unread")) {
+                count = data.get("unread").asLong();
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", Map.of("count", count),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Notification unread-count failed: {}", e.getMessage());
+            return upstreamFailure("NOTIFICATIONS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/preferences")
+    public ResponseEntity<Map<String, Object>> getPreferences(
+            @RequestParam(required = false) String patientId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = (patientId != null && !patientId.isBlank())
+                    ? client.getPreferences(patientId)
+                    : client.getPreferences();
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -92,11 +171,14 @@ public class NotificationController {
 
     @PutMapping("/preferences")
     public ResponseEntity<Map<String, Object>> updatePreferences(
+            @RequestParam(required = false) String patientId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode data = client.updatePreferences(body);
+            JsonNode data = (patientId != null && !patientId.isBlank())
+                    ? client.updatePreferences(patientId, body)
+                    : client.updatePreferences(body);
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -104,6 +186,18 @@ public class NotificationController {
             log.error("Notification preferences update failed: {}", e.getMessage());
             return upstreamFailure("NOTIFICATIONS_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    @PutMapping("/preferences/{category}")
+    public ResponseEntity<Map<String, Object>> updatePreferenceByCategory(
+            @PathVariable String category,
+            @RequestParam(required = false) String patientId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> merged = new java.util.LinkedHashMap<>(body);
+        merged.putIfAbsent("category", category);
+        return updatePreferences(patientId, requestId, correlationId, merged);
     }
 
     private ResponseEntity<Map<String, Object>> upstreamFailure(

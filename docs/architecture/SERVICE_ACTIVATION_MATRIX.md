@@ -6,7 +6,7 @@ Canonical activation status across the Impilo vNext service estate. Labels use I
 
 | Activation State | Count |
 | --- | ---: |
-| Activated | 148 |
+| Activated | 152 |
 | Duplicated | 2 |
 | Skeleton | 5 |
 
@@ -76,11 +76,13 @@ Canonical activation status across the Impilo vNext service estate. Labels use I
 | Learning | backend_service | Ring 2 Scale | Enterprise Resource | Activated | Fixed | high |
 | LIMS | external_dependency | External | Integration & Operations | Activated | Fixed | high |
 | Loki | infrastructure | Infrastructure | Integration & Operations | Activated | Fixed | high |
+| Llm Orchestration | backend_service | Ring 2 Scale | Experience | Activated | Fixed | medium |
 | MinIO | infrastructure | Infrastructure | Integration & Operations | Activated | Fixed | high |
 | Mobile Api Client | shared_library | Library | Experience | Activated | Fixed | high |
 | Mobile Auth | shared_library | Library | Trust & Governance | Activated | Fixed | high |
 | Mobile Design System | shared_library | Library | Experience | Activated | Fixed | high |
 | Mobile Messaging | shared_library | Library | Experience | Activated | Fixed | high |
+| Mobile Ndila | shared_library | Library | Experience | Activated | Fixed | high |
 | Mobile Offline | shared_library | Library | Experience | Activated | Fixed | high |
 | Mobile Timeline | shared_library | Library | Experience | Activated | Fixed | high |
 | Mobile Trust | shared_library | Library | Trust & Governance | Activated | Fixed | high |
@@ -99,6 +101,8 @@ Canonical activation status across the Impilo vNext service estate. Labels use I
 | Mvumo | backend_service | Ring 0 Kernel | Trust & Governance | Activated | Fixed | high |
 | National Data Repository | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
 | Ndr | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
+| Ndila | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
+| Nhume | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
 | Notification | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
 | Observability | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
 | Offline Edge | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |

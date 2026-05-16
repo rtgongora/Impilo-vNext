@@ -14,6 +14,7 @@ export type ProviderTabKey =
   | "queue"
   | "messaging"
   | "tools"
+  | "apps"
   | "professional";
 
 export type EncounterStatus = "IN_PROGRESS" | "COMPLETED" | "CANCELLED";

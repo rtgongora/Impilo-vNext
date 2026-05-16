@@ -69,7 +69,7 @@ type ProductRegistryCandidate = {
 };
 
 function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] {
-  const root = payload as any;
+  const root = payload as Record<string, unknown> | undefined;
   const list =
     (Array.isArray(root) && root) ||
     (Array.isArray(root?.items) && root.items) ||
@@ -78,11 +78,12 @@ function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] 
     [];
 
   return list
-    .map((raw: any, i: number) => {
-      const id = String(raw?.id ?? raw?.itemId ?? raw?.sku ?? raw?.code ?? `item-${i}`);
-      const name = String(raw?.name ?? raw?.label ?? raw?.title ?? raw?.displayName ?? raw?.description ?? "");
-      const code = String(raw?.code ?? raw?.productCode ?? raw?.sku ?? raw?.itemCode ?? "");
-      const kind = raw?.kind != null ? String(raw.kind) : undefined;
+    .map((raw, i: number) => {
+      const row = raw as Record<string, unknown> | undefined;
+      const id = String(row?.id ?? row?.itemId ?? row?.sku ?? row?.code ?? `item-${i}`);
+      const name = String(row?.name ?? row?.label ?? row?.title ?? row?.displayName ?? row?.description ?? "");
+      const code = String(row?.code ?? row?.productCode ?? row?.sku ?? row?.itemCode ?? "");
+      const kind = row?.kind != null ? String(row.kind) : undefined;
       return { id, name, code, kind } satisfies ProductRegistryCandidate;
     })
     .filter((c: ProductRegistryCandidate) => c.name.trim() !== "" || c.code.trim() !== "");

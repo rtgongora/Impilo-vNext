@@ -29,6 +29,11 @@ export function useLogWellnessActivity(patientId: string | undefined) {
   return useMutation({
     mutationFn: logWellnessActivity,
     onSuccess: async () => {
+      if (patientId) {
+        await qc.invalidateQueries({
+          queryKey: qk.activities(patientId, 14),
+        });
+      }
       await qc.invalidateQueries({ queryKey: ["citizen-wellness", "activities"] });
     },
   });

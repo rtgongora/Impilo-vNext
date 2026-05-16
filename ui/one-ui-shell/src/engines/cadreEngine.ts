@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { getDevOverrides, useDevOverrideListener } from "@/hooks/useCadreFormConfig";
-import type { VisitType, AcuityLevel } from "@/hooks/useCadreFormConfig";
+import type { VisitType } from "@/hooks/useCadreFormConfig";
 
 // ── Types ──────────────────────────────────────────
 
@@ -62,6 +62,14 @@ export interface CadreContext {
   loading: boolean;
 }
 
+function getResponseData(input: unknown): unknown[] {
+  if (typeof input !== "object" || input === null || !("data" in input)) {
+    return [];
+  }
+  const data = (input as { data?: unknown }).data;
+  return Array.isArray(data) ? data : [];
+}
+
 // ── Data Fetching ──────────────────────────────────
 
 /** Fetch all active cadre definitions (cached globally) */
@@ -70,7 +78,7 @@ export function useCadreDefinitions() {
     queryKey: ["cadre-definitions"],
     queryFn: async () => {
       const resp = await apiClient.get("/internal/v1/pct/cadre-definitions?active=true");
-      return ((resp as any).data || []) as CadreDefinition[];
+      return getResponseData(resp) as CadreDefinition[];
     },
     staleTime: 1000 * 60 * 30, // 30 min cache — reference data
     gcTime: 1000 * 60 * 60,
@@ -99,7 +107,7 @@ export function useCadreScopeRules(cadreCode: string | null) {
       const resp = await apiClient.get(
         `/internal/v1/pct/cadre-scope-rules?cadre_codes=${hierarchy.join(",")}&active=true`
       );
-      const data = ((resp as any).data || []) as Array<Record<string, unknown>>;
+      const data = getResponseData(resp) as Array<Record<string, unknown>>;
 
       // More specific cadre rules override parent rules
       const ruleMap = new Map<string, ScopeRule>();
@@ -144,7 +152,7 @@ export function useCadreFormSectionsDB(cadreCode: string | null, visitType?: Vis
       const resp = await apiClient.get(
         `/internal/v1/pct/cadre-form-sections?cadre_codes=${hierarchy.join(",")}&active=true`
       );
-      const data = ((resp as any).data || []) as Array<Record<string, unknown>>;
+      const data = getResponseData(resp) as Array<Record<string, unknown>>;
 
       // Merge with child overriding parent
       const sectionMap = new Map<string, FormSection>();

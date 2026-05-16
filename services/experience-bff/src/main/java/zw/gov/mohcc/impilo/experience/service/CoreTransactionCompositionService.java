@@ -495,16 +495,17 @@ public class CoreTransactionCompositionService {
                 .put("allowed", false)
                 .put("reason", "External search is policy-controlled and role-restricted."));
         command.set("toolPermissions", toolPermissions);
-        command.set("loginBriefing", objectMapper.createObjectNode()
-                .put("role", "PROVIDER")
-                .put("headline", "Nompilo daily briefing for current role.")
-                .set("highlights", objectMapper.valueToTree(List.of(
-                        "Current workflow state: " + currentState,
-                        "Provider queue and pending tasks available"
-                )))
-                .set("urgentItems", objectMapper.valueToTree(List.of(
-                        "Review blockers before progressing transaction"
-                ))));
+        ObjectNode loginBriefing = objectMapper.createObjectNode();
+        loginBriefing.put("role", "PROVIDER");
+        loginBriefing.put("headline", "Nompilo daily briefing for current role.");
+        loginBriefing.set("highlights", objectMapper.valueToTree(List.of(
+                "Current workflow state: " + currentState,
+                "Provider queue and pending tasks available"
+        )));
+        loginBriefing.set("urgentItems", objectMapper.valueToTree(List.of(
+                "Review blockers before progressing transaction"
+        )));
+        command.set("loginBriefing", loginBriefing);
         command.set("supportHandoff", objectMapper.createObjectNode()
                 .put("enabled", true)
                 .put("destination", "FACILITY_HELP_DESK")

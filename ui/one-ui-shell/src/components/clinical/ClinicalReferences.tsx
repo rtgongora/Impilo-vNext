@@ -12,7 +12,6 @@ import {
   Shield, ExternalLink, Search, Tablet, ScrollText, Scissors,
   FlaskConical, Headphones, HelpCircle,
 } from "lucide-react";
-import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 type ProviderRole = "physician" | "specialist" | "registrar" | "consultant" | "nurse" | "midwife" | "chw" | "pharmacist" | "radiologist" | "pathologist";
@@ -90,7 +89,6 @@ export function ClinicalReferences() {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const { isClinical } = useRoleGroup();
   const user = useAuthStore((s) => s.user);
 
   const providerRole = resolveProviderRole(user?.roles ?? []);

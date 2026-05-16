@@ -30,15 +30,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       <ExperienceSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b bg-white px-4 sm:px-6 flex items-center justify-between gap-2 shrink-0">
-          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-gray-500">
+        <header className="h-16 border-b border-[color:var(--border-soft)] bg-[color:var(--surface)] px-4 sm:px-6 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-[color:var(--text-muted)]">
             <button
               type="button"
               onClick={() => toggleNavDrawer()}
-              className="inline-flex shrink-0 items-center gap-2 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+              className="impilo-btn-secondary shrink-0 gap-2 px-3 py-1.5 text-xs"
               title="Work zones — clinical, professional, and personal navigation"
               aria-label="Open work zones menu"
             >
@@ -47,23 +47,23 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </button>
             <button
               onClick={() => router.back()}
-              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1.5 rounded-full text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)] transition-colors"
               title="Go back"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <Link
               href="/home"
-              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1.5 rounded-full text-[color:var(--text-muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--text-primary)] transition-colors"
               title="Home"
             >
               <Home className="w-4 h-4" />
             </Link>
-            <div className="hidden h-5 w-px bg-gray-200 sm:mx-1 sm:block" />
+            <div className="hidden h-5 w-px bg-[color:var(--border-soft)] sm:mx-1 sm:block" />
             {facility && (
               <Link
                 href="/facility"
-                className="hidden shrink-0 rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-700 sm:inline-flex"
+                className="hidden shrink-0 rounded-full border border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--primary-hover)] sm:inline-flex"
               >
                 {facility.name}
               </Link>
@@ -71,13 +71,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
             {workspace && (
               <Link
                 href="/workspace"
-                className="hidden shrink-0 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 lg:inline-flex"
+                className="hidden shrink-0 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-xs font-medium text-[color:var(--text-secondary)] lg:inline-flex"
               >
                 {workspace.name}
               </Link>
             )}
             {shiftActive && (
-              <span className="hidden shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 xl:inline-flex">
+              <span className="hidden shrink-0 rounded-full border border-[color:var(--warning)]/30 bg-[color:var(--warning-soft)] px-2.5 py-1 text-xs font-medium text-amber-700 xl:inline-flex">
                 Shift Active
               </span>
             )}
@@ -86,10 +86,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-4">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">{user.displayName || user.email}</span>
+                <span className="text-sm text-[color:var(--text-secondary)]">{user.displayName || user.email}</span>
                 <Link
                   href="/auth/logout"
-                  className="text-xs text-gray-400 hover:text-gray-600"
+                  className="text-xs text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)]"
                 >
                   Sign Out
                 </Link>
@@ -97,14 +97,14 @@ export function AppLayout({ children }: { children: ReactNode }) {
             ) : (
               <Link
                 href="/auth/login"
-                className="text-sm text-impilo-500 hover:text-impilo-600"
+                className="text-sm text-[color:var(--primary)] hover:text-[color:var(--primary-hover)]"
               >
                 Sign In
               </Link>
             )}
           </div>
         </header>
-        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 sm:px-6">
+        <div className="border-b border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 sm:px-6">
           <div className="space-y-2">
             <NompiloGlobalCommandBar />
             <RoleJourneyNavigation />
@@ -112,7 +112,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </div>
         <OperationalContextStrip />
-        <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
+        <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)] md:p-5">{children}</main>
       </div>
       <ProactiveAssistant />
     </div>

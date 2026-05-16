@@ -5,24 +5,28 @@ import type { CoreTransactionView } from "./types";
 
 function panel(title: string, body: ReactNode) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <div className="mt-2 text-sm text-slate-600">{body}</div>
+    <section className="impilo-surface-card p-5">
+      <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">{title}</h3>
+      <div className="mt-2 text-sm text-[color:var(--text-secondary)]">{body}</div>
     </section>
   );
 }
 
 export function TransactionStateBadge({ state }: { state: string }) {
-  return <span className="rounded-full bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700">{state}</span>;
+  return <span className="impilo-chip border-[color:var(--nompilo)]/30 bg-[color:var(--nompilo-soft)] text-[color:var(--nompilo)]">{state}</span>;
 }
 
 export function TransactionTypeBadge({ type }: { type: string }) {
-  return <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{type}</span>;
+  return <span className="impilo-chip">{type}</span>;
 }
 
 export function OfflineSyncStatusBadge({ status }: { status: string }) {
-  const tone = status.includes("FAILED") ? "bg-red-100 text-red-700" : status.includes("PENDING") ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
-  return <span className={`rounded-full px-2 py-1 text-xs font-semibold ${tone}`}>Sync: {status}</span>;
+  const tone = status.includes("FAILED")
+    ? "impilo-status-danger"
+    : status.includes("PENDING")
+      ? "impilo-status-warning"
+      : "impilo-status-success";
+  return <span className={`${tone}`}>Sync: {status}</span>;
 }
 
 export function TrustContextBanner({ transaction }: { transaction: CoreTransactionView }) {
@@ -182,7 +186,7 @@ export function NompiloCompanionButton() {
   return (
     <button
       type="button"
-      className="rounded-full border border-indigo-300 bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700"
+      className="rounded-full border border-[color:var(--nompilo)]/30 bg-[color:var(--nompilo-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--nompilo)]"
     >
       Nompilo
     </button>
@@ -294,7 +298,7 @@ export function NompiloVoiceDictationButton({ transaction }: { transaction: Core
   return (
     <button
       type="button"
-      className="rounded-full border border-teal-300 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700"
+      className="rounded-full border border-[color:var(--nompilo)]/25 bg-[color:var(--nompilo-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--nompilo)]"
     >
       {transaction.nompiloCommand.dictationEnabled ? "Voice Dictation On" : "Voice Dictation Off"}
     </button>
@@ -379,7 +383,7 @@ export function NompiloCommandResultCard({ transaction }: { transaction: CoreTra
 
 export function CoreTransactionDoctrineBanner() {
   return (
-    <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900">
+    <div className="rounded-3xl border border-[color:var(--primary-muted)] bg-[linear-gradient(90deg,var(--primary-soft),var(--surface-warm))] p-4 text-sm text-[color:var(--text-primary)] shadow-impilo-card">
       Core Transaction Doctrine: every meaningful action is stateful, trusted, auditable, and journey-aligned.
     </div>
   );
@@ -392,9 +396,9 @@ export function CoreTransactionShell({
   transaction?: CoreTransactionView;
   status: "loading" | "empty" | "error" | "permission-denied" | "ready";
 }) {
-  if (status === "loading") return <p className="text-sm text-slate-500">Loading core transaction...</p>;
-  if (status === "empty") return <p className="text-sm text-slate-500">No transaction selected yet.</p>;
-  if (status === "error") return <p className="text-sm text-red-600">Unable to load transaction. Retry or contact support.</p>;
+  if (status === "loading") return <p className="text-sm text-[color:var(--text-secondary)]">Loading core transaction...</p>;
+  if (status === "empty") return <p className="text-sm text-[color:var(--text-secondary)]">No transaction selected yet.</p>;
+  if (status === "error") return <p className="text-sm text-[color:var(--danger)]">Unable to load transaction. Retry or contact support.</p>;
   if (status === "permission-denied") return <p className="text-sm text-amber-700">You do not have permission for this transaction context.</p>;
   if (!transaction) return null;
   if (transaction.offlineSyncStatus === "SYNC_PENDING") {

@@ -103,6 +103,20 @@ public class CounterService {
         return alertEventRepository.findByTenantId(tenantId);
     }
 
+    @Transactional
+    public Optional<AlertEventEntity> acknowledgeAlert(UUID tenantId, Long alertId) {
+        Optional<AlertEventEntity> event = alertEventRepository.findByIdAndTenantId(alertId, tenantId);
+        if (event.isEmpty()) {
+            return Optional.empty();
+        }
+        AlertEventEntity alert = event.get();
+        if (!alert.isAcknowledged()) {
+            alert.setAcknowledged(true);
+            alertEventRepository.save(alert);
+        }
+        return Optional.of(alert);
+    }
+
     public List<AlertDefinitionEntity> getAlertDefinitions(UUID tenantId) {
         return alertDefRepository.findByTenantIdAndActiveTrue(tenantId);
     }

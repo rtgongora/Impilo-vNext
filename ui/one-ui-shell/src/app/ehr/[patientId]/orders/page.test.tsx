@@ -134,7 +134,7 @@ describe("OrdersPage", () => {
   });
 
   it("allows product-registry search to fill test name/code (no fake catalog)", () => {
-    mockUseProductRegistrySearch.mockImplementation((params: any) => {
+    mockUseProductRegistrySearch.mockImplementation((params: { q?: string } | undefined) => {
       if (params?.q === "cbc") {
         return {
           data: { items: [{ id: "svc-1", name: "Complete Blood Count", code: "CBC", kind: "service" }] },

@@ -52,7 +52,7 @@ export default function OrganizationAdminLandingPage() {
   const searchParams = useSearchParams();
   const rehydrate = useOperationalContextStore((s) => s.rehydrateFromSession);
   const user = useAuthStore((s) => s.user);
-  const roles = user?.roles ?? [];
+  const roles = useMemo(() => user?.roles ?? [], [user?.roles]);
 
   const displayCards = useMemo((): OrganizationPlaneCard[] => {
     if (isFinanceOnlyOperator(roles)) {
@@ -141,7 +141,7 @@ export default function OrganizationAdminLandingPage() {
                 const href = `${card.href}${card.href.includes("?") ? "&" : "?"}from=organization-admin`;
                 return (
                   <Link
-                    key={card.surface}
+                    key={`${card.surface}:${card.href}`}
                     href={href}
                     onClick={() =>
                       useOperationalContextStore.getState().setOrganizationAdminSurface(card.surface)

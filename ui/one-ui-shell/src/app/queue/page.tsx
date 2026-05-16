@@ -91,7 +91,7 @@ export default function QueuePage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["queue-entries"] }); queryClient.invalidateQueries({ queryKey: ["queue-stats"] }); },
   });
 
-  const entries = data?.data ?? [];
+  const entries = useMemo(() => data?.data ?? [], [data?.data]);
   const waitingEntries = useMemo(
     () => entries.filter((entry) => entry.attributes.status === "WAITING"),
     [entries],

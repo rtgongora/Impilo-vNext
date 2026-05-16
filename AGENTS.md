@@ -70,6 +70,13 @@ tests/          Integration tests
 - Preserve existing services and avoid deleting or breaking unrelated work.
 - Use `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` before calling a feature done.
 
+### Implementation integrity checklist (required)
+
+- For every user-facing feature, prove the chain: **web route/mobile screen -> hook/client -> BFF endpoint -> service -> contract -> tests**.
+- Never mark fixture-backed UX as live; use explicit maturity labels in internal/dev-facing surfaces.
+- Avoid accidental web/mobile drift: if parity is intentionally not in scope, document it in `docs/audits/*`.
+- Do not leave empty handlers (`onClick={() => {}}`, disabled flows without reason) in high-value production surfaces.
+
 Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md)
 
 **Non-obvious architectural constraints**:

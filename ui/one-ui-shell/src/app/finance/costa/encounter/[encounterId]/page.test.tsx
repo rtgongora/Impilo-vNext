@@ -240,7 +240,7 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     vi.resetModules();
     vi.doMock("next/navigation", () => ({
       useParams: () => ({ encounterId: "enc-empty" }),
-      useSearchParams: () => ({ get: (_: string) => null }),
+      useSearchParams: () => ({ get: () => null }),
     }));
     vi.doMock("@/hooks/queries/useServiceAccessDecisions", () => ({
       useServiceAccessDecisionsList: () => ({ data: [], isLoading: false, isError: false }),
@@ -271,7 +271,7 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     vi.resetModules();
     vi.doMock("next/navigation", () => ({
       useParams: () => ({ encounterId: "enc-error" }),
-      useSearchParams: () => ({ get: (_: string) => null }),
+      useSearchParams: () => ({ get: () => null }),
     }));
     vi.doMock("@/hooks/queries/useServiceAccessDecisions", () => ({
       useServiceAccessDecisionsList: () => ({

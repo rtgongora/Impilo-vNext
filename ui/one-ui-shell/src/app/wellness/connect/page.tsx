@@ -4,7 +4,7 @@
  * Health Connect–equivalent ingest demo — posts typed changesets to the Experience BFF.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -86,7 +86,7 @@ export default function WellnessHealthConnectPage() {
     }
   };
 
-  const loadSources = async () => {
+  const loadSources = useCallback(async () => {
     if (!patientId) return;
     setLoadingSources(true);
     try {
@@ -99,7 +99,7 @@ export default function WellnessHealthConnectPage() {
     } finally {
       setLoadingSources(false);
     }
-  };
+  }, [patientId]);
 
   const connectAndroidHealthConnect = async () => {
     if (!patientId) return;
@@ -140,7 +140,7 @@ export default function WellnessHealthConnectPage() {
 
   useEffect(() => {
     void loadSources();
-  }, [patientId]);
+  }, [loadSources]);
 
   return (
     <AppLayout>

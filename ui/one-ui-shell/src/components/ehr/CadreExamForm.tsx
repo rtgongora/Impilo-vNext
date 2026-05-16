@@ -11,7 +11,7 @@
 import { useState } from "react";
 import {
   User, Heart, Wind, Activity, Brain, Eye, Bone,
-  CheckCircle2, AlertTriangle, ShieldAlert, Stethoscope, Baby,
+  CheckCircle2, ShieldAlert, Stethoscope, Baby,
 } from "lucide-react";
 import { type CadreFormConfig } from "@/hooks/useCadreFormConfig";
 

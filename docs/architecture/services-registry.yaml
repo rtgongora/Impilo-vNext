@@ -1225,6 +1225,52 @@ services:
   deduplication_group: ''
   backlog_priority: None
   last_validated_on: '2026-05-15'
+- canonical_name: mobile-ndila
+  display_name: Mobile Ndila
+  module_path: apps/mobile/packages/mobile-ndila
+  type: shared_library
+  implementation_status: live
+  ring: library
+  ring_display: Library
+  primary_plane: experience
+  primary_plane_display: Experience
+  category: user_interface
+  category_display: User Interface
+  secondary_planes: []
+  secondary_plane_displays: []
+  system_of_record_for: []
+  consumes: []
+  consumed_by: []
+  frontend_surface: ''
+  api_surface: ''
+  events_published: []
+  events_consumed: []
+  database_schema: null
+  port: null
+  deployment_unit: apps/mobile/packages/mobile-ndila
+  readiness_status: baseline-assessed
+  boundary_notes: ''
+  forbidden_responsibilities: []
+  confidence: high
+  evidence_files:
+  - apps/mobile/packages/mobile-ndila
+  documentation_gap: ''
+  implementation_gap: ''
+  frontend_gap: ''
+  possible_duplicate: ''
+  unresolved_questions: []
+  activation_state: Activated
+  contract_alignment_status: Not Applicable
+  contract_evidence: []
+  surfacing_quality: Not Required
+  integration_status: Standalone
+  remediation_status: Fixed
+  remediation_notes: ''
+  owner_decision_required: false
+  canonical_service: ''
+  deduplication_group: ''
+  backlog_priority: None
+  last_validated_on: '2026-05-16'
 - canonical_name: mobile-offline
   display_name: Mobile Offline
   module_path: apps/mobile/packages/mobile-offline
@@ -3762,9 +3808,8 @@ services:
   possible_duplicate: ''
   unresolved_questions: []
   activation_state: Duplicated
-  contract_alignment_status: Aligned
-  contract_evidence:
-  - contracts/openapi/wellness.openapi.yaml
+  contract_alignment_status: Not Applicable
+  contract_evidence: []
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed
@@ -3885,6 +3930,62 @@ services:
   deduplication_group: ''
   backlog_priority: None
   last_validated_on: '2026-05-15'
+- canonical_name: llm-orchestration-service
+  display_name: Llm Orchestration
+  module_path: services/llm-orchestration-service
+  type: backend_service
+  implementation_status: live
+  ring: ring_2_scale
+  ring_display: Ring 2 Scale
+  primary_plane: experience
+  primary_plane_display: Experience
+  category: experience
+  category_display: Experience
+  secondary_planes:
+  - integration_ops
+  - trust_governance
+  secondary_plane_displays:
+  - Integration & Operations
+  - Trust & Governance
+  system_of_record_for:
+  - LLM orchestration prompts, tool routing, and assistant workflow sessions
+  consumes:
+  - tshepo-authz-service
+  - multiple-domain-services-via-bff
+  consumed_by:
+  - web-mobile-experience
+  frontend_surface: ui/one-ui-shell routes and domain consoles
+  api_surface: Not Declared
+  events_published: []
+  events_consumed: []
+  database_schema: null
+  port: null
+  deployment_unit: services/llm-orchestration-service
+  readiness_status: baseline-assessed
+  boundary_notes: ''
+  forbidden_responsibilities:
+  - must-not-own-domain-source-data
+  - must-not-bypass-bff-authz-audit-controls
+  confidence: medium
+  evidence_files:
+  - services/llm-orchestration-service/pom.xml
+  documentation_gap: canonical llm-orchestration OpenAPI contract is not yet published.
+  implementation_gap: ''
+  frontend_gap: ''
+  possible_duplicate: ''
+  unresolved_questions: []
+  activation_state: Activated
+  contract_alignment_status: Not Applicable
+  contract_evidence: []
+  surfacing_quality: Not Required
+  integration_status: Standalone
+  remediation_status: Fixed
+  remediation_notes: ''
+  owner_decision_required: false
+  canonical_service: ''
+  deduplication_group: ''
+  backlog_priority: None
+  last_validated_on: '2026-05-16'
 - canonical_name: msika-flow-service
   display_name: Msika Flow
   module_path: services/msika-flow-service
@@ -5954,6 +6055,167 @@ services:
   deduplication_group: ''
   backlog_priority: None
   last_validated_on: '2026-05-15'
+- canonical_name: ndila-service
+  display_name: Ndila
+  module_path: services/ndila-service
+  type: backend_service
+  implementation_status: live
+  ring: ring_2_scale
+  ring_display: Ring 2 Scale
+  primary_plane: integration_ops
+  primary_plane_display: Integration & Operations
+  category: integration
+  category_display: Integration
+  secondary_planes:
+  - registry_spine
+  - experience
+  - trust_governance
+  - clinical_execution
+  - enterprise_resource
+  secondary_plane_displays:
+  - Registry Spine
+  - Experience
+  - Trust & Governance
+  - Clinical Execution
+  - Enterprise Resource
+  system_of_record_for:
+  - canonical geospatial location registry
+  - routing, ETA, and distance matrix orchestration
+  - geofencing and catchment boundary operations
+  - tracking asset telemetry normalization
+  - spatial search and geospatial intelligence context
+  consumes:
+  - tshepo-authz-service
+  - tuso-service
+  - indawo-service
+  - varapi-service
+  - surveillance-service
+  consumed_by:
+  - experience-bff
+  - integration-hub
+  - nhume-service
+  - dispatch-service
+  frontend_surface: ui/one-ui-shell routes and domain consoles
+  api_surface: contracts/openapi/ndila.openapi.yaml
+  events_published:
+  - ndila.*
+  events_consumed:
+  - tuso.facility.*
+  - indawo.site.*
+  - surveillance.public-health.*
+  database_schema: impilo_ndila
+  port: 8155
+  deployment_unit: services/ndila-service
+  readiness_status: baseline-assessed
+  boundary_notes: ''
+  forbidden_responsibilities:
+  - must-not-authorize-access-decisions
+  - must-not-own-patient-identity-source-of-truth
+  - must-not-own-provider-identity-source-of-truth
+  - must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries
+  confidence: high
+  evidence_files:
+  - services/ndila-service/pom.xml
+  - contracts/openapi/ndila.openapi.yaml
+  - contracts/asyncapi/ndila-events.asyncapi.yaml
+  - docs/architecture/NDILA_IMPLEMENTATION_NOTE.md
+  documentation_gap: ''
+  implementation_gap: ''
+  frontend_gap: ''
+  possible_duplicate: ''
+  unresolved_questions: []
+  activation_state: Activated
+  contract_alignment_status: Aligned
+  contract_evidence:
+  - contracts/openapi/ndila.openapi.yaml
+  - contracts/asyncapi/ndila-events.asyncapi.yaml
+  surfacing_quality: Complete
+  integration_status: Integrated
+  remediation_status: Fixed
+  remediation_notes: ''
+  owner_decision_required: false
+  canonical_service: ''
+  deduplication_group: ''
+  backlog_priority: None
+  last_validated_on: '2026-05-16'
+- canonical_name: nhume-service
+  display_name: Nhume
+  module_path: services/nhume-service
+  type: backend_service
+  implementation_status: live
+  ring: ring_2_scale
+  ring_display: Ring 2 Scale
+  primary_plane: integration_ops
+  primary_plane_display: Integration & Operations
+  category: integration
+  category_display: Integration
+  secondary_planes:
+  - experience
+  - clinical_execution
+  - registry_spine
+  - enterprise_resource
+  - trust_governance
+  secondary_plane_displays:
+  - Experience
+  - Clinical Execution
+  - Registry Spine
+  - Enterprise Resource
+  - Trust & Governance
+  system_of_record_for:
+  - dispatch request and assignment lifecycle
+  - courier and fleet operational registry
+  - last-mile tracking and proof-of-delivery telemetry
+  - delivery chain-of-custody and exception workflow
+  consumes:
+  - tshepo-authz-service
+  - ndila-service
+  - vito-service
+  - varapi-service
+  - tuso-service
+  - indawo-service
+  - msika-service
+  - mushex-service
+  consumed_by:
+  - experience-bff
+  - integration-hub
+  frontend_surface: ui/one-ui-shell routes and domain consoles
+  api_surface: Not Declared
+  events_published:
+  - nhume.*
+  events_consumed: []
+  database_schema: impilo_nhume
+  port: 8120
+  deployment_unit: services/nhume-service
+  readiness_status: baseline-assessed
+  boundary_notes: ''
+  forbidden_responsibilities:
+  - must-not-own-clinical-record-source-of-truth
+  - must-not-own-patient-identity-source-of-truth
+  - must-not-own-provider-identity-source-of-truth
+  - must-not-own-consent-policy-authority
+  - must-not-own-payment-ledgers
+  confidence: high
+  evidence_files:
+  - services/nhume-service/pom.xml
+  - docs/architecture/nhume-dispatch-and-delivery.md
+  documentation_gap: canonical nhume.openapi.yaml is not yet published.
+  implementation_gap: ''
+  frontend_gap: ''
+  possible_duplicate: dispatch-service
+  unresolved_questions: []
+  activation_state: Activated
+  contract_alignment_status: Partial
+  contract_evidence:
+  - docs/architecture/nhume-dispatch-and-delivery.md
+  surfacing_quality: Complete
+  integration_status: Integrated
+  remediation_status: Partially Fixed
+  remediation_notes: Publish canonical OpenAPI contract for nhume-service runtime surface.
+  owner_decision_required: false
+  canonical_service: ''
+  deduplication_group: ''
+  backlog_priority: P1
+  last_validated_on: '2026-05-16'
 - canonical_name: notification-service
   display_name: Notification
   module_path: services/notification-service

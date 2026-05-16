@@ -136,7 +136,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
         return (
           <button
             onClick={() => setOpen(!open)}
-            className={`h-10 rounded-full shadow-md bg-impilo-50 text-impilo-500 hover:bg-impilo-100 border border-impilo-200 px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
+            className={`h-10 rounded-full shadow-impilo-card bg-[color:var(--primary-soft)] text-[color:var(--primary)] hover:bg-white border border-[color:var(--primary-muted)] px-4 flex items-center gap-2 text-xs font-medium backdrop-blur-sm ${className ?? ""}`}
           >
             <HelpCircle className="h-3.5 w-3.5" />
             <span>Need Help?</span>
@@ -146,7 +146,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
         return (
           <button
             onClick={() => setOpen(!open)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors ${className ?? ""}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[color:var(--primary)] hover:bg-[color:var(--primary-hover)] text-white rounded-full transition-colors ${className ?? ""}`}
           >
             <HelpCircle className="h-4 w-4" />
             <span>Help</span>
@@ -157,7 +157,7 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
         return (
           <button
             onClick={() => setOpen(!open)}
-            className={`h-9 w-9 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors ${className ?? ""}`}
+            className={`h-9 w-9 flex items-center justify-center text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] hover:bg-[color:var(--surface-soft)] rounded-full transition-colors ${className ?? ""}`}
           >
             <HelpCircle className="h-4 w-4" />
           </button>
@@ -170,11 +170,11 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
       {triggerButton}
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[color:var(--border-soft)] rounded-3xl shadow-impilo-floating z-50">
           {/* Header */}
           <div className="p-3 pb-2">
-            <h3 className="font-semibold text-sm">Help &amp; Resources</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="font-semibold text-sm text-[color:var(--text-primary)]">Help &amp; Resources</h3>
+            <p className="text-xs text-[color:var(--text-muted)]">
               Find answers and learn Impilo
             </p>
           </div>
@@ -182,17 +182,17 @@ export function HelpMenu({ variant = "icon", className }: HelpMenuProps) {
           {/* Search */}
           <div className="px-3 pb-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[color:var(--text-muted)]" />
               <input
                 placeholder="Search help..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-8 pr-3 text-sm border rounded-md border-gray-300 focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                className="w-full h-8 pl-8 pr-3 text-sm border rounded-full border-[color:var(--border-soft)] focus:ring-2 focus:ring-[color:var(--primary-soft)] focus:border-[color:var(--primary)]"
               />
             </div>
           </div>
 
-          <hr className="border-gray-100" />
+          <hr className="border-[color:var(--border-soft)]" />
 
           {/* Scrollable content */}
           <div className="max-h-[320px] overflow-y-auto">

@@ -63,6 +63,38 @@ export interface OmnichannelDisclosureRule {
   created_at?: string | null;
 }
 
+export interface OmnichannelDashboard {
+  executive?: Record<string, unknown>;
+  operations?: Record<string, unknown>;
+  clinical?: Record<string, unknown>;
+  communications?: Record<string, unknown>;
+  governance?: {
+    source_health?: Record<string, string>;
+    partial_data?: boolean;
+    trend_window?: string;
+    last_refreshed_at?: string | null;
+    [key: string]: unknown;
+  };
+  active_campaigns?: number;
+  completed_campaigns?: number;
+  active_sms_journeys?: number;
+  configured_channels?: number;
+  pending_callbacks?: number;
+  escalated_callbacks?: number;
+  ussd_flows?: number;
+  ivr_flows?: number;
+  disclosure_rules?: number;
+  source_health?: Record<string, string>;
+  last_refreshed_at?: string | null;
+}
+
+export function useOmnichannelDashboard() {
+  return useQuery<{ data: OmnichannelDashboard }>({
+    queryKey: ["omni-dashboard"],
+    queryFn: () => apiClient.get("/internal/v1/omnichannel/dashboard"),
+  });
+}
+
 export function useOmnichannelCallbacks() {
   return useQuery<{ data: OmnichannelCallback[] }>({
     queryKey: ["omni-callbacks"],

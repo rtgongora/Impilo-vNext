@@ -6,9 +6,9 @@ Contract alignment view for backend and integration runtimes.
 
 | Contract Alignment Status | Count |
 | --- | ---: |
-| Aligned | 79 |
-| Not Applicable | 74 |
-| Partial | 2 |
+| Aligned | 80 |
+| Not Applicable | 75 |
+| Partial | 3 |
 
 ## Backend Contract Matrix
 
@@ -53,6 +53,7 @@ Contract alignment view for backend and integration runtimes.
 | Jobs | Aligned | contracts/openapi/jobs.openapi.yaml | contracts/openapi/jobs.openapi.yaml | Fixed |
 | Landela Adapter | Aligned | contracts/openapi/landela-adapter.openapi.yaml | contracts/openapi/landela-adapter.openapi.yaml | Fixed |
 | Learning | Aligned | contracts/openapi/learning.openapi.yaml | contracts/openapi/learning.openapi.yaml | Fixed |
+| Llm Orchestration | Not Applicable | Not Declared | services/llm-orchestration-service/pom.xml | Fixed |
 | Msika Flow | Aligned | contracts/openapi/msika-flow.openapi.yaml | contracts/openapi/msika-flow.openapi.yaml | Fixed |
 | Msika | Aligned | contracts/openapi/msika-core.openapi.yaml | contracts/openapi/msika-core.openapi.yaml | Fixed |
 | Mushe Wallet | Aligned | contracts/openapi/mushe-wallet.openapi.yaml | contracts/openapi/mushe-wallet.openapi.yaml | Fixed |
@@ -60,6 +61,8 @@ Contract alignment view for backend and integration runtimes.
 | Mvumo | Aligned | contracts/openapi/mvumo.openapi.yaml | contracts/openapi/mvumo.openapi.yaml | Fixed |
 | National Data Repository | Aligned | contracts/openapi/national-data-repository.openapi.yaml | contracts/openapi/national-data-repository.openapi.yaml | Fixed |
 | Ndr | Aligned | contracts/openapi/ndr.openapi.yaml | contracts/openapi/ndr.openapi.yaml | Fixed |
+| Ndila | Aligned | contracts/openapi/ndila.openapi.yaml | contracts/openapi/ndila.openapi.yaml; contracts/asyncapi/ndila-events.asyncapi.yaml | Fixed |
+| Nhume | Partial | services/nhume-service runtime APIs (OpenAPI pending) | docs/architecture/nhume-dispatch-and-delivery.md | Partially Fixed |
 | Notification | Aligned | contracts/openapi/notification.openapi.yaml | contracts/openapi/notification.openapi.yaml | Fixed |
 | Observability | Aligned | contracts/openapi/observability.openapi.yaml | contracts/openapi/observability.openapi.yaml | Fixed |
 | Offline Edge | Aligned | contracts/openapi/offline-edge.openapi.yaml | contracts/openapi/offline-edge.openapi.yaml | Fixed |

@@ -123,7 +123,7 @@ export default function TriageQueuePage() {
     },
   });
 
-  const entries = data?.data ?? [];
+  const entries = useMemo(() => data?.data ?? [], [data?.data]);
   const awaitingAssessment = useMemo(
     () => entries.filter((entry) => !getQueueTriageCategory(entry)),
     [entries],

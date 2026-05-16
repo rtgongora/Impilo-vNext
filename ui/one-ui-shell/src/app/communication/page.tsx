@@ -166,7 +166,7 @@ function PagesTab() {
   const sendPage = useSendClinicalPage();
   const markRead = useMarkClinicalPageRead();
   const respondToPage = useRespondToClinicalPage();
-  const pages = data?.data ?? [];
+  const pages = useMemo(() => data?.data ?? [], [data?.data]);
 
   const [showSend, setShowSend] = useState(false);
   const [pageForm, setPageForm] = useState({

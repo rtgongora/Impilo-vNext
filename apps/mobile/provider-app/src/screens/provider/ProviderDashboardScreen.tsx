@@ -19,6 +19,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
+import { useCommunicationDashboard } from "@impilo/mobile-messaging";
 import { appStore, useAppStore } from "../../stores/appStore";
 import { useEncounterStore } from "../../stores/encounterStore";
 import { getMyTasks } from "../../services/taskService";
@@ -27,6 +28,52 @@ import { getFacilityMetrics } from "../../services/supportService";
 import type { Task, Encounter, FacilityMetrics, ProviderTabKey } from "../../types";
 
 const BLUE = "#1E40AF";
+
+type CommsDashboardSnapshot = {
+  active_threads?: number;
+  sent_today?: number;
+  failed_today?: number;
+} | null;
+
+export function buildProviderCommsKpis(
+  commsDashboard: CommsDashboardSnapshot,
+  setProviderTab: (tab: ProviderTabKey) => void,
+  setMode: (mode: "provider" | "outreach" | "supervisor" | "offline") => void
+) {
+  if (!commsDashboard) {
+    return [];
+  }
+
+  return [
+    {
+      label: "Active Threads",
+      value: commsDashboard.active_threads,
+      color: "#1E40AF",
+      icon: "chatbubbles",
+      hint: "Tap to open inbox",
+      onPress: () => setProviderTab("messaging"),
+    },
+    {
+      label: "Sent Today",
+      value: commsDashboard.sent_today,
+      color: "#059669",
+      icon: "send",
+      hint: "Tap to open inbox",
+      onPress: () => setProviderTab("messaging"),
+    },
+    {
+      label: "Failed Today",
+      value: commsDashboard.failed_today,
+      color: (commsDashboard.failed_today ?? 0) > 0 ? "#DC2626" : "#111827",
+      icon: "alert-circle",
+      hint: "Tap to open escalations",
+      onPress: () => {
+        appStore.getState().setSupervisorEntryTab("escalations");
+        setMode("supervisor");
+      },
+    },
+  ];
+}
 
 const LAUNCH_ACTIONS: Array<{
   key: string;
@@ -53,6 +100,7 @@ const PRIORITY_VARIANT: Record<string, string> = {
 export function ProviderDashboardScreen() {
   const { facilityId, facilityName, workspaceName, setProviderTab, setMode } = useAppStore();
   const { activeEncounter } = useEncounterStore();
+  const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openEncounters, setOpenEncounters] = useState<Encounter[]>([]);
   const [metrics, setMetrics] = useState<FacilityMetrics | null>(null);
@@ -202,6 +250,41 @@ export function ProviderDashboardScreen() {
             </Card>
           ))}
         </View>
+
+        {commsDashboard ? (
+          <>
+            <Text style={styles.sectionLabel}>Comms Snapshot</Text>
+            {commsDashboard.source_health && Object.values(commsDashboard.source_health).some((state) => state !== "UP") ? (
+              <View style={styles.commsWarning}>
+                <Text style={styles.commsWarningText}>
+                  Some comms sources are degraded. Metrics may be partial; tap Refresh or open Comms for details.
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.metricsRow}>
+              {buildProviderCommsKpis(commsDashboard, setProviderTab, setMode).map((m) => (
+                <Pressable
+                  key={m.label}
+                  onPress={m.onPress}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flex: 1 })}
+                  testID={`comms-kpi-${m.label.toLowerCase().replace(" ", "-")}`}
+                  accessibilityLabel={`${m.label}. ${m.hint}`}
+                >
+                  <Card variant="elevated" padding="sm" style={styles.metricCard}>
+                    <CardBody>
+                      <View style={styles.metricContent}>
+                        <Ionicons name={m.icon as never} size={18} color={m.color} />
+                        <Text style={[styles.metricValue, { color: m.color }]}>{String(m.value ?? 0)}</Text>
+                        <Text style={styles.metricLabel}>{m.label}</Text>
+                        <Text style={styles.metricHint}>{m.hint}</Text>
+                      </View>
+                    </CardBody>
+                  </Card>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {/* Quick launch actions */}
         <Text style={styles.sectionLabel}>Quick Launch</Text>
@@ -481,6 +564,23 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#6B7280",
     textAlign: "center",
+  },
+  metricHint: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+  commsWarning: {
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  commsWarningText: {
+    fontSize: 11,
+    color: "#92400E",
   },
   sectionLabel: {
     fontSize: 12,

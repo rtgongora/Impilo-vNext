@@ -15,6 +15,9 @@ const SECTIONS = [
   { href: "/developer/api-catalog", label: "API Catalog", description: "Browse and explore Health OS API endpoints", Icon: BookOpen },
   { href: "/developer/clients", label: "Client Registration", description: "Register and manage API clients and credentials", Icon: Key },
   { href: "/developer/sandbox", label: "Sandbox", description: "Test API calls in an isolated sandbox environment", Icon: FlaskConical },
+  { href: "/developer/event-catalogue", label: "Event Catalogue", description: "Internal vs. externally publishable events governed by Integration Hub", Icon: BookOpen },
+  { href: "/marketplace/apps/integration", label: "Integration Operations", description: "External applications, contracts, webhooks and event subscriptions", Icon: Key },
+  { href: "/marketplace/apps", label: "Capability Marketplace", description: "Apps, plugins, extensions, connectors, adapters and AI skills", Icon: BookOpen },
 ];
 
 export default function DeveloperPage() {

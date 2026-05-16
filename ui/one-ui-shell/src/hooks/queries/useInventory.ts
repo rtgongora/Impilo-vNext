@@ -338,12 +338,6 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
 
-function extractPagedItems(raw: unknown): unknown[] {
-  const data = asRecord(asRecord(raw).data);
-  const items = data.items;
-  return Array.isArray(items) ? items : [];
-}
-
 function extractDataArray(raw: unknown): Record<string, unknown>[] {
   const data = asRecord(raw).data;
   return Array.isArray(data) ? (data as Record<string, unknown>[]) : [];
@@ -399,46 +393,6 @@ export interface InventoryCount {
 function str(v: unknown): string {
   if (v === null || v === undefined) return "";
   return String(v);
-}
-
-function mapOnHandToInventoryItem(row: unknown, facilityId: string): InventoryItem {
-  const o = asRecord(row);
-  const qty = Number(o.qtyOnHand ?? 0);
-  const updated = str(o.updatedAt);
-  return {
-    id: str(o.id),
-    facilityId: str(o.facilityId) || facilityId,
-    productCode: str(o.itemCode),
-    productName: str(o.itemCode),
-    category: "",
-    quantityOnHand: Number.isFinite(qty) ? qty : 0,
-    reorderLevel: 0,
-    unit: "EA",
-    status: qty <= 0 ? "LOW_STOCK" : "ACTIVE",
-    lastCountedAt: updated || null,
-    createdAt: updated,
-    updatedAt: updated,
-  };
-}
-
-function mapLedgerToMovement(row: unknown): InventoryMovement {
-  const o = asRecord(row);
-  const qty = Number(o.qtyDelta ?? 0);
-  const store = str(o.storeId);
-  const bin = str(o.binId);
-  const loc = [store, bin].filter(Boolean).join(" / ");
-  const et = str(o.eventType);
-  const rs = str(o.reason);
-  return {
-    id: str(o.eventId),
-    movedAt: str(o.createdAt),
-    itemName: str(o.itemCode),
-    fromLocation: loc || "—",
-    toLocation: "",
-    quantity: Number.isFinite(qty) ? Math.abs(qty) : 0,
-    reason: [et, rs].filter(Boolean).join(" — ") || "—",
-    performedBy: str(o.actorId) || "—",
-  };
 }
 
 /** On-hand rows for facility (catalog + quantity projection). */

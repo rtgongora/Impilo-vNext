@@ -38,7 +38,7 @@ export default function StockManagementPage() {
 
   const [activeModal, setActiveModal] = useState<ActionModal>(null);
 
-  const rows: InventoryItem[] = itemsQuery.data ?? [];
+  const rows: InventoryItem[] = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
   const movementCount = (movementsQuery.data ?? []).length;
   const pendingPoCount = countEnvelopeList(posQuery.data);
 

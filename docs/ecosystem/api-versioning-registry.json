@@ -1,6 +1,6 @@
 {
   "_description": "Impilo vNext API Versioning Registry — machine-readable source of truth for all API versions, deprecation windows, and sunset dates. Used by verify-deprecation-window.sh to enforce policy.",
-  "_updated": "2026-03-15",
+  "_updated": "2026-05-16",
   "_policy_ref": "docs/ecosystem/versioning-and-deprecation-policy.md",
   "versioning_rules": {
     "path_convention": "/internal/v{N}/{service}/{resource}",
@@ -144,6 +144,35 @@
         "POST /internal/v1/notify/send",
         "POST /internal/v1/notify/templates",
         "GET /internal/v1/notify/templates"
+      ]
+    },
+    {
+      "service": "experience-bff-comms",
+      "path_prefix": "/internal/v1/",
+      "version": 1,
+      "status": "CURRENT",
+      "introduced": "2026-05-16",
+      "deprecated_at": null,
+      "sunset_at": null,
+      "endpoints": [
+        "GET /internal/v1/comms/approval-queue",
+        "GET /internal/v1/comms/approval-queue/history",
+        "GET /internal/v1/comms/approval-queue/health",
+        "POST /internal/v1/comms/approval-queue/templates/{templateId}/approve",
+        "POST /internal/v1/comms/approval-queue/templates/{templateId}/reject-with-reason",
+        "POST /internal/v1/comms/approval-queue/templates/{templateId}/resubmit",
+        "POST /internal/v1/comms/approval-queue/templates/{templateId}/reopen",
+        "GET /internal/v1/comms/approval-queue/templates/{templateId}/dry-run",
+        "POST /internal/v1/comms/approval-queue/campaigns/{campaignId}/approve",
+        "POST /internal/v1/comms/approval-queue/campaigns/{campaignId}/reject-with-reason",
+        "POST /internal/v1/comms/approval-queue/campaigns/{campaignId}/resubmit",
+        "POST /internal/v1/comms/approval-queue/campaigns/{campaignId}/reopen",
+        "GET /internal/v1/comms/approval-queue/campaigns/{campaignId}/dry-run",
+        "POST /internal/v1/comms/approval-queue/campaigns/{campaignId}/cancel",
+        "GET /internal/v1/communication/dashboard",
+        "GET /internal/v1/communication/health",
+        "GET /internal/v1/omnichannel/dashboard",
+        "GET /internal/v1/omnichannel/health"
       ]
     },
     {

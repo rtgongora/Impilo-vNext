@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/extension-manifest.schema.json",
+  "title": "Health OS Extension Manifest",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes",
+    "extendsServiceId", "extensionPoint"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "EXTENSION" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "clinicalSafetyClassification": {
+      "enum": ["NON_CLINICAL", "CLINICAL_INFORMATIONAL", "CLINICAL_DECISION_SUPPORT", "CLINICAL_DIRECT_CARE"]
+    },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "rolesAllowed": { "type": "array", "items": { "type": "string" } },
+    "extendsServiceId": { "type": "string", "description": "Sovereign service this extension augments (e.g. pct-service, surveillance-service)." },
+    "extensionPoint": {
+      "enum": ["CLINICAL_RULE", "CLINICAL_FORM", "WORKFLOW", "DASHBOARD_TILE", "REPORT", "WORKSPACE_PANEL", "NOMPILO_SKILL_HOOK", "OTHER"]
+    },
+    "declaredRules": { "type": "array", "items": { "type": "string" } },
+    "declaredForms": { "type": "array", "items": { "type": "string" } },
+    "declaredWorkflows": { "type": "array", "items": { "type": "string" } },
+    "declaredDashboards": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.surv.persistence.repository;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,5 +14,11 @@ public interface CaseRepository extends JpaRepository<CaseEntity, Long> {
 
     Page<CaseEntity> findByTenantId(UUID tenantId, Pageable pageable);
 
+    List<CaseEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+
     Page<CaseEntity> findByTenantIdAndStatus(UUID tenantId, CaseStatus status, Pageable pageable);
+
+    long countByTenantIdAndStatus(UUID tenantId, CaseStatus status);
+
+    long countByTenantIdAndStatusNot(UUID tenantId, CaseStatus status);
 }

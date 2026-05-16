@@ -57,9 +57,9 @@ export default function ControlTowerPage() {
   const statsQ = useFacilityQueueStats(fid);
   const shiftsQ = useFacilityActiveShiftCount(fid);
 
-  const wards = wardsQ.data?.data ?? [];
-  const beds = bedsQ.data?.data ?? [];
-  const queueEntries = queueQ.data?.data ?? [];
+  const wards = useMemo(() => wardsQ.data?.data ?? [], [wardsQ.data?.data]);
+  const beds = useMemo(() => bedsQ.data?.data ?? [], [bedsQ.data?.data]);
+  const queueEntries = useMemo(() => queueQ.data?.data ?? [], [queueQ.data?.data]);
   const queueStats = statsQ.data?.data;
 
   const queueRows = useMemo(() => buildQueueRows(queueEntries), [queueEntries]);

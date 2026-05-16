@@ -1,11 +1,15 @@
 # Service completeness report (Phase A2)
 
-Generated: 2026-05-15T05:26:10.204Z
+Generated: 2026-05-16T21:25:38.735Z
 
 | Module | Composite | backend | bff | contract | api_docs | kafka | ui_hooks | ui_pages |
 |--------|-----------|---------|-----|----------|----------|-------|----------|----------|
-| scheduling-service | 0.524 | stub | substantial | none | stub | none | substantial | substantial |
-| workforce-governance-service | 0.81 | substantial | substantial | none | partial | substantial | substantial | substantial |
+| nhume-service | 0.524 | substantial | substantial | none | partial | substantial | none | none |
+| llm-orchestration-service | 0.667 | substantial | substantial | none | partial | none | substantial | substantial |
+| analytics-pipeline-service | 0.714 | stub | substantial | substantial | partial | none | substantial | substantial |
+| ndila-service | 0.714 | substantial | substantial | substantial | substantial | substantial | none | none |
+| referral-service | 0.714 | stub | substantial | substantial | partial | none | substantial | substantial |
+| scheduling-service | 0.714 | stub | substantial | substantial | partial | none | substantial | substantial |
 | hr-payroll-service | 0.952 | substantial | substantial | substantial | substantial | substantial | partial | substantial |
 | mushe-wallet-service | 0.952 | substantial | substantial | substantial | partial | substantial | substantial | substantial |
 | procurement-service | 0.952 | substantial | substantial | substantial | substantial | substantial | partial | substantial |
@@ -84,24 +88,29 @@ Generated: 2026-05-15T05:26:10.204Z
 | vito-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 | wellness-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 | workflow-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
+| workforce-governance-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 | zibo-service | 1 | substantial | substantial | substantial | substantial | substantial | substantial | substantial |
 
 ## Aggregate (0–3 per dimension)
 
-- backend: 2.98
+- backend: 2.93
 - bff: 3
 - contract: 2.93
-- api_docs: 2.95
-- kafka: 2.96
-- experience_hooks: 2.96
-- experience_pages: 3
+- api_docs: 2.93
+- kafka: 2.86
+- experience_hooks: 2.9
+- experience_pages: 2.93
 
 ## Phase F implementation backlog (literal gaps)
 
 | Module | gap_count | gaps |
 |--------|-----------|------|
-| scheduling-service | 4 | backend, contract, api_docs, integration_kafka |
-| workforce-governance-service | 2 | contract, api_docs |
+| nhume-service | 4 | contract, api_docs, experience_hooks, experience_pages |
+| llm-orchestration-service | 3 | contract, api_docs, integration_kafka |
+| analytics-pipeline-service | 3 | backend, api_docs, integration_kafka |
+| referral-service | 3 | backend, api_docs, integration_kafka |
+| scheduling-service | 3 | backend, api_docs, integration_kafka |
+| ndila-service | 2 | experience_hooks, experience_pages |
 | hr-payroll-service | 1 | experience_hooks |
 | mushe-wallet-service | 1 | api_docs |
 | procurement-service | 1 | experience_hooks |

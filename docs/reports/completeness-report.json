@@ -1,96 +1,37 @@
 {
-  "generated_at": "2026-05-15T05:26:10.204Z",
+  "generated_at": "2026-05-16T21:25:38.735Z",
   "registry": "docs/registry/services-registry.yaml",
-  "service_count": 81,
+  "service_count": 86,
   "aggregate": {
-    "backend_avg": 2.98,
+    "backend_avg": 2.93,
     "bff_avg": 3,
     "contract_avg": 2.93,
-    "api_docs_avg": 2.95,
-    "kafka_avg": 2.96,
-    "experience_hooks_avg": 2.96,
-    "experience_pages_avg": 3
+    "api_docs_avg": 2.93,
+    "kafka_avg": 2.86,
+    "experience_hooks_avg": 2.9,
+    "experience_pages_avg": 2.93
   },
   "services": [
     {
-      "maven_module": "scheduling-service",
+      "maven_module": "nhume-service",
       "product_names": [
-        "Scheduling"
+        "Nhume"
       ],
-      "primary_plane": "clinical",
+      "primary_plane": "integration",
       "sovereign_group": null,
       "implementation_gaps": [
-        "backend",
         "contract",
         "api_docs",
-        "integration_kafka"
+        "experience_hooks",
+        "experience_pages"
       ],
       "implementation_gap_count": 4,
       "dimensions": {
         "backend": {
-          "level": "stub",
-          "application_class": "SchedulingServiceApplication",
-          "flyway_migrations": 0,
-          "java_files": 2
-        },
-        "bff": {
           "level": "substantial",
-          "is_bff_shell": false,
-          "expected_client": "RegistryDownstreamFacadeClient",
-          "client_file_present": true,
-          "referenced_in_controller": true,
-          "proxy": null,
-          "service_endpoint_accessor": null,
-          "service_endpoint_declared": false
-        },
-        "contract": {
-          "level": "none",
-          "openapi_file": null,
-          "present": false
-        },
-        "api_docs": {
-          "level": "stub",
-          "springdoc_in_pom": false
-        },
-        "integration_kafka": {
-          "level": "none",
-          "kafka_listener_count": 0,
-          "kafka_publish_signals": 0,
-          "kafka_combined_score": 0,
-          "pom_kafka_dependency": false
-        },
-        "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 12,
-          "search_terms_sample": [
-            "scheduling"
-          ]
-        },
-        "experience_pages": {
-          "level": "substantial",
-          "files_with_hits": 27
-        }
-      },
-      "composite_score": 0.524
-    },
-    {
-      "maven_module": "workforce-governance-service",
-      "product_names": [
-        "Workforce Governance"
-      ],
-      "primary_plane": "enterprise",
-      "sovereign_group": null,
-      "implementation_gaps": [
-        "contract",
-        "api_docs"
-      ],
-      "implementation_gap_count": 2,
-      "dimensions": {
-        "backend": {
-          "level": "substantial",
-          "application_class": "WorkforceGovernanceApplication",
-          "flyway_migrations": 1,
-          "java_files": 42
+          "application_class": "NhumeServiceApplication",
+          "flyway_migrations": 3,
+          "java_files": 71
         },
         "bff": {
           "level": "substantial",
@@ -114,26 +55,328 @@
         "integration_kafka": {
           "level": "substantial",
           "kafka_listener_count": 0,
-          "kafka_publish_signals": 3,
-          "kafka_combined_score": 3,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
           "pom_kafka_dependency": true
         },
         "experience_hooks": {
-          "level": "substantial",
-          "files_with_hits": 17,
+          "level": "none",
+          "files_with_hits": 0,
           "search_terms_sample": [
-            "workforce-governance",
-            "workforcegovernance",
-            "workforce",
-            "governance"
+            "nhume"
+          ]
+        },
+        "experience_pages": {
+          "level": "none",
+          "files_with_hits": 0
+        }
+      },
+      "composite_score": 0.524
+    },
+    {
+      "maven_module": "llm-orchestration-service",
+      "product_names": [
+        "Llm Orchestration"
+      ],
+      "primary_plane": "integration",
+      "sovereign_group": null,
+      "implementation_gaps": [
+        "contract",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "implementation_gap_count": 3,
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "LlmOrchestrationApplication",
+          "flyway_migrations": 1,
+          "java_files": 23
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "none",
+          "openapi_file": null,
+          "present": false
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 12,
+          "search_terms_sample": [
+            "llm-orchestration",
+            "llmorchestration",
+            "llm",
+            "orchestration"
           ]
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 47
+          "files_with_hits": 34
         }
       },
-      "composite_score": 0.81
+      "composite_score": 0.667
+    },
+    {
+      "maven_module": "analytics-pipeline-service",
+      "product_names": [
+        "Analytics Pipeline"
+      ],
+      "primary_plane": "integration",
+      "sovereign_group": null,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "implementation_gap_count": 3,
+      "dimensions": {
+        "backend": {
+          "level": "stub",
+          "application_class": "AnalyticsPipelineServiceApplication",
+          "flyway_migrations": 0,
+          "java_files": 1
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "analytics-pipeline.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 5,
+          "search_terms_sample": [
+            "analytics-pipeline",
+            "analyticspipeline",
+            "analytics",
+            "pipeline"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 21
+        }
+      },
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "ndila-service",
+      "product_names": [
+        "Ndila"
+      ],
+      "primary_plane": "integration",
+      "sovereign_group": null,
+      "implementation_gaps": [
+        "experience_hooks",
+        "experience_pages"
+      ],
+      "implementation_gap_count": 2,
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "NdilaServiceApplication",
+          "flyway_migrations": 1,
+          "java_files": 68
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "ndila.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 2,
+          "kafka_combined_score": 2,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "none",
+          "files_with_hits": 0,
+          "search_terms_sample": [
+            "ndila"
+          ]
+        },
+        "experience_pages": {
+          "level": "none",
+          "files_with_hits": 0
+        }
+      },
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "referral-service",
+      "product_names": [
+        "Referral"
+      ],
+      "primary_plane": "integration",
+      "sovereign_group": null,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "implementation_gap_count": 3,
+      "dimensions": {
+        "backend": {
+          "level": "stub",
+          "application_class": "ReferralServiceApplication",
+          "flyway_migrations": 0,
+          "java_files": 1
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "referral.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 12,
+          "search_terms_sample": [
+            "referral"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 45
+        }
+      },
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "scheduling-service",
+      "product_names": [
+        "Scheduling"
+      ],
+      "primary_plane": "clinical",
+      "sovereign_group": null,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "implementation_gap_count": 3,
+      "dimensions": {
+        "backend": {
+          "level": "stub",
+          "application_class": "SchedulingServiceApplication",
+          "flyway_migrations": 0,
+          "java_files": 2
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "scheduling.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "partial",
+          "springdoc_in_pom": false
+        },
+        "integration_kafka": {
+          "level": "none",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 0,
+          "kafka_combined_score": 0,
+          "pom_kafka_dependency": false
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 12,
+          "search_terms_sample": [
+            "scheduling"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 27
+        }
+      },
+      "composite_score": 0.714
     },
     {
       "maven_module": "hr-payroll-service",
@@ -319,7 +562,7 @@
       "product_names": [
         "Simba"
       ],
-      "primary_plane": "clinical",
+      "primary_plane": "enterprise",
       "sovereign_group": null,
       "implementation_gaps": [
         "experience_hooks"
@@ -329,8 +572,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "SimbaApplication",
-          "flyway_migrations": 1,
-          "java_files": 51
+          "flyway_migrations": 2,
+          "java_files": 52
         },
         "bff": {
           "level": "substantial",
@@ -416,7 +659,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 47,
+          "files_with_hits": 48,
           "search_terms_sample": [
             "ai-model-registry",
             "aimodelregistry",
@@ -475,7 +718,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 41,
+          "files_with_hits": 42,
           "search_terms_sample": [
             "asset-registry",
             "assetregistry",
@@ -534,7 +777,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 27,
+          "files_with_hits": 28,
           "search_terms_sample": [
             "audit-ledger",
             "auditledger",
@@ -895,7 +1138,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 178
+          "files_with_hits": 177
         }
       },
       "composite_score": 1
@@ -951,7 +1194,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 13
+          "files_with_hits": 12
         }
       },
       "composite_score": 1
@@ -1298,7 +1541,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 361
+          "files_with_hits": 363
         }
       },
       "composite_score": 1
@@ -1357,7 +1600,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 346
+          "files_with_hits": 348
         }
       },
       "composite_score": 1
@@ -1416,7 +1659,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 349
+          "files_with_hits": 351
         }
       },
       "composite_score": 1
@@ -1475,7 +1718,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 346
+          "files_with_hits": 348
         }
       },
       "composite_score": 1
@@ -1552,8 +1795,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "DispatchServiceApplication",
-          "flyway_migrations": 2,
-          "java_files": 17
+          "flyway_migrations": 3,
+          "java_files": 41
         },
         "bff": {
           "level": "substantial",
@@ -1608,8 +1851,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "DocumentStoreApplication",
-          "flyway_migrations": 2,
-          "java_files": 23
+          "flyway_migrations": 3,
+          "java_files": 41
         },
         "bff": {
           "level": "substantial",
@@ -1648,7 +1891,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 279
+          "files_with_hits": 280
         }
       },
       "composite_score": 1
@@ -1667,7 +1910,7 @@
           "level": "substantial",
           "application_class": "ExperienceBffApplication",
           "flyway_migrations": 39,
-          "java_files": 309
+          "java_files": 335
         },
         "bff": {
           "level": "substantial",
@@ -1690,9 +1933,9 @@
         },
         "integration_kafka": {
           "level": "substantial",
-          "kafka_listener_count": 18,
-          "kafka_publish_signals": 2,
-          "kafka_combined_score": 20,
+          "kafka_listener_count": 19,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 22,
           "pom_kafka_dependency": true
         },
         "experience_hooks": {
@@ -1881,7 +2124,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 42
+          "files_with_hits": 43
         }
       },
       "composite_score": 1
@@ -2559,7 +2802,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 44,
+          "files_with_hits": 45,
           "search_terms_sample": [
             "msika-flow",
             "msikaflow",
@@ -2569,7 +2812,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 225
+          "files_with_hits": 226
         }
       },
       "composite_score": 1
@@ -2797,7 +3040,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 357
+          "files_with_hits": 358
         }
       },
       "composite_score": 1
@@ -2871,7 +3114,7 @@
         "backend": {
           "level": "substantial",
           "application_class": "NotificationApplication",
-          "flyway_migrations": 5,
+          "flyway_migrations": 6,
           "java_files": 46
         },
         "bff": {
@@ -2902,7 +3145,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 12,
+          "files_with_hits": 13,
           "search_terms_sample": [
             "notification"
           ]
@@ -3139,7 +3382,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 15
+          "files_with_hits": 16
         }
       },
       "composite_score": 1
@@ -3158,7 +3401,7 @@
           "level": "substantial",
           "application_class": "PacsAdapterApplication",
           "flyway_migrations": 3,
-          "java_files": 40
+          "java_files": 43
         },
         "bff": {
           "level": "substantial",
@@ -3188,7 +3431,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 8,
+          "files_with_hits": 10,
           "search_terms_sample": [
             "pacs-adapter",
             "pacsadapter",
@@ -3198,7 +3441,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 15
+          "files_with_hits": 18
         }
       },
       "composite_score": 1
@@ -3216,8 +3459,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "PctApplication",
-          "flyway_migrations": 8,
-          "java_files": 108
+          "flyway_migrations": 9,
+          "java_files": 120
         },
         "bff": {
           "level": "substantial",
@@ -3418,7 +3661,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 48,
+          "files_with_hits": 49,
           "search_terms_sample": [
             "product-registry",
             "productregistry",
@@ -3428,7 +3671,7 @@
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 107
+          "files_with_hits": 106
         }
       },
       "composite_score": 1
@@ -3533,7 +3776,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 12,
+          "files_with_hits": 13,
           "search_terms_sample": [
             "rules"
           ]
@@ -3589,7 +3832,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 42,
+          "files_with_hits": 43,
           "search_terms_sample": [
             "schema-registry",
             "schemaregistry",
@@ -3847,8 +4090,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "SurveillanceApplication",
-          "flyway_migrations": 4,
-          "java_files": 30
+          "flyway_migrations": 8,
+          "java_files": 75
         },
         "bff": {
           "level": "substantial",
@@ -3934,7 +4177,7 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 27,
+          "files_with_hits": 28,
           "search_terms_sample": [
             "tshepo-audit",
             "tshepoaudit",
@@ -3962,7 +4205,7 @@
         "backend": {
           "level": "substantial",
           "application_class": "TshepoAuthzApplication",
-          "flyway_migrations": 11,
+          "flyway_migrations": 12,
           "java_files": 71
         },
         "bff": {
@@ -4533,7 +4776,7 @@
       "product_names": [
         "Wellness"
       ],
-      "primary_plane": "clinical",
+      "primary_plane": "enterprise",
       "sovereign_group": null,
       "implementation_gaps": [],
       "implementation_gap_count": 0,
@@ -4541,8 +4784,8 @@
         "backend": {
           "level": "substantial",
           "application_class": "WellnessServiceApplication",
-          "flyway_migrations": 3,
-          "java_files": 7
+          "flyway_migrations": 4,
+          "java_files": 8
         },
         "bff": {
           "level": "substantial",
@@ -4628,14 +4871,73 @@
         },
         "experience_hooks": {
           "level": "substantial",
-          "files_with_hits": 25,
+          "files_with_hits": 27,
           "search_terms_sample": [
             "workflow"
           ]
         },
         "experience_pages": {
           "level": "substantial",
-          "files_with_hits": 83
+          "files_with_hits": 85
+        }
+      },
+      "composite_score": 1
+    },
+    {
+      "maven_module": "workforce-governance-service",
+      "product_names": [
+        "Workforce Governance"
+      ],
+      "primary_plane": "enterprise",
+      "sovereign_group": null,
+      "implementation_gaps": [],
+      "implementation_gap_count": 0,
+      "dimensions": {
+        "backend": {
+          "level": "substantial",
+          "application_class": "WorkforceGovernanceApplication",
+          "flyway_migrations": 1,
+          "java_files": 42
+        },
+        "bff": {
+          "level": "substantial",
+          "is_bff_shell": false,
+          "expected_client": "RegistryDownstreamFacadeClient",
+          "client_file_present": true,
+          "referenced_in_controller": true,
+          "proxy": null,
+          "service_endpoint_accessor": null,
+          "service_endpoint_declared": false
+        },
+        "contract": {
+          "level": "substantial",
+          "openapi_file": "workforce-governance.openapi.yaml",
+          "present": true
+        },
+        "api_docs": {
+          "level": "substantial",
+          "springdoc_in_pom": true
+        },
+        "integration_kafka": {
+          "level": "substantial",
+          "kafka_listener_count": 0,
+          "kafka_publish_signals": 3,
+          "kafka_combined_score": 3,
+          "pom_kafka_dependency": true
+        },
+        "experience_hooks": {
+          "level": "substantial",
+          "files_with_hits": 17,
+          "search_terms_sample": [
+            "workforce-governance",
+            "workforcegovernance",
+            "workforce",
+            "governance"
+          ]
+        },
+        "experience_pages": {
+          "level": "substantial",
+          "files_with_hits": 47
         }
       },
       "composite_score": 1
@@ -4699,26 +5001,70 @@
   ],
   "implementation_backlog": [
     {
-      "maven_module": "scheduling-service",
-      "primary_plane": "clinical",
+      "maven_module": "nhume-service",
+      "primary_plane": "integration",
       "implementation_gap_count": 4,
       "implementation_gaps": [
-        "backend",
         "contract",
         "api_docs",
-        "integration_kafka"
+        "experience_hooks",
+        "experience_pages"
       ],
       "composite_score": 0.524
     },
     {
-      "maven_module": "workforce-governance-service",
-      "primary_plane": "enterprise",
-      "implementation_gap_count": 2,
+      "maven_module": "llm-orchestration-service",
+      "primary_plane": "integration",
+      "implementation_gap_count": 3,
       "implementation_gaps": [
         "contract",
-        "api_docs"
+        "api_docs",
+        "integration_kafka"
       ],
-      "composite_score": 0.81
+      "composite_score": 0.667
+    },
+    {
+      "maven_module": "analytics-pipeline-service",
+      "primary_plane": "integration",
+      "implementation_gap_count": 3,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "referral-service",
+      "primary_plane": "integration",
+      "implementation_gap_count": 3,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "scheduling-service",
+      "primary_plane": "clinical",
+      "implementation_gap_count": 3,
+      "implementation_gaps": [
+        "backend",
+        "api_docs",
+        "integration_kafka"
+      ],
+      "composite_score": 0.714
+    },
+    {
+      "maven_module": "ndila-service",
+      "primary_plane": "integration",
+      "implementation_gap_count": 2,
+      "implementation_gaps": [
+        "experience_hooks",
+        "experience_pages"
+      ],
+      "composite_score": 0.714
     },
     {
       "maven_module": "hr-payroll-service",
@@ -4749,7 +5095,7 @@
     },
     {
       "maven_module": "simba-service",
-      "primary_plane": "clinical",
+      "primary_plane": "enterprise",
       "implementation_gap_count": 1,
       "implementation_gaps": [
         "experience_hooks"

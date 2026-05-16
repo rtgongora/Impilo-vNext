@@ -19,7 +19,7 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import type { Conversation } from "@impilo/mobile-messaging";
+import { useCommunicationDashboard, type Conversation } from "@impilo/mobile-messaging";
 import {
   fetchConversations,
   createConversation,
@@ -39,6 +39,7 @@ export function MessagingInboxScreen() {
   const [newMessage, setNewMessage] = useState("");
   const [newType, setNewType] = useState<"DIRECT" | "SUPPORT">("DIRECT");
   const [submitting, setSubmitting] = useState(false);
+  const { dashboard } = useCommunicationDashboard();
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -100,6 +101,22 @@ export function MessagingInboxScreen() {
     <Screen>
       <Header title="Messages" />
       <ScrollView testID="messaging-inbox-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
+        {dashboard ? (
+          <View style={styles.kpiRow}>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{String(dashboard.active_threads ?? 0)}</Text>
+              <Text style={styles.kpiLabel}>Active threads</Text>
+            </View>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{String(dashboard.open_clinical_pages ?? 0)}</Text>
+              <Text style={styles.kpiLabel}>Open pages</Text>
+            </View>
+            <View style={styles.kpiCard}>
+              <Text style={styles.kpiValue}>{String(dashboard.sent_today ?? 0)}</Text>
+              <Text style={styles.kpiLabel}>Sent today</Text>
+            </View>
+          </View>
+        ) : null}
         <View style={styles.actionsBar}>
           <View style={styles.filterRow}>
             {[
@@ -254,6 +271,29 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
+  },
+  kpiRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  kpiCard: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  kpiValue: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  kpiLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    marginTop: 2,
   },
   filterRow: {
     flexDirection: "row",

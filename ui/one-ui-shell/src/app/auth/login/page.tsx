@@ -34,7 +34,6 @@ import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
-import { apiClient } from "@/lib/api-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -264,6 +263,9 @@ export default function LoginPage() {
           Privacy Policy
         </Link>
         .
+      </p>
+      <p className="mt-1 text-center text-[11px] text-gray-400">
+        Consent policy version: {CURRENT_CONSENT_VERSION}
       </p>
 
       {/* ── Dev/test quick-login panel ─────────────────────────── */}

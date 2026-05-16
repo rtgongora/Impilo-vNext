@@ -52,7 +52,7 @@ export default function MyDocumentsPage() {
   const { data, isLoading, isError } = usePersonalDocuments();
   const downloadMutation = usePersonalDocumentDownloadUrl();
 
-  const documents = data?.data ?? [];
+  const documents = useMemo(() => data?.data ?? [], [data?.data]);
   const filteredDocuments = useMemo(
     () => documents.filter((document) => documentMatches(document, query)),
     [documents, query],

@@ -104,7 +104,7 @@ export default function RosterPage() {
     weekStartISO,
   });
 
-  const shifts = data?.data ?? [];
+  const shifts = useMemo(() => data?.data ?? [], [data?.data]);
 
   const rows: RosterRow[] = useMemo(() => {
     const byUser = new Map<string, { displayName: string; days: Record<string, CellState> }>();

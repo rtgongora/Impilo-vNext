@@ -22,6 +22,7 @@ import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class NotifyService {
@@ -107,6 +108,60 @@ public class NotifyService {
                 .map(this::toResponse);
     }
 
+    @Transactional
+    public Optional<NotificationResponse> markAsRead(String tenantId, String podId, String correlationId, String notificationId) {
+        Optional<NotificationEntity> maybeEntity = notificationRepository.findByIdAndTenantId(notificationId, tenantId);
+        if (maybeEntity.isEmpty()) {
+            return Optional.empty();
+        }
+        NotificationEntity entity = maybeEntity.get();
+        if (entity.getReadAt() == null) {
+            entity.setReadAt(OffsetDateTime.now());
+            notificationRepository.save(entity);
+            emitReadOutboxEvent(entity, tenantId, podId, correlationId);
+        }
+        return Optional.of(toResponse(entity));
+    }
+
+    @Transactional
+    public int markAllAsRead(String tenantId) {
+        int updated = 0;
+        Page<NotificationEntity> page = notificationRepository.findByTenantId(tenantId, Pageable.unpaged());
+        for (NotificationEntity entity : page.getContent()) {
+            if (entity.getReadAt() == null) {
+                entity.setReadAt(OffsetDateTime.now());
+                updated++;
+            }
+        }
+        if (updated > 0) {
+            notificationRepository.saveAll(page.getContent());
+        }
+        return updated;
+    }
+
+    @Transactional(readOnly = true)
+    public long unreadCount(String tenantId) {
+        return notificationRepository.countByTenantIdAndReadAtIsNull(tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Map<String, Object>> getPreferences(String tenantId, String patientRef) {
+        if (patientRef == null || patientRef.isBlank()) {
+            return Optional.empty();
+        }
+        return mvumoPreferenceClient.getCommunicationPreferences(tenantId, patientRef)
+                .map(node -> objectMapper.convertValue(node, Map.class));
+    }
+
+    @Transactional
+    public Optional<Map<String, Object>> updatePreferences(String tenantId, String patientRef, Map<String, Object> body) {
+        if (patientRef == null || patientRef.isBlank()) {
+            return Optional.empty();
+        }
+        return mvumoPreferenceClient.putCommunicationPreferences(tenantId, patientRef, body)
+                .map(node -> objectMapper.convertValue(node, Map.class));
+    }
+
     private NotificationResponse toResponse(NotificationEntity entity) {
         return new NotificationResponse(
                 entity.getId(),
@@ -117,8 +172,25 @@ public class NotifyService {
                 entity.getAttempts(),
                 entity.getLastError(),
                 entity.getCreatedAt(),
-                entity.getSentAt()
+                entity.getSentAt(),
+                entity.getReadAt()
         );
+    }
+
+    private void emitReadOutboxEvent(NotificationEntity entity, String tenantId, String podId, String correlationId) {
+        OutboxEventEntity outbox = new OutboxEventEntity();
+        outbox.setTenantId(tenantId);
+        outbox.setPodId(podId);
+        outbox.setCorrelationId(correlationId != null ? correlationId : "unknown");
+        outbox.setEventType("impilo.notify.notification.read.v1");
+        outbox.setSchemaVersion(1);
+        outbox.setOccurredAt(OffsetDateTime.now());
+        outbox.setPayloadJson(serializePayload(Map.of(
+                "notificationId", entity.getId(),
+                "channel", entity.getChannel(),
+                "status", entity.getStatus().name()
+        )));
+        outboxEventRepository.save(outbox);
     }
 
     private String serializeVariables(Map<String, String> variables) {

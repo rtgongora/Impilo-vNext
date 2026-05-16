@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/external-event-subscription.schema.json",
+  "title": "External Event Subscription",
+  "description": "Per-external-app projection of which externally-publishable event topics the app is approved to receive. See doctrine §5.",
+  "type": "object",
+  "required": [
+    "externalAppId", "integrationContractId", "webhookSubscriptionId",
+    "eventTopic", "status", "approvedBy", "approvedAt"
+  ],
+  "properties": {
+    "externalAppId": { "type": "string" },
+    "integrationContractId": { "type": "string" },
+    "webhookSubscriptionId": { "type": "string" },
+    "eventTopic": { "type": "string" },
+    "status": { "enum": ["ACTIVE", "PAUSED", "REVOKED"] },
+    "approvedBy": { "type": "string" },
+    "approvedAt": { "type": "string", "format": "date-time" }
+  }
+}

@@ -34,9 +34,10 @@ import {
 } from "../../services/citizenDeliveryService";
 import type { MarketplaceService as MktService, ServiceRequest as SvcReq } from "../../types";
 import { CartScreen } from "./CartScreen";
+import { HealthOsAppsScreen } from "./HealthOsAppsScreen";
 import { useAppStore } from "../../stores/appStore";
 
-type MarketplaceTab = "browse" | "requests" | "deliveries" | "cart";
+type MarketplaceTab = "browse" | "requests" | "deliveries" | "cart" | "apps";
 
 const CATEGORIES = [
   { label: "All", value: "" },
@@ -61,6 +62,7 @@ const TABS: { id: MarketplaceTab; label: string; icon: React.ComponentProps<type
   { id: "requests", label: "Requests", icon: "receipt-outline" },
   { id: "deliveries", label: "Deliveries", icon: "bicycle-outline" },
   { id: "cart", label: "Cart", icon: "cart-outline" },
+  { id: "apps", label: "Apps", icon: "apps-outline" },
 ];
 
 export function MarketplaceScreen() {
@@ -444,6 +446,8 @@ export function MarketplaceScreen() {
         ) : null}
 
         {tab === "cart" ? <CartScreen /> : null}
+
+        {tab === "apps" ? <HealthOsAppsScreen /> : null}
       </ScrollView>
     </Screen>
   );

@@ -8,6 +8,7 @@ import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
 import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationEntity, String> {
@@ -18,4 +19,8 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
             String tenantId, String patientRef, NotificationStatus status);
 
     Page<NotificationEntity> findByTenantId(String tenantId, Pageable pageable);
+
+    Optional<NotificationEntity> findByIdAndTenantId(String id, String tenantId);
+
+    long countByTenantIdAndReadAtIsNull(String tenantId);
 }

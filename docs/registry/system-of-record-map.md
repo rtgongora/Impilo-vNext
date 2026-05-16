@@ -41,13 +41,16 @@
 | `jobs-service` | integration | Jobs canonical records |
 | `landela-adapter-service` | integration | Landela Adapter canonical records |
 | `learning-service` | experience | Learning canonical records |
+| `llm-orchestration-service` | integration | Llm Orchestration canonical records |
 | `msika-flow-service` | enterprise | Msika Flow canonical records |
 | `msika-service` | enterprise | Msika canonical records |
 | `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |
 | `mushex-service` | enterprise | Mushex canonical records |
 | `mvumo-service` | trust | Mvumo canonical records |
 | `national-data-repository-service` | data | National Data Repository canonical records |
+| `ndila-service` | integration | canonical geospatial location registry, routing, ETA, and distance matrix orchestration, geofencing and catchment boundary operations, tracking asset telemetry normalization, spatial search and geospatial intelligence context |
 | `ndr-service` | data | Ndr canonical records |
+| `nhume-service` | integration | dispatch request and assignment lifecycle, courier and fleet operational registry, last-mile tracking and proof-of-delivery telemetry, delivery chain-of-custody and exception workflow |
 | `notification-service` | integration | Notification canonical records |
 | `observability-service` | integration | Observability canonical records |
 | `offline-edge-service` | integration | Offline Edge canonical records |

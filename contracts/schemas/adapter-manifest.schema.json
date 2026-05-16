@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/adapter-manifest.schema.json",
+  "title": "Health OS Adapter Manifest",
+  "description": "Vendor-specific implementation behind a canonical Impilo integration port. See docs/architecture/CANONICAL_INTEGRATION_PORTS.md.",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes",
+    "canonicalPort", "adapterImplementationClass", "vendorName"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "ADAPTER" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "canonicalPort": {
+      "enum": [
+        "ImagingIntegrationPort",
+        "LaboratoryIntegrationPort",
+        "LogisticsIntegrationPort",
+        "TelemedicineIntegrationPort",
+        "OmnichannelIntegrationPort",
+        "PaymentIntegrationPort",
+        "MapsIntegrationPort",
+        "AIProviderPort",
+        "DeviceIntegrationPort"
+      ]
+    },
+    "adapterImplementationClass": { "type": "string" },
+    "vendorName": { "type": "string" },
+    "vendorVersion": { "type": "string" },
+    "defaultForPort": { "type": "boolean" }
+  }
+}

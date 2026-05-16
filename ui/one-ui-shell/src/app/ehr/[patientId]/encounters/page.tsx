@@ -63,10 +63,10 @@ export default function EncountersPage() {
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const createEncounter = useCreateEncounter();
 
-  const encounters: EncounterResource[] = encountersData?.data ?? [];
-  const referrals = referralsData?.data ?? [];
-  const clinicalNotes = notesData?.data ?? [];
-  const telemedicineSessions = telemedicineData?.data ?? [];
+  const encounters: EncounterResource[] = useMemo(() => encountersData?.data ?? [], [encountersData?.data]);
+  const referrals = useMemo(() => referralsData?.data ?? [], [referralsData?.data]);
+  const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
+  const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const activeEncounter = encounters.find(
     (encounter) => encounter.attributes.status === "ACTIVE" || encounter.attributes.status === "IN_PROGRESS",
   );

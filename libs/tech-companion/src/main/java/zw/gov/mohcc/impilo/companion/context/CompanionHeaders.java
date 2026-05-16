@@ -62,6 +62,32 @@ public final class CompanionHeaders {
     public static final String ACCESS_MODE      = "X-Access-Mode";      // INTERNAL, EXTERNAL
     public static final String WORKFLOW_STATE   = "X-Workflow-State";   // e.g. DRAFT, ACTIVE, DISCHARGED
 
+    // ── Service identity (Health OS Extensibility Doctrine §4 / §9) ──────
+    /** Stable registered identifier of the calling sovereign service (e.g. "experience-bff", "msika-apps-service"). */
+    public static final String SERVICE_ID      = "X-Service-Id";
+    /** Human-readable name of the calling service. */
+    public static final String SERVICE_NAME    = "X-Service-Name";
+    /** Semantic version of the calling service. */
+    public static final String SERVICE_VERSION = "X-Service-Version";
+    /** Classification of the request originator: HUMAN, SYSTEM, SCHEDULED_JOB, BACKGROUND_WORKER, EVENT_CONSUMER, AI_ASSISTED, EXTERNAL_APP. */
+    public static final String REQUEST_SOURCE  = "X-Request-Source";
+
+    // ── External application origination (Doctrine §6 / §9.2) ────────────
+    /** Registered external application id, when the request originates from an approved external app. */
+    public static final String EXTERNAL_APP_ID     = "X-External-App-Id";
+    /** Integration category of the external app (mirrors `IntegrationCategory` enum). */
+    public static final String INTEGRATION_TYPE    = "X-Integration-Type";
+    /** Version of the integration contract under which the call is being made. */
+    public static final String INTEGRATION_VERSION = "X-Integration-Version";
+    /** Cryptographic signature of the request body (HMAC-SHA256 or ED25519) for external app requests. */
+    public static final String REQUEST_SIGNATURE   = "X-Request-Signature";
+
+    // ── AI skill origination (when REQUEST_SOURCE = AI_ASSISTED) ─────────
+    /** Identifier of the activated AI Skill manifest invoking this action. */
+    public static final String AI_SKILL_ID   = "X-AI-Skill-Id";
+    /** AI model reference used (from ai-model-registry-service). */
+    public static final String AI_MODEL_REF  = "X-AI-Model-Ref";
+
     // ── Step-up authentication ──────────────────────────────────
     public static final String STEP_UP_TOKEN = "X-Step-Up-Token";
 

@@ -16,6 +16,7 @@ import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen
 import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
 import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
+import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
@@ -83,6 +84,11 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "tools" ? "construct" : "construct-outline", providerTab === "tools"),
     },
     {
+      key: "apps" as const,
+      label: "Apps",
+      icon: tabIcon(providerTab === "apps" ? "apps" : "apps-outline", providerTab === "apps"),
+    },
+    {
       key: "professional" as const,
       label: "Profile",
       icon: tabIcon(providerTab === "professional" ? "person-circle" : "person-circle-outline", providerTab === "professional"),
@@ -105,6 +111,8 @@ export function ProviderTabs() {
         return <MessagingScreen />;
       case "tools":
         return <ClinicalToolsScreen />;
+      case "apps":
+        return <HealthOsAppsScreen />;
       case "professional":
         return <ProfessionalProfileScreen />;
       default:

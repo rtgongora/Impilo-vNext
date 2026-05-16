@@ -4,6 +4,8 @@
  * ImpiloBrandLogo — Canonical SVG-backed brand mark and wordmark.
  */
 
+import Image from "next/image";
+
 interface ImpiloBrandLogoProps {
   variant?: "mark" | "full";
   tone?: "brand" | "white" | "black";
@@ -37,13 +39,14 @@ export function ImpiloBrandLogo({
 
   return (
     <span className={`inline-flex items-center ${className ?? ""}`}>
-      <img
+      <Image
         src={src}
         alt="Impilo"
         width={width}
         height={size}
         className="block h-auto"
         draggable={false}
+        unoptimized
       />
     </span>
   );

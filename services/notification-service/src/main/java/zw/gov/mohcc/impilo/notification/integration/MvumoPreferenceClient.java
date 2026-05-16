@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
@@ -88,5 +89,60 @@ public class MvumoPreferenceClient {
             log.warn("Mvumo evaluate parse error (allow send): {}", e.getMessage());
         }
         return Optional.empty();
+    }
+
+    public Optional<JsonNode> getCommunicationPreferences(String tenantId, String patientId) {
+        if (!enabled || patientId == null || patientId.isBlank()) {
+            return Optional.empty();
+        }
+        String url = baseUrl + "/internal/v1/mvumo/patients/" + patientId + "/communication-preferences";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (tenantId != null && !tenantId.isBlank()) {
+            headers.set("X-Tenant-ID", tenantId);
+        }
+        try {
+            String raw = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class).getBody();
+            return extractData(raw);
+        } catch (RestClientException e) {
+            log.warn("Mvumo preferences fetch unavailable: {}", e.getMessage());
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Mvumo preferences fetch parse error: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<JsonNode> putCommunicationPreferences(String tenantId, String patientId, Map<String, Object> body) {
+        if (!enabled || patientId == null || patientId.isBlank()) {
+            return Optional.empty();
+        }
+        String url = baseUrl + "/internal/v1/mvumo/patients/" + patientId + "/communication-preferences";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (tenantId != null && !tenantId.isBlank()) {
+            headers.set("X-Tenant-ID", tenantId);
+        }
+        try {
+            String raw = restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body, headers), String.class).getBody();
+            return extractData(raw);
+        } catch (RestClientException e) {
+            log.warn("Mvumo preferences update unavailable: {}", e.getMessage());
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Mvumo preferences update parse error: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Optional<JsonNode> extractData(String raw) throws Exception {
+        if (raw == null || raw.isBlank()) {
+            return Optional.empty();
+        }
+        JsonNode root = objectMapper.readTree(raw);
+        if (root.has("data")) {
+            return Optional.ofNullable(root.get("data"));
+        }
+        return Optional.of(root);
     }
 }

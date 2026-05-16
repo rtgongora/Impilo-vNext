@@ -51,11 +51,105 @@ const triageColors = {
   green: { bg: "bg-green-600", border: "border-green-600", text: "text-white", label: "Standard" },
 };
 
+interface TriageDangerSign {
+  id: string;
+  name: string;
+  present: boolean;
+}
+
+interface TriageRecord {
+  category?: string;
+  triageTime?: string;
+  arrivalTime?: string;
+  triagedBy?: string;
+  arrivalMode?: string;
+  chiefComplaint?: string;
+  notes?: string;
+  dangerSigns?: TriageDangerSign[];
+}
+
+interface EncounterVitalsLike {
+  heartRate?: number | string | null;
+  bpSystolic?: number | string | null;
+  bpDiastolic?: number | string | null;
+  spo2?: number | string | null;
+  temperature?: number | string | null;
+  respRate?: number | string | null;
+  attributes?: {
+    heartRate?: number | string | null;
+    systolic?: number | string | null;
+    diastolic?: number | string | null;
+    oxygenSaturation?: number | string | null;
+    temperature?: number | string | null;
+    respiratoryRate?: number | string | null;
+  };
+}
+
+interface HistoryCondition {
+  id: string;
+  status: string;
+  condition: string;
+  icdCode?: string;
+  diagnosed?: string;
+}
+
+interface HistorySurgery {
+  id: string;
+  procedure: string;
+  date?: string;
+}
+
+interface HistoryMedication {
+  id: string;
+  medication: string;
+  dose?: string;
+  frequency?: string;
+}
+
+interface HistoryAllergy {
+  id: string;
+  allergen: string;
+  severity: string;
+  reaction?: string;
+}
+
+interface EncounterHistoryLike {
+  presentingComplaint?: string;
+  presentingComplaintCode?: string;
+  hpi?: {
+    site?: string;
+    onset?: string;
+    character?: string;
+    radiation?: string;
+    associatedSymptoms?: string;
+    timing?: string;
+    exacerbating?: string;
+    severity?: string;
+  };
+  pastMedicalHistory?: HistoryCondition[];
+  pastSurgicalHistory?: HistorySurgery[];
+  medications?: HistoryMedication[];
+  allergies?: HistoryAllergy[];
+  socialHistory?: {
+    occupation?: string;
+    smokingStatus?: string;
+    alcoholUse?: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; isLoading: boolean }) {
+function TriagePanel({
+  triage,
+  vitals,
+  isLoading,
+}: {
+  triage: TriageRecord | null;
+  vitals: EncounterVitalsLike | null;
+  isLoading: boolean;
+}) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-400">
@@ -75,8 +169,12 @@ function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; 
   }
 
   const color = triageColors[triage.category as keyof typeof triageColors] || triageColors.green;
-  const triageTime = new Date(triage.triageTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-  const arrivalTime = new Date(triage.arrivalTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  const triageTime = triage.triageTime
+    ? new Date(triage.triageTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : "--:--";
+  const arrivalTime = triage.arrivalTime
+    ? new Date(triage.arrivalTime).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+    : "--:--";
 
   return (
     <div className="space-y-4">
@@ -97,7 +195,7 @@ function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; 
           <div className="text-right">
             <span className="inline-flex items-center gap-1 text-xs border rounded px-2 py-0.5 text-gray-600 border-gray-200 mb-1">
               <Ambulance className="w-3 h-3" />
-              {triage.arrivalMode.replace("-", " ")}
+              {(triage.arrivalMode ?? "unknown").replace("-", " ")}
             </span>
             <div className="text-xs text-gray-500">Arrived: {arrivalTime}</div>
           </div>
@@ -124,7 +222,7 @@ function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; 
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 gap-2">
-            {(triage.dangerSigns ?? []).map((sign: any) => (
+            {(triage.dangerSigns ?? []).map((sign) => (
               <div
                 key={sign.id}
                 className={`flex items-center gap-2 p-2 rounded-lg ${
@@ -175,7 +273,13 @@ function TriagePanel({ triage, vitals, isLoading }: { triage: any; vitals: any; 
   );
 }
 
-function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean }) {
+function HistoryPanel({
+  history,
+  isLoading,
+}: {
+  history: EncounterHistoryLike | null;
+  isLoading: boolean;
+}) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-400">
@@ -258,7 +362,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
           </span>
         </div>
         <div className="p-4 space-y-2">
-          {(history.pastMedicalHistory ?? []).map((condition: any) => (
+          {(history.pastMedicalHistory ?? []).map((condition) => (
             <div
               key={condition.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -292,7 +396,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
           <h3 className="text-base font-semibold">Past Surgical History</h3>
         </div>
         <div className="p-4 space-y-2">
-          {(history.pastSurgicalHistory ?? []).map((surgery: any) => (
+          {(history.pastSurgicalHistory ?? []).map((surgery) => (
             <div
               key={surgery.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -316,7 +420,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
           </span>
         </div>
         <div className="p-4 space-y-2">
-          {(history.medications ?? []).map((drug: any) => (
+          {(history.medications ?? []).map((drug) => (
             <div
               key={drug.id}
               className="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg"
@@ -340,7 +444,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
           </h3>
         </div>
         <div className="p-4 space-y-2">
-          {(history.allergies ?? []).map((allergy: any) => (
+          {(history.allergies ?? []).map((allergy) => (
             <div
               key={allergy.id}
               className={`p-3 rounded-lg ${
@@ -394,7 +498,7 @@ function HistoryPanel({ history, isLoading }: { history: any; isLoading: boolean
   );
 }
 
-function ExaminationPanel() {
+export function ExaminationPanel() {
   const [findings, setFindings] = useState<Record<string, string>>({
     consciousness: "Alert",
     distress: "Not in distress",
@@ -671,7 +775,7 @@ import { LabResultsSystem } from "@/components/lab/LabResultsSystem";
 import { PatientTimeline } from "@/components/timeline/PatientTimeline";
 import { ClerkingTemplateSelector } from "@/components/ehr/clerking/ClerkingTemplateSelector";
 import { ClerkingFormEditor } from "@/components/ehr/clerking/ClerkingFormEditor";
-import { CLERKING_TEMPLATES, type ClerkingTemplate, type CadreLevel } from "@/data/clerkingTemplates";
+import { type ClerkingTemplate, type CadreLevel } from "@/data/clerkingTemplates";
 
 type AssessmentTab = "triage" | "vitals" | "clerking" | "cadre-history" | "cadre-exam" | "history" | "examination" | "labs" | "timeline";
 
@@ -690,7 +794,7 @@ export function AssessmentSection() {
   const { data: historyData, isLoading: historyLoading } = useEncounterHistory(encounterId);
 
   const triage = triageData?.data ?? null;
-  const latestVitals = vitalsData?.data?.[0]?.attributes ?? vitalsData?.data?.[0] ?? null;
+  const latestVitals = (vitalsData?.data?.[0]?.attributes ?? vitalsData?.data?.[0] ?? null) as EncounterVitalsLike | null;
   const history = historyData?.data ?? null;
 
   const [activeTab, setActiveTab] = useState<AssessmentTab>(isSimplified ? "cadre-history" : "triage");

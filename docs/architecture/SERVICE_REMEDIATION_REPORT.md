@@ -8,23 +8,23 @@ integration/event parity audit, and evidence closure).
 
 ### 18.1 Final status counts (services-registry baseline)
 
-Total services evaluated: **155**
+Total services evaluated: **157**
 
 | Category | Status | Count |
 | --- | --- | ---: |
-| Remediation | Fixed | 153 |
-| Remediation | Partially Fixed | 2 |
-| Activation | Activated | 148 |
+| Remediation | Fixed | 154 |
+| Remediation | Partially Fixed | 3 |
+| Activation | Activated | 150 |
 | Activation | Skeleton | 5 |
 | Activation | Duplicated | 2 |
-| Contract Alignment | Aligned | 79 |
+| Contract Alignment | Aligned | 80 |
 | Contract Alignment | Not Applicable | 74 |
-| Contract Alignment | Partial | 2 |
-| Surfacing Quality | Complete | 110 |
+| Contract Alignment | Partial | 3 |
+| Surfacing Quality | Complete | 112 |
 | Surfacing Quality | Not Required | 45 |
-| Integration Status | Integrated | 110 |
+| Integration Status | Integrated | 112 |
 | Integration Status | Standalone | 45 |
-| Implementation Status | live | 148 |
+| Implementation Status | live | 150 |
 | Implementation Status | skeleton | 5 |
 | Implementation Status | deprecated | 2 |
 
@@ -164,3 +164,13 @@ All policy closures requested in this wave are now encoded in source and docs.
 - Closed remaining partials in this scope:
   - expanded `simba.openapi.yaml` to reflect implemented wellness endpoints,
   - rewired one-ui-shell wellness goals/clubs/diet/programs/routes pages away from demo-only data to runtime APIs.
+
+## Ndila + Nhume Service Mapping Cascade (May 2026)
+
+- Added `ndila-service` and `nhume-service` into canonical service-mapping doctrine and generated registry views.
+- Classified both as Integration & Operations services with explicit SoR boundaries and cross-plane dependencies.
+- Registered Ndila contract evidence against:
+  - `contracts/openapi/ndila.openapi.yaml`
+  - `contracts/asyncapi/ndila-events.asyncapi.yaml`
+- Marked Nhume contract posture as partial pending canonical OpenAPI publication, while preserving runtime and architecture evidence in:
+  - `docs/architecture/nhume-dispatch-and-delivery.md`

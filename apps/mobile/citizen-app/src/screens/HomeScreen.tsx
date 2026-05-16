@@ -17,15 +17,64 @@ import {
   LoadingSpinner,
   Avatar,
 } from "@impilo/mobile-design-system";
+import { useCommunicationDashboard } from "@impilo/mobile-messaging";
 import { useAppStore } from "../stores/appStore";
 import { fetchAppointments } from "../services/appointmentService";
 import { fetchPrescriptions } from "../services/prescriptionService";
 import { fetchLabResults } from "../services/labResultService";
-import type { Appointment, Prescription, LabResult } from "../types";
+import type { Appointment, Prescription, LabResult, CitizenTab } from "../types";
 import { FacilityDirectoryScreen } from "./FacilityDirectoryScreen";
 import { FacilityDetailScreen } from "./FacilityDetailScreen";
 
 const GREEN = "#059669";
+
+type CommsDashboardSnapshot = {
+  active_threads?: number;
+  sent_today?: number;
+  failed_today?: number;
+} | null;
+
+export function buildCitizenCommsKpis(
+  commsDashboard: CommsDashboardSnapshot,
+  setActiveTab: (tab: CitizenTab) => void
+) {
+  if (!commsDashboard) {
+    return [];
+  }
+
+  return [
+    {
+      id: "threads",
+      label: "Threads",
+      value: commsDashboard.active_threads,
+      color: "#1E40AF",
+      bg: "#DBEAFE",
+      icon: "chatbubbles-outline",
+      hint: "Tap to open messages",
+      onPress: () => setActiveTab("messaging"),
+    },
+    {
+      id: "sent",
+      label: "Sent Today",
+      value: commsDashboard.sent_today,
+      color: "#059669",
+      bg: "#D1FAE5",
+      icon: "paper-plane-outline",
+      hint: "Tap to open messages",
+      onPress: () => setActiveTab("messaging"),
+    },
+    {
+      id: "failed",
+      label: "Failed",
+      value: commsDashboard.failed_today,
+      color: (commsDashboard.failed_today ?? 0) > 0 ? "#B91C1C" : "#6B7280",
+      bg: "#FEE2E2",
+      icon: "alert-circle-outline",
+      hint: "Tap to open public health",
+      onPress: () => setActiveTab("public_health"),
+    },
+  ];
+}
 
 const QUICK_ACTIONS = [
   { id: "book",     label: "Book",    icon: "calendar-outline",   tab: "personal",    color: "#059669", bg: "#D1FAE5" },
@@ -38,6 +87,7 @@ const QUICK_ACTIONS = [
 
 export function HomeScreen() {
   const { profile, setActiveTab, unreadNotifications, selectedFacilityName } = useAppStore();
+  const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [facilityView, setFacilityView] = useState<null | { mode: "list" } | { mode: "detail"; id: string }>(null);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [activePrescriptions, setActivePrescriptions] = useState<Prescription[]>([]);
@@ -177,6 +227,37 @@ export function HomeScreen() {
             </Pressable>
           ))}
         </View>
+
+        {commsDashboard ? (
+          <>
+            <Text style={styles.sectionLabel}>Comms Snapshot</Text>
+            {commsDashboard.source_health && Object.values(commsDashboard.source_health).some((state) => state !== "UP") ? (
+              <View style={styles.commsWarning}>
+                <Text style={styles.commsWarningText}>
+                  Comms data is partially available right now. You can still open Messages or Public Health for latest details.
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.quickGrid}>
+              {buildCitizenCommsKpis(commsDashboard, setActiveTab).map((item) => (
+                <Pressable
+                  key={item.id}
+                  testID={`comms-${item.id}`}
+                  onPress={item.onPress}
+                  style={({ pressed }) => [styles.quickCard, { opacity: pressed ? 0.85 : 1 }]}
+                  accessibilityLabel={`${item.label}. ${item.hint}`}
+                >
+                  <View style={[styles.quickIconCircle, { backgroundColor: item.bg }]}>
+                    <Ionicons name={item.icon as never} size={22} color={item.color} />
+                  </View>
+                  <Text style={[styles.quickLabel, { color: item.color }]}>{item.label}</Text>
+                  <Text style={styles.commsValue}>{String(item.value ?? 0)}</Text>
+                  <Text style={styles.commsHint}>{item.hint}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        ) : null}
 
         {/* Data sections */}
         {isLoading ? (
@@ -458,6 +539,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     textAlign: "center",
+  },
+  commsValue: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  commsHint: {
+    fontSize: 10,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+  commsWarning: {
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+    backgroundColor: "#FEF3C7",
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  commsWarningText: {
+    fontSize: 11,
+    color: "#92400E",
   },
   loadingBox: {
     paddingVertical: 32,

@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: Health OS Launcher (Experience BFF surface)
+  version: 0.1.0
+  description: |
+    The Health OS launcher API returns a unified, role-aware, facility-aware
+    list of apps for the calling actor. The list merges Core Platform Service
+    entries (the bootstrap catalogue defined in `app-registry.ts`) with
+    marketplace installations queried from `msika-apps-service`.
+
+    Hosted by `experience-bff`. See doctrine §8.
+
+servers:
+  - url: http://localhost:8160
+    description: Local dev (experience-bff)
+
+paths:
+  /internal/v1/launcher/apps:
+    get:
+      summary: List launcher apps for the calling actor
+      parameters:
+        - in: query
+          name: includeUnavailable
+          schema: { type: boolean, default: false }
+        - in: query
+          name: includeDeprecated
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LauncherResponse' }
+
+  /internal/v1/launcher/apps/{appCode}/state:
+    get:
+      summary: Get state of a specific app for the calling actor
+      parameters:
+        - in: path
+          name: appCode
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LauncherApp' }
+
+  /internal/v1/launcher/apps/{appCode}/request-access:
+    post:
+      summary: Submit a request-access action for an unavailable app (forwards to msika-apps-service)
+      parameters:
+        - in: path
+          name: appCode
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [justification]
+              properties:
+                justification: { type: string }
+                purposeOfUse: { type: string }
+      responses:
+        '202':
+          description: Activation request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activationRequestId: { type: string }
+                  status: { type: string }
+
+components:
+  schemas:
+    LauncherApp:
+      type: object
+      required: [id, appCode, name, href, category, state, systemAppFlag]
+      properties:
+        id: { type: string }
+        appCode: { type: string }
+        name: { type: string }
+        description: { type: string }
+        icon: { type: string, nullable: true }
+        href: { type: string }
+        category: { type: string }
+        state:
+          type: string
+          enum:
+            - AVAILABLE
+            - INSTALLED
+            - REQUEST_ACCESS
+            - PENDING_APPROVAL
+            - NOT_AVAILABLE_AT_FACILITY
+            - REQUIRES_CONFIGURATION
+            - TEMPORARILY_UNAVAILABLE
+            - SUSPENDED
+            - DEPRECATED
+        marketplaceItemId: { type: string, nullable: true }
+        installationId: { type: string, nullable: true }
+        systemAppFlag: { type: boolean }
+        weight: { type: integer }
+        requiredRole: { type: string, nullable: true }
+        pinned: { type: boolean }
+        recentlyUsed: { type: boolean }
+        stateExplanation: { type: string, nullable: true }
+
+    LauncherResponse:
+      type: object
+      required: [actor, apps, generatedAt]
+      properties:
+        actor:
+          type: object
+          properties:
+            actorId: { type: string }
+            actorType: { type: string }
+            tenantId: { type: string }
+            facilityId: { type: string, nullable: true }
+            workspaceId: { type: string, nullable: true }
+        apps:
+          type: array
+          items: { $ref: '#/components/schemas/LauncherApp' }
+        generatedAt: { type: string, format: date-time }

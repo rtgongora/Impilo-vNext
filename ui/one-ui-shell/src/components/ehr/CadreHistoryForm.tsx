@@ -11,7 +11,7 @@
 import { useState } from "react";
 import {
   AlertTriangle, FileText, Pill, Users, Heart, Baby, Plus,
-  CheckCircle2, Search, X, ShieldAlert, Brain, Stethoscope,
+  CheckCircle2, Search, X, ShieldAlert, Stethoscope,
   ClipboardCheck, ArrowRight,
 } from "lucide-react";
 import { type CadreFormConfig } from "@/hooks/useCadreFormConfig";

@@ -6,8 +6,8 @@ Frontend and UX surfacing quality across backend and Experience components.
 
 | Surfacing Quality | Count |
 | --- | ---: |
-| Complete | 110 |
-| Not Required | 45 |
+| Complete | 112 |
+| Not Required | 46 |
 
 ## Surfacing Matrix
 
@@ -60,6 +60,7 @@ Frontend and UX surfacing quality across backend and Experience components.
 | Knowledge Admin | frontend_app | /knowledge-admin | Complete | None |
 | Landela Adapter | adapter | ui/one-ui-shell routes and domain consoles | Complete | None |
 | Learning | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
+| Llm Orchestration | backend_service | orchestration runtime (internal consumers) | Not Required | None |
 | Msika Flow Ops | frontend_app | /msika-flow-ops | Complete | None |
 | Msika Flow Portal | frontend_app | /msika-flow-portal | Complete | None |
 | Msika Flow | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
@@ -74,6 +75,8 @@ Frontend and UX surfacing quality across backend and Experience components.
 | Mvumo | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
 | National Data Repository | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
 | Ndr | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
+| Ndila | backend_service | ui/one-ui-shell ndila component pack and mobile-ndila package surfaces | Complete | None |
+| Nhume | backend_service | ui/one-ui-shell nhume routes and mobile courier/tracking surfaces | Complete | None |
 | Notification | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
 | Observability | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
 | Offline Edge | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |

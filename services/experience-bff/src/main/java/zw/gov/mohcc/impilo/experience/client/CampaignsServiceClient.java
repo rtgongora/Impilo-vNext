@@ -63,6 +63,18 @@ public class CampaignsServiceClient {
         return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
     }
 
+    public JsonNode requestReview(long campaignId) {
+        String url = baseUrl + "/internal/v1/campaigns/" + campaignId + "/review";
+        log.info("Campaigns: requestReview campaignId={}", campaignId);
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    public JsonNode reopenCampaign(long campaignId) {
+        String url = baseUrl + "/internal/v1/campaigns/" + campaignId + "/reopen";
+        log.info("Campaigns: reopen campaignId={}", campaignId);
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -1,0 +1,481 @@
+openapi: 3.0.3
+info:
+  title: Msika Apps — Capability Marketplace API
+  version: 0.1.0
+  description: |
+    The Capability Marketplace ("Msika Apps") is the governed catalogue for
+    apps, plugins, extensions, connectors, adapters, workflow packs, content
+    packs, AI skills, and device integrations within the Impilo vNext Health OS.
+
+    Distinct from `msika-service` (product/service registry) and
+    `msika-flow-service` (commerce orchestration). See doctrine
+    `docs/doctrine/HEALTH_OS_EXTENSIBILITY_DOCTRINE.md` §7.
+  contact:
+    name: Impilo Platform Team
+    email: platform@impilo.gov.zw
+
+servers:
+  - url: http://localhost:8181
+    description: Local dev (msika-apps-service)
+  - url: https://api.impilo.gov.zw/msika-apps
+    description: Production gateway
+
+tags:
+  - name: Marketplace Items
+  - name: Publishers
+  - name: Activation Requests
+  - name: Installations
+  - name: Marketplace Audit
+
+paths:
+  /internal/v1/marketplace/apps:
+    get:
+      tags: [Marketplace Items]
+      summary: List marketplace items
+      parameters:
+        - in: query
+          name: type
+          schema: { $ref: '#/components/schemas/CapabilityType' }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: visibility
+          schema: { $ref: '#/components/schemas/MarketplaceVisibility' }
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: facilityId
+          schema: { type: string }
+        - in: query
+          name: rolesAvailable
+          schema: { type: array, items: { type: string } }
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceItem' }
+
+  /internal/v1/marketplace/apps/{itemId}:
+    get:
+      tags: [Marketplace Items]
+      summary: Get marketplace item detail
+      parameters:
+        - in: path
+          name: itemId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+        '404':
+          description: Not found
+
+  /internal/v1/marketplace/publishers:
+    get:
+      tags: [Publishers]
+      summary: List publishers
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Publisher' }
+
+  /internal/v1/marketplace/activation-requests:
+    get:
+      tags: [Activation Requests]
+      summary: List activation requests
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: itemId
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ActivationRequest' }
+    post:
+      tags: [Activation Requests]
+      summary: Create an activation request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ActivationRequestCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivationRequest' }
+
+  /internal/v1/marketplace/activation-requests/{requestId}/approve:
+    post:
+      tags: [Activation Requests]
+      summary: Approve an activation request (creates an installation)
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ApprovalDecision' }
+      responses:
+        '200':
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/activation-requests/{requestId}/reject:
+    post:
+      tags: [Activation Requests]
+      summary: Reject an activation request
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RejectionDecision' }
+      responses:
+        '200':
+          description: Rejected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivationRequest' }
+
+  /internal/v1/marketplace/installations:
+    get:
+      tags: [Installations]
+      summary: List installations
+      parameters:
+        - in: query
+          name: tenantId
+          schema: { type: string }
+        - in: query
+          name: facilityId
+          schema: { type: string }
+        - in: query
+          name: itemId
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/installations/{installationId}:
+    get:
+      tags: [Installations]
+      summary: Get installation detail
+      parameters:
+        - in: path
+          name: installationId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/installations/{installationId}/configure:
+    post:
+      tags: [Installations]
+      summary: Update installation configuration
+      parameters:
+        - in: path
+          name: installationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                configuration: { type: object, additionalProperties: true }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/installations/{installationId}/suspend:
+    post:
+      tags: [Installations]
+      summary: Suspend an installation
+      parameters:
+        - in: path
+          name: installationId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Suspended
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/installations/{installationId}/reinstate:
+    post:
+      tags: [Installations]
+      summary: Reinstate a suspended installation
+      parameters:
+        - in: path
+          name: installationId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Reinstated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Installation' }
+
+  /internal/v1/marketplace/audit-events:
+    get:
+      tags: [Marketplace Audit]
+      summary: List marketplace audit events
+      parameters:
+        - in: query
+          name: itemId
+          schema: { type: string }
+        - in: query
+          name: installationId
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketplaceAuditEvent' }
+
+components:
+  schemas:
+    CapabilityType:
+      type: string
+      enum: [APP, EXTENSION, PLUGIN, CONNECTOR, ADAPTER, WORKFLOW_PACK, CONTENT_PACK, AI_SKILL, DEVICE_INTEGRATION]
+
+    MarketplaceVisibility:
+      type: string
+      enum: [PUBLIC, MOHCC_ONLY, FACILITY_ONLY, PROGRAMME_ONLY, PROVINCE_ONLY, DISTRICT_ONLY, PRIVATE_SECTOR_ONLY, SANDBOX_ONLY, DEVELOPER_PREVIEW, DEPRECATED, SUSPENDED]
+
+    MarketplaceItem:
+      type: object
+      required: [id, itemCode, name, description, type, category, publisherId, version, visibility]
+      properties:
+        id: { type: string }
+        itemCode: { type: string }
+        name: { type: string }
+        description: { type: string }
+        type: { $ref: '#/components/schemas/CapabilityType' }
+        category: { type: string }
+        publisherId: { type: string }
+        publisherName: { type: string }
+        version: { type: string }
+        compatibilityVersion: { type: string }
+        supportedEnvironments:
+          type: array
+          items: { type: string, enum: [SANDBOX, STAGING, PRODUCTION] }
+        visibility: { $ref: '#/components/schemas/MarketplaceVisibility' }
+        iconRef: { type: string, nullable: true }
+        documentationUrl: { type: string, nullable: true }
+        manifestRef: { type: string }
+        securityClassification: { type: string }
+        dataProtectionClassification: { type: string }
+        clinicalSafetyClassification: { type: string, nullable: true }
+        approvalStatus: { type: string }
+        certificationStatus: { type: string, nullable: true }
+        regulatoryStatus: { type: string, nullable: true }
+        pricingModel: { type: string, nullable: true }
+        licensingModel: { type: string, nullable: true }
+        requiredScopes: { type: array, items: { type: string } }
+        requiredEvents: { type: array, items: { type: string } }
+        requiredApis: { type: array, items: { type: string } }
+        requiredDataCategories: { type: array, items: { type: string } }
+        requiredPermissions: { type: array, items: { type: string } }
+        rolesAllowed: { type: array, items: { type: string } }
+        consentRequirements: { type: array, items: { type: string } }
+        healthStatus: { type: string }
+        lastUpdated: { type: string, format: date-time }
+        deprecationDate: { type: string, format: date-time, nullable: true }
+
+    Publisher:
+      type: object
+      required: [id, name, legalName, status]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        legalName: { type: string }
+        websiteUrl: { type: string, nullable: true }
+        technicalContact: { $ref: '#/components/schemas/ContactPoint' }
+        dataProtectionContact: { $ref: '#/components/schemas/ContactPoint' }
+        supportContact: { $ref: '#/components/schemas/ContactPoint' }
+        status: { type: string, enum: [ACTIVE, SUSPENDED, REVOKED] }
+        verifiedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    ContactPoint:
+      type: object
+      required: [name, email]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        role: { type: string }
+
+    ActivationRequest:
+      type: object
+      required: [id, itemId, requesterActorId, requesterTenantId, status, createdAt]
+      properties:
+        id: { type: string }
+        itemId: { type: string }
+        requesterActorId: { type: string }
+        requesterTenantId: { type: string }
+        requesterFacilityId: { type: string, nullable: true }
+        requesterWorkspaceId: { type: string, nullable: true }
+        requesterProgrammeId: { type: string, nullable: true }
+        purposeOfUse: { type: string }
+        justification: { type: string }
+        requestedConfiguration:
+          type: object
+          additionalProperties: true
+        status: { type: string, enum: [REQUESTED, IN_REVIEW, APPROVED, REJECTED, WITHDRAWN] }
+        reviewers:
+          type: array
+          items: { $ref: '#/components/schemas/ApprovalRecord' }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        decisionReason: { type: string, nullable: true }
+        correlationId: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ActivationRequestCreate:
+      type: object
+      required: [itemId, requesterTenantId, purposeOfUse, justification]
+      properties:
+        itemId: { type: string }
+        requesterTenantId: { type: string }
+        requesterFacilityId: { type: string }
+        requesterWorkspaceId: { type: string }
+        requesterProgrammeId: { type: string }
+        purposeOfUse: { type: string }
+        justification: { type: string }
+        requestedConfiguration: { type: object, additionalProperties: true }
+
+    ApprovalRecord:
+      type: object
+      properties:
+        reviewerActorId: { type: string }
+        reviewerRole: { type: string }
+        approvalDomain: { type: string }
+        decision: { type: string, enum: [PENDING, APPROVED, REJECTED, CHANGES_REQUESTED] }
+        decidedAt: { type: string, format: date-time, nullable: true }
+        notes: { type: string, nullable: true }
+
+    ApprovalDecision:
+      type: object
+      required: [approvalDomain, notes]
+      properties:
+        approvalDomain: { type: string }
+        notes: { type: string }
+        targetFacilityIds:
+          type: array
+          items: { type: string }
+
+    RejectionDecision:
+      type: object
+      required: [approvalDomain, reason]
+      properties:
+        approvalDomain: { type: string }
+        reason: { type: string }
+
+    Installation:
+      type: object
+      required: [id, itemId, tenantId, lifecycle, healthStatus, installedAt]
+      properties:
+        id: { type: string }
+        itemId: { type: string }
+        itemVersion: { type: string }
+        tenantId: { type: string }
+        facilityIds: { type: array, items: { type: string } }
+        workspaceIds: { type: array, items: { type: string } }
+        programmeIds: { type: array, items: { type: string } }
+        rolesEnabled: { type: array, items: { type: string } }
+        configuration: { type: object, additionalProperties: true }
+        integrationContractId: { type: string, nullable: true }
+        externalAppId: { type: string, nullable: true }
+        lifecycle:
+          type: string
+          enum: [LISTED, REQUESTED, IN_REVIEW, APPROVED, INSTALLED, CONFIGURED, ACTIVE, SUSPENDED, DEPRECATED, REJECTED]
+        installedBy: { type: string }
+        installedAt: { type: string, format: date-time }
+        configuredAt: { type: string, format: date-time, nullable: true }
+        activatedAt: { type: string, format: date-time, nullable: true }
+        suspendedAt: { type: string, format: date-time, nullable: true }
+        suspendedReason: { type: string, nullable: true }
+        lastHealthCheckAt: { type: string, format: date-time, nullable: true }
+        healthStatus: { type: string, enum: [HEALTHY, DEGRADED, UNAVAILABLE, UNKNOWN] }
+
+    MarketplaceAuditEvent:
+      type: object
+      properties:
+        id: { type: string }
+        itemId: { type: string }
+        installationId: { type: string, nullable: true }
+        activationRequestId: { type: string, nullable: true }
+        externalAppId: { type: string, nullable: true }
+        eventType: { type: string }
+        actorId: { type: string }
+        actorType: { type: string }
+        tenantId: { type: string }
+        facilityId: { type: string, nullable: true }
+        reason: { type: string, nullable: true }
+        correlationId: { type: string }
+        occurredAt: { type: string, format: date-time }

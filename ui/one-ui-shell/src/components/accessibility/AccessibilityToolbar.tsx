@@ -71,8 +71,8 @@ export function AccessibilityToolbar() {
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2">
-      <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--surface)] px-3 py-2 shadow-impilo-card">
+      <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-[color:var(--text-muted)]">
         <Ear className="h-3.5 w-3.5" />
         Accessibility
       </span>
@@ -90,8 +90,8 @@ export function AccessibilityToolbar() {
           className={[
             "rounded-full border px-2.5 py-1 text-[11px] transition",
             state[toggle.key]
-              ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-              : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100",
+              ? "border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
+              : "border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-secondary)] hover:bg-white",
           ].join(" ")}
         >
           {toggle.label}
@@ -104,7 +104,7 @@ export function AccessibilityToolbar() {
           window.speechSynthesis?.cancel();
           window.speechSynthesis?.speak(new SpeechSynthesisUtterance(text));
         }}
-        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-slate-100"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
       >
         <Volume2 className="h-3.5 w-3.5" />
         Read Aloud
@@ -112,14 +112,14 @@ export function AccessibilityToolbar() {
       <button
         type="button"
         onClick={() => focusSearchPalette()}
-        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-slate-100"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
       >
         <Keyboard className="h-3.5 w-3.5" />
         Keyboard Hints
       </button>
       <Link
         href="/caregiving"
-        className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600 hover:bg-slate-100"
+        className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-2.5 py-1 text-[11px] text-[color:var(--text-secondary)] hover:bg-white"
       >
         <Languages className="h-3.5 w-3.5" />
         Caregiver Assist

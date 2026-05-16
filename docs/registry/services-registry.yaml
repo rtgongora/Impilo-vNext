@@ -1206,6 +1206,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: llm-orchestration-service
+    maven_module: llm-orchestration-service
+    primary_plane: integration
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Llm Orchestration
+    owner_team: TBD
+    system_of_record_for:
+      - Llm Orchestration canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: msika-flow-service
     maven_module: msika-flow-service
     primary_plane: enterprise
@@ -1379,6 +1408,53 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: ndila-service
+    maven_module: ndila-service
+    primary_plane: integration
+    plane: integration
+    domain: interoperability
+    secondary_planes:
+      - registry
+      - experience
+      - data
+      - trust
+      - clinical
+      - enterprise
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Ndila
+    owner_team: TBD
+    system_of_record_for:
+      - canonical geospatial location registry
+      - routing, ETA, and distance matrix orchestration
+      - geofencing and catchment boundary operations
+      - tracking asset telemetry normalization
+      - spatial search and geospatial intelligence context
+    consumes_from:
+      - tshepo-authz-service
+      - tuso-service
+      - indawo-service
+      - varapi-service
+      - surveillance-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+      - nhume-service
+      - dispatch-service
+    forbidden_responsibilities:
+      - must-not-authorize-access-decisions
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-own-provider-identity-source-of-truth
+      - must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: ndr-service
     maven_module: ndr-service
     primary_plane: data
@@ -1402,6 +1478,54 @@ services:
     forbidden_responsibilities:
       - must-not-handle-care-transaction-orchestration
       - must-not-bypass-consent-governance
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
+  - id: nhume-service
+    maven_module: nhume-service
+    primary_plane: integration
+    plane: integration
+    domain: interoperability
+    secondary_planes:
+      - experience
+      - clinical
+      - registry
+      - enterprise
+      - trust
+      - data
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Nhume
+    owner_team: TBD
+    system_of_record_for:
+      - dispatch request and assignment lifecycle
+      - courier and fleet operational registry
+      - last-mile tracking and proof-of-delivery telemetry
+      - delivery chain-of-custody and exception workflow
+    consumes_from:
+      - tshepo-authz-service
+      - ndila-service
+      - vito-service
+      - varapi-service
+      - tuso-service
+      - indawo-service
+      - msika-service
+      - mushex-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-own-clinical-record-source-of-truth
+      - must-not-own-patient-identity-source-of-truth
+      - must-not-own-provider-identity-source-of-truth
+      - must-not-own-consent-policy-authority
+      - must-not-own-payment-ledgers
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial

@@ -26,7 +26,7 @@ export function RoleJourneyNavigation() {
   const nav = isManager ? MANAGER_NAVIGATION : isProvider ? PROVIDER_NAVIGATION : CLIENT_NAVIGATION;
 
   return (
-    <nav aria-label="Role and journey navigation" className="flex gap-2 overflow-x-auto py-2">
+    <nav aria-label="Role and journey navigation" className="flex gap-2 overflow-x-auto py-1">
       {nav.map((item) => (
         <Link
           key={item.label}
@@ -34,8 +34,8 @@ export function RoleJourneyNavigation() {
           className={[
             "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
             isActive(pathname, item)
-              ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900",
+              ? "border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
+              : "border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)]",
           ].join(" ")}
         >
           {item.label}

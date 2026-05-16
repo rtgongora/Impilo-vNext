@@ -23,6 +23,8 @@ Open safe-remediation backlog for unresolved activation and contract alignment g
 | P1 | Wellness frontend runtime parity | Experience | Replace remaining demo wellness pages (diet/goals/clubs/programmes/routes variants) with real wellness-service APIs | Fixed |
 | P1 | Wellness consent-policy deep integration | Trust & Governance | Use explicit source permissions and share scopes as enforceable policy surface while TSHEPO policy adapters are integrated incrementally | Fixed |
 | P1 | Wellness clinical writeback governance | Clinical Execution | Keep personal wellness data non-clinical by default and require explicit provider acceptance workflow before any BUTANO promotion | Fixed |
+| P1 | Nhume OpenAPI parity | Integration & Operations | Publish canonical `nhume.openapi.yaml` so dispatch/delivery runtime surface is contract-backed like other integration services | Partially Fixed |
+| P1 | Ndila provider operational cutover | Integration & Operations | Keep mock provider default for safety but complete production provider credentials/policy guardrails before enabling external map backends | Partially Fixed |
 
 Event-contract parity backlog items were closed in the final convergence run.
 Execution and rollback traceability remains in:

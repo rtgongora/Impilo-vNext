@@ -8,38 +8,20 @@
  */
 
 import { useMemo } from "react";
-import { User, Stethoscope, MapPin, Calendar, Loader2, AlertTriangle } from "lucide-react";
+import { User, MapPin, Calendar, Loader2, AlertTriangle } from "lucide-react";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob, maskId, safeAge, genderChar } from "@/lib/pii-mask";
 import { usePatient } from "@/hooks/queries/usePatients";
-import { useEncounter, type EncounterResource } from "@/hooks/queries/useEncounters";
+import { useEncounter } from "@/hooks/queries/useEncounters";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function calculateAge(dob: string): number {
-  const birth = new Date(dob);
-  const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
-  const m = now.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-  return age;
-}
-
 function daysBetween(a: string, b: Date): number {
   return Math.floor(
     (b.getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24),
   );
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-  return `${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 // ---------------------------------------------------------------------------

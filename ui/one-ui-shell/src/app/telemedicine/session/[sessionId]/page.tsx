@@ -11,12 +11,12 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, CheckCircle2, Clock, FileText, Loader2, Lock,
-  MessageCircle, Mic, Phone, PhoneOff, Send, Shield, User,
-  Video, VideoOff, AlertTriangle, ClipboardList, Activity,
+  ArrowLeft, CheckCircle2, FileText, Loader2, Lock,
+  Mic, Phone, PhoneOff, Send, Shield, User,
+  Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { apiClient } from "@/lib/api-client";
@@ -33,7 +33,6 @@ interface Message {
 
 export default function TeleconsultSessionPage() {
   const params = useParams();
-  const router = useRouter();
   const sessionId = params.sessionId as string;
   const user = useAuthStore((s) => s.user);
 

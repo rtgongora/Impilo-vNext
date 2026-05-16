@@ -41,13 +41,16 @@
 | `jobs-service` | `jobs-service` | integration | interoperability | — |
 | `landela-adapter-service` | `landela-adapter-service` | integration | interoperability | — |
 | `learning-service` | `learning-service` | experience | workflow-orchestration | — |
+| `llm-orchestration-service` | `llm-orchestration-service` | integration | platform-ops | — |
 | `msika-flow-service` | `msika-flow-service` | enterprise | marketplace | — |
 | `msika-service` | `msika-service` | enterprise | marketplace | — |
 | `mushe-wallet-service` | `mushe-wallet-service` | enterprise | finance | — |
 | `mushex-service` | `mushex-service` | enterprise | finance | — |
 | `mvumo-service` | `mvumo-service` | trust | identity-governance | — |
 | `national-data-repository-service` | `national-data-repository-service` | data | intelligence | — |
+| `ndila-service` | `ndila-service` | integration | interoperability | registry, experience, data, trust, clinical, enterprise |
 | `ndr-service` | `ndr-service` | data | intelligence | — |
+| `nhume-service` | `nhume-service` | integration | interoperability | experience, clinical, registry, enterprise, trust, data |
 | `notification-service` | `notification-service` | integration | interoperability | — |
 | `observability-service` | `observability-service` | integration | platform-ops | — |
 | `offline-edge-service` | `offline-edge-service` | integration | platform-ops | — |

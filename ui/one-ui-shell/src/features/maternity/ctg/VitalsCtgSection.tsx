@@ -52,7 +52,7 @@ export function VitalsCtgSection({
   const isActive = session?.status === "ACTIVE";
 
   const chunksQuery = useCtgTraceChunks(sessionId, { enabled: Boolean(sessionId) && isActive });
-  const chunks = chunksQuery.data?.data ?? [];
+  const chunks = useMemo(() => chunksQuery.data?.data ?? [], [chunksQuery.data?.data]);
 
   const originMs = useMemo(() => ctgTraceOriginMs(chunks), [chunks]);
   const fhr = useMemo(() => flattenCtgChannelSamples(chunks, "FHR", originMs), [chunks, originMs]);

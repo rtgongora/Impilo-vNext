@@ -8,6 +8,7 @@ import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.companion.error.ErrorEnvelope;
 import zw.gov.mohcc.impilo.dispatch.core.DispatchJobService;
+import zw.gov.mohcc.impilo.dispatch.core.DeliveryOperationsService;
 import zw.gov.mohcc.impilo.dispatch.core.InvalidStatusTransitionException;
 
 import java.util.Map;
@@ -30,6 +31,15 @@ public class DispatchExceptionHandler {
 
     @ExceptionHandler(DispatchJobService.JobNotFoundException.class)
     public ResponseEntity<ErrorEnvelope> handleJobNotFound(DispatchJobService.JobNotFoundException ex) {
+        RequestContext ctx = safeContext();
+        ErrorEnvelope envelope = ErrorEnvelope.of(
+                "NOT_FOUND", ex.getMessage(),
+                ctx.requestId(), ctx.correlationId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(envelope);
+    }
+
+    @ExceptionHandler(DeliveryOperationsService.DeliveryNotFoundException.class)
+    public ResponseEntity<ErrorEnvelope> handleDeliveryNotFound(DeliveryOperationsService.DeliveryNotFoundException ex) {
         RequestContext ctx = safeContext();
         ErrorEnvelope envelope = ErrorEnvelope.of(
                 "NOT_FOUND", ex.getMessage(),

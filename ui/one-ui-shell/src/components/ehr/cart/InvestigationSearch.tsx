@@ -17,14 +17,12 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import {
   Search, Plus, X, Zap, FlaskConical, Image, Heart,
-  AlertTriangle, ChevronDown, Package, Sparkles,
+  ChevronDown, Package, Sparkles,
 } from "lucide-react";
 import {
   searchInvestigations,
   getCommonInvestigations,
-  getInvestigationsByType,
   getClinicalDomains,
-  getInvestigationsByDomain,
   TYPE_LABELS,
   DOMAIN_LABELS,
   type Investigation,

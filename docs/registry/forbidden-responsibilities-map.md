@@ -41,13 +41,16 @@
 | `jobs-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `landela-adapter-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `learning-service` | experience | must-not-own-domain-source-data, must-not-bypass-bff-authz-audit-controls |
+| `llm-orchestration-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `msika-flow-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `msika-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `mushe-wallet-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `mushex-service` | enterprise | must-not-store-clinical-records-as-source-of-truth, must-not-own-identity-assurance-policy |
 | `mvumo-service` | trust | must-not-own-clinical-record-content, must-not-own-billing-ledgers |
 | `national-data-repository-service` | data | must-not-handle-care-transaction-orchestration, must-not-bypass-consent-governance |
+| `ndila-service` | integration | must-not-authorize-access-decisions, must-not-own-patient-identity-source-of-truth, must-not-own-provider-identity-source-of-truth, must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries |
 | `ndr-service` | data | must-not-handle-care-transaction-orchestration, must-not-bypass-consent-governance |
+| `nhume-service` | integration | must-not-own-clinical-record-source-of-truth, must-not-own-patient-identity-source-of-truth, must-not-own-provider-identity-source-of-truth, must-not-own-consent-policy-authority, must-not-own-payment-ledgers |
 | `notification-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `observability-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-edge-service` | integration | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |

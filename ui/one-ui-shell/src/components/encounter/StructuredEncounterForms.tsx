@@ -10,8 +10,8 @@
 
 import { useState } from "react";
 import {
-  Activity, AlertTriangle, Baby, CheckCircle2, ChevronDown,
-  ClipboardCheck, Heart, Pill, Stethoscope, Thermometer,
+  Activity, Baby, ChevronDown,
+  ClipboardCheck, Heart, Pill, Stethoscope,
 } from "lucide-react";
 
 // ── Common Types ──────────────────────────────────────────────────
@@ -108,6 +108,7 @@ const DOCTOR_EXAM_FINDINGS: CheckItem[] = [
 ];
 
 export function DoctorEncounterForm({ onDataChange }: { onDataChange: (data: Record<string, unknown>) => void }) {
+  void onDataChange;
   const [systemsChecked, setSystemsChecked] = useState(new Set<string>());
   const [examChecked, setExamChecked] = useState(new Set<string>());
   const [chiefComplaint, setChiefComplaint] = useState("");
@@ -240,6 +241,7 @@ const NURSE_INTERVENTIONS: CheckItem[] = [
 ];
 
 export function NurseEncounterForm({ onDataChange }: { onDataChange: (data: Record<string, unknown>) => void }) {
+  void onDataChange;
   const [assessChecked, setAssessChecked] = useState(new Set<string>());
   const [interventionsChecked, setInterventionsChecked] = useState(new Set<string>());
   const [painScore, setPainScore] = useState("");
@@ -298,6 +300,7 @@ const PHARMACIST_CHECKS: CheckItem[] = [
 ];
 
 export function PharmacistEncounterForm({ onDataChange }: { onDataChange: (data: Record<string, unknown>) => void }) {
+  void onDataChange;
   const [checksChecked, setChecksChecked] = useState(new Set<string>());
   const [clinicalIntervention, setClinicalIntervention] = useState("");
   const [interventionType, setInterventionType] = useState("");
@@ -360,6 +363,7 @@ const MIDWIFE_ANC_CHECKS: CheckItem[] = [
 ];
 
 export function MidwifeEncounterForm({ onDataChange }: { onDataChange: (data: Record<string, unknown>) => void }) {
+  void onDataChange;
   const [ancChecked, setAncChecked] = useState(new Set<string>());
   const [gestationalAge, setGestationalAge] = useState("");
   const [gravida, setGravida] = useState("");

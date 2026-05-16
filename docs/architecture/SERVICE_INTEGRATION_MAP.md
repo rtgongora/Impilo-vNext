@@ -65,6 +65,7 @@ Runtime follow-on plan for controlled convergence:
 | Knowledge Admin | experience-bff | None | Integrated |
 | Landela Adapter | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Learning | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience | Integrated |
+| Llm Orchestration | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience | Integrated |
 | Msika Flow Ops | experience-bff | None | Integrated |
 | Msika Flow Portal | experience-bff | None | Integrated |
 | Msika Flow | tshepo-authz-service | experience-bff, integration-hub | Integrated |
@@ -79,6 +80,8 @@ Runtime follow-on plan for controlled convergence:
 | Mvumo | None | experience-bff, integration-hub | Integrated |
 | National Data Repository | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Ndr | tshepo-authz-service | experience-bff, integration-hub | Integrated |
+| Ndila | tshepo-authz-service, tuso-service, indawo-service, varapi-service, surveillance-service | experience-bff, integration-hub, nhume-service, dispatch-service | Integrated |
+| Nhume | tshepo-authz-service, ndila-service, vito-service, varapi-service, tuso-service, indawo-service, msika-service, mushex-service | experience-bff, integration-hub | Integrated |
 | Notification | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Observability | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Offline Edge | tshepo-authz-service | experience-bff, integration-hub | Integrated |

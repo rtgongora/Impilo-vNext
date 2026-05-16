@@ -104,6 +104,25 @@ public class CounterController {
         return ResponseEntity.ok(Map.of("alerts", items, "total", items.size()));
     }
 
+    @PostMapping("/internal/v1/surveillance/alerts/{alertId}/acknowledge")
+    public ResponseEntity<?> acknowledgeAlert(@PathVariable Long alertId) {
+        RequestContext ctx = RequestContextHolder.require();
+        UUID tenantId = UUID.fromString(ctx.tenantId());
+
+        Optional<AlertEventEntity> acknowledged = counterService.acknowledgeAlert(tenantId, alertId);
+        if (acknowledged.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", "Alert not found"
+            ));
+        }
+
+        AlertEventEntity a = acknowledged.get();
+        return ResponseEntity.ok(Map.of(
+                "id", a.getId(),
+                "acknowledged", a.isAcknowledged()
+        ));
+    }
+
     @PostMapping("/internal/v1/surveillance/alerts/definitions")
     public ResponseEntity<?> createAlertDefinition(@RequestBody Map<String, Object> body) {
         RequestContext ctx = RequestContextHolder.require();

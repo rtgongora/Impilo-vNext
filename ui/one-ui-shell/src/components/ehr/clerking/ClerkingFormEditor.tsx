@@ -27,22 +27,24 @@ import {
 } from "lucide-react";
 import {
   ClerkingTemplate,
-  ClerkingSection,
   ClerkingField,
   CadreLevel,
   filterSectionsByRole,
 } from "@/data/clerkingTemplates";
 
+type FormFieldValue = string | number | boolean | string[] | null | undefined;
+type ClerkingFormData = Record<string, FormFieldValue>;
+
 interface ClerkingFormEditorProps {
   template: ClerkingTemplate;
   cadreLevel: CadreLevel;
   encounterId?: string;
-  onSave?: (data: Record<string, any>) => void;
-  onSign?: (data: Record<string, any>) => void;
-  initialData?: Record<string, any>;
+  onSave?: (data: ClerkingFormData) => void;
+  onSign?: (data: ClerkingFormData) => void;
+  initialData?: ClerkingFormData;
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   User,
   MessageSquare,
   FileText,
@@ -70,7 +72,7 @@ export function ClerkingFormEditor({
   onSign,
   initialData = {},
 }: ClerkingFormEditorProps) {
-  const [formData, setFormData] = useState<Record<string, any>>(initialData);
+  const [formData, setFormData] = useState<ClerkingFormData>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [expandedSections, setExpandedSections] = useState<string[]>([
@@ -108,7 +110,7 @@ export function ClerkingFormEditor({
 
   const completion = calculateCompletion();
 
-  const handleFieldChange = (fieldId: string, value: any) => {
+  const handleFieldChange = (fieldId: string, value: FormFieldValue) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
   };
 
@@ -118,13 +120,13 @@ export function ClerkingFormEditor({
     checked: boolean
   ) => {
     setFormData((prev) => {
-      const currentValues = prev[fieldId] || [];
+      const currentValues = Array.isArray(prev[fieldId]) ? (prev[fieldId] as string[]) : [];
       if (checked) {
         return { ...prev, [fieldId]: [...currentValues, option] };
       } else {
         return {
           ...prev,
-          [fieldId]: currentValues.filter((v: string) => v !== option),
+          [fieldId]: currentValues.filter((v) => v !== option),
         };
       }
     });
@@ -141,7 +143,7 @@ export function ClerkingFormEditor({
       onSave?.(formData);
       setLastSaved(new Date());
       showFeedback("success", "Clerking saved successfully");
-    } catch (error) {
+    } catch {
       showFeedback("error", "Failed to save clerking");
     } finally {
       setIsSaving(false);
@@ -175,6 +177,10 @@ export function ClerkingFormEditor({
 
   const renderField = (field: ClerkingField) => {
     const value = formData[field.id];
+    const textLikeValue =
+      typeof value === "string" || typeof value === "number" ? String(value) : "";
+    const checkedValue = value === true;
+    const groupValue = Array.isArray(value) ? value : [];
 
     switch (field.type) {
       case "text":
@@ -182,7 +188,7 @@ export function ClerkingFormEditor({
           <input
             id={field.id}
             type="text"
-            value={value || ""}
+            value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
@@ -193,7 +199,7 @@ export function ClerkingFormEditor({
         return (
           <textarea
             id={field.id}
-            value={value || ""}
+            value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
             className="w-full min-h-[100px] rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
@@ -205,7 +211,7 @@ export function ClerkingFormEditor({
           <input
             id={field.id}
             type="number"
-            value={value || ""}
+            value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             placeholder={field.placeholder}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
@@ -217,7 +223,7 @@ export function ClerkingFormEditor({
           <input
             id={field.id}
             type="date"
-            value={value || ""}
+            value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           />
@@ -229,7 +235,7 @@ export function ClerkingFormEditor({
             <input
               id={field.id}
               type="checkbox"
-              checked={value || false}
+              checked={checkedValue}
               onChange={(e) => handleFieldChange(field.id, e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-impilo-500 focus:ring-impilo-400"
             />
@@ -243,7 +249,7 @@ export function ClerkingFormEditor({
         return (
           <select
             id={field.id}
-            value={value || ""}
+            value={textLikeValue}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-impilo-400 focus:outline-none focus:ring-1 focus:ring-impilo-400"
           >
@@ -264,7 +270,7 @@ export function ClerkingFormEditor({
                 <input
                   id={`${field.id}-${option}`}
                   type="checkbox"
-                  checked={(value || []).includes(option)}
+                  checked={groupValue.includes(option)}
                   onChange={(e) =>
                     handleCheckboxGroupChange(
                       field.id,
@@ -310,6 +316,7 @@ export function ClerkingFormEditor({
         <div>
           <h2 className="text-lg font-semibold">{template.name}</h2>
           <p className="text-sm text-gray-500">{template.description}</p>
+          {encounterId && <p className="text-xs text-gray-400 mt-1">Encounter: {encounterId}</p>}
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">

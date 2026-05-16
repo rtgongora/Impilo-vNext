@@ -41,13 +41,16 @@
 | `jobs-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `landela-adapter-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `learning-service` | experience | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience |
+| `llm-orchestration-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `msika-flow-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `msika-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `mushe-wallet-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `mushex-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `mvumo-service` | trust | — | experience-bff, integration-hub |
 | `national-data-repository-service` | data | tshepo-authz-service | experience-bff, integration-hub |
+| `ndila-service` | integration | tshepo-authz-service, tuso-service, indawo-service, varapi-service, surveillance-service | experience-bff, integration-hub, nhume-service, dispatch-service |
 | `ndr-service` | data | tshepo-authz-service | experience-bff, integration-hub |
+| `nhume-service` | integration | tshepo-authz-service, ndila-service, vito-service, varapi-service, tuso-service, indawo-service, msika-service, mushex-service | experience-bff, integration-hub |
 | `notification-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `observability-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `offline-edge-service` | integration | tshepo-authz-service | experience-bff, integration-hub |

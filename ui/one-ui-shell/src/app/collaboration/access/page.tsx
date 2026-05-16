@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const SESSION_HEADER = "X-Patient-Share-Session";
 
@@ -51,7 +51,7 @@ export default function CollaborationAccessPage() {
     return json;
   }
 
-  async function getJson(path: string, extraHeaders?: Record<string, string>) {
+  const getJson = useCallback(async (path: string, extraHeaders?: Record<string, string>) => {
     const res = await fetch(path, { headers: { ...extraHeaders } });
     const text = await res.text();
     const json = text ? JSON.parse(text) : null;
@@ -59,9 +59,9 @@ export default function CollaborationAccessPage() {
       throw new Error(String((json as { error?: { message?: string } })?.error?.message ?? res.statusText));
     }
     return json;
-  }
+  }, []);
 
-  async function loadCouncils(tid: string) {
+  const loadCouncils = useCallback(async (tid: string) => {
     if (!tid) return;
     setError("");
     try {
@@ -76,7 +76,7 @@ export default function CollaborationAccessPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load councils");
     }
-  }
+  }, [councilId, getJson]);
 
   useEffect(() => {
     async function validateToken() {
@@ -99,7 +99,7 @@ export default function CollaborationAccessPage() {
       }
     }
     void validateToken();
-  }, [shareToken]);
+  }, [loadCouncils, shareToken]);
 
   async function handleOtp(e: React.FormEvent) {
     e.preventDefault();

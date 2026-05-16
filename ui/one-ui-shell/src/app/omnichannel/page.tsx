@@ -12,6 +12,7 @@ import {
   useCreateOmnichannelCallback,
   useCreateSmsJourney,
   useOmnichannelCallbacks,
+  useOmnichannelDashboard,
   useOmnichannelChannels,
   useOmnichannelDisclosureRules,
   useOmnichannelIvrFlows,
@@ -41,6 +42,24 @@ function countDefinitionNodes(value: unknown): number {
 function formatDateTime(value?: string | null) {
   if (!value) return "Not yet recorded";
   return new Date(value).toLocaleString();
+}
+
+function metricNumber(dashboard: Record<string, unknown> | undefined, key: string, fallback = 0) {
+  if (!dashboard) return fallback;
+  const legacy = dashboard[key];
+  if (typeof legacy === "number") return legacy;
+  const operations = (dashboard.operations as Record<string, unknown> | undefined) ?? {};
+  const communications = (dashboard.communications as Record<string, unknown> | undefined) ?? {};
+  const clinical = (dashboard.clinical as Record<string, unknown> | undefined) ?? {};
+  const candidates = [
+    operations[key],
+    communications[key],
+    clinical[key],
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "number") return candidate;
+  }
+  return fallback;
 }
 
 export default function OmnichannelPage() {
@@ -85,19 +104,29 @@ export default function OmnichannelPage() {
 }
 
 function OverviewTab() {
+  const { data: dashboardData, isLoading: dashboardLoading } = useOmnichannelDashboard();
   const { data: callbacksData, isLoading: callbacksLoading } = useOmnichannelCallbacks();
   const { data: channelsData, isLoading: channelsLoading } = useOmnichannelChannels();
   const { data: smsData, isLoading: smsLoading } = useOmnichannelSmsJourneys();
   const { data: ussdData, isLoading: ussdLoading } = useOmnichannelUssdMenus();
   const { data: ivrData, isLoading: ivrLoading } = useOmnichannelIvrFlows();
   const { data: disclosureData, isLoading: disclosureLoading } = useOmnichannelDisclosureRules();
+  const dashboard = dashboardData?.data;
   const callbacks = callbacksData?.data ?? [];
   const channels = channelsData?.data ?? [];
   const smsJourneys = smsData?.data ?? [];
   const ussdMenus = ussdData?.data ?? [];
   const ivrFlows = ivrData?.data ?? [];
   const disclosureRules = disclosureData?.data ?? [];
-  const loading = callbacksLoading || channelsLoading || smsLoading || ussdLoading || ivrLoading || disclosureLoading;
+  const loading = dashboardLoading || callbacksLoading || channelsLoading || smsLoading || ussdLoading || ivrLoading || disclosureLoading;
+
+  const sourceHealth =
+    (dashboard?.governance as { source_health?: Record<string, string> } | undefined)?.source_health
+    ?? dashboard?.source_health
+    ?? {};
+  const lastRefreshedAt =
+    (dashboard?.governance as { last_refreshed_at?: string | null } | undefined)?.last_refreshed_at
+    ?? dashboard?.last_refreshed_at;
 
   return (
     <div className="space-y-6">
@@ -109,12 +138,26 @@ function OverviewTab() {
       ) : (
         <>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <SummaryCard label="Configured channels" value={String(channels.filter((item) => item.is_active).length)} helper="Active channel configs" tone="teal" />
-            <SummaryCard label="Pending callbacks" value={String(callbacks.filter((item) => item.status === "PENDING").length)} helper="Queue items needing follow-up" tone="amber" />
-            <SummaryCard label="SMS journeys" value={String(smsJourneys.filter((item) => item.is_active).length)} helper="Active outbound journeys" tone="blue" />
-            <SummaryCard label="USSD menus" value={String(ussdMenus.length)} helper="Published feature-phone paths" tone="green" />
-            <SummaryCard label="IVR flows" value={String(ivrFlows.length)} helper="Voice flow definitions" tone="purple" />
-            <SummaryCard label="Disclosure rules" value={String(disclosureRules.length)} helper="Active data release policies" tone="indigo" />
+            <SummaryCard href="/omnichannel?tab=overview" label="Configured channels" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "configured_channels", channels.filter((item) => item.is_active).length))} helper="Active channel configs" tone="teal" />
+            <SummaryCard href="/omnichannel?tab=callbacks" label="Pending callbacks" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "pending_callbacks", callbacks.filter((item) => item.status === "PENDING").length))} helper="Queue items needing follow-up" tone="amber" />
+            <SummaryCard href="/omnichannel?tab=sms" label="SMS journeys" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "active_sms_journeys", smsJourneys.filter((item) => item.is_active).length))} helper="Active outbound journeys" tone="blue" />
+            <SummaryCard href="/omnichannel?tab=ussd" label="USSD menus" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "ussd_flows", ussdMenus.length))} helper="Published feature-phone paths" tone="green" />
+            <SummaryCard href="/omnichannel?tab=ivr" label="IVR flows" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "ivr_flows", ivrFlows.length))} helper="Voice flow definitions" tone="purple" />
+            <SummaryCard href="/omnichannel?tab=disclosure" label="Disclosure rules" value={String(metricNumber(dashboard as Record<string, unknown> | undefined, "disclosure_rules", disclosureRules.length))} helper="Active data release policies" tone="indigo" />
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium text-gray-600">Source health:</span>
+              {Object.entries(sourceHealth).map(([source, status]) => (
+                <span
+                  key={source}
+                  className={`rounded-full px-2 py-0.5 ${status === "UP" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                >
+                  {source}: {status}
+                </span>
+              ))}
+              {lastRefreshedAt ? <span className="ml-auto text-gray-400">Updated {formatDateTime(lastRefreshedAt)}</span> : null}
+            </div>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
@@ -132,9 +175,10 @@ function OverviewTab() {
   );
 }
 
-function SummaryCard({ label, value, helper, tone }: { label: string; value: string; helper: string; tone: "teal" | "amber" | "blue" | "green" | "purple" | "indigo" }) {
+function SummaryCard({ label, value, helper, tone, href }: { label: string; value: string; helper: string; tone: "teal" | "amber" | "blue" | "green" | "purple" | "indigo"; href?: string }) {
   const toneClasses: Record<string, string> = { teal: "bg-teal-50 text-teal-900", amber: "bg-amber-50 text-amber-900", blue: "bg-impilo-50 text-impilo-800", green: "bg-green-50 text-green-900", purple: "bg-purple-50 text-purple-900", indigo: "bg-indigo-50 text-indigo-900" };
-  return <div className={`rounded-lg p-4 ${toneClasses[tone]}`}><p className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs opacity-80">{helper}</p></div>;
+  const content = <div className={`rounded-lg p-4 ${toneClasses[tone]}`}><p className="text-xs font-medium uppercase tracking-wide opacity-70">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs opacity-80">{helper}</p></div>;
+  return href ? <Link href={href}>{content}</Link> : content;
 }
 
 function SmsTab() {

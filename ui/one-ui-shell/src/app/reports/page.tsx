@@ -103,7 +103,10 @@ export default function ReportsHubPage() {
     queryKey: ["reports", "national-kpis"],
     queryFn: () => apiClient.get<{ data: { gold_stats?: Record<string, unknown> } }>("/internal/v1/operations/national-kpis"),
   });
-  const goldStats = (nationalKpiQuery.data?.data?.gold_stats ?? {}) as Record<string, unknown>;
+  const goldStats = useMemo(
+    () => (nationalKpiQuery.data?.data?.gold_stats ?? {}) as Record<string, unknown>,
+    [nationalKpiQuery.data?.data?.gold_stats],
+  );
   const numberOrUnavailable = (value: unknown) => (typeof value === "number" ? value.toLocaleString() : "Unavailable");
 
   const dhis2Rows = useMemo(

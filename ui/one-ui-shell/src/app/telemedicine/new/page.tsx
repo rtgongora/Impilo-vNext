@@ -11,7 +11,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  AlertTriangle, ArrowRight, CheckCircle2, ClipboardList, FileText,
+  AlertTriangle, CheckCircle2, ClipboardList, FileText,
   Loader2, Lock, MapPin, Send, Shield, Stethoscope, Upload, Users, Video,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -130,7 +130,7 @@ export default function NewTeleconsultPage() {
 
       setSubmitted(true);
       setTimeout(() => router.push(`/telemedicine/session/${sid}`), 2000);
-    } catch (e) {
+    } catch {
       setError("Failed to submit referral. Please try again.");
     } finally {
       setSubmitting(false);
@@ -159,7 +159,6 @@ export default function NewTeleconsultPage() {
           {/* Left navigation — steps */}
           <nav className="w-48 shrink-0 space-y-1">
             {STEPS.map((step) => {
-              const Icon = step.icon;
               const isActive = activeStep === step.id;
               const isDone = step.id === "letter" ? !!referralLetter.trim()
                 : step.id === "routing" ? !!routingType

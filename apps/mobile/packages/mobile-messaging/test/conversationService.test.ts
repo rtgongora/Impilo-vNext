@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createConversation,
+  fetchCommunicationDashboard,
   fetchConversations,
   fetchMessages,
   markConversationRead,
@@ -125,5 +126,38 @@ describe("conversationService provider messaging routes", () => {
       }),
     );
     expect(created.id).toBe("conv-2");
+  });
+
+  it("normalizes role-grouped communication dashboard payloads", async () => {
+    getMock.mockResolvedValue({
+      data: {
+        data: {
+          operations: {
+            active_threads: 12,
+            messages_sent_today: 44,
+            delivery_failures_today: 3,
+          },
+          communications: {
+            active_announcements: 7,
+          },
+          clinical: {
+            open_clinical_pages: 5,
+          },
+          governance: {
+            source_health: { channels: "UP", notifications: "DOWN" },
+            last_refreshed_at: "2026-01-01T00:00:00Z",
+          },
+        },
+      },
+    });
+
+    const dashboard = await fetchCommunicationDashboard();
+    expect(getMock).toHaveBeenCalledWith("/internal/v1/communication/dashboard");
+    expect(dashboard.active_threads).toBe(12);
+    expect(dashboard.sent_today).toBe(44);
+    expect(dashboard.failed_today).toBe(3);
+    expect(dashboard.active_announcements).toBe(7);
+    expect(dashboard.open_clinical_pages).toBe(5);
+    expect(dashboard.source_health?.notifications).toBe("DOWN");
   });
 });

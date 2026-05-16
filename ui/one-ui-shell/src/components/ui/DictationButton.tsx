@@ -64,7 +64,7 @@ export function DictationButton({
     if (isListening && transcript === "" && interimTranscript === "") {
       baseValueRef.current = value;
     }
-  }, [isListening]);
+  }, [interimTranscript, isListening, transcript, value]);
 
   // Append finalized transcript to value
   useEffect(() => {
@@ -72,7 +72,7 @@ export function DictationButton({
       const separator = baseValueRef.current && !baseValueRef.current.endsWith(" ") ? " " : "";
       onValueChange(baseValueRef.current + separator + transcript);
     }
-  }, [transcript]);
+  }, [onValueChange, transcript]);
 
   const handleToggle = useCallback(() => {
     if (isListening) {

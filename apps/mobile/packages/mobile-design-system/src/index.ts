@@ -31,6 +31,8 @@ export { StatusIndicator } from "./components/StatusIndicator";
 export type { StatusIndicatorProps, IndicatorStatus } from "./components/StatusIndicator";
 export { Avatar } from "./components/Avatar";
 export type { AvatarProps, AvatarSize } from "./components/Avatar";
+export { FeatureMaturityBadge } from "./components/FeatureMaturityBadge";
+export type { FeatureMaturityStatus } from "./components/FeatureMaturityBadge";
 
 // Form Components
 export { TextField } from "./forms/TextField";

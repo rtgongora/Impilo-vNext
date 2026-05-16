@@ -106,3 +106,21 @@ infra/              Envoy, Kubernetes, observability configs
 scripts/            Seed data and smoke tests
 docs/               Architecture docs and runbooks
 ```
+
+## Implementation Integrity Rules (Web + Mobile)
+
+To avoid floating frontend and fake capability drift:
+
+1. **Trace every feature end-to-end**: web route/mobile screen -> hook/client -> BFF endpoint -> backend service -> contract -> test.
+2. **Do not present fixture data as live**. Use explicit maturity labels (`Live`, `Partial`, `Fixture`, `Not wired`) in dev/internal surfaces.
+3. **Do not ship dead-end actions**. Buttons must either perform real actions or be disabled with a clear reason.
+4. **Wire both surfaces intentionally**. If a feature is web-only or mobile-only, document that explicitly in `docs/audits/*`.
+5. **Use canonical contracts** where possible (`contracts/*`) and avoid duplicate local enums/types.
+6. **Nompilo capabilities must be grounded** in real API/service support; do not imply unsupported actions.
+7. **Validate continuously** with lint/tests/build before calling work complete.
+
+For current evidence-based integrity status and remediation backlog, see:
+
+- `docs/audits/IMPLEMENTATION_INTEGRITY_AUDIT.md`
+- `docs/audits/WEB_MOBILE_PARITY_AUDIT.md`
+- `docs/audits/REMEDIATION_SUMMARY.md`

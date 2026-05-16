@@ -11,7 +11,7 @@
  * Route: /ehr/[patientId]/consults
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -254,9 +254,13 @@ export default function ConsultsPage() {
     setTeleconsultReferralId("");
   }
 
-  function toggleReferralAction(referral: ReferralResource, type: ReferralActionType) {
+  const toggleReferralAction = useCallback((referral: ReferralResource, type: ReferralActionType) => {
     if (activeReferralAction?.id === referral.id && activeReferralAction.type === type) {
-      resetReferralAction();
+      setActiveReferralAction(null);
+      setReferralScheduledAt("");
+      setReferralHandoffNote("");
+      setReferralResponseNotes("");
+      setReferralOutcome("");
       return;
     }
 
@@ -265,7 +269,7 @@ export default function ConsultsPage() {
     setReferralHandoffNote("");
     setReferralResponseNotes(referral.attributes.response_notes ?? referral.attributes.responseNotes ?? "");
     setReferralOutcome((referral.attributes.outcome ?? "") as ReferralOutcome);
-  }
+  }, [activeReferralAction]);
 
   function handleAcceptReferral(referral: ReferralResource) {
     if (!facility) return;
@@ -518,6 +522,7 @@ export default function ConsultsPage() {
     receivableReferrals,
     router,
     scheduledTeleconsult,
+    toggleReferralAction,
   ]);
   const telemetryLine = useMemo(() => {
     if (activeTeleconsult) {

@@ -25,10 +25,6 @@
  */
 
 import { useState } from "react";
-import {
-  Activity, Brain, ClipboardCheck, Eye, Heart, Loader2,
-  MessageCircle, Stethoscope, Thermometer, Users, Zap,
-} from "lucide-react";
 
 // ── Shared checklist component ────────────────────────────────────
 

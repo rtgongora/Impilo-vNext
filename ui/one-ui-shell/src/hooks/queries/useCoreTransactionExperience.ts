@@ -4,11 +4,15 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import type { CoreTransactionBffView } from "../../../../../contracts/core-transaction";
-
-type CoreTransactionView = CoreTransactionBffView;
+import type {
+  CoreTransactionJourneyView,
+  CoreTransactionLifecycleStage,
+  CoreTransactionTimelineEntry,
+  CoreTransactionView,
+} from "@/features/core-transaction/types";
 
 interface CoreTransactionListData {
-  items?: CoreTransactionView[];
+  items?: CoreTransactionBffView[];
 }
 
 type AnyRecord = Record<string, unknown>;
@@ -18,6 +22,110 @@ function asArray(value: unknown): AnyRecord[] {
     return value.filter((item): item is AnyRecord => typeof item === "object" && item !== null);
   }
   return [];
+}
+
+function toLifecycleStage(stage: CoreTransactionBffView["transaction"]["lifecycleStage"]): CoreTransactionLifecycleStage {
+  if (stage === "NEED_OR_TRIGGER") return "ENTRY";
+  return stage;
+}
+
+function toTimelineEntry(
+  entry: CoreTransactionBffView["timeline"][number],
+  index: number,
+  total: number,
+): CoreTransactionTimelineEntry {
+  return {
+    at: entry.at,
+    eventName: entry.eventName,
+    stateBefore: entry.stateBefore,
+    stateAfter: entry.stateAfter,
+    actorId: entry.actorId,
+    journeyType: entry.journeyType,
+    journeyStage: entry.journeyStage,
+    status: index === total - 1 ? "CURRENT" : "COMPLETED",
+  };
+}
+
+function toJourney(journey: CoreTransactionBffView["journeys"]["person"]): CoreTransactionJourneyView {
+  return {
+    journeyType: journey.journeyType,
+    currentStage: journey.currentStage,
+    stages: journey.stages,
+    visibleToActor: journey.visibleToActor,
+    nextActions: journey.nextActions.map((action) => ({ code: action.code, label: action.label })),
+    blockers: journey.blockers,
+    timelineEntries: journey.timelineEntries.map((entry, index) =>
+      toTimelineEntry(entry, index, journey.timelineEntries.length),
+    ),
+    completionStatus: journey.completionStatus,
+  };
+}
+
+function toCoreTransactionView(input: CoreTransactionBffView): CoreTransactionView {
+  const serviceCode = input.transaction.context.registryContext.serviceCode;
+  const timeline = input.timeline.map((entry, index) =>
+    toTimelineEntry(entry, index, input.timeline.length),
+  );
+  return {
+    fixture: true,
+    transaction: {
+      id: input.transaction.id,
+      type: input.transaction.type,
+      currentState: input.transaction.currentState,
+      lifecycleStage: toLifecycleStage(input.transaction.lifecycleStage),
+      serviceCode,
+    },
+    journeys: {
+      person: toJourney(input.journeys.person),
+      provider: toJourney(input.journeys.provider),
+      platform: toJourney(input.journeys.platform),
+    },
+    clientSummary: {
+      clientRef: input.clientSummary.clientRef,
+      clientAlias: input.clientSummary.clientAlias,
+      identityStatus: input.clientSummary.provisionalIdentity ? "PROVISIONAL" : "RESOLVED",
+    },
+    providerContext: {
+      providerRef: input.providerContext?.providerRef,
+      actorId: input.transaction.actor.actorId,
+      roleCode: input.providerContext?.roleCode,
+    },
+    facilityContext: {
+      facilityId: input.facilityContext.facilityId,
+      workspaceId: input.facilityContext.workspaceId,
+    },
+    trustContext: {
+      purposeOfUse: input.trustContext.purposeOfUse,
+      consentStatus: input.trustContext.consentGranted === true ? "GRANTED" : "NOT_GRANTED",
+      accessStatus: input.trustContext.accessDecision ?? "ALLOW",
+    },
+    clinicalContext: {
+      encounterId: input.clinicalContext?.encounterId,
+      ordersPending: input.orders.length,
+      resultsPending: input.clinicalContext?.resultRefs?.length ?? 0,
+    },
+    financialContext: {
+      costingStatus: input.financialContext?.costingStatus ?? "NOT_APPLICABLE",
+      paymentStatus: input.financialContext?.paymentStatus ?? "NOT_APPLICABLE",
+      claimStatus: input.financialContext?.claimStatus ?? "NOT_APPLICABLE",
+    },
+    followUp: {
+      required: input.followUp?.followUpRequired ?? false,
+      note: input.followUp?.nextFollowUpDate,
+    },
+    timeline,
+    nextActions: input.nextActions.map((action) => ({ code: action.code, label: action.label })),
+    permissions: input.permissions.map((permission) => ({ code: permission.code, allowed: permission.allowed })),
+    auditSummary: {
+      correlationId: input.auditSummary.correlationId,
+      sourceSystem: input.auditSummary.sourceSystem,
+      auditRequired: input.auditSummary.auditRequired,
+    },
+    offlineSyncStatus: input.offlineSyncStatus,
+    failureModes: input.failureModes,
+    nompilo: input.nompilo,
+    nompiloCommand: input.nompiloCommand,
+  };
 }
 
 function normalizeCollection(raw: unknown): AnyRecord[] {
@@ -53,7 +161,10 @@ export function useCoreTransactionList(filters?: { state?: string; type?: string
 export function useCoreTransactionFeed(filters?: { state?: string; type?: string }) {
   const query = useCoreTransactionList(filters);
   const items = useMemo(
-    () => asArray(query.data?.data.items) as CoreTransactionView[],
+    () =>
+      asArray(query.data?.data.items)
+        .map((item) => item as unknown as CoreTransactionBffView)
+        .map(toCoreTransactionView),
     [query.data?.data.items],
   );
   return { ...query, items };

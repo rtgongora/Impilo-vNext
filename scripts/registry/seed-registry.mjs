@@ -195,6 +195,63 @@ const DOCTRINE_OVERRIDES = new Map(
         ],
       },
     ],
+    [
+      "ndila-service",
+      {
+        primary_plane: "integration",
+        plane: "integration",
+        domain: "interoperability",
+        secondary_planes: ["registry", "experience", "data", "trust", "clinical", "enterprise"],
+        system_of_record_for: [
+          "canonical geospatial location registry",
+          "routing, ETA, and distance matrix orchestration",
+          "geofencing and catchment boundary operations",
+          "tracking asset telemetry normalization",
+          "spatial search and geospatial intelligence context",
+        ],
+        consumes_from: ["tshepo-authz-service", "tuso-service", "indawo-service", "varapi-service", "surveillance-service"],
+        exposes_to: ["experience-bff", "integration-hub", "nhume-service", "dispatch-service"],
+        forbidden_responsibilities: [
+          "must-not-authorize-access-decisions",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-own-provider-identity-source-of-truth",
+          "must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries",
+        ],
+      },
+    ],
+    [
+      "nhume-service",
+      {
+        primary_plane: "integration",
+        plane: "integration",
+        domain: "interoperability",
+        secondary_planes: ["experience", "clinical", "registry", "enterprise", "trust", "data"],
+        system_of_record_for: [
+          "dispatch request and assignment lifecycle",
+          "courier and fleet operational registry",
+          "last-mile tracking and proof-of-delivery telemetry",
+          "delivery chain-of-custody and exception workflow",
+        ],
+        consumes_from: [
+          "tshepo-authz-service",
+          "ndila-service",
+          "vito-service",
+          "varapi-service",
+          "tuso-service",
+          "indawo-service",
+          "msika-service",
+          "mushex-service",
+        ],
+        exposes_to: ["experience-bff", "integration-hub"],
+        forbidden_responsibilities: [
+          "must-not-own-clinical-record-source-of-truth",
+          "must-not-own-patient-identity-source-of-truth",
+          "must-not-own-provider-identity-source-of-truth",
+          "must-not-own-consent-policy-authority",
+          "must-not-own-payment-ledgers",
+        ],
+      },
+    ],
   ]
 );
 

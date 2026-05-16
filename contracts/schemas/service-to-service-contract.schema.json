@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/service-to-service-contract.schema.json",
+  "title": "Service-to-Service Contract",
+  "description": "Internal trust contract between two sovereign services. See doctrine §4.",
+  "type": "object",
+  "required": [
+    "callerServiceId", "calleeServiceId", "contractVersion",
+    "allowedOperations", "allowedScopes", "allowedRequestSources",
+    "ownerTeam", "supportContact", "status"
+  ],
+  "properties": {
+    "callerServiceId": { "type": "string" },
+    "calleeServiceId": { "type": "string" },
+    "contractVersion": { "type": "string" },
+    "allowedOperations": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "allowedScopes": { "type": "array", "items": { "type": "string" } },
+    "allowedEventTopics": { "type": "array", "items": { "type": "string" } },
+    "allowedRequestSources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": ["HUMAN", "SYSTEM", "SCHEDULED_JOB", "BACKGROUND_WORKER", "EVENT_CONSUMER", "AI_ASSISTED", "EXTERNAL_APP"]
+      }
+    },
+    "rateLimit": {
+      "type": "object",
+      "properties": {
+        "requestsPerMinute": { "type": "integer", "minimum": 1 },
+        "burst": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ownerTeam": { "type": "string" },
+    "supportContact": {
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" }
+      }
+    },
+    "lastVerifiedAt": { "type": "string", "format": "date-time" },
+    "status": { "enum": ["DRAFT", "ACTIVE", "DEPRECATED"] }
+  }
+}

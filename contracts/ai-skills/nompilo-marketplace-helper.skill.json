@@ -1,0 +1,110 @@
+{
+  "$schema": "../schemas/ai-skill-manifest.schema.json",
+  "itemCode": "nompilo-marketplace-helper",
+  "name": "Nompilo Marketplace Helper",
+  "version": "1.0.0",
+  "description": "Helps users discover, troubleshoot and request Health OS capabilities (apps, plugins, extensions, connectors, AI skills) governed through the Msika Apps capability marketplace. Read-only and tenant/role-scoped.",
+  "publisherId": "msika-apps-publisher",
+  "defaultVisibility": "MOHCC_ONLY",
+  "rolesAllowed": [
+    "CITIZEN",
+    "PROVIDER",
+    "FACILITY_ADMIN",
+    "DISTRICT_ADMIN",
+    "PROVINCIAL_ADMIN",
+    "NATIONAL_ADMIN",
+    "MARKETPLACE_ADMIN",
+    "INTEGRATION_ADMIN",
+    "OPERATIONS"
+  ],
+  "permittedPurposesOfUse": [
+    "TREATMENT",
+    "OPERATIONS",
+    "SUPPORT",
+    "PUBLIC_HEALTH"
+  ],
+  "tshepoPolicyRef": "policy:nompilo.marketplace.helper.v1",
+  "phiAccess": false,
+  "safetyDoctrineRef": "docs/doctrine/HEALTH_OS_EXTENSIBILITY_DOCTRINE.md",
+  "prohibitedAutonomousActions": [
+    "approve activation requests",
+    "suspend or reactivate installations",
+    "rotate or reveal external app credentials",
+    "publish or unpublish marketplace items",
+    "modify TSHEPO policies",
+    "subscribe external apps to internal-only events"
+  ],
+  "documentationUrl": "/developer/event-catalogue",
+  "supportContact": {
+    "name": "Marketplace Operations",
+    "email": "marketplace-ops@impilo.health.gov.zw"
+  },
+  "tools": [
+    {
+      "name": "findMarketplaceCapability",
+      "description": "Search the capability marketplace by type (APP, PLUGIN, EXTENSION, CONNECTOR, ADAPTER, WORKFLOW_PACK, CONTENT_PACK, AI_SKILL, DEVICE_INTEGRATION) and category. Returns only APPROVED items the caller is allowed to see.",
+      "effect": "READ_ONLY",
+      "requiredScopes": ["marketplace:read"],
+      "rolesAllowed": ["CITIZEN", "PROVIDER", "FACILITY_ADMIN", "DISTRICT_ADMIN", "PROVINCIAL_ADMIN", "NATIONAL_ADMIN", "MARKETPLACE_ADMIN", "INTEGRATION_ADMIN", "OPERATIONS"],
+      "requiresConfirmation": false,
+      "implementedBy": {
+        "serviceId": "msika-apps-service",
+        "className": "zw.gov.mohcc.impilo.msikaapps.nompilo.NompiloMarketplaceTools",
+        "methodName": "findMarketplaceCapability"
+      },
+      "inputSchemaRef": "../schemas/tools/find-marketplace-capability.input.schema.json"
+    },
+    {
+      "name": "explainCapabilityStatus",
+      "description": "Explain in plain language the approval and health status of a specific marketplace item identified by its itemCode.",
+      "effect": "READ_ONLY",
+      "requiredScopes": ["marketplace:read"],
+      "rolesAllowed": ["CITIZEN", "PROVIDER", "FACILITY_ADMIN", "DISTRICT_ADMIN", "PROVINCIAL_ADMIN", "NATIONAL_ADMIN", "MARKETPLACE_ADMIN", "INTEGRATION_ADMIN", "OPERATIONS"],
+      "requiresConfirmation": false,
+      "implementedBy": {
+        "serviceId": "msika-apps-service",
+        "className": "zw.gov.mohcc.impilo.msikaapps.nompilo.NompiloMarketplaceTools",
+        "methodName": "explainCapabilityStatus"
+      }
+    },
+    {
+      "name": "listInstalledCapabilities",
+      "description": "List the marketplace capabilities installed for the caller's tenant. Optional lifecycle filter (ACTIVE, INSTALLED, SUSPENDED, DEPRECATED).",
+      "effect": "READ_ONLY",
+      "requiredScopes": ["marketplace:read", "tenant:read"],
+      "rolesAllowed": ["FACILITY_ADMIN", "DISTRICT_ADMIN", "PROVINCIAL_ADMIN", "NATIONAL_ADMIN", "MARKETPLACE_ADMIN", "INTEGRATION_ADMIN", "OPERATIONS"],
+      "requiresConfirmation": false,
+      "implementedBy": {
+        "serviceId": "msika-apps-service",
+        "className": "zw.gov.mohcc.impilo.msikaapps.nompilo.NompiloMarketplaceTools",
+        "methodName": "listInstalledCapabilities"
+      }
+    },
+    {
+      "name": "summarizePendingApprovals",
+      "description": "Summary count of marketplace activation requests awaiting an approval decision for the caller's tenant.",
+      "effect": "READ_ONLY",
+      "requiredScopes": ["marketplace:approve", "tenant:read"],
+      "rolesAllowed": ["FACILITY_ADMIN", "DISTRICT_ADMIN", "PROVINCIAL_ADMIN", "NATIONAL_ADMIN", "MARKETPLACE_ADMIN"],
+      "requiresConfirmation": false,
+      "implementedBy": {
+        "serviceId": "msika-apps-service",
+        "className": "zw.gov.mohcc.impilo.msikaapps.nompilo.NompiloMarketplaceTools",
+        "methodName": "summarizePendingApprovals"
+      }
+    },
+    {
+      "name": "troubleshootIntegration",
+      "description": "Plain-language troubleshooting for a 'temporarily unavailable' or 'suspended' marketplace capability. Does not surface credentials, stack traces, or internal hostnames.",
+      "effect": "READ_ONLY",
+      "requiredScopes": ["marketplace:read"],
+      "rolesAllowed": ["CITIZEN", "PROVIDER", "FACILITY_ADMIN", "DISTRICT_ADMIN", "PROVINCIAL_ADMIN", "NATIONAL_ADMIN", "MARKETPLACE_ADMIN", "INTEGRATION_ADMIN", "OPERATIONS"],
+      "requiresConfirmation": false,
+      "implementedBy": {
+        "serviceId": "msika-apps-service",
+        "className": "zw.gov.mohcc.impilo.msikaapps.nompilo.NompiloMarketplaceTools",
+        "methodName": "troubleshootIntegration"
+      }
+    }
+  ]
+}

@@ -112,6 +112,7 @@ A service that is not in the register does not officially exist in vNext.
 | Mobile Api Client | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-api-client | High |
 | Mobile Design System | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-design-system | High |
 | Mobile Messaging | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-messaging | High |
+| Mobile Ndila | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-ndila | High |
 | Mobile Offline | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-offline | High |
 | Mobile Timeline | shared library | Library | Experience | User Interface | Live | Not Declared | Not Declared | apps/mobile/packages/mobile-timeline | High |
 | Chaos Testing | shared library | Library | Integration & Operations | Resilience | Skeleton | Not Declared | Not Declared | libs/chaos-testing/pom.xml, libs/chaos-testing/README.md | Medium |
@@ -162,6 +163,7 @@ A service that is not in the register does not officially exist in vNext.
 | Wellness | backend service | Ring 1 Execution | Clinical Execution | Clinical | Deprecated | Not Declared | ui/one-ui-shell routes and domain consoles | services/wellness-service/pom.xml, contracts/openapi/wellness.openapi.yaml | High |
 | Hr Payroll | backend service | Ring 2 Scale | Enterprise Resource | Enterprise | Live | Hr Payroll canonical records | ui/one-ui-shell routes and domain consoles | services/hr-payroll-service/pom.xml, contracts/openapi/hr-payroll.openapi.yaml | High |
 | Learning | backend service | Ring 2 Scale | Enterprise Resource | Enterprise | Live | Learning canonical records | ui/one-ui-shell routes and domain consoles | services/learning-service/pom.xml, contracts/openapi/learning.openapi.yaml | High |
+| Llm Orchestration | backend service | Ring 2 Scale | Experience | Experience | Live | LLM orchestration prompts, tool routing, and assistant workflow sessions | ui/one-ui-shell routes and domain consoles | services/llm-orchestration-service/pom.xml | Medium |
 | Msika Flow | backend service | Ring 2 Scale | Enterprise Resource | Enterprise | Live | Msika Flow canonical records | ui/one-ui-shell routes and domain consoles | services/msika-flow-service/pom.xml, contracts/openapi/msika-flow.openapi.yaml | High |
 | Procurement | backend service | Ring 2 Scale | Enterprise Resource | Enterprise | Live | Procurement canonical records | ui/one-ui-shell routes and domain consoles | services/procurement-service/pom.xml, contracts/openapi/procurement.openapi.yaml | High |
 | Workforce Governance | backend service | Ring 2 Scale | Enterprise Resource | Enterprise | Live | Workforce Governance canonical records | ui/one-ui-shell routes and domain consoles | services/workforce-governance-service/pom.xml | High |
@@ -199,6 +201,8 @@ A service that is not in the register does not officially exist in vNext.
 | Landela Adapter | adapter | Ring 2 Scale | Integration & Operations | Integration | Live | Landela Adapter canonical records | ui/one-ui-shell routes and domain consoles | services/landela-adapter-service/pom.xml, contracts/openapi/landela-adapter.openapi.yaml | High |
 | National Data Repository | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | National Data Repository canonical records | ui/one-ui-shell routes and domain consoles | services/national-data-repository-service/pom.xml, contracts/openapi/national-data-repository.openapi.yaml | High |
 | Ndr | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | Ndr canonical records | ui/one-ui-shell routes and domain consoles | services/ndr-service/pom.xml, contracts/openapi/ndr.openapi.yaml | High |
+| Ndila | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | canonical geospatial location registry; routing, ETA, and distance matrix orchestration; geofencing and catchment boundary operations; tracking asset telemetry normalization; spatial search and geospatial intelligence context | ui/one-ui-shell routes and domain consoles | services/ndila-service/pom.xml, contracts/openapi/ndila.openapi.yaml | High |
+| Nhume | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | dispatch request and assignment lifecycle; courier and fleet operational registry; last-mile tracking and proof-of-delivery telemetry; delivery chain-of-custody and exception workflow | ui/one-ui-shell routes and domain consoles | services/nhume-service/pom.xml, docs/architecture/nhume-dispatch-and-delivery.md | High |
 | Notification | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | Notification canonical records | ui/one-ui-shell routes and domain consoles | services/notification-service/pom.xml, contracts/openapi/notification.openapi.yaml | High |
 | Observability | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | Observability canonical records | ui/one-ui-shell routes and domain consoles | services/observability-service/pom.xml, contracts/openapi/observability.openapi.yaml | High |
 | Offline Edge | backend service | Ring 2 Scale | Integration & Operations | Integration | Live | Offline Edge canonical records | ui/one-ui-shell routes and domain consoles | services/offline-edge-service/pom.xml, contracts/openapi/offline-edge.openapi.yaml | High |
@@ -283,6 +287,7 @@ A service that is not in the register does not officially exist in vNext.
 | Mobile Api Client | Experience | Not Declared |
 | Mobile Design System | Experience | Not Declared |
 | Mobile Messaging | Experience | Not Declared |
+| Mobile Ndila | Experience | Not Declared |
 | Mobile Offline | Experience | Not Declared |
 | Mobile Timeline | Experience | Not Declared |
 | Chaos Testing | Integration & Operations | Not Declared |
@@ -333,6 +338,7 @@ A service that is not in the register does not officially exist in vNext.
 | Wellness | Clinical Execution | patient-linked wellness activities; screening prompts; wellness records |
 | Hr Payroll | Enterprise Resource | Hr Payroll canonical records |
 | Learning | Enterprise Resource | Learning canonical records |
+| Llm Orchestration | Experience | LLM orchestration prompts, tool routing, and assistant workflow sessions |
 | Msika Flow | Enterprise Resource | Msika Flow canonical records |
 | Procurement | Enterprise Resource | Procurement canonical records |
 | Workforce Governance | Enterprise Resource | Workforce Governance canonical records |
@@ -370,6 +376,8 @@ A service that is not in the register does not officially exist in vNext.
 | Landela Adapter | Integration & Operations | Landela Adapter canonical records |
 | National Data Repository | Integration & Operations | National Data Repository canonical records |
 | Ndr | Integration & Operations | Ndr canonical records |
+| Ndila | Integration & Operations | canonical geospatial location registry; routing, ETA, and distance matrix orchestration; geofencing and catchment boundary operations; tracking asset telemetry normalization; spatial search and geospatial intelligence context |
+| Nhume | Integration & Operations | dispatch request and assignment lifecycle; courier and fleet operational registry; last-mile tracking and proof-of-delivery telemetry; delivery chain-of-custody and exception workflow |
 | Notification | Integration & Operations | Notification canonical records |
 | Observability | Integration & Operations | Observability canonical records |
 | Offline Edge | Integration & Operations | Offline Edge canonical records |
@@ -442,6 +450,7 @@ A service that is not in the register does not officially exist in vNext.
 | Mobile Api Client | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
 | Mobile Design System | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
 | Mobile Messaging | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
+| Mobile Ndila | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
 | Mobile Offline | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
 | Mobile Timeline | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
 | Chaos Testing | Not Declared | Not Declared | Not Declared | Not Declared | Not Declared |
@@ -492,6 +501,7 @@ A service that is not in the register does not officially exist in vNext.
 | Wellness | ui/one-ui-shell routes and domain consoles | contracts/openapi/wellness.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Hr Payroll | ui/one-ui-shell routes and domain consoles | contracts/openapi/hr-payroll.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Learning | ui/one-ui-shell routes and domain consoles | contracts/openapi/learning.openapi.yaml | Not Declared | Not Declared | Not Declared |
+| Llm Orchestration | ui/one-ui-shell routes and domain consoles | Not Declared | Not Declared | Not Declared | Not Declared |
 | Msika Flow | ui/one-ui-shell routes and domain consoles | contracts/openapi/msika-flow.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Procurement | ui/one-ui-shell routes and domain consoles | contracts/openapi/procurement.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Workforce Governance | ui/one-ui-shell routes and domain consoles | Not Declared | Not Declared | Not Declared | Not Declared |
@@ -529,6 +539,8 @@ A service that is not in the register does not officially exist in vNext.
 | Landela Adapter | ui/one-ui-shell routes and domain consoles | contracts/openapi/landela-adapter.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | National Data Repository | ui/one-ui-shell routes and domain consoles | contracts/openapi/national-data-repository.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Ndr | ui/one-ui-shell routes and domain consoles | contracts/openapi/ndr.openapi.yaml | Not Declared | Not Declared | Not Declared |
+| Ndila | ui/one-ui-shell routes and domain consoles | contracts/openapi/ndila.openapi.yaml | contracts/asyncapi/ndila-events.asyncapi.yaml | contracts/asyncapi/ndila-events.asyncapi.yaml | Not Declared |
+| Nhume | ui/one-ui-shell routes and domain consoles | Not Declared | Not Declared | Not Declared | Not Declared |
 | Notification | ui/one-ui-shell routes and domain consoles | contracts/openapi/notification.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Observability | ui/one-ui-shell routes and domain consoles | contracts/openapi/observability.openapi.yaml | Not Declared | Not Declared | Not Declared |
 | Offline Edge | ui/one-ui-shell routes and domain consoles | contracts/openapi/offline-edge.openapi.yaml | Not Declared | Not Declared | Not Declared |
@@ -601,6 +613,7 @@ A service that is not in the register does not officially exist in vNext.
 | Mobile Api Client | None Declared | None Declared |
 | Mobile Design System | None Declared | None Declared |
 | Mobile Messaging | None Declared | None Declared |
+| Mobile Ndila | None Declared | None Declared |
 | Mobile Offline | None Declared | None Declared |
 | Mobile Timeline | None Declared | None Declared |
 | Chaos Testing | None Declared | None Declared |
@@ -651,6 +664,7 @@ A service that is not in the register does not officially exist in vNext.
 | Wellness | tshepo-authz-service, simba-service | experience-bff, integration-hub |
 | Hr Payroll | tshepo-authz-service | experience-bff, integration-hub |
 | Learning | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience |
+| Llm Orchestration | tshepo-authz-service, multiple-domain-services-via-bff | web-mobile-experience |
 | Msika Flow | tshepo-authz-service | experience-bff, integration-hub |
 | Procurement | tshepo-authz-service | experience-bff, integration-hub |
 | Workforce Governance | tshepo-authz-service | experience-bff, integration-hub |
@@ -688,6 +702,8 @@ A service that is not in the register does not officially exist in vNext.
 | Landela Adapter | tshepo-authz-service | experience-bff, integration-hub |
 | National Data Repository | tshepo-authz-service | experience-bff, integration-hub |
 | Ndr | tshepo-authz-service | experience-bff, integration-hub |
+| Ndila | tshepo-authz-service, tuso-service, indawo-service, varapi-service, surveillance-service | experience-bff, integration-hub, nhume-service, dispatch-service |
+| Nhume | tshepo-authz-service, ndila-service, vito-service, varapi-service, tuso-service, indawo-service, msika-service, mushex-service | experience-bff, integration-hub |
 | Notification | tshepo-authz-service | experience-bff, integration-hub |
 | Observability | tshepo-authz-service | experience-bff, integration-hub |
 | Offline Edge | tshepo-authz-service | experience-bff, integration-hub |

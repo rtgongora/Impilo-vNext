@@ -1,5 +1,7 @@
 package zw.gov.mohcc.impilo.companion.context;
 
+import java.util.Optional;
+
 /**
  * Thread-local holder for the current request's {@link RequestContext}.
  *
@@ -21,6 +23,11 @@ public final class RequestContextHolder {
     /** Get the context, or null if not set. */
     public static RequestContext get() {
         return HOLDER.get();
+    }
+
+    /** Get the context as an Optional, never null. */
+    public static Optional<RequestContext> current() {
+        return Optional.ofNullable(HOLDER.get());
     }
 
     /**

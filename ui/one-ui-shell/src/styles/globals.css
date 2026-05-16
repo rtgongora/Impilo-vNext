@@ -2,48 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Impilo brand tokens ─────────────────────────────────────────────── */
-
 @layer base {
   :root {
-    /* Brand */
-    --color-brand-primary: #009739;
-    --color-brand-accent-yellow: #FCE300;
-    --color-brand-accent-red: #EF3340;
-    --color-brand-accent-black: #231F20;
+    --impilo-green: #009739;
+    --impilo-green-soft-logo: #0f9848;
+    --impilo-yellow: #fce300;
+    --impilo-red: #ef3340;
+    --impilo-charcoal: #221f20;
 
-    /* Semantic */
-    --color-success: #16A34A;
-    --color-warning: #F59E0B;
-    --color-danger: #DC2626;
-    --color-info: #2563EB;
+    --background: #f7faf8;
+    --surface: #ffffff;
+    --surface-soft: #f0f7f3;
+    --surface-warm: #fffdf3;
 
-    /* Neutrals */
-    --color-neutral-0: #FFFFFF;
-    --color-neutral-50: #F8FAFC;
-    --color-neutral-100: #F1F5F9;
-    --color-neutral-500: #64748B;
-    --color-neutral-900: #0F172A;
+    --primary: #009739;
+    --primary-hover: #087f35;
+    --primary-soft: #e6f6ec;
+    --primary-muted: #cfeedd;
 
-    /* Typography */
+    --accent-yellow: #fce300;
+    --accent-yellow-soft: #fff8c7;
+    --accent-red: #ef3340;
+    --accent-red-soft: #ffe8ea;
+
+    --charcoal: #221f20;
+    --text-primary: #1e2a24;
+    --text-secondary: #5b6b61;
+    --text-muted: #7a8a80;
+
+    --border-soft: #ddebe2;
+    --border-strong: #b8d8c4;
+
+    --info: #2563eb;
+    --info-soft: #eaf1ff;
+    --warning: #f59e0b;
+    --warning-soft: #fff4d6;
+    --success: #009739;
+    --success-soft: #e6f6ec;
+    --danger: #ef3340;
+    --danger-soft: #ffe8ea;
+    --nompilo: #6d5df6;
+    --nompilo-soft: #efedff;
+
     --font-sans: "Inter", system-ui, sans-serif;
     --font-serif: "Source Serif 4", Georgia, serif;
 
-    /* Spacing */
-    --space-unit: 4px;
-
-    /* Border radius */
-    --radius-default: 12px;
-    --radius-lg: 16px;
-
-    /* Shadows */
-    --shadow-subtle: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-soft: 0 18px 45px rgba(16, 80, 45, 0.08);
+    --shadow-card: 0 12px 30px rgba(20, 80, 45, 0.07);
+    --shadow-floating: 0 22px 60px rgba(20, 60, 40, 0.14);
+    --shadow-nompilo: 0 20px 50px rgba(109, 93, 246, 0.16);
   }
 
   body {
     font-family: var(--font-sans);
-    color: var(--color-neutral-900);
-    background-color: var(--color-neutral-50);
+    color: var(--text-primary);
+    background:
+      radial-gradient(circle at 10% -10%, rgba(15, 152, 72, 0.09), transparent 36%),
+      radial-gradient(circle at 88% 0%, rgba(252, 227, 0, 0.1), transparent 30%),
+      var(--background);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -59,5 +75,105 @@
   .impilo-low-bandwidth * {
     transition: none !important;
     animation: none !important;
+  }
+}
+
+@layer components {
+  .impilo-surface-card {
+    @apply rounded-3xl border bg-white shadow-impilo-card;
+    border-color: var(--border-soft);
+  }
+
+  .impilo-surface-soft {
+    @apply rounded-3xl border;
+    background: var(--surface-soft);
+    border-color: var(--border-soft);
+  }
+
+  .impilo-surface-warm {
+    @apply rounded-3xl border;
+    background: var(--surface-warm);
+    border-color: var(--border-soft);
+  }
+
+  .impilo-pill-input {
+    @apply h-11 rounded-full border bg-white px-4 text-sm outline-none transition;
+    border-color: var(--border-soft);
+    color: var(--text-primary);
+  }
+
+  .impilo-pill-input:focus {
+    @apply ring-2;
+    border-color: var(--primary);
+    --tw-ring-color: color-mix(in srgb, var(--primary) 30%, white);
+  }
+
+  .impilo-btn-primary {
+    @apply inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold text-white transition;
+    background: var(--primary);
+    box-shadow: var(--shadow-card);
+  }
+
+  .impilo-btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .impilo-btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border bg-white px-4 py-2 text-sm font-medium transition;
+    color: var(--text-secondary);
+    border-color: var(--border-soft);
+  }
+
+  .impilo-btn-secondary:hover {
+    background: var(--surface-soft);
+    color: var(--text-primary);
+  }
+
+  .impilo-chip {
+    @apply inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium;
+    border-color: var(--border-soft);
+    color: var(--text-secondary);
+    background: white;
+  }
+
+  .impilo-status-success {
+    @apply impilo-chip;
+    background: var(--success-soft);
+    border-color: color-mix(in srgb, var(--success) 25%, white);
+    color: color-mix(in srgb, var(--success) 80%, #10261a);
+  }
+
+  .impilo-status-warning {
+    @apply impilo-chip;
+    background: var(--warning-soft);
+    border-color: color-mix(in srgb, var(--warning) 28%, white);
+    color: #7f5600;
+  }
+
+  .impilo-status-danger {
+    @apply impilo-chip;
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 28%, white);
+    color: color-mix(in srgb, var(--danger) 82%, #2d090b);
+  }
+
+  .impilo-status-info {
+    @apply impilo-chip;
+    background: var(--info-soft);
+    border-color: color-mix(in srgb, var(--info) 25%, white);
+    color: color-mix(in srgb, var(--info) 78%, #081126);
+  }
+
+  .impilo-subtle-african-accent {
+    background-image:
+      radial-gradient(circle at 24% 18%, rgba(15, 152, 72, 0.09) 0, transparent 34%),
+      radial-gradient(circle at 72% 28%, rgba(252, 227, 0, 0.12) 0, transparent 26%),
+      linear-gradient(
+        115deg,
+        rgba(239, 51, 64, 0.05) 0%,
+        rgba(239, 51, 64, 0) 30%,
+        rgba(34, 31, 32, 0.03) 62%,
+        rgba(34, 31, 32, 0) 100%
+      );
   }
 }

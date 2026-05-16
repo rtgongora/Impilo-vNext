@@ -1,0 +1,419 @@
+openapi: 3.0.3
+info:
+  title: Integration Service Governance Registry API
+  version: 0.1.0
+  description: |
+    Governance plane for external applications, integration contracts, internal
+    service-to-service contracts, webhook subscriptions, external event
+    subscriptions, and the event catalogue.
+
+    Hosted by `integration-hub` (alongside the existing runtime route/dispatch
+    capabilities). See doctrine `docs/doctrine/HEALTH_OS_EXTENSIBILITY_DOCTRINE.md` §6.
+
+servers:
+  - url: http://localhost:8110
+    description: Local dev (integration-hub)
+  - url: https://api.impilo.gov.zw/integration
+    description: Production gateway
+
+tags:
+  - name: External Applications
+  - name: Integration Contracts
+  - name: Service-to-Service Contracts
+  - name: Webhook Subscriptions
+  - name: External Event Subscriptions
+  - name: Event Catalogue
+
+paths:
+  /internal/v1/external-apps:
+    get:
+      tags: [External Applications]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExternalApplication' }
+    post:
+      tags: [External Applications]
+      summary: Register a new external application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExternalApplicationCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalApplication' }
+
+  /internal/v1/external-apps/{externalAppId}:
+    get:
+      tags: [External Applications]
+      parameters:
+        - in: path
+          name: externalAppId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExternalApplication' }
+
+  /internal/v1/external-apps/{externalAppId}/suspend:
+    post:
+      tags: [External Applications]
+      parameters:
+        - in: path
+          name: externalAppId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Suspended
+
+  /internal/v1/integration-contracts:
+    get:
+      tags: [Integration Contracts]
+      parameters:
+        - in: query
+          name: externalAppId
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/IntegrationContract' }
+    post:
+      tags: [Integration Contracts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/IntegrationContractCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IntegrationContract' }
+
+  /internal/v1/s2s-contracts:
+    get:
+      tags: [Service-to-Service Contracts]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ServiceToServiceContract' }
+    post:
+      tags: [Service-to-Service Contracts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServiceToServiceContractCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ServiceToServiceContract' }
+
+  /internal/v1/webhook-subscriptions:
+    get:
+      tags: [Webhook Subscriptions]
+      parameters:
+        - in: query
+          name: externalAppId
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/WebhookSubscription' }
+    post:
+      tags: [Webhook Subscriptions]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WebhookSubscriptionCreate' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookSubscription' }
+
+  /internal/v1/webhook-subscriptions/{id}/test:
+    post:
+      tags: [Webhook Subscriptions]
+      summary: Send a test delivery (HMAC-signed) to verify the consumer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Test delivery dispatched
+
+  /internal/v1/external-event-subscriptions:
+    get:
+      tags: [External Event Subscriptions]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExternalEventSubscription' }
+
+  /internal/v1/event-catalogue:
+    get:
+      tags: [Event Catalogue]
+      summary: Canonical list of internal vs externally-publishable events
+      parameters:
+        - in: query
+          name: classification
+          schema: { type: string, enum: [INTERNAL_ONLY, EXTERNALLY_PUBLISHABLE] }
+        - in: query
+          name: ownerServiceId
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/EventCatalogueEntry' }
+
+components:
+  schemas:
+    ContactPoint:
+      type: object
+      required: [name, email]
+      properties:
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string }
+        role: { type: string }
+
+    ExternalApplication:
+      type: object
+      required: [id, appCode, name, status, environment, integrationCategory]
+      properties:
+        id: { type: string }
+        appCode: { type: string }
+        name: { type: string }
+        description: { type: string }
+        publisherId: { type: string }
+        publisherName: { type: string }
+        technicalContact: { $ref: '#/components/schemas/ContactPoint' }
+        dataProtectionContact: { $ref: '#/components/schemas/ContactPoint' }
+        status:
+          type: string
+          enum: [REGISTERED, PENDING_REVIEW, APPROVED_SANDBOX, APPROVED_STAGING, APPROVED_PRODUCTION, SUSPENDED, REVOKED]
+        environment: { type: string, enum: [SANDBOX, STAGING, PRODUCTION] }
+        integrationCategory: { type: string }
+        riskClassification: { type: string }
+        authenticationMethod: { type: string }
+        oauthClientId: { type: string, nullable: true }
+        mtlsCertificateFingerprint: { type: string, nullable: true }
+        ipAllowlist: { type: array, items: { type: string } }
+        allowedTenants: { type: array, items: { type: string } }
+        allowedFacilities: { type: array, items: { type: string } }
+        rateLimit:
+          type: object
+          properties:
+            requestsPerMinute: { type: integer }
+            burst: { type: integer }
+        credentialExpiresAt: { type: string, format: date-time, nullable: true }
+        registeredAt: { type: string, format: date-time }
+        approvedAt: { type: string, format: date-time, nullable: true }
+        suspendedAt: { type: string, format: date-time, nullable: true }
+        suspendedReason: { type: string, nullable: true }
+
+    ExternalApplicationCreate:
+      type: object
+      required: [appCode, name, publisherId, integrationCategory, authenticationMethod, environment]
+      properties:
+        appCode: { type: string }
+        name: { type: string }
+        description: { type: string }
+        publisherId: { type: string }
+        publisherName: { type: string }
+        technicalContact: { $ref: '#/components/schemas/ContactPoint' }
+        dataProtectionContact: { $ref: '#/components/schemas/ContactPoint' }
+        environment: { type: string, enum: [SANDBOX, STAGING, PRODUCTION] }
+        integrationCategory: { type: string }
+        riskClassification: { type: string }
+        authenticationMethod: { type: string }
+        allowedTenants: { type: array, items: { type: string } }
+        allowedFacilities: { type: array, items: { type: string } }
+        rateLimit:
+          type: object
+          properties:
+            requestsPerMinute: { type: integer }
+            burst: { type: integer }
+
+    IntegrationContract:
+      type: object
+      required: [id, externalAppId, contractCode, version, status]
+      properties:
+        id: { type: string }
+        externalAppId: { type: string }
+        contractCode: { type: string }
+        version: { type: string }
+        integrationCategory: { type: string }
+        environment: { type: string }
+        effectiveFrom: { type: string, format: date-time }
+        effectiveUntil: { type: string, format: date-time, nullable: true }
+        allowedApis: { type: array, items: { type: string } }
+        allowedEvents: { type: array, items: { type: string } }
+        allowedWebhookCallbacks: { type: array, items: { type: string } }
+        scopes: { type: array, items: { type: string } }
+        purposeOfUse: { type: array, items: { type: string } }
+        consentBasis: { type: string }
+        signatureMethod: { type: string }
+        status: { type: string }
+        documentRef: { type: string, nullable: true }
+
+    IntegrationContractCreate:
+      allOf:
+        - $ref: '#/components/schemas/IntegrationContract'
+      required: [externalAppId, contractCode, version, integrationCategory, environment, effectiveFrom, allowedApis, scopes, purposeOfUse, signatureMethod, status]
+
+    ServiceToServiceContract:
+      type: object
+      required: [id, callerServiceId, calleeServiceId, contractVersion, status]
+      properties:
+        id: { type: string }
+        callerServiceId: { type: string }
+        calleeServiceId: { type: string }
+        contractVersion: { type: string }
+        allowedOperations: { type: array, items: { type: string } }
+        allowedScopes: { type: array, items: { type: string } }
+        allowedEventTopics: { type: array, items: { type: string } }
+        allowedRequestSources: { type: array, items: { type: string } }
+        ownerTeam: { type: string }
+        supportContact: { $ref: '#/components/schemas/ContactPoint' }
+        lastVerifiedAt: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [DRAFT, ACTIVE, DEPRECATED] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    ServiceToServiceContractCreate:
+      type: object
+      required: [callerServiceId, calleeServiceId, contractVersion, allowedOperations, allowedRequestSources, ownerTeam, supportContact]
+      properties:
+        callerServiceId: { type: string }
+        calleeServiceId: { type: string }
+        contractVersion: { type: string }
+        allowedOperations: { type: array, items: { type: string } }
+        allowedScopes: { type: array, items: { type: string } }
+        allowedEventTopics: { type: array, items: { type: string } }
+        allowedRequestSources: { type: array, items: { type: string } }
+        ownerTeam: { type: string }
+        supportContact: { $ref: '#/components/schemas/ContactPoint' }
+
+    WebhookSubscription:
+      type: object
+      required: [id, externalAppId, integrationContractId, eventTopics, deliveryUrl, signatureMethod, active]
+      properties:
+        id: { type: string }
+        externalAppId: { type: string }
+        integrationContractId: { type: string }
+        eventTopics: { type: array, items: { type: string } }
+        deliveryUrl: { type: string, format: uri }
+        signatureMethod: { type: string }
+        active: { type: boolean }
+        filter:
+          type: object
+          properties:
+            facilityIds: { type: array, items: { type: string } }
+            programmeIds: { type: array, items: { type: string } }
+        retryPolicy:
+          type: object
+          properties:
+            maxRetries: { type: integer }
+            initialDelayMs: { type: integer }
+            maxDelayMs: { type: integer }
+        deadLetterAfterRetries: { type: integer }
+        lastDeliveryAt: { type: string, format: date-time, nullable: true }
+        lastDeliveryStatus: { type: string, nullable: true }
+        consecutiveFailures: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    WebhookSubscriptionCreate:
+      type: object
+      required: [externalAppId, integrationContractId, eventTopics, deliveryUrl, signatureMethod]
+      properties:
+        externalAppId: { type: string }
+        integrationContractId: { type: string }
+        eventTopics: { type: array, items: { type: string } }
+        deliveryUrl: { type: string, format: uri }
+        signatureMethod: { type: string }
+        filter:
+          type: object
+        retryPolicy:
+          type: object
+
+    ExternalEventSubscription:
+      type: object
+      properties:
+        id: { type: string }
+        externalAppId: { type: string }
+        integrationContractId: { type: string }
+        webhookSubscriptionId: { type: string }
+        eventTopic: { type: string }
+        status: { type: string, enum: [ACTIVE, PAUSED, REVOKED] }
+        approvedBy: { type: string }
+        approvedAt: { type: string, format: date-time }
+
+    EventCatalogueEntry:
+      type: object
+      required: [id, topic, classification, ownerServiceId]
+      properties:
+        id: { type: string }
+        topic: { type: string }
+        description: { type: string }
+        classification: { type: string, enum: [INTERNAL_ONLY, EXTERNALLY_PUBLISHABLE] }
+        sensitivityTier: { type: string, enum: [LOW, STANDARD, ELEVATED, CRITICAL] }
+        ownerServiceId: { type: string }
+        schemaRef: { type: string }
+        schemaVersion: { type: string }
+        partnerPublishable: { type: boolean }
+        containsPii: { type: boolean }
+        containsPhi: { type: boolean }
+        deprecated: { type: boolean }
+        introducedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
