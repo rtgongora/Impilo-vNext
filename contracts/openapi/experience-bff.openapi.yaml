@@ -2584,6 +2584,330 @@ paths:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/comms/approval-queue:
+    get:
+      operationId: bffCommsApprovalQueueList
+      tags: [Summary]
+      summary: List comms approval queue items across templates and campaigns
+      responses:
+        '200':
+          description: Approval queue envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsApprovalQueueEnvelope'
+
+  /internal/v1/comms/approval-queue/health:
+    get:
+      operationId: bffCommsApprovalQueueHealth
+      tags: [Health]
+      summary: Health probe for comms approval queue dependencies
+      responses:
+        '200':
+          description: Queue health envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsHealthEnvelope'
+
+  /internal/v1/comms/approval-queue/history:
+    get:
+      operationId: bffCommsApprovalQueueHistory
+      tags: [Summary]
+      summary: Governance decision history for templates and campaigns
+      responses:
+        '200':
+          description: Approval decision history envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsHistoryEnvelope'
+
+  /internal/v1/comms/approval-queue/templates/{templateId}/approve:
+    post:
+      operationId: bffCommsApproveTemplate
+      tags: [Summary]
+      summary: Approve and publish a template after pre-dispatch checks
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Approval decision envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsDecisionEnvelope'
+
+  /internal/v1/comms/approval-queue/templates/{templateId}/reject-with-reason:
+    post:
+      operationId: bffCommsRejectTemplateWithReason
+      tags: [Summary]
+      summary: Reject a template with mandatory decision reason
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision_reason]
+              properties:
+                decision_reason:
+                  type: string
+      responses:
+        '200':
+          description: Rejection decision envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsDecisionEnvelope'
+        '400':
+          description: Validation failed when reason is missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsErrorEnvelope'
+
+  /internal/v1/comms/approval-queue/campaigns/{campaignId}/approve:
+    post:
+      operationId: bffCommsApproveCampaign
+      tags: [Summary]
+      summary: Approve and dispatch a campaign after pre-dispatch checks
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Approval decision envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsDecisionEnvelope'
+
+  /internal/v1/comms/approval-queue/campaigns/{campaignId}/dry-run:
+    get:
+      operationId: bffCommsCampaignDryRun
+      tags: [Summary]
+      summary: Evaluate campaign dispatch readiness and estimated reachable audience
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Dry-run evaluation envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsDryRunEnvelope'
+
+  /internal/v1/communication/dashboard:
+    get:
+      operationId: bffCommunicationDashboard
+      tags: [Summary]
+      summary: Role-oriented communication dashboard with source confidence metadata
+      responses:
+        '200':
+          description: Communication role dashboard envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsRoleDashboardEnvelope'
+
+  /internal/v1/communication/health:
+    get:
+      operationId: bffCommunicationHealth
+      tags: [Health]
+      summary: Health probe for communication dashboard dependencies
+      responses:
+        '200':
+          description: Communication health envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsHealthEnvelope'
+
+  /internal/v1/communication/telemedicine/operations:
+    get:
+      operationId: bffCommunicationTelemedicineOperations
+      tags: [Summary]
+      summary: Telemedicine communications operational console for queue/fallback/dead-letter health
+      responses:
+        '200':
+          description: Telemedicine communications operational console envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemedicineCommsOperationalConsoleEnvelope'
+
+  /internal/v1/communication/telemedicine/workflow-history:
+    get:
+      operationId: bffCommunicationTelemedicineWorkflowHistory
+      tags: [Summary]
+      summary: Telemedicine communication workflow history for audit replay
+      parameters:
+        - name: session_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: event_type
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Telemedicine workflow history envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemedicineWorkflowHistoryEnvelope'
+
+  /internal/v1/communication/telemedicine/workflow-history/export:
+    get:
+      operationId: bffCommunicationTelemedicineWorkflowHistoryExport
+      tags: [Summary]
+      summary: Export telemedicine communication workflow history with replay filters
+      parameters:
+        - name: session_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: event_type
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+      responses:
+        '200':
+          description: Exported workflow history envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemedicineWorkflowExportEnvelope'
+
+  /internal/v1/communication/telemedicine/workflow-history/retention:
+    post:
+      operationId: bffCommunicationTelemedicineWorkflowRetention
+      tags: [Summary]
+      summary: Configure in-memory telemedicine workflow history retention controls
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemedicineWorkflowRetentionRequest'
+      responses:
+        '200':
+          description: Updated retention settings envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemedicineWorkflowRetentionEnvelope'
+
+  /internal/v1/communication/telemedicine/workflow-history/prune:
+    post:
+      operationId: bffCommunicationTelemedicineWorkflowPrune
+      tags: [Summary]
+      summary: Prune telemedicine workflow history by retention policy
+      responses:
+        '200':
+          description: Prune result envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemedicineWorkflowPruneEnvelope'
+
+  /internal/v1/omnichannel/dashboard:
+    get:
+      operationId: bffOmnichannelDashboard
+      tags: [Summary]
+      summary: Role-oriented omnichannel dashboard with trend and partial-data signals
+      responses:
+        '200':
+          description: Omnichannel role dashboard envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsRoleDashboardEnvelope'
+
+  /internal/v1/omnichannel/health:
+    get:
+      operationId: bffOmnichannelHealth
+      tags: [Health]
+      summary: Health probe for omnichannel dashboard dependencies
+      responses:
+        '200':
+          description: Omnichannel health envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommsHealthEnvelope'
+
 components:
   schemas:
     CoreTransactionListEnvelope:
@@ -2815,3 +3139,422 @@ components:
           type: string
         label:
           type: string
+    CommsErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        meta:
+          type: object
+          properties:
+            request_id:
+              type: string
+            correlation_id:
+              type: string
+    CommsHealthEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            healthy:
+              type: boolean
+            checks:
+              type: object
+              additionalProperties:
+                type: string
+            checked_at:
+              type: string
+              format: date-time
+        meta:
+          type: object
+          additionalProperties: true
+    CommsDecisionEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            decision:
+              type: string
+            reviewed_by:
+              type: string
+            reviewed_at:
+              type: string
+              format: date-time
+            decision_reason:
+              type: string
+            result:
+              type: object
+              additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    CommsDryRunEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            campaign_id:
+              type: integer
+              format: int64
+            template_id:
+              type: string
+            dry_run_ok:
+              type: boolean
+            issues:
+              type: array
+              items:
+                type: string
+            estimated_reachable_audience:
+              type: integer
+            blocked_by_policy:
+              type: integer
+        meta:
+          type: object
+          additionalProperties: true
+    CommsHistoryEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    CommsApprovalQueueEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            templates:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            campaigns:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            counts:
+              type: object
+              properties:
+                templates:
+                  type: integer
+                campaigns:
+                  type: integer
+                total:
+                  type: integer
+            source_health:
+              type: object
+              additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    CommsRoleDashboardEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            executive:
+              $ref: '#/components/schemas/CommsDashboardExecutive'
+            operations:
+              $ref: '#/components/schemas/CommsDashboardOperations'
+            clinical:
+              type: object
+              additionalProperties: true
+            communications:
+              $ref: '#/components/schemas/CommsDashboardCommunications'
+            governance:
+              $ref: '#/components/schemas/CommsDashboardGovernance'
+        meta:
+          type: object
+          additionalProperties: true
+    CommsDashboardExecutive:
+      type: object
+      properties:
+        total_active_communications:
+          type: integer
+        delivery_success_rate:
+          type: number
+          format: double
+        telemedicine_join_success_rate:
+          type: number
+          format: double
+      additionalProperties: true
+    CommsDashboardOperations:
+      type: object
+      properties:
+        active_threads:
+          type: integer
+        messages_sent_today:
+          type: integer
+        delivery_failures_today:
+          type: integer
+        trend_window:
+          type: string
+        telemedicine:
+          $ref: '#/components/schemas/TelemedicineCommsMetrics'
+      additionalProperties: true
+    CommsDashboardCommunications:
+      type: object
+      properties:
+        active_announcements:
+          type: integer
+        sent_today:
+          type: integer
+        failed_today:
+          type: integer
+        delta_pct:
+          type: number
+          format: double
+        telemedicine_metrics:
+          $ref: '#/components/schemas/TelemedicineCommsMetrics'
+      additionalProperties: true
+    CommsDashboardGovernance:
+      type: object
+      properties:
+        source_health:
+          type: object
+          additionalProperties: true
+        partial_data:
+          type: boolean
+        sample_size:
+          type: object
+          additionalProperties: true
+        telemedicine_operational_console:
+          $ref: '#/components/schemas/TelemedicineOperationalConsole'
+        last_refreshed_at:
+          type: string
+          format: date-time
+      additionalProperties: true
+    TelemedicineCommsMetrics:
+      type: object
+      properties:
+        telemedicine_reminders_sent:
+          type: integer
+        join_success_rate:
+          type: number
+          format: double
+        failed_join_support_requests:
+          type: integer
+        no_show_nudges_sent:
+          type: integer
+        reminder_to_attendance_conversion:
+          type: number
+          format: double
+        video_audio_fallback_events:
+          type: integer
+        post_consultation_followup_completion:
+          type: integer
+        survey_response_rate:
+          type: number
+          format: double
+        escalation_volumes:
+          type: integer
+        client_unreachable_counts:
+          type: integer
+        provider_delay_notifications:
+          type: integer
+        average_telemedicine_support_response_ms:
+          type: number
+          format: double
+      additionalProperties: true
+    TelemedicineOperationalConsole:
+      type: object
+      properties:
+        reminder_queue_status:
+          type: string
+        queue_depth:
+          type: integer
+        join_link_notification_failures:
+          type: integer
+        push_sms_whatsapp_fallback_rates:
+          type: number
+        webhook_failures_between_telemedicine_and_comms_hub:
+          type: integer
+        delivery_receipt_lag_ms:
+          type: number
+          format: double
+        failed_telemedicine_support_escalations:
+          type: integer
+        stuck_waiting_room_notifications:
+          type: integer
+        dead_letter_events:
+          type: integer
+        last_refreshed_at:
+          type: string
+          format: date-time
+      additionalProperties: true
+    TelemedicineLinkage:
+      type: object
+      properties:
+        client:
+          type: string
+        provider:
+          type: string
+        facility:
+          type: string
+        session:
+          type: string
+        appointment:
+          type: string
+        referral:
+          type: string
+        prescription:
+          type: string
+        lab_request:
+          type: string
+        payment_or_claim:
+          type: string
+        helpdesk_ticket:
+          type: string
+        followup_task:
+          type: string
+      additionalProperties: true
+    TelemedicineWorkflowHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        event_type:
+          type: string
+        session_id:
+          type: string
+        tenant_id:
+          type: string
+        outcome:
+          type: string
+        channel:
+          type: string
+        template_key:
+          type: string
+        delivery_receipt_lag_ms:
+          type: integer
+          format: int64
+        occurred_at:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/TelemedicineLinkage'
+      additionalProperties: true
+    TelemedicineCommsOperationalConsoleEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            metrics:
+              $ref: '#/components/schemas/TelemedicineCommsMetrics'
+            console:
+              $ref: '#/components/schemas/TelemedicineOperationalConsole'
+            last_refreshed_at:
+              type: string
+              format: date-time
+        meta:
+          type: object
+          additionalProperties: true
+    TelemedicineWorkflowHistoryEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TelemedicineWorkflowHistoryEntry'
+            session_id:
+              type: string
+            event_type:
+              type: string
+            action:
+              type: string
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+            limit:
+              type: integer
+        meta:
+          type: object
+          additionalProperties: true
+    TelemedicineWorkflowExportEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TelemedicineWorkflowHistoryEntry'
+            count:
+              type: integer
+            exported_at:
+              type: string
+              format: date-time
+            format:
+              type: string
+        meta:
+          type: object
+          additionalProperties: true
+    TelemedicineWorkflowRetentionRequest:
+      type: object
+      properties:
+        max_history:
+          type: integer
+          minimum: 1
+        retention_hours:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+    TelemedicineWorkflowRetentionEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            retention:
+              $ref: '#/components/schemas/TelemedicineWorkflowRetentionRequest'
+            updated_at:
+              type: string
+              format: date-time
+        meta:
+          type: object
+          additionalProperties: true
+    TelemedicineWorkflowPruneEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            removed:
+              type: integer
+            retention:
+              $ref: '#/components/schemas/TelemedicineWorkflowRetentionRequest'
+            pruned_at:
+              type: string
+              format: date-time
+        meta:
+          type: object
+          additionalProperties: true

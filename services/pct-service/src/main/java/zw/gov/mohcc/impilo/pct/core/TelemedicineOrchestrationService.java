@@ -83,7 +83,7 @@ public class TelemedicineOrchestrationService {
         referral.setCompletionPayload("{}");
 
         ReferralEntity saved = referralRepository.save(referral);
-        emitOutbox("teleconsult.referral.created", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.referral_created", saved.getReferralId().toString(), toReferralPayload(saved));
         telemetryService.record("telemedicine.referral.created", null, Map.of(
                 "referralId", saved.getReferralId().toString(),
                 "specialty", defaulted(saved.getSpecialty(), "GENERAL"),
@@ -141,7 +141,7 @@ public class TelemedicineOrchestrationService {
         if (status != null) entity.setStatus(status.trim().toUpperCase(Locale.ROOT));
 
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.updated", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.referral_updated", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
 
@@ -154,7 +154,7 @@ public class TelemedicineOrchestrationService {
         entity.setMvumoSessionId(optional(request, "mvumo_session_id", "mvumoSessionId"));
         entity.setTshepoDecisionId(optional(request, "tshepo_decision_id", "tshepoDecisionId"));
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.consent.updated", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.consent_updated", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
 
@@ -164,7 +164,7 @@ public class TelemedicineOrchestrationService {
         entity.setStatus("SUBMITTED");
         entity.setSubmittedAt(OffsetDateTime.now());
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.submitted", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.followup_required", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
 
@@ -178,7 +178,7 @@ public class TelemedicineOrchestrationService {
                 "timestamp", OffsetDateTime.now().toString()
         ));
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.accepted", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.created", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
 
@@ -207,7 +207,7 @@ public class TelemedicineOrchestrationService {
         }
 
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.responded", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.support_requested", saved.getReferralId().toString(), toReferralPayload(saved));
         return toReferralPayload(saved);
     }
 
@@ -218,7 +218,7 @@ public class TelemedicineOrchestrationService {
         entity.setCompletedAt(OffsetDateTime.now());
         entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
         ReferralEntity saved = referralRepository.save(entity);
-        emitOutbox("teleconsult.referral.completed", saved.getReferralId().toString(), toReferralPayload(saved));
+        emitOutbox("telemedicine.session.completed", saved.getReferralId().toString(), toReferralPayload(saved));
         telemetryService.record("telemedicine.referral.completed", null, Map.of(
                 "referralId", saved.getReferralId().toString(),
                 "patientCpid", saved.getPatientCpid(),
@@ -289,7 +289,9 @@ public class TelemedicineOrchestrationService {
         entity.setNotes(optional(request, "notes"));
 
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
-        emitOutbox("teleconsult.session.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.scheduled", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.join_link.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
         telemetryService.record("telemedicine.session.created", null, Map.of(
                 "sessionId", saved.getSessionId().toString(),
                 "sessionType", saved.getSessionType(),
@@ -312,7 +314,8 @@ public class TelemedicineOrchestrationService {
             entity.setStartedAt(OffsetDateTime.now());
         }
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
-        emitOutbox("teleconsult.session.joined", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.waiting_room.entered", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.started", saved.getSessionId().toString(), toTelehealthPayload(saved));
         return toTelehealthPayload(saved);
     }
 
@@ -330,7 +333,7 @@ public class TelemedicineOrchestrationService {
             entity.setNotes(defaulted(optional(request, "notes"), entity.getNotes()));
         }
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
-        emitOutbox("teleconsult.session.completed", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.completed", saved.getSessionId().toString(), toTelehealthPayload(saved));
         telemetryService.record("telemedicine.session.completed", null, Map.of(
                 "sessionId", saved.getSessionId().toString(),
                 "durationSeconds", saved.getDurationSeconds() == null ? 0L : saved.getDurationSeconds(),
@@ -454,7 +457,13 @@ public class TelemedicineOrchestrationService {
         outbox.setAggregateId(aggregateId);
         outbox.setEventType(eventType);
         outbox.setTenantId(ctx.tenantId());
-        outbox.setPayload(writeJsonObject(payload));
+        Map<String, Object> envelope = new LinkedHashMap<>();
+        envelope.put("eventType", eventType);
+        envelope.put("aggregateId", aggregateId);
+        envelope.put("tenantId", ctx.tenantId());
+        envelope.put("occurredAt", OffsetDateTime.now().toString());
+        envelope.put("payload", payload == null ? Map.of() : payload);
+        outbox.setPayload(writeJsonObject(envelope));
         outboxRepository.save(outbox);
     }
 

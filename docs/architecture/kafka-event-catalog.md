@@ -27,6 +27,7 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 |-------------|-----------------------------------|
 | `pct.encounter.started` | `encounterRef`, `journeyId`, `patientCpid` (see [`EncounterService`](../../services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/core/EncounterService.java) for full payload incl. `eventId`, `tenantId`) |
 | `pct.encounter.completed` | `encounterRef`, `journeyId` |
+| `clinical.teleconsult.lifecycle` | `eventType` (`telemedicine.session.*`), `payload.id`, `payload.patientCpid`, `payload.providerId`, `payload.facilityId` |
 | `oros.order.status_changed` | `orderId`, `status` |
 | `oros.result.available` | `orderId`, `resultId` |
 | `pharmacy.dispense.complete` | `prescriptionId` (canonical topic from pharmacy-service `OutboxPublisher`) |
@@ -71,6 +72,8 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 | `pct.encounter.completed` | costing-engine | `CostaEventConsumer` |
 | `oros.order.placed` | costing-engine, pharmacy | `CostaEventConsumer`, `OrosConsumer` |
 | `pharmacy.dispense.complete` | costing-engine, oros, experience-bff | `CostaEventConsumer`, `OrosEventConsumer`, `UpstreamEventConsumer` |
+| `clinical.teleconsult.lifecycle` | experience-bff | `TelemedicineLifecycleConsumer` |
+| `clinical.telemedicine.communication` | downstream analytics/comms consumers (producer in experience-bff) | `TelemedicineCommunicationEventPublisher` |
 | `inventory.ledger.event.created` | costing-engine | `CostaEventConsumer` |
 | `mushex.payment.status.changed` | costing-engine, experience-bff, pharmacy, pct, msika-flow | `CostaEventConsumer`, `UpstreamEventConsumer`, `MushexConsumer`, `PctEventConsumer`, `PaymentEventConsumer` |
 | `mushex.refund.status.changed` | costing-engine, experience-bff | `CostaEventConsumer`, `UpstreamEventConsumer` |

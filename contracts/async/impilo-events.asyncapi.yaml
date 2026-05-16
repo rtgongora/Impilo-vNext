@@ -199,6 +199,13 @@ channels:
       teleconsultLifecycle:
         $ref: "#/components/messages/TeleconsultLifecycle"
 
+  telemedicineCommunicationLifecycle:
+    address: clinical.telemedicine.communication
+    description: Comms Hub telemedicine communication workflow outcomes and escalations
+    messages:
+      telemedicineCommunication:
+        $ref: "#/components/messages/TelemedicineCommunicationLifecycle"
+
   # ── Analytics Channel ───────────────────────────────────────────────────
 
   analyticsSurveillanceEvent:
@@ -295,6 +302,12 @@ operations:
     channel:
       $ref: "#/channels/clinicalTeleconsultLifecycle"
     summary: pct-service and experience-bff publish teleconsult lifecycle updates
+
+  publishTelemedicineCommunicationLifecycle:
+    action: send
+    channel:
+      $ref: "#/channels/telemedicineCommunicationLifecycle"
+    summary: experience-bff comms hub publishes telemedicine communication lifecycle updates
 
   # Analytics producers
   publishSurveillanceEvent:
@@ -495,6 +508,14 @@ components:
       name: TeleconsultLifecycle
       title: Teleconsult Lifecycle Event
       summary: Teleconsult workflow state transition emitted by clinical orchestration
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    TelemedicineCommunicationLifecycle:
+      name: TelemedicineCommunicationLifecycle
+      title: Telemedicine Communication Lifecycle Event
+      summary: Communication orchestration result for a telemedicine session
       contentType: application/json
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"

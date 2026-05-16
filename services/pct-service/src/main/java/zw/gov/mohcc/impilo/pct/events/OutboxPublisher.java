@@ -141,6 +141,9 @@ public class OutboxPublisher {
         if (eventType == null) {
             return "pct.events";
         }
+        if (eventType.startsWith("telemedicine.session.")) {
+            return "clinical.teleconsult.lifecycle";
+        }
 
         return switch (eventType) {
             case "JOURNEY_CREATED", "JOURNEY_STATE_CHANGED" -> "pct.journey.state_changed";

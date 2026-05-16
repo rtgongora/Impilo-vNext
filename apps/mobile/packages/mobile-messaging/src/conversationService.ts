@@ -16,6 +16,57 @@ interface Envelope<T> {
   data: T;
 }
 
+export interface CommunicationDashboard {
+  active_announcements: number;
+  open_clinical_pages: number;
+  active_threads: number;
+  sent_today: number;
+  failed_today: number;
+  telemedicine_reminders_sent?: number;
+  telemedicine_join_success_rate?: number;
+  telemedicine_no_show_nudges_sent?: number;
+  telemedicine_fallback_events?: number;
+  telemedicine_escalation_volumes?: number;
+  source_health?: Record<string, string>;
+  last_refreshed_at?: string | null;
+}
+
+function asNumber(value: unknown, fallback = 0): number {
+  return typeof value === "number" ? value : fallback;
+}
+
+function normalizeCommunicationDashboard(raw: unknown): CommunicationDashboard {
+  const record = asRecord(raw) ?? {};
+  const operations = asRecord(record.operations) ?? {};
+  const communications = asRecord(record.communications) ?? {};
+  const clinical = asRecord(record.clinical) ?? {};
+  const governance = asRecord(record.governance) ?? {};
+  const telemedicine =
+    (asRecord(operations.telemedicine) as AnyRecord | null) ??
+    (asRecord(communications.telemedicine_metrics) as AnyRecord | null) ??
+    {};
+  return {
+    active_announcements: asNumber(record.active_announcements ?? communications.active_announcements),
+    open_clinical_pages: asNumber(record.open_clinical_pages ?? clinical.open_clinical_pages),
+    active_threads: asNumber(record.active_threads ?? operations.active_threads),
+    sent_today: asNumber(record.sent_today ?? communications.sent_today ?? operations.messages_sent_today),
+    failed_today: asNumber(record.failed_today ?? communications.failed_today ?? operations.delivery_failures_today),
+    telemedicine_reminders_sent: asNumber(telemedicine.telemedicine_reminders_sent),
+    telemedicine_join_success_rate: asNumber(
+      telemedicine.join_success_rate ?? telemedicine.telemedicine_join_success_rate
+    ),
+    telemedicine_no_show_nudges_sent: asNumber(telemedicine.no_show_nudges_sent),
+    telemedicine_fallback_events: asNumber(telemedicine.video_audio_fallback_events),
+    telemedicine_escalation_volumes: asNumber(telemedicine.escalation_volumes),
+    source_health:
+      (asRecord(record.source_health) as Record<string, string> | null) ??
+      (asRecord(governance.source_health) as Record<string, string> | null) ??
+      undefined,
+    last_refreshed_at:
+      String(record.last_refreshed_at ?? governance.last_refreshed_at ?? "") || undefined,
+  };
+}
+
 function asRecord(value: unknown): AnyRecord | null {
   return typeof value === "object" && value !== null ? (value as AnyRecord) : null;
 }
@@ -51,6 +102,7 @@ function toConversation(raw: unknown): Conversation {
     unreadCount,
     createdAt,
     updatedAt,
+    telemedicineLinks: (asRecord(attributes.telemedicine_links) as Conversation["telemedicineLinks"]) ?? undefined,
   };
 }
 
@@ -79,6 +131,7 @@ function toMessage(raw: unknown): Message {
     sentAt,
     readBy: Array.isArray(attributes.readBy) ? (attributes.readBy as string[]) : [],
     status: "SENT",
+    telemedicineLinks: (asRecord(attributes.telemedicine_links) as Message["telemedicineLinks"]) ?? undefined,
   };
 }
 
@@ -202,4 +255,12 @@ export async function markConversationRead(
     `${V1}/conversations/${encodeURIComponent(conversationId)}/read`,
     { participant_id: upToMessageId }
   );
+}
+
+/**
+ * Fetch communication dashboard KPIs for mobile comms surfaces.
+ */
+export async function fetchCommunicationDashboard(): Promise<CommunicationDashboard> {
+  const response = await apiClient.get<Envelope<unknown>>("/internal/v1/communication/dashboard");
+  return normalizeCommunicationDashboard(response.data.data);
 }

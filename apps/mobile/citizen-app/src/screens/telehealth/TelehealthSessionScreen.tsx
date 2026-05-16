@@ -35,9 +35,24 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
   const [endNotes, setEndNotes] = useState("");
   const [showEndForm, setShowEndForm] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [supportNotice, setSupportNotice] = useState<string | null>(null);
 
   // Real-time channel for session events
-  const channel = useChannel(sessionChannel ?? `telehealth-${session.id}`);
+  const channel = useChannel(sessionChannel ?? `telehealth-${session.id}`, {
+    onMessage: (event) => {
+      if (event.type === "telemedicine.session.provider_late") {
+        setSupportNotice("Your provider is running late. Please stay in the waiting room.");
+      } else if (event.type === "telemedicine.session.video_failed") {
+        setSupportNotice("Video connection failed. Open Impilo audio fallback or request support.");
+      } else if (event.type === "telemedicine.session.audio_failed") {
+        setSupportNotice("Audio connection failed. Use secure chat or request helpdesk support.");
+      } else if (event.type === "telemedicine.session.completed" || event.type === "session_ended") {
+        setSupportNotice("Your teleconsultation has ended. Follow-up steps are available in Impilo.");
+        setSession((prev) => ({ ...prev, status: "COMPLETED" }));
+        setSessionToken(null);
+      }
+    },
+  });
 
   // Elapsed timer when in session
   useEffect(() => {
@@ -133,6 +148,14 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
             </View>
           </CardBody>
         </Card>
+        {supportNotice ? (
+          <Card>
+            <CardHeader title="Telemedicine Support" />
+            <CardBody>
+              <Text style={styles.infoText}>{supportNotice}</Text>
+            </CardBody>
+          </Card>
+        ) : null}
 
         {/* Active session area */}
         {sessionToken ? (
