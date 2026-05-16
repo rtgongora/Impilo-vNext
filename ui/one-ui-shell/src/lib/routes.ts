@@ -436,6 +436,30 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/learning/catalog", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Catalogue", navLabel: "Catalogue", navZone: "professional" },
   // Phase 6B (May 2026) — native course-detail surface backed by Phase 5B /v11/courses/{id}/structure.
   { path: "/learning/courses/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Course", navLabel: "Course" },
+
+  // ── Zone: Nhume — Dispatch, Delivery, Fleet Tracking & Last-Mile Logistics ──
+  // Nhume is the logistics nervous system of Impilo. Routes are mounted under
+  // /nhume so that dispatchers, facility runners, programme managers, fleet
+  // operators, autonomous-platform operators and citizens can all reach the
+  // surfaces they are authorised for. Backend: services/nhume-service.
+  { path: "/nhume", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Logistics", navLabel: "Nhume", navZone: "work" },
+  { path: "/nhume/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Operations Dashboard", navLabel: "Operations Dashboard", navZone: "work" },
+  { path: "/nhume/deliveries", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Deliveries", navLabel: "Deliveries", navZone: "work" },
+  { path: "/nhume/deliveries/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Delivery Request", navLabel: "New Delivery", navZone: "work" },
+  { path: "/nhume/deliveries/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Delivery Detail", navLabel: "Delivery", navZone: "work" },
+  { path: "/nhume/dispatcher", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Nhume Dispatcher Console", navLabel: "Dispatcher Console", navZone: "work" },
+  { path: "/nhume/map", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fleet Tracking Map", navLabel: "Fleet Map", navZone: "work" },
+  { path: "/nhume/courier", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Courier / Driver Console", navLabel: "Courier Console", navZone: "work" },
+  { path: "/nhume/fleet", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet & Asset Management", navLabel: "Fleet & Assets", navZone: "work" },
+  { path: "/nhume/fleet/[assetId]", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet Asset", navLabel: "Asset Detail", navZone: "work" },
+  { path: "/nhume/couriers", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Drivers & Couriers", navLabel: "Drivers & Couriers", navZone: "work" },
+  { path: "/nhume/couriers/[courierId]", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Courier Profile", navLabel: "Courier Profile", navZone: "work" },
+  { path: "/nhume/policies", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Delivery Policies", navLabel: "Delivery Policies", navZone: "work" },
+  { path: "/nhume/autonomous", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Autonomous Delivery", navLabel: "Autonomous", navZone: "work" },
+  { path: "/nhume/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Nhume Analytics", navLabel: "Analytics", navZone: "work" },
+  { path: "/nhume/custody/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chain of Custody", navLabel: "Chain of Custody", navZone: "work" },
+  // Citizen-facing track page (privacy-safe, role-aware).
+  { path: "/nhume/track/[deliveryId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Delivery", navLabel: "Track Delivery", navZone: "life" },
 ];
 
 // Total route count assertion.
@@ -465,7 +489,10 @@ export const ROUTES: RouteDefinition[] = [
 // New total is 276.
 // Additional upstream route registrations on this branch increase the current
 // canonical total to 278.
-export const EXPECTED_ROUTE_COUNT = 278;
+// Nhume (May 2026): 17 new routes under /nhume for the Dispatch, Delivery,
+// Fleet Tracking and Last-Mile Logistics service (services/nhume-service).
+// Combined with upstream additions on this branch the canonical total is 307.
+export const EXPECTED_ROUTE_COUNT = 307;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

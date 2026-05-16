@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT:8340}
+
+spring:
+  application:
+    name: nhume-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_nhume
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+impilo:
+  companion:
+    enabled: true
+  nhume:
+    # Ndila (maps & geospatial intelligence) integration.
+    ndila:
+      base-url: ${NHUME_NDILA_BASE_URL:}
+      provider: ${NHUME_NDILA_PROVIDER:simulation}     # simulation | mapbox | google | osm | azure
+      api-key: ${NHUME_NDILA_API_KEY:}
+    # Comms Hub (omnichannel notifications) integration.
+    comms-hub:
+      base-url: ${NHUME_COMMS_HUB_BASE_URL:}
+      enabled: ${NHUME_COMMS_HUB_ENABLED:true}
+    # Trust Layer (TSHEPO) policy decision point.
+    trust:
+      pdp-url: ${NHUME_TSHEPO_PDP_URL:}
+      enforce: ${NHUME_TRUST_ENFORCE:true}
+    # Autonomous delivery providers (drone / UAV / AGV / robot / smart locker).
+    autonomous:
+      simulation-enabled: ${NHUME_AUTONOMOUS_SIM:true}
+    # Webhook signature secret for partner couriers.
+    webhooks:
+      shared-secret: ${NHUME_WEBHOOK_SECRET:dev-webhook-secret-change-me}
+    # Location retention window (days) for privacy-safe trimming.
+    location-retention-days: ${NHUME_LOCATION_RETENTION_DAYS:30}
+    # Seed demo / test data on startup.
+    seed-demo-data: ${NHUME_SEED_DEMO_DATA:true}

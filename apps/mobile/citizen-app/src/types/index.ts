@@ -156,6 +156,16 @@ export type ServiceRequestStatus =
   | "COMPLETED"
   | "CANCELLED";
 
+export interface CitizenDelivery {
+  id: string;
+  status: string;
+  priority: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TelehealthSession {
   id: string;
   providerId: string;

@@ -5,7 +5,7 @@
  * Maps directly to BFF API response shapes.
  */
 
-export type AppMode = "provider" | "outreach" | "supervisor" | "offline";
+export type AppMode = "provider" | "outreach" | "supervisor" | "offline" | "courier";
 export type ProviderTabKey =
   | "dashboard"
   | "patients"
