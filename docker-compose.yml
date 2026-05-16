@@ -7,7 +7,12 @@ version: "3.9"
 
 services:
   # ---------------------------------------------------------------------------
-  # PostgreSQL 16 — one instance, per-service databases created via init script
+  # PostgreSQL 16 — one instance, per-service databases created via init script.
+  #
+  # Note: services that need PostGIS (e.g. ndila-service) treat the extension
+  # as optional. Run with the standard postgres image for dev (PostGIS will be
+  # absent and Ndila falls back to JSONB + pure-Java spatial math), or swap to
+  # postgis/postgis:16-3.4 for a PostGIS-enabled cluster — both modes work.
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine

@@ -40,3 +40,13 @@
 - `mobile-kiosk-ui-patterns.md`
 - `ui-route-journey-map.md`
 - `ui-refinement-implementation-summary.md`
+- `impilo-ui-visual-design-system.md`
+- `impilo-brand-theme-tokens.md`
+- `impilo-mobile-web-visual-style.md`
+- `impilo-rounded-healthcare-design-language.md`
+- `impilo-subtle-african-design-signature.md`
+- `impilo-ui-theme-implementation-summary.md`
+
+## Ndila — Geospatial Intelligence
+
+- `NDILA_IMPLEMENTATION_NOTE.md` — Ndila audit, scope, integrations, tests, operational follow-ups.
