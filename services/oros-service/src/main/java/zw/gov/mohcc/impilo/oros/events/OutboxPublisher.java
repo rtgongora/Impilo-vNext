@@ -51,6 +51,8 @@ public class OutboxPublisher {
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final boolean dualEmitCanonicalEnabled;
+    private final boolean dualEmitCoreTransactionEnabled;
+    private final String coreTransactionTopic;
     private final String canonicalResultAvailableTopic;
 
     /**
@@ -62,10 +64,14 @@ public class OutboxPublisher {
     public OutboxPublisher(EventOutboxRepository outboxRepository,
                            KafkaTemplate<String, String> kafkaTemplate,
                            @Value("${oros.outbox.dual-emit-canonical-enabled:false}") boolean dualEmitCanonicalEnabled,
+                           @Value("${oros.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
+                           @Value("${oros.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic,
                            @Value("${oros.outbox.canonical-topics.result-available:clinical.oros.result.available}") String canonicalResultAvailableTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.dualEmitCanonicalEnabled = dualEmitCanonicalEnabled;
+        this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
+        this.coreTransactionTopic = coreTransactionTopic;
         this.canonicalResultAvailableTopic = canonicalResultAvailableTopic;
     }
 
@@ -101,6 +107,10 @@ public class OutboxPublisher {
                 String canonicalTopic = resolveCanonicalCompanionTopic(event.getEventType());
                 if (canonicalTopic != null && !canonicalTopic.equals(topic)) {
                     kafkaTemplate.send(canonicalTopic, key, payload);
+                }
+                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
+                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
+                    kafkaTemplate.send(coreTransactionTopic, key, payload);
                 }
 
                 event.setPublishedAt(OffsetDateTime.now());
@@ -173,6 +183,24 @@ public class OutboxPublisher {
         }
         return switch (eventType) {
             case "RESULT_AVAILABLE", "RESULT_POSTED" -> canonicalResultAvailableTopic;
+            default -> null;
+        };
+    }
+
+    static String resolveCoreTransactionTopic(String eventType) {
+        if (eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "ORDER_PLACED",
+                 "ORDER_STATUS_CHANGED",
+                 "ORDER_ACCEPTED",
+                 "ORDER_COMPLETED",
+                 "ORDER_CANCELLED",
+                 "RESULT_AVAILABLE",
+                 "RESULT_POSTED",
+                 "RESULT_CRITICAL",
+                 "CRITICAL_RESULT_POSTED" -> "core.transaction.events";
             default -> null;
         };
     }

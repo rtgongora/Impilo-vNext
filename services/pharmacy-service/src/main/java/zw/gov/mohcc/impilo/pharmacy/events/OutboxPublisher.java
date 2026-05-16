@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.pharmacy.events;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,8 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitCoreTransactionEnabled;
+    private final String coreTransactionTopic;
 
     /**
      * Constructs the OutboxPublisher with the outbox repository and Kafka template.
@@ -57,9 +60,13 @@ public class OutboxPublisher {
      * @param kafkaTemplate    Kafka template for publishing events
      */
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${pharmacy.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
+                           @Value("${pharmacy.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
+        this.coreTransactionTopic = coreTransactionTopic;
     }
 
     /**
@@ -92,6 +99,10 @@ public class OutboxPublisher {
                 String payload = event.getPayload();
 
                 kafkaTemplate.send(topic, key, payload);
+                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
+                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
+                    kafkaTemplate.send(coreTransactionTopic, key, payload);
+                }
 
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
@@ -153,6 +164,23 @@ public class OutboxPublisher {
             case "PRESCRIPTION_DISPENSED" -> "pharmacy.prescription.dispensed";
 
             default -> "pharmacy.events";
+        };
+    }
+
+    static String resolveCoreTransactionTopic(String eventType) {
+        if (eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "PRESCRIPTION_CREATED",
+                 "DISPENSE_ORDER_RECEIVED",
+                 "DISPENSE_ACCEPTED",
+                 "DISPENSE_COMPLETED",
+                 "DISPENSE_CANCELLED",
+                 "PICKUP_CLAIMED",
+                 "MUSHEX_CHARGE_REQUESTED",
+                 "PRESCRIPTION_DISPENSED" -> "core.transaction.events";
+            default -> null;
         };
     }
 }

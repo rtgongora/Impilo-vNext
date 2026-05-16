@@ -50,4 +50,14 @@ class OutboxPublisherTest {
     void routeTopic_nullEvent_fallsBackToGeneric() {
         assertEquals("msika.flow.events", OutboxPublisher.routeTopic(null));
     }
+
+    @Test
+    void resolveCoreTransactionTopic_orderCompleted_mapsToCoreTransactionEvents() {
+        assertEquals("core.transaction.events", OutboxPublisher.resolveCoreTransactionTopic("ORDER_COMPLETED"));
+    }
+
+    @Test
+    void resolveCoreTransactionTopic_unknownEvent_returnsNull() {
+        assertNull(OutboxPublisher.resolveCoreTransactionTopic("VENDOR_APPROVED"));
+    }
 }

@@ -87,6 +87,8 @@ mushex:
   outbox:
     poll-interval-ms: 2000
     batch-size: 100
+    dual-emit-core-transaction-enabled: ${MUSHEX_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${MUSHEX_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
   currency: USD
   hmac-pepper: ${MUSHEX_HMAC_PEPPER:mushex-dev-pepper-change-in-prod}
   remittance:

@@ -1,0 +1,3177 @@
+version: '1'
+generated_from: docs/architecture/services-registry.yaml
+doctrine_source: docs/doctrine/CORE_TRANSACTION_ACCEPTANCE_CRITERIA.md
+services:
+- service: butano-fhir
+  applies: true
+  q01_transaction_types: &id001
+  - FACILITY_WALK_IN
+  - APPOINTMENT
+  - EMERGENCY
+  - REFERRAL
+  - CHRONIC_CARE
+  - LABORATORY
+  - IMAGING
+  - PHARMACY
+  q02_lifecycle_stages: &id002
+  - ENTRY
+  - TRIAGE_OR_ELIGIBILITY
+  - ENCOUNTER_OR_DELIVERY
+  - ORDERS_AND_ANCILLARY
+  - RECORD_CONTRIBUTION
+  - FOLLOW_UP_CONTINUITY
+  - COMPLETION
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: butano-fhir
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/butano-fhir.openapi.yaml
+  q12_tests:
+  - services/butano-fhir/pom.xml
+  - contracts/openapi/butano-fhir.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: butano-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: butano-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/butano.custom.openapi.yaml
+  q12_tests:
+  - services/butano-service/pom.xml
+  - contracts/openapi/butano.custom.openapi.yaml
+  - services/butano-service/src/main/java/zw/gov/mohcc/impilo/butano/events/ButanoEventConsumer.java
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: indawo-service
+  applies: true
+  q01_transaction_types: &id003
+  - FACILITY_WALK_IN
+  - APPOINTMENT
+  - EMERGENCY
+  - TELEMEDICINE
+  - REFERRAL
+  - COMMUNITY_OUTREACH
+  q02_lifecycle_stages: &id004
+  - ENTRY
+  - IDENTITY
+  - TRUST_AND_CONSENT
+  - SERVICE_SELECTION
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: indawo-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/indawo.openapi.yaml
+  q12_tests:
+  - services/indawo-service/pom.xml
+  - contracts/openapi/indawo.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: msika-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/msika-core.openapi.yaml
+  q12_tests:
+  - services/msika-service/pom.xml
+  - contracts/openapi/msika-core.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tuso-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: tuso-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tuso.openapi.yaml
+  q12_tests:
+  - services/tuso-service/pom.xml
+  - contracts/openapi/tuso.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ubomi-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: ubomi-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/ubomi.openapi.yaml
+  q12_tests:
+  - services/ubomi-service/pom.xml
+  - contracts/openapi/ubomi.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: varapi-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: varapi-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/varapi.openapi.yaml
+  q12_tests:
+  - services/varapi-service/pom.xml
+  - contracts/openapi/varapi.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: vito-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: vito-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - impilo.vito.identity
+  - impilo.vito.lifecycle
+  - impilo.vito.issuance
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/vito.openapi.yaml
+  q12_tests:
+  - services/vito-service/pom.xml
+  - contracts/openapi/vito.openapi.yaml
+  - services/vito-service/src/main/java/zw/gov/mohcc/impilo/vito/events/VitoKafkaPublisher.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: zibo-service
+  applies: true
+  q01_transaction_types: *id003
+  q02_lifecycle_stages: *id004
+  q03_actor_served: system
+  q04_source_of_truth_plane: registry_spine
+  q05_source_of_truth_service: zibo-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/zibo.openapi.yaml
+  q12_tests:
+  - services/zibo-service/pom.xml
+  - contracts/openapi/zibo.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: identity-assurance-service
+  applies: true
+  q01_transaction_types: &id005
+  - FACILITY_WALK_IN
+  - APPOINTMENT
+  - EMERGENCY
+  - TELEMEDICINE
+  - REFERRAL
+  - ADMINISTRATIVE_HEALTH
+  q02_lifecycle_stages: &id006
+  - TRUST_AND_CONSENT
+  - COMPLETION
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: identity-assurance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/identity-assurance.openapi.yaml
+  q12_tests:
+  - services/identity-assurance-service/pom.xml
+  - contracts/openapi/identity-assurance.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mvumo-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: mvumo-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/mvumo.openapi.yaml
+  q12_tests:
+  - services/mvumo-service/pom.xml
+  - contracts/openapi/mvumo.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-audit-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-audit-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-audit.openapi.yaml
+  q12_tests:
+  - services/tshepo-audit-service/pom.xml
+  - contracts/openapi/tshepo-audit.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-authz-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-authz-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-authz.openapi.yaml
+  q12_tests:
+  - services/tshepo-authz-service/pom.xml
+  - contracts/openapi/tshepo-authz.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-consent-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-consent-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-consent.openapi.yaml
+  q12_tests:
+  - services/tshepo-consent-service/pom.xml
+  - contracts/openapi/tshepo-consent.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-identity-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-identity-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-identity.openapi.yaml
+  q12_tests:
+  - services/tshepo-identity-service/pom.xml
+  - contracts/openapi/tshepo-identity.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-keys-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-keys-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-keys.openapi.yaml
+  q12_tests:
+  - services/tshepo-keys-service/pom.xml
+  - contracts/openapi/tshepo-keys.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-offline-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-offline-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo-offline.openapi.yaml
+  q12_tests:
+  - services/tshepo-offline-service/pom.xml
+  - contracts/openapi/tshepo-offline.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: clinical-knowledge-platform-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: clinical-knowledge-platform-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/clinical-knowledge-platform.openapi.yaml
+  q12_tests:
+  - services/clinical-knowledge-platform-service/pom.xml
+  - contracts/openapi/clinical-knowledge-platform.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: forms-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: forms-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/forms.openapi.yaml
+  q12_tests:
+  - services/forms-service/pom.xml
+  - contracts/openapi/forms.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: guidance-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: guidance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/guidance.openapi.yaml
+  q12_tests:
+  - services/guidance-service/pom.xml
+  - contracts/openapi/guidance.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: inpatient-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: inpatient-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/inpatient.openapi.yaml
+  q12_tests:
+  - services/inpatient-service/pom.xml
+  - contracts/openapi/inpatient.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: oros-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: oros-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - oros.order.placed
+  - oros.order.status_changed
+  - oros.result.available
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/oros.openapi.yaml
+  q12_tests:
+  - services/oros-service/pom.xml
+  - contracts/openapi/oros.openapi.yaml
+  - services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/events/OutboxPublisher.java
+  - services/oros-service/src/main/java/zw/gov/mohcc/impilo/oros/events/OrosEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pct-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: pct-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - pct.encounter.started
+  - pct.encounter.completed
+  - pct.journey.state_changed
+  - pct.death.recorded
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/pct.openapi.yaml
+  q12_tests:
+  - services/pct-service/pom.xml
+  - contracts/openapi/pct.openapi.yaml
+  - services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/events/OutboxPublisher.java
+  - services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/events/PctEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pharmacy-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: pharmacy-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - pharmacy.dispense.complete
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/pharmacy.openapi.yaml
+  q12_tests:
+  - services/pharmacy-service/pom.xml
+  - contracts/openapi/pharmacy.openapi.yaml
+  - services/pharmacy-service/src/main/java/zw/gov/mohcc/impilo/pharmacy/events/OutboxPublisher.java
+  - services/pharmacy-service/src/main/java/zw/gov/mohcc/impilo/pharmacy/events/MushexConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: referral-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: referral-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell referral workflows
+  q11_bff_or_contract: contracts/openapi/referral.openapi.yaml
+  q12_tests:
+  - services/referral-service/pom.xml
+  - contracts/openapi/referral.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: scheduling-service
+  applies: true
+  q01_transaction_types: *id001
+  q02_lifecycle_stages: *id002
+  q03_actor_served: provider
+  q04_source_of_truth_plane: clinical_execution
+  q05_source_of_truth_service: scheduling-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/scheduling.openapi.yaml
+  q12_tests:
+  - services/scheduling-service/pom.xml
+  - contracts/openapi/scheduling.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: simba-service
+  applies: true
+  q01_transaction_types: &id007
+  - MARKETPLACE
+  - TRAINING_OR_COMPETENCY
+  - SUPERVISION_OR_MENTORSHIP
+  - ADMINISTRATIVE_HEALTH
+  q02_lifecycle_stages: &id008
+  - FINANCIAL_SETTLEMENT
+  - FOLLOW_UP_CONTINUITY
+  - COMPLETION
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: simba-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/simba.openapi.yaml
+  q12_tests:
+  - services/simba-service/pom.xml
+  - contracts/openapi/simba.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: wellness-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: wellness-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/wellness.openapi.yaml
+  q12_tests:
+  - services/wellness-service/pom.xml
+  - contracts/openapi/wellness.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: hr-payroll-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: hr-payroll-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/hr-payroll.openapi.yaml
+  q12_tests:
+  - services/hr-payroll-service/pom.xml
+  - contracts/openapi/hr-payroll.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: learning-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: learning-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/learning.openapi.yaml
+  q12_tests:
+  - services/learning-service/pom.xml
+  - contracts/openapi/learning.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-flow-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: msika-flow-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/msika-flow.openapi.yaml
+  q12_tests:
+  - services/msika-flow-service/pom.xml
+  - contracts/openapi/msika-flow.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: procurement-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: procurement-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/procurement.openapi.yaml
+  q12_tests:
+  - services/procurement-service/pom.xml
+  - contracts/openapi/procurement.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: workforce-governance-service
+  applies: true
+  q01_transaction_types: *id007
+  q02_lifecycle_stages: *id008
+  q03_actor_served: system
+  q04_source_of_truth_plane: enterprise_resource
+  q05_source_of_truth_service: workforce-governance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/workforce-governance.openapi.yaml
+  q12_tests:
+  - services/workforce-governance-service/pom.xml
+  - contracts/openapi/workforce-governance.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: community-service
+  applies: true
+  q01_transaction_types: &id009
+  - FACILITY_WALK_IN
+  - APPOINTMENT
+  - EMERGENCY
+  - TELEMEDICINE
+  - REFERRAL
+  - CHRONIC_CARE
+  - MARKETPLACE
+  - WELLNESS
+  q02_lifecycle_stages: &id010
+  - ENTRY
+  - IDENTITY
+  - TRUST_AND_CONSENT
+  - SCHEDULING_OR_QUEUE
+  - ENCOUNTER_OR_DELIVERY
+  - INSTRUCTIONS_AND_NOTIFICATIONS
+  - FOLLOW_UP_CONTINUITY
+  - COMPLETION
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: community-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: Web and mobile clients via experience-bff
+  q11_bff_or_contract: contracts/openapi/community.openapi.yaml
+  q12_tests:
+  - services/community-service/pom.xml
+  - contracts/openapi/community.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: experience-bff
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: experience-bff
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: Web and mobile clients via experience-bff
+  q11_bff_or_contract: contracts/openapi/experience-bff.openapi.yaml (including teleconsult
+    and mobile telehealth/session routes)
+  q12_tests:
+  - services/experience-bff/pom.xml
+  - contracts/openapi/experience-bff.openapi.yaml
+  - services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/events/UpstreamEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: costing-engine-service
+  applies: true
+  q01_transaction_types: &id011
+  - FACILITY_WALK_IN
+  - APPOINTMENT
+  - MARKETPLACE
+  - PHARMACY
+  - ADMINISTRATIVE_HEALTH
+  q02_lifecycle_stages: &id012
+  - FINANCIAL_SETTLEMENT
+  - COMPLETION
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: costing-engine-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - costa.bill.finalized
+  - costa.invoice.issued
+  - costa.payment.status_changed
+  - costa.refund.issued
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/costa.openapi.yaml
+  q12_tests:
+  - services/costing-engine-service/pom.xml
+  - contracts/openapi/costa.openapi.yaml
+  - services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/kafka/OutboxPublisher.java
+  - services/costing-engine-service/src/main/java/zw/gov/mohcc/impilo/costa/kafka/CostaEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: coverage-service
+  applies: true
+  q01_transaction_types: *id011
+  q02_lifecycle_stages: *id012
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: coverage-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/coverage.openapi.yaml
+  q12_tests:
+  - services/coverage-service/pom.xml
+  - contracts/openapi/coverage.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: general-ledger-service
+  applies: true
+  q01_transaction_types: *id011
+  q02_lifecycle_stages: *id012
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: general-ledger-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/general-ledger.openapi.yaml
+  q12_tests:
+  - services/general-ledger-service/pom.xml
+  - contracts/openapi/general-ledger.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mushe-wallet-service
+  applies: true
+  q01_transaction_types: *id011
+  q02_lifecycle_stages: *id012
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: mushe-wallet-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/mushe-wallet.openapi.yaml
+  q12_tests:
+  - services/mushe-wallet-service/pom.xml
+  - contracts/openapi/mushe-wallet.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mushex-service
+  applies: true
+  q01_transaction_types: *id011
+  q02_lifecycle_stages: *id012
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: mushex-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - mushex.payment.status.changed
+  - mushex.refund.status.changed
+  - mushex.claim.submitted
+  - mushex.claim.adjudicated
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/mushex.openapi.yaml
+  q12_tests:
+  - services/mushex-service/pom.xml
+  - contracts/openapi/mushex.openapi.yaml
+  - services/mushex-service/src/main/java/zw/gov/mohcc/impilo/mushex/kafka/OutboxPublisher.java
+  - services/mushex-service/src/main/java/zw/gov/mohcc/impilo/mushex/kafka/CostaEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: share-slip-service
+  applies: true
+  q01_transaction_types: *id011
+  q02_lifecycle_stages: *id012
+  q03_actor_served: system
+  q04_source_of_truth_plane: finance_resource
+  q05_source_of_truth_service: share-slip-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/share-slip.openapi.yaml
+  q12_tests:
+  - services/share-slip-service/pom.xml
+  - contracts/openapi/share-slip.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ai-model-registry-service
+  applies: true
+  q01_transaction_types: &id013
+  - REFERRAL
+  - LABORATORY
+  - IMAGING
+  - COMMUNITY_OUTREACH
+  - MARKETPLACE
+  q02_lifecycle_stages: &id014
+  - ORDERS_AND_ANCILLARY
+  - INSTRUCTIONS_AND_NOTIFICATIONS
+  - FOLLOW_UP_CONTINUITY
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: ai-model-registry-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/ai-model-registry.openapi.yaml
+  q12_tests:
+  - services/ai-model-registry-service/pom.xml
+  - contracts/openapi/ai-model-registry.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: analytics-pipeline-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: analytics-pipeline-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: experience-bff intelligence and reporting surfaces
+  q11_bff_or_contract: contracts/openapi/analytics-pipeline.openapi.yaml
+  q12_tests:
+  - services/analytics-pipeline-service/pom.xml
+  - contracts/openapi/analytics-pipeline.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: asset-registry-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: asset-registry-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/asset-registry.openapi.yaml
+  q12_tests:
+  - services/asset-registry-service/pom.xml
+  - contracts/openapi/asset-registry.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: audit-ledger-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: audit-ledger-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/audit-ledger.openapi.yaml
+  q12_tests:
+  - services/audit-ledger-service/pom.xml
+  - contracts/openapi/audit-ledger.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: campaigns-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: campaigns-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/campaigns.openapi.yaml
+  q12_tests:
+  - services/campaigns-service/pom.xml
+  - contracts/openapi/campaigns.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: card-print-agent
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: card-print-agent
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/card-print.openapi.yaml
+  q12_tests:
+  - services/card-print-agent/pom.xml
+  - contracts/openapi/card-print.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: channels-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: channels-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/channels.openapi.yaml
+  q12_tests:
+  - services/channels-service/pom.xml
+  - contracts/openapi/channels.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: connector-fhir-adapter
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: connector-fhir-adapter
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/connector-fhir.openapi.yaml
+  q12_tests:
+  - services/connector-fhir-adapter/pom.xml
+  - contracts/openapi/connector-fhir.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: credential-verification-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: credential-verification-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/credential-verification.openapi.yaml
+  q12_tests:
+  - services/credential-verification-service/pom.xml
+  - contracts/openapi/credential-verification.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: data-access-governance-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: data-access-governance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/data-access-governance.openapi.yaml
+  q12_tests:
+  - services/data-access-governance-service/pom.xml
+  - contracts/openapi/data-access-governance.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: data-governance-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: data-governance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/data-governance.openapi.yaml
+  q12_tests:
+  - services/data-governance-service/pom.xml
+  - contracts/openapi/data-governance.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: data-ingestion-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: data-ingestion-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/data-ingestion.openapi.yaml
+  q12_tests:
+  - services/data-ingestion-service/pom.xml
+  - contracts/openapi/data-ingestion.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: data-pipeline-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: data-pipeline-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/data-pipeline.openapi.yaml
+  q12_tests:
+  - services/data-pipeline-service/pom.xml
+  - contracts/openapi/data-pipeline.openapi.yaml
+  - services/data-pipeline-service/src/main/java/zw/gov/mohcc/impilo/pipeline/events/PipelineEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: data-warehouse-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: data-warehouse-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/data-warehouse.openapi.yaml
+  q12_tests:
+  - services/data-warehouse-service/pom.xml
+  - contracts/openapi/data-warehouse.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: developer-portal-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: developer-portal-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/developer-portal.openapi.yaml
+  q12_tests:
+  - services/developer-portal-service/pom.xml
+  - contracts/openapi/developer-portal.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: dispatch-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: dispatch-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/dispatch.openapi.yaml
+  q12_tests:
+  - services/dispatch-service/pom.xml
+  - contracts/openapi/dispatch.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: document-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: document-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/document-store.openapi.yaml
+  q12_tests:
+  - services/document-service/pom.xml
+  - contracts/openapi/document-store.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: fhir-gateway-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: fhir-gateway-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/fhir-gateway.openapi.yaml
+  q12_tests:
+  - services/fhir-gateway-service/pom.xml
+  - contracts/openapi/fhir-gateway.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: integration-hub
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: integration-hub
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/integration-hub.openapi.yaml
+  q12_tests:
+  - services/integration-hub/pom.xml
+  - contracts/openapi/integration-hub.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: inventory-elmis-adapter
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: inventory-elmis-adapter
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/inventory-elmis.openapi.yaml
+  q12_tests:
+  - services/inventory-elmis-adapter/pom.xml
+  - contracts/openapi/inventory-elmis.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: inventory-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: inventory-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/inventory.openapi.yaml
+  q12_tests:
+  - services/inventory-service/pom.xml
+  - contracts/openapi/inventory.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: iot-ingestion-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: iot-ingestion-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/iot-ingestion.openapi.yaml
+  q12_tests:
+  - services/iot-ingestion-service/pom.xml
+  - contracts/openapi/iot-ingestion.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: jobs-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: jobs-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/jobs.openapi.yaml
+  q12_tests:
+  - services/jobs-service/pom.xml
+  - contracts/openapi/jobs.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: landela-adapter-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: landela-adapter-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/landela-adapter.openapi.yaml
+  q12_tests:
+  - services/landela-adapter-service/pom.xml
+  - contracts/openapi/landela-adapter.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: national-data-repository-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: national-data-repository-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/national-data-repository.openapi.yaml
+  q12_tests:
+  - services/national-data-repository-service/pom.xml
+  - contracts/openapi/national-data-repository.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ndr-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: ndr-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/ndr.openapi.yaml
+  q12_tests:
+  - services/ndr-service/pom.xml
+  - contracts/openapi/ndr.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: notification-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: notification-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/notification.openapi.yaml
+  q12_tests:
+  - services/notification-service/pom.xml
+  - contracts/openapi/notification.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: observability-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: observability-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/observability.openapi.yaml
+  q12_tests:
+  - services/observability-service/pom.xml
+  - contracts/openapi/observability.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: offline-edge-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: offline-edge-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/offline-edge.openapi.yaml
+  q12_tests:
+  - services/offline-edge-service/pom.xml
+  - contracts/openapi/offline-edge.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: offline-sync-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: offline-sync-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/offline-sync.openapi.yaml
+  q12_tests:
+  - services/offline-sync-service/pom.xml
+  - contracts/openapi/offline-sync.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pacs-adapter-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: pacs-adapter-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - pacs.study.available
+  - pacs.study.correlated
+  - imaging.viewer.launched
+  - imaging.report.linked
+  - imaging.study.linked_to_order
+  - imaging.access.recorded
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/pacs-adapter.openapi.yaml
+  q12_tests:
+  - services/pacs-adapter-service/pom.xml
+  - contracts/openapi/pacs-adapter.openapi.yaml
+  - services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/api/controller/ImagingStudyController.java
+  - services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/core/ImagingStudyService.java
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pharmacy-elmis-adapter
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: pharmacy-elmis-adapter
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/pharmacy-elmis.openapi.yaml
+  q12_tests:
+  - services/pharmacy-elmis-adapter/pom.xml
+  - contracts/openapi/pharmacy-elmis.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: reporting-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: reporting-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/reporting.openapi.yaml
+  q12_tests:
+  - services/reporting-service/pom.xml
+  - contracts/openapi/reporting.openapi.yaml
+  - services/reporting-service/src/main/java/zw/gov/mohcc/impilo/reporting/events/ReportingEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: rules-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: rules-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/rules.openapi.yaml
+  q12_tests:
+  - services/rules-service/pom.xml
+  - contracts/openapi/rules.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: schema-registry-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: schema-registry-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/schema-registry.openapi.yaml
+  q12_tests:
+  - services/schema-registry-service/pom.xml
+  - contracts/openapi/schema-registry.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: search-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: search-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/search.openapi.yaml
+  q12_tests:
+  - services/search-service/pom.xml
+  - contracts/openapi/search.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: security-hardening-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: security-hardening-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/security-hardening.openapi.yaml
+  q12_tests:
+  - services/security-hardening-service/pom.xml
+  - contracts/openapi/security-hardening.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: support-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: support-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/support.openapi.yaml
+  q12_tests:
+  - services/support-service/pom.xml
+  - contracts/openapi/support.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: surveillance-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: surveillance-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - impilo.surv.signal.created.v1
+  - impilo.surv.signal.hit.v1
+  - impilo.surv.case.opened.v1
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/surveillance.openapi.yaml
+  q12_tests:
+  - services/surveillance-service/pom.xml
+  - contracts/openapi/surveillance.openapi.yaml
+  - services/surveillance-service/src/main/java/zw/gov/mohcc/impilo/surv/events/SurvOutboxPublisher.java
+  - services/surveillance-service/src/main/java/zw/gov/mohcc/impilo/surv/events/SurveillanceEventConsumer.java
+  - docs/architecture/kafka-event-catalog.md
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: workflow-service
+  applies: true
+  q01_transaction_types: *id013
+  q02_lifecycle_stages: *id014
+  q03_actor_served: system
+  q04_source_of_truth_plane: integration_ops
+  q05_source_of_truth_service: workflow-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - core.transaction.events
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/workflow.openapi.yaml
+  q12_tests:
+  - services/workflow-service/pom.xml
+  - contracts/openapi/workflow.openapi.yaml
+  q13_analytics_reporting_output: analytics.reporting.aggregate
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: tshepo-service
+  applies: true
+  q01_transaction_types: *id005
+  q02_lifecycle_stages: *id006
+  q03_actor_served: system
+  q04_source_of_truth_plane: trust_governance
+  q05_source_of_truth_service: tshepo-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: ui/one-ui-shell routes and domain consoles
+  q11_bff_or_contract: contracts/openapi/tshepo.openapi.yaml
+  q12_tests:
+  - services/tshepo-service/pom.xml
+  - contracts/openapi/tshepo.openapi.yaml
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: butano-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: butano-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /butano-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/butano-web
+  - ui/butano-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: citizen-app
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: citizen-app
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: mobile clients
+  q11_bff_or_contract: none
+  q12_tests:
+  - apps/mobile/citizen-app
+  - apps/mobile/citizen-app/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: costa-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: costa-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /costa-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/costa-console
+  - ui/costa-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: developer-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: developer-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /developer-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/developer-console
+  - ui/developer-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ehr
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: ehr
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /ehr
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/ehr
+  - ui/ehr/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: experience
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: experience
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /experience
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/experience
+  - ui/experience/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: inventory-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: inventory-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /inventory-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/inventory-web
+  - ui/inventory-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: knowledge-admin
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: knowledge-admin
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /knowledge-admin
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/knowledge-admin
+  - ui/knowledge-admin/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-flow-ops
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: msika-flow-ops
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /msika-flow-ops
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/msika-flow-ops
+  - ui/msika-flow-ops/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-flow-portal
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: msika-flow-portal
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /msika-flow-portal
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/msika-flow-portal
+  - ui/msika-flow-portal/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-flow-vendor
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: msika-flow-vendor
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /msika-flow-vendor
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/msika-flow-vendor
+  - ui/msika-flow-vendor/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: msika-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: msika-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /msika-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/msika-web
+  - ui/msika-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mushex-finance-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: mushex-finance-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /mushex-finance-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/mushex-finance-console
+  - ui/mushex-finance-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mushex-ops-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: mushex-ops-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /mushex-ops-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/mushex-ops-console
+  - ui/mushex-ops-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: mushex-payer-portal
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: mushex-payer-portal
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /mushex-payer-portal
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/mushex-payer-portal
+  - ui/mushex-payer-portal/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: one-ui-shell
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: one-ui-shell
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /one-ui-shell
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/one-ui-shell
+  - ui/one-ui-shell/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ops-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: ops-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /ops-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/ops-console
+  - ui/ops-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: ops-docs
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: ops-docs
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /ops-docs
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/ops-docs
+  - ui/ops-docs/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: oros-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: oros-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /oros-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/oros-web
+  - ui/oros-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pct-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: pct-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /pct-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/pct-web
+  - ui/pct-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: pharmacy-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: pharmacy-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /pharmacy-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/pharmacy-web
+  - ui/pharmacy-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: portal
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: portal
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /portal
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/portal
+  - ui/portal/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: provider-app
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: provider-app
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: mobile clients
+  q11_bff_or_contract: none
+  q12_tests:
+  - apps/mobile/provider-app
+  - apps/mobile/provider-app/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: self-service
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: self-service
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /self-service
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/self-service
+  - ui/self-service/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: shared-ui
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: shared-ui
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /shared-ui
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/shared-ui
+  - ui/shared-ui/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: support-console
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: support-console
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /support-console
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/support-console
+  - ui/support-console/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.
+- service: zibo-web
+  applies: true
+  q01_transaction_types: *id009
+  q02_lifecycle_stages: *id010
+  q03_actor_served: provider
+  q04_source_of_truth_plane: experience
+  q05_source_of_truth_service: zibo-web
+  q06_states_create_read_update_close: stateful transitions handled per service boundary;
+    see contracts/core-transaction.ts
+  q07_emitted_events:
+  - none
+  q08_permission_or_consent: tshepo-authz and/or service policy checks
+  q09_audit_event: auditable through outbox/trust context/correlation headers
+  q10_ui_surface: /zibo-web
+  q11_bff_or_contract: none
+  q12_tests:
+  - ui/zibo-web
+  - ui/zibo-web/package.json
+  q13_analytics_reporting_output: service-metrics
+  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
+  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
+  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
+  q17_duplicate_domain_truth_check: no-duplicate-truth-required
+  q18_person_centered_continuity: supported
+  q19_provider_burden_impact: reduced when integrated with experience workflows
+  q20_health_system_impact: improves trusted transaction execution and observability
+  coverage: complete
+  notes: Generated baseline; refine per service owner where needed.

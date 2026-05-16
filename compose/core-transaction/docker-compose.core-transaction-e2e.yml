@@ -1,0 +1,93 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "46379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.7.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      CLUSTER_ID: "impilo-core-transaction-e2e"
+    ports:
+      - "49092:9092"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 40s
+
+  workflow-mock:
+    image: wiremock/wiremock:3.9.1
+    command: [ "--global-response-templating", "--verbose" ]
+    volumes:
+      - ./wiremock/workflow/mappings:/home/wiremock/mappings:ro
+    ports:
+      - "48250:8080"
+
+  pct-mock:
+    image: wiremock/wiremock:3.9.1
+    command: [ "--global-response-templating", "--verbose" ]
+    volumes:
+      - ./wiremock/pct/mappings:/home/wiremock/mappings:ro
+    ports:
+      - "48251:8080"
+
+  costa-mock:
+    image: wiremock/wiremock:3.9.1
+    command: [ "--global-response-templating", "--verbose" ]
+    volumes:
+      - ./wiremock/costa/mappings:/home/wiremock/mappings:ro
+    ports:
+      - "48252:8080"
+
+  experience-bff:
+    build:
+      context: ../../services/experience-bff
+      dockerfile: Dockerfile
+    environment:
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      WORKFLOW_BASE_URL: http://workflow-mock:8080
+      PCT_BASE_URL: http://pct-mock:8080
+      COSTA_BASE_URL: http://costa-mock:8080
+      KEYCLOAK_URL: http://localhost:1
+    ports:
+      - "48161:8160"
+    depends_on:
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      workflow-mock:
+        condition: service_started
+      pct-mock:
+        condition: service_started
+      costa-mock:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8160/actuator/health >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s

@@ -24,6 +24,22 @@ Seven architectural planes:
 
 Canonical doctrine and ownership maps are maintained under `docs/architecture/planes/` and `docs/registry/`.
 
+Core Transaction doctrine references:
+
+- `docs/doctrine/CORE_TRANSACTION_DOCTRINE.md`
+- `docs/doctrine/CORE_TRANSACTION_STATE_MACHINE.md`
+- `docs/doctrine/THREE_CORE_JOURNEYS.md`
+- `docs/doctrine/PERSON_JOURNEY.md`
+- `docs/doctrine/PROVIDER_JOURNEY.md`
+- `docs/doctrine/PLATFORM_BACK_OF_HOUSE_JOURNEY.md`
+- `docs/doctrine/NOMPILO_INTELLIGENT_JOURNEY_COMPANION.md`
+- `docs/architecture/core-transaction-plane-map.md`
+- `docs/architecture/core-transaction-event-model.md`
+- `docs/architecture/three-journey-core-transaction-map.md`
+- `docs/architecture/nompilo-journey-companion-architecture.md`
+- `docs/architecture/nompilo-accessibility-omnichannel-feedback.md`
+- `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md`
+
 Canonical service governance and classification references:
 
 - `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md`

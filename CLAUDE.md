@@ -125,6 +125,22 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Frontend work is incomplete unless backed by real APIs and real service logic.
 - Every production route must include authz, audit, error handling, observability, and tests.
 
+## Core Transaction Doctrine Compliance
+
+- Map each feature to a core transaction type and lifecycle stage.
+- Map each feature to person/provider/platform journey stage(s) where applicable.
+- Reject orphan capabilities that do not attach to a canonical transaction journey.
+- Never create duplicate patient/provider/facility/service/terminology/payment/consent/clinical truth models.
+- Backend changes are incomplete until journey wiring exists in BFF and UI surfaces where applicable.
+- Frontend-only experiences are incomplete unless bound to domain truth or clearly marked as prototype.
+- Experience and BFF are composition/orchestration layers, not source-of-truth services.
+- Require state transition, event, permission, and audit meaning for meaningful actions.
+- Include failure-path and offline/federated behavior in implementation scope when relevant.
+- Include Nompilo guidance, accessibility, and feedback capture consideration for user-facing changes.
+- Nompilo never overrides provider judgement and must remain auditable.
+- Preserve existing architecture and unrelated work.
+- Enforce `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` during feature delivery.
+
 ## Golden Thread (UI → DB proof path)
 1. `ui/experience/src/lib/api-client.ts` — injects trust headers
 2. `services/tshepo-service/.../api/AuthorizeController.java` — ext_authz endpoint

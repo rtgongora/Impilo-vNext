@@ -14,7 +14,7 @@ This `docs/registry/` area remains useful for generated support artifacts and hi
 
 | File | Role |
 |------|------|
-| [`services-registry.yaml`](./services-registry.yaml) | **Source of truth** — canonical seven-plane ownership, domains, SoR boundaries, dependency contracts, and readiness fields. |
+| [`services-registry.yaml`](./services-registry.yaml) | **Generated baseline artifact** — produced from registry scripts; canonical governance gate and architecture source of truth are enforced from `docs/architecture/services-registry.yaml` and validator scripts in `scripts/architecture/`. |
 | [`services-index.md`](./services-index.md) | **Generated** full service index (do not edit by hand). |
 | [`service-plane-map.md`](./service-plane-map.md) | Generated one-primary-plane map. |
 | [`service-ownership-matrix.md`](./service-ownership-matrix.md) | Generated ownership and SoR matrix. |

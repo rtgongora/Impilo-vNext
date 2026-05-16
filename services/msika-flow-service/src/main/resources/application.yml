@@ -58,6 +58,8 @@ springdoc:
 msika-flow:
   outbox:
     poll-interval-ms: 2000
+    dual-emit-core-transaction-enabled: ${MSIKA_FLOW_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${MSIKA_FLOW_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
   pickup:
     otp-length: 6
     expiry-hours: 48

@@ -1,0 +1,26 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/v1/patient/[^/]+/timeline"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "data": [
+        {
+          "id": "enc-1",
+          "updatedAt": "2026-05-01T08:00:00Z",
+          "status": "IN_PROGRESS"
+        },
+        {
+          "id": "enc-2",
+          "updatedAt": "2026-05-01T10:15:00Z",
+          "status": "COMPLETED"
+        }
+      ]
+    }
+  }
+}

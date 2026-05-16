@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OutboxPublisherRoutingConventionTest {
 
@@ -29,5 +31,13 @@ class OutboxPublisherRoutingConventionTest {
             assertNotEquals("costa.events", OutboxPublisher.routeTopic(eventType),
                     "event type unexpectedly routed to default topic: " + eventType);
         }
+    }
+
+    @Test
+    void financialLifecycleEvents_dualEmitToCoreTransactionTopic() {
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("BILL_FINALIZED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("PAYMENT_STATUS_CHANGED"));
+        assertTrue(OutboxPublisher.shouldEmitCoreTransaction("CLAIM_PACK_CREATED"));
+        assertFalse(OutboxPublisher.shouldEmitCoreTransaction("RULESET_PUBLISHED"));
     }
 }

@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/internal/v1/workflows"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "data": [
+        {
+          "id": "tx-1",
+          "state": "TRUST_CONTEXT_ESTABLISHED",
+          "transactionType": "FACILITY_WALK_IN",
+          "serviceCode": "svc.opd.triage",
+          "clientRef": "vito:client-1",
+          "providerRef": "varapi:provider-1",
+          "facilityId": "tuso:facility-1",
+          "workspaceId": "workspace:triage",
+          "cpid": "cpid-1",
+          "purposeOfUse": "TREATMENT",
+          "correlationId": "corr-core-tx-1",
+          "documentationGap": "Awaiting mandatory triage note from provider workspace."
+        }
+      ]
+    }
+  }
+}

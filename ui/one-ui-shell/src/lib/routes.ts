@@ -59,6 +59,10 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Home ──────────────────────────────────────────────────
   // ── Zone: Clinical Hub ──────────────────────────────────────────
   { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
+  { path: "/core-transaction", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Core Transaction", navLabel: "Core Transaction", navZone: "work" },
+  { path: "/client-journey", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Client Journey", navLabel: "Client Journey", navZone: "life" },
+  { path: "/provider-workspace", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Provider Workspace", navLabel: "Provider Workspace", navZone: "work" },
+  { path: "/platform-journey", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Platform Journey", navLabel: "Platform Journey", navZone: "professional" },
 
   // ── Zone: Clinical Tools ────────────────────────────────────────
   { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },

@@ -25,6 +25,263 @@ servers:
     description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
 
 paths:
+  /internal/v1/core-transactions:
+    get:
+      operationId: bffCoreTransactionsList
+      tags: [Summary]
+      summary: List composed core transaction views (internal canonical surface)
+      parameters:
+        - name: state
+          in: query
+          required: false
+          schema: { type: string }
+        - name: type
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Core transaction list envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionListEnvelope'
+    post:
+      operationId: bffCoreTransactionsCreate
+      tags: [Summary]
+      summary: Start a new core transaction workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Core transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}:
+    get:
+      operationId: bffCoreTransactionGet
+      tags: [Summary]
+      summary: Get composed core transaction view by ID
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Core transaction composed view
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionEnvelope'
+    post:
+      operationId: bffCoreTransactionPostCompatibility
+      tags: [Summary]
+      summary: Compatibility post route (reserved)
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/actions/{actionCode}:
+    post:
+      operationId: bffCoreTransactionAction
+      tags: [Summary]
+      summary: Apply action to core transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: actionCode
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Action accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/timeline:
+    get:
+      operationId: bffCoreTransactionTimeline
+      tags: [Summary]
+      summary: Get core transaction timeline
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Timeline entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionTimelineEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/next-actions:
+    get:
+      operationId: bffCoreTransactionNextActions
+      tags: [Summary]
+      summary: Get next allowed actions for transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Next actions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionNextActionsEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/journeys:
+    get:
+      operationId: bffCoreTransactionJourneys
+      tags: [Summary]
+      summary: Get synchronized person/provider/platform journey views
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Journey view envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionJourneysEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/nompilo:
+    get:
+      operationId: bffCoreTransactionNompilo
+      tags: [Summary]
+      summary: Get Nompilo companion context for transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Nompilo context envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionNompiloEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/feedback:
+    post:
+      operationId: bffCoreTransactionFeedback
+      tags: [Summary]
+      summary: Submit transaction journey feedback
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Feedback accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionActionAcceptedEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/nompilo/handoff:
+    post:
+      operationId: bffCoreTransactionNompiloHandoff
+      tags: [Summary]
+      summary: Request Nompilo human handoff for transaction
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Handoff accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionActionAcceptedEnvelope'
+
+  /internal/v1/core-transactions/{transactionId}/nompilo/command:
+    post:
+      operationId: bffCoreTransactionNompiloCommand
+      tags: [Summary]
+      summary: Execute governed Nompilo command for transaction context
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Command accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreTransactionActionAcceptedEnvelope'
+
   /internal/v1/summary/patient/{patientId}:
     get:
       operationId: bffPatientSummaryAggregated
@@ -2328,4 +2585,233 @@ paths:
                 additionalProperties: true
 
 components:
-  schemas: {}
+  schemas:
+    CoreTransactionListEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoreTransactionBffView'
+            failureModes:
+              type: array
+              items:
+                type: string
+    CoreTransactionEnvelope:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CoreTransactionBffView'
+    CoreTransactionTimelineEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoreTransactionTimelineEntry'
+    CoreTransactionNextActionsEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nextActions:
+              type: array
+              items:
+                $ref: '#/components/schemas/CoreTransactionNextAction'
+    CoreTransactionJourneysEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            journeys:
+              type: object
+              properties:
+                person:
+                  $ref: '#/components/schemas/CoreTransactionJourneyView'
+                provider:
+                  $ref: '#/components/schemas/CoreTransactionJourneyView'
+                platform:
+                  $ref: '#/components/schemas/CoreTransactionJourneyView'
+    CoreTransactionNompiloEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            nompilo:
+              $ref: '#/components/schemas/NompiloCompanionContext'
+    CoreTransactionActionAcceptedEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            transactionId:
+              type: string
+            status:
+              type: string
+            message:
+              type: string
+            payload:
+              type: object
+              additionalProperties: true
+    CoreTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        currentState:
+          type: string
+        lifecycleStage:
+          type: string
+        offlineSyncStatus:
+          type: string
+        failureModes:
+          type: array
+          items:
+            type: string
+        blockerReasons:
+          type: array
+          items:
+            type: string
+    CoreTransactionBffView:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/CoreTransaction'
+        journeys:
+          type: object
+          properties:
+            person:
+              $ref: '#/components/schemas/CoreTransactionJourneyView'
+            provider:
+              $ref: '#/components/schemas/CoreTransactionJourneyView'
+            platform:
+              $ref: '#/components/schemas/CoreTransactionJourneyView'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreTransactionTimelineEntry'
+        nextActions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreTransactionNextAction'
+        failureModes:
+          type: array
+          items:
+            type: string
+        blockerReasons:
+          type: array
+          items:
+            type: string
+        nompilo:
+          $ref: '#/components/schemas/NompiloCompanionContext'
+        nompiloCommand:
+          $ref: '#/components/schemas/NompiloCommandContext'
+    CoreTransactionJourneyView:
+      type: object
+      properties:
+        journeyType:
+          type: string
+        currentStage:
+          type: string
+        blockers:
+          type: array
+          items:
+            type: string
+        blockerReasons:
+          type: array
+          items:
+            type: string
+        nextActions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreTransactionNextAction'
+    NompiloCompanionContext:
+      type: object
+      properties:
+        available:
+          type: boolean
+        mode:
+          type: string
+        confidence:
+          type: string
+        currentGuidance:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    NompiloCommandContext:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        surfaces:
+          type: array
+          items:
+            type: string
+        availableSearchSources:
+          type: array
+          items:
+            type: string
+        suggestedCommands:
+          type: array
+          items:
+            type: string
+        recentCommands:
+          type: array
+          items:
+            type: string
+        voiceEnabled:
+          type: boolean
+        dictationEnabled:
+          type: boolean
+        toolPermissions:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        loginBriefing:
+          type: object
+          additionalProperties: true
+        supportHandoff:
+          type: object
+          additionalProperties: true
+        analyticsCapabilities:
+          type: array
+          items:
+            type: string
+        learningCapabilities:
+          type: array
+          items:
+            type: string
+    CoreTransactionTimelineEntry:
+      type: object
+      properties:
+        at:
+          type: string
+        eventName:
+          type: string
+        stateBefore:
+          type: string
+        stateAfter:
+          type: string
+        actorId:
+          type: string
+    CoreTransactionNextAction:
+      type: object
+      properties:
+        code:
+          type: string
+        label:
+          type: string

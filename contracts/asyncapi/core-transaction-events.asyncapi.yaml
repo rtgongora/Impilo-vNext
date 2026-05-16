@@ -1,0 +1,263 @@
+asyncapi: "3.0.0"
+info:
+  title: Core Transaction Event Contract
+  version: "1.0.0"
+  description: Canonical Core Transaction event contract for Impilo vNext.
+defaultContentType: application/json
+channels:
+  coreTransactionEvents:
+    address: core.transaction.events
+    messages:
+      coreTransactionEvent:
+        $ref: "#/components/messages/CoreTransactionEvent"
+operations:
+  publishCoreTransactionEvent:
+    action: send
+    channel:
+      $ref: "#/channels/coreTransactionEvents"
+components:
+  messages:
+    CoreTransactionEvent:
+      name: CoreTransactionEvent
+      title: Core Transaction Event
+      payload:
+        $ref: "#/components/schemas/CoreTransactionEventEnvelope"
+  schemas:
+    CoreTransactionEventEnvelope:
+      type: object
+      required:
+        - event_name
+        - transaction_id
+        - correlation_id
+        - tenant_id
+        - pod_id
+        - facility_id
+        - actor_id
+        - actor_type
+        - purpose_of_use
+        - service_code
+        - transaction_type
+        - state_before
+        - state_after
+        - timestamp
+        - source_system
+        - offline_sync_status
+        - payload
+      properties:
+        event_name:
+          type: string
+          enum:
+            - core.transaction.initiated
+            - core.identity.resolution.requested
+            - core.identity.resolved
+            - core.identity.provisional.created
+            - core.trust.context.established
+            - core.consent.checked
+            - core.consent.granted
+            - core.consent.denied
+            - core.service.selected
+            - core.costing.required
+            - core.cost.estimated
+            - core.coverage.check.requested
+            - core.coverage.confirmed
+            - core.exemption.confirmed
+            - core.pre_service_payment.required
+            - core.pre_service_payment.initiated
+            - core.pre_service_payment.completed
+            - core.pre_service_payment.failed
+            - core.access.granted
+            - core.access.blocked.payment_required
+            - core.appointment.created
+            - core.queue.joined
+            - core.triage.started
+            - core.triage.completed
+            - core.provider.assigned
+            - core.encounter.started
+            - core.encounter.updated
+            - core.order.created
+            - core.order.completed
+            - core.result.available
+            - core.prescription.created
+            - core.dispense.completed
+            - core.referral.created
+            - core.referral.accepted
+            - core.referral.completed
+            - core.costing.calculated
+            - core.invoice.generated
+            - core.payment.initiated
+            - core.payment.completed
+            - core.claim.submitted
+            - core.claim.adjudicated
+            - core.client.instructions.generated
+            - core.shr.update.requested
+            - core.shr.updated
+            - core.followup.created
+            - core.notification.sent
+            - core.feedback.requested
+            - core.feedback.submitted
+            - core.nompilo.guidance.requested
+            - core.nompilo.guidance.delivered
+            - core.nompilo.handoff.requested
+            - core.transaction.completed
+            - core.transaction.closed
+            - core.transaction.audit.flagged
+        transaction_id:
+          type: string
+        correlation_id:
+          type: string
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        facility_id:
+          type: string
+        workspace_id:
+          type: string
+        client_ref:
+          type: string
+        client_alias:
+          type: string
+        provider_ref:
+          type: string
+        actor_id:
+          type: string
+        actor_type:
+          type: string
+        purpose_of_use:
+          type: string
+        service_code:
+          type: string
+        transaction_type:
+          type: string
+        state_before:
+          type: string
+        state_after:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        source_system:
+          type: string
+        device_fingerprint:
+          type: string
+        offline_sync_status:
+          type: string
+        journey_type:
+          type: string
+          enum: [PERSON, PROVIDER, PLATFORM]
+        journey_stage:
+          type: string
+        nompilo_context_id:
+          type: string
+        payload:
+          $ref: "#/components/schemas/CoreTransactionEventPayload"
+        metadata:
+          type: object
+          additionalProperties: true
+    CoreTransactionEventPayload:
+      type: object
+      properties:
+        context:
+          $ref: "#/components/schemas/CoreTransactionContext"
+        audit:
+          $ref: "#/components/schemas/CoreTransactionAuditContext"
+        trust:
+          $ref: "#/components/schemas/CoreTransactionTrustContext"
+        financial:
+          $ref: "#/components/schemas/CoreTransactionFinancialContext"
+        clinical:
+          $ref: "#/components/schemas/CoreTransactionClinicalContext"
+        follow_up:
+          $ref: "#/components/schemas/CoreTransactionFollowUpContext"
+        journey:
+          $ref: "#/components/schemas/CoreTransactionJourneyContext"
+        nompilo:
+          $ref: "#/components/schemas/NompiloEventContext"
+      additionalProperties: true
+    CoreTransactionContext:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+        pod_id:
+          type: string
+        facility_id:
+          type: string
+        workspace_id:
+          type: string
+        service_code:
+          type: string
+    CoreTransactionAuditContext:
+      type: object
+      properties:
+        correlation_id:
+          type: string
+        source_system:
+          type: string
+        request_id:
+          type: string
+        audit_required:
+          type: boolean
+    CoreTransactionTrustContext:
+      type: object
+      properties:
+        consent_required:
+          type: boolean
+        consent_granted:
+          type: boolean
+        purpose_of_use:
+          type: string
+        emergency_override_used:
+          type: boolean
+    CoreTransactionFinancialContext:
+      type: object
+      properties:
+        costing_status:
+          type: string
+        billing_status:
+          type: string
+        payment_status:
+          type: string
+        claim_status:
+          type: string
+    CoreTransactionClinicalContext:
+      type: object
+      properties:
+        encounter_id:
+          type: string
+        order_refs:
+          type: array
+          items:
+            type: string
+        result_refs:
+          type: array
+          items:
+            type: string
+    CoreTransactionFollowUpContext:
+      type: object
+      properties:
+        follow_up_required:
+          type: boolean
+        next_follow_up_date:
+          type: string
+          format: date-time
+    CoreTransactionJourneyContext:
+      type: object
+      properties:
+        journey_type:
+          type: string
+        journey_stage:
+          type: string
+        actor_view:
+          type: string
+    NompiloEventContext:
+      type: object
+      properties:
+        nompilo_context_id:
+          type: string
+        surface_type:
+          type: string
+        mode:
+          type: string
+        handoff_requested:
+          type: boolean

@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/internal/v1/workflows/[^/]+/signal"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "data": {
+        "status": "ACCEPTED",
+        "actionApplied": true
+      }
+    }
+  }
+}

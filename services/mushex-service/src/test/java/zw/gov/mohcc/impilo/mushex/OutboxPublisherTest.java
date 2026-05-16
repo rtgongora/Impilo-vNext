@@ -40,7 +40,7 @@ class OutboxPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate);
+        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, true, "core.transaction.events");
     }
 
     // ---------------------------------------------------------------
@@ -123,6 +123,17 @@ class OutboxPublisherTest {
     void routeTopic_unknownType_returnsDefaultTopic() {
         assertEquals("mushex.events",
             OutboxPublisher.routeTopic("SOME_UNKNOWN_EVENT"));
+    }
+
+    @Test
+    void resolveCoreTransactionTopic_statusChanged_routesToCoreTransactionEvents() {
+        assertEquals("core.transaction.events",
+            OutboxPublisher.resolveCoreTransactionTopic("STATUS_CHANGED"));
+    }
+
+    @Test
+    void resolveCoreTransactionTopic_nonCanonical_returnsNull() {
+        assertNull(OutboxPublisher.resolveCoreTransactionTopic("FRAUD_FLAGGED"));
     }
 
     @Test

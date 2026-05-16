@@ -82,6 +82,8 @@ costa:
   outbox:
     poll-interval-ms: 2000
     batch-size: 100
+    dual-emit-core-transaction-enabled: ${COSTA_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${COSTA_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
   currency: USD
   default-cost-method: TARIFF
   step-up:

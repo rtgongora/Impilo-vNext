@@ -53,6 +53,23 @@ tests/          Integration tests
 - Frontend work is incomplete until backed by real APIs and real service logic.
 - All production routes must have authz, audit, error handling, observability, and tests.
 
+### Core Transaction Doctrine Compliance
+
+- Every feature must map to a `CoreTransactionType` and lifecycle stage.
+- Every feature must map to Person, Provider, and/or Platform journey stages where applicable.
+- Orphan features are not allowed; each capability must show journey placement.
+- Do not create duplicate truth for patient/provider/facility/service/terminology/payment/consent/clinical data.
+- Backend-only work is incomplete until wired through user journey surfaces where applicable.
+- Frontend-only work is incomplete unless connected to domain truth or explicitly marked as prototype.
+- Experience composes and orchestrates; it does not own sovereign domain truth.
+- Experience BFF composes sovereign truths; it must not become source-of-truth for clinical/registry/trust/finance.
+- Meaningful actions must carry state transition, event emission, permission meaning, and audit trace.
+- Implementations must consider failure and offline/federated behavior where relevant.
+- Relevant user-facing flows must include Nompilo guidance, accessibility, and feedback capture consideration.
+- Nompilo must not override provider judgement or become an unaudited decision channel.
+- Preserve existing services and avoid deleting or breaking unrelated work.
+- Use `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` before calling a feature done.
+
 Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md)
 
 **Non-obvious architectural constraints**:
