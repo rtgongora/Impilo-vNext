@@ -3,15 +3,15 @@
 ## What Was Found
 
 - `simba-service` existed in the Maven reactor but had been classified with a generic clinical `care-delivery` domain instead of wellness/lifestyle orchestration doctrine.
-- `wellness-service` had been classified under Experience (`workflow-orchestration`) even though runtime ownership indicates a clinical wellness/preventive-care service behind BFF proxying.
+- `wellness-service` had been classified under Experience (`workflow-orchestration`) even though runtime ownership indicated wellness-domain behavior behind BFF proxying.
 - `surveillance-service` and `campaigns-service` were in the Data plane but carried a generic `intelligence` domain, obscuring explicit public-health ownership.
 - `mushe-wallet-service` exists on disk and in registry artifacts but is not included in `services/pom.xml` reactor modules.
 - `shared-core` remains a reactor module represented as a registry library, which is valid operationally but still a classification edge case.
 
 ## Corrections Applied
 
-- `simba-service` set to `primary_plane: clinical`, `domain: wellness-lifestyle-orchestration`, with explicit system-of-record and forbidden-responsibility boundaries.
-- `wellness-service` set to `primary_plane: clinical`, `domain: wellness-preventive-care`, with corrected SoR/forbidden lists and service exposure model.
+- `simba-service` set to `primary_plane: enterprise`, `domain: wellness-personal-health-data`, as canonical wellness/personal-health-data system of record with explicit forbidden-responsibility boundaries.
+- `wellness-service` set to `primary_plane: enterprise`, `domain: wellness-compatibility-alias`, as compatibility alias only with no canonical SoR ownership.
 - `surveillance-service` set to `domain: public-health-surveillance` with explicit cross-plane touchpoints (`clinical`, `experience`, `integration`, `registry`, `trust`).
 - `campaigns-service` set to `domain: public-health-campaigns` with explicit cross-plane touchpoints (`clinical`, `experience`, `integration`, `registry`, `trust`).
 

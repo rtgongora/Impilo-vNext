@@ -1,0 +1,148 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo Imaging Pipeline Events
+  version: '0.1.0'
+  description: >
+    Event contracts for the PACS/DICOM remediation rail spanning OROS, PACS adapter,
+    BUTANO writeback, and imaging viewer governance.
+defaultContentType: application/json
+
+channels:
+  imaging.order.created:
+    description: Imaging order accepted by OROS.
+    subscribe:
+      operationId: consumeImagingOrderCreated
+      message:
+        $ref: '#/components/messages/ImagingOrderCreated'
+  imaging.study.received:
+    description: PACS adapter registered study metadata from Orthanc/PACS.
+    publish:
+      operationId: publishImagingStudyReceived
+      message:
+        $ref: '#/components/messages/ImagingStudyReceived'
+  imaging.study.correlated:
+    description: Study linked to OROS order context.
+    publish:
+      operationId: publishImagingStudyCorrelated
+      message:
+        $ref: '#/components/messages/ImagingStudyCorrelated'
+  imaging.study.unmatched:
+    description: Study remains unmatched to order context.
+    publish:
+      operationId: publishImagingStudyUnmatched
+      message:
+        $ref: '#/components/messages/ImagingStudyUnmatched'
+  imaging.report.available:
+    description: Imaging report metadata linked to study.
+    publish:
+      operationId: publishImagingReportAvailable
+      message:
+        $ref: '#/components/messages/ImagingReportAvailable'
+  imaging.writeback.succeeded:
+    description: Imaging metadata writeback to SHR accepted.
+    publish:
+      operationId: publishImagingWritebackSucceeded
+      message:
+        $ref: '#/components/messages/ImagingWritebackStatus'
+  imaging.writeback.failed:
+    description: Imaging metadata writeback failed and needs remediation.
+    publish:
+      operationId: publishImagingWritebackFailed
+      message:
+        $ref: '#/components/messages/ImagingWritebackStatus'
+  imaging.viewer.launched:
+    description: Viewer launch audited through governed Experience path.
+    publish:
+      operationId: publishImagingViewerLaunched
+      message:
+        $ref: '#/components/messages/ImagingViewerLaunched'
+  imaging.viewer.access_denied:
+    description: Viewer launch denied by trust/consent/workspace policy.
+    publish:
+      operationId: publishImagingViewerAccessDenied
+      message:
+        $ref: '#/components/messages/ImagingViewerAccessDenied'
+
+components:
+  messages:
+    ImagingOrderCreated:
+      payload:
+        $ref: '#/components/schemas/BaseImagingEnvelope'
+    ImagingStudyReceived:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              studyId: { type: string }
+              studyInstanceUid: { type: string }
+              accessionNumber: { type: string }
+    ImagingStudyCorrelated:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              studyId: { type: string }
+              orderId: { type: string }
+    ImagingStudyUnmatched:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              studyId: { type: string }
+              reason: { type: string }
+    ImagingReportAvailable:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              reportRef: { type: string }
+              reportStatus: { type: string }
+    ImagingWritebackStatus:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              target: { type: string, enum: [BUTANO, FHIR_GATEWAY] }
+              status: { type: string, enum: [SUCCEEDED, FAILED] }
+              reason: { type: string }
+    ImagingViewerLaunched:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              viewerSessionId: { type: string }
+              viewerType: { type: string }
+              actorId: { type: string }
+              facilityId: { type: string }
+              workspaceId: { type: string }
+              teleconsultSessionId: { type: string, format: uuid }
+    ImagingViewerAccessDenied:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/BaseImagingEnvelope'
+          - type: object
+            properties:
+              denialCode: { type: string }
+              actorId: { type: string }
+              facilityId: { type: string }
+              workspaceId: { type: string }
+
+  schemas:
+    BaseImagingEnvelope:
+      type: object
+      additionalProperties: true
+      properties:
+        eventId: { type: string }
+        correlationId: { type: string }
+        tenantId: { type: string }
+        patientCpid: { type: string }
+        encounterRef: { type: string }
+        teleconsultSessionId: { type: string, format: uuid }
+        orderId: { type: string }
+        occurredAt: { type: string, format: date-time }

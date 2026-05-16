@@ -9,3 +9,6 @@ A service or component is considered complete for this remediation program only 
 - [ ] Boundary convergence decisions are encoded for canonical pairs (MSIKA/Product Registry and Simba/Wellness).
 - [ ] Validation script runs in advisory mode with zero structural errors.
 - [ ] Any unresolved ambiguity is marked `Needs Owner Decision` with an explicit question.
+- [ ] Imaging-sensitive flows (viewer launch/image/report access) are governed through trust headers, audit events, and documented PACS integration paths (`docs/architecture/PACS_DICOM_PIPELINE.md`).
+- [ ] Telemedicine-sensitive flows (consult intake/routing/session/recommendation/writeback) are governed through trust headers, consent/audit controls, and documented pipeline evidence (`docs/architecture/TELEMEDICINE_PIPELINE.md`).
+- [ ] Document-sensitive flows (upload/preview/download/linkage/lifecycle) are governed through trust headers, access-control/audit controls, provider-neutral storage abstraction, and documented pipeline evidence (`docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`).

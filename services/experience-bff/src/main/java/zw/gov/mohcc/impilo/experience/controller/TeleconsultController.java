@@ -14,12 +14,17 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
+import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -33,7 +38,8 @@ import java.util.*;
 public class TeleconsultController {
 
     private static final Logger log = LoggerFactory.getLogger(TeleconsultController.class);
-    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("ON_CALL", "TEAM", "SPECIALTY_POOL", "POOL", "NATIONAL_POOL");
+    private static final Set<String> UNSUPPORTED_ROUTING_TYPES = Set.of("ON_CALL", "POOL", "NATIONAL_POOL");
+    private static final Set<String> TEAM_ROUTING_TYPES = Set.of("TEAM", "SPECIALTY_POOL");
     private static final Set<String> PRACTITIONER_ROUTING_TYPES = Set.of("PRACTITIONER", "PROVIDER");
 
     private final PctServiceClient pctClient;
@@ -41,6 +47,10 @@ public class TeleconsultController {
     private final DocumentServiceClient documentClient;
     private final VarapiServiceClient varapiClient;
     private final TusoServiceClient tusoClient;
+    private final NotificationServiceClient notificationClient;
+    private final FhirGatewayServiceClient fhirGatewayClient;
+    private final CostaServiceClient costaClient;
+    private final TelemedicineGovernanceService telemedicineGovernanceService;
     private final ObjectMapper objectMapper;
 
     public TeleconsultController(PctServiceClient pctClient,
@@ -48,12 +58,20 @@ public class TeleconsultController {
                                  DocumentServiceClient documentClient,
                                  VarapiServiceClient varapiClient,
                                  TusoServiceClient tusoClient,
+                                 NotificationServiceClient notificationClient,
+                                 FhirGatewayServiceClient fhirGatewayClient,
+                                 CostaServiceClient costaClient,
+                                 TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
         this.mvumoClient = mvumoClient;
         this.documentClient = documentClient;
         this.varapiClient = varapiClient;
         this.tusoClient = tusoClient;
+        this.notificationClient = notificationClient;
+        this.fhirGatewayClient = fhirGatewayClient;
+        this.costaClient = costaClient;
+        this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
 
@@ -61,9 +79,13 @@ public class TeleconsultController {
     public ResponseEntity<Map<String, Object>> createSession(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("encounter_id", val(body, "encounterId", "encounter_id"));
             payload.put("patient_id", val(body, "patientId", "patient_id"));
@@ -72,12 +94,21 @@ public class TeleconsultController {
             payload.put("specialty", val(body, "specialty"));
             payload.put("clinical_question", val(body, "clinicalQuestion", "reason"));
             payload.put("modality", "virtual");
-            payload.put("virtual_mode", "video");
+            payload.put("virtual_mode", defaultString(val(body, "virtualMode", "virtual_mode"), "video"));
+            payload.put("session_provider", defaultString(
+                    val(body, "sessionProvider", "session_provider", "providerType", "provider_type"),
+                    "managed-primary"));
             payload.put("consent_required", true);
             var created = pctClient.createReferral(payload);
             if (created == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
             }
+            emitTelemedicineNotification("TELECONSULT_REQUESTED", created, actorId, "A teleconsult request is waiting for specialist review.");
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_SESSION_CREATED", "POST:teleconsult/sessions", "SUCCESS",
+                    actorId, "PROVIDER", val(body, "patientId", "patient_id"), "TeleconsultSession",
+                    extractId(created), Map.of("mode", "virtual"));
             return ok(created, requestId, correlationId, HttpStatus.CREATED);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -89,8 +120,13 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
             List<String> attachmentRefs = extractAttachmentReferences(body.get("attachments"));
             ValidationError attachmentValidation = validateAttachmentReferences(attachmentRefs);
             if (attachmentValidation != null) {
@@ -121,6 +157,11 @@ public class TeleconsultController {
             if (updated == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No referral update payload returned", requestId, correlationId);
             }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_UPDATED", "PUT:teleconsult/referral", "SUCCESS",
+                    actorId, "PROVIDER", val(body, "patientId", "patient_id"), "TeleconsultReferral",
+                    id, Map.of("routingType", normalizedRoutingType(val(body, "routingType", "routing_type"))));
             return ok(normalizeReferralPayload(updated), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -176,8 +217,13 @@ public class TeleconsultController {
     public ResponseEntity<Map<String, Object>> submitReferral(
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
             JsonNode referral = pctClient.getReferral(id);
             ValidationError submitValidation = validateStoredRoutingAndAttachments(referral);
             if (submitValidation != null) {
@@ -187,6 +233,12 @@ public class TeleconsultController {
             if (submitted == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No referral submit payload returned", requestId, correlationId);
             }
+            emitTelemedicineNotification("TELECONSULT_SUBMITTED", submitted, actorId, "Teleconsult referral submitted for specialist action.");
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_SUBMITTED", "POST:teleconsult/submit", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(submitted), "TeleconsultReferral",
+                    id, Map.of());
             return ok(normalizeReferralPayload(submitted), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -199,9 +251,22 @@ public class TeleconsultController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String patientId,
-            @RequestParam(required = false) String referrerId) {
+            @RequestParam(required = false) String referrerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
         try {
-            var list = pctClient.listPatientReferrals(patientId, 0, 50);
+            telemedicineGovernanceService.assertGovernedRead();
+            JsonNode list;
+            int safeSize = Math.min(Math.max(size, 1), 100);
+            if (patientId != null && !patientId.isBlank()) {
+                list = pctClient.listPatientReferrals(patientId, page, safeSize);
+                list = filterReferralsByStatus(list, status);
+            } else if (referrerId != null && !referrerId.isBlank()) {
+                list = pctClient.listIncomingReferrals(referrerId, status, page, safeSize);
+            } else {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_FILTER",
+                        "patientId or referrerId is required", requestId, correlationId);
+            }
             if (list == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult list payload returned", requestId, correlationId);
             }
@@ -217,6 +282,7 @@ public class TeleconsultController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
+            telemedicineGovernanceService.assertGovernedRead();
             var referral = pctClient.getReferral(id);
             if (referral == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
@@ -232,10 +298,20 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
             var accepted = pctClient.acceptReferral(id, Map.of(
                     "accepted_by", actorId != null ? actorId : "unknown"));
+            emitTelemedicineNotification("TELECONSULT_ACCEPTED", accepted, actorId, "Teleconsult request accepted.");
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_ACCEPTED", "POST:teleconsult/accept", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(accepted), "TeleconsultReferral",
+                    id, Map.of());
             return ok(accepted, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -247,11 +323,35 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "error", Map.of("code", "REALTIME_CHANNEL_UNAVAILABLE",
-                        "message", "Live decline/chat transport is not implemented in canonical backend"),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String reason = val(body, "reason", "declineReason", "message");
+            Map<String, Object> decline = new LinkedHashMap<>();
+            decline.put("response_type", "DECLINED");
+            decline.put("status", "DECLINED");
+            decline.put("message", reason != null ? reason : "Declined by receiving specialist");
+            if (actorId != null && !actorId.isBlank()) {
+                decline.put("responder_id", actorId);
+            }
+            JsonNode response = pctClient.respondReferral(id, decline);
+            if (response == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No decline payload returned", requestId, correlationId);
+            }
+            emitTelemedicineNotification("TELECONSULT_DECLINED", response, actorId, "Teleconsult request declined.");
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_DECLINED", "POST:teleconsult/decline", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(response), "TeleconsultReferral",
+                    id, Map.of("reason", reason));
+            return ok(response, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/sessions/{id}/messages")
@@ -259,12 +359,37 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
             @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "error", Map.of("code", "REALTIME_CHANNEL_UNAVAILABLE",
-                        "message", "Live chat transport is not implemented in canonical backend"),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String message = val(body, "message", "text", "content");
+            if (message == null || message.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "INVALID_MESSAGE", "message is required", requestId, correlationId);
+            }
+            Map<String, Object> note = new LinkedHashMap<>();
+            note.put("response_type", "MESSAGE");
+            note.put("channel", "ASYNCHRONOUS_NOTE");
+            note.put("message", message);
+            if (actorId != null && !actorId.isBlank()) {
+                note.put("responder_id", actorId);
+            }
+            JsonNode response = pctClient.respondReferral(id, note);
+            if (response == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No message payload returned", requestId, correlationId);
+            }
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_MESSAGE_SENT", "POST:teleconsult/messages", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(response), "TeleconsultReferral",
+                    id, Map.of("messageLength", message.length()));
+            return ok(response, requestId, correlationId, HttpStatus.ACCEPTED);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @GetMapping("/sessions/{id}/messages")
@@ -272,10 +397,16 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "error", Map.of("code", "REALTIME_CHANNEL_UNAVAILABLE",
-                        "message", "Live chat history is not implemented in canonical backend"),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            JsonNode referral = pctClient.getReferral(id);
+            if (referral == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No session payload returned for messages", requestId, correlationId);
+            }
+            return ok(extractMessageThread(referral), requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/sessions/{id}/response")
@@ -285,6 +416,7 @@ public class TeleconsultController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
             var response = pctClient.respondReferral(id, body);
             if (response == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No consultation response payload returned", requestId, correlationId);
@@ -300,12 +432,35 @@ public class TeleconsultController {
             @PathVariable String id,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestBody Map<String, Object> body) {
         try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            if (Boolean.parseBoolean(val(body, "breakGlassOverride", "break_glass_override"))) {
+                String reason = val(body, "breakGlassReason", "break_glass_reason", "reason");
+                String approver = val(body, "breakGlassApprovedBy", "break_glass_approved_by");
+                if (reason == null || reason.isBlank() || approver == null || approver.isBlank()) {
+                    return error(HttpStatus.BAD_REQUEST, "BREAK_GLASS_REQUIREMENTS_MISSING",
+                            "breakGlassReason and breakGlassApprovedBy are required for override completion",
+                            requestId, correlationId);
+                }
+                telemedicineGovernanceService.assertBreakGlassOverrideAllowed();
+            }
             var completed = pctClient.completeReferral(id, body == null ? Map.of() : body);
             if (completed == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No completion payload returned", requestId, correlationId);
             }
+            emitTelemedicineNotification("TELECONSULT_COMPLETED", completed, actorId, "Teleconsult session completed.");
+            writeTeleconsultSummaryToFhir(id, completed, actorId);
+            triggerTeleconsultBilling(id, completed, body);
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, purposeOfUse, facilityId,
+                    "TELEMEDICINE_REFERRAL_COMPLETED", "POST:teleconsult/complete", "SUCCESS",
+                    actorId, "PROVIDER", extractPatient(completed), "TeleconsultReferral",
+                    id, Map.of("breakGlass", Boolean.parseBoolean(val(body, "breakGlassOverride", "break_glass_override"))));
             return ok(completed, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -320,6 +475,7 @@ public class TeleconsultController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
+            telemedicineGovernanceService.assertGovernedRead();
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("query", query);
             request.put("page", page);
@@ -339,6 +495,7 @@ public class TeleconsultController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         try {
+            telemedicineGovernanceService.assertGovernedRead();
             Map<String, Object> request = new LinkedHashMap<>();
             request.put("query", query);
             request.put("page", page);
@@ -356,6 +513,7 @@ public class TeleconsultController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "facility_id") String facilityId) {
         try {
+            telemedicineGovernanceService.assertGovernedRead();
             long parsedFacilityId = Long.parseLong(facilityId);
             JsonNode workspaces = tusoClient.listWorkspaces(parsedFacilityId);
             return ok(workspaces, requestId, correlationId, HttpStatus.OK);
@@ -481,6 +639,13 @@ public class TeleconsultController {
                 return new ValidationError(HttpStatus.BAD_GATEWAY, "VARAPI_UNAVAILABLE",
                         "VARAPI provider lookup failed for routing validation");
             }
+        }
+        if (TEAM_ROUTING_TYPES.contains(routingType)) {
+            if (routingTarget.trim().length() < 3) {
+                return new ValidationError(HttpStatus.BAD_REQUEST, "INVALID_ROUTING_TARGET",
+                        routingType + " routing target must identify a specialty/team key");
+            }
+            return null;
         }
         if ("WORKSPACE".equals(routingType)) {
             try {
@@ -630,6 +795,54 @@ public class TeleconsultController {
         return copy;
     }
 
+    private JsonNode filterReferralsByStatus(JsonNode payload, String status) {
+        if (status == null || status.isBlank() || payload == null || payload.isNull()) {
+            return payload;
+        }
+        String expected = status.trim().toUpperCase(Locale.ROOT);
+        if (payload.isArray()) {
+            ArrayNode filtered = objectMapper.createArrayNode();
+            payload.forEach(node -> {
+                String nodeStatus = node.path("status").asText("");
+                if (expected.equals(nodeStatus.toUpperCase(Locale.ROOT))) {
+                    filtered.add(node);
+                }
+            });
+            return filtered;
+        }
+        if (payload.isObject()) {
+            ObjectNode copy = payload.deepCopy();
+            JsonNode items = copy.path("items");
+            if (items.isArray()) {
+                ArrayNode filtered = objectMapper.createArrayNode();
+                items.forEach(node -> {
+                    String nodeStatus = node.path("status").asText("");
+                    if (expected.equals(nodeStatus.toUpperCase(Locale.ROOT))) {
+                        filtered.add(node);
+                    }
+                });
+                copy.set("items", filtered);
+                return copy;
+            }
+        }
+        return payload;
+    }
+
+    private JsonNode extractMessageThread(JsonNode referral) {
+        if (referral == null || referral.isNull()) {
+            return objectMapper.createArrayNode();
+        }
+        JsonNode fromMessages = referral.path("messages");
+        if (fromMessages.isArray()) {
+            return fromMessages;
+        }
+        JsonNode fromResponses = referral.path("responses");
+        if (fromResponses.isArray()) {
+            return fromResponses;
+        }
+        return objectMapper.createArrayNode();
+    }
+
     private JsonNode parseRoutingTarget(JsonNode routingNode) {
         if (routingNode == null || routingNode.isNull() || routingNode.isMissingNode()) return null;
         if (routingNode.isObject()) return routingNode;
@@ -644,6 +857,140 @@ public class TeleconsultController {
             }
         }
         return null;
+    }
+
+    @GetMapping("/ops/sla")
+    public ResponseEntity<Map<String, Object>> telemedicineOpsSla(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityHeader,
+            @RequestParam(name = "facility_id", required = false) String facilityId) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            String resolvedFacility = facilityId != null && !facilityId.isBlank() ? facilityId : facilityHeader;
+            if (resolvedFacility == null || resolvedFacility.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_FACILITY_ID",
+                        "facility_id query param or X-Facility-ID header is required", requestId, correlationId);
+            }
+            JsonNode payload = pctClient.getTelemedicineOps(resolvedFacility);
+            if (payload == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine ops payload returned", requestId, correlationId);
+            }
+            return ok(payload, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/ops/specialty-workbench")
+    public ResponseEntity<Map<String, Object>> specialtyWorkbench(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityHeader,
+            @RequestParam(name = "facility_id", required = false) String facilityId,
+            @RequestParam(required = false) String specialty,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            String resolvedFacility = facilityId != null && !facilityId.isBlank() ? facilityId : facilityHeader;
+            if (resolvedFacility == null || resolvedFacility.isBlank()) {
+                return error(HttpStatus.BAD_REQUEST, "MISSING_FACILITY_ID",
+                        "facility_id query param or X-Facility-ID header is required", requestId, correlationId);
+            }
+            JsonNode incoming = pctClient.listIncomingReferrals(resolvedFacility, "SUBMITTED", page, Math.min(Math.max(size, 1), 100));
+            ArrayNode rows = objectMapper.createArrayNode();
+            if (incoming != null && incoming.isArray()) {
+                for (JsonNode row : incoming) {
+                    String rowSpecialty = row.path("specialty").asText("");
+                    if (specialty == null || specialty.isBlank() || specialty.equalsIgnoreCase(rowSpecialty)) {
+                        rows.add(row);
+                    }
+                }
+            }
+            return ok(rows, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private void emitTelemedicineNotification(String templateKey, JsonNode source, String actorId, String message) {
+        try {
+            String recipient = extractPatient(source);
+            if (recipient == null || recipient.isBlank()) {
+                return;
+            }
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("templateKey", templateKey);
+            body.put("channel", "IN_APP");
+            body.put("to", recipient);
+            body.put("variables", Map.of(
+                    "actorId", defaultString(actorId, "unknown"),
+                    "message", message
+            ));
+            notificationClient.sendNotification(body);
+        } catch (Exception ex) {
+            log.warn("Telemedicine notification emission failed: {}", ex.getMessage());
+        }
+    }
+
+    private void writeTeleconsultSummaryToFhir(String referralId, JsonNode completed, String actorId) {
+        try {
+            String patientRef = extractPatient(completed);
+            if (patientRef == null || patientRef.isBlank()) {
+                return;
+            }
+            ObjectNode diagnosticReport = objectMapper.createObjectNode();
+            diagnosticReport.put("resourceType", "DiagnosticReport");
+            diagnosticReport.put("status", "final");
+            diagnosticReport.put("code", "teleconsult-summary");
+            diagnosticReport.put("subject", "Patient/" + patientRef);
+            diagnosticReport.put("issued", OffsetDateTime.now().toString());
+            diagnosticReport.put("conclusion", "Teleconsult referral " + referralId + " completed.");
+            diagnosticReport.put("performer", defaultString(actorId, "unknown"));
+            fhirGatewayClient.createResource("DiagnosticReport", diagnosticReport);
+        } catch (Exception ex) {
+            log.warn("Teleconsult FHIR writeback failed: {}", ex.getMessage());
+        }
+    }
+
+    private void triggerTeleconsultBilling(String referralId, JsonNode completed, Map<String, Object> body) {
+        try {
+            String encounterId = val(body, "encounterId", "encounter_id");
+            if (encounterId == null || encounterId.isBlank()) {
+                encounterId = completed != null && completed.path("encounterId").isTextual()
+                        ? completed.path("encounterId").asText()
+                        : referralId;
+            }
+            JsonNode billDraft = costaClient.createBillDraft(encounterId, "ENCOUNTER");
+            if (billDraft == null || !billDraft.has("id")) {
+                return;
+            }
+            String billId = billDraft.path("id").asText();
+            costaClient.submitForApproval(billId);
+            costaClient.approveBill(billId, "Auto-approved teleconsult completion");
+            costaClient.finalizeBill(billId);
+        } catch (Exception ex) {
+            log.warn("Teleconsult billing trigger failed: {}", ex.getMessage());
+        }
+    }
+
+    private String extractId(JsonNode node) {
+        if (node == null) return "";
+        if (node.hasNonNull("id")) return node.get("id").asText();
+        return "";
+    }
+
+    private String extractPatient(JsonNode node) {
+        if (node == null) return null;
+        if (node.hasNonNull("patientCpid")) return node.get("patientCpid").asText();
+        if (node.hasNonNull("patient_id")) return node.get("patient_id").asText();
+        if (node.hasNonNull("patientId")) return node.get("patientId").asText();
+        return null;
+    }
+
+    private String defaultString(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 
     private record ValidationError(HttpStatus status, String code, String message) {

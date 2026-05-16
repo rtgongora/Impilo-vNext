@@ -23,6 +23,7 @@ Authoritative topic matrix and reconciliation log: [`docs/architecture/kafka-eve
 | [`document-store.asyncapi.yaml`](./document-store.asyncapi.yaml) | `docstore.documents`, `docstore.events` |
 | [`data-ingestion-bronze.asyncapi.yaml`](./data-ingestion-bronze.asyncapi.yaml) | Pattern consumer (`impilo\..*` default) — illustrative channel + envelope |
 | [`data-pipeline-reporting-aggregate.asyncapi.yaml`](./data-pipeline-reporting-aggregate.asyncapi.yaml) | `analytics.reporting.aggregate` producer/consumer contract between data-pipeline-service and reporting-service |
+| [`imaging-pipeline.asyncapi.yaml`](./imaging-pipeline.asyncapi.yaml) | Imaging pipeline remediation events: `imaging.order.created`, `imaging.study.*`, `imaging.writeback.*`, `imaging.viewer.*` |
 
 ## Phase E status
 

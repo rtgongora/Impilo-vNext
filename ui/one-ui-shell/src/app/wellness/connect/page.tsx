@@ -4,12 +4,20 @@
  * Health Connect–equivalent ingest demo — posts typed changesets to the Experience BFF.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link2, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { getHealthConnectManifest, postHealthConnectChangeSet } from "@/lib/health-connect-ingest";
+import {
+  connectPersonalHealthSource,
+  getHealthConnectManifest,
+  getPersonalWellnessSummary,
+  listPersonalHealthSources,
+  postHealthConnectChangeSet,
+  updatePersonalHealthSourcePermissions,
+  type WellnessConnectedSource,
+} from "@/lib/health-connect-ingest";
 
 const SAMPLE_JSON = `{
   "patientId": "REPLACE_ME",
@@ -40,6 +48,9 @@ export default function WellnessHealthConnectPage() {
   const [jsonText, setJsonText] = useState(SAMPLE_JSON);
   const [loadingManifest, setLoadingManifest] = useState(false);
   const [posting, setPosting] = useState(false);
+  const [loadingSources, setLoadingSources] = useState(false);
+  const [sources, setSources] = useState<WellnessConnectedSource[]>([]);
+  const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [result, setResult] = useState<string>("");
 
   const loadManifest = async () => {
@@ -75,6 +86,62 @@ export default function WellnessHealthConnectPage() {
     }
   };
 
+  const loadSources = async () => {
+    if (!patientId) return;
+    setLoadingSources(true);
+    try {
+      const rows = await listPersonalHealthSources(patientId);
+      setSources(rows);
+      const s = await getPersonalWellnessSummary(patientId);
+      setSummary(s);
+    } catch (e) {
+      setResult(e instanceof Error ? e.message : "Failed to load source management data");
+    } finally {
+      setLoadingSources(false);
+    }
+  };
+
+  const connectAndroidHealthConnect = async () => {
+    if (!patientId) return;
+    try {
+      await connectPersonalHealthSource({
+        person_cpid: patientId,
+        source_type: "android_health_connect",
+        source_name: "Android Health Connect",
+        source_app_id: "com.google.android.apps.healthdata",
+        provider_access_allowed: false,
+        clinical_writeback_allowed: false,
+        sharing_scope: "PERSONAL_ONLY",
+        category_permissions: {
+          activity: true,
+          vitals: true,
+          sleep: true,
+          nutrition: true,
+        },
+      });
+      await loadSources();
+      setResult("Connected Android Health Connect source.");
+    } catch (e) {
+      setResult(e instanceof Error ? e.message : "Failed to connect source");
+    }
+  };
+
+  const toggleProviderSharing = async (source: WellnessConnectedSource) => {
+    try {
+      await updatePersonalHealthSourcePermissions(source.id, {
+        provider_access_allowed: !source.provider_access_allowed,
+        sharing_scope: !source.provider_access_allowed ? "SHARED_WITH_PROVIDER" : "PERSONAL_ONLY",
+      });
+      await loadSources();
+    } catch (e) {
+      setResult(e instanceof Error ? e.message : "Failed to update source permissions");
+    }
+  };
+
+  useEffect(() => {
+    void loadSources();
+  }, [patientId]);
+
   return (
     <AppLayout>
       <PageShell
@@ -100,6 +167,23 @@ export default function WellnessHealthConnectPage() {
           </button>
           <button
             type="button"
+            onClick={connectAndroidHealthConnect}
+            disabled={!patientId}
+            className="inline-flex items-center gap-2 rounded-lg border border-impilo-300 bg-white px-4 py-2 text-sm font-medium hover:bg-impilo-50 disabled:opacity-50"
+          >
+            Connect source
+          </button>
+          <button
+            type="button"
+            onClick={loadSources}
+            disabled={loadingSources || !patientId}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+          >
+            {loadingSources ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Refresh sources
+          </button>
+          <button
+            type="button"
             onClick={submit}
             disabled={posting || !patientId}
             className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 text-white px-4 py-2 text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
@@ -119,6 +203,42 @@ export default function WellnessHealthConnectPage() {
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-800 mb-2">Manifest</h3>
             <pre className="text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-48">{manifest}</pre>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-800 mb-2">Connected sources & permissions</h3>
+          <div className="rounded-lg border border-gray-200 divide-y bg-white">
+            {sources.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-gray-500">No connected sources yet.</p>
+            ) : (
+              sources.map((source) => (
+                <div key={source.id} className="px-3 py-2 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{source.source_name}</p>
+                    <p className="text-xs text-gray-500">
+                      {source.source_type} · {source.status} · consent {source.consent_status}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void toggleProviderSharing(source)}
+                    className="rounded-md border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"
+                  >
+                    {source.provider_access_allowed ? "Revoke provider sharing" : "Allow provider sharing"}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {summary && (
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-800 mb-2">Wellness summary</h3>
+            <pre className="text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-48">
+              {JSON.stringify(summary, null, 2)}
+            </pre>
           </div>
         )}
 

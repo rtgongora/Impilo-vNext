@@ -3,6 +3,7 @@
 | Service ID | Primary plane | Consumes from | Exposes to |
 |---|---|---|---|
 | `ai-model-registry-service` | data | tshepo-authz-service | experience-bff, integration-hub |
+| `analytics-pipeline-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `asset-registry-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `audit-ledger-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `butano-fhir` | clinical | tshepo-authz-service | experience-bff, integration-hub |
@@ -58,6 +59,7 @@
 | `pharmacy-service` | clinical | tshepo-authz-service | experience-bff, integration-hub |
 | `procurement-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `product-registry-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
+| `referral-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `reporting-service` | data | tshepo-authz-service | experience-bff, integration-hub |
 | `rules-service` | clinical | tshepo-authz-service | experience-bff, integration-hub |
 | `scheduling-service` | clinical | tshepo-authz-service | experience-bff, integration-hub |
@@ -65,7 +67,7 @@
 | `search-service` | data | tshepo-authz-service | experience-bff, integration-hub |
 | `security-hardening-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `share-slip-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
-| `simba-service` | clinical | tshepo-authz-service | experience-bff, integration-hub |
+| `simba-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `support-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `surveillance-service` | data | tshepo-authz-service | experience-bff, integration-hub |
 | `tshepo-audit-service` | trust | — | experience-bff, integration-hub |
@@ -79,7 +81,7 @@
 | `ubomi-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
 | `varapi-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
 | `vito-service` | registry | tshepo-authz-service | experience-bff, integration-hub |
-| `wellness-service` | clinical | tshepo-authz-service, simba-service | experience-bff, integration-hub |
+| `wellness-service` | enterprise | simba-service | experience-bff, integration-hub |
 | `workflow-service` | integration | tshepo-authz-service | experience-bff, integration-hub |
 | `workforce-governance-service` | enterprise | tshepo-authz-service | experience-bff, integration-hub |
 | `zibo-service` | registry | tshepo-authz-service | experience-bff, integration-hub |

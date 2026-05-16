@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,8 @@ import zw.gov.mohcc.impilo.pacs.api.dto.LaunchViewerRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
-import zw.gov.mohcc.impilo.pacs.integration.OrthancClient;
+import zw.gov.mohcc.impilo.pacs.events.PacsOutboxPublisher;
+import zw.gov.mohcc.impilo.pacs.integration.PacsBackendClient;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAccessAuditEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
@@ -36,6 +38,7 @@ import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingStudyRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingViewerSessionRepository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,14 +71,18 @@ public class ImagingStudyService {
     private final ImagingAccessAuditRepository accessAuditRepository;
     private final ImagingReportLinkRepository reportLinkRepository;
     private final ImagingOrderLinkRepository orderLinkRepository;
-    private final OrthancClient orthancClient;
+    private final PacsBackendClient pacsBackendClient;
+    private final ViewerEnginePolicy viewerEnginePolicy;
+    private final ObjectProvider<PacsOutboxPublisher> outboxPublisherProvider;
     private final boolean allowPlaceholderOrthancForward;
 
     public ImagingStudyService(
             ImagingStudyRepository studyRepository,
             EventOutboxRepository outboxRepository,
             ObjectMapper objectMapper,
-            OrthancClient orthancClient,
+            PacsBackendClient pacsBackendClient,
+            ViewerEnginePolicy viewerEnginePolicy,
+            ObjectProvider<PacsOutboxPublisher> outboxPublisherProvider,
             @Value("${impilo.orthanc.allow-placeholder-forward:false}") boolean allowPlaceholderOrthancForward,
             ImagingHierarchySyncService hierarchySyncService,
             ImagingSeriesRepository seriesRepository,
@@ -87,7 +94,9 @@ public class ImagingStudyService {
         this.studyRepository = studyRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
-        this.orthancClient = orthancClient;
+        this.pacsBackendClient = pacsBackendClient;
+        this.viewerEnginePolicy = viewerEnginePolicy;
+        this.outboxPublisherProvider = outboxPublisherProvider;
         this.allowPlaceholderOrthancForward = allowPlaceholderOrthancForward;
         this.hierarchySyncService = hierarchySyncService;
         this.seriesRepository = seriesRepository;
@@ -232,7 +241,7 @@ public class ImagingStudyService {
         study = studyRepository.save(study);
 
         try {
-            List<String> matches = orthancClient.findStudyIdsByStudyInstanceUid(study.getStudyUid());
+            List<String> matches = pacsBackendClient.findStudyIdsByStudyInstanceUid(study.getStudyUid());
             String orthancId;
             if (!matches.isEmpty()) {
                 orthancId = matches.get(0);
@@ -246,8 +255,8 @@ public class ImagingStudyService {
                         study.getStudyUid());
             } else {
                 throw new IllegalStateException(
-                        "No Orthanc study found for StudyInstanceUID=" + study.getStudyUid()
-                                + " — ingest to Orthanc or enable impilo.orthanc.allow-placeholder-forward for dev.");
+                        "No PACS study found for StudyInstanceUID=" + study.getStudyUid()
+                                + " — ingest to configured PACS backend or enable impilo.orthanc.allow-placeholder-forward for dev.");
             }
 
             study.setOrthancId(orthancId);
@@ -255,15 +264,15 @@ public class ImagingStudyService {
             study.setUpdatedAt(OffsetDateTime.now());
             study = studyRepository.save(study);
 
-            log.info("Imaging study forwarded to Orthanc: studyUid={}, orthancId={}",
-                    study.getStudyUid(), orthancId);
+            log.info("Imaging study forwarded to PACS backend: studyUid={}, backendId={}, provider={}",
+                    study.getStudyUid(), orthancId, pacsBackendClient.backendProvider());
         } catch (Exception e) {
             study.setStatus(StudyStatus.FAILED.name());
             study.setUpdatedAt(OffsetDateTime.now());
             studyRepository.save(study);
 
             log.error("Failed to forward imaging study: studyUid={}", study.getStudyUid(), e);
-            throw new RuntimeException("Failed to forward study to Orthanc", e);
+            throw new RuntimeException("Failed to forward study to configured PACS backend", e);
         }
 
         return study;
@@ -278,11 +287,12 @@ public class ImagingStudyService {
     public ImagingViewerSessionEntity launchViewerSession(Long studyId, LaunchViewerRequest request,
                                                           String actorId, String actorType) {
         ImagingStudyEntity study = getStudy(studyId);
+        String viewerEngine = viewerEnginePolicy.resolve(request.getViewerType());
 
         ImagingViewerSessionEntity session = new ImagingViewerSessionEntity();
         session.setStudyId(study.getId());
         session.setLaunchedBy(actorId);
-        session.setViewerType(request.getViewerType() != null ? request.getViewerType() : "DICOMWEB_STACK");
+        session.setViewerType(viewerEngine);
         session.setContextRef(request.getContextRef());
         session.setScope(request.getScope());
         RequestContext ctx = RequestContextHolder.get();
@@ -295,6 +305,29 @@ public class ImagingStudyService {
         appendViewerLaunchedOutbox(study, session.getId(), request);
 
         return session;
+    }
+
+    public Map<String, Object> viewerLaunchContext(Long studyId, String requestedViewerType, String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+        String viewerEngine = viewerEnginePolicy.resolve(requestedViewerType);
+        recordAccess(study.getId(), null, null, actorId, actorType, "VIEWER_CONTEXT", "viewer_launch_context");
+
+        Map<String, Object> context = new LinkedHashMap<>();
+        context.put("studyId", study.getId());
+        context.put("patientCpid", study.getPatientCpid());
+        context.put("studyUid", study.getStudyUid());
+        context.put("accessionNumber", study.getAccessionNumber());
+        context.put("orosOrderId", study.getOrosOrderId());
+        context.put("encounterRef", study.getEncounterRef());
+        context.put("facilityId", study.getFacilityId());
+        context.put("viewerEngine", viewerEngine);
+        context.put("viewerPolicy", viewerEnginePolicy.describe());
+        context.put("backend", Map.of(
+                "provider", pacsBackendClient.backendProvider(),
+                "mode", pacsBackendClient.backendMode(),
+                "capabilities", pacsBackendClient.capabilities()
+        ));
+        return context;
     }
 
     @Transactional
@@ -348,6 +381,87 @@ public class ImagingStudyService {
         return orderLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
     }
 
+    public Map<String, Object> orthancConnectivityStatus() {
+        return pacsBackendClient.systemStatus();
+    }
+
+    public List<ImagingStudyEntity> listUnmatchedStudies() {
+        return studyRepository.findTop100ByStatusOrderByUpdatedAtDesc(StudyStatus.PENDING_ORDER.name());
+    }
+
+    public List<ImagingStudyEntity> listFailedCorrelations() {
+        return studyRepository.findTop100ByStatusOrderByUpdatedAtDesc(StudyStatus.FAILED.name());
+    }
+
+    public List<Map<String, Object>> listFailedWritebacks() {
+        List<Map<String, Object>> failed = new ArrayList<>();
+        for (EventOutboxEntity row : outboxRepository.findTop100ByPublishErrorIsNotNullOrderByCreatedAtDesc()) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("outboxId", row.getId());
+            item.put("aggregateType", row.getAggregateType());
+            item.put("aggregateId", row.getAggregateId());
+            item.put("eventType", row.getEventType());
+            item.put("tenantId", row.getTenantId());
+            item.put("correlationId", row.getCorrelationId());
+            item.put("publishError", row.getPublishError());
+            item.put("createdAt", row.getCreatedAt());
+            failed.add(item);
+        }
+        return failed;
+    }
+
+    @Transactional
+    public Map<String, Object> retryFailedWriteback(Long outboxId) {
+        EventOutboxEntity row = outboxRepository.findById(outboxId)
+                .orElseThrow(() -> new IllegalArgumentException("Outbox row not found: " + outboxId));
+
+        if (row.getPublishedAt() != null) {
+            return Map.of(
+                    "outboxId", outboxId,
+                    "status", "ALREADY_PUBLISHED",
+                    "publishedAt", row.getPublishedAt());
+        }
+
+        row.setPublishError(null);
+        outboxRepository.save(row);
+
+        int publishedNow = 0;
+        PacsOutboxPublisher publisher = outboxPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publishedNow = publisher.publishPendingEvents();
+        }
+
+        EventOutboxEntity refreshed = outboxRepository.findById(outboxId).orElse(row);
+        String status = refreshed.getPublishedAt() != null ? "PUBLISHED" : "RETRY_QUEUED";
+
+        return Map.of(
+                "outboxId", outboxId,
+                "status", status,
+                "publishedAt", refreshed.getPublishedAt(),
+                "publishError", refreshed.getPublishError(),
+                "publishedNow", publishedNow);
+    }
+
+    @Transactional
+    public Map<String, Object> retryAllFailedWritebacks() {
+        List<EventOutboxEntity> failed = outboxRepository.findTop100ByPublishErrorIsNotNullOrderByCreatedAtDesc();
+        for (EventOutboxEntity row : failed) {
+            row.setPublishError(null);
+            outboxRepository.save(row);
+        }
+
+        int publishedNow = 0;
+        PacsOutboxPublisher publisher = outboxPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publishedNow = publisher.publishPendingEvents();
+        }
+
+        return Map.of(
+                "failedRowsRequeued", failed.size(),
+                "publishedNow", publishedNow,
+                "status", "RETRY_REQUESTED");
+    }
+
     private void recordAccess(Long studyId, Long seriesId, Long instanceId,
                               String actorId, String actorType, String accessType, String workflowContext) {
         ImagingAccessAuditEntity row = new ImagingAccessAuditEntity();
@@ -372,7 +486,7 @@ public class ImagingStudyService {
             payload.put("viewer_session_id", sessionId);
             payload.put("patient_cpid", study.getPatientCpid());
             payload.put("studyInstanceUid", study.getStudyUid());
-            payload.put("viewer_type", req.getViewerType());
+            payload.put("viewer_type", viewerEnginePolicy.resolve(req.getViewerType()));
             payload.put("context_ref", req.getContextRef());
             payload.put("scope", req.getScope());
 
@@ -400,6 +514,9 @@ public class ImagingStudyService {
             payload.put("report_link_id", linkId);
             payload.put("report_ref", reportRef);
             payload.put("patient_cpid", study.getPatientCpid());
+            payload.put("accession_number", study.getAccessionNumber());
+            payload.put("studyInstanceUid", study.getStudyUid());
+            payload.put("oros_order_id", study.getOrosOrderId());
 
             EventOutboxEntity row = new EventOutboxEntity();
             row.setAggregateType(AGGREGATE_IMAGING_STUDY);

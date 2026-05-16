@@ -123,3 +123,26 @@ Frontend and UX surfacing quality across backend and Experience components.
 | Workforce Governance | backend_service | ui/one-ui-shell routes and domain consoles | Complete | P1 |
 | Zibo | backend_service | ui/one-ui-shell routes and domain consoles | Complete | None |
 | Zibo Web | frontend_app | /zibo-web | Complete | None |
+
+## Simba + Wellness Surfacing Note (May 2026)
+
+- `ui/one-ui-shell` `wellness/connect` now uses real source-management and personal-data summary APIs instead of demo-only ingest behavior.
+- Provider-mobile vitals monitor routing now aligns with the actual BFF endpoint family.
+- Several lifestyle pages still include placeholder/demo content and remain explicit backlog for full runtime wiring.
+
+## Telemedicine Surfacing Note (May 2026)
+
+- Provider and coordinator telemedicine surfaces are routed through `experience-bff` (`/telemedicine`, teleconsult, referral queue, and scheduling flows).
+- Citizen telehealth backend paths are now explicitly contract-documented, but citizen web surfacing remains partial.
+- Specialist pathway surfacing remains uneven across specialties (strongest in teleradiology; partial for most other tele-specialties).
+- Detailed status by capability is tracked in `docs/architecture/TELEMEDICINE_PIPELINE.md`.
+
+## Imaging Surfacing Note
+
+- EHR imaging route registry entries, PACS workflow shortcuts, and shell command discoverability were hardened in this wave. Detailed evidence and remaining viewer gaps are documented in `docs/architecture/PACS_DICOM_PIPELINE.md`.
+
+## Document Management Surfacing Note (May 2026)
+
+- Provider/EHR document flows remain surfaced via `ClinicalDocumentsController` and document-service metadata/signed-url paths.
+- Document preview support is now explicit via `document-service` preview endpoint contract.
+- Citizen/admin document workflow surfacing remains partial and is tracked in `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`.

@@ -37,6 +37,7 @@ env:
   MSIKA_FLOW_BASE_URL: http://msika-flow-service:8100
   MUSHEX_BASE_URL: http://mushex-service.impilo-finance.svc.cluster.local:8087
   ORTHANC_BASE_URL: http://orthanc.impilo-clinical.svc.cluster.local:8042
+  ORTHANC_DICOMWEB_URL: http://orthanc.impilo-clinical.svc.cluster.local:8042/dicom-web
   # Canonical wellness target (Simba). Wellness alias runtime is compatibility-only until 2026-12-31 sunset.
   WELLNESS_BASE_URL: http://simba-service:8125
 

@@ -46,6 +46,17 @@ export interface WellnessChallenge {
   status: string;
 }
 
+export interface WellnessDiscoverService {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  facilityName?: string;
+  price?: number;
+  currency?: string;
+  rating?: number;
+}
+
 function mapActivityRow(row: Row): WellnessActivity {
   return {
     id: str(row.id, "activity"),
@@ -116,4 +127,20 @@ export async function fetchWellnessChallenges(): Promise<WellnessChallenge[]> {
 
 export async function joinWellnessChallenge(challengeId: string, patientId: string): Promise<void> {
   await apiClient.post(`${BASE}/challenges/${challengeId}/join`, { patientId });
+}
+
+export async function fetchWellnessDiscoverServices(category?: string): Promise<WellnessDiscoverService[]> {
+  const query = category ? `?category=${encodeURIComponent(category)}` : "";
+  const res = await apiClient.get<{ data: Row[] }>(`/internal/v1/mobile/citizen/services/discover${query}`);
+  const rows = res.data ?? [];
+  return rows.map((row) => ({
+    id: str(row.id, ""),
+    name: str(row.name, "Service"),
+    description: row.description != null ? str(row.description) : undefined,
+    category: row.category != null ? str(row.category) : undefined,
+    facilityName: row.facility_name != null ? str(row.facility_name) : row.facilityName != null ? str(row.facilityName) : undefined,
+    price: row.price != null ? num(row.price) : undefined,
+    currency: row.currency != null ? str(row.currency) : undefined,
+    rating: row.rating != null ? num(row.rating) : undefined,
+  }));
 }

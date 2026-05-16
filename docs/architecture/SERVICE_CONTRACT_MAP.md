@@ -65,7 +65,7 @@ Contract alignment view for backend and integration runtimes.
 | Offline Edge | Aligned | contracts/openapi/offline-edge.openapi.yaml | contracts/openapi/offline-edge.openapi.yaml | Fixed |
 | Offline Sync | Aligned | contracts/openapi/offline-sync.openapi.yaml | contracts/openapi/offline-sync.openapi.yaml | Fixed |
 | Oros | Aligned | contracts/openapi/oros.openapi.yaml | contracts/openapi/oros.openapi.yaml | Fixed |
-| Pacs Adapter | Aligned | contracts/openapi/pacs-adapter.openapi.yaml | contracts/openapi/pacs-adapter.openapi.yaml | Fixed |
+| Pacs Adapter | Aligned | contracts/openapi/pacs-adapter.openapi.yaml | contracts/openapi/pacs-adapter.openapi.yaml; contracts/openapi/imaging-viewer-launch.openapi.yaml; contracts/asyncapi/imaging-pipeline.asyncapi.yaml | Fixed |
 | Pct | Aligned | contracts/openapi/pct.openapi.yaml | contracts/openapi/pct.openapi.yaml | Fixed |
 | Pharmacy Elmis Adapter | Aligned | contracts/openapi/pharmacy-elmis.openapi.yaml | contracts/openapi/pharmacy-elmis.openapi.yaml | Fixed |
 | Pharmacy | Aligned | contracts/openapi/pharmacy.openapi.yaml | contracts/openapi/pharmacy.openapi.yaml | Fixed |
@@ -93,7 +93,38 @@ Contract alignment view for backend and integration runtimes.
 | Ubomi | Aligned | contracts/openapi/ubomi.openapi.yaml | contracts/openapi/ubomi.openapi.yaml | Fixed |
 | Varapi | Aligned | contracts/openapi/varapi.openapi.yaml | contracts/openapi/varapi.openapi.yaml | Fixed |
 | Vito | Aligned | contracts/openapi/vito.openapi.yaml | contracts/openapi/vito.openapi.yaml | Fixed |
-| Wellness | Not Applicable | contracts/openapi/wellness.openapi.yaml | contracts/openapi/wellness.openapi.yaml | Fixed |
+| Wellness | Aligned | contracts/openapi/wellness.openapi.yaml | contracts/openapi/wellness.openapi.yaml | Fixed |
 | Workflow | Aligned | contracts/openapi/workflow.openapi.yaml | contracts/openapi/workflow.openapi.yaml | Fixed |
 | Workforce Governance | Aligned | contracts/openapi/workforce-governance.openapi.yaml | contracts/openapi/workforce-governance.openapi.yaml | Fixed |
 | Zibo | Aligned | contracts/openapi/zibo.openapi.yaml | contracts/openapi/zibo.openapi.yaml | Fixed |
+
+## Imaging Contract Additions (May 2026)
+
+- `contracts/openapi/pacs-adapter.openapi.yaml` expanded to cover implemented PACS adapter API surface including ops endpoints.
+- `contracts/openapi/pacs-adapter.openapi.yaml` now includes `viewer-launch-context` and provider-neutral backend status metadata fields.
+- `contracts/openapi/imaging-viewer-launch.openapi.yaml` added for governed viewer launch context.
+- `contracts/openapi/experience-bff.openapi.yaml` now includes governed imaging ops and viewer-launch-context proxy endpoints.
+- `contracts/asyncapi/imaging-pipeline.asyncapi.yaml` added for imaging event rail documentation.
+
+## Telemedicine Contract Additions (May 2026)
+
+- `contracts/openapi/experience-bff.openapi.yaml` now includes explicit teleconsult and telemedicine route coverage slices.
+- `contracts/openapi/mobile-provider.openapi.yaml` now includes provider telemedicine session list/create/join/end routes.
+- `contracts/openapi/mobile-citizen.openapi.yaml` now includes citizen telehealth session list/get/create/join/end routes.
+- Canonical capability and residual contract gaps are tracked in `docs/architecture/TELEMEDICINE_PIPELINE.md`.
+
+## Telemedicine + Document Neutrality Contract Refinement (May 2026)
+
+- `contracts/openapi/pct.openapi.yaml` now includes typed telehealth session create/response schemas with provider-neutral `sessionProvider`.
+- `contracts/openapi/mobile-provider.openapi.yaml` and `contracts/openapi/mobile-citizen.openapi.yaml` now include typed provider-neutral session-provider fields.
+- `contracts/openapi/document-store.openapi.yaml` now includes `/v1/internal/objects/{objectId}/preview` and explicit provider-neutral storage posture.
+- Document-management contract closure status and remaining gaps are tracked in `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`.
+
+## Simba + Wellness Contract Refinement (May 2026)
+
+- `contracts/openapi/wellness.openapi.yaml` now includes personal-health-data runtime APIs for:
+  - source registration and source permission governance,
+  - manual wellness readings,
+  - citizen/provider wellness summaries,
+  - remote monitoring alerts and provider review.
+- `contracts/openapi/simba.openapi.yaml` remains a partial contract relative to Simba runtime surface and needs a dedicated parity pass.

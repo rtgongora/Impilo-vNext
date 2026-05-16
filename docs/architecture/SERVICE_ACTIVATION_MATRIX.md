@@ -140,7 +140,7 @@ Canonical activation status across the Impilo vNext service estate. Labels use I
 | Shared Kernel | shared_library | Library | Integration & Operations | Activated | Fixed | high |
 | Shared Kernel Java | shared_library | Library | Integration & Operations | Activated | Fixed | high |
 | Shared Ui | frontend_app | User Interface | Experience | Activated | Fixed | high |
-| Simba | backend_service | Ring 1 Execution | Clinical Execution | Activated | Fixed | medium |
+| Simba | backend_service | Ring 1 Execution | Enterprise Resource | Activated | Fixed | high |
 | SMS/WhatsApp Gateway | external_dependency | External | Integration & Operations | Activated | Fixed | high |
 | Supply Planning | shared_library | Library | Enterprise Resource | Skeleton | Fixed | medium |
 | Support Console | frontend_app | User Interface | Experience | Activated | Fixed | high |
@@ -164,8 +164,30 @@ Canonical activation status across the Impilo vNext service estate. Labels use I
 | Vault | infrastructure | Infrastructure | Trust & Governance | Activated | Fixed | high |
 | Vault KMS | shared_library | Library | Trust & Governance | Skeleton | Fixed | medium |
 | Vito | backend_service | Ring 0 Kernel | Registry Spine | Activated | Fixed | high |
-| Wellness | backend_service | Ring 1 Execution | Clinical Execution | Duplicated | Fixed | high |
+| Wellness | backend_service | Ring 1 Execution | Enterprise Resource | Duplicated | Fixed | high |
+
+## Simba + Wellness Activation Note (May 2026)
+
+- `simba-service` is the canonical Wellness/PHD domain owner (PCT-equivalent for wellness state).
+- `wellness-service` remains a compatibility alias and should not receive new ownership.
+- Personal-health-data source governance, manual readings, provider summary, and remote alerts are implemented on Simba runtime surfaces.
 | Workflow | backend_service | Ring 2 Scale | Integration & Operations | Activated | Fixed | high |
 | Workforce Governance | backend_service | Ring 2 Scale | Enterprise Resource | Activated | Partially Fixed | high |
 | Zibo | backend_service | Ring 0 Kernel | Registry Spine | Activated | Fixed | high |
 | Zibo Web | frontend_app | User Interface | Experience | Activated | Fixed | high |
+
+## Telemedicine + Document Management Activation Note (May 2026)
+
+- `pct-service` and `experience-bff` remain activated with telemedicine lifecycle ownership split preserved (PCT canonical state; BFF orchestration/governance).
+- `document-service` remains activated and now includes provider-neutral storage routing, but external DMS adapter parity in this service remains partial.
+- Detailed acceptance and backlog status:
+  - `docs/architecture/TELEMEDICINE_PIPELINE.md`
+  - `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`
+
+## Imaging Pipeline Note
+
+- PACS/DICOM activation evidence for Orthanc, PACS adapter, OROS, BUTANO writeback, and viewer surfacing is tracked in `docs/architecture/PACS_DICOM_PIPELINE.md`.
+
+## Telemedicine Pipeline Note
+
+- Telemedicine activation evidence (provider/citizen session flow, teleconsult lifecycle, routing/consent, specialty readiness status, and remaining gaps) is tracked in `docs/architecture/TELEMEDICINE_PIPELINE.md`.

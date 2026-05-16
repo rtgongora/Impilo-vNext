@@ -192,6 +192,13 @@ channels:
       deathRecorded:
         $ref: "#/components/messages/DeathRecorded"
 
+  clinicalTeleconsultLifecycle:
+    address: clinical.teleconsult.lifecycle
+    description: Teleconsult and telehealth lifecycle state transitions
+    messages:
+      teleconsultLifecycle:
+        $ref: "#/components/messages/TeleconsultLifecycle"
+
   # ── Analytics Channel ───────────────────────────────────────────────────
 
   analyticsSurveillanceEvent:
@@ -207,6 +214,13 @@ channels:
     messages:
       surveillanceAlert:
         $ref: "#/components/messages/SurveillanceAlert"
+
+  integrationNotificationDispatched:
+    address: integration.notification.dispatched
+    description: Notification dispatch lifecycle event (attempted/sent/failed)
+    messages:
+      notificationDispatched:
+        $ref: "#/components/messages/NotificationDispatched"
 
 # ---------------------------------------------------------------------------
 # Operations — publish/subscribe bindings
@@ -276,6 +290,12 @@ operations:
       $ref: "#/channels/clinicalDispensed"
     summary: pharmacy-service publishes medication dispensed
 
+  publishTeleconsultLifecycle:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalTeleconsultLifecycle"
+    summary: pct-service and experience-bff publish teleconsult lifecycle updates
+
   # Analytics producers
   publishSurveillanceEvent:
     action: send
@@ -307,6 +327,12 @@ operations:
     channel:
       $ref: "#/channels/clinicalOrderPlaced"
     summary: Pharmacy, PACS, BUTANO consume order events
+
+  consumeNotificationDispatched:
+    action: receive
+    channel:
+      $ref: "#/channels/integrationNotificationDispatched"
+    summary: Experience and analytics consume notification lifecycle events
 
 # ---------------------------------------------------------------------------
 # Components
@@ -465,6 +491,14 @@ components:
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"
 
+    TeleconsultLifecycle:
+      name: TeleconsultLifecycle
+      title: Teleconsult Lifecycle Event
+      summary: Teleconsult workflow state transition emitted by clinical orchestration
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
     # ── Analytics Events ──────────────────────────────────────────────────
 
     SurveillanceEvent:
@@ -479,6 +513,14 @@ components:
       name: SurveillanceAlert
       title: Surveillance Alert
       summary: Surveillance threshold breach alert
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    NotificationDispatched:
+      name: NotificationDispatched
+      title: Notification Dispatched
+      summary: Notification send attempt lifecycle event
       contentType: application/json
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"

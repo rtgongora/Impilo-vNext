@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: Impilo Imaging Viewer Launch Contract
+  version: 0.1.0
+  description: >
+    Contract for governed viewer launch context retrieval used by EHR/provider UI.
+    This contract is fulfilled by Experience imaging endpoints over PACS adapter data.
+
+servers:
+  - url: /internal/v1/imaging
+
+paths:
+  /studies/{studyId}/viewer-launch-context:
+    get:
+      summary: Resolve governed viewer launch context
+      operationId: getViewerLaunchContext
+      parameters:
+        - name: studyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: viewerType
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [DICOMWEB_STACK, OHIF, CORNERSTONE]
+        - name: chart_patient_cpid
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Viewer launch context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewerLaunchEnvelope"
+        "403":
+          description: Access denied (TSHEPO/consent/context policy)
+
+  /studies/{studyId}/viewer-sessions:
+    post:
+      summary: Create viewer launch context for a study
+      operationId: createViewerSession
+      parameters:
+        - name: studyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: chart_patient_cpid
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ViewerLaunchRequest"
+      responses:
+        "200":
+          description: Viewer launch context accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ViewerLaunchEnvelope"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Access denied (TSHEPO/consent/context policy)
+        "404":
+          description: Study not found
+
+components:
+  schemas:
+    ViewerLaunchRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - viewerType
+      properties:
+        viewerType:
+          type: string
+          enum: [DICOMWEB_STACK, OHIF, CORNERSTONE]
+          example: DICOMWEB_STACK
+        contextRef:
+          type: string
+          example: oros-order:OR-123
+        teleconsultSessionId:
+          type: string
+          format: uuid
+        encounterRef:
+          type: string
+        scope:
+          type: string
+          example: clinical
+        orderId:
+          type: string
+        accessionNumber:
+          type: string
+        studyInstanceUid:
+          type: string
+
+    ViewerLaunchEnvelope:
+      type: object
+      additionalProperties: false
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          additionalProperties: true
+          properties:
+            id:
+              type: integer
+              format: int64
+            studyId:
+              type: integer
+              format: int64
+            viewerType:
+              type: string
+            contextRef:
+              type: string
+            correlationId:
+              type: string
+            backend:
+              type: object
+              additionalProperties: true

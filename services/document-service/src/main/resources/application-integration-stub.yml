@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: integration-stub
+
+# Profile for CI/integration environments that exercise adapter wiring
+# without production vendor credentials.
+document-store:
+  storage:
+    provider-type: LANDELA_ADAPTER
+  landela-adapter:
+    base-url: ${LANDELA_ADAPTER_BASE_URL:http://localhost:18092}
+    api-key: ${LANDELA_ADAPTER_API_KEY:integration-stub-key}
+
+  ocr:
+    provider-type: EXTERNAL_STUB
+  ocr-stub:
+    base-url: ${DOCUMENT_OCR_STUB_BASE_URL:http://localhost:18081}
+    path: ${DOCUMENT_OCR_STUB_PATH:/v1/ocr/extract}
+    api-key: ${DOCUMENT_OCR_STUB_API_KEY:integration-stub-key}
+
+  signature:
+    provider-type: EXTERNAL_STUB
+  signature-stub:
+    base-url: ${DOCUMENT_SIGNATURE_STUB_BASE_URL:http://localhost:18082}
+    path: ${DOCUMENT_SIGNATURE_STUB_PATH:/v1/signature/sign}
+    api-key: ${DOCUMENT_SIGNATURE_STUB_API_KEY:integration-stub-key}

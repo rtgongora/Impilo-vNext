@@ -17,3 +17,136 @@ paths:
               schema:
                 type: string
                 example: ok
+
+  /internal/v1/referrals:
+    get:
+      summary: List referrals for a patient
+      operationId: listReferrals
+      tags: [Referral]
+      parameters:
+        - name: patientId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Referral list envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      summary: Create referral
+      operationId: createReferral
+      tags: [Referral]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Referral created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/referrals/{id}:
+    get:
+      summary: Get referral by id
+      operationId: getReferral
+      tags: [Referral]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Referral envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/referrals/{id}/accept:
+    post:
+      summary: Accept referral
+      operationId: acceptReferral
+      tags: [Referral]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Referral accept envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/referrals/{id}/respond:
+    post:
+      summary: Respond to referral
+      operationId: respondReferral
+      tags: [Referral]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Referral response envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/referrals/{id}/complete:
+    post:
+      summary: Complete referral
+      operationId: completeReferral
+      tags: [Referral]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Referral completion envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true

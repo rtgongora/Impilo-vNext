@@ -1,0 +1,574 @@
+package zw.gov.mohcc.impilo.pct.core;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.pct.core.telemedicine.SessionProvisioningResult;
+import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProvider;
+import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProviderRouter;
+import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.ReferralEntity;
+import zw.gov.mohcc.impilo.pct.persistence.entity.TelehealthSessionEntity;
+import zw.gov.mohcc.impilo.pct.persistence.repository.EventOutboxRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.ReferralRepository;
+import zw.gov.mohcc.impilo.pct.persistence.repository.TelehealthSessionRepository;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
+
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+
+@Service
+public class TelemedicineOrchestrationService {
+
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<String>> STRING_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<Map<String, Object>>> MAP_LIST_TYPE = new TypeReference<>() {};
+
+    private final ReferralRepository referralRepository;
+    private final TelehealthSessionRepository telehealthSessionRepository;
+    private final EventOutboxRepository outboxRepository;
+    private final TelemetryService telemetryService;
+    private final TelemedicineSessionProviderRouter sessionProviderRouter;
+    private final ObjectMapper objectMapper;
+
+    public TelemedicineOrchestrationService(
+            ReferralRepository referralRepository,
+            TelehealthSessionRepository telehealthSessionRepository,
+            EventOutboxRepository outboxRepository,
+            TelemetryService telemetryService,
+            TelemedicineSessionProviderRouter sessionProviderRouter,
+            ObjectMapper objectMapper) {
+        this.referralRepository = referralRepository;
+        this.telehealthSessionRepository = telehealthSessionRepository;
+        this.outboxRepository = outboxRepository;
+        this.telemetryService = telemetryService;
+        this.sessionProviderRouter = sessionProviderRouter;
+        this.objectMapper = objectMapper;
+    }
+
+    @Transactional
+    public Map<String, Object> createReferral(Map<String, Object> request) {
+        TrustContext ctx = TrustContextHolder.require();
+        ReferralEntity referral = new ReferralEntity();
+        referral.setTenantId(ctx.tenantId());
+        referral.setPatientCpid(required(request, "patientId", "patient_id"));
+        referral.setEncounterId(optional(request, "encounterId", "encounter_id"));
+        referral.setProviderId(optional(request, "providerId", "provider_id", "referredBy", "referred_by"));
+        referral.setFacilityId(optional(request, "facilityId", "facility_id", "referredToFacility", "referred_to_facility"));
+        referral.setReferralType(defaulted(optional(request, "referralType", "referral_type"), "SPECIALIST"));
+        referral.setSpecialty(optional(request, "specialty"));
+        referral.setUrgency(defaulted(optional(request, "urgency", "priority"), "ROUTINE"));
+        referral.setReason(required(request, "reason", "clinical_question"));
+        referral.setClinicalSummary(optional(request, "clinicalSummary", "clinical_summary", "patient_summary"));
+        referral.setPreferredMode(optional(request, "preferredMode", "preferred_mode"));
+        referral.setModality(defaulted(optional(request, "modality"), "virtual"));
+        referral.setVirtualMode(defaulted(optional(request, "virtual_mode", "virtualMode"), "video"));
+        referral.setStatus("DRAFT");
+        referral.setStage(1);
+        referral.setRoutingTarget("{}");
+        referral.setAttachmentDocumentIds("[]");
+        referral.setMessages("[]");
+        referral.setResponses("[]");
+        referral.setCompletionPayload("{}");
+
+        ReferralEntity saved = referralRepository.save(referral);
+        emitOutbox("teleconsult.referral.created", saved.getReferralId().toString(), toReferralPayload(saved));
+        telemetryService.record("telemedicine.referral.created", null, Map.of(
+                "referralId", saved.getReferralId().toString(),
+                "specialty", defaulted(saved.getSpecialty(), "GENERAL"),
+                "urgency", saved.getUrgency()));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPatientReferrals(String patientId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return referralRepository.findByTenantIdAndPatientCpidOrderByCreatedAtDesc(ctx.tenantId(), patientId)
+                .stream()
+                .map(this::toReferralPayload)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listIncomingReferrals(String facilityId, String status) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<ReferralEntity> rows;
+        if (status == null || status.isBlank()) {
+            rows = referralRepository.findByTenantIdAndFacilityIdOrderByCreatedAtDesc(ctx.tenantId(), facilityId);
+        } else {
+            rows = referralRepository.findByTenantIdAndFacilityIdAndStatusOrderByCreatedAtDesc(
+                    ctx.tenantId(), facilityId, status.trim().toUpperCase(Locale.ROOT));
+        }
+        return rows.stream().map(this::toReferralPayload).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getReferral(String referralId) {
+        TrustContext ctx = TrustContextHolder.require();
+        ReferralEntity entity = referralRepository.findByTenantIdAndReferralId(ctx.tenantId(), parseUuid(referralId, "referralId"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Referral not found"));
+        return toReferralPayload(entity);
+    }
+
+    @Transactional
+    public Map<String, Object> updateReferralStage(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        entity.setStage(asInt(request.get("stage"), entity.getStage()));
+        entity.setClinicalSummary(defaulted(optional(request, "patient_summary", "patientSummary"), entity.getClinicalSummary()));
+        entity.setReason(defaulted(optional(request, "clinical_question", "clinicalQuestion"), entity.getReason()));
+        entity.setPreferredMode(defaulted(optional(request, "preferredMode", "preferred_mode"), entity.getPreferredMode()));
+
+        Object routingTarget = request.get("routing_target");
+        if (routingTarget == null) routingTarget = request.get("routingTarget");
+        if (routingTarget != null) entity.setRoutingTarget(writeJsonObject(routingTarget));
+
+        Object attachments = request.get("attachment_document_ids");
+        if (attachments == null) attachments = request.get("attachmentReferences");
+        if (attachments != null) entity.setAttachmentDocumentIds(writeJsonArray(attachments));
+
+        String status = optional(request, "status");
+        if (status != null) entity.setStatus(status.trim().toUpperCase(Locale.ROOT));
+
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.updated", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> updateReferralConsent(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        entity.setConsentType(optional(request, "consent_type", "consentType"));
+        entity.setConsentStatus(defaulted(optional(request, "consent_status", "status"), "PENDING"));
+        entity.setConsentReference(optional(request, "consent_reference", "consentReference"));
+        entity.setMvumoSessionId(optional(request, "mvumo_session_id", "mvumoSessionId"));
+        entity.setTshepoDecisionId(optional(request, "tshepo_decision_id", "tshepoDecisionId"));
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.consent.updated", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> submitReferral(String referralId) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        entity.setStatus("SUBMITTED");
+        entity.setSubmittedAt(OffsetDateTime.now());
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.submitted", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> acceptReferral(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        entity.setStatus("ACCEPTED");
+        appendResponse(entity, Map.of(
+                "responseType", "ACCEPTED",
+                "acceptedBy", defaulted(optional(request, "accepted_by", "acceptedBy"), "unknown"),
+                "timestamp", OffsetDateTime.now().toString()
+        ));
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.accepted", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> respondReferral(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        String responseType = defaulted(optional(request, "response_type", "responseType"), "MESSAGE")
+                .trim().toUpperCase(Locale.ROOT);
+        String message = defaulted(optional(request, "message", "response_notes", "notes"), "No message provided");
+        String responderId = defaulted(optional(request, "responder_id", "responderId"), "unknown");
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("responseType", responseType);
+        response.put("message", message);
+        response.put("responderId", responderId);
+        response.put("timestamp", OffsetDateTime.now().toString());
+
+        appendResponse(entity, response);
+        if ("DECLINED".equals(responseType)) {
+            entity.setStatus("DECLINED");
+        } else if ("MESSAGE".equals(responseType)) {
+            appendMessage(entity, response);
+            entity.setStatus(defaulted(entity.getStatus(), "IN_REVIEW"));
+        } else {
+            entity.setStatus("RESPONDED");
+        }
+
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.responded", saved.getReferralId().toString(), toReferralPayload(saved));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> completeReferral(String referralId, Map<String, Object> request) {
+        ReferralEntity entity = getReferralEntity(referralId);
+        entity.setStatus("COMPLETED");
+        entity.setCompletedAt(OffsetDateTime.now());
+        entity.setCompletionPayload(writeJsonObject(request == null ? Map.of() : request));
+        ReferralEntity saved = referralRepository.save(entity);
+        emitOutbox("teleconsult.referral.completed", saved.getReferralId().toString(), toReferralPayload(saved));
+        telemetryService.record("telemedicine.referral.completed", null, Map.of(
+                "referralId", saved.getReferralId().toString(),
+                "patientCpid", saved.getPatientCpid(),
+                "specialty", defaulted(saved.getSpecialty(), "GENERAL")));
+        return toReferralPayload(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listPatientTelehealthSessions(String patientCpid, String status) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<TelehealthSessionEntity> rows = status == null || status.isBlank()
+                ? telehealthSessionRepository.findByTenantIdAndPatientCpidOrderByCreatedAtDesc(ctx.tenantId(), patientCpid)
+                : telehealthSessionRepository.findByTenantIdAndPatientCpidAndStatusOrderByCreatedAtDesc(
+                ctx.tenantId(), patientCpid, status.trim().toUpperCase(Locale.ROOT));
+        return rows.stream().map(this::toTelehealthPayload).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listFacilityTelehealthSessions(String facilityId, String status) {
+        TrustContext ctx = TrustContextHolder.require();
+        List<TelehealthSessionEntity> rows = status == null || status.isBlank()
+                ? telehealthSessionRepository.findByTenantIdAndFacilityIdOrderByCreatedAtDesc(ctx.tenantId(), facilityId)
+                : telehealthSessionRepository.findByTenantIdAndFacilityIdAndStatusOrderByCreatedAtDesc(
+                ctx.tenantId(), facilityId, status.trim().toUpperCase(Locale.ROOT));
+        return rows.stream().map(this::toTelehealthPayload).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTelehealthSession(String sessionId) {
+        TrustContext ctx = TrustContextHolder.require();
+        TelehealthSessionEntity entity = telehealthSessionRepository
+                .findByTenantIdAndSessionId(ctx.tenantId(), parseUuid(sessionId, "sessionId"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Telehealth session not found"));
+        return toTelehealthPayload(entity);
+    }
+
+    @Transactional
+    public Map<String, Object> createTelehealthSession(Map<String, Object> request) {
+        TrustContext ctx = TrustContextHolder.require();
+        TelehealthSessionEntity entity = new TelehealthSessionEntity();
+        entity.setTenantId(ctx.tenantId());
+        entity.setPatientCpid(required(request, "patientId", "patient_id", "patientCpid"));
+        entity.setProviderId(optional(request, "providerId", "provider_id"));
+        entity.setFacilityId(optional(request, "facilityId", "facility_id"));
+        entity.setEncounterId(optional(request, "encounterId", "encounter_id"));
+        String referralId = optional(request, "referralId", "referral_id");
+        if (referralId != null && !referralId.isBlank()) {
+            entity.setReferralId(parseUuid(referralId, "referralId"));
+        }
+        entity.setSessionType(defaulted(optional(request, "sessionType", "session_type"), "VIDEO").toUpperCase(Locale.ROOT));
+        entity.setStatus("SCHEDULED");
+        entity.setScheduledAt(parseDate(optional(request, "scheduledAt", "scheduled_at"), OffsetDateTime.now().plusMinutes(30)));
+        String requestedProvider = optional(request, "sessionProvider", "session_provider", "providerType", "provider_type");
+        SessionProvisioningResult provisioning = sessionProviderRouter.provision(
+                requestedProvider,
+                new TelemedicineSessionProvider.SessionProvisioningRequest(
+                        ctx.tenantId(),
+                        entity.getPatientCpid(),
+                        entity.getProviderId(),
+                        entity.getFacilityId(),
+                        entity.getSessionType(),
+                        referralId,
+                        entity.getEncounterId(),
+                        request == null ? Map.of() : request));
+        entity.setRoomUrl(defaulted(optional(request, "roomUrl", "room_url"), provisioning.roomUrl()));
+        entity.setChannel(defaulted(optional(request, "channel"), provisioning.channel()));
+        entity.setAccessToken(defaulted(optional(request, "accessToken", "access_token"), provisioning.accessToken()));
+        entity.setNotes(optional(request, "notes"));
+
+        TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
+        emitOutbox("teleconsult.session.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        telemetryService.record("telemedicine.session.created", null, Map.of(
+                "sessionId", saved.getSessionId().toString(),
+                "sessionType", saved.getSessionType(),
+                "facilityId", defaulted(saved.getFacilityId(), "UNKNOWN")));
+
+        if (saved.getReferralId() != null) {
+            referralRepository.findByTenantIdAndReferralId(ctx.tenantId(), saved.getReferralId()).ifPresent(referral -> {
+                referral.setStatus("SCHEDULED");
+                referralRepository.save(referral);
+            });
+        }
+        return toTelehealthPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> joinTelehealthSession(String sessionId) {
+        TelehealthSessionEntity entity = getTelehealthEntity(sessionId);
+        entity.setStatus("IN_PROGRESS");
+        if (entity.getStartedAt() == null) {
+            entity.setStartedAt(OffsetDateTime.now());
+        }
+        TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
+        emitOutbox("teleconsult.session.joined", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        return toTelehealthPayload(saved);
+    }
+
+    @Transactional
+    public Map<String, Object> endTelehealthSession(String sessionId, Map<String, Object> request) {
+        TelehealthSessionEntity entity = getTelehealthEntity(sessionId);
+        OffsetDateTime now = OffsetDateTime.now();
+        entity.setStatus("COMPLETED");
+        if (entity.getStartedAt() == null) {
+            entity.setStartedAt(now);
+        }
+        entity.setEndedAt(now);
+        entity.setDurationSeconds(Duration.between(entity.getStartedAt(), now).getSeconds());
+        if (request != null) {
+            entity.setNotes(defaulted(optional(request, "notes"), entity.getNotes()));
+        }
+        TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
+        emitOutbox("teleconsult.session.completed", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        telemetryService.record("telemedicine.session.completed", null, Map.of(
+                "sessionId", saved.getSessionId().toString(),
+                "durationSeconds", saved.getDurationSeconds() == null ? 0L : saved.getDurationSeconds(),
+                "facilityId", defaulted(saved.getFacilityId(), "UNKNOWN")));
+        return toTelehealthPayload(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> telemedicineOpsSnapshot(String facilityId) {
+        List<Map<String, Object>> openReferrals = listIncomingReferrals(facilityId, "SUBMITTED");
+        List<Map<String, Object>> inProgressSessions = listFacilityTelehealthSessions(facilityId, "IN_PROGRESS");
+        List<Map<String, Object>> scheduledSessions = listFacilityTelehealthSessions(facilityId, "SCHEDULED");
+
+        long overdueScheduled = scheduledSessions.stream()
+                .filter(row -> {
+                    String raw = asString(row.get("scheduledAt"));
+                    if (raw == null || raw.isBlank()) return false;
+                    try {
+                        return OffsetDateTime.parse(raw).isBefore(OffsetDateTime.now().minusMinutes(15));
+                    } catch (Exception ignored) {
+                        return false;
+                    }
+                })
+                .count();
+
+        return Map.of(
+                "facilityId", facilityId,
+                "submittedReferralBacklog", openReferrals.size(),
+                "inProgressSessions", inProgressSessions.size(),
+                "scheduledSessions", scheduledSessions.size(),
+                "overdueScheduledSessions", overdueScheduled
+        );
+    }
+
+    private ReferralEntity getReferralEntity(String referralId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return referralRepository.findByTenantIdAndReferralId(ctx.tenantId(), parseUuid(referralId, "referralId"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Referral not found"));
+    }
+
+    private TelehealthSessionEntity getTelehealthEntity(String sessionId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return telehealthSessionRepository.findByTenantIdAndSessionId(ctx.tenantId(), parseUuid(sessionId, "sessionId"))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Telehealth session not found"));
+    }
+
+    private Map<String, Object> toReferralPayload(ReferralEntity entity) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("id", entity.getReferralId().toString());
+        body.put("patientCpid", entity.getPatientCpid());
+        body.put("encounterId", entity.getEncounterId());
+        body.put("providerId", entity.getProviderId());
+        body.put("facilityId", entity.getFacilityId());
+        body.put("referralType", entity.getReferralType());
+        body.put("specialty", entity.getSpecialty());
+        body.put("urgency", entity.getUrgency());
+        body.put("reason", entity.getReason());
+        body.put("clinicalSummary", entity.getClinicalSummary());
+        body.put("status", entity.getStatus());
+        body.put("stage", entity.getStage());
+        body.put("preferredMode", entity.getPreferredMode());
+        body.put("modality", entity.getModality());
+        body.put("virtualMode", entity.getVirtualMode());
+        body.put("routingTarget", readJsonMap(entity.getRoutingTarget()));
+        body.put("attachmentDocumentIds", readJsonStringList(entity.getAttachmentDocumentIds()));
+        body.put("messages", readJsonMapList(entity.getMessages()));
+        body.put("responses", readJsonMapList(entity.getResponses()));
+        body.put("consentType", entity.getConsentType());
+        body.put("consentStatus", entity.getConsentStatus());
+        body.put("consentReference", entity.getConsentReference());
+        body.put("mvumoSessionId", entity.getMvumoSessionId());
+        body.put("tshepoDecisionId", entity.getTshepoDecisionId());
+        body.put("completion", readJsonMap(entity.getCompletionPayload()));
+        body.put("submittedAt", toIso(entity.getSubmittedAt()));
+        body.put("completedAt", toIso(entity.getCompletedAt()));
+        body.put("createdAt", toIso(entity.getCreatedAt()));
+        body.put("updatedAt", toIso(entity.getUpdatedAt()));
+        return body;
+    }
+
+    private Map<String, Object> toTelehealthPayload(TelehealthSessionEntity entity) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("id", entity.getSessionId().toString());
+        body.put("patientCpid", entity.getPatientCpid());
+        body.put("providerId", entity.getProviderId());
+        body.put("facilityId", entity.getFacilityId());
+        body.put("referralId", entity.getReferralId() == null ? null : entity.getReferralId().toString());
+        body.put("encounterId", entity.getEncounterId());
+        body.put("sessionType", entity.getSessionType());
+        body.put("status", entity.getStatus());
+        body.put("roomUrl", entity.getRoomUrl());
+        body.put("channel", entity.getChannel());
+        body.put("sessionProvider", resolveSessionProvider(entity.getChannel()));
+        body.put("token", entity.getAccessToken());
+        body.put("scheduledAt", toIso(entity.getScheduledAt()));
+        body.put("startedAt", toIso(entity.getStartedAt()));
+        body.put("endedAt", toIso(entity.getEndedAt()));
+        body.put("durationSeconds", entity.getDurationSeconds());
+        body.put("notes", entity.getNotes());
+        body.put("createdAt", toIso(entity.getCreatedAt()));
+        body.put("updatedAt", toIso(entity.getUpdatedAt()));
+        return body;
+    }
+
+    private void appendMessage(ReferralEntity entity, Map<String, Object> payload) {
+        List<Map<String, Object>> messages = new ArrayList<>(readJsonMapList(entity.getMessages()));
+        messages.add(payload);
+        entity.setMessages(writeJsonArray(messages));
+    }
+
+    private void appendResponse(ReferralEntity entity, Map<String, Object> payload) {
+        List<Map<String, Object>> responses = new ArrayList<>(readJsonMapList(entity.getResponses()));
+        responses.add(payload);
+        entity.setResponses(writeJsonArray(responses));
+    }
+
+    private void emitOutbox(String eventType, String aggregateId, Map<String, Object> payload) {
+        TrustContext ctx = TrustContextHolder.require();
+        EventOutboxEntity outbox = new EventOutboxEntity();
+        outbox.setAggregateType("telemedicine");
+        outbox.setAggregateId(aggregateId);
+        outbox.setEventType(eventType);
+        outbox.setTenantId(ctx.tenantId());
+        outbox.setPayload(writeJsonObject(payload));
+        outboxRepository.save(outbox);
+    }
+
+    private UUID parseUuid(String raw, String field) {
+        try {
+            return UUID.fromString(raw);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " must be a UUID");
+        }
+    }
+
+    private String required(Map<String, Object> request, String... keys) {
+        String value = optional(request, keys);
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, keys[0] + " is required");
+        }
+        return value;
+    }
+
+    private String optional(Map<String, Object> request, String... keys) {
+        if (request == null) return null;
+        for (String key : keys) {
+            Object value = request.get(key);
+            if (value != null) {
+                String as = value.toString().trim();
+                if (!as.isBlank()) return as;
+            }
+        }
+        return null;
+    }
+
+    private String defaulted(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private int asInt(Object raw, int fallback) {
+        if (raw == null) return fallback;
+        if (raw instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(raw.toString());
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private OffsetDateTime parseDate(String raw, OffsetDateTime fallback) {
+        if (raw == null || raw.isBlank()) return fallback;
+        try {
+            return OffsetDateTime.parse(raw);
+        } catch (Exception ex) {
+            return fallback;
+        }
+    }
+
+    private String writeJsonObject(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value == null ? Map.of() : value);
+        } catch (JsonProcessingException e) {
+            return "{}";
+        }
+    }
+
+    private String writeJsonArray(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value == null ? List.of() : value);
+        } catch (JsonProcessingException e) {
+            return "[]";
+        }
+    }
+
+    private Map<String, Object> readJsonMap(String raw) {
+        if (raw == null || raw.isBlank()) return Map.of();
+        try {
+            return objectMapper.readValue(raw, MAP_TYPE);
+        } catch (Exception ignored) {
+            return Map.of();
+        }
+    }
+
+    private List<String> readJsonStringList(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        try {
+            return objectMapper.readValue(raw, STRING_LIST_TYPE);
+        } catch (Exception ignored) {
+            return List.of();
+        }
+    }
+
+    private List<Map<String, Object>> readJsonMapList(String raw) {
+        if (raw == null || raw.isBlank()) return List.of();
+        try {
+            return objectMapper.readValue(raw, MAP_LIST_TYPE);
+        } catch (Exception ignored) {
+            return List.of();
+        }
+    }
+
+    private String toIso(OffsetDateTime dt) {
+        return dt == null ? null : dt.toString();
+    }
+
+    private String asString(Object value) {
+        return value == null ? null : value.toString();
+    }
+
+    private String resolveSessionProvider(String channel) {
+        if (channel == null || channel.isBlank()) {
+            return TelemedicineSessionProviderRouter.DEFAULT_PROVIDER_TYPE;
+        }
+        return switch (channel.trim().toLowerCase(Locale.ROOT)) {
+            case "manual-phone" -> "MANUAL_PHONE";
+            case "async-no-video" -> "ASYNC_NO_VIDEO";
+            case "external-managed" -> "EXTERNAL_MANAGED";
+            default -> TelemedicineSessionProviderRouter.DEFAULT_PROVIDER_TYPE;
+        };
+    }
+}

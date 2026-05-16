@@ -64,6 +64,25 @@ A service that is not in the register does not officially exist in vNext.
 - Plane assignment follows system-of-record responsibility, not folder placement or branding.
 - Low-confidence and unclear classifications are tracked in unresolved sections.
 
+## Imaging Remediation Snapshot (May 2026)
+- PACS/DICOM focused hardening was executed across Orthanc, PACS adapter, OROS, BUTANO/FHIR, Experience viewer launch, and ops observability.
+- PACS adapter now exposes a provider abstraction boundary (default Orthanc provider, external PACS contract stub) so vNext workflow ownership is not hard-bound to one PACS backend.
+- Viewer launch now uses a policy-based engine selector (`DICOMWEB_STACK` / `OHIF` / `CORNERSTONE`) with governed launch-context metadata.
+- Canonical evidence and residual gaps are tracked in `docs/architecture/PACS_DICOM_PIPELINE.md`.
+- The run intentionally avoided destructive refactors and preserved OROS/BUTANO/Orthanc canonical ownership boundaries.
+
+## Telemedicine Remediation Snapshot (May 2026)
+- Telemedicine orchestration remains anchored in `experience-bff` with canonical PCT referral/encounter ownership and Mvumo consent integration.
+- Provider/citizen telehealth session APIs and teleconsult lifecycle APIs are now explicitly contract-documented in OpenAPI slices.
+- Runtime-safe controller hardening was applied for teleconsult decline/message flow, telemedicine list filtering, citizen telehealth end payload pass-through, and Mvumo client duplication fix.
+- Canonical readiness evidence, acceptance-status scoring, and backlog are tracked in `docs/architecture/TELEMEDICINE_PIPELINE.md`.
+
+## Document Management Remediation Snapshot (May 2026)
+- `document-service` now uses a provider-neutral storage-provider contract at runtime (current adapter: MinIO/S3).
+- `landela-adapter-service` remains the external DMS bridge and is not replaced.
+- Document preview path is now explicitly surfaced in the document-store contract and BFF client.
+- Canonical readiness evidence and backlog are tracked in `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`.
+
 ## Complete Service Inventory
 | Service | Type | Ring | Primary Plane | Category | Status | System Of Record For | Frontend Surface | Evidence | Confidence |
 |---|---|---|---|---|---|---|---|---|---|
@@ -755,6 +774,8 @@ A service that is not in the register does not officially exist in vNext.
 - `docs/architecture/SERVICE_ACTIVATION_BACKLOG.md`
 - `docs/architecture/SERVICE_DEFINITION_OF_DONE.md`
 - `docs/architecture/SERVICE_REMEDIATION_REPORT.md`
+- `docs/architecture/PACS_DICOM_PIPELINE.md`
+- `docs/architecture/TELEMEDICINE_PIPELINE.md`
 - `docs/architecture/EVENT_CONTRACT_PARITY_CONVERGENCE_PLAN.md`
 - `docs/architecture/service-update-policy.md`
 - `docs/architecture/ring-plane-taxonomy.md`
@@ -765,3 +786,9 @@ A service that is not in the register does not officially exist in vNext.
 
 ## Evidence References
 Primary evidence was taken from `services/`, `ui/`, `apps/mobile/`, `libs/`, `contracts/openapi/`, `docker-compose.yml`, `ops/runtime/`, `infra/`, `docs/registry/services-registry.yaml`, and `docs/plan/SERVICE_CATALOG.md`.
+
+## Simba + Wellness Classification Update (May 2026)
+
+- `simba-service` is classified as the canonical wellness/personal-health-data domain owner (PCT-equivalent role for wellness lifecycle state).
+- `wellness-service` is maintained as a compatibility alias and migration bridge only; no new domain ownership should be assigned there.
+- Detailed evidence and capability matrix: `docs/architecture/SIMBA_WELLNESS_LIFESTYLE_ASSESSMENT.md`.

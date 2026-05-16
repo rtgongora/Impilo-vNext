@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
-import { useLaunchImagingViewer } from "@/hooks/queries/useImaging";
+import { useImagingViewerLaunchContext, useLaunchImagingViewer } from "@/hooks/queries/useImaging";
 import { apiClient } from "@/lib/api-client";
 import { applyWindowLevelToRgba, decodeNativeGrayscaleForWl } from "@/lib/dicom/nativeWindowLevel";
 
@@ -47,9 +47,32 @@ export default function DicomViewerPage() {
   const studyUid = search.get("studyUid") ?? "";
   const initialSeriesUid = search.get("seriesUid");
   const governedStudyId = search.get("governedStudyId");
+  const requestedViewerType = search.get("viewerType");
+  const ohifBaseUrl =
+    process.env.NEXT_PUBLIC_OHIF_BASE_URL ??
+    (process.env.NODE_ENV === "development" ? "http://localhost:3005" : "");
 
   const launchViewer = useLaunchImagingViewer(patientId);
+  const launchContextQ = useImagingViewerLaunchContext(governedStudyId, {
+    chartPatientCpid: patientId,
+    viewerType: requestedViewerType,
+  });
   const sessionRecorded = useRef(false);
+  const resolvedViewerEngine = String(
+    (launchContextQ.data?.data as { viewerEngine?: string } | undefined)?.viewerEngine ??
+      requestedViewerType ??
+      "DICOMWEB_STACK",
+  )
+    .trim()
+    .toUpperCase();
+  const useOhif = resolvedViewerEngine === "OHIF";
+  const ohifUrl = useMemo(() => {
+    if (!useOhif || !ohifBaseUrl || !studyUid) return null;
+    const normalizedBase = ohifBaseUrl.replace(/\/+$/, "");
+    const url = new URL(`${normalizedBase}/viewer`);
+    url.searchParams.set("StudyInstanceUIDs", studyUid);
+    return url.toString();
+  }, [useOhif, ohifBaseUrl, studyUid]);
 
   useEffect(() => {
     if (!governedStudyId || sessionRecorded.current) return;
@@ -57,12 +80,12 @@ export default function DicomViewerPage() {
     void launchViewer.mutateAsync({
       studyId: governedStudyId,
       body: {
-        viewerType: "DICOMWEB_STACK",
+        viewerType: requestedViewerType ?? "DICOMWEB_STACK",
         contextRef: `/ehr/${patientId}/imaging/viewer`,
         scope: "FULL_DICOM",
       },
     });
-  }, [governedStudyId, patientId, launchViewer]);
+  }, [governedStudyId, patientId, launchViewer, requestedViewerType]);
 
   const { data: seriesJson, isLoading: loadingSeries, error: seriesError } = useQuery({
     queryKey: ["dicomweb-series", studyUid],
@@ -353,6 +376,59 @@ export default function DicomViewerPage() {
             Chart context: <span className="font-mono text-slate-700">{patientId}</span>
           </span>
         </div>
+        {governedStudyId && (
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700">
+            Viewer engine{" "}
+            <span className="font-semibold">
+              {resolvedViewerEngine}
+            </span>
+            {" · "}
+            PACS backend{" "}
+            <span className="font-semibold">
+              {String(
+                (launchContextQ.data?.data as { backend?: { provider?: string } } | undefined)?.backend?.provider ??
+                  "ORTHANC",
+              )}
+            </span>
+            <span className="mx-2 text-slate-300">|</span>
+            <Link
+              href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                studyUid,
+              )}${governedStudyId ? `&governedStudyId=${encodeURIComponent(governedStudyId)}` : ""}&viewerType=DICOMWEB_STACK`}
+              className={`mr-2 rounded px-2 py-1 ${resolvedViewerEngine === "DICOMWEB_STACK" ? "bg-slate-100 font-semibold" : "hover:bg-slate-50"}`}
+            >
+              DICOMWEB_STACK
+            </Link>
+            <Link
+              href={`/ehr/${encodeURIComponent(patientId)}/imaging/viewer?studyUid=${encodeURIComponent(
+                studyUid,
+              )}${governedStudyId ? `&governedStudyId=${encodeURIComponent(governedStudyId)}` : ""}&viewerType=OHIF`}
+              className={`rounded px-2 py-1 ${resolvedViewerEngine === "OHIF" ? "bg-slate-100 font-semibold" : "hover:bg-slate-50"}`}
+            >
+              OHIF
+            </Link>
+          </div>
+        )}
+
+        {useOhif && !ohifUrl && (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+            OHIF engine selected, but no OHIF host is configured. Set{" "}
+            <code className="font-mono">NEXT_PUBLIC_OHIF_BASE_URL</code> (dev default is{" "}
+            <code className="font-mono">http://localhost:3005</code>), or switch to{" "}
+            <code className="font-mono">DICOMWEB_STACK</code>.
+          </div>
+        )}
+
+        {useOhif && ohifUrl && (
+          <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+            <iframe
+              title="OHIF viewer"
+              src={ohifUrl}
+              className="h-[78vh] w-full rounded-xl border border-slate-200"
+              referrerPolicy="no-referrer"
+            />
+          </div>
+        )}
 
         {!studyUid && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
@@ -373,7 +449,7 @@ export default function DicomViewerPage() {
           </div>
         )}
 
-        {studyUid && !loadingSeries && !seriesError && (
+        {!useOhif && studyUid && !loadingSeries && !seriesError && (
           <div className="grid gap-4 xl:grid-cols-[240px_minmax(0,1fr)]">
             <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Series</p>

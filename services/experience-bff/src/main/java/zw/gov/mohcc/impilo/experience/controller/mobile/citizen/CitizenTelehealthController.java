@@ -35,7 +35,8 @@ public class CitizenTelehealthController {
             String preferredDate,
             String sessionType,
             String providerId,
-            String referralId
+            String referralId,
+            String sessionProvider
     ) {}
 
     @GetMapping("/sessions")
@@ -51,6 +52,9 @@ public class CitizenTelehealthController {
         int limit = Math.min(size, 100);
 
         JsonNode sessions = pctClient.getPatientTelehealthSessions(actorId, status, page, limit);
+        if (sessions == null) {
+            throw new ResourceNotFoundException("Telehealth sessions not available");
+        }
 
         // UUID patientId = resolvePatientId(tenantId, actorId);
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
@@ -69,6 +73,9 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         JsonNode session = pctClient.getTelehealthSession(id.toString());
+        if (session == null) {
+            throw new ResourceNotFoundException("Telehealth session not found");
+        }
 
         // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
 
@@ -96,8 +103,12 @@ public class CitizenTelehealthController {
         sessionRequest.put("preferredDate", body.preferredDate());
         if (body.providerId() != null) sessionRequest.put("providerId", body.providerId());
         if (body.referralId() != null) sessionRequest.put("referralId", body.referralId());
+        if (body.sessionProvider() != null) sessionRequest.put("sessionProvider", body.sessionProvider());
 
         JsonNode result = pctClient.requestTelehealthSession(sessionRequest);
+        if (result == null) {
+            throw new ResourceNotFoundException("Telehealth session could not be created");
+        }
 
         // jdbcTemplate.update("""
         //     INSERT INTO citizen_telehealth_sessions (...) VALUES (...)
@@ -118,6 +129,9 @@ public class CitizenTelehealthController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         JsonNode result = pctClient.joinTelehealthSession(id.toString());
+        if (result == null) {
+            throw new ResourceNotFoundException("Telehealth session join failed");
+        }
 
         // jdbcTemplate.update("""
         //     UPDATE citizen_telehealth_sessions
@@ -141,6 +155,9 @@ public class CitizenTelehealthController {
             @RequestBody(required = false) Map<String, Object> body) {
 
         JsonNode result = pctClient.endTelehealthSession(id.toString(), body != null ? body : Map.of());
+        if (result == null) {
+            throw new ResourceNotFoundException("Telehealth session end failed");
+        }
 
         // jdbcTemplate.update("""
         //     UPDATE citizen_telehealth_sessions
@@ -149,7 +166,7 @@ public class CitizenTelehealthController {
         //     """, ...);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "COMPLETED"));
+        response.put("data", result);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }

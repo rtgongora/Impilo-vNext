@@ -128,3 +128,32 @@ Runtime follow-on plan for controlled convergence:
 | Workforce Governance | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Zibo | tshepo-authz-service | experience-bff, integration-hub | Integrated |
 | Zibo Web | experience-bff | None | Integrated |
+
+## Imaging Integration Note (May 2026)
+
+- PACS adapter integration now includes explicit ops status and failure-list endpoints for Orthanc connectivity and outbox/writeback visibility.
+- Experience BFF now proxies governed imaging ops endpoints (`/internal/v1/imaging/ops/*`) that feed admin system-monitor cards.
+- PACS backend integration is now provider-neutral at the service boundary (`ORTHANC` default with external PACS connector stub contract).
+- OROS PACS consumption was hardened for envelope payload compatibility to reduce event-shape drift risk.
+- End-to-end state and unresolved risks are tracked in `docs/architecture/PACS_DICOM_PIPELINE.md`.
+
+## Telemedicine Integration Note (May 2026)
+
+- Telemedicine orchestration remains integrated through `experience-bff` with canonical PCT referral/encounter ownership and Mvumo consent integration.
+- Routing validation paths use VARAPI (practitioner identity/role checks) and TUSO (facility/workspace checks).
+- Session and teleconsult lifecycle routes now have explicit OpenAPI coverage in experience-bff/mobile contract slices.
+- Remaining integration gaps (specialty-specific async rails, teleconsult writeback closure, and consolidated ops telemetry) are tracked in `docs/architecture/TELEMEDICINE_PIPELINE.md`.
+
+## Telemedicine + Document Management Integration Refinement (May 2026)
+
+- `pct-service` now routes session provisioning through provider-neutral telemedicine session providers while keeping referral/session state canonical in PCT.
+- `document-service` now routes binary storage operations through a provider-neutral storage provider contract and exposes an inline preview payload endpoint.
+- Remaining external media-provider and external-DMS integration backlog is tracked in:
+  - `docs/architecture/TELEMEDICINE_PIPELINE.md`
+  - `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`
+
+## Simba + Wellness Integration Refinement (May 2026)
+
+- BFF wellness upstream configuration now prioritizes canonical Simba ownership while preserving `WELLNESS_SERVICE_BASE_URL` compatibility.
+- Mobile provider vitals route alignment fixed to `/internal/v1/mobile/provider/vitals`.
+- Simba personal-data integration now includes connected-source governance, permission management, manual entry, provider summary, and remote alert APIs.

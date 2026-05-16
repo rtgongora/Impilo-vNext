@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +26,15 @@ import java.util.*;
 public class MobileTelemedicineController {
 
     private final PctServiceClient pctClient;
+    private final ObjectMapper objectMapper;
 
     public MobileTelemedicineController(PctServiceClient pctClient) {
+        this(pctClient, new ObjectMapper());
+    }
+
+    public MobileTelemedicineController(PctServiceClient pctClient, ObjectMapper objectMapper) {
         this.pctClient = pctClient;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/sessions")
@@ -44,8 +53,9 @@ public class MobileTelemedicineController {
             try {
                 JsonNode data = pctClient.getPatientTelehealthSessions(patientId, status, page, size);
                 if (data != null) {
+                    JsonNode filtered = filterSessions(data, providerId, referralId);
                     return ResponseEntity.ok(Map.of(
-                            "data", data,
+                            "data", filtered,
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
                 return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine list payload returned", requestId, correlationId);
@@ -57,8 +67,9 @@ public class MobileTelemedicineController {
             try {
                 JsonNode data = pctClient.listTelehealthSessions(facilityId, status, page, size);
                 if (data != null) {
+                    JsonNode filtered = filterSessions(data, providerId, referralId);
                     return ResponseEntity.ok(Map.of(
-                            "data", data,
+                            "data", filtered,
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
                 }
                 return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine list payload returned", requestId, correlationId);
@@ -96,6 +107,9 @@ public class MobileTelemedicineController {
         String referralId = body.get("referral_id") != null ? body.get("referral_id").toString() : null;
         String scheduledAt = body.get("scheduled_at") != null ? body.get("scheduled_at").toString() : null;
         String notes = body.get("notes") != null ? body.get("notes").toString() : null;
+        String sessionProvider = body.get("session_provider") != null
+                ? body.get("session_provider").toString()
+                : (body.get("provider_type") != null ? body.get("provider_type").toString() : null);
 
         if (patientId == null || patientId.isBlank()) {
             return badRequest("MISSING_PATIENT_ID", "patient_id is required", requestId, correlationId);
@@ -121,6 +135,9 @@ public class MobileTelemedicineController {
             if (referralId != null) pctBody.put("referralId", referralId);
             pctBody.put("scheduledAt", scheduled.toString());
             if (notes != null) pctBody.put("notes", notes);
+            if (sessionProvider != null && !sessionProvider.isBlank()) {
+                pctBody.put("sessionProvider", sessionProvider);
+            }
             JsonNode result = pctClient.requestTelehealthSession(pctBody);
             if (result != null) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
@@ -189,5 +206,56 @@ public class MobileTelemedicineController {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", Map.of("code", code, "message", message != null ? message : "Telemedicine upstream unavailable"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private JsonNode filterSessions(JsonNode payload, String providerId, String referralId) {
+        boolean filterProvider = providerId != null && !providerId.isBlank();
+        boolean filterReferral = referralId != null && !referralId.isBlank();
+        if ((!filterProvider && !filterReferral) || payload == null || payload.isNull()) {
+            return payload;
+        }
+        if (payload.isArray()) {
+            return filterSessionArray((ArrayNode) payload, providerId, referralId);
+        }
+        if (payload.isObject()) {
+            ObjectNode copy = payload.deepCopy();
+            JsonNode items = copy.path("items");
+            if (items.isArray()) {
+                copy.set("items", filterSessionArray((ArrayNode) items, providerId, referralId));
+                return copy;
+            }
+            JsonNode data = copy.path("data");
+            if (data.isArray()) {
+                copy.set("data", filterSessionArray((ArrayNode) data, providerId, referralId));
+                return copy;
+            }
+        }
+        return payload;
+    }
+
+    private ArrayNode filterSessionArray(ArrayNode sessions, String providerId, String referralId) {
+        ArrayNode filtered = objectMapper.createArrayNode();
+        sessions.forEach(node -> {
+            String provider = first(node, "providerId", "provider_id");
+            String referral = first(node, "referralId", "referral_id");
+            boolean providerMatch = providerId == null || providerId.isBlank() || providerId.equals(provider);
+            boolean referralMatch = referralId == null || referralId.isBlank() || referralId.equals(referral);
+            if (providerMatch && referralMatch) {
+                filtered.add(node);
+            }
+        });
+        return filtered;
+    }
+
+    private String first(JsonNode node, String... keys) {
+        for (String key : keys) {
+            if (node.hasNonNull(key)) {
+                String v = node.get(key).asText();
+                if (v != null && !v.isBlank()) {
+                    return v;
+                }
+            }
+        }
+        return null;
     }
 }

@@ -63,6 +63,15 @@ public class DocumentServiceClient {
     }
 
     /**
+     * Generate preview payload for inline-safe document rendering.
+     */
+    public JsonNode getPreview(UUID objectId) {
+        String url = baseUrl + "/v1/internal/objects/" + objectId + "/preview";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Find objects by SHA-256 content hash (deduplication check).
      *
      * @param sha256 the content hash

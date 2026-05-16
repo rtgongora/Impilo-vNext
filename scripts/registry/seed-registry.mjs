@@ -106,9 +106,9 @@ const DOCTRINE_OVERRIDES = new Map(
     [
       "simba-service",
       {
-        primary_plane: "clinical",
-        plane: "clinical",
-        domain: "wellness-lifestyle-orchestration",
+        primary_plane: "enterprise",
+        plane: "enterprise",
+        domain: "wellness-personal-health-data",
         secondary_planes: ["experience", "data", "integration", "registry", "trust"],
         system_of_record_for: [
           "wellness journeys",
@@ -120,6 +120,9 @@ const DOCTRINE_OVERRIDES = new Map(
           "coaching and nudge workflows",
           "wellness programme participation",
           "longitudinal wellness progress",
+          "connected source registry and permissions",
+          "personal wellness readings and manual entries",
+          "wellness remote monitoring alerts",
         ],
         forbidden_responsibilities: [
           "must-not-own-clinical-encounter-lifecycle",
@@ -138,19 +141,12 @@ const DOCTRINE_OVERRIDES = new Map(
     [
       "wellness-service",
       {
-        primary_plane: "clinical",
-        plane: "clinical",
-        domain: "wellness-preventive-care",
+        primary_plane: "enterprise",
+        plane: "enterprise",
+        domain: "wellness-compatibility-alias",
         secondary_planes: ["experience", "data", "registry", "trust"],
-        system_of_record_for: [
-          "patient-linked wellness activities",
-          "screening prompts",
-          "wellness records",
-          "wellness goals",
-          "lifestyle and preventive-care activities",
-          "adherence support activities",
-        ],
-        consumes_from: ["tshepo-authz-service", "simba-service"],
+        system_of_record_for: [],
+        consumes_from: ["simba-service"],
         exposes_to: ["experience-bff", "integration-hub"],
         forbidden_responsibilities: [
           "must-not-own-public-health-surveillance-source-of-truth",

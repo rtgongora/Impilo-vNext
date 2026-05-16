@@ -18,6 +18,8 @@ tags:
   - name: ERP-HR
   - name: ERP-Procurement
   - name: AssetRegistry
+  - name: Teleconsult
+  - name: Telemedicine
 servers:
   - url: http://localhost:8160
     description: Local default (`default_http_port` in docs/registry/services-registry.yaml)
@@ -53,6 +55,414 @@ paths:
       responses:
         '200':
           description: Service reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions:
+    get:
+      operationId: bffTeleconsultListSessions
+      tags: [Teleconsult]
+      summary: List teleconsult sessions (patient/referrer scoped)
+      parameters:
+        - name: patientId
+          in: query
+          required: false
+          schema: { type: string }
+        - name: referrerId
+          in: query
+          required: false
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Teleconsult listing envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffTeleconsultCreateSession
+      tags: [Teleconsult]
+      summary: Create teleconsult request/session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Teleconsult created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}:
+    get:
+      operationId: bffTeleconsultGetSession
+      tags: [Teleconsult]
+      summary: Get teleconsult session by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Teleconsult session envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}/accept:
+    post:
+      operationId: bffTeleconsultAccept
+      tags: [Teleconsult]
+      summary: Accept teleconsult session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Accept response envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}/decline:
+    post:
+      operationId: bffTeleconsultDecline
+      tags: [Teleconsult]
+      summary: Decline teleconsult session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Decline response envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}/messages:
+    get:
+      operationId: bffTeleconsultMessagesList
+      tags: [Teleconsult]
+      summary: List teleconsult async messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Message thread envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffTeleconsultMessagesSend
+      tags: [Teleconsult]
+      summary: Send teleconsult async message
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Message accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}/response:
+    post:
+      operationId: bffTeleconsultSubmitResponse
+      tags: [Teleconsult]
+      summary: Submit specialist response for teleconsult
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Response accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/sessions/{id}/complete:
+    post:
+      operationId: bffTeleconsultComplete
+      tags: [Teleconsult]
+      summary: Complete teleconsult workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Completion envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/ops/sla:
+    get:
+      operationId: bffTeleconsultOpsSla
+      tags: [Teleconsult]
+      summary: Telemedicine SLA and backlog metrics
+      parameters:
+        - name: facility_id
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Ops SLA metrics envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/teleconsult/ops/specialty-workbench:
+    get:
+      operationId: bffTeleconsultSpecialtyWorkbench
+      tags: [Teleconsult]
+      summary: Specialist backlog workbench rows
+      parameters:
+        - name: facility_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: specialty
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Specialty workbench row envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/telemedicine/sessions:
+    get:
+      operationId: bffProviderTelemedicineList
+      tags: [Telemedicine]
+      summary: Provider telemedicine session worklist
+      responses:
+        '200':
+          description: Session listing envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/telemedicine/sessions/{id}/join:
+    post:
+      operationId: bffProviderTelemedicineJoin
+      tags: [Telemedicine]
+      summary: Join provider telemedicine session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session join envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/telemedicine/sessions/{id}/end:
+    post:
+      operationId: bffProviderTelemedicineEnd
+      tags: [Telemedicine]
+      summary: End provider telemedicine session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session end envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffProviderTelemedicineCreate
+      tags: [Telemedicine]
+      summary: Create provider telemedicine session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/telehealth/sessions:
+    get:
+      operationId: bffCitizenTelehealthList
+      tags: [Telemedicine]
+      summary: Citizen telehealth session list
+      responses:
+        '200':
+          description: Citizen telehealth listing envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/telehealth/sessions/{id}:
+    get:
+      operationId: bffCitizenTelehealthGet
+      tags: [Telemedicine]
+      summary: Get citizen telehealth session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Telehealth session envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/telehealth/sessions/{id}/join:
+    post:
+      operationId: bffCitizenTelehealthJoin
+      tags: [Telemedicine]
+      summary: Join citizen telehealth session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session join envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/citizen/telehealth/sessions/{id}/end:
+    post:
+      operationId: bffCitizenTelehealthEnd
+      tags: [Telemedicine]
+      summary: End citizen telehealth session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session end envelope
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: bffCitizenTelehealthCreate
+      tags: [Telemedicine]
+      summary: Request citizen telehealth consultation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Telehealth request created
           content:
             application/json:
               schema:
@@ -1728,6 +2138,189 @@ paths:
                 additionalProperties: true
         '502':
           description: `NOTIFICATIONS_UNAVAILABLE` typed fail-close response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/studies:
+    get:
+      operationId: bffImagingListStudies
+      tags: [Clinical]
+      summary: List studies via governed PACS adapter proxy
+      responses:
+        '200':
+          description: Wrapped imaging studies response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/studies/search:
+    post:
+      operationId: bffImagingSearchStudies
+      tags: [Clinical]
+      summary: Search studies via governed PACS adapter proxy
+      responses:
+        '200':
+          description: Wrapped imaging studies response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/studies/{studyId}/viewer-sessions:
+    post:
+      operationId: bffImagingLaunchViewer
+      tags: [Clinical]
+      summary: Launch audited viewer session from patient context
+      parameters:
+        - name: studyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wrapped viewer session response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '403':
+          description: Access denied by imaging governance checks
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/studies/{studyId}/viewer-launch-context:
+    get:
+      operationId: bffImagingViewerLaunchContext
+      tags: [Clinical]
+      summary: Resolve governed viewer launch context with selected engine and PACS backend metadata
+      parameters:
+        - name: studyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: viewerType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: chart_patient_cpid
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wrapped viewer launch context response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '403':
+          description: Access denied by imaging governance checks
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/status:
+    get:
+      operationId: bffImagingOpsStatus
+      tags: [Clinical]
+      summary: Governed imaging ops backend status probe
+      responses:
+        '200':
+          description: Wrapped ops status response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/unmatched-studies:
+    get:
+      operationId: bffImagingOpsUnmatched
+      tags: [Clinical]
+      summary: Governed imaging ops list of unmatched studies
+      responses:
+        '200':
+          description: Wrapped unmatched studies response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/failed-correlations:
+    get:
+      operationId: bffImagingOpsFailedCorrelations
+      tags: [Clinical]
+      summary: Governed imaging ops list of failed correlations
+      responses:
+        '200':
+          description: Wrapped failed correlations response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/failed-writebacks:
+    get:
+      operationId: bffImagingOpsFailedWritebacks
+      tags: [Clinical]
+      summary: Governed imaging ops list of failed writebacks
+      responses:
+        '200':
+          description: Wrapped failed writebacks response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/failed-writebacks/{outboxId}/retry:
+    post:
+      operationId: bffImagingOpsRetryFailedWriteback
+      tags: [Clinical]
+      summary: Retry a failed imaging writeback row
+      parameters:
+        - name: outboxId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Wrapped retry status response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging/ops/failed-writebacks/retry-all:
+    post:
+      operationId: bffImagingOpsRetryAllFailedWritebacks
+      tags: [Clinical]
+      summary: Retry all failed imaging writeback rows
+      responses:
+        '200':
+          description: Wrapped batch retry response
           content:
             application/json:
               schema:

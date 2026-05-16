@@ -3,6 +3,7 @@
 | Service ID | Primary plane | System-of-record responsibilities |
 |---|---|---|
 | `ai-model-registry-service` | data | Ai Model Registry canonical records |
+| `analytics-pipeline-service` | integration | Analytics Pipeline canonical records |
 | `asset-registry-service` | integration | Asset Registry canonical records |
 | `audit-ledger-service` | integration | Audit Ledger canonical records |
 | `butano-fhir` | clinical | Butano Fhir canonical records |
@@ -45,8 +46,8 @@
 | `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |
 | `mushex-service` | enterprise | Mushex canonical records |
 | `mvumo-service` | trust | Mvumo canonical records |
-| `national-data-repository-service` | data | NDR dataset catalog and query facade (transitional; merge target with `ndr-service`) |
-| `ndr-service` | data | Canonical NDR ingest + governed bronze/gold query runtime (primary during consolidation) |
+| `national-data-repository-service` | data | National Data Repository canonical records |
+| `ndr-service` | data | Ndr canonical records |
 | `notification-service` | integration | Notification canonical records |
 | `observability-service` | integration | Observability canonical records |
 | `offline-edge-service` | integration | Offline Edge canonical records |
@@ -58,6 +59,7 @@
 | `pharmacy-service` | clinical | Pharmacy canonical records |
 | `procurement-service` | enterprise | Procurement canonical records |
 | `product-registry-service` | registry | Product Registry canonical records |
+| `referral-service` | integration | Referral canonical records |
 | `reporting-service` | data | Reporting canonical records |
 | `rules-service` | clinical | Rules canonical records |
 | `scheduling-service` | clinical | Scheduling canonical records |
@@ -65,7 +67,7 @@
 | `search-service` | data | Search canonical records |
 | `security-hardening-service` | integration | Security Hardening canonical records |
 | `share-slip-service` | enterprise | Share Slip canonical records |
-| `simba-service` | clinical | wellness journeys, lifestyle plans, self-care plans, preventive care workflows, wellness goals, habit tracking workflows, coaching and nudge workflows, wellness programme participation, longitudinal wellness progress |
+| `simba-service` | enterprise | wellness journeys, lifestyle plans, self-care plans, preventive care workflows, wellness goals, habit tracking workflows, coaching and nudge workflows, wellness programme participation, longitudinal wellness progress, connected source registry and permissions, personal wellness readings and manual entries, wellness remote monitoring alerts |
 | `support-service` | integration | Support canonical records |
 | `surveillance-service` | data | public-health surveillance signals and case aggregates, surveillance alert definitions and epidemiological counters, notifiable event monitoring telemetry |
 | `tshepo-audit-service` | trust | Tshepo Audit canonical records |
@@ -79,7 +81,7 @@
 | `ubomi-service` | registry | Ubomi canonical records |
 | `varapi-service` | registry | Varapi canonical records |
 | `vito-service` | registry | Vito canonical records |
-| `wellness-service` | clinical | patient-linked wellness activities, screening prompts, wellness records, wellness goals, lifestyle and preventive-care activities, adherence support activities |
+| `wellness-service` | enterprise | — |
 | `workflow-service` | integration | Workflow canonical records |
 | `workforce-governance-service` | enterprise | Workforce Governance canonical records |
 | `zibo-service` | registry | Zibo canonical records |

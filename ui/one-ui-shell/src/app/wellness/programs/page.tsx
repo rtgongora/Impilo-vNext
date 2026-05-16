@@ -7,19 +7,25 @@
  */
 
 import { BookOpen, Search, Filter } from "lucide-react";
+import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-
-const PROGRAMS = [
-  { title: "Diabetes Prevention", description: "Lifestyle changes to prevent or delay Type 2 diabetes", duration: "12 weeks", status: "Open" },
-  { title: "Cardiovascular Wellness", description: "Heart-healthy eating, exercise, and stress management", duration: "8 weeks", status: "Open" },
-  { title: "Maternal Wellness", description: "Prenatal and postnatal health, nutrition, and support", duration: "Ongoing", status: "Open" },
-  { title: "Mental Wellness", description: "Stress management, mindfulness, and emotional resilience", duration: "6 weeks", status: "Open" },
-  { title: "Smoking Cessation", description: "Structured programme to quit smoking with support", duration: "10 weeks", status: "Open" },
-  { title: "Weight Management", description: "Evidence-based weight loss and healthy eating programme", duration: "16 weeks", status: "Coming Soon" },
-];
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useJoinWellnessChallenge, useWellnessChallenges } from "@/hooks/queries/useCitizenWellness";
 
 export default function WellnessProgramsPage() {
+  const cpid = useAuthStore((s) => s.user?.id);
+  const [search, setSearch] = useState("");
+  const challengesQ = useWellnessChallenges();
+  const joinChallenge = useJoinWellnessChallenge(cpid);
+
+  const programs = useMemo(() => {
+    const rows = challengesQ.data ?? [];
+    return rows.filter((r) =>
+      `${r.title} ${r.description ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [challengesQ.data, search]);
+
   return (
     <AppLayout>
       <PageShell
@@ -35,6 +41,8 @@ export default function WellnessProgramsPage() {
               <input
                 type="text"
                 placeholder="Search programmes..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
@@ -48,7 +56,7 @@ export default function WellnessProgramsPage() {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">My Enrollments</h3>
             <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center">
-              <p className="text-sm text-gray-600">You are not enrolled in any programmes. Browse below to find one.</p>
+              <p className="text-sm text-gray-600">Programme enrollment is backed by challenge participation in this release.</p>
             </div>
           </div>
 
@@ -56,19 +64,26 @@ export default function WellnessProgramsPage() {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Available Programmes</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {PROGRAMS.map(({ title, description, duration, status }) => (
+              {programs.map((program) => (
                 <div
-                  key={title}
+                  key={program.id}
                   className="rounded-xl border border-gray-200 bg-white p-5 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">{title}</h4>
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${status === "Open" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                      {status}
+                    <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">{program.title}</h4>
+                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${program.status === "ACTIVE" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                      {program.status === "ACTIVE" ? "Open" : program.status}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{description}</p>
-                  <p className="text-xs text-gray-400">Duration: {duration}</p>
+                  <p className="text-sm text-gray-600 mb-2">{program.description ?? "Wellness programme"}</p>
+                  <p className="text-xs text-gray-400">Target: {program.targetValue} {program.targetUnit}</p>
+                  <button
+                    onClick={() => void joinChallenge.mutateAsync({ challengeId: program.id })}
+                    disabled={!cpid}
+                    className="mt-3 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                  >
+                    Enroll
+                  </button>
                 </div>
               ))}
             </div>

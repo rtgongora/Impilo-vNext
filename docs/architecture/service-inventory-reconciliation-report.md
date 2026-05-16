@@ -29,7 +29,7 @@
 | `fhir-gateway-service` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `pct-service` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `scheduling-service` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | no | yes | yes | no | aligned |
-| `simba-service` | yes | yes | yes | clinical | wellness-lifestyle-orchestration | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
+| `simba-service` | yes | yes | yes | enterprise | wellness-personal-health-data | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `oros-service` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `pharmacy-service` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `pharmacy-elmis-adapter` | yes | yes | yes | clinical | care-delivery | baseline-assessed | implemented-or-partial | unknown-or-partial | no | yes | no | no | aligned |
@@ -100,7 +100,7 @@
 | `../libs/contract-tests` | no | yes | yes | ? | ? | ? | ? | ? | no | no | no | no | aligned |
 | `developer-portal-service` | yes | yes | yes | integration | platform-ops | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | no | no | aligned |
 | `schema-registry-service` | yes | yes | yes | integration | platform-ops | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | no | no | aligned |
-| `wellness-service` | yes | yes | yes | clinical | wellness-preventive-care | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
+| `wellness-service` | yes | yes | yes | enterprise | wellness-compatibility-alias | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
 | `experience-bff` | yes | yes | yes | experience | workflow-orchestration | baseline-assessed | implemented-or-partial | wired | yes | yes | yes | yes | aligned |
 | `workforce-governance-service` | yes | yes | yes | enterprise | workforce-operations | baseline-assessed | implemented-or-partial | unknown-or-partial | no | yes | no | no | aligned |
 | `clinical-knowledge-platform-service` | yes | yes | yes | clinical | clinical-knowledge | baseline-assessed | implemented-or-partial | unknown-or-partial | yes | yes | yes | no | aligned |
@@ -112,8 +112,8 @@
 
 ## Focused Corrections Applied In This Pass
 
-- `simba-service`: corrected to `primary_plane=clinical`, `domain=wellness-lifestyle-orchestration`; SoR and forbidden responsibilities now explicitly align with wellness/lifestyle orchestration doctrine.
-- `wellness-service`: reclassified from Experience to Clinical with `domain=wellness-preventive-care`; SoR/forbidden lists tightened and BFF/integration exposure normalized.
+- `simba-service`: corrected to `primary_plane=enterprise`, `domain=wellness-personal-health-data`; canonical SoR scope now includes connected sources, personal readings, and remote-alert ownership.
+- `wellness-service`: reclassified as enterprise compatibility alias (`domain=wellness-compatibility-alias`) with no canonical SoR responsibilities.
 - `surveillance-service`: domain corrected to `public-health-surveillance` and secondary touchpoints expanded (`clinical`, `experience`, `integration`, `registry`, `trust`).
 - `campaigns-service`: domain corrected to `public-health-campaigns` and secondary touchpoints expanded (`clinical`, `experience`, `integration`, `registry`, `trust`).
 - `mushe-wallet-service`: reactor inclusion + parent/build fixes completed; now reconciled and buildable from `services/pom.xml`.

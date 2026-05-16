@@ -6,6 +6,7 @@ Integration hub, adapters, offline sync, jobs, notifications and channel/edge wo
 
 | Service ID | Maven module | Domain | System of record | Forbidden responsibilities |
 |---|---|---|---|---|
+| `analytics-pipeline-service` | `analytics-pipeline-service` | platform-ops | Analytics Pipeline canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `asset-registry-service` | `asset-registry-service` | platform-ops | Asset Registry canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `audit-ledger-service` | `audit-ledger-service` | platform-ops | Audit Ledger canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `card-print-agent` | `card-print-agent` | interoperability | Card Print Agent canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
@@ -21,6 +22,7 @@ Integration hub, adapters, offline sync, jobs, notifications and channel/edge wo
 | `observability-service` | `observability-service` | platform-ops | Observability canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-edge-service` | `offline-edge-service` | platform-ops | Offline Edge canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `offline-sync-service` | `offline-sync-service` | interoperability | Offline Sync canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
+| `referral-service` | `referral-service` | platform-ops | Referral canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `schema-registry-service` | `schema-registry-service` | platform-ops | Schema Registry canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `security-hardening-service` | `security-hardening-service` | platform-ops | Security Hardening canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |
 | `support-service` | `support-service` | platform-ops | Support canonical records | must-not-become-system-of-record-for-clinical-or-finance, must-not-embed-actor-facing-business-workflows |

@@ -61,6 +61,7 @@ public class VisitSummaryGenerator {
         List<Condition> conditions = searchByEncounter(Condition.class, encounterRef, tenantId);
         List<Observation> observations = searchByEncounter(Observation.class, encounterRef, tenantId);
         List<DiagnosticReport> reports = searchByEncounter(DiagnosticReport.class, encounterRef, tenantId);
+        List<ImagingStudy> imagingStudies = searchByEncounter(ImagingStudy.class, encounterRef, tenantId);
         List<MedicationRequest> medRequests = searchByEncounter(MedicationRequest.class, encounterRef, tenantId);
         List<Procedure> procedures = searchByEncounter(Procedure.class, encounterRef, tenantId);
         List<ServiceRequest> serviceRequests = searchByEncounter(ServiceRequest.class, encounterRef, tenantId);
@@ -78,6 +79,7 @@ public class VisitSummaryGenerator {
         conditions.forEach(r -> addEntry(bundle, r));
         observations.forEach(r -> addEntry(bundle, r));
         reports.forEach(r -> addEntry(bundle, r));
+        imagingStudies.forEach(r -> addEntry(bundle, r));
         medRequests.forEach(r -> addEntry(bundle, r));
         procedures.forEach(r -> addEntry(bundle, r));
         serviceRequests.forEach(r -> addEntry(bundle, r));

@@ -152,6 +152,27 @@ public class TshepoAuthzServiceClient {
     }
 
     /**
+     * Synthetic ext_authz for telemedicine read operations.
+     */
+    public boolean telemedicineReadAllowed() {
+        return syntheticAuthorizeVerdict("GET", "/internal/v1/telemedicine-governed-read");
+    }
+
+    /**
+     * Synthetic ext_authz for telemedicine lifecycle mutations.
+     */
+    public boolean telemedicineMutateAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/telemedicine-governed-mutate");
+    }
+
+    /**
+     * Synthetic ext_authz for telemedicine break-glass overrides.
+     */
+    public boolean telemedicineBreakGlassAllowed() {
+        return syntheticAuthorizeVerdict("POST", "/internal/v1/telemedicine-break-glass-override");
+    }
+
+    /**
      * Synthetic ext_authz for Experience enterprise-domain finance routes (billing workspace or MusheX platform).
      * Resource type is derived from the last path segment (see tshepo-authz V007).
      */

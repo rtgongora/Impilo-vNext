@@ -95,6 +95,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: analytics-pipeline-service
+    maven_module: analytics-pipeline-service
+    primary_plane: integration
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Analytics Pipeline
+    owner_team: TBD
+    system_of_record_for:
+      - Analytics Pipeline canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: asset-registry-service
     maven_module: asset-registry-service
     primary_plane: integration
@@ -1698,6 +1727,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: referral-service
+    maven_module: referral-service
+    primary_plane: integration
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Referral
+    owner_team: TBD
+    system_of_record_for:
+      - Referral canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: reporting-service
     maven_module: reporting-service
     primary_plane: data
@@ -1903,9 +1961,9 @@ services:
     observability_status: partial
   - id: simba-service
     maven_module: simba-service
-    primary_plane: clinical
-    plane: clinical
-    domain: wellness-lifestyle-orchestration
+    primary_plane: enterprise
+    plane: enterprise
+    domain: wellness-personal-health-data
     secondary_planes:
       - experience
       - data
@@ -1929,6 +1987,9 @@ services:
       - coaching and nudge workflows
       - wellness programme participation
       - longitudinal wellness progress
+      - connected source registry and permissions
+      - personal wellness readings and manual entries
+      - wellness remote monitoring alerts
     consumes_from:
       - tshepo-authz-service
     exposes_to:
@@ -2333,9 +2394,9 @@ services:
     observability_status: partial
   - id: wellness-service
     maven_module: wellness-service
-    primary_plane: clinical
-    plane: clinical
-    domain: wellness-preventive-care
+    primary_plane: enterprise
+    plane: enterprise
+    domain: wellness-compatibility-alias
     secondary_planes:
       - experience
       - data
@@ -2348,15 +2409,8 @@ services:
     product_names:
       - Wellness
     owner_team: TBD
-    system_of_record_for:
-      - patient-linked wellness activities
-      - screening prompts
-      - wellness records
-      - wellness goals
-      - lifestyle and preventive-care activities
-      - adherence support activities
+    system_of_record_for: []
     consumes_from:
-      - tshepo-authz-service
       - simba-service
     exposes_to:
       - experience-bff

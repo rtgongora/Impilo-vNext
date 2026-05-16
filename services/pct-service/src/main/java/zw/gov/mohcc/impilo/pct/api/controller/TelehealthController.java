@@ -55,7 +55,7 @@ public class TelehealthController {
     public ResponseEntity<ApiResponse<List<TelehealthSessionEntity>>> listFacility(
             @RequestParam String facilityId,
             @RequestParam(required = false) String status) {
-        return executeList(() -> telehealthService.listByFacility(UUID.fromString(facilityId), status));
+        return executeList(() -> telehealthService.listByFacility(facilityId, status));
     }
 
     private ResponseEntity<ApiResponse<TelehealthSessionEntity>> execute(ThrowingSupplier<TelehealthSessionEntity> action) {

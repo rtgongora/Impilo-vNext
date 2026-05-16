@@ -44,7 +44,8 @@ services:
   - docs/plan/SERVICE_CATALOG.md
   - contracts/openapi
   documentation_gap: ''
-  implementation_gap: ''
+  implementation_gap: Provider-neutral storage routing exists with MinIO adapter; additional
+    external DMS/storage adapters remain pending for full engine-parity.
   frontend_gap: ''
   possible_duplicate: ''
   unresolved_questions: []
@@ -681,9 +682,11 @@ services:
   secondary_plane_displays: []
   system_of_record_for: []
   consumes: []
-  consumed_by: []
+  consumed_by:
+  - pacs-adapter-service
+  - experience-bff
   frontend_surface: ''
-  api_surface: ''
+  api_surface: Orthanc REST (/system,/studies) and DICOMweb (/dicom-web)
   events_published: []
   events_consumed: []
   database_schema: null
@@ -695,6 +698,9 @@ services:
   confidence: high
   evidence_files:
   - docker-compose.yml
+  - ops/runtime/docker-compose.shared.yml
+  - scripts/runtime/wait-for-readiness.sh
+  - scripts/runtime/platformctl.sh
   documentation_gap: ''
   implementation_gap: ''
   frontend_gap: ''
@@ -706,7 +712,7 @@ services:
   surfacing_quality: Not Required
   integration_status: Standalone
   remediation_status: Fixed
-  remediation_notes: ''
+  remediation_notes: Compose/runtime health probing hardened; Kubernetes Orthanc workload declaration remains a tracked follow-on.
   owner_decision_required: false
   canonical_service: ''
   deduplication_group: ''
@@ -2172,7 +2178,11 @@ services:
   frontend_surface: ui/one-ui-shell routes and domain consoles
   api_surface: contracts/openapi/butano.custom.openapi.yaml
   events_published: []
-  events_consumed: []
+  events_consumed:
+  - pacs.study.available
+  - pacs.study.correlated
+  - pacs.imaging_study
+  - impilo.pacs.imaging_study
   database_schema: null
   port: 8090
   deployment_unit: services/butano-service
@@ -2185,6 +2195,7 @@ services:
   evidence_files:
   - services/butano-service/pom.xml
   - contracts/openapi/butano.custom.openapi.yaml
+  - services/butano-service/src/main/java/zw/gov/mohcc/impilo/butano/events/ButanoEventConsumer.java
   documentation_gap: ''
   implementation_gap: ''
   frontend_gap: ''
@@ -2197,7 +2208,9 @@ services:
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed
-  remediation_notes: OpenAPI contract evidence closed for soft-gate promotion readiness.
+  remediation_notes: Document-service now uses provider-neutral storage-provider routing
+    (MINIO active). Preview endpoint and contract are wired; external storage adapters
+    remain backlog.
   owner_decision_required: false
   canonical_service: ''
   deduplication_group: ''
@@ -3327,6 +3340,7 @@ services:
   - oros.result.available
   events_consumed:
   - pacs.study.available
+  - pacs.imaging_study
   - pharmacy.dispense.complete
   - lims.order.status_changed
   - lims.result.available
@@ -3381,6 +3395,8 @@ services:
   secondary_plane_displays: []
   system_of_record_for:
   - Pct canonical records
+  - telehealth session lifecycle records
+  - teleconsult referral lifecycle records
   consumes:
   - tshepo-authz-service
   consumed_by:
@@ -3414,7 +3430,8 @@ services:
   - services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/events/PctEventConsumer.java
   - docs/architecture/kafka-event-catalog.md
   documentation_gap: ''
-  implementation_gap: ''
+  implementation_gap: Telemedicine specialty-specific pathways remain partially modelled
+    through referral/session orchestration and require phased expansion.
   frontend_gap: ''
   possible_duplicate: ''
   unresolved_questions: []
@@ -3425,7 +3442,8 @@ services:
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed
-  remediation_notes: ''
+  remediation_notes: PCT remains canonical source-of-truth for virtual encounter, telehealth
+    session, and referral lifecycle state used by telemedicine orchestration.
   owner_decision_required: false
   canonical_service: ''
   deduplication_group: ''
@@ -3531,8 +3549,8 @@ services:
   - services/referral-service/pom.xml
   - contracts/openapi/referral.openapi.yaml
   documentation_gap: ''
-  implementation_gap: Promote to Aligned only after runtime-backed contract verification
-    evidence is attached.
+  implementation_gap: Runtime-backed teleconsult/referral endpoint evidence and ownership
+    convergence with PCT are still required before promotion to Aligned.
   frontend_gap: ''
   possible_duplicate: ''
   unresolved_questions: []
@@ -3543,8 +3561,9 @@ services:
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Partially Fixed
-  remediation_notes: Skeleton service contract exists; concrete runtime-backed artifact
-    validation is required before Aligned.
+  remediation_notes: Skeleton service contract exists; telemedicine/virtual referral orchestration
+    currently runs via PCT plus experience-bff bridge, pending dedicated referral-service
+    runtime closure decision.
   owner_decision_required: false
   canonical_service: ''
   deduplication_group: ''
@@ -3611,10 +3630,10 @@ services:
   implementation_status: live
   ring: ring_1_execution
   ring_display: Ring 1 Execution
-  primary_plane: clinical_execution
-  primary_plane_display: Clinical Execution
-  category: clinical
-  category_display: Clinical
+  primary_plane: enterprise_resource
+  primary_plane_display: Enterprise Resource
+  category: enterprise
+  category_display: Enterprise
   secondary_planes:
   - experience
   - integration_ops
@@ -3626,15 +3645,10 @@ services:
   - Registry Spine
   - Trust & Governance
   system_of_record_for:
-  - wellness journeys
-  - lifestyle plans
-  - self-care plans
-  - preventive care workflows
-  - wellness goals
-  - habit tracking workflows
-  - coaching and nudge workflows
-  - wellness programme participation
-  - longitudinal wellness progress
+  - personal wellness profile
+  - connected source registry and permissions
+  - personal wellness readings and manual entries
+  - wellness remote monitoring alerts
   consumes:
   - tshepo-authz-service
   consumed_by:
@@ -3648,8 +3662,9 @@ services:
   port: null
   deployment_unit: services/simba-service
   readiness_status: baseline-assessed
-  boundary_notes: Wellness and lifestyle workflow scope overlaps with Wellness Service;
-    ownership converged to Simba as canonical wellness authority.
+  boundary_notes: Simba is the canonical wellness and personal-health-data domain service.
+    Assistant/orchestration features may exist here, but wellness truth remains canonical
+    under Simba service boundaries.
   authority_status: canonical_system_of_record
   aliases:
   - Wellness Service
@@ -3667,7 +3682,7 @@ services:
   - must-not-own-consent-policy-authority
   - must-not-own-payment-ledgers
   - must-not-own-public-health-surveillance-source-of-truth
-  confidence: medium
+  confidence: high
   evidence_files:
   - services/simba-service/pom.xml
   - contracts/openapi/simba.openapi.yaml
@@ -3693,13 +3708,13 @@ services:
   display_name: Wellness
   module_path: services/wellness-service
   type: backend_service
-  implementation_status: deprecated
+  implementation_status: live
   ring: ring_1_execution
   ring_display: Ring 1 Execution
-  primary_plane: clinical_execution
-  primary_plane_display: Clinical Execution
-  category: clinical
-  category_display: Clinical
+  primary_plane: enterprise_resource
+  primary_plane_display: Enterprise Resource
+  category: enterprise
+  category_display: Enterprise
   secondary_planes:
   - experience
   - integration_ops
@@ -3724,10 +3739,8 @@ services:
   port: null
   deployment_unit: services/wellness-service
   readiness_status: baseline-assessed
-  boundary_notes: 'Deprecated alias for Simba wellness capability. Do not add new
-    ownership here. Alias sunset milestones: freeze new downstream alias references
-    by 2026-05-15; runtime cutover to canonical owner by 2026-09-30; hard sunset by
-    2026-12-31.'
+  boundary_notes: Deprecated compatibility alias for Simba wellness APIs. Avoid creating
+    new ownership here and route new wellness capabilities to Simba.
   authority_status: alias_deprecated
   canonical_owner: simba-service
   alias_of: simba-service
@@ -3749,21 +3762,21 @@ services:
   possible_duplicate: ''
   unresolved_questions: []
   activation_state: Duplicated
-  contract_alignment_status: Not Applicable
+  contract_alignment_status: Aligned
   contract_evidence:
   - contracts/openapi/wellness.openapi.yaml
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed
-  remediation_notes: 'Deprecated alias runtime follows phased sunset: freeze 2026-05-15,
-    cutover 2026-09-30, hard sunset 2026-12-31.'
+  remediation_notes: Compatibility alias retained for migration while canonical ownership
+    is converged to Simba.
   owner_decision_required: false
   canonical_service: simba-service
   deduplication_group: ''
   backlog_priority: None
   last_validated_on: '2026-05-15'
-  alias_freeze_effective: '2026-05-15'
-  alias_runtime_cutover_target: '2026-09-30'
+  alias_freeze_effective: null
+  alias_runtime_cutover_target: null
 - canonical_name: hr-payroll-service
   display_name: Hr Payroll
   module_path: services/hr-payroll-service
@@ -4103,13 +4116,15 @@ services:
   secondary_plane_displays: []
   system_of_record_for:
   - Experience Bff canonical records
+  - telemedicine orchestration state projection for web/mobile experiences
   consumes:
   - tshepo-authz-service
   - multiple-domain-services-via-bff
   consumed_by:
   - web-mobile-experience
   frontend_surface: Web and mobile clients via experience-bff
-  api_surface: contracts/openapi/experience-bff.openapi.yaml
+  api_surface: contracts/openapi/experience-bff.openapi.yaml (including teleconsult
+    and mobile telehealth/session routes)
   events_published: []
   events_consumed:
   - pct.encounter.started
@@ -4121,6 +4136,7 @@ services:
   - mushex.payment.status.changed
   - mushex.refund.status.changed
   - pacs.study.available
+  - pacs.study.correlated
   - impilo.surv.case.opened.v1
   database_schema: null
   port: 8160
@@ -4137,7 +4153,8 @@ services:
   - services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/events/UpstreamEventConsumer.java
   - docs/architecture/kafka-event-catalog.md
   documentation_gap: ''
-  implementation_gap: ''
+  implementation_gap: Specialty-specific telemedicine workbench and consolidated telemedicine
+    ops dashboard remain partial.
   frontend_gap: ''
   possible_duplicate: ''
   unresolved_questions: []
@@ -4148,7 +4165,8 @@ services:
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed
-  remediation_notes: ''
+  remediation_notes: Telemedicine orchestration hardened for decline/message pathways,
+    provider/citizen session lifecycle handling, and contract coverage.
   owner_decision_required: false
   canonical_service: ''
   deduplication_group: ''
@@ -6174,8 +6192,16 @@ services:
   - integration-hub
   frontend_surface: ui/one-ui-shell routes and domain consoles
   api_surface: contracts/openapi/pacs-adapter.openapi.yaml
-  events_published: []
-  events_consumed: []
+  events_published:
+  - pacs.study.available
+  - pacs.study.correlated
+  - imaging.viewer.launched
+  - imaging.report.linked
+  - imaging.study.linked_to_order
+  - imaging.access.recorded
+  events_consumed:
+  - oros.order.status_changed
+  - impilo.oros.order
   database_schema: null
   port: 8113
   deployment_unit: services/pacs-adapter-service
@@ -6188,6 +6214,8 @@ services:
   evidence_files:
   - services/pacs-adapter-service/pom.xml
   - contracts/openapi/pacs-adapter.openapi.yaml
+  - services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/api/controller/ImagingStudyController.java
+  - services/pacs-adapter-service/src/main/java/zw/gov/mohcc/impilo/pacs/core/ImagingStudyService.java
   documentation_gap: ''
   implementation_gap: ''
   frontend_gap: ''
@@ -6197,6 +6225,8 @@ services:
   contract_alignment_status: Aligned
   contract_evidence:
   - contracts/openapi/pacs-adapter.openapi.yaml
+  - contracts/openapi/imaging-viewer-launch.openapi.yaml
+  - contracts/asyncapi/imaging-pipeline.asyncapi.yaml
   surfacing_quality: Complete
   integration_status: Integrated
   remediation_status: Fixed

@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -45,6 +47,14 @@ public class FhirGatewayServiceClient {
         String url = baseUrl + "/fhir/" + resourceType + "/" + id;
         log.debug("FHIR Gateway: reading {}/{}", resourceType, id);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode createResource(String resourceType, JsonNode body) {
+        String url = baseUrl + "/fhir/" + resourceType;
+        log.info("FHIR Gateway: creating {}", resourceType);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.POST, new HttpEntity<>(body), JsonNode.class);
         return response.getBody();
     }
 }

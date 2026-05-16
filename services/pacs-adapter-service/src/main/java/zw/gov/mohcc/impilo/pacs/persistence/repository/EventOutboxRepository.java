@@ -10,4 +10,6 @@ import java.util.List;
 public interface EventOutboxRepository extends JpaRepository<EventOutboxEntity, Long> {
 
     List<EventOutboxEntity> findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+
+    List<EventOutboxEntity> findTop100ByPublishErrorIsNotNullOrderByCreatedAtDesc();
 }

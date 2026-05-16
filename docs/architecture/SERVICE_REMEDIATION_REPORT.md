@@ -106,3 +106,61 @@ Validation and checks executed in this wave:
 - architecture registry validator execution (`validate-service-registry.py`)
 
 All policy closures requested in this wave are now encoded in source and docs.
+
+## PACS/DICOM Focused Remediation (May 2026)
+
+- Orthanc runtime hardening: compose healthchecks, readiness probe coverage, and startup failure visibility.
+- PACS adapter hardening: provider abstraction layer, viewer-engine policy, viewer-launch-context endpoint, and ops status/unmatched/failed-correlations/failed-writebacks APIs plus expanded OpenAPI.
+- OROS/BUTANO hardening: PACS event envelope compatibility, ImagingStudy timeline/visit-summary inclusion, and FHIR gateway clinical allowlist update.
+- EHR surfacing hardening: imaging route registry entries, PACS workflow discoverability improvements, and admin system-monitor imaging ops cards.
+- Dedicated evidence and remaining backlog: `docs/architecture/PACS_DICOM_PIPELINE.md`.
+
+## Telemedicine/Virtual Care Focused Remediation (May 2026)
+
+- Corrected an unsafe duplicate class definition in `MvumoServiceClient` (compile/runtime hygiene hardening).
+- Hardened teleconsult orchestration behavior:
+  - list filtering now supports patient/referrer scoping with status filtering behavior,
+  - decline flow now routes through canonical referral response API instead of hard `501`,
+  - asynchronous note/message submission now uses referral response rails,
+  - message retrieval now returns referral response/message thread where available.
+- Hardened provider telemedicine worklist handling by applying provider/referral query filtering to returned session payloads.
+- Hardened citizen telehealth session end flow to return canonical upstream payloads (instead of synthetic completion object).
+- Added telemedicine contract coverage in:
+  - `contracts/openapi/experience-bff.openapi.yaml`
+  - `contracts/openapi/mobile-provider.openapi.yaml`
+  - `contracts/openapi/mobile-citizen.openapi.yaml`
+- Published canonical status snapshot and backlog in `docs/architecture/TELEMEDICINE_PIPELINE.md`.
+
+## Telemedicine + Document Management Neutrality Refinement (May 2026)
+
+- Telemedicine:
+  - Added provider-neutral session provisioning in `pct-service` (`MANAGED_PRIMARY`, `ASYNC_NO_VIDEO`, `MANUAL_PHONE`).
+  - Mobile provider/citizen telehealth flows now support explicit `sessionProvider` routing hints.
+  - Updated telehealth contracts with typed provider-neutral request/response fields.
+- Document management:
+  - Introduced provider-neutral binary storage contract in `document-service` (`ObjectStorageProvider` + router; current adapter `MINIO`).
+  - Added document preview endpoint contract and BFF client support.
+  - Added canonical document capability status matrix in `docs/architecture/DOCUMENT_MANAGEMENT_PIPELINE.md`.
+
+## Simba + Wellness + Personal Health Data Refinement (May 2026)
+
+- Reclassified boundary posture:
+  - `simba-service` treated as canonical wellness/personal-health-data source-of-record.
+  - `wellness-service` treated as compatibility alias during migration.
+- Implemented Simba wellness personal-data runtime APIs:
+  - connected source registry and source permission controls,
+  - manual reading ingestion,
+  - citizen/provider wellness summaries,
+  - remote monitoring alert creation and provider review.
+- Added persistence support for source governance and alert operations:
+  - `wellness_connected_sources`,
+  - `wellness_source_access_audit`,
+  - `wellness_remote_alerts`.
+- Fixed integration drift and surfacing wiring:
+  - BFF wellness base URL now supports both `WELLNESS_BASE_URL` and `WELLNESS_SERVICE_BASE_URL`,
+  - mobile provider vitals monitor path aligned to the implemented BFF route.
+- Added architecture evidence file:
+  - `docs/architecture/SIMBA_WELLNESS_LIFESTYLE_ASSESSMENT.md`.
+- Closed remaining partials in this scope:
+  - expanded `simba.openapi.yaml` to reflect implemented wellness endpoints,
+  - rewired one-ui-shell wellness goals/clubs/diet/programs/routes pages away from demo-only data to runtime APIs.

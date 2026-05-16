@@ -1256,6 +1256,389 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /v1/ops/telemedicine:
+    get:
+      operationId: getTelemedicineOps
+      summary: Get telemedicine SLA and backlog snapshot
+      tags: [ControlTower]
+      parameters:
+        - name: facilityId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Telemedicine ops snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals:
+    get:
+      operationId: listReferrals
+      summary: List referrals by patient
+      tags: [Journey]
+      parameters:
+        - name: patientId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Referral list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createReferral
+      summary: Create referral
+      tags: [Journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Referral created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/incoming:
+    get:
+      operationId: listIncomingReferrals
+      summary: List incoming referrals for facility
+      tags: [Journey]
+      parameters:
+        - name: facilityId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Incoming referrals
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}:
+    get:
+      operationId: getReferral
+      summary: Get referral by id
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Referral record
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/stage:
+    put:
+      operationId: updateReferralStage
+      summary: Update referral stage and metadata
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated referral
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/consent:
+    post:
+      operationId: updateReferralConsent
+      summary: Update referral consent metadata
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated referral
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/submit:
+    post:
+      operationId: submitReferral
+      summary: Submit referral for specialist queue
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Submitted referral
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/accept:
+    post:
+      operationId: acceptReferral
+      summary: Accept referral
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Accepted referral
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/respond:
+    post:
+      operationId: respondReferral
+      summary: Respond to referral
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Referral response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/referrals/{id}/complete:
+    post:
+      operationId: completeReferral
+      summary: Complete referral
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Completed referral
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/telehealth:
+    get:
+      operationId: listTelehealthSessions
+      summary: List facility telehealth sessions
+      tags: [Journey]
+      parameters:
+        - name: facilityId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Telehealth list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    post:
+      operationId: createTelehealthSession
+      summary: Create telehealth session
+      tags: [Journey]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelehealthSessionCreateRequest'
+      responses:
+        '200':
+          description: Created telehealth session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelehealthSessionEnvelope'
+
+  /v1/telehealth/{id}:
+    get:
+      operationId: getTelehealthSession
+      summary: Get telehealth session
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Telehealth session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelehealthSessionEnvelope'
+
+  /v1/telehealth/{id}/join:
+    post:
+      operationId: joinTelehealthSession
+      summary: Join telehealth session
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Joined telehealth session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelehealthSessionEnvelope'
+
+  /v1/telehealth/{id}/end:
+    post:
+      operationId: endTelehealthSession
+      summary: End telehealth session
+      tags: [Journey]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Ended telehealth session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelehealthSessionEnvelope'
+
+  /v1/patient/{cpid}/telehealth:
+    get:
+      operationId: listPatientTelehealthSessions
+      summary: List telehealth sessions for patient
+      tags: [Journey]
+      parameters:
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Patient telehealth sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
   # -------------------------------------------------------------------------
   # Tasks
   # -------------------------------------------------------------------------
@@ -2530,6 +2913,115 @@ components:
           type: string
         actorName:
           type: string
+
+    TelehealthSessionCreateRequest:
+      type: object
+      required: [patientId]
+      properties:
+        patientId:
+          type: string
+          description: CPID/patient reference.
+        providerId:
+          type: string
+          nullable: true
+        facilityId:
+          type: string
+          nullable: true
+        referralId:
+          type: string
+          format: uuid
+          nullable: true
+        encounterId:
+          type: string
+          nullable: true
+        sessionType:
+          type: string
+          enum: [VIDEO, AUDIO, PHONE, ASYNC]
+          default: VIDEO
+        sessionProvider:
+          type: string
+          description: Provider-neutral session engine key.
+          enum: [MANAGED_PRIMARY, ASYNC_NO_VIDEO, MANUAL_PHONE, EXTERNAL_MANAGED]
+        scheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      additionalProperties: false
+
+    TelehealthSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientCpid:
+          type: string
+        providerId:
+          type: string
+          nullable: true
+        facilityId:
+          type: string
+          nullable: true
+        referralId:
+          type: string
+          format: uuid
+          nullable: true
+        encounterId:
+          type: string
+          nullable: true
+        sessionType:
+          type: string
+        status:
+          type: string
+        roomUrl:
+          type: string
+          nullable: true
+        channel:
+          type: string
+        sessionProvider:
+          type: string
+        token:
+          type: string
+          nullable: true
+        scheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+        durationSeconds:
+          type: integer
+          format: int64
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TelehealthSessionEnvelope:
+      type: object
+      additionalProperties: true
+      properties:
+        success:
+          type: boolean
+        correlationId:
+          type: string
+        data:
+          $ref: '#/components/schemas/TelehealthSession'
 
     # -- Error --
     ErrorResponse:

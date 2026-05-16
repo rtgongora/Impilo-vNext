@@ -399,6 +399,13 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     requiredRole: "QUEUE",
   },
   {
+    id: "cmd-pacs-workflow",
+    label: "Open PACS workflow",
+    keywords: ["pacs", "dicom", "imaging", "radiology", "orthanc"],
+    action: { type: "navigate", href: "/queue/search?workflow=pacs" },
+    requiredRole: "CLINICAL",
+  },
+  {
     id: "cmd-clinical",
     label: "Open Clinical hub",
     keywords: ["clinical", "care", "clinical hub", "patient care"],

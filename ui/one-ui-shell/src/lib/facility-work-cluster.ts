@@ -64,8 +64,8 @@ export const FACILITY_WORK_SUBCONTEXT_NAV: Record<FacilityWorkClusterSubcontext,
   },
   imaging: {
     shortLabel: "Imaging",
-    href: "/queue/search",
-    nextCue: "Locate the patient for imaging orders and results review",
+    href: "/queue/search?workflow=pacs",
+    nextCue: "Open the PACS queue workflow for patient imaging context",
   },
   billing: {
     shortLabel: "Billing",

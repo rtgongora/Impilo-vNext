@@ -509,6 +509,15 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode getTelemedicineOps(String facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/ops/telemedicine")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        log.info("PCT: Telemedicine ops snapshot for facility={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode updateReferralStage(String referralId, Map<String, Object> request) {
         String url = baseUrl + "/v1/referrals/" + referralId + "/stage";
         log.info("PCT: Updating referral stage for id={}", referralId);

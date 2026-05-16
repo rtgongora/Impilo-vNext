@@ -229,7 +229,12 @@ public class OrosEventConsumer {
     @Transactional
     public void consumePacsStudy(String message) {
         try {
-            JsonNode event = objectMapper.readTree(message);
+            JsonNode root = objectMapper.readTree(message);
+            JsonNode event = extractPayload(root);
+            if (event == null || event.isNull()) {
+                log.warn("PACS study event missing payload, skipping");
+                return;
+            }
             String eventId = getTextField(event, "eventId");
             String orderId = getTextField(event, "orderId");
             String studyUid = getTextField(event, "studyInstanceUid");
@@ -294,6 +299,31 @@ public class OrosEventConsumer {
         } catch (JsonProcessingException e) {
             log.error("Failed to parse PACS study event: {}", e.getMessage(), e);
         }
+    }
+
+    private JsonNode extractPayload(JsonNode root) {
+        if (root == null) {
+            return null;
+        }
+        if (!root.has("payload")) {
+            return root;
+        }
+        JsonNode payload = root.get("payload");
+        if (payload == null || payload.isNull()) {
+            return null;
+        }
+        if (payload.isObject()) {
+            return payload;
+        }
+        if (payload.isTextual()) {
+            try {
+                return objectMapper.readTree(payload.asText());
+            } catch (JsonProcessingException e) {
+                log.warn("Failed to parse PACS textual payload envelope: {}", e.getMessage());
+                return null;
+            }
+        }
+        return payload;
     }
 
     /**

@@ -75,3 +75,12 @@ pct:
     default-sla-minutes: 30
   discharge:
     require-payment-clearance: true
+  telemedicine:
+    provider:
+      external:
+        enabled: ${PCT_TELEMED_EXTERNAL_ENABLED:false}
+        base-url: ${PCT_TELEMED_EXTERNAL_BASE_URL:}
+        session-path: ${PCT_TELEMED_EXTERNAL_SESSION_PATH:/v1/sessions}
+        api-key: ${PCT_TELEMED_EXTERNAL_API_KEY:}
+      fallback:
+        allow-managed-primary-fallback: ${PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY:true}

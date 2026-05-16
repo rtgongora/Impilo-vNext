@@ -493,9 +493,23 @@ components:
           description: Recipient address (phone number, email, device token)
         variables:
           type: object
-          additionalProperties:
-            type: string
+          additionalProperties: true
           description: Template variable substitutions
+        context:
+          type: object
+          description: Optional correlation context (teleconsult, encounter, referral, deep-link)
+          properties:
+            teleconsultSessionId:
+              type: string
+            encounterRef:
+              type: string
+            referralId:
+              type: string
+            patientCpid:
+              type: string
+            deepLink:
+              type: string
+          additionalProperties: true
 
     NotifyResponse:
       type: object

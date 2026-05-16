@@ -20,6 +20,7 @@ tags:
   - name: ProviderDeveloperPortal
   - name: ProviderProfessionalSettings
   - name: ProviderProfessionalChannels
+  - name: ProviderTelemedicine
 
 paths:
   /internal/v1/facilities:
@@ -177,12 +178,123 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProviderTriageWriteResponse'
-        '201':
-          description: Triage recorded (PCT delegation)
+
+  /internal/v1/mobile/provider/telemedicine/sessions:
+    get:
+      tags: [ProviderTelemedicine]
+      summary: List provider telemedicine sessions
+      operationId: providerTelemedicineList
+      parameters:
+        - name: patient_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: facility_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: provider_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: referral_id
+          in: query
+          required: false
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Telemedicine session listing envelope
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProviderTriageWriteResponse'
+                type: object
+                additionalProperties: true
+    post:
+      tags: [ProviderTelemedicine]
+      summary: Create telemedicine session
+      operationId: providerTelemedicineCreate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patient_id, provider_id]
+              properties:
+                patient_id: { type: string }
+                provider_id: { type: string }
+                facility_id: { type: string, nullable: true }
+                referral_id: { type: string, format: uuid, nullable: true }
+                encounter_id: { type: string, nullable: true }
+                session_type:
+                  type: string
+                  enum: [VIDEO, AUDIO, PHONE, ASYNC]
+                session_provider:
+                  type: string
+                  enum: [MANAGED_PRIMARY, ASYNC_NO_VIDEO, MANUAL_PHONE, EXTERNAL_MANAGED]
+                provider_type:
+                  type: string
+                  enum: [MANAGED_PRIMARY, ASYNC_NO_VIDEO, MANUAL_PHONE, EXTERNAL_MANAGED]
+                scheduled_at: { type: string, format: date-time, nullable: true }
+                notes: { type: string, nullable: true }
+              additionalProperties: false
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/telemedicine/sessions/{id}/join:
+    post:
+      tags: [ProviderTelemedicine]
+      summary: Join telemedicine session
+      operationId: providerTelemedicineJoin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Session join payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/mobile/provider/telemedicine/sessions/{id}/end:
+    post:
+      tags: [ProviderTelemedicine]
+      summary: End telemedicine session
+      operationId: providerTelemedicineEnd
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Session end payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
 
   /internal/v1/mobile/provider/pharmacy/pending:
     get:

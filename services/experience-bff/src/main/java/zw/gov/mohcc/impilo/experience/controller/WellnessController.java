@@ -84,10 +84,12 @@ public class WellnessController {
     @GetMapping("/enrollments")
     public ResponseEntity<Map<String, Object>> listEnrollments(
             @RequestParam(required = false) String participantId,
+            @RequestParam(name = "person_cpid", required = false) String personCpid,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = client.listEnrollments(participantId);
+            String effectiveParticipant = participantId != null && !participantId.isBlank() ? participantId : personCpid;
+            JsonNode data = client.listEnrollments(effectiveParticipant);
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -136,10 +138,12 @@ public class WellnessController {
     @GetMapping("/goals")
     public ResponseEntity<Map<String, Object>> listGoals(
             @RequestParam(required = false) String participantId,
+            @RequestParam(name = "person_cpid", required = false) String personCpid,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = client.listGoals(participantId);
+            String effectiveParticipant = participantId != null && !participantId.isBlank() ? participantId : personCpid;
+            JsonNode data = client.listGoals(effectiveParticipant);
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : new Object[0],
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));

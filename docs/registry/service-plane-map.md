@@ -3,6 +3,7 @@
 | Service ID | Maven module | Primary plane | Domain | Secondary planes |
 |---|---|---|---|---|
 | `ai-model-registry-service` | `ai-model-registry-service` | data | intelligence | — |
+| `analytics-pipeline-service` | `analytics-pipeline-service` | integration | platform-ops | — |
 | `asset-registry-service` | `asset-registry-service` | integration | platform-ops | — |
 | `audit-ledger-service` | `audit-ledger-service` | integration | platform-ops | — |
 | `butano-fhir` | `butano-fhir` | clinical | care-delivery | — |
@@ -58,6 +59,7 @@
 | `pharmacy-service` | `pharmacy-service` | clinical | care-delivery | — |
 | `procurement-service` | `procurement-service` | enterprise | enterprise-resource | — |
 | `product-registry-service` | `product-registry-service` | registry | registry-spine | — |
+| `referral-service` | `referral-service` | integration | platform-ops | — |
 | `reporting-service` | `reporting-service` | data | intelligence | — |
 | `rules-service` | `rules-service` | clinical | clinical-knowledge | — |
 | `scheduling-service` | `scheduling-service` | clinical | care-delivery | — |
@@ -65,7 +67,7 @@
 | `search-service` | `search-service` | data | intelligence | — |
 | `security-hardening-service` | `security-hardening-service` | integration | platform-ops | — |
 | `share-slip-service` | `share-slip-service` | enterprise | finance | — |
-| `simba-service` | `simba-service` | clinical | wellness-lifestyle-orchestration | experience, data, integration, registry, trust |
+| `simba-service` | `simba-service` | enterprise | wellness-personal-health-data | experience, data, integration, registry, trust |
 | `support-service` | `support-service` | integration | platform-ops | — |
 | `surveillance-service` | `surveillance-service` | data | public-health-surveillance | clinical, experience, integration, registry, trust |
 | `tshepo-audit-service` | `tshepo-audit-service` | trust | identity-governance | — |
@@ -79,7 +81,7 @@
 | `ubomi-service` | `ubomi-service` | registry | registry-spine | — |
 | `varapi-service` | `varapi-service` | registry | registry-spine | — |
 | `vito-service` | `vito-service` | registry | registry-spine | — |
-| `wellness-service` | `wellness-service` | clinical | wellness-preventive-care | experience, data, registry, trust |
+| `wellness-service` | `wellness-service` | enterprise | wellness-compatibility-alias | experience, data, registry, trust |
 | `workflow-service` | `workflow-service` | integration | interoperability | — |
 | `workforce-governance-service` | `workforce-governance-service` | enterprise | workforce-operations | — |
 | `zibo-service` | `zibo-service` | registry | terminology | — |

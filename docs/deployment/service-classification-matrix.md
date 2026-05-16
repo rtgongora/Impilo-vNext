@@ -5,6 +5,7 @@ Production hardening baseline. Architectural ownership uses canonical planes and
 | Service | Primary Plane | Domain | Deployment Namespace | Runtime Criticality | Data Sensitivity | Stateful/Stateless | DB | Kafka/Event Topics | Ingress | Authz/Audit Requirements | Observability Requirements | Scaling Behaviour | Production Readiness Status |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `ai-model-registry-service` | data | intelligence | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
+| `analytics-pipeline-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `asset-registry-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `audit-ledger-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `butano-fhir` | clinical | care-delivery | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
@@ -60,6 +61,7 @@ Production hardening baseline. Architectural ownership uses canonical planes and
 | `pharmacy-service` | clinical | care-delivery | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `procurement-service` | enterprise | enterprise-resource | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `product-registry-service` | registry | registry-spine | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
+| `referral-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `reporting-service` | data | intelligence | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `rules-service` | clinical | clinical-knowledge | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `scheduling-service` | clinical | care-delivery | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
@@ -67,7 +69,7 @@ Production hardening baseline. Architectural ownership uses canonical planes and
 | `search-service` | data | intelligence | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `security-hardening-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `share-slip-service` | enterprise | finance | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
-| `simba-service` | clinical | wellness-lifestyle-orchestration | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
+| `simba-service` | enterprise | wellness-personal-health-data | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `support-service` | integration | platform-ops | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `surveillance-service` | data | public-health-surveillance | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `tshepo-audit-service` | trust | identity-governance | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
@@ -81,7 +83,7 @@ Production hardening baseline. Architectural ownership uses canonical planes and
 | `ubomi-service` | registry | registry-spine | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `varapi-service` | registry | registry-spine | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `vito-service` | registry | registry-spine | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
-| `wellness-service` | clinical | wellness-preventive-care | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
+| `wellness-service` | enterprise | wellness-compatibility-alias | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `workflow-service` | integration | interoperability | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `workforce-governance-service` | enterprise | workforce-operations | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |
 | `zibo-service` | registry | terminology | unchanged-existing | to-be-profiled | high | unknown | tbd | tbd | internal-gateway | partial | partial | hpa-latency-and-queue-based | baseline-assessed |

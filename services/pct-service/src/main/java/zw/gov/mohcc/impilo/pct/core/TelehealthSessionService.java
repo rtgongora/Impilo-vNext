@@ -41,10 +41,8 @@ public class TelehealthSessionService {
         entity.setTenantId(ctx.tenantId());
         entity.setPatientCpid(patientId);
         entity.setProviderId(str(request, "providerId", "provider_id"));
-        entity.setFacilityId(parseUuid(str(request, "facilityId", "facility_id"), ctx.facilityId()));
-        entity.setWorkspaceId(ctx.workspaceId());
+        entity.setFacilityId(defaulted(str(request, "facilityId", "facility_id"), stringOrNull(ctx.facilityId())));
         entity.setSessionType(defaulted(str(request, "sessionType", "session_type"), "VIDEO").toUpperCase(Locale.ROOT));
-        entity.setVirtualMode(mapVirtualMode(entity.getSessionType()));
         entity.setStatus("SCHEDULED");
         entity.setChannel("clinical");
         entity.setNotes(str(request, "notes"));
@@ -56,8 +54,7 @@ public class TelehealthSessionService {
                 Long numeric = Long.parseLong(encounterId);
                 EncounterEntity encounter = encounterRepository.findByTenantIdAndId(ctx.tenantId(), numeric)
                         .orElseThrow(() -> new PctDomainException("MISSING_ENCOUNTER", 404, "Encounter not found: " + encounterId));
-                entity.setEncounterId(numeric);
-                entity.setJourneyId(encounter.getJourneyId());
+                entity.setEncounterId(numeric.toString());
                 entity.setPatientCpid(encounter.getSubjectCpid());
             } catch (NumberFormatException ex) {
                 throw new PctDomainException("INVALID_ENCOUNTER_ID", 400, "encounter_id must be numeric");
@@ -86,7 +83,7 @@ public class TelehealthSessionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TelehealthSessionEntity> listByFacility(UUID facilityId, String status) {
+    public List<TelehealthSessionEntity> listByFacility(String facilityId, String status) {
         TrustContext ctx = TrustContextHolder.require();
         List<TelehealthSessionEntity> items = telehealthRepository.findByTenantIdAndFacilityIdOrderByCreatedAtDesc(ctx.tenantId(), facilityId);
         return filterStatus(items, status);
@@ -120,7 +117,7 @@ public class TelehealthSessionService {
         }
         if (session.getStartedAt() != null && session.getEndedAt() != null) {
             long seconds = java.time.Duration.between(session.getStartedAt(), session.getEndedAt()).getSeconds();
-            session.setDurationSeconds((int) Math.max(0, seconds));
+            session.setDurationSeconds(Math.max(0, seconds));
         }
         return telehealthRepository.save(session);
     }
@@ -135,18 +132,12 @@ public class TelehealthSessionService {
                 .toList();
     }
 
-    private String mapVirtualMode(String sessionType) {
-        return switch (sessionType.toUpperCase(Locale.ROOT)) {
-            case "AUDIO" -> "audio";
-            case "CHAT" -> "chat";
-            case "ASYNC_REVIEW" -> "async";
-            case "CASE_REVIEW" -> "board";
-            default -> "video";
-        };
-    }
-
     private String defaulted(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private String stringOrNull(UUID value) {
+        return value == null ? null : value.toString();
     }
 
     private String str(java.util.Map<String, Object> src, String... keys) {

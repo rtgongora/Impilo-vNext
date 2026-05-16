@@ -3,8 +3,6 @@ package zw.gov.mohcc.impilo.docstore.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.minio.*;
-import io.minio.http.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import zw.gov.mohcc.impilo.docstore.config.DocumentStoreProperties;
 import zw.gov.mohcc.impilo.docstore.core.scan.ScanService;
+import zw.gov.mohcc.impilo.docstore.core.storage.ObjectStorageProvider;
+import zw.gov.mohcc.impilo.docstore.core.storage.ObjectStorageProviderRouter;
 import zw.gov.mohcc.impilo.docstore.dto.ObjectResponse;
 import zw.gov.mohcc.impilo.docstore.dto.ScanResult;
 import zw.gov.mohcc.impilo.docstore.dto.SignedUrlResponse;
@@ -31,7 +31,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Core service for object storage operations.
@@ -51,23 +50,23 @@ public class ObjectStorageService {
 
     private static final Logger log = LoggerFactory.getLogger(ObjectStorageService.class);
 
-    private final MinioClient minioClient;
     private final DocumentStoreProperties properties;
+    private final ObjectStorageProviderRouter storageProviderRouter;
     private final ObjectRepository objectRepository;
     private final SignedUrlRepository signedUrlRepository;
     private final EventOutboxRepository outboxRepository;
     private final ScanService scanService;
     private final ObjectMapper objectMapper;
 
-    public ObjectStorageService(MinioClient minioClient,
-                                 DocumentStoreProperties properties,
+    public ObjectStorageService(DocumentStoreProperties properties,
+                                ObjectStorageProviderRouter storageProviderRouter,
                                  ObjectRepository objectRepository,
                                  SignedUrlRepository signedUrlRepository,
                                  EventOutboxRepository outboxRepository,
                                  ScanService scanService,
                                  ObjectMapper objectMapper) {
-        this.minioClient = minioClient;
         this.properties = properties;
+        this.storageProviderRouter = storageProviderRouter;
         this.objectRepository = objectRepository;
         this.signedUrlRepository = signedUrlRepository;
         this.outboxRepository = outboxRepository;
@@ -87,6 +86,7 @@ public class ObjectStorageService {
         TrustContext ctx = TrustContextHolder.require();
 
         validateFileSize(file);
+        ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
 
         try {
             byte[] content = file.getBytes();
@@ -104,31 +104,26 @@ public class ObjectStorageService {
             String objectKey = ctx.tenantId() + "/" + objectId + "/" + sanitizeFilename(filename);
 
             // Ensure bucket exists
-            ensureBucketExists(bucket);
+            storageProvider.ensureBucketExists(bucket);
 
             // Upload to MinIO
-            minioClient.putObject(PutObjectArgs.builder()
-                    .bucket(bucket)
-                    .object(objectKey)
-                    .stream(new ByteArrayInputStream(content), content.length, -1)
-                    .contentType(request.mimeType())
-                    .build());
+            String providerStorageKey = storageProvider.putObject(bucket, objectKey, content, request.mimeType());
 
-            log.info("Stored object {} in MinIO: bucket={}, key={}, size={}, sha256={}",
-                    objectId, bucket, objectKey, content.length, sha256);
+            log.info("Stored object {} in {}: bucket={}, key={}, size={}, sha256={}",
+                    objectId, storageProvider.providerType(), bucket, providerStorageKey, content.length, sha256);
 
             // Persist metadata
             ObjectEntity entity = new ObjectEntity();
             entity.setObjectId(objectId);
             entity.setTenantId(ctx.tenantId());
             entity.setBucket(bucket);
-            entity.setObjectKey(objectKey);
+            entity.setObjectKey(providerStorageKey);
             entity.setOriginalFilename(filename);
             entity.setMimeType(request.mimeType());
             entity.setFileSizeBytes(content.length);
             entity.setHashSha256(sha256);
             entity.setCreatedBy(ctx.actorId() != null ? ctx.actorId() : "system");
-            entity.setMetadata(serializeMetadata(request.metadata()));
+            entity.setMetadata(serializeMetadata(augmentMetadata(request.metadata(), storageProvider.providerType())));
 
             // Run antivirus scan
             if (properties.getScan().isEnabled()) {
@@ -178,16 +173,12 @@ public class ObjectStorageService {
 
         ObjectEntity entity = objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
                 .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
+        ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
 
         try {
             int ttlSeconds = properties.getSignedUrl().getTtlSeconds();
 
-            String url = minioClient.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
-                    .method(Method.GET)
-                    .bucket(entity.getBucket())
-                    .object(entity.getObjectKey())
-                    .expiry(ttlSeconds, TimeUnit.SECONDS)
-                    .build());
+            String url = storageProvider.generateSignedUrl(entity.getBucket(), entity.getObjectKey(), ttlSeconds);
 
             String token = UUID.randomUUID().toString().replace("-", "")
                     + UUID.randomUUID().toString().replace("-", "");
@@ -221,12 +212,10 @@ public class ObjectStorageService {
     public InputStream downloadObject(UUID objectId) {
         ObjectEntity entity = objectRepository.findByObjectIdAndDeletedAtIsNull(objectId)
                 .orElseThrow(() -> new NoSuchElementException("Object not found: " + objectId));
+        ObjectStorageProvider storageProvider = storageProviderRouter.activeProvider();
 
         try {
-            return minioClient.getObject(GetObjectArgs.builder()
-                    .bucket(entity.getBucket())
-                    .object(entity.getObjectKey())
-                    .build());
+            return storageProvider.getObject(entity.getBucket(), entity.getObjectKey());
         } catch (Exception e) {
             log.error("Failed to download object {}: {}", objectId, e.getMessage(), e);
             throw new RuntimeException("Failed to download object: " + e.getMessage(), e);
@@ -310,23 +299,6 @@ public class ObjectStorageService {
         return filename.replaceAll("[^a-zA-Z0-9._\\-]", "_");
     }
 
-    private void ensureBucketExists(String bucket) {
-        try {
-            boolean exists = minioClient.bucketExists(BucketExistsArgs.builder()
-                    .bucket(bucket)
-                    .build());
-            if (!exists) {
-                minioClient.makeBucket(MakeBucketArgs.builder()
-                        .bucket(bucket)
-                        .build());
-                log.info("Created MinIO bucket: {}", bucket);
-            }
-        } catch (Exception e) {
-            log.error("Failed to ensure bucket exists: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to ensure bucket exists: " + e.getMessage(), e);
-        }
-    }
-
     private String serializeMetadata(Map<String, String> metadata) {
         if (metadata == null || metadata.isEmpty()) {
             return "{}";
@@ -337,6 +309,15 @@ public class ObjectStorageService {
             log.warn("Failed to serialize metadata, using empty object: {}", e.getMessage());
             return "{}";
         }
+    }
+
+    private Map<String, String> augmentMetadata(Map<String, String> metadata, String providerType) {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (metadata != null) {
+            out.putAll(metadata);
+        }
+        out.putIfAbsent("storageProvider", providerType);
+        return out;
     }
 
     private Map<String, String> deserializeMetadata(String json) {

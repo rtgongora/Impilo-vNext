@@ -9,7 +9,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import zw.gov.mohcc.impilo.docstore.core.ocr.OcrService;
 import zw.gov.mohcc.impilo.docstore.core.ObjectStorageService;
+import zw.gov.mohcc.impilo.docstore.core.signature.SignatureService;
 import zw.gov.mohcc.impilo.docstore.dto.ObjectResponse;
 import zw.gov.mohcc.impilo.docstore.dto.SignedUrlResponse;
 import zw.gov.mohcc.impilo.docstore.dto.StoreObjectRequest;
@@ -44,9 +46,15 @@ public class ObjectController {
     private static final Logger log = LoggerFactory.getLogger(ObjectController.class);
 
     private final ObjectStorageService storageService;
+    private final OcrService ocrService;
+    private final SignatureService signatureService;
 
-    public ObjectController(ObjectStorageService storageService) {
+    public ObjectController(ObjectStorageService storageService,
+                            OcrService ocrService,
+                            SignatureService signatureService) {
         this.storageService = storageService;
+        this.ocrService = ocrService;
+        this.signatureService = signatureService;
     }
 
     /**
@@ -126,6 +134,35 @@ public class ObjectController {
     }
 
     /**
+     * Generate a preview payload for inline rendering clients.
+     *
+     * Returns a signed URL with MIME/disposition hints without proxying bytes.
+     */
+    @GetMapping("/{objectId}/preview")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getPreview(@PathVariable UUID objectId) {
+        String correlationId = getCorrelationId();
+        try {
+            ObjectEntity entity = storageService.getObjectEntity(objectId);
+            SignedUrlResponse signed = storageService.generateSignedUrl(objectId);
+            java.util.Map<String, Object> preview = java.util.Map.of(
+                    "url", signed.url(),
+                    "expiresAt", signed.expiresAt(),
+                    "mimeType", entity.getMimeType(),
+                    "filename", entity.getOriginalFilename(),
+                    "disposition", "inline");
+            return ResponseEntity.ok(ApiResponse.ok(preview, correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        } catch (Exception e) {
+            log.error("Preview generation failed for object {}: {}", objectId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("PREVIEW_FAILED",
+                            "Failed to generate preview URL", 500, correlationId));
+        }
+    }
+
+    /**
      * Proxy-download an object's content through this service.
      *
      * Streams the object content from MinIO through the service layer,
@@ -193,6 +230,72 @@ public class ObjectController {
         String correlationId = getCorrelationId();
         List<ObjectResponse> results = storageService.getByHash(sha256);
         return ResponseEntity.ok(ApiResponse.ok(results, correlationId));
+    }
+
+    @PostMapping("/{objectId}/ocr")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> requestOcr(@PathVariable UUID objectId) {
+        String correlationId = getCorrelationId();
+        try {
+            return ResponseEntity.accepted().body(ApiResponse.ok(ocrService.requestOcr(objectId), correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        } catch (Exception e) {
+            log.error("OCR request failed for object {}: {}", objectId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("OCR_FAILED", "Failed to process OCR request", 500, correlationId));
+        }
+    }
+
+    @GetMapping("/{objectId}/ocr")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getLatestOcr(@PathVariable UUID objectId) {
+        String correlationId = getCorrelationId();
+        try {
+            return ResponseEntity.ok(ApiResponse.ok(ocrService.getLatestOcr(objectId), correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        }
+    }
+
+    @PostMapping("/{objectId}/signature")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> requestSignature(
+            @PathVariable UUID objectId,
+            @RequestBody(required = false) java.util.Map<String, Object> body) {
+        String correlationId = getCorrelationId();
+        try {
+            String signerId = body == null || body.get("signerId") == null ? null : body.get("signerId").toString();
+            return ResponseEntity.accepted().body(ApiResponse.ok(signatureService.requestSignature(objectId, signerId), correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        } catch (Exception e) {
+            log.error("Signature request failed for object {}: {}", objectId, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("SIGNATURE_FAILED", "Failed to process signature request", 500, correlationId));
+        }
+    }
+
+    @GetMapping("/{objectId}/signature")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> getLatestSignature(@PathVariable UUID objectId) {
+        String correlationId = getCorrelationId();
+        try {
+            return ResponseEntity.ok(ApiResponse.ok(signatureService.getLatestSignature(objectId), correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        }
+    }
+
+    @GetMapping("/signatures/{jobId}/verify")
+    public ResponseEntity<ApiResponse<java.util.Map<String, Object>>> verifySignature(@PathVariable UUID jobId) {
+        String correlationId = getCorrelationId();
+        try {
+            return ResponseEntity.ok(ApiResponse.ok(signatureService.verifySignature(jobId), correlationId));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("NOT_FOUND", e.getMessage(), 404, correlationId));
+        }
     }
 
     // --- Private helpers ---

@@ -50,6 +50,8 @@ public class WellnessSecurityConfig {
                             .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
                             .requestMatchers("/internal/v1/wellness/connect/**")
                             .authenticated()
+                            .requestMatchers("/internal/v1/wellness/personal-data/**")
+                            .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/wellness/**")
                             .authenticated()
                             .requestMatchers("/internal/v1/mobile/citizen/monitoring/**")

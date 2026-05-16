@@ -126,8 +126,8 @@ impilo:
     pacs-base-url: ${PACS_BASE_URL:http://localhost:8113}
     community-base-url: ${COMMUNITY_BASE_URL:http://localhost:8122}
     simba-base-url: ${SIMBA_BASE_URL:http://localhost:8125}
-    # Deprecated alias compatibility path through 2026-12-31 hard sunset.
-    wellness-base-url: ${WELLNESS_BASE_URL:${SIMBA_BASE_URL:http://localhost:8125}}
+    # Simba is canonical wellness owner; wellness-service remains compatibility alias.
+    wellness-base-url: ${WELLNESS_BASE_URL:${SIMBA_BASE_URL:${WELLNESS_SERVICE_BASE_URL:http://localhost:8125}}}
     mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
     inventory-base-url: ${INVENTORY_BASE_URL:http://localhost:8098}
     asset-registry-base-url: ${ASSET_REGISTRY_BASE_URL:http://localhost:8310}
