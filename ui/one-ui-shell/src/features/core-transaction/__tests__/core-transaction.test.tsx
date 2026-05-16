@@ -270,6 +270,31 @@ describe("core transaction composed view and rendering", () => {
     expect(screen.getByText("Nompilo Support and Escalation")).toBeInTheDocument();
   });
 
+  it("renders unsupported Nompilo states without breaking journey shell", () => {
+    const unsupported = {
+      ...facilityWalkInTransaction,
+      nompiloCommand: {
+        ...facilityWalkInTransaction.nompiloCommand,
+        dictationEnabled: false,
+        supportHandoff: {
+          ...facilityWalkInTransaction.nompiloCommand.supportHandoff,
+          enabled: false,
+          destination: undefined,
+        },
+      },
+    };
+
+    render(
+      <>
+        <NompiloVoiceDictationButton transaction={unsupported} />
+        <NompiloSupportEscalationPanel transaction={unsupported} />
+      </>,
+    );
+
+    expect(screen.getByText(/Voice Dictation Off/i)).toBeInTheDocument();
+    expect(screen.getByText(/Support handoff unavailable/i)).toBeInTheDocument();
+  });
+
   it("does not allow Nompilo to become source of truth", () => {
     expect(
       isNompiloSourceOfTruth({

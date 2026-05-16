@@ -101,6 +101,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Profile", navLabel: "Profile", navZone: "life" },
   { path: "/home/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Preferences", navLabel: "Preferences", navZone: "life" },
   { path: "/home/credentials", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Credentials & CPD", navLabel: "Credentials", navZone: "professional" },
+  { path: "/home/referrals", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Referrals", navLabel: "Referrals", navZone: "life" },
   { path: "/home/medications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Medications", navLabel: "Medications", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
@@ -380,6 +381,8 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
   { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },
   { path: "/operations/facility-operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Operations", navLabel: "Facility Operations", navZone: "professional" },
+  { path: "/operations/workflows", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workflow Orchestration", navLabel: "Workflows", navZone: "professional" },
+  { path: "/operations/dispatch", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Dispatch Operations", navLabel: "Dispatch", navZone: "professional" },
   { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
   { path: "/operations/vito/registration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Registration", navZone: "professional" },
   { path: "/operations/vito/registration/new", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "New Registration", navLabel: "New Registration", navZone: "professional" },
@@ -501,7 +504,7 @@ export const ROUTES: RouteDefinition[] = [
 // New total is 276.
 // Additional upstream route registrations on this branch increase the current
 // canonical total to 326.
-export const EXPECTED_ROUTE_COUNT = 326;
+export const EXPECTED_ROUTE_COUNT = 329;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
