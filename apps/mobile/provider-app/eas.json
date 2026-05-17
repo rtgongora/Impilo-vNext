@@ -7,6 +7,16 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://10.0.2.2:8000",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "http://10.0.2.2:8080",
+        "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
+        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "provider-app",
+        "EXPO_PUBLIC_APP_VARIANT": "dev",
+        "EXPO_PUBLIC_APP_NAME": "Impilo Provider Dev"
+      },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
@@ -17,11 +27,54 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-preview.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://auth-preview.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
+        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "provider-app",
+        "EXPO_PUBLIC_APP_VARIANT": "preview",
+        "EXPO_PUBLIC_APP_NAME": "Impilo Provider Preview"
+      },
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "EXPO_PUBLIC_ENV": "staging",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api-staging.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://auth-staging.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
+        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "provider-app",
+        "EXPO_PUBLIC_APP_VARIANT": "staging",
+        "EXPO_PUBLIC_APP_NAME": "Impilo Provider Staging"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
       }
     },
     "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_URL": "https://auth.impilo.gov.zw",
+        "EXPO_PUBLIC_KEYCLOAK_REALM": "impilo",
+        "EXPO_PUBLIC_KEYCLOAK_CLIENT_ID": "provider-app",
+        "EXPO_PUBLIC_APP_VARIANT": "production",
+        "EXPO_PUBLIC_APP_NAME": "Impilo Provider"
+      },
       "android": {
         "buildType": "app-bundle"
       },

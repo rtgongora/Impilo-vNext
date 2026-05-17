@@ -1,0 +1,970 @@
+# =============================================================================
+# Community Social Surface — Timeline, Communities, Groups, Pages (OpenAPI 3.0)
+#
+# Backed by community-service (local default port 8122). Hosted under the
+# `/internal/v1/community/social/**` namespace so it does not collide with the
+# existing CHW/outreach surface documented in community.openapi.yaml.
+#
+# Companion v1.2 headers (X-Tenant-ID, X-Pod-ID, X-Request-ID,
+# X-Correlation-ID, X-Actor-ID, X-Purpose-Of-Use) are required on all
+# authenticated requests and forwarded by the Experience BFF.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Community Social Surface
+  version: "1.0.0"
+  description: |
+    Health-aware social timeline for Impilo / vNext. Provides communities,
+    groups, pages, posts, reactions, comments, bookmarks, reports, and a
+    moderation queue. Role-aware visibility scopes are enforced server-side.
+
+    Surfaces (BFF -> service):
+
+      Experience BFF                          community-service
+      ─────────────────────────────────────   ───────────────────────────────
+      /internal/v1/social/feed              -> /internal/v1/community/social/feed
+      /internal/v1/social/posts             -> /internal/v1/community/social/posts
+      /internal/v1/social/communities       -> /internal/v1/community/social/communities
+      /internal/v1/social/groups            -> /internal/v1/community/social/groups
+      /internal/v1/social/pages             -> /internal/v1/community/social/pages
+      /internal/v1/social/composer-assist   -> llm-orchestration-service
+
+    Mobile shells consume `/internal/v1/mobile/{citizen,provider}/social/**`
+    on the Experience BFF which thin-wraps the same surface with role-aware
+    feed scopes.
+
+servers:
+  - url: http://localhost:8122
+    description: community-service direct (local)
+  - url: http://localhost:8160
+    description: Experience BFF (local)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Social-Feed
+  - name: Social-Posts
+  - name: Social-Communities
+  - name: Social-Groups
+  - name: Social-Pages
+  - name: Social-Engagement
+  - name: Social-Moderation
+  - name: Social-Composer
+
+paths:
+  /internal/v1/community/social/feed:
+    get:
+      operationId: socialGetFeed
+      tags: [Social-Feed]
+      summary: Get role-aware feed slice
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: "#/components/parameters/RequestId"
+        - name: scope
+          in: query
+          required: false
+          description: |
+            Feed scope. One of: home, following, community, group, page,
+            facility, public_health, learning, wellness, saved, my_posts,
+            drafts, moderation, announcements
+          schema:
+            type: string
+            default: home
+        - name: scopeId
+          in: query
+          description: ID of the scope target (community/group/page/facility)
+          required: false
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Feed page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeedPage"
+
+  /internal/v1/community/social/posts:
+    post:
+      operationId: socialCreatePost
+      tags: [Social-Posts]
+      summary: Create a post (text, announcement, question, event, poll, resource)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+
+  /internal/v1/community/social/posts/{id}:
+    get:
+      operationId: socialGetPost
+      tags: [Social-Posts]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    patch:
+      operationId: socialUpdatePost
+      tags: [Social-Posts]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePostRequest"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+    delete:
+      operationId: socialArchivePost
+      tags: [Social-Posts]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Archived
+
+  /internal/v1/community/social/posts/{id}/publish:
+    post:
+      operationId: socialPublishDraft
+      tags: [Social-Posts]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Published
+
+  /internal/v1/community/social/posts/{id}/pin:
+    post:
+      operationId: socialPinPost
+      tags: [Social-Posts]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Pinned
+
+  /internal/v1/community/social/posts/{id}/reactions:
+    post:
+      operationId: socialReact
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReactionRequest"
+      responses:
+        "200":
+          description: Reaction counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReactionSummary"
+    delete:
+      operationId: socialUnreact
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Updated counts
+
+  /internal/v1/community/social/posts/{id}/comments:
+    get:
+      operationId: socialListComments
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Comment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comment"
+    post:
+      operationId: socialAddComment
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+
+  /internal/v1/community/social/posts/{id}/bookmark:
+    post:
+      operationId: socialBookmark
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Bookmarked
+    delete:
+      operationId: socialUnbookmark
+      tags: [Social-Engagement]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Removed bookmark
+
+  /internal/v1/community/social/posts/{id}/report:
+    post:
+      operationId: socialReportPost
+      tags: [Social-Moderation]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportRequest"
+      responses:
+        "201":
+          description: Report accepted
+
+  /internal/v1/community/social/communities:
+    get:
+      operationId: socialListCommunities
+      tags: [Social-Communities]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: category
+          in: query
+          required: false
+          schema: { type: string }
+        - name: q
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Communities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Community"
+    post:
+      operationId: socialCreateCommunity
+      tags: [Social-Communities]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommunityRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Community"
+
+  /internal/v1/community/social/communities/{id}:
+    get:
+      operationId: socialGetCommunity
+      tags: [Social-Communities]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Community
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Community"
+
+  /internal/v1/community/social/communities/{id}/join:
+    post:
+      operationId: socialJoinCommunity
+      tags: [Social-Communities]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Joined or pending
+
+  /internal/v1/community/social/communities/{id}/leave:
+    post:
+      operationId: socialLeaveCommunity
+      tags: [Social-Communities]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Left
+
+  /internal/v1/community/social/groups:
+    get:
+      operationId: socialListGroups
+      tags: [Social-Groups]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: communityId
+          in: query
+          required: false
+          schema: { type: string, format: uuid }
+        - name: category
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+    post:
+      operationId: socialCreateGroup
+      tags: [Social-Groups]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /internal/v1/community/social/groups/{id}:
+    get:
+      operationId: socialGetGroup
+      tags: [Social-Groups]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /internal/v1/community/social/groups/{id}/join:
+    post:
+      operationId: socialJoinGroup
+      tags: [Social-Groups]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Joined or pending
+
+  /internal/v1/community/social/pages:
+    get:
+      operationId: socialListPages
+      tags: [Social-Pages]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: kind
+          in: query
+          required: false
+          description: facility|organisation|programme|campaign|service|provider|department
+          schema: { type: string }
+      responses:
+        "200":
+          description: Pages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Page"
+    post:
+      operationId: socialCreatePage
+      tags: [Social-Pages]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePageRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+
+  /internal/v1/community/social/pages/{id}:
+    get:
+      operationId: socialGetPage
+      tags: [Social-Pages]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+
+  /internal/v1/community/social/pages/{id}/follow:
+    post:
+      operationId: socialFollowPage
+      tags: [Social-Pages]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Followed
+
+  /internal/v1/community/social/suggestions:
+    get:
+      operationId: socialSuggestions
+      tags: [Social-Communities, Social-Pages, Social-Groups]
+      summary: Role-aware suggested communities/groups/pages for the actor
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      responses:
+        "200":
+          description: Suggestions bundle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestionsBundle"
+
+  /internal/v1/community/social/moderation/queue:
+    get:
+      operationId: socialModerationQueue
+      tags: [Social-Moderation]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+      responses:
+        "200":
+          description: Moderation cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModerationCase"
+
+  /internal/v1/community/social/moderation/{caseId}/resolve:
+    post:
+      operationId: socialResolveModeration
+      tags: [Social-Moderation]
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/ActorId"
+        - name: caseId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveModerationRequest"
+      responses:
+        "200":
+          description: Resolved
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema: { type: string, format: uuid }
+    PodId:
+      name: X-Pod-ID
+      in: header
+      required: false
+      schema: { type: string }
+    ActorId:
+      name: X-Actor-ID
+      in: header
+      required: false
+      schema: { type: string }
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema: { type: string }
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: false
+      schema: { type: string }
+
+  schemas:
+    Visibility:
+      type: string
+      enum: [public, tenant, organisation, facility, community, group, page_followers, role_only, private]
+
+    PostKind:
+      type: string
+      enum: [text, announcement, question, event, poll, learning, health_promotion, campaign, facility_update, resource]
+
+    PostStatus:
+      type: string
+      enum: [draft, scheduled, published, archived, rejected, removed]
+
+    ReactionType:
+      type: string
+      enum: [LIKE, CELEBRATE, SUPPORT, INSIGHTFUL, CARE]
+
+    Identity:
+      type: object
+      properties:
+        kind: { type: string, enum: [user, community, group, page, system] }
+        id: { type: string }
+        displayName: { type: string }
+        avatarUrl: { type: string }
+        roleBadge: { type: string }
+        verified: { type: boolean }
+        facilityName: { type: string }
+
+    Attachment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        mediaType: { type: string }
+        url: { type: string }
+        previewText: { type: string }
+        kind: { type: string, enum: [image, document, link, video, audio, event_card, poll_card, resource_card] }
+        metadata:
+          type: object
+          additionalProperties: true
+
+    Post:
+      type: object
+      required: [id, kind, status, visibility, body, author, createdAt, tenantId]
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        kind: { $ref: "#/components/schemas/PostKind" }
+        status: { $ref: "#/components/schemas/PostStatus" }
+        visibility: { $ref: "#/components/schemas/Visibility" }
+        title: { type: string }
+        body: { type: string }
+        topics:
+          type: array
+          items: { type: string }
+        author: { $ref: "#/components/schemas/Identity" }
+        scope:
+          type: object
+          properties:
+            communityId: { type: string, format: uuid }
+            groupId: { type: string, format: uuid }
+            pageId: { type: string, format: uuid }
+            facilityId: { type: string }
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/Attachment" }
+        reactionSummary: { $ref: "#/components/schemas/ReactionSummary" }
+        commentCount: { type: integer }
+        bookmarked: { type: boolean }
+        pinned: { type: boolean }
+        source: { type: string, description: "manual|comms_hub|fundo|public_health|nompilo|comms_template" }
+        createdAt: { type: string, format: date-time }
+        publishedAt: { type: string, format: date-time }
+        scheduledFor: { type: string, format: date-time }
+        nompiloFlags:
+          type: object
+          additionalProperties: true
+
+    CreatePostRequest:
+      type: object
+      required: [kind, body]
+      properties:
+        kind: { $ref: "#/components/schemas/PostKind" }
+        title: { type: string }
+        body: { type: string }
+        visibility: { $ref: "#/components/schemas/Visibility" }
+        topics:
+          type: array
+          items: { type: string }
+        scope:
+          type: object
+          properties:
+            communityId: { type: string, format: uuid }
+            groupId: { type: string, format: uuid }
+            pageId: { type: string, format: uuid }
+            facilityId: { type: string }
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/Attachment" }
+        scheduledFor: { type: string, format: date-time }
+        saveAsDraft: { type: boolean }
+        source: { type: string }
+        nompiloAssist:
+          type: object
+          additionalProperties: true
+
+    UpdatePostRequest:
+      type: object
+      properties:
+        title: { type: string }
+        body: { type: string }
+        visibility: { $ref: "#/components/schemas/Visibility" }
+        topics:
+          type: array
+          items: { type: string }
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/Attachment" }
+
+    ReactionRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { $ref: "#/components/schemas/ReactionType" }
+
+    ReactionSummary:
+      type: object
+      properties:
+        total: { type: integer }
+        byType:
+          type: object
+          additionalProperties: { type: integer }
+        viewerReaction: { $ref: "#/components/schemas/ReactionType" }
+
+    CommentRequest:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string }
+        parentCommentId: { type: string, format: uuid }
+
+    Comment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        postId: { type: string, format: uuid }
+        body: { type: string }
+        author: { $ref: "#/components/schemas/Identity" }
+        parentCommentId: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        reactionSummary: { $ref: "#/components/schemas/ReactionSummary" }
+
+    ReportRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string }
+        details: { type: string }
+
+    FeedPage:
+      type: object
+      properties:
+        scope: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/Post" }
+        nextCursor: { type: string }
+
+    Community:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        category: { type: string }
+        kind: { type: string, enum: [public, private, restricted, verified] }
+        coverColor: { type: string }
+        iconUrl: { type: string }
+        coverImageUrl: { type: string }
+        memberCount: { type: integer }
+        rules: { type: array, items: { type: string } }
+        moderatorIds: { type: array, items: { type: string } }
+        viewerMembership:
+          type: string
+          enum: [none, requested, member, moderator, admin]
+        createdAt: { type: string, format: date-time }
+        nompiloAssistantEnabled: { type: boolean }
+
+    CreateCommunityRequest:
+      type: object
+      required: [name, category, kind]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        category: { type: string }
+        kind: { type: string, enum: [public, private, restricted, verified] }
+        coverColor: { type: string }
+        iconUrl: { type: string }
+        coverImageUrl: { type: string }
+        rules: { type: array, items: { type: string } }
+
+    Group:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        communityId: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        category: { type: string }
+        facilityId: { type: string }
+        organisationId: { type: string }
+        memberCount: { type: integer }
+        viewerMembership:
+          type: string
+          enum: [none, requested, member, moderator, admin]
+        createdAt: { type: string, format: date-time }
+
+    CreateGroupRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string }
+        description: { type: string }
+        communityId: { type: string, format: uuid }
+        facilityId: { type: string }
+        organisationId: { type: string }
+        category: { type: string }
+
+    Page:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tenantId: { type: string, format: uuid }
+        kind: { type: string, enum: [facility, organisation, programme, campaign, service, provider, department, district, province] }
+        name: { type: string }
+        slug: { type: string }
+        bio: { type: string }
+        iconUrl: { type: string }
+        coverImageUrl: { type: string }
+        verified: { type: boolean }
+        followerCount: { type: integer }
+        actionLinks:
+          type: array
+          items:
+            type: object
+            properties:
+              label: { type: string }
+              href: { type: string }
+              kind: { type: string }
+        adminIds: { type: array, items: { type: string } }
+        viewerFollows: { type: boolean }
+        createdAt: { type: string, format: date-time }
+
+    CreatePageRequest:
+      type: object
+      required: [name, kind]
+      properties:
+        name: { type: string }
+        slug: { type: string }
+        kind: { type: string }
+        bio: { type: string }
+        iconUrl: { type: string }
+        coverImageUrl: { type: string }
+        actionLinks:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    SuggestionsBundle:
+      type: object
+      properties:
+        communities:
+          type: array
+          items: { $ref: "#/components/schemas/Community" }
+        groups:
+          type: array
+          items: { $ref: "#/components/schemas/Group" }
+        pages:
+          type: array
+          items: { $ref: "#/components/schemas/Page" }
+
+    ModerationCase:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        postId: { type: string, format: uuid }
+        reporterActorId: { type: string }
+        reason: { type: string }
+        details: { type: string }
+        status: { type: string, enum: [OPEN, ACK, RESOLVED, DISMISSED] }
+        decision: { type: string, enum: [NO_ACTION, REMOVE, RESTRICT, ARCHIVE, ESCALATE] }
+        createdAt: { type: string, format: date-time }
+        resolvedAt: { type: string, format: date-time }
+
+    ResolveModerationRequest:
+      type: object
+      required: [decision]
+      properties:
+        decision: { type: string, enum: [NO_ACTION, REMOVE, RESTRICT, ARCHIVE, ESCALATE] }
+        rationale: { type: string }

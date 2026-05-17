@@ -13,6 +13,7 @@ import org.hl7.fhir.r4.model.CodeableConcept;
 import org.hl7.fhir.r4.model.Coding;
 import org.hl7.fhir.r4.model.DiagnosticReport;
 import org.hl7.fhir.r4.model.DocumentReference;
+import org.hl7.fhir.r4.model.Enumerations;
 import org.hl7.fhir.r4.model.IdType;
 import org.hl7.fhir.r4.model.ImagingStudy;
 import org.hl7.fhir.r4.model.Meta;
@@ -455,7 +456,7 @@ public class ButanoEventConsumer {
             if (findDocumentReferenceIdByReportRef(docDao, tenantId, reportRef).isEmpty()) {
                 DocumentReference doc = new DocumentReference();
                 doc.setMeta(new Meta().addTag(new Coding(tenantTagSystem, tenantId.toString(), null)));
-                doc.setStatus(DocumentReference.DocumentReferenceStatus.CURRENT);
+                doc.setStatus(Enumerations.DocumentReferenceStatus.CURRENT);
                 doc.setSubject(new Reference("Patient/" + patientPid.get()));
                 doc.addIdentifier().setSystem(REPORT_IDENTIFIER_SYSTEM).setValue(reportRef);
                 DocumentReference.DocumentReferenceContentComponent content = doc.addContent();

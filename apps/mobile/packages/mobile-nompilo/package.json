@@ -1,0 +1,29 @@
+{
+  "name": "@impilo/mobile-nompilo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nompilo assistant SDK for Impilo mobile apps — warm, role-aware AI helper. Wraps the experience-bff LLM gateway with mobile-safe defaults, graceful fallback when no live model endpoint is available, and trust-aware contextual prompts. Never fabricates clinical, legal, or financial decisions.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@impilo/mobile-api-client": "workspace:*",
+    "@impilo/mobile-trust": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "vitest": "^2.1.0",
+    "react": "19.1.0",
+    "@types/react": "~19.1.10"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -77,6 +77,25 @@ tests/          Integration tests
 - Avoid accidental web/mobile drift: if parity is intentionally not in scope, document it in `docs/audits/*`.
 - Do not leave empty handlers (`onClick={() => {}}`, disabled flows without reason) in high-value production surfaces.
 
+### Social Timeline / Communities / Pages
+
+- **Bounded context**: lives in `community-service` under the
+  `zw.gov.mohcc.impilo.community.social` package. Do **not** create a
+  separate `social-service` — extend the existing context.
+- **Contract**: `contracts/openapi/social.openapi.yaml`. Mirror DTO
+  shapes in `services/community-service/.../social/api/dto/SocialDtos.java`
+  and the OpenAPI file together.
+- **DB**: tables prefixed `social_` in the `community` schema (`V002__social.sql`).
+- **BFF surface**: `/internal/v1/social/**` (shared web/mobile),
+  `/internal/v1/mobile/citizen/social/**`,
+  `/internal/v1/mobile/provider/social/**`, and the legacy citizen feed
+  wrapper at `/internal/v1/mobile/citizen/feed`.
+- **Nompilo composer assist**: BFF endpoint
+  `/internal/v1/social/composer/assist` proxies the LLM Orchestration
+  Service with deterministic offline fallbacks. Preserve the fallback
+  behaviour when changing.
+- **Runbook**: [`docs/architecture/SOCIAL_TIMELINE.md`](docs/architecture/SOCIAL_TIMELINE.md).
+
 Full port allocation: [`docs/runbooks/port-allocation.md`](docs/runbooks/port-allocation.md)
 
 **Non-obvious architectural constraints**:

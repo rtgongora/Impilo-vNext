@@ -13,6 +13,7 @@ export type ProviderTabKey =
   | "results"
   | "queue"
   | "messaging"
+  | "social"
   | "tools"
   | "apps"
   | "professional";

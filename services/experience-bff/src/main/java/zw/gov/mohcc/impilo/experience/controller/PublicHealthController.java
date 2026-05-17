@@ -699,7 +699,7 @@ public class PublicHealthController {
     }
 
     @PostMapping("/inspections/schedules")
-    public ResponseEntity<Map<String, Object>> scheduleInspection(
+    public ResponseEntity<Map<String, Object>> scheduleInspectionSchedule(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestBody Map<String, Object> body) {
         governance.assertGovernedMutate();

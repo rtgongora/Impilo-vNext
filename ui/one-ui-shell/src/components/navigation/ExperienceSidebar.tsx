@@ -155,6 +155,9 @@ const ZONES: SidebarZone[] = [
       items: [
         { href: "/home", label: "Home", icon: LayoutDashboard },
         // Health OS §2a: Intelligent experience layer
+        { href: "/social", label: "Social timeline", icon: Users },
+        { href: "/communities", label: "Communities", icon: HeartHandshake },
+        { href: "/pages", label: "Pages", icon: BookMarked },
         { href: "/ask", label: "Ask", icon: MessageSquare },
         { href: "/intelligence", label: "Intelligence", icon: Sparkles },
         { href: "/search", label: "Search", icon: Search },

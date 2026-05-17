@@ -10,7 +10,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
+import { Pressable, View, Text, ScrollView, StyleSheet, RefreshControl } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
@@ -27,6 +27,7 @@ import {
   requestCapabilityActivation,
   type LauncherApp,
 } from "../../services/healthOsLauncherService";
+import { SystemStatusScreen } from "./SystemStatusScreen";
 
 const BLUE = "#1E40AF";
 
@@ -48,6 +49,27 @@ export function HealthOsAppsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [requesting, setRequesting] = useState<string | null>(null);
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
+  const [showStatus, setShowStatus] = useState(false);
+
+  if (showStatus) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Pressable
+          onPress={() => setShowStatus(false)}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Health OS apps"
+          style={styles.backRow}
+          testID="back-to-apps"
+        >
+          <Ionicons name="chevron-back" size={18} color="#1E40AF" />
+          <Text style={styles.backText}>Back to apps</Text>
+        </Pressable>
+        <View style={{ flex: 1 }}>
+          <SystemStatusScreen />
+        </View>
+      </View>
+    );
+  }
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -94,11 +116,23 @@ export function HealthOsAppsScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} colors={[BLUE]} />}
       >
+        <Pressable
+          onPress={() => setShowStatus(true)}
+          style={styles.statusEntry}
+          accessibilityRole="button"
+          accessibilityLabel="Open system status"
+          testID="open-system-status"
+        >
+          <Ionicons name="pulse-outline" size={18} color={BLUE} />
+          <Text style={styles.statusEntryText}>System status (integrations)</Text>
+          <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+        </Pressable>
+
         {error ? (
           <Card style={styles.errorCard}>
             <CardBody>
               <Text style={styles.errorText}>{error}</Text>
-              <Button onPress={load} variant="outline">Retry</Button>
+              <Button onPress={load} variant="outline" title="Retry" />
             </CardBody>
           </Card>
         ) : null}
@@ -148,9 +182,8 @@ export function HealthOsAppsScreen() {
                       onPress={() => handleRequest(app)}
                       variant="primary"
                       disabled={requesting === app.id}
-                    >
-                      {requesting === app.id ? "Submitting..." : "Request access"}
-                    </Button>
+                      title={requesting === app.id ? "Submitting..." : "Request access"}
+                    />
                   ) : null}
                 </CardBody>
               </Card>
@@ -204,4 +237,23 @@ const styles = StyleSheet.create({
   errorText: { color: "#b91c1c", fontSize: 13, marginBottom: 8 },
   toast: { borderColor: "#bfdbfe", borderWidth: 1, marginBottom: 12 },
   toastText: { color: "#1e3a8a", fontSize: 12 },
+  statusEntry: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: "#EFF6FF",
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  statusEntryText: { flex: 1, color: "#1E40AF", fontWeight: "600", fontSize: 13 },
+  backRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  backText: { color: "#1E40AF", fontWeight: "600", fontSize: 13 },
 });

@@ -1,8 +1,29 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
+const VARIANT = (process.env.EXPO_PUBLIC_APP_VARIANT ?? "dev").toLowerCase();
+const VARIANT_NAME_SUFFIX: Record<string, string> = {
+  dev: " Dev",
+  development: " Dev",
+  preview: " Preview",
+  staging: " Staging",
+  production: "",
+};
+const VARIANT_BUNDLE_SUFFIX: Record<string, string> = {
+  dev: ".dev",
+  development: ".dev",
+  preview: ".preview",
+  staging: ".staging",
+  production: "",
+};
+
+const APP_NAME =
+  process.env.EXPO_PUBLIC_APP_NAME ?? `Impilo Health${VARIANT_NAME_SUFFIX[VARIANT] ?? ""}`;
+const BUNDLE_BASE = "zw.gov.impilo.citizen";
+const BUNDLE = `${BUNDLE_BASE}${VARIANT_BUNDLE_SUFFIX[VARIANT] ?? ""}`;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "Impilo Health",
+  name: APP_NAME,
   slug: "impilo-citizen",
   version: "0.1.0",
   orientation: "portrait",
@@ -16,7 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "zw.gov.impilo.citizen",
+    bundleIdentifier: BUNDLE,
     buildNumber: "1",
     infoPlist: {
       NSCameraUsageDescription:
@@ -33,7 +54,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#009739",
     },
-    package: "zw.gov.impilo.citizen",
+    package: BUNDLE,
     versionCode: 1,
     permissions: [
       "CAMERA",
@@ -65,6 +86,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
   ],
   extra: {
+    appVariant: VARIANT,
+    appName: APP_NAME,
     keycloakUrl:
       process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "http://192.168.100.211:8480",
     keycloakRealm: process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "impilo",

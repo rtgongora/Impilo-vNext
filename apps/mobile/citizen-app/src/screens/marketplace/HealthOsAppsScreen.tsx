@@ -100,7 +100,7 @@ export function HealthOsAppsScreen() {
           <Card style={styles.errorCard}>
             <CardBody>
               <Text style={styles.errorText}>{error}</Text>
-              <Button onPress={load} variant="outline">Retry</Button>
+              <Button onPress={load} variant="outline" title="Retry" />
             </CardBody>
           </Card>
         ) : null}
@@ -150,9 +150,8 @@ export function HealthOsAppsScreen() {
                       onPress={() => handleRequest(app)}
                       variant="primary"
                       disabled={requesting === app.id}
-                    >
-                      {requesting === app.id ? "Submitting..." : "Request access"}
-                    </Button>
+                      title={requesting === app.id ? "Submitting..." : "Request access"}
+                    />
                   ) : null}
                 </CardBody>
               </Card>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { apiClient, type PagedList } from "@/lib/apiClient";
 import { useSearchParams } from "next/navigation";
 
@@ -14,7 +14,7 @@ interface CatalogItem {
   createdAt: string;
 }
 
-export default function ItemsPage() {
+function ItemsPageContent() {
   const searchParams = useSearchParams();
   const catalogId = searchParams.get("catalogId") || "";
   const [items, setItems] = useState<CatalogItem[]>([]);
@@ -148,5 +148,13 @@ export default function ItemsPage() {
         <p className="text-gray-500">No items found in this catalog.</p>
       ) : null}
     </div>
+  );
+}
+
+export default function ItemsPage() {
+  return (
+    <Suspense fallback={<p className="text-gray-500">Loading catalog items...</p>}>
+      <ItemsPageContent />
+    </Suspense>
   );
 }

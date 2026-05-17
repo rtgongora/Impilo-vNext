@@ -27,6 +27,16 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties(ServiceClientConfig.ServiceEndpoints.class)
 public class ServiceClientConfig {
+    private static final String X_SERVICE_ID = "X-Service-Id";
+    private static final String X_SERVICE_NAME = "X-Service-Name";
+    private static final String X_SERVICE_VERSION = "X-Service-Version";
+    private static final String X_REQUEST_SOURCE = "X-Request-Source";
+    private static final String X_EXTERNAL_APP_ID = "X-External-App-Id";
+    private static final String X_INTEGRATION_TYPE = "X-Integration-Type";
+    private static final String X_INTEGRATION_VERSION = "X-Integration-Version";
+    private static final String X_REQUEST_SIGNATURE = "X-Request-Signature";
+    private static final String X_AI_SKILL_ID = "X-AI-Skill-Id";
+    private static final String X_AI_MODEL_REF = "X-AI-Model-Ref";
 
     @ConfigurationProperties(prefix = "impilo.services")
     public record ServiceEndpoints(
@@ -246,16 +256,16 @@ public class ServiceClientConfig {
                 // Forward Health OS Extensibility Doctrine §1 / §14 headers so that
                 // service identity, request source, and external-app provenance
                 // survive BFF → downstream service hops.
-                forwardHeader(inbound, request, CompanionHeaders.SERVICE_ID);
-                forwardHeader(inbound, request, CompanionHeaders.SERVICE_NAME);
-                forwardHeader(inbound, request, CompanionHeaders.SERVICE_VERSION);
-                forwardHeader(inbound, request, CompanionHeaders.REQUEST_SOURCE);
-                forwardHeader(inbound, request, CompanionHeaders.EXTERNAL_APP_ID);
-                forwardHeader(inbound, request, CompanionHeaders.INTEGRATION_TYPE);
-                forwardHeader(inbound, request, CompanionHeaders.INTEGRATION_VERSION);
-                forwardHeader(inbound, request, CompanionHeaders.REQUEST_SIGNATURE);
-                forwardHeader(inbound, request, CompanionHeaders.AI_SKILL_ID);
-                forwardHeader(inbound, request, CompanionHeaders.AI_MODEL_REF);
+                forwardHeader(inbound, request, X_SERVICE_ID);
+                forwardHeader(inbound, request, X_SERVICE_NAME);
+                forwardHeader(inbound, request, X_SERVICE_VERSION);
+                forwardHeader(inbound, request, X_REQUEST_SOURCE);
+                forwardHeader(inbound, request, X_EXTERNAL_APP_ID);
+                forwardHeader(inbound, request, X_INTEGRATION_TYPE);
+                forwardHeader(inbound, request, X_INTEGRATION_VERSION);
+                forwardHeader(inbound, request, X_REQUEST_SIGNATURE);
+                forwardHeader(inbound, request, X_AI_SKILL_ID);
+                forwardHeader(inbound, request, X_AI_MODEL_REF);
                 // Keep forwarding step-up token even when older companion-header artifacts
                 // do not expose the constant yet.
                 forwardHeader(inbound, request, "X-Step-Up-Token");
@@ -264,9 +274,9 @@ public class ServiceClientConfig {
             // BFF identifies itself as the caller for downstream S2S trust
             // contracts. Downstream services can use this to authorize against
             // an active S2SContract in integration-hub.
-            if (!request.getHeaders().containsKey(CompanionHeaders.SERVICE_ID)) {
-                request.getHeaders().set(CompanionHeaders.SERVICE_ID, "experience-bff");
-                request.getHeaders().set(CompanionHeaders.SERVICE_NAME, "Experience BFF");
+            if (!request.getHeaders().containsKey(X_SERVICE_ID)) {
+                request.getHeaders().set(X_SERVICE_ID, "experience-bff");
+                request.getHeaders().set(X_SERVICE_NAME, "Experience BFF");
             }
             return execution.execute(request, body);
         };

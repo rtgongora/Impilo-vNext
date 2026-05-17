@@ -33,6 +33,13 @@ export { Avatar } from "./components/Avatar";
 export type { AvatarProps, AvatarSize } from "./components/Avatar";
 export { FeatureMaturityBadge } from "./components/FeatureMaturityBadge";
 export type { FeatureMaturityStatus } from "./components/FeatureMaturityBadge";
+export { IntegrationStatusBadge } from "./components/IntegrationStatusBadge";
+export type {
+  IntegrationStatusBadgeProps,
+  IntegrationBadgeStatus,
+} from "./components/IntegrationStatusBadge";
+export { NompiloLauncher } from "./components/NompiloLauncher";
+export type { NompiloLauncherProps } from "./components/NompiloLauncher";
 
 // Form Components
 export { TextField } from "./forms/TextField";

@@ -33,7 +33,11 @@ class OutboxPublisherTest {
 
     @BeforeEach
     void setUp() {
-        outboxPublisher = new OutboxPublisher(outboxRepository, kafkaTemplate);
+        outboxPublisher = new OutboxPublisher(
+                outboxRepository,
+                kafkaTemplate,
+                true,
+                "analytics.reporting.aggregate");
     }
 
     @Nested

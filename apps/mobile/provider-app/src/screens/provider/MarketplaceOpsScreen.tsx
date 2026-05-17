@@ -8,8 +8,7 @@ import { useAppStore } from "../../stores/appStore";
 import { deliveryAction, listAssignedDeliveries, type ProviderDelivery } from "../../services/deliveryService";
 
 export function MarketplaceOpsScreen() {
-  const isOnline = useAppStore((s) => s.isOnline);
-  const setGlobalError = useAppStore((s) => s.setGlobalError);
+  const { isOnline, setGlobalError } = useAppStore();
   const [loading, setLoading] = React.useState(true);
   const [deliveries, setDeliveries] = React.useState<ProviderDelivery[]>([]);
 
@@ -67,7 +66,9 @@ export function MarketplaceOpsScreen() {
           deliveries.map((delivery) => (
             <Card key={delivery.id}>
               <CardBody>
-                <Text style={styles.title}>{delivery.pickupLocation} -> {delivery.dropoffLocation}</Text>
+                <Text style={styles.title}>
+                  {delivery.pickupLocation} {"->"} {delivery.dropoffLocation}
+                </Text>
                 <View style={styles.row}>
                   <Badge variant="outline">{delivery.status}</Badge>
                   <TouchableOpacity style={styles.action} onPress={() => runAction(delivery.id, "accept")}><Text style={styles.actionText}>Accept</Text></TouchableOpacity>

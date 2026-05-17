@@ -43,7 +43,12 @@ const STATUS_TONE: Record<string, "default" | "secondary" | "destructive" | "out
   RETURNED: "outline",
 };
 
-export function NhumeTrackingScreen() {
+export interface NhumeTrackingScreenProps {
+  /** Optional back handler (when hosted inside HomeScreen / overlay). */
+  onBack?: () => void;
+}
+
+export function NhumeTrackingScreen({ onBack }: NhumeTrackingScreenProps = {}) {
   const [deliveries, setDeliveries] = useState<NhumeCitizenDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -109,7 +114,7 @@ export function NhumeTrackingScreen() {
   if (loading) {
     return (
       <Screen>
-        <Header title="Track delivery" />
+        <Header title="Track delivery" onBack={onBack} />
         <LoadingSpinner size="md" />
       </Screen>
     );
@@ -197,7 +202,11 @@ export function NhumeTrackingScreen() {
 
   return (
     <Screen>
-      <Header title="Track delivery" subtitle="Your active and recent Nhume deliveries" />
+      <Header
+        title="Track delivery"
+        subtitle="Your active and recent Nhume deliveries"
+        onBack={onBack}
+      />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16, gap: 12 }}

@@ -25,6 +25,7 @@ import { fetchLabResults } from "../services/labResultService";
 import type { Appointment, Prescription, LabResult, CitizenTab } from "../types";
 import { FacilityDirectoryScreen } from "./FacilityDirectoryScreen";
 import { FacilityDetailScreen } from "./FacilityDetailScreen";
+import { NhumeTrackingScreen } from "./NhumeTrackingScreen";
 
 const GREEN = "#059669";
 
@@ -76,19 +77,34 @@ export function buildCitizenCommsKpis(
   ];
 }
 
-const QUICK_ACTIONS = [
-  { id: "book",     label: "Book",    icon: "calendar-outline",   tab: "personal",    color: "#059669", bg: "#D1FAE5" },
-  { id: "refill",   label: "Refill",  icon: "refresh-outline",    tab: "personal",    color: "#1E40AF", bg: "#DBEAFE" },
-  { id: "message",  label: "Message", icon: "chatbubble-outline",  tab: "messaging",   color: "#7C3AED", bg: "#EDE9FE" },
-  { id: "telehealth", label: "Video", icon: "videocam-outline",   tab: "telehealth",  color: "#0891B2", bg: "#CFFAFE" },
-  { id: "records",  label: "Records", icon: "folder-outline",     tab: "personal",    color: "#D97706", bg: "#FEF3C7" },
-  { id: "public-health", label: "Public Health", icon: "pulse-outline", tab: "public_health", color: "#0369A1", bg: "#E0F2FE" },
-] as const;
+type QuickActionTarget =
+  | { kind: "tab"; tab: CitizenTab }
+  | { kind: "track" };
+
+interface QuickAction {
+  id: string;
+  label: string;
+  icon: string;
+  color: string;
+  bg: string;
+  target: QuickActionTarget;
+}
+
+const QUICK_ACTIONS: ReadonlyArray<QuickAction> = [
+  { id: "book",          label: "Book",          icon: "calendar-outline",  color: "#059669", bg: "#D1FAE5", target: { kind: "tab", tab: "personal" } },
+  { id: "refill",        label: "Refill",        icon: "refresh-outline",   color: "#1E40AF", bg: "#DBEAFE", target: { kind: "tab", tab: "personal" } },
+  { id: "message",       label: "Message",       icon: "chatbubble-outline", color: "#7C3AED", bg: "#EDE9FE", target: { kind: "tab", tab: "messaging" } },
+  { id: "telehealth",    label: "Video",         icon: "videocam-outline",  color: "#0891B2", bg: "#CFFAFE", target: { kind: "tab", tab: "telehealth" } },
+  { id: "track",         label: "Track",         icon: "cube-outline",      color: "#0F766E", bg: "#CCFBF1", target: { kind: "track" } },
+  { id: "records",       label: "Records",       icon: "folder-outline",    color: "#D97706", bg: "#FEF3C7", target: { kind: "tab", tab: "personal" } },
+  { id: "public-health", label: "Public Health", icon: "pulse-outline",     color: "#0369A1", bg: "#E0F2FE", target: { kind: "tab", tab: "public_health" } },
+];
 
 export function HomeScreen() {
   const { profile, setActiveTab, unreadNotifications, selectedFacilityName } = useAppStore();
   const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [facilityView, setFacilityView] = useState<null | { mode: "list" } | { mode: "detail"; id: string }>(null);
+  const [trackingOpen, setTrackingOpen] = useState(false);
   const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
   const [activePrescriptions, setActivePrescriptions] = useState<Prescription[]>([]);
   const [pendingResults, setPendingResults] = useState<LabResult[]>([]);
@@ -124,6 +140,9 @@ export function HomeScreen() {
   }, [facilityView]);
 
   if (facilityPicker) return facilityPicker;
+  if (trackingOpen) {
+    return <NhumeTrackingScreen onBack={() => setTrackingOpen(false)} />;
+  }
 
   return (
     <Screen>
@@ -212,7 +231,13 @@ export function HomeScreen() {
             <Pressable
               key={action.id}
               testID={`quick-${action.id}`}
-              onPress={() => setActiveTab(action.tab as Parameters<typeof setActiveTab>[0])}
+              onPress={() => {
+                if (action.target.kind === "tab") {
+                  setActiveTab(action.target.tab);
+                } else if (action.target.kind === "track") {
+                  setTrackingOpen(true);
+                }
+              }}
               style={({ pressed }) => [
                 styles.quickCard,
                 { opacity: pressed ? 0.85 : 1 },

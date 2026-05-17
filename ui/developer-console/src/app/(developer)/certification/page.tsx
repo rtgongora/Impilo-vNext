@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   listClients,
@@ -17,7 +17,7 @@ import type {
 import { CertResultBadge } from "@/components/StatusBadge";
 import { useDeveloperSession } from "@/stores/sessionStore";
 
-export default function CertificationPage() {
+function CertificationPageContent() {
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clientId");
 
@@ -264,5 +264,13 @@ export default function CertificationPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CertificationPage() {
+  return (
+    <Suspense fallback={<div className="text-sm text-neutral-500 py-20 text-center">Loading certifications...</div>}>
+      <CertificationPageContent />
+    </Suspense>
   );
 }
