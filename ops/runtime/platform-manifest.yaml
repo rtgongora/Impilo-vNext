@@ -663,6 +663,24 @@ components:
     profiles: [dev-full, integration, pilot]
     database: costing
 
+  - name: learning
+    type: ring2
+    layer: 5
+    description: "Learning Service — Impilo Fundo backend (catalog, paths, learner progress, CPD/workflow/helpdesk linkages, Varapi sync)"
+    module_path: services/learning-service
+    build_target: "services/learning-service (Maven + Dockerfile)"
+    port: 8235
+    dependencies: [postgres, kafka, keycloak]
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8235/actuator/health"
+    readiness_timeout: 90s
+    shutdown_priority: 30
+    profiles: [dev-full, integration, pilot]
+    database: impilo_learning
+    kafka_topics: [platform.learning.events]
+    notes: "Internal-only API surface (/internal/v1/learning/**). BFF talks to it via LEARNING_SERVICE_BASE_URL. Compose runs with LEARNING_SECURITY_OAUTH2_ENABLED=false; Helm defaults to true. Phase 2 hardening: platform-manifest registration, Helm chart, OpenAPI contract, transactional outbox publisher, golden contract harness. CPD authority remains with varapi-service; learning-service is the Impilo Fundo product/UX name's technical home."
+
   - name: coverage
     type: ring2
     layer: 5
@@ -1079,7 +1097,7 @@ components:
     module_path: services/experience-bff
     build_target: "services/experience-bff (Maven + Dockerfile)"
     port: 8160
-    dependencies: [postgres, tshepo, vito, tuso, varapi, pct, mvumo]
+    dependencies: [postgres, tshepo, vito, tuso, varapi, pct, mvumo, learning]
     healthcheck:
       type: http
       endpoint: "http://localhost:8160/actuator/health"

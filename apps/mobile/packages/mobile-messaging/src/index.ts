@@ -57,4 +57,5 @@ export {
   useChannel,
   useConversations,
   useMessages,
+  useCommunicationDashboard,
 } from "./hooks";

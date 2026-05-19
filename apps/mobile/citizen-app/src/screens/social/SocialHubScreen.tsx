@@ -11,12 +11,14 @@ import { ClubsScreen } from "./ClubsScreen";
 import { ProfessionalPagesScreen } from "./ProfessionalPagesScreen";
 import { CrowdfundingScreen } from "./CrowdfundingScreen";
 import { CommunitiesScreen } from "./CommunitiesScreen";
+import { PagesScreen } from "./PagesScreen";
 
-type SocialTab = "feed" | "communities" | "clubs" | "providers" | "crowdfunding";
+type SocialTab = "feed" | "communities" | "pages" | "clubs" | "providers" | "crowdfunding";
 
 const TABS: { id: SocialTab; label: string; icon: React.ComponentProps<typeof Ionicons>["name"] }[] = [
   { id: "feed", label: "Feed", icon: "newspaper-outline" },
   { id: "communities", label: "Communities", icon: "people-circle-outline" },
+  { id: "pages", label: "Pages", icon: "bookmark-outline" },
   { id: "clubs", label: "Clubs", icon: "trophy-outline" },
   { id: "providers", label: "Providers", icon: "briefcase-outline" },
   { id: "crowdfunding", label: "Fundraising", icon: "heart-circle-outline" },
@@ -67,6 +69,7 @@ export function SocialHubScreen() {
         <TabBar tab={tab} setTab={setTab} />
         <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
           {tab === "communities" && <CommunitiesScreen />}
+          {tab === "pages" && <PagesScreen />}
           {tab === "clubs" && <ClubsScreen />}
           {tab === "providers" && <ProfessionalPagesScreen />}
           {tab === "crowdfunding" && <CrowdfundingScreen />}

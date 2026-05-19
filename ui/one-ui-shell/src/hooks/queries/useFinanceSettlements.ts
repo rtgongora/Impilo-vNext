@@ -2,6 +2,7 @@
  * MusheX-backed settlement operations proxied by Experience BFF (not /internal/v1/mushex/*).
  *
  * - POST /internal/v1/finance/settlements/run
+ * - GET  /internal/v1/finance/settlements?intentId=...|intentIds=...
  * - GET  /internal/v1/finance/settlements/{settlementId}
  * - POST /internal/v1/finance/settlements/{settlementId}/release-payouts
  */
@@ -24,6 +25,23 @@ export function useFinanceSettlement(settlementId: string | undefined) {
         `/internal/v1/finance/settlements/${encodeURIComponent(String(settlementId))}`,
       ),
     enabled: Boolean(settlementId),
+  });
+}
+
+export function useFinanceSettlementsByIntentIds(intentIds: string[] | undefined, enabled: boolean) {
+  const ids = (intentIds ?? []).filter((id) => id && id.trim().length > 0);
+  const q = new URLSearchParams();
+  for (const id of ids) {
+    q.append("intentIds", id);
+  }
+  const suffix = q.toString();
+  return useQuery<FinanceSettlementJson>({
+    queryKey: ["finance", "settlements", "by-intent-ids", ids.join(",")],
+    queryFn: () =>
+      apiClient.get<FinanceSettlementJson>(
+        `/internal/v1/finance/settlements${suffix ? `?${suffix}` : ""}`,
+      ),
+    enabled: enabled && ids.length > 0,
   });
 }
 

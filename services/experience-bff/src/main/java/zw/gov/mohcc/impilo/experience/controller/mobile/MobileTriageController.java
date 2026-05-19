@@ -70,15 +70,20 @@ public class MobileTriageController {
                     response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
                     return ResponseEntity.status(HttpStatus.CREATED).body(response);
                 }
+                return upstreamFailure("PCT_UNAVAILABLE", "No triage payload returned", requestId, correlationId);
             } catch (Exception e) {
-                log.warn("PCT triage delegation from mobile failed (non-blocking): {}", e.getMessage());
+                log.warn("PCT triage delegation from mobile failed: {}", e.getMessage());
+                return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
             }
         }
 
-        // TODO: Align mobile triage write + read with PCT journey model (journeyId vs encounter_id).
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", Map.of(
+                        "code", "MISSING_ENCOUNTER_ID",
+                        "message", "encounter_id (PCT journey id) is required"),
+                "meta", Map.of(
+                        "request_id", requestId,
+                        "correlation_id", correlationId)
         ));
     }
 
@@ -98,6 +103,7 @@ public class MobileTriageController {
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
                     ));
                 }
+                return upstreamFailure("PCT_UNAVAILABLE", "No triage payload returned for journey", requestId, correlationId);
             }
             if (patientId != null && !patientId.isBlank()) {
                 JsonNode result = pctClient.listJourneys(patientId, 0, 10);
@@ -113,13 +119,22 @@ public class MobileTriageController {
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
                     ));
                 }
+                return upstreamFailure("PCT_UNAVAILABLE", "No journey list payload returned", requestId, correlationId);
             }
         } catch (Exception e) {
             log.warn("PCT triage list failed: {}", e.getMessage());
+            return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", Map.of("code", "MISSING_QUERY_FILTER", "message", "Provide encounter_id or patient_id"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
         ));
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Triage upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

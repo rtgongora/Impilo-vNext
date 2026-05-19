@@ -32,6 +32,17 @@ public class FinancialCardReversalPlatformService {
         return cardProfileRepository.findByTenantIdOrderByIssuedAtDesc(ctx.tenantId());
     }
 
+    public CardProfileEntity getCardProfile(String cardProfileId) {
+        var ctx = TrustContextHolder.require();
+        CardProfileEntity row = cardProfileRepository.findById(cardProfileId)
+                .orElseThrow(() -> new PlatformResourceNotFoundException(
+                        "Card profile not found: " + cardProfileId));
+        if (!ctx.tenantId().equals(row.getTenantId())) {
+            throw new PlatformResourceNotFoundException("Card profile not found: " + cardProfileId);
+        }
+        return row;
+    }
+
     @Transactional
     public CardProfileEntity createCardProfile(FinancialPlatformCardRequests.CreateCardProfileRequest req) {
         var ctx = TrustContextHolder.require();
@@ -51,6 +62,17 @@ public class FinancialCardReversalPlatformService {
     public List<ReversalRecordEntity> listReversals() {
         var ctx = TrustContextHolder.require();
         return reversalRecordRepository.findByTenantIdOrderByCreatedAtDesc(ctx.tenantId());
+    }
+
+    public ReversalRecordEntity getReversal(String reversalId) {
+        var ctx = TrustContextHolder.require();
+        ReversalRecordEntity row = reversalRecordRepository.findById(reversalId)
+                .orElseThrow(() -> new PlatformResourceNotFoundException(
+                        "Reversal not found: " + reversalId));
+        if (!ctx.tenantId().equals(row.getTenantId())) {
+            throw new PlatformResourceNotFoundException("Reversal not found: " + reversalId);
+        }
+        return row;
     }
 
     @Transactional

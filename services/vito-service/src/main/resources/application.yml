@@ -70,7 +70,7 @@ vito:
   # Biometric governance (Tshepo policy + auditable events)
   biometric:
     policy-enabled: ${VITO_BIOMETRIC_POLICY_ENABLED:true}
-    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
     # When > 0, verify() requires probeContext.livenessScore() >= this value (vendor pipeline should populate).
     liveness-min-score: ${VITO_BIOMETRIC_LIVENESS_MIN_SCORE:0}
 
@@ -81,7 +81,7 @@ vito:
   # Patient-mediated external provider collaboration (Tshepo policy + Varapi provisional profile)
   patient-share:
     policy-enabled: ${VITO_PATIENT_SHARE_POLICY_ENABLED:true}
-    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
     pct-base-url: ${PCT_BASE_URL:http://localhost:8088}
     pct-bearer-token: ${VITO_TO_PCT_BEARER_TOKEN:}
@@ -99,6 +99,9 @@ vito:
   v11:
     # DualEmitPolicy: LEGACY_ONLY | V1_1_ONLY | DUAL
     emit-mode: ${VITO_EMIT_MODE:DUAL}
+  outbox:
+    dual-emit-kernel-client-registered-enabled: ${VITO_OUTBOX_DUAL_EMIT_KERNEL_CLIENT_REGISTERED_ENABLED:false}
+    kernel-client-registered-topic: ${VITO_OUTBOX_KERNEL_CLIENT_REGISTERED_TOPIC:kernel.vito.client.registered}
 
 impilo:
   ops:

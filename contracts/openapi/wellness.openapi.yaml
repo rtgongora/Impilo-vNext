@@ -606,6 +606,202 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
 
+  /internal/v1/wellness/personal-data/sources:
+    get:
+      tags: [HealthConnect]
+      summary: List connected wellness sources for a patient
+      operationId: listPersonalHealthSources
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [HealthConnect]
+      summary: Connect/register a wellness source (manual, wearable, Health Connect, etc.)
+      operationId: connectPersonalHealthSource
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WellnessSourceCreateRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/wellness/personal-data/sources/{id}/permissions:
+    patch:
+      tags: [HealthConnect]
+      summary: Update connected source category permissions and sharing controls
+      operationId: updatePersonalHealthSourcePermissions
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WellnessSourcePermissionPatch'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          description: Source not found
+
+  /internal/v1/wellness/personal-data/permissions:
+    get:
+      tags: [HealthConnect]
+      summary: List effective source permissions for a patient
+      operationId: listPersonalHealthPermissions
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+
+  /internal/v1/wellness/personal-data/readings/manual:
+    post:
+      tags: [HealthConnect]
+      summary: Record a manual wellness reading
+      operationId: createManualWellnessReading
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManualWellnessReadingRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/wellness/personal-data/summary:
+    get:
+      tags: [HealthConnect]
+      summary: Citizen personal wellness summary (non-clinical record by default)
+      operationId: getPersonalWellnessSummary
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/wellness/personal-data/provider-summary:
+    get:
+      tags: [HealthConnect]
+      summary: Provider-facing wellness summary (patient-shared wellness scope)
+      operationId: getProviderWellnessSummary
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - $ref: '#/components/parameters/PatientIdQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/wellness/personal-data/remote-alerts:
+    get:
+      tags: [HealthConnect]
+      summary: Remote monitoring alerts for patient or worklist
+      operationId: listRemoteMonitoringAlerts
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: patientId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CitizenListEnvelope'
+    post:
+      tags: [HealthConnect]
+      summary: Create a remote monitoring alert
+      operationId: createRemoteMonitoringAlert
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteAlertCreateRequest'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeObject'
+
+  /internal/v1/wellness/personal-data/remote-alerts/{id}/review:
+    post:
+      tags: [HealthConnect]
+      summary: Review and update remote monitoring alert status
+      operationId: reviewRemoteMonitoringAlert
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoteAlertReviewRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          description: Alert not found
+
 components:
   parameters:
     XTenantId:
@@ -716,3 +912,113 @@ components:
             type: object
             additionalProperties: true
       additionalProperties: true
+    WellnessSourceCreateRequest:
+      type: object
+      required: [patientId, sourceType, sourceName]
+      properties:
+        patientId:
+          type: string
+        sourceType:
+          type: string
+          enum: [manual_entry, android_health_connect, apple_healthkit, wearable, iot_device, remote_monitoring_device, provider_entry, community_health_worker_entry, imported_file, external_api, unknown]
+        sourceName:
+          type: string
+        sourceDeviceId:
+          type: string
+        sourceAppId:
+          type: string
+        sourcePriority:
+          type: integer
+        providerAccessAllowed:
+          type: boolean
+        clinicalWritebackAllowed:
+          type: boolean
+        consentStatus:
+          type: string
+          enum: [GRANTED, REVOKED, PENDING]
+        sharingScope:
+          type: string
+          enum: [PERSONAL_ONLY, SHARED_WITH_PROVIDER, PROGRAMME]
+        categoryPermissions:
+          type: object
+          additionalProperties:
+            type: boolean
+    WellnessSourcePermissionPatch:
+      type: object
+      properties:
+        providerAccessAllowed:
+          type: boolean
+        clinicalWritebackAllowed:
+          type: boolean
+        consentStatus:
+          type: string
+          enum: [GRANTED, REVOKED, PENDING]
+        sharingScope:
+          type: string
+          enum: [PERSONAL_ONLY, SHARED_WITH_PROVIDER, PROGRAMME]
+        status:
+          type: string
+          enum: [CONNECTED, DISCONNECTED, BLOCKED]
+        categoryPermissions:
+          type: object
+          additionalProperties:
+            type: boolean
+    ManualWellnessReadingRequest:
+      type: object
+      required: [patientId, category, value]
+      properties:
+        patientId:
+          type: string
+        category:
+          type: string
+          description: Vital or wellness category key (example HEART_RATE, SLEEP_SCORE, WATER_ML)
+        value:
+          type: number
+        unit:
+          type: string
+        measuredAt:
+          type: string
+          format: date-time
+        sourceType:
+          type: string
+          enum: [manual_entry, provider_entry, community_health_worker_entry]
+        notes:
+          type: string
+    RemoteAlertCreateRequest:
+      type: object
+      required: [patientId, category]
+      properties:
+        patientId:
+          type: string
+        sourceId:
+          type: string
+          format: uuid
+        category:
+          type: string
+        vitalType:
+          type: string
+        observedValue:
+          type: number
+        thresholdMin:
+          type: number
+        thresholdMax:
+          type: number
+        unit:
+          type: string
+        measuredAt:
+          type: string
+          format: date-time
+        severity:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, CRITICAL]
+    RemoteAlertReviewRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OPEN, ACKNOWLEDGED, RESOLVED, DISMISSED]
+        escalationStatus:
+          type: string
+          enum: [PENDING_REVIEW, ESCALATED, FOLLOW_UP_SCHEDULED, CLOSED]
+        reviewNotes:
+          type: string

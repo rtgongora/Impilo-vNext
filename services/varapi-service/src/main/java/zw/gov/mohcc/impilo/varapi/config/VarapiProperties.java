@@ -234,7 +234,7 @@ public class VarapiProperties {
     /** Optional Tshepo policy gate for council staff / provider self-service actions. */
     public static class CouncilRegulatoryProperties {
         private boolean policyEnabled = false;
-        private String tshepoPolicyBaseUrl = "http://localhost:8079";
+        private String tshepoPolicyBaseUrl = "http://localhost:8081";
         /** When policy is enabled, deny workflow actions if Tshepo is unreachable or returns an empty body. */
         private boolean policyDenyWhenUnreachable = true;
         /** Subscribe to {@code mushex.payment.status.changed} to settle Varapi obligations without polling. */

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { KeycloakClient, generateCodeVerifier, generateCodeChallenge, AuthError } from "../src/keycloakClient";
+import { resolveActorId } from "../src/authStore";
 
 describe("KeycloakClient", () => {
   const config = {
@@ -59,5 +60,40 @@ describe("AuthError", () => {
     expect(err.message).toBe("test message");
     expect(err.name).toBe("AuthError");
     expect(err).toBeInstanceOf(Error);
+  });
+});
+
+describe("resolveActorId — CPID claim contract", () => {
+  const base = {
+    sub: "keycloak-uuid-001",
+    preferred_username: "citizen.moyo",
+    realm_access: { roles: ["CITIZEN"] as string[] },
+  };
+
+  it("uses CPID as actorId for a citizen when the claim is present", () => {
+    const userInfo = { ...base, cpid: "CPID-ZW-00001" };
+    expect(resolveActorId(userInfo)).toBe("CPID-ZW-00001");
+  });
+
+  it("falls back to sub when citizen has no CPID claim", () => {
+    expect(resolveActorId(base)).toBe("keycloak-uuid-001");
+  });
+
+  it("uses sub for a CLINICIAN even if cpid is present", () => {
+    const userInfo = {
+      ...base,
+      cpid: "CPID-ZW-00001",
+      realm_access: { roles: ["CLINICIAN"] },
+    };
+    expect(resolveActorId(userInfo)).toBe("keycloak-uuid-001");
+  });
+
+  it("uses sub for an OPERATOR even if cpid is present", () => {
+    const userInfo = {
+      ...base,
+      cpid: "CPID-ZW-00001",
+      realm_access: { roles: ["SYSTEM_ADMIN"] },
+    };
+    expect(resolveActorId(userInfo)).toBe("keycloak-uuid-001");
   });
 });

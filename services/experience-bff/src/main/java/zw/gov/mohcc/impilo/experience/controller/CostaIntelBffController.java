@@ -17,7 +17,7 @@ import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.finance.FinancePlaneAuthorizationService;
 
 /**
- * Proxies COSTA {@code /api/costa/...} through the finance plane for Experience UI and tools.
+ * Proxies COSTA {@code /api/costa/...} through the enterprise plane (finance domain) for Experience UI and tools.
  */
 @RestController
 @RequestMapping("/internal/v1/finance/costa-intel")

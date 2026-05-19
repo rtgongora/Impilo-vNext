@@ -28,7 +28,7 @@ metadata:
   labels:
     part-of: impilo-vnext
 data:
-  TSHEPO_SERVICE_URL: "http://tshepo-service.impilo-trust.svc.cluster.local:8081"
+  TSHEPO_SERVICE_URL: "http://tshepo-authz.impilo-trust.svc.cluster.local:8081"
   TSHEPO_AUTHZ_URL: "http://tshepo-authz.impilo-trust.svc.cluster.local:8081"
   TSHEPO_AUDIT_URL: "http://tshepo-audit.impilo-trust.svc.cluster.local:8183"
   TSHEPO_CONSENT_URL: "http://tshepo-consent.impilo-trust.svc.cluster.local:8182"
@@ -102,7 +102,7 @@ metadata:
     part-of: impilo-vnext
 data:
   EXPERIENCE_BFF_PORT: "8160"
-  TSHEPO_BASE_URL: "http://tshepo-service.impilo-trust.svc.cluster.local:8081"
+  TSHEPO_BASE_URL: "http://tshepo-authz.impilo-trust.svc.cluster.local:8081"
   VITO_BASE_URL: "http://vito-service.impilo-registry.svc.cluster.local:8082"
   VARAPI_BASE_URL: "http://varapi-service.impilo-registry.svc.cluster.local:8083"
   TUSO_BASE_URL: "http://tuso-service.impilo-registry.svc.cluster.local:8084"

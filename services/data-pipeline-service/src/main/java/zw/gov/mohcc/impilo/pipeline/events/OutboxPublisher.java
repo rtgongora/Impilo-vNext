@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.pipeline.events;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -26,11 +27,17 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean reportingAggregateEmitEnabled;
+    private final String reportingAggregateTopic;
 
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${pipeline.outbox.reporting-aggregate-emit-enabled:true}") boolean reportingAggregateEmitEnabled,
+                           @Value("${pipeline.outbox.reporting-aggregate-topic:analytics.reporting.aggregate}") String reportingAggregateTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.reportingAggregateEmitEnabled = reportingAggregateEmitEnabled;
+        this.reportingAggregateTopic = reportingAggregateTopic;
     }
 
     @Scheduled(fixedDelayString = "${pipeline.outbox.poll-interval-ms:500}")
@@ -52,6 +59,10 @@ public class OutboxPublisher {
             try {
                 String topic = routeTopic(event.getEventType());
                 kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload());
+                String secondaryTopic = resolveSecondaryTopic(event.getEventType());
+                if (secondaryTopic != null && !secondaryTopic.equals(topic)) {
+                    kafkaTemplate.send(secondaryTopic, event.getAggregateId(), event.getPayload());
+                }
 
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
@@ -79,6 +90,16 @@ public class OutboxPublisher {
             case "EVENT_INGESTED" -> "impilo.pipeline.event.ingested.v1";
             case "WATERMARK_UPDATED" -> "impilo.pipeline.watermark.updated.v1";
             default -> "impilo.pipeline.events";
+        };
+    }
+
+    private String resolveSecondaryTopic(String eventType) {
+        if (!reportingAggregateEmitEnabled || eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "EVENT_INGESTED" -> reportingAggregateTopic;
+            default -> null;
         };
     }
 }

@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import zw.gov.mohcc.impilo.surv.core.CounterService;
 import zw.gov.mohcc.impilo.surv.core.IngestService;
@@ -29,19 +32,27 @@ public class SurveillanceEventConsumer {
     private final CounterService counterService;
     private final AlertEventRepository alertEventRepository;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
 
     public SurveillanceEventConsumer(IngestService ingestService,
                                      CounterService counterService,
                                      AlertEventRepository alertEventRepository,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     MeterRegistry meterRegistry) {
         this.ingestService = ingestService;
         this.counterService = counterService;
         this.alertEventRepository = alertEventRepository;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
     }
 
-    @KafkaListener(topics = "clinical.pct.encounter.completed", groupId = "surveillance-service")
-    public void consumeEncounterCompleted(String message) {
+    @KafkaListener(
+            topics = "#{'${surv.kafka.topics.encounter-completed:clinical.pct.encounter.completed,pct.encounter.completed}'.split(',')}",
+            groupId = "surveillance-service")
+    public void consumeEncounterCompleted(String message,
+                                          @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        meterRegistry.counter("impilo.eventing.consumer.messages.total",
+                "service", "surveillance-service", "topic", topic).increment();
         try {
             JsonNode root = objectMapper.readTree(message);
             UUID tenantId = parseUuid(root, "tenantId", "tenant_id").orElse(FALLBACK_TENANT);
@@ -54,17 +65,25 @@ public class SurveillanceEventConsumer {
             }
 
             ingestService.ingest(tenantId, "kafka:surveillance", correlationId,
-                    "clinical.pct.encounter.completed", message, facilityId,
-                    "kafka:clinical.pct.encounter.completed:" + correlationId);
+                    topic, message, facilityId,
+                    "kafka:" + topic + ":" + correlationId);
 
-            log.info("Surveillance ingest for notifiable encounter tenant={} facility={}", tenantId, facilityId);
+            log.info("Surveillance ingest for notifiable encounter topic={} tenant={} facility={}",
+                    topic, tenantId, facilityId);
         } catch (JsonProcessingException e) {
-            log.error("Failed to parse clinical.pct.encounter.completed: {}", e.getMessage(), e);
+            meterRegistry.counter("impilo.eventing.consumer.errors.total",
+                    "service", "surveillance-service", "topic", topic).increment();
+            log.error("Failed to parse {}: {}", topic, e.getMessage(), e);
         }
     }
 
-    @KafkaListener(topics = "clinical.pct.death.recorded", groupId = "surveillance-service")
-    public void consumeDeathRecorded(String message) {
+    @KafkaListener(
+            topics = "#{'${surv.kafka.topics.death-recorded:clinical.pct.death.recorded,pct.death.recorded}'.split(',')}",
+            groupId = "surveillance-service")
+    public void consumeDeathRecorded(String message,
+                                     @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        meterRegistry.counter("impilo.eventing.consumer.messages.total",
+                "service", "surveillance-service", "topic", topic).increment();
         try {
             JsonNode root = objectMapper.readTree(message);
             UUID tenantId = parseUuid(root, "tenantId", "tenant_id").orElse(FALLBACK_TENANT);
@@ -72,14 +91,21 @@ public class SurveillanceEventConsumer {
 
             counterService.incrementCounter(tenantId, facilityId, "MORTALITY", LocalDate.now());
 
-            log.info("Recorded mortality counter increment tenant={} facility={}", tenantId, facilityId);
+            log.info("Recorded mortality counter increment topic={} tenant={} facility={}", topic, tenantId, facilityId);
         } catch (JsonProcessingException e) {
-            log.error("Failed to parse clinical.pct.death.recorded: {}", e.getMessage(), e);
+            meterRegistry.counter("impilo.eventing.consumer.errors.total",
+                    "service", "surveillance-service", "topic", topic).increment();
+            log.error("Failed to parse {}: {}", topic, e.getMessage(), e);
         }
     }
 
-    @KafkaListener(topics = "analytics.surveillance.alert", groupId = "surveillance-service")
-    public void consumeSurveillanceAlert(String message) {
+    @KafkaListener(
+            topics = "#{'${surv.kafka.topics.alert:analytics.surveillance.alert}'.split(',')}",
+            groupId = "surveillance-service")
+    public void consumeSurveillanceAlert(String message,
+                                         @Header(KafkaHeaders.RECEIVED_TOPIC) String topic) {
+        meterRegistry.counter("impilo.eventing.consumer.messages.total",
+                "service", "surveillance-service", "topic", topic).increment();
         try {
             JsonNode root = objectMapper.readTree(message);
             Long alertEventId = parseLong(root, "alertEventId", "alert_event_id", "id");
@@ -92,10 +118,12 @@ public class SurveillanceEventConsumer {
                     log.warn("Escalation tracking: alert_event id={} not found locally", alertEventId);
                 }
             } else {
-                log.info("Surveillance alert consumed for escalation tracking (no local id in payload)");
+                log.info("Surveillance alert consumed for escalation tracking topic={} (no local id in payload)", topic);
             }
         } catch (JsonProcessingException e) {
-            log.error("Failed to parse analytics.surveillance.alert: {}", e.getMessage(), e);
+            meterRegistry.counter("impilo.eventing.consumer.errors.total",
+                    "service", "surveillance-service", "topic", topic).increment();
+            log.error("Failed to parse {}: {}", topic, e.getMessage(), e);
         }
     }
 

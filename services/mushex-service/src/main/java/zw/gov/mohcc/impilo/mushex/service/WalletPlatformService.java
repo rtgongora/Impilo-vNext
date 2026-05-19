@@ -44,6 +44,11 @@ public class WalletPlatformService {
         return walletAccountRepository.findByTenantIdAndOwnerRef(ctx.tenantId(), ownerRef);
     }
 
+    public WalletAccountEntity getWallet(String walletId) {
+        TrustContext ctx = TrustContextHolder.require();
+        return loadWallet(walletId, ctx.tenantId());
+    }
+
     @Transactional
     public WalletAccountEntity createWallet(String ownerType, String ownerRef, String currency, String walletType) {
         TrustContext ctx = TrustContextHolder.require();
@@ -122,9 +127,9 @@ public class WalletPlatformService {
 
     private WalletAccountEntity loadWallet(String walletId, UUID tenantId) {
         WalletAccountEntity w = walletAccountRepository.findById(walletId)
-                .orElseThrow(() -> new IllegalArgumentException("Wallet not found"));
+                .orElseThrow(() -> new PlatformResourceNotFoundException("Wallet not found: " + walletId));
         if (!w.getTenantId().equals(tenantId)) {
-            throw new IllegalArgumentException("Wallet not found");
+            throw new PlatformResourceNotFoundException("Wallet not found: " + walletId);
         }
         return w;
     }

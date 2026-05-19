@@ -254,7 +254,7 @@
   "clients": [
     {
       "clientId": "experience-ui",
-      "name": "Impilo web experience (OIDC — primary browser / ROPC client)",
+      "name": "Impilo web experience (OIDC \u2014 primary browser / ROPC client)",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -292,18 +292,10 @@
         "http://localhost:3003/*",
         "http://197.221.242.150:3003/*"
       ],
-      "webOrigins": [
-        "http://localhost:3003",
-        "http://197.221.242.150:3003"
-      ],
+      "webOrigins": ["http://localhost:3003", "http://197.221.242.150:3003"],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ]
+      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"]
     },
     {
       "clientId": "impilo-backend",
@@ -318,12 +310,7 @@
       "webOrigins": [],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
-      "defaultClientScopes": [
-        "openid",
-        "profile",
-        "email",
-        "impilo-tenant"
-      ],
+      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"],
       "protocolMappers": [
         {
           "name": "facility_id",
@@ -371,10 +358,97 @@
       "webOrigins": [],
       "protocol": "openid-connect",
       "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email", "impilo-tenant"]
+    },
+    {
+      "clientId": "citizen-app",
+      "name": "Impilo Citizen App (Mobile)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "impilo-citizen://auth/callback",
+        "exp://192.168.100.211:2507/*",
+        "exp://192.168.100.211:8081/*",
+        "exp://192.168.100.211:8082/*",
+        "exp://192.168.100.211:8083/*",
+        "exp://192.168.100.211:8084/*",
+        "exp://192.168.100.211:8085/*",
+        "exp://127.0.0.1:2507/*",
+        "exp://127.0.0.1:8081/*",
+        "exp://127.0.0.1:8082/*",
+        "exp://127.0.0.1:8083/*",
+        "http://localhost:8081/*",
+        "http://192.168.100.211:8081/*"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
       "defaultClientScopes": [
         "openid",
         "profile",
         "email",
+        "roles",
+        "impilo-tenant"
+      ],
+      "protocolMappers": [
+        {
+          "name": "cpid",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "cpid",
+            "claim.name": "cpid",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "provider-app",
+      "name": "Impilo Provider App (Mobile)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "impilo-provider://auth/callback",
+        "exp://192.168.100.211:2507/*",
+        "exp://192.168.100.211:8081/*",
+        "exp://192.168.100.211:8082/*",
+        "exp://192.168.100.211:8083/*",
+        "exp://192.168.100.211:8084/*",
+        "exp://192.168.100.211:8085/*",
+        "exp://127.0.0.1:2507/*",
+        "exp://127.0.0.1:8081/*",
+        "exp://127.0.0.1:8082/*",
+        "exp://127.0.0.1:8083/*",
+        "http://localhost:8081/*",
+        "http://192.168.100.211:8081/*"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles",
         "impilo-tenant"
       ]
     },
@@ -439,9 +513,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "SYSTEM_ADMIN"
-      ]
+      "realmRoles": ["SYSTEM_ADMIN"]
     },
     {
       "username": "admin.harare",
@@ -457,9 +529,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "FACILITY_ADMIN"
-      ]
+      "realmRoles": ["FACILITY_ADMIN"]
     },
     {
       "username": "dr.mapfumo",
@@ -469,12 +539,8 @@
       "lastName": "Mapfumo",
       "email": "mapfumo@mohcc.gov.zw",
       "attributes": {
-        "facility_id": [
-          "f1000000-0000-0000-0000-000000000001"
-        ],
-        "provider_number": [
-          "PROV-ZW-001"
-        ]
+        "facility_id": ["f1000000-0000-0000-0000-000000000001"],
+        "provider_number": ["PROV-ZW-001"]
       },
       "credentials": [
         {
@@ -483,9 +549,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "CLINICIAN"
-      ]
+      "realmRoles": ["CLINICIAN"]
     },
     {
       "username": "nurse.chienda",
@@ -495,9 +559,7 @@
       "lastName": "Chienda",
       "email": "chienda@mohcc.gov.zw",
       "attributes": {
-        "facility_id": [
-          "f1000000-0000-0000-0000-000000000002"
-        ]
+        "facility_id": ["f1000000-0000-0000-0000-000000000002"]
       },
       "credentials": [
         {
@@ -506,9 +568,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "NURSE"
-      ]
+      "realmRoles": ["NURSE"]
     },
     {
       "username": "citizen.moyo",
@@ -518,9 +578,7 @@
       "lastName": "Moyo",
       "email": "tatenda.moyo@example.com",
       "attributes": {
-        "cpid": [
-          "CPID-ZW-00001"
-        ]
+        "cpid": ["CPID-ZW-00001"]
       },
       "credentials": [
         {
@@ -529,9 +587,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "CITIZEN"
-      ]
+      "realmRoles": ["CITIZEN"]
     },
     {
       "username": "support.agent1",
@@ -547,9 +603,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "SUPPORT_AGENT"
-      ]
+      "realmRoles": ["SUPPORT_AGENT"]
     },
     {
       "username": "finance.ndlovu",
@@ -565,9 +619,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": [
-        "FINANCE"
-      ]
+      "realmRoles": ["FINANCE"]
     },
     {
       "username": "superadmin",

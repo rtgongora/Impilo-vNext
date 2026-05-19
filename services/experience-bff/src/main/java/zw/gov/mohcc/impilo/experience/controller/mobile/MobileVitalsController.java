@@ -88,20 +88,29 @@ public class MobileVitalsController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
-            @RequestParam(name = "encounter_id") String encounterId,
+            @RequestParam(name = "encounter_id", required = false) String encounterId,
+            @RequestParam(name = "patient_id", required = false) String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        String cpid;
-        try {
-            long enc = Long.parseLong(encounterId.trim());
-            JsonNode encNode = pctClient.getEncounter(enc);
-            if (encNode == null || !encNode.has("subjectCpid")) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Encounter not found");
+        String cpid = null;
+        if (patientId != null && !patientId.isBlank()) {
+            cpid = patientId.trim();
+        } else if (encounterId != null && !encounterId.isBlank()) {
+            try {
+                long enc = Long.parseLong(encounterId.trim());
+                JsonNode encNode = pctClient.getEncounter(enc);
+                if (encNode == null || !encNode.has("subjectCpid")) {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Encounter not found");
+                }
+                cpid = encNode.get("subjectCpid").asText();
+            } catch (NumberFormatException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "encounter_id must be a numeric PCT encounter id");
             }
-            cpid = encNode.get("subjectCpid").asText();
-        } catch (NumberFormatException e) {
+        }
+        if (cpid == null || cpid.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "encounter_id must be a numeric PCT encounter id");
+                    "either patient_id or encounter_id is required");
         }
         JsonNode data = pctClient.listVitals(cpid, page, size);
         return ResponseEntity.ok(Map.of(

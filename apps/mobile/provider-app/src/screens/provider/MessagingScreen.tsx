@@ -23,6 +23,7 @@ import {
   useConversations,
   useMessages,
   useChannel,
+  useCommunicationDashboard,
   type Conversation,
   type Message,
 } from "@impilo/mobile-messaging";
@@ -31,6 +32,7 @@ import { useAuth } from "@impilo/mobile-auth";
 export function MessagingScreen() {
   const auth = useAuth();
   const { conversations, isLoading, error, refresh } = useConversations();
+  const { dashboard } = useCommunicationDashboard();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   if (activeConversationId) {
@@ -47,6 +49,28 @@ export function MessagingScreen() {
     <Screen>
       <Header title="Messages" />
       <ScrollView testID="messaging-screen" style={styles.container}>
+        {dashboard ? (
+          <View style={styles.metricsRow}>
+            <Card variant="elevated" padding="sm" style={styles.metricCard}>
+              <CardBody>
+                <Text style={styles.metricValue}>{String(dashboard.active_threads ?? 0)}</Text>
+                <Text style={styles.metricLabel}>Active threads</Text>
+              </CardBody>
+            </Card>
+            <Card variant="elevated" padding="sm" style={styles.metricCard}>
+              <CardBody>
+                <Text style={styles.metricValue}>{String(dashboard.sent_today ?? 0)}</Text>
+                <Text style={styles.metricLabel}>Sent today</Text>
+              </CardBody>
+            </Card>
+            <Card variant="elevated" padding="sm" style={styles.metricCard}>
+              <CardBody>
+                <Text style={styles.metricValue}>{String(dashboard.failed_today ?? 0)}</Text>
+                <Text style={styles.metricLabel}>Failed today</Text>
+              </CardBody>
+            </Card>
+          </View>
+        ) : null}
         {isLoading ? (
           <LoadingSpinner size="md" />
         ) : error ? (
@@ -196,6 +220,24 @@ function ConversationView({ conversationId, currentUserId, onBack }: Conversatio
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+  },
+  metricsRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  metricCard: {
+    flex: 1,
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    marginTop: 2,
   },
   conversationRow: {
     flexDirection: "row",

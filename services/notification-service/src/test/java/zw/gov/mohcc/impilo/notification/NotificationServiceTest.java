@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -336,6 +337,60 @@ class NotificationServiceTest {
         assertThat(second.getResponse().getStatus()).isEqualTo(first.getResponse().getStatus());
         assertThat(second.getResponse().getContentAsString())
                 .isEqualTo(first.getResponse().getContentAsString());
+    }
+
+    @Test
+    @DisplayName("Inbox read endpoints persist read state and unread counter")
+    void inboxReadLifecycle() throws Exception {
+        enqueueOne("SMS", "+263770000030", null, null);
+        enqueueOne("SMS", "+263770000031", null, null);
+        String targetId = notificationRepository.findAll().get(0).getId();
+
+        MvcResult before = mockMvc.perform(get("/internal/v1/notifications/inbox/unread-count")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(MAPPER.readTree(before.getResponse().getContentAsString()).get("count").asInt()).isEqualTo(2);
+
+        mockMvc.perform(patch("/internal/v1/notifications/" + targetId + "/read")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "read-one-" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+
+        NotificationEntity updated = notificationRepository.findById(targetId).orElseThrow();
+        assertThat(updated.getReadAt()).isNotNull();
+
+        MvcResult afterSingle = mockMvc.perform(get("/internal/v1/notifications/inbox/unread-count")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(MAPPER.readTree(afterSingle.getResponse().getContentAsString()).get("count").asInt()).isEqualTo(1);
+
+        mockMvc.perform(post("/internal/v1/notifications/inbox/read-all")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "read-all-" + UUID.randomUUID()))
+                .andExpect(status().isOk());
+
+        MvcResult afterAll = mockMvc.perform(get("/internal/v1/notifications/inbox/unread-count")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(MAPPER.readTree(afterAll.getResponse().getContentAsString()).get("count").asInt()).isZero();
     }
 
     // ─── Helpers ───

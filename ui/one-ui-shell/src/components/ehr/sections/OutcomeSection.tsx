@@ -8,9 +8,9 @@
 
 import { useState } from "react";
 import {
-  DoorOpen, Building2, ArrowRightLeft, Stethoscope, Calendar, FileText,
-  CheckCircle2, AlertTriangle, Heart, Pill, BookOpen, ShieldAlert, Utensils,
-  Activity, User, ClipboardList, Phone, MapPin, Plus, Clock, Send, UserX,
+  DoorOpen, Building2, ArrowRightLeft, Calendar, FileText,
+  CheckCircle2, AlertTriangle, Heart, Pill,
+  User, ClipboardList, Phone, Plus, Send, UserX,
 } from "lucide-react";
 
 type Disposition = "discharge" | "admit" | "transfer" | "refer" | "death" | "lama" | "";

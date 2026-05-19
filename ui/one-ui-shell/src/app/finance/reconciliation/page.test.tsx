@@ -50,6 +50,9 @@ describe("FinanceReconciliationPage", () => {
       if (url.startsWith("/internal/v1/finance/reconciliation/unmatched")) {
         return Promise.resolve({ content: [], totalElements: 0 });
       }
+      if (url.startsWith("/internal/v1/finance/reconciliation/triple-match")) {
+        return Promise.resolve({ data: [{ invoice_id: "INV-1", mushex_intent_id: "PI-1" }] });
+      }
       return Promise.resolve({});
     });
     post.mockResolvedValue({ ok: true });
@@ -85,6 +88,15 @@ describe("FinanceReconciliationPage", () => {
       expect(post).toHaveBeenCalledWith(
         "/internal/v1/finance/reconciliation/match?reconId=R-1",
         expect.objectContaining({ intentId: "I-1" }),
+      );
+    });
+
+    await user.type(screen.getByLabelText("Triple match encounter id"), "ENC-1");
+    await user.click(screen.getByRole("button", { name: /Fetch triple match/i }));
+
+    await waitFor(() => {
+      expect(get.mock.calls.some(([u]) => String(u).includes("/internal/v1/finance/reconciliation/triple-match"))).toBe(
+        true,
       );
     });
   });

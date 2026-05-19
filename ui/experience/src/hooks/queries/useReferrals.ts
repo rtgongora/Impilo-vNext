@@ -77,8 +77,23 @@ export function useCreateReferral() {
   const queryClient = useQueryClient();
 
   return useMutation<ReferralResponse, unknown, CreateReferralPayload>({
-    mutationFn: (payload: CreateReferralPayload) =>
-      apiClient.post<ReferralResponse>("/internal/v1/referrals", payload),
+    mutationFn: (payload: CreateReferralPayload) => {
+      const aliases = payload as Record<string, unknown>;
+      return apiClient.post<ReferralResponse>("/internal/v1/referrals", {
+        patient_id: payload.patientId,
+        encounter_id: payload.encounterId,
+        referral_type: payload.referralType,
+        specialty: payload.specialty,
+        referred_to: payload.referredTo,
+        referred_to_facility: payload.referredToFacility,
+        reason: payload.reason,
+        urgency: payload.urgency,
+        clinical_summary: payload.clinicalSummary,
+        referred_by: (aliases.referred_by as string) ?? (aliases.referredBy as string),
+        referred_by_name:
+          (aliases.referred_by_name as string) ?? (aliases.referredByName as string),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["referrals"] });
     },

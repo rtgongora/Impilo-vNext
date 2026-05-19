@@ -103,6 +103,9 @@ step "Layer 1: Shared Services"
 
 wait_for_health "Keycloak"  "http://localhost:8080/health/ready" 120 || true
 wait_for_health "HAPI FHIR" "http://localhost:8090/fhir/metadata" 90 || true
+if [[ "${PROFILE}" != "lite" ]]; then
+    wait_for_health "Orthanc PACS" "http://localhost:8042/system" 90 || true
+fi
 
 # ── Layer 2: Edge ────────────────────────────────────────────────────────────
 step "Layer 2: Edge"

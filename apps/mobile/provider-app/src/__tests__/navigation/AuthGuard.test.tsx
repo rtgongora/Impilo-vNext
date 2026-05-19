@@ -9,6 +9,7 @@ import React from "react";
 const mockAuthState = {
   isAuthenticated: false,
   isLoading: false,
+  hasActiveProvider: vi.fn(() => true),
   user: null,
   session: null,
   error: null,
@@ -39,10 +40,14 @@ vi.mock("@impilo/mobile-design-system", () => ({
 }));
 
 vi.mock("../../stores/appStore", () => ({
-  useAppStore: () => ({ facilityId: "facility-1", facilityName: "Test Facility" }),
+  useAppStore: () => ({
+    facilityId: "facility-1",
+    facilityName: "Test Facility",
+    workspaceId: "workspace-1",
+  }),
   appStore: {
     subscribe: vi.fn(() => () => {}),
-    getState: () => ({ facilityId: "facility-1" }),
+    getState: () => ({ facilityId: "facility-1", workspaceId: "workspace-1" }),
   },
 }));
 
@@ -52,6 +57,14 @@ vi.mock("../../screens/LoginScreen", () => ({
 
 vi.mock("../../screens/SelectFacilityScreen", () => ({
   SelectFacilityScreen: () => React.createElement("div", { "data-testid": "select-facility-screen" }),
+}));
+
+vi.mock("../../screens/SelectWorkspaceScreen", () => ({
+  SelectWorkspaceScreen: () => React.createElement("div", { "data-testid": "select-workspace-screen" }),
+}));
+
+vi.mock("../../screens/ProviderActivationScreen", () => ({
+  ProviderActivationScreen: () => React.createElement("div", { "data-testid": "provider-activation-screen" }),
 }));
 
 import { AuthGuard } from "../../navigation/AuthGuard";
@@ -66,6 +79,7 @@ describe("AuthGuard", () => {
     vi.clearAllMocks();
     mockAuthState.isAuthenticated = false;
     mockAuthState.isLoading = false;
+    mockAuthState.hasActiveProvider.mockReturnValue(true);
   });
 
   it("shows loading spinner when auth is loading", () => {

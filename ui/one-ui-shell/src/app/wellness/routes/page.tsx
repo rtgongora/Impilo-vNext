@@ -3,19 +3,10 @@ import { useState } from "react";
 import { MapPin, Search, Star, ArrowUpDown, Footprints, Bike, Clock, TrendingUp } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useQuery } from "@tanstack/react-query";
+import { fetchWellnessDiscoverServices } from "@/lib/citizen-wellness-api";
 
-type Route = { id: number; name: string; distance: string; difficulty: "Easy" | "Moderate" | "Hard"; type: "Walking" | "Running" | "Cycling"; rating: number; reviews: number; duration: string; elevation: string; location: string };
-
-const ROUTES: Route[] = [
-  { id: 1, name: "Sea Point Promenade Loop", distance: "5.2 km", difficulty: "Easy", type: "Walking", rating: 4.8, reviews: 324, duration: "55 min", elevation: "Flat", location: "Sea Point, Cape Town" },
-  { id: 2, name: "Newlands Forest Trail", distance: "8.4 km", difficulty: "Moderate", type: "Running", rating: 4.6, reviews: 189, duration: "48 min", elevation: "+210m", location: "Newlands, Cape Town" },
-  { id: 3, name: "Chapman's Peak Ride", distance: "18.5 km", difficulty: "Hard", type: "Cycling", rating: 4.9, reviews: 412, duration: "65 min", elevation: "+540m", location: "Hout Bay, Cape Town" },
-  { id: 4, name: "Kirstenbosch Garden Walk", distance: "3.8 km", difficulty: "Easy", type: "Walking", rating: 4.7, reviews: 267, duration: "40 min", elevation: "+80m", location: "Newlands, Cape Town" },
-  { id: 5, name: "Tokai Plantation Run", distance: "10.2 km", difficulty: "Moderate", type: "Running", rating: 4.4, reviews: 156, duration: "55 min", elevation: "+180m", location: "Tokai, Cape Town" },
-  { id: 6, name: "Green Point Urban Loop", distance: "4.0 km", difficulty: "Easy", type: "Cycling", rating: 4.3, reviews: 98, duration: "15 min", elevation: "Flat", location: "Green Point, Cape Town" },
-  { id: 7, name: "Lion's Head Sunrise Trail", distance: "5.6 km", difficulty: "Hard", type: "Running", rating: 4.9, reviews: 531, duration: "70 min", elevation: "+460m", location: "Signal Hill, Cape Town" },
-  { id: 8, name: "Constantia Greenbelt", distance: "6.1 km", difficulty: "Easy", type: "Walking", rating: 4.5, reviews: 143, duration: "65 min", elevation: "+40m", location: "Constantia, Cape Town" },
-];
+type Route = { id: string; name: string; distance: string; difficulty: "Easy" | "Moderate" | "Hard"; type: "Walking" | "Running" | "Cycling"; rating: number; reviews: number; duration: string; elevation: string; location: string };
 
 const TYPES = ["All", "Walking", "Running", "Cycling"];
 const DIFFICULTIES = ["All", "Easy", "Moderate", "Hard"];
@@ -30,7 +21,25 @@ export default function RoutesPage() {
   const [diffFilter, setDiffFilter] = useState("All");
   const [sortBy, setSortBy] = useState<"rating" | "distance">("rating");
 
-  const filtered = ROUTES
+  const discoverQ = useQuery({
+    queryKey: ["wellness-discover-services", "fitness"],
+    queryFn: () => fetchWellnessDiscoverServices("fitness"),
+  });
+
+  const routes: Route[] = (discoverQ.data ?? []).map((service, idx) => ({
+    id: service.id || String(idx),
+    name: service.name,
+    distance: "—",
+    difficulty: idx % 3 === 0 ? "Easy" : idx % 3 === 1 ? "Moderate" : "Hard",
+    type: idx % 3 === 0 ? "Walking" : idx % 3 === 1 ? "Running" : "Cycling",
+    rating: service.rating ?? 4.0,
+    reviews: 0,
+    duration: "Variable",
+    elevation: "N/A",
+    location: service.facilityName ?? "Community facility",
+  }));
+
+  const filtered = routes
     .filter((r) => (typeFilter === "All" || r.type === typeFilter) && (diffFilter === "All" || r.difficulty === diffFilter) && (r.name.toLowerCase().includes(search.toLowerCase()) || r.location.toLowerCase().includes(search.toLowerCase())))
     .sort((a, b) => sortBy === "rating" ? b.rating - a.rating : parseFloat(a.distance) - parseFloat(b.distance));
 

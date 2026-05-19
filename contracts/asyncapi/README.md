@@ -22,7 +22,17 @@ Authoritative topic matrix and reconciliation log: [`docs/architecture/kafka-eve
 | [`campaigns-outbound.asyncapi.yaml`](./campaigns-outbound.asyncapi.yaml) | `impilo.campaigns.created.v1`, `impilo.campaigns.enrolled.v1`, `impilo.campaigns.dispatched.v1`, `impilo.campaigns.unknown` |
 | [`document-store.asyncapi.yaml`](./document-store.asyncapi.yaml) | `docstore.documents`, `docstore.events` |
 | [`data-ingestion-bronze.asyncapi.yaml`](./data-ingestion-bronze.asyncapi.yaml) | Pattern consumer (`impilo\..*` default) — illustrative channel + envelope |
+| [`data-pipeline-reporting-aggregate.asyncapi.yaml`](./data-pipeline-reporting-aggregate.asyncapi.yaml) | `analytics.reporting.aggregate` producer/consumer contract between data-pipeline-service and reporting-service |
+| [`imaging-pipeline.asyncapi.yaml`](./imaging-pipeline.asyncapi.yaml) | Imaging pipeline remediation events: `imaging.order.created`, `imaging.study.*`, `imaging.writeback.*`, `imaging.viewer.*` |
+| [`ndila-events.asyncapi.yaml`](./ndila-events.asyncapi.yaml) | Ndila geospatial events: `ndila.location.*`, `ndila.route.*`, `ndila.provider.*`, `ndila.geofence.*`, `ndila.catchment.*`, `ndila.tracking.*`, `ndila.intelligence.*` |
 
 ## Phase E status
 
-**Complete** (agent-led roadmap, **2026-04-12**): catalog covers all in-repo `@KafkaListener` literals, major outbox publishers, BUTANO/campaigns/document/msika-flow rails, and data-ingestion pattern ingestion. Further **payload** JSON Schemas and CI drift checks are **Phase F** work.
+**Baseline complete** (agent-led roadmap, **2026-04-12**): catalog covers core in-repo listener literals and major outbox publishers (PCT/OROS/Pharmacy/COSTA/MUSHEX/BUTANO/campaigns/document/msika-flow) plus data-ingestion pattern ingestion.
+
+This directory is **not** a guarantee that every active listener literal in repository code is represented one-to-one in AsyncAPI files. For full reconciliation and drift notes, use:
+
+- `docs/architecture/kafka-event-catalog.md`
+- `docs/plan/EVENTING_AND_TOPICS.md`
+
+Further payload JSON Schemas and CI drift checks remain Phase F work.

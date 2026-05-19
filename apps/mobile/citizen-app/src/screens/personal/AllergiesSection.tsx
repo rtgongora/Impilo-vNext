@@ -14,11 +14,13 @@ import {
   CardBody,
   Button,
   Badge,
+  FeatureMaturityBadge,
   LoadingSpinner,
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
 import type { Allergy } from "../../types";
+import { fetchAllergies } from "../../services/personalHealthService";
 
 const SEVERITY_VARIANT: Record<string, "default" | "warning" | "destructive"> = {
   SEVERE: "destructive",
@@ -39,10 +41,8 @@ export function AllergiesSection({ patientId }: AllergiesSectionProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      // const result = await fetchAllergies({ patientId });
-      // setAllergies(result.items);
-      setAllergies([]);
+      const result = await fetchAllergies();
+      setAllergies(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
@@ -68,6 +68,18 @@ export function AllergiesSection({ patientId }: AllergiesSectionProps) {
         }
       />
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.statusRow}>
+          <FeatureMaturityBadge
+            status={allergies.length > 0 ? "connected" : "partial"}
+            detail="Allergies now query /internal/v1/mobile/citizen/summary."
+          />
+          <Text style={styles.statusText}>
+            {allergies.length > 0
+              ? "Allergies are loaded from the citizen health summary endpoint."
+              : "No allergies returned yet from the citizen health summary endpoint."}
+          </Text>
+        </View>
+
         {/* Summary Card */}
         <Card>
           <CardBody>
@@ -92,9 +104,7 @@ export function AllergiesSection({ patientId }: AllergiesSectionProps) {
         ) : allergies.length === 0 ? (
           <EmptyState
             title="No allergies recorded"
-            description="No known allergies on file. Your healthcare provider can add allergies during visits."
-            actionLabel="Request Addition"
-            onAction={() => {}}
+            description="No known allergies on file. Allergy request actions will be enabled after backend wiring is completed."
           />
         ) : (
           allergies.map((allergy) => (
@@ -134,7 +144,8 @@ export function AllergiesSection({ patientId }: AllergiesSectionProps) {
           <Button
             title="Request Allergy Review"
             variant="secondary"
-            onPress={() => {}}
+            disabled={false}
+            onPress={load}
           />
         )}
       </ScrollView>
@@ -149,6 +160,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     gap: 16,
+  },
+  statusRow: {
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#6B7280",
   },
   summaryRow: {
     flexDirection: "row",

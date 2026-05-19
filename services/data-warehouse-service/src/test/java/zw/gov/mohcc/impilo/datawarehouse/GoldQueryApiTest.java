@@ -11,10 +11,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import zw.gov.mohcc.impilo.datawarehouse.domain.GoldEncounterEntity;
+import zw.gov.mohcc.impilo.datawarehouse.repository.GoldEncounterRepository;
+
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -24,6 +29,9 @@ class GoldQueryApiTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private GoldEncounterRepository encounterRepository;
 
     private static final String TENANT = "00000000-0000-0000-0000-000000000001";
 
@@ -72,6 +80,39 @@ class GoldQueryApiTest {
 
     @Test
     @Order(4)
+    @DisplayName("GET /internal/v1/gold/query only returns rows for request tenant")
+    void queryEncountersIsTenantScoped() throws Exception {
+        encounterRepository.deleteAll();
+
+        GoldEncounterEntity tenantOne = new GoldEncounterEntity();
+        tenantOne.setTenantId(UUID.fromString(TENANT));
+        tenantOne.setEncounterId("enc-tenant-1");
+        tenantOne.setPatientId("pat-1");
+        tenantOne.setSourceEventId("evt-1");
+        tenantOne.setSourceEventType("encounter.created");
+        encounterRepository.save(tenantOne);
+
+        GoldEncounterEntity tenantTwo = new GoldEncounterEntity();
+        tenantTwo.setTenantId(UUID.fromString("00000000-0000-0000-0000-000000000002"));
+        tenantTwo.setEncounterId("enc-tenant-2");
+        tenantTwo.setPatientId("pat-2");
+        tenantTwo.setSourceEventId("evt-2");
+        tenantTwo.setSourceEventType("encounter.created");
+        encounterRepository.save(tenantTwo);
+
+        mockMvc.perform(get("/internal/v1/gold/query")
+                        .param("dataset", "encounters")
+                        .header("X-Tenant-ID", TENANT)
+                        .header("X-Pod-ID", "national")
+                        .header("X-Request-ID", "req-3b")
+                        .header("X-Correlation-ID", "corr-3b"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalCount").value(1))
+                .andExpect(jsonPath("$.items[0].encounterId").value("enc-tenant-1"));
+    }
+
+    @Test
+    @Order(5)
     @DisplayName("GET /internal/v1/gold/stats returns materializer stats")
     void statsReturnsStats() throws Exception {
         mockMvc.perform(get("/internal/v1/gold/stats")
@@ -80,11 +121,11 @@ class GoldQueryApiTest {
                         .header("X-Request-ID", "req-4")
                         .header("X-Correlation-ID", "corr-4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.gold_encounters").value(0));
+                .andExpect(jsonPath("$.gold_encounters").value(greaterThanOrEqualTo(0)));
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     @DisplayName("POST /internal/v1/gold/materialize processes encounter event")
     void materializeEncounterEvent() throws Exception {
         String body = """
@@ -106,5 +147,31 @@ class GoldQueryApiTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.eventId").value("evt-mat-1"))
                 .andExpect(jsonPath("$.upsertedCount").value(1));
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("POST /internal/v1/gold/materialize rejects malformed envelope")
+    void materializeRejectsMalformedEnvelope() throws Exception {
+        String body = """
+                {
+                    "eventId": "evt-mat-2",
+                    "eventType": "impilo.lab.observation.v1",
+                    "envelopeJson": "not-json{{"
+                }
+                """;
+
+        mockMvc.perform(post("/internal/v1/gold/materialize")
+                        .header("X-Tenant-ID", TENANT)
+                        .header("X-Pod-ID", "national")
+                        .header("X-Request-ID", "req-6")
+                        .header("X-Correlation-ID", "corr-6")
+                        .header("Idempotency-Key", "idem-mat-2")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.eventId").value("evt-mat-2"))
+                .andExpect(jsonPath("$.status").value("INVALID_ENVELOPE"))
+                .andExpect(jsonPath("$.upsertedCount").value(0));
     }
 }

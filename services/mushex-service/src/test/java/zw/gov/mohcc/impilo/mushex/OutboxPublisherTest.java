@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.mushex.kafka.OutboxPublisher;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -39,7 +40,7 @@ class OutboxPublisherTest {
 
     @BeforeEach
     void setUp() {
-        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate);
+        publisher = new OutboxPublisher(outboxRepository, kafkaTemplate, true, "core.transaction.events");
     }
 
     // ---------------------------------------------------------------
@@ -122,6 +123,63 @@ class OutboxPublisherTest {
     void routeTopic_unknownType_returnsDefaultTopic() {
         assertEquals("mushex.events",
             OutboxPublisher.routeTopic("SOME_UNKNOWN_EVENT"));
+    }
+
+    @Test
+    void resolveCoreTransactionTopic_statusChanged_routesToCoreTransactionEvents() {
+        assertEquals("core.transaction.events",
+            OutboxPublisher.resolveCoreTransactionTopic("STATUS_CHANGED"));
+    }
+
+    @Test
+    void resolveCoreTransactionTopic_nonCanonical_returnsNull() {
+        assertNull(OutboxPublisher.resolveCoreTransactionTopic("FRAUD_FLAGGED"));
+    }
+
+    @Test
+    void routingConvention_producedTypesAreExplicitOrIntentionalDefaults() {
+        Set<String> producedEventTypes = Set.of(
+                "INTENT_CREATED",
+                "STATUS_CHANGED",
+                "REFUND_REQUESTED",
+                "REFUND_COMPLETED",
+                "REFUND_FAILED",
+                "CLAIM_SUBMITTED",
+                "CLAIM_ADJUDICATED",
+                "CLAIM_PAID",
+                "CLAIM_DISPUTED",
+                "SETTLEMENT_COMPUTED",
+                "SETTLEMENT_BATCH_RELEASED",
+                "FRAUD_FLAGGED",
+                "REMITTANCE_ISSUED",
+                "REMITTANCE_CLAIMED",
+                "REMITTANCE_REVOKED",
+                "REMITTANCE_REQUESTED",
+                "WALLET_CREATED",
+                "WALLET_TRANSACTION_RECORDED",
+                "LEDGER_ENTRY_POSTED",
+                "RECON_MATCHED",
+                "ATTEMPT_INITIATED",
+                "ATTEMPT_FAILED_PRE_INITIATION",
+                "ATTEMPT_RESELECTED"
+        );
+
+        Set<String> intentionalDefaults = Set.of(
+                "CLAIM_DISPUTED",
+                "SETTLEMENT_COMPUTED",
+                "REMITTANCE_REVOKED",
+                "LEDGER_ENTRY_POSTED",
+                "RECON_MATCHED"
+        );
+
+        for (String eventType : producedEventTypes) {
+            String topic = OutboxPublisher.routeTopic(eventType);
+            if (intentionalDefaults.contains(eventType)) {
+                assertEquals("mushex.events", topic, "intentional default changed unexpectedly: " + eventType);
+            } else {
+                assertNotEquals("mushex.events", topic, "event type unexpectedly routed to default topic: " + eventType);
+            }
+        }
     }
 
     // ---------------------------------------------------------------

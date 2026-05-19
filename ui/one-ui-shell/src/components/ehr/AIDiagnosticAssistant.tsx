@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import {
-  Brain, Loader2, AlertTriangle, CheckCircle2, Lightbulb, TestTube,
+  Brain, Loader2, AlertTriangle, Lightbulb, TestTube,
   Pill, Activity, ChevronRight, Sparkles, FlaskConical, X,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";

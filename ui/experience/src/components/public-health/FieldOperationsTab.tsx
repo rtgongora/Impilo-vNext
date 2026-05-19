@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardList,
   Loader2,
@@ -11,9 +12,12 @@ import {
   Shield,
   Target,
   Users,
-  X,
 } from "lucide-react";
-import { usePublicHealthSites } from "@/hooks/queries/usePublicHealth";
+import {
+  usePublicHealthFieldTasks,
+  usePublicHealthSites,
+  useTransitionPublicHealthFieldTask,
+} from "@/hooks/queries/usePublicHealth";
 import { apiClient } from "@/lib/api-client";
 
 const FIELD_ACTIVITY_TYPES = [
@@ -44,6 +48,7 @@ const FIELD_STATUSES = [
 ] as const;
 
 interface NewFieldActivity {
+  linkedSiteId: string;
   activityType: string;
   activityTitle: string;
   description: string;
@@ -64,6 +69,7 @@ interface NewFieldActivity {
 }
 
 const EMPTY_FIELD_ACTIVITY: NewFieldActivity = {
+  linkedSiteId: "",
   activityType: "",
   activityTitle: "",
   description: "",
@@ -101,9 +107,18 @@ function EmptyOpsTable(title: string, detail: string) {
   );
 }
 
+const TASK_TRANSITIONS: Record<string, string> = {
+  PLANNED: "ASSIGNED",
+  ASSIGNED: "IN_PROGRESS",
+  IN_PROGRESS: "COMPLETED",
+};
+
 export function FieldOperationsTab() {
-  const [activeSubTab, setActiveSubTab] = useState<"teams" | "tasks" | "tracking">("teams");
+  const queryClient = useQueryClient();
+  const [activeSubTab, setActiveSubTab] = useState<"teams" | "tasks" | "tracking">("tasks");
   const { data: indawoSites = [], isLoading: sitesLoading, isError: sitesError } = usePublicHealthSites();
+  const { data: fieldTasks = [], isLoading: tasksLoading } = usePublicHealthFieldTasks();
+  const transitionTask = useTransitionPublicHealthFieldTask();
   const siteCount = indawoSites.length;
 
   const [showNewForm, setShowNewForm] = useState(false);
@@ -121,11 +136,16 @@ export function FieldOperationsTab() {
       setFieldError("Activity type, title, and team leader name are required.");
       return;
     }
+    if (siteCount > 0 && !fieldForm.linkedSiteId) {
+      setFieldError("Select a linked facility/site before submitting this field activity.");
+      return;
+    }
     setFieldSubmitting(true);
     setFieldError(null);
     try {
       await apiClient.post("/internal/v1/public-health/field-operations", {
         ...fieldForm,
+        facility_id: fieldForm.linkedSiteId || null,
         teamSize: Number(fieldForm.teamSize) || 0,
         householdsTargeted: Number(fieldForm.householdsTargeted) || 0,
         coordinates: fieldForm.gpsLat && fieldForm.gpsLng
@@ -133,11 +153,16 @@ export function FieldOperationsTab() {
           : null,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setFieldSubmitting(false);
+      setFieldError("Failed to submit field operation. Verify the BFF and surveillance service are available.");
+      return;
     }
     setFieldSubmitting(false);
     setFieldSubmitted(true);
     setFieldForm(EMPTY_FIELD_ACTIVITY);
+    queryClient.invalidateQueries({ queryKey: ["public-health-field-tasks"] });
+    queryClient.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    queryClient.invalidateQueries({ queryKey: ["public-health-map-markers"] });
     setTimeout(() => { setFieldSubmitted(false); setShowNewForm(false); }, 3000);
   }
 
@@ -155,11 +180,11 @@ export function FieldOperationsTab() {
         </div>
         <button
           type="button"
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+          onClick={() => setShowNewForm((s) => !s)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
         >
           <Plus className="w-4 h-4" />
-          Record New Field Activity (pending)
+          Record New Field Activity
         </button>
       </div>
 
@@ -219,6 +244,21 @@ export function FieldOperationsTab() {
             <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5" /> 2. Location
             </legend>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Linked Facility / Public Health Site {siteCount > 0 ? "*" : "(optional)"}</span>
+              <select
+                value={fieldForm.linkedSiteId}
+                onChange={(e) => updateField("linkedSiteId", e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="">{siteCount > 0 ? "Select linked site..." : "No sites available"}</option>
+                {indawoSites.map((site) => (
+                  <option key={site.id} value={site.id}>
+                    {site.name} ({site.siteType})
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="block">
                 <span className="text-sm font-medium text-gray-700">Province</span>
@@ -385,7 +425,7 @@ export function FieldOperationsTab() {
             sub: sitesError ? "Could not load" : "Live from BFF",
           },
           { label: "Field teams deployed", value: "—", Icon: Users, sub: "No workforce API" },
-          { label: "Active field tasks", value: "—", Icon: ClipboardList, sub: "No task board API" },
+          { label: "Active field tasks", value: tasksLoading ? "…" : String(fieldTasks.filter((t) => t.status !== "COMPLETED" && t.status !== "CANCELLED").length), Icon: ClipboardList, sub: "Live task board" },
           { label: "Contacts traced (24h)", value: "—", Icon: Target, sub: "No aggregate API" },
           { label: "GPS check-ins (24h)", value: "—", Icon: Navigation, sub: "No telemetry API" },
         ].map((kpi, i) => (
@@ -404,7 +444,7 @@ export function FieldOperationsTab() {
 
       <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 flex items-center gap-2 text-xs text-gray-600">
         <Radio className="h-3.5 w-3.5 shrink-0" />
-        Data forms / comms KPIs will appear when public-health BFF exposes field operations endpoints.
+        Field operation submissions are live; roster/task/GPS dashboards still require dedicated workforce and telemetry APIs.
       </div>
 
       <div className="flex gap-1 border-b border-gray-200">
@@ -434,11 +474,61 @@ export function FieldOperationsTab() {
           "No field team roster endpoint under /internal/v1/public-health/*. Use Indawo sites above for premises context.",
         )}
 
-      {activeSubTab === "tasks" &&
-        EmptyOpsTable(
-          "Field Task Assignment Board",
-          "No task board API on the Experience BFF. Tasks will list here when a governed workforce or case-task service is wired.",
-        )}
+      {activeSubTab === "tasks" && (
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="px-4 py-3 border-b">
+            <h4 className="text-sm font-semibold text-gray-900">Field task board</h4>
+          </div>
+          <div className="p-4 overflow-x-auto">
+            {tasksLoading ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500 py-6 justify-center">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading tasks…
+              </div>
+            ) : fieldTasks.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-6">No field tasks. Submit a field activity to create one.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left text-xs text-gray-600">
+                  <tr>
+                    <th className="px-3 py-2">Title</th>
+                    <th className="px-3 py-2">Type</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Assigned</th>
+                    <th className="px-3 py-2">Advance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fieldTasks.map((t) => {
+                    const next = TASK_TRANSITIONS[t.status];
+                    return (
+                      <tr key={t.id} className="border-t border-gray-100">
+                        <td className="px-3 py-2 font-medium">{t.title}</td>
+                        <td className="px-3 py-2 text-gray-600">{t.taskType}</td>
+                        <td className="px-3 py-2"><span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">{t.status}</span></td>
+                        <td className="px-3 py-2 text-gray-500 text-xs">{t.assignedTo}</td>
+                        <td className="px-3 py-2">
+                          {next ? (
+                            <button
+                              type="button"
+                              disabled={transitionTask.isPending}
+                              onClick={() => transitionTask.mutate({ taskId: t.id, status: next })}
+                              className="text-[10px] text-impilo-600 hover:underline"
+                            >
+                              → {next}
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-gray-400">Done</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
 
       {activeSubTab === "tracking" &&
         EmptyOpsTable(

@@ -6,6 +6,8 @@
   "scripts": {
     "report": "node generate-completeness-report.mjs",
     "emit-stubs": "node emit-missing-openapi-stubs.mjs",
+    "lint-learning-openapi-local": "node lint-learning-openapi-local.mjs",
+    "check-lms-rollout-evidence": "node lms-rollout-evidence-check.mjs",
     "sync-ui-refs": "node sync-registry-ui-refs.mjs",
     "sync-bff-downstreams": "node sync-registry-bff-downstreams.mjs",
     "add-springdoc": "node add-springdoc-to-service-poms.mjs",

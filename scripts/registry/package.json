@@ -1,10 +1,13 @@
 {
   "name": "@impilo/registry-tools",
   "private": true,
-  "description": "Generate docs/registry/services-index.md from services-registry.yaml",
+  "description": "Generate Impilo production architecture registry artifacts",
   "type": "module",
   "scripts": {
-    "generate": "node generate-service-index.mjs"
+    "seed": "node seed-registry.mjs",
+    "generate": "node generate-service-index.mjs",
+    "generate:architecture": "node generate-architecture-registers.mjs",
+    "generate:all": "node seed-registry.mjs && node generate-service-index.mjs && node generate-architecture-registers.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

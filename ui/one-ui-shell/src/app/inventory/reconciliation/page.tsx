@@ -30,7 +30,7 @@ export default function InventoryReconciliationPage() {
   const [countedInput, setCountedInput] = useState("");
   const [rows, setRows] = useState<CountRow[]>([]);
 
-  const items = itemsQuery.data ?? [];
+  const items = useMemo(() => itemsQuery.data ?? [], [itemsQuery.data]);
 
   const selectedItem = useMemo(() => items.find((i) => i.id === selectedItemId), [items, selectedItemId]);
 

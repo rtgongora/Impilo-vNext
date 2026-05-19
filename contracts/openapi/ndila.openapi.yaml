@@ -1,0 +1,948 @@
+# =============================================================================
+# Ndila — Geospatial Intelligence, Routing, Location and Spatial Orchestration
+#
+# Canonical API path:  /api/v1/ndila/...
+# Legacy alias path:   /api/v1/maps/...        (preserved for continuity)
+# Doctrine: "Ndila is the spatial intelligence layer of Impilo vNext: it turns
+#           locations, routes, boundaries, catchments, movements and risks into
+#           actionable health system intelligence."
+#
+# All canonical endpoints honour the Impilo trust header contract:
+#   X-Tenant-ID, X-Pod-ID, X-Correlation-ID, X-Actor-ID, X-Actor-Type,
+#   X-Purpose-Of-Use, X-Facility-ID, X-Workspace-ID, X-Shift-ID,
+#   X-Device-Fingerprint
+#
+# Provider doctrine: provider selection is policy-driven. Public OpenStreetMap
+# tile servers MUST NOT be used for production tile rendering — see
+# NdilaProviderPolicyService and the `ndila_tile_configs` table for the
+# enforcement seam.
+# =============================================================================
+openapi: "3.0.3"
+
+info:
+  title: Ndila Service API
+  version: "1.0.0"
+  description: |
+    Ndila is the shared Geospatial Intelligence, Routing, Location and Spatial
+    Orchestration Service for Impilo vNext. It is consumed by Tuso, Indawo,
+    Nhume/Dispatch, Public Health Operations, Data & Intelligence, Comms Hub,
+    Telehealth, Marketplace/Msika, MusheX, Varapi, Vito (where consented),
+    Fundo, Nompilo, the One UI Experience Layer, the Provider Mobile App and
+    the Citizen Mobile App.
+
+servers:
+  - url: http://localhost:8155
+    description: Local development
+  - url: https://{tenant}.impilo.health/api
+    description: Production (per-tenant)
+    variables:
+      tenant:
+        default: demo
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Locations
+  - name: Geocoding
+  - name: Routing
+  - name: Geofences
+  - name: Catchments
+  - name: Spatial-Search
+  - name: Tracking
+  - name: Intelligence
+  - name: Audience
+  - name: Tiles
+  - name: Ops
+
+paths:
+  # ── Geocoding ──────────────────────────────────────────────────────────────
+  /api/v1/ndila/geocode:
+    post:
+      operationId: ndilaGeocode
+      tags: [Geocoding]
+      summary: Geocode free-text query → coordinates
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/GeocodeRequest' } }
+      responses:
+        "200":
+          description: Geocode response with provider metadata
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
+
+  /api/v1/ndila/reverse-geocode:
+    post:
+      operationId: ndilaReverseGeocode
+      tags: [Geocoding]
+      summary: Reverse geocode coordinates → address
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/ReverseGeocodeRequest' } }
+      responses:
+        "200":
+          description: Reverse geocode response
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
+
+  /api/v1/ndila/search:
+    get:
+      operationId: ndilaSearch
+      tags: [Geocoding]
+      summary: Free-text place search
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: country, in: query, schema: { type: string } }
+        - { name: province, in: query, schema: { type: string } }
+        - { name: district, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Search results (Ndila Geocode envelope)
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
+
+  /api/v1/ndila/validate-location:
+    post:
+      operationId: ndilaValidateLocation
+      tags: [Locations]
+      summary: Validate a coordinate (range / plausibility / accuracy)
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/ValidateLocationRequest' } }
+      responses:
+        "200":
+          description: Validation outcome
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/ValidateLocationResponse' } }
+
+  # ── Locations ──────────────────────────────────────────────────────────────
+  /api/v1/ndila/locations:
+    post:
+      operationId: ndilaCreateLocation
+      tags: [Locations]
+      summary: Create / register a Ndila location
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CreateLocationRequest' } }
+      responses:
+        "201":
+          description: Location created
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
+
+  /api/v1/ndila/locations/{id}:
+    get:
+      operationId: ndilaGetLocation
+      tags: [Locations]
+      summary: Get location by id
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200":
+          description: Location payload
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
+    put:
+      operationId: ndilaUpdateLocationCoordinates
+      tags: [Locations]
+      summary: Update a location's coordinates / accuracy
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/UpdateLocationCoordinatesRequest' } }
+      responses:
+        "200":
+          description: Updated location
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
+
+  /api/v1/ndila/locations/by-owner/{ownerService}/{ownerEntityId}:
+    get:
+      operationId: ndilaListLocationsByOwner
+      tags: [Locations]
+      summary: List Ndila locations indexed against an owner entity (Tuso facility, Indawo site, etc.)
+      parameters:
+        - { name: ownerService, in: path, required: true, schema: { type: string } }
+        - { name: ownerEntityId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LocationResponse' }
+
+  # ── Routing ────────────────────────────────────────────────────────────────
+  /api/v1/ndila/routes:
+    post:
+      operationId: ndilaRoute
+      tags: [Routing]
+      summary: Compute a point-to-point route
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/RouteRequest' } }
+      responses:
+        "200":
+          description: Route response with provider metadata
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/RouteResponse' } }
+
+  /api/v1/ndila/routes/multi-stop:
+    post:
+      operationId: ndilaMultiStopRoute
+      tags: [Routing]
+      summary: Compute a multi-stop route
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/MultiStopRouteRequest' } }
+      responses:
+        "200":
+          description: Multi-stop response
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/distance-matrix:
+    post:
+      operationId: ndilaDistanceMatrix
+      tags: [Routing]
+      summary: Compute a distance / duration matrix
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/DistanceMatrixRequest' } }
+      responses:
+        "200":
+          description: Distance matrix response
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/eta:
+    post:
+      operationId: ndilaEta
+      tags: [Routing]
+      summary: Compute an ETA (geometry-less route)
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/RouteRequest' } }
+      responses:
+        "200":
+          description: Route response (no polyline)
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/RouteResponse' } }
+
+  # ── Geofences ──────────────────────────────────────────────────────────────
+  /api/v1/ndila/geofences:
+    post:
+      operationId: ndilaCreateGeofence
+      tags: [Geofences]
+      summary: Create a Ndila geofence
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CreateGeofenceRequest' } }
+      responses:
+        "201":
+          description: Geofence created
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/GeofenceResponse' } }
+
+  /api/v1/ndila/geofences/{id}:
+    get:
+      operationId: ndilaGetGeofence
+      tags: [Geofences]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200":
+          description: Geofence payload
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/GeofenceResponse' } }
+
+  /api/v1/ndila/geofences/check-point:
+    post:
+      operationId: ndilaGeofenceCheckPoint
+      tags: [Geofences]
+      summary: Determine which geofences contain a point
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CheckPointRequest' } }
+      responses:
+        "200":
+          description: Matched geofences
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  # ── Catchments ─────────────────────────────────────────────────────────────
+  /api/v1/ndila/catchments:
+    post:
+      operationId: ndilaCreateCatchment
+      tags: [Catchments]
+      summary: Create a Ndila catchment area
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CreateCatchmentRequest' } }
+      responses:
+        "201":
+          description: Catchment created
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/CatchmentResponse' } }
+
+  /api/v1/ndila/catchments/{id}:
+    get:
+      operationId: ndilaGetCatchment
+      tags: [Catchments]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200":
+          description: Catchment payload
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/CatchmentResponse' } }
+
+  /api/v1/ndila/catchments/by-owner/{ownerService}/{ownerEntityId}:
+    get:
+      operationId: ndilaListCatchmentsByOwner
+      tags: [Catchments]
+      parameters:
+        - { name: ownerService, in: path, required: true, schema: { type: string } }
+        - { name: ownerEntityId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Catchments for owner
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CatchmentResponse' }
+
+  /api/v1/ndila/catchments/check-point:
+    post:
+      operationId: ndilaCatchmentCheckPoint
+      tags: [Catchments]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CheckPointRequest' } }
+      responses:
+        "200":
+          description: Matched catchments
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/catchments/nearest-service:
+    post:
+      operationId: ndilaNearestService
+      tags: [Catchments]
+      summary: Find nearest service of a given type
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/NearestServiceRequest' } }
+      responses:
+        "200":
+          description: Nearest service matches
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/catchments/coverage-summary:
+    post:
+      operationId: ndilaCoverageSummary
+      tags: [Catchments]
+      summary: Summarize catchment coverage for an owner entity
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/CoverageSummaryRequest' } }
+      responses:
+        "200":
+          description: Coverage summary
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  # ── Spatial search ─────────────────────────────────────────────────────────
+  /api/v1/ndila/spatial/nearby:
+    post:
+      operationId: ndilaSpatialNearby
+      tags: [Spatial-Search]
+      summary: Find Ndila locations near a point
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/NearbyRequest' } }
+      responses:
+        "200":
+          description: Nearby matches
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/spatial/nearest:
+    post:
+      operationId: ndilaSpatialNearest
+      tags: [Spatial-Search]
+      summary: Find nearest Ndila locations (single or k-nearest)
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/NearbyRequest' } }
+      responses:
+        "200":
+          description: Nearest matches
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  # ── Tracking ───────────────────────────────────────────────────────────────
+  /api/v1/ndila/tracking/assets:
+    post:
+      operationId: ndilaRegisterTrackingAsset
+      tags: [Tracking]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/RegisterAssetRequest' } }
+      responses:
+        "201":
+          description: Asset registered
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/TrackingAssetResponse' } }
+
+  /api/v1/ndila/tracking/assets/{assetId}/location:
+    post:
+      operationId: ndilaIngestTrackingEvent
+      tags: [Tracking]
+      summary: Ingest a tracking event for an asset
+      parameters: [{ name: assetId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/TrackingEventRequest' } }
+      responses:
+        "201":
+          description: Event ingested
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/tracking/assets/{assetId}/latest:
+    get:
+      operationId: ndilaLatestTrackingEvent
+      tags: [Tracking]
+      parameters: [{ name: assetId, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200":
+          description: Latest event
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/tracking/assets/{assetId}/history:
+    get:
+      operationId: ndilaTrackingHistory
+      tags: [Tracking]
+      parameters:
+        - { name: assetId, in: path, required: true, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        "200":
+          description: History
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object, additionalProperties: true }
+
+  /api/v1/ndila/tracking/assets/nearby:
+    post:
+      operationId: ndilaNearbyAssets
+      tags: [Tracking]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Nearby assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object, additionalProperties: true }
+
+  # ── Intelligence ───────────────────────────────────────────────────────────
+  /api/v1/ndila/intelligence/facility-coordinate-quality:
+    post:
+      operationId: ndilaCoordinateQuality
+      tags: [Intelligence]
+      summary: Report on coordinate quality issues for a tenant / district
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Coordinate quality report
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/intelligence/risk-clusters:
+    post:
+      operationId: ndilaRiskClusters
+      tags: [Intelligence]
+      summary: Summarize spatial risk clusters
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Risk cluster summary
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/intelligence/ai-context-packet:
+    post:
+      operationId: ndilaAiContextPacket
+      tags: [Intelligence]
+      summary: Generate a Nompilo-safe spatial context packet
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: '#/components/schemas/AiContextPacketRequest' } }
+      responses:
+        "200":
+          description: AI-safe context packet
+          content:
+            application/json: { schema: { $ref: '#/components/schemas/AiContextPacketResponse' } }
+
+  # ── Audience ───────────────────────────────────────────────────────────────
+  /api/v1/ndila/audience/by-geofence:
+    post:
+      operationId: ndilaAudienceByGeofence
+      tags: [Audience]
+      summary: Resolve a comms audience by Ndila geofence (handle only, never raw PII)
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Audience handle
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/audience/by-catchment:
+    post:
+      operationId: ndilaAudienceByCatchment
+      tags: [Audience]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Audience handle
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/audience/by-radius:
+    post:
+      operationId: ndilaAudienceByRadius
+      tags: [Audience]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Audience handle
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /api/v1/ndila/audience/by-admin-area:
+    post:
+      operationId: ndilaAudienceByAdminArea
+      tags: [Audience]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, additionalProperties: true } }
+      responses:
+        "200":
+          description: Audience handle
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  # ── Tiles ──────────────────────────────────────────────────────────────────
+  /api/v1/ndila/tiles/config:
+    get:
+      operationId: ndilaTileConfig
+      tags: [Tiles]
+      summary: Return a per-tenant tile provider configuration. Public OSM tile servers are blocked in production.
+      responses:
+        "200":
+          description: Tile config
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  # ── Ops ────────────────────────────────────────────────────────────────────
+  /internal/v1/ndila/providers:
+    get:
+      operationId: ndilaListProviders
+      tags: [Ops]
+      summary: Inspect provider capabilities + enabled state
+      responses:
+        "200":
+          description: Provider matrix
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+  /internal/v1/health:
+    get:
+      operationId: ndilaInternalHealth
+      tags: [Ops]
+      summary: Internal health probe
+      responses:
+        "200":
+          description: Service reachable
+          content:
+            application/json: { schema: { type: object, additionalProperties: true } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Coordinate:
+      type: object
+      properties:
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
+      required: [latitude, longitude]
+
+    GeocodeRequest:
+      type: object
+      properties:
+        query: { type: string, example: "Parirenyatwa Hospital, Harare" }
+        country: { type: string, example: ZWE }
+        province: { type: string }
+        district: { type: string }
+        purposeOfUse: { type: string }
+      required: [query]
+
+    ReverseGeocodeRequest:
+      type: object
+      properties:
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        country: { type: string }
+      required: [latitude, longitude]
+
+    GeocodeResult:
+      type: object
+      properties:
+        name: { type: string }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        address: { type: string }
+        confidence: { type: number, format: double }
+        provider: { type: string }
+        providerPlaceId: { type: string }
+        verificationStatus: { type: string }
+
+    GeocodeResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        denialReason: { type: string }
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/GeocodeResult' }
+        provider: { type: string }
+        fallbackUsed: { type: boolean }
+        servedFromCache: { type: boolean }
+        policyDecisionId: { type: string }
+
+    ValidateLocationRequest:
+      type: object
+      properties:
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        accuracyMeters: { type: number, format: double }
+        country: { type: string }
+
+    ValidateLocationResponse:
+      type: object
+      properties:
+        valid: { type: boolean }
+        plausible: { type: boolean }
+        errors: { type: array, items: { type: string } }
+        warnings: { type: array, items: { type: string } }
+        confidence: { type: number, format: double }
+
+    CreateLocationRequest:
+      type: object
+      properties:
+        ownerService: { type: string }
+        ownerEntityType: { type: string }
+        ownerEntityId: { type: string }
+        name: { type: string }
+        description: { type: string }
+        locationType: { type: string }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        altitudeMeters: { type: number, format: double }
+        addressLine1: { type: string }
+        locality: { type: string }
+        ward: { type: string }
+        district: { type: string }
+        province: { type: string }
+        country: { type: string }
+        source: { type: string }
+        sensitivityLevel:
+          type: string
+          enum: [PUBLIC, INTERNAL, RESTRICTED, HIGHLY_RESTRICTED]
+        coordinateAccuracyMeters: { type: number, format: double }
+      required: [ownerService, ownerEntityType, name, locationType]
+
+    UpdateLocationCoordinatesRequest:
+      type: object
+      properties:
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        coordinateAccuracyMeters: { type: number, format: double }
+        source: { type: string }
+
+    LocationResponse:
+      type: object
+      properties:
+        id: { type: string }
+        tenantId: { type: string }
+        ownerService: { type: string }
+        ownerEntityType: { type: string }
+        ownerEntityId: { type: string }
+        name: { type: string }
+        locationType: { type: string }
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        district: { type: string }
+        province: { type: string }
+        country: { type: string }
+        verificationStatus: { type: string }
+        sensitivityLevel: { type: string }
+        active: { type: boolean }
+
+    RouteRequest:
+      type: object
+      properties:
+        origin: { $ref: '#/components/schemas/Coordinate' }
+        destination: { $ref: '#/components/schemas/Coordinate' }
+        mode:
+          type: string
+          enum: [WALKING, CYCLING, MOTORBIKE, CAR, TRUCK, AMBULANCE, PUBLIC_TRANSPORT, DRONE, ROBOT, AUTONOMOUS_VEHICLE, BOAT, OTHER]
+        optimizeFor: { type: string, enum: [FASTEST, SHORTEST, SAFEST] }
+        avoid:
+          type: array
+          items: { type: string }
+        includeGeometry: { type: boolean }
+      required: [origin, destination]
+
+    RouteResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        denialReason: { type: string }
+        distanceMeters: { type: number, format: double }
+        durationSeconds: { type: number, format: double }
+        mode: { type: string }
+        provider: { type: string }
+        providerMode: { type: string }
+        fallbackUsed: { type: boolean }
+        servedFromCache: { type: boolean }
+        polyline: { type: string }
+        warnings: { type: array, items: { type: string } }
+        confidence: { type: number, format: double }
+        policyDecisionId: { type: string }
+
+    MultiStopRouteRequest:
+      type: object
+      properties:
+        waypoints:
+          type: array
+          items: { $ref: '#/components/schemas/Coordinate' }
+        mode: { type: string }
+        optimizeFor: { type: string }
+      required: [waypoints]
+
+    DistanceMatrixRequest:
+      type: object
+      properties:
+        origins:
+          type: array
+          items: { $ref: '#/components/schemas/Coordinate' }
+        destinations:
+          type: array
+          items: { $ref: '#/components/schemas/Coordinate' }
+        mode: { type: string }
+
+    CreateGeofenceRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        geofenceType:
+          type: string
+          enum: [FACILITY_BOUNDARY, WARD_BOUNDARY, DISTRICT_BOUNDARY, PROVINCE_BOUNDARY, COUNTRY_BOUNDARY, CATCHMENT_AREA, DELIVERY_ZONE, RESTRICTED_ZONE, NO_FLY_ZONE, INSPECTION_ZONE, OUTBREAK_ZONE, EMERGENCY_ZONE, SERVICE_COVERAGE_ZONE, COLD_CHAIN_ROUTE_CORRIDOR, CUSTOM]
+        geometryJson: { type: string }
+        ownerService: { type: string }
+        ownerEntityType: { type: string }
+        ownerEntityId: { type: string }
+        riskLevel: { type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL] }
+        centerLatitude: { type: number, format: double }
+        centerLongitude: { type: number, format: double }
+        radiusMeters: { type: number, format: double }
+      required: [name, geofenceType, geometryJson]
+
+    GeofenceResponse:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        geofenceType: { type: string }
+        riskLevel: { type: string }
+        ownerService: { type: string }
+        ownerEntityId: { type: string }
+        centerLatitude: { type: number, format: double }
+        centerLongitude: { type: number, format: double }
+        radiusMeters: { type: number, format: double }
+        active: { type: boolean }
+
+    CheckPointRequest:
+      type: object
+      properties:
+        point: { $ref: '#/components/schemas/Coordinate' }
+      required: [point]
+
+    CreateCatchmentRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        ownerService: { type: string }
+        ownerEntityType: { type: string }
+        ownerEntityId: { type: string }
+        geometryType: { type: string, enum: [RADIUS, POLYGON, MULTIPOLYGON, ISOCHRONE] }
+        geometryJson: { type: string }
+        centerLatitude: { type: number, format: double }
+        centerLongitude: { type: number, format: double }
+        radiusMeters: { type: number, format: double }
+        populationEstimate: { type: integer }
+      required: [name, ownerService]
+
+    CatchmentResponse:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        ownerService: { type: string }
+        ownerEntityId: { type: string }
+        geometryType: { type: string }
+        populationEstimate: { type: integer }
+        householdsEstimate: { type: integer }
+        active: { type: boolean }
+
+    NearestServiceRequest:
+      type: object
+      properties:
+        point: { $ref: '#/components/schemas/Coordinate' }
+        locationType: { type: string }
+        limit: { type: integer }
+      required: [point]
+
+    CoverageSummaryRequest:
+      type: object
+      properties:
+        ownerService: { type: string }
+        ownerEntityId: { type: string }
+
+    NearbyRequest:
+      type: object
+      properties:
+        origin: { $ref: '#/components/schemas/Coordinate' }
+        radiusMeters: { type: number, format: double }
+        entityTypes: { type: array, items: { type: string } }
+        limit: { type: integer }
+      required: [origin, radiusMeters]
+
+    RegisterAssetRequest:
+      type: object
+      properties:
+        assetId: { type: string }
+        assetType:
+          type: string
+          enum: [VEHICLE, MOTORBIKE, AMBULANCE, DELIVERY_RIDER, MOBILE_OUTREACH_TEAM, FIELD_INSPECTOR, COURIER, DRONE, ROBOT, AUTONOMOUS_VEHICLE, COLD_CHAIN_CONTAINER, MEDICAL_SUPPLY_PACKAGE, LAB_SAMPLE, LAB_COURIER, EMERGENCY_RESPONSE_TEAM, OTHER]
+        ownerService: { type: string }
+        ownerEntityId: { type: string }
+        label: { type: string }
+        sensitivityLevel:
+          type: string
+          enum: [PUBLIC, INTERNAL, RESTRICTED, HIGHLY_RESTRICTED]
+      required: [assetId, assetType]
+
+    TrackingAssetResponse:
+      type: object
+      properties:
+        id: { type: string }
+        assetId: { type: string }
+        assetType: { type: string }
+        ownerService: { type: string }
+        ownerEntityId: { type: string }
+        active: { type: boolean }
+        sensitivityLevel: { type: string }
+
+    TrackingEventRequest:
+      type: object
+      properties:
+        latitude: { type: number, format: double }
+        longitude: { type: number, format: double }
+        accuracyMeters: { type: number, format: double }
+        eventTimestamp: { type: string, format: date-time }
+        telemetrySource: { type: string }
+      required: [latitude, longitude]
+
+    AreaScope:
+      type: object
+      properties:
+        level: { type: string, enum: [WARD, DISTRICT, PROVINCE, NATIONAL, FACILITY, CUSTOM] }
+        id: { type: string }
+
+    AiContextPacketRequest:
+      type: object
+      properties:
+        question: { type: string }
+        areaScope: { $ref: '#/components/schemas/AreaScope' }
+        purposeOfUse: { type: string }
+        includeRecommendations: { type: boolean }
+
+    AiContextPacketResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+        denialReason: { type: string }
+        contextPacketId: { type: string }
+        summary: { type: string }
+        signals:
+          type: array
+          items: { type: object, additionalProperties: true }
+        recommendedActions: { type: array, items: { type: string } }
+        confidence: { type: number, format: double }
+        restrictions: { type: array, items: { type: string } }
+        areaScope: { $ref: '#/components/schemas/AreaScope' }
+        explainability: { type: array, items: { type: string } }

@@ -7,11 +7,14 @@
  */
 
 import Link from "next/link";
-import { Settings2, Users, Database, Package, Wrench } from "lucide-react";
+import { Settings2, Users, Database, Package, Wrench, Workflow, ClipboardList } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
 const SECTIONS = [
+  { href: "/operations/facility-operations", label: "Facility Operations", description: "Operational dashboard for district view, patient flow, and resources", Icon: Settings2 },
+  { href: "/operations/workflows", label: "Workflow Orchestration", description: "Operator view of workflow execution state from the orchestration service", Icon: Workflow },
+  { href: "/operations/dispatch", label: "Dispatch Operations", description: "Dispatch queue visibility for assignment and completion operations", Icon: ClipboardList },
   { href: "/operations/vito", label: "Identity Operations", description: "VITO client registry: dedup, issuance queue, match review, card management", Icon: Users },
   { href: "/operations/butano", label: "SHR Operations", description: "BUTANO reconciliation, FHIR stats, trigger management", Icon: Database },
   { href: "/operations/assets", label: "Asset Management", description: "Track, assign, and lifecycle-manage organizational assets", Icon: Package },

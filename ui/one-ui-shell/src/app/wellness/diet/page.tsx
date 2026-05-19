@@ -1,50 +1,56 @@
 "use client";
-import { useState } from "react";
-import { UtensilsCrossed, Plus, Minus, Droplets, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { UtensilsCrossed, Plus, Droplets } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-
-type Meal = { id: number; time: string; name: string; calories: number; protein: number; carbs: number; fat: number };
-type MealSlot = "Breakfast" | "Lunch" | "Dinner" | "Snacks";
-
-const INITIAL_MEALS: Record<MealSlot, Meal[]> = {
-  Breakfast: [
-    { id: 1, time: "07:15", name: "Oats with banana & honey", calories: 340, protein: 10, carbs: 58, fat: 8 },
-    { id: 2, time: "07:15", name: "Black coffee", calories: 5, protein: 0, carbs: 1, fat: 0 },
-  ],
-  Lunch: [
-    { id: 3, time: "12:30", name: "Grilled chicken wrap", calories: 480, protein: 35, carbs: 42, fat: 16 },
-    { id: 4, time: "12:30", name: "Side salad with olive oil", calories: 120, protein: 2, carbs: 8, fat: 9 },
-  ],
-  Dinner: [
-    { id: 5, time: "18:45", name: "Salmon with roasted vegetables", calories: 520, protein: 38, carbs: 30, fat: 22 },
-  ],
-  Snacks: [
-    { id: 6, time: "10:00", name: "Apple with almond butter", calories: 210, protein: 5, carbs: 26, fat: 12 },
-  ],
-};
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useDietEntries, useRecordDietEntry } from "@/hooks/queries/useSimba";
 
 const TARGETS = { calories: 2200, protein: 120, carbs: 280, fat: 75 };
+type Totals = { calories: number; protein: number; carbs: number; fat: number; waterMl: number };
 
 /** Diet & Nutrition — Health OS §6: how people eat. */
 export default function DietPage() {
-  const [meals, setMeals] = useState(INITIAL_MEALS);
-  const [water, setWater] = useState(5);
-  const [adding, setAdding] = useState<MealSlot | null>(null);
-  const [form, setForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "" });
+  const cpid = useAuthStore((s) => s.user?.id ?? null);
+  const dietQ = useDietEntries(cpid);
+  const recordDiet = useRecordDietEntry();
+  const [form, setForm] = useState({ name: "", calories: "", protein: "", carbs: "", fat: "", water: "" });
 
-  const allMeals = Object.values(meals).flat();
-  const totals = allMeals.reduce(
-    (a, m) => ({ calories: a.calories + m.calories, protein: a.protein + m.protein, carbs: a.carbs + m.carbs, fat: a.fat + m.fat }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  const meals = useMemo(() => {
+    const payload = dietQ.data;
+    if (!payload) return [] as Array<Record<string, unknown>>;
+    if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
+    if (Array.isArray((payload as { data?: unknown }).data)) {
+      return (payload as { data: Array<Record<string, unknown>> }).data;
+    }
+    return [] as Array<Record<string, unknown>>;
+  }, [dietQ.data]);
+
+  const totals = meals.reduce<Totals>(
+    (a, m) => ({
+      calories: a.calories + Number(m.calories ?? 0),
+      protein: a.protein + Number(m.proteinG ?? m.protein_g ?? 0),
+      carbs: a.carbs + Number(m.carbsG ?? m.carbs_g ?? 0),
+      fat: a.fat + Number(m.fatG ?? m.fat_g ?? 0),
+      waterMl: a.waterMl + Number(m.waterMl ?? m.water_ml ?? 0),
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0, waterMl: 0 } satisfies Totals,
   );
 
-  const addEntry = (slot: MealSlot) => {
-    if (!form.name) return;
-    const entry: Meal = { id: Date.now(), time: new Date().toTimeString().slice(0, 5), name: form.name, calories: +form.calories || 0, protein: +form.protein || 0, carbs: +form.carbs || 0, fat: +form.fat || 0 };
-    setMeals((prev) => ({ ...prev, [slot]: [...prev[slot], entry] }));
-    setForm({ name: "", calories: "", protein: "", carbs: "", fat: "" });
-    setAdding(null);
+  const addEntry = async () => {
+    if (!cpid || !form.name) return;
+    await recordDiet.mutateAsync({
+      person_cpid: cpid,
+      meal_type: form.name,
+      description: form.name,
+      calories: Number(form.calories || 0),
+      protein_g: Number(form.protein || 0),
+      carbs_g: Number(form.carbs || 0),
+      fat_g: Number(form.fat || 0),
+      water_ml: Number(form.water || 0),
+      recorded_at: new Date().toISOString(),
+    });
+    setForm({ name: "", calories: "", protein: "", carbs: "", fat: "", water: "" });
   };
 
   const ProgressBar = ({ label, value, max, color }: { label: string; value: number; max: number; color: string }) => (
@@ -66,7 +72,12 @@ export default function DietPage() {
         <div className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 p-5 text-white shadow-lg mb-6">
           <h2 className="font-semibold text-lg mb-4">Today&apos;s Nutrition</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {([["Calories", totals.calories, TARGETS.calories, "kcal"], ["Protein", totals.protein, TARGETS.protein, "g"], ["Carbs", totals.carbs, TARGETS.carbs, "g"], ["Fat", totals.fat, TARGETS.fat, "g"]] as const).map(([l, v, m, u]) => (
+            {([
+              ["Calories", totals.calories, TARGETS.calories, "kcal"],
+              ["Protein", totals.protein, TARGETS.protein, "g"],
+              ["Carbs", totals.carbs, TARGETS.carbs, "g"],
+              ["Fat", totals.fat, TARGETS.fat, "g"],
+            ] as Array<[string, number, number, string]>).map(([l, v, m, u]) => (
               <div key={l} className="text-center">
                 <p className="text-2xl font-bold">{v}<span className="text-sm font-normal ml-0.5">{u}</span></p>
                 <div className="h-2 mt-1 rounded-full bg-white/25 overflow-hidden"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min((v / m) * 100, 100)}%` }} /></div>
@@ -77,36 +88,33 @@ export default function DietPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Meal log */}
           <div className="lg:col-span-2 space-y-4">
-            {(["Breakfast", "Lunch", "Dinner", "Snacks"] as MealSlot[]).map((slot) => (
-              <div key={slot} className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
-                  <h3 className="font-semibold text-gray-800">{slot}</h3>
-                  <button onClick={() => setAdding(adding === slot ? null : slot)} className="text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center gap-1">
-                    {adding === slot ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{adding === slot ? "Cancel" : "Add"}
-                  </button>
-                </div>
-                {adding === slot && (
-                  <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex flex-wrap gap-2 items-end">
-                    <input placeholder="Food item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm flex-1 min-w-[140px]" />
-                    {(["calories", "protein", "carbs", "fat"] as const).map((f) => (
-                      <input key={f} placeholder={f.charAt(0).toUpperCase() + f.slice(1)} type="number" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm w-20" />
-                    ))}
-                    <button onClick={() => addEntry(slot)} className="rounded-lg bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700">Add</button>
-                  </div>
-                )}
-                <div className="divide-y divide-gray-50">
-                  {meals[slot].length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No entries yet</p>}
-                  {meals[slot].map((m) => (
-                    <div key={m.id} className="px-4 py-2.5 flex items-center justify-between">
-                      <div><p className="text-sm font-medium text-gray-800">{m.name}</p><p className="text-xs text-gray-400">{m.time}</p></div>
-                      <p className="text-sm font-semibold text-gray-600">{m.calories} kcal</p>
-                    </div>
-                  ))}
-                </div>
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+                <h3 className="font-semibold text-gray-800">Record nutrition entry</h3>
+                <Plus className="h-4 w-4 text-emerald-700" />
               </div>
-            ))}
+              <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex flex-wrap gap-2 items-end">
+                <input placeholder="Meal / item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm flex-1 min-w-[140px]" />
+                {(["calories", "protein", "carbs", "fat", "water"] as const).map((f) => (
+                  <input key={f} placeholder={f === "water" ? "water ml" : f} type="number" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm w-24" />
+                ))}
+                <button onClick={() => void addEntry()} className="rounded-lg bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700">Save</button>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {dietQ.isLoading && <p className="px-4 py-3 text-sm text-gray-400">Loading entries...</p>}
+                {!dietQ.isLoading && meals.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No entries yet</p>}
+                {meals.map((m, idx) => (
+                  <div key={idx} className="px-4 py-2.5 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{String(m.description ?? m.mealType ?? m.meal_type ?? "Meal")}</p>
+                      <p className="text-xs text-gray-400">{String(m.recordedAt ?? m.recorded_at ?? "")}</p>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-600">{Number(m.calories ?? 0)} kcal</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Water tracker + targets sidebar */}
@@ -114,12 +122,8 @@ export default function DietPage() {
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 text-center">
               <Droplets className="h-8 w-8 text-impilo-400 mx-auto mb-2" />
               <h3 className="font-semibold text-gray-800 mb-1">Water Intake</h3>
-              <p className="text-3xl font-bold text-impilo-500">{water}<span className="text-base font-normal text-gray-500"> / 8 glasses</span></p>
-              <div className="h-3 mt-2 rounded-full bg-blue-100 overflow-hidden"><div className="h-full rounded-full bg-impilo-500 transition-all" style={{ width: `${Math.min((water / 8) * 100, 100)}%` }} /></div>
-              <div className="flex justify-center gap-4 mt-4">
-                <button onClick={() => setWater(Math.max(0, water - 1))} className="h-10 w-10 rounded-full bg-impilo-100 text-impilo-600 flex items-center justify-center hover:bg-impilo-200"><Minus className="h-5 w-5" /></button>
-                <button onClick={() => setWater(water + 1)} className="h-10 w-10 rounded-full bg-impilo-500 text-white flex items-center justify-center hover:bg-impilo-500"><Plus className="h-5 w-5" /></button>
-              </div>
+              <p className="text-3xl font-bold text-impilo-500">{Math.round(totals.waterMl / 250)}<span className="text-base font-normal text-gray-500"> / 8 glasses</span></p>
+              <div className="h-3 mt-2 rounded-full bg-blue-100 overflow-hidden"><div className="h-full rounded-full bg-impilo-500 transition-all" style={{ width: `${Math.min((totals.waterMl / 2000) * 100, 100)}%` }} /></div>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-5 space-y-3">
               <h3 className="font-semibold text-gray-800">Daily Targets</h3>

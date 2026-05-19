@@ -72,6 +72,13 @@ impilo:
   scheduling:
     # Merge scheduling-service slot grid with Tuso bookings for /appointments/availability
     use-remote-slots: ${SCHEDULING_USE_REMOTE_SLOTS:true}
+  wallet:
+    # MusheX gateway-neutrality doctrine, "Wallet local-fallback principle" (audit gap G-5).
+    # false (default, production-safe) — when the upstream Mushe Wallet service is unavailable,
+    # return 503 WALLET_UPSTREAM_UNAVAILABLE rather than synthesising wallet balances/transactions.
+    # true (dev/test only) — fall back to the in-memory wallet shape and log a WARN
+    # "WALLET FALLBACK ACTIVATED" line for every activation so the event is auditable.
+    allow-local-fallback: ${IMPILO_WALLET_ALLOW_LOCAL_FALLBACK:false}
   bff:
     citizen-longtail:
       # stub = deterministic BFF behaviour; live = VITO patient-share + credential public verify
@@ -119,6 +126,8 @@ impilo:
     pacs-base-url: ${PACS_BASE_URL:http://localhost:8113}
     community-base-url: ${COMMUNITY_BASE_URL:http://localhost:8122}
     simba-base-url: ${SIMBA_BASE_URL:http://localhost:8125}
+    # Simba is canonical wellness owner; wellness-service remains compatibility alias.
+    wellness-base-url: ${WELLNESS_BASE_URL:${SIMBA_BASE_URL:${WELLNESS_SERVICE_BASE_URL:http://localhost:8125}}}
     mushe-wallet-base-url: ${MUSHE_WALLET_BASE_URL:http://localhost:8126}
     inventory-base-url: ${INVENTORY_BASE_URL:http://localhost:8098}
     asset-registry-base-url: ${ASSET_REGISTRY_BASE_URL:http://localhost:8310}
@@ -150,6 +159,7 @@ impilo:
 
     # Health Intelligence Plane — AI Model Registry
     ai-model-registry-base-url: ${AI_MODEL_REGISTRY_BASE_URL:http://localhost:8280}
+    llm-orchestration-base-url: ${LLM_ORCHESTRATION_BASE_URL:http://localhost:8265}
     # ERP Plane — general ledger, HR/payroll, procurement
     general-ledger-base-url: ${GENERAL_LEDGER_BASE_URL:http://localhost:8281}
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}

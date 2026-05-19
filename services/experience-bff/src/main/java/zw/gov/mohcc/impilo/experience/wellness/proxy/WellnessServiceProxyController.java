@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.wellness.proxy;
 
 import jakarta.servlet.http.HttpServletRequest;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -45,13 +47,19 @@ public class WellnessServiceProxyController {
 
     private final RestTemplate restTemplate;
     private final String wellnessBaseUrl;
+    private final Counter legacyCitizenWalletRouteCounter;
 
     public WellnessServiceProxyController(
             RestTemplate restTemplate,
+            MeterRegistry meterRegistry,
             @Value("${impilo.services.wellness-base-url:http://localhost:8161}") String wellnessBaseUrl) {
         this.restTemplate = restTemplate;
         String b = wellnessBaseUrl.trim();
         this.wellnessBaseUrl = b.endsWith("/") ? b.substring(0, b.length() - 1) : b;
+        this.legacyCitizenWalletRouteCounter = Counter.builder("impilo.legacy.route.requests")
+                .description("Inbound requests still using legacy wallet proxy routes")
+                .tag("route_family", "mobile_citizen_wallet")
+                .register(meterRegistry);
     }
 
     @RequestMapping(
@@ -84,6 +92,9 @@ public class WellnessServiceProxyController {
             }
         }
         String uri = request.getRequestURI();
+        if (uri != null && uri.startsWith("/internal/v1/mobile/citizen/wallet")) {
+            legacyCitizenWalletRouteCounter.increment();
+        }
         String q = request.getQueryString();
         URI target = URI.create(wellnessBaseUrl + uri + (q != null && !q.isBlank() ? "?" + q : ""));
 

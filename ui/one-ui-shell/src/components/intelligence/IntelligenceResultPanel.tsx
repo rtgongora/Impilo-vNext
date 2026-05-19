@@ -32,9 +32,9 @@ function Card({
           ? "bg-amber-50/40"
           : "bg-white";
   return (
-    <section className={`rounded-lg border ${border} ${bg} p-4`}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{title}</h3>
-      <div className="text-sm text-gray-800">{children}</div>
+    <section className={`rounded-3xl border ${border} ${bg} p-4 shadow-impilo-card`}>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text-muted)] mb-2">{title}</h3>
+      <div className="text-sm text-[color:var(--text-primary)]">{children}</div>
     </section>
   );
 }
@@ -44,7 +44,7 @@ function Card({
  */
 export function IntelligenceResultPanel({ data }: { data: Record<string, unknown> | null }) {
   if (!data) {
-    return <p className="text-sm text-gray-600">Run a query to see results.</p>;
+    return <p className="text-sm text-[color:var(--text-secondary)]">Run a query to see results.</p>;
   }
 
   const status = typeof data.status === "string" ? data.status : "COMPLETED";
@@ -59,15 +59,15 @@ export function IntelligenceResultPanel({ data }: { data: Record<string, unknown
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-        <span className="rounded-full bg-gray-100 px-2 py-0.5">Status: {status}</span>
+      <div className="flex flex-wrap gap-2 text-xs text-[color:var(--text-secondary)]">
+        <span className="impilo-chip">Status: {status}</span>
         {policy ? (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5" title="Policy envelope">
+          <span className="impilo-chip" title="Policy envelope">
             Policy: {policy}
           </span>
         ) : null}
         {typeof data.queryType === "string" ? (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5">Mode: {data.queryType}</span>
+          <span className="impilo-chip">Mode: {data.queryType}</span>
         ) : null}
       </div>
 

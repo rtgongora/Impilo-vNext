@@ -3,6 +3,18 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import EncounterPage from "./page";
 
+let mockEncounterLoading = false;
+let mockEncounterData: unknown = {
+  data: {
+    id: "enc-1",
+    attributes: {
+      status: "IN_PROGRESS",
+      encounterType: "OUTPATIENT",
+      startedAt: "2026-04-08T09:00:00.000Z",
+    },
+  },
+};
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1", encounterId: "enc-1" }),
   useRouter: () => ({ push: vi.fn() }),
@@ -35,17 +47,8 @@ vi.mock("@/hooks/queries/useReferrals", () => ({
 }));
 vi.mock("@/hooks/queries/useEncounters", () => ({
   useEncounter: () => ({
-    data: {
-      data: {
-        id: "enc-1",
-        attributes: {
-          status: "IN_PROGRESS",
-          encounterType: "OUTPATIENT",
-          startedAt: "2026-04-08T09:00:00.000Z",
-        },
-      },
-    },
-    isLoading: false,
+    data: mockEncounterData,
+    isLoading: mockEncounterLoading,
   }),
   useEncounters: () => ({
     data: {
@@ -63,6 +66,7 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
     isLoading: false,
   }),
   useCloseEncounter: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useUpdateEncounterPathwayProtocol: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
@@ -75,7 +79,33 @@ vi.mock("@tanstack/react-query", () => ({
 vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn(), post: vi.fn() } }));
 
 describe("EncounterPage", () => {
+  it("shows chart loading state while encounter is loading", () => {
+    mockEncounterLoading = true;
+    mockEncounterData = null;
+    render(<EncounterPage />);
+    expect(screen.getByText("Loading encounter...")).toBeInTheDocument();
+    mockEncounterLoading = false;
+  });
+
+  it("shows unable-to-load state when no encounter payload exists", () => {
+    mockEncounterLoading = false;
+    mockEncounterData = null;
+    render(<EncounterPage />);
+    expect(screen.getByText("Encounter not found")).toBeInTheDocument();
+  });
+
   it("surfaces encounter closure orchestration above the encounter workspace", () => {
+    mockEncounterLoading = false;
+    mockEncounterData = {
+      data: {
+        id: "enc-1",
+        attributes: {
+          status: "IN_PROGRESS",
+          encounterType: "OUTPATIENT",
+          startedAt: "2026-04-08T09:00:00.000Z",
+        },
+      },
+    };
     render(<EncounterPage />);
 
     expect(screen.getByText("Encounter closure")).toBeInTheDocument();

@@ -26,6 +26,7 @@ export function TelemedicineScreen() {
   const [activeSession, setActiveSession] = useState<TelemedicineSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -122,9 +123,17 @@ export function TelemedicineScreen() {
     activeSession?.channelId ? `telehealth:${activeSession.channelId}` : "",
     {
       onMessage: (event) => {
-        if (event.type === "session_ended") {
+        if (event.type === "session_ended" || event.type === "telemedicine.session.completed") {
           setActiveSession(null);
           loadSessions();
+        } else if (event.type === "telemedicine.session.client_not_joined") {
+          setSessionNotice("Client has not joined yet. A no-show nudge has been sent.");
+        } else if (event.type === "telemedicine.session.waiting_room.entered") {
+          setSessionNotice("Client is waiting in the telemedicine room.");
+        } else if (event.type === "telemedicine.session.provider_late") {
+          setSessionNotice("Provider delay notification was sent to client.");
+        } else if (event.type === "telemedicine.session.support_requested") {
+          setSessionNotice("Join support requested. Escalation to helpdesk has been raised.");
         }
       },
     }
@@ -150,6 +159,8 @@ export function TelemedicineScreen() {
                     testID="end-session-btn"
                   />
                 </View>
+                <Text style={styles.noticeText}>{`Realtime channel: ${channelStatus}`}</Text>
+                {sessionNotice ? <Text style={styles.noticeText}>{sessionNotice}</Text> : null}
               </View>
             </CardBody>
           </Card>
@@ -222,6 +233,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     justifyContent: "center",
+  },
+  noticeText: {
+    fontSize: 13,
+    color: "#374151",
+    marginTop: 12,
+    textAlign: "center",
   },
   sessionRow: {
     flexDirection: "row",

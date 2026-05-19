@@ -88,7 +88,7 @@ export default function TelemedicinePage() {
   const joinSession = useJoinTelemedicineSession();
   const createSession = useCreateTelemedicineSession();
 
-  const sessions: TelemedicineSession[] = data?.data ?? [];
+  const sessions: TelemedicineSession[] = useMemo(() => data?.data ?? [], [data?.data]);
   const incomingSessions = useMemo(
     () => sessions.filter((session) => session.attributes.provider_id !== user?.id),
     [sessions, user?.id],

@@ -230,7 +230,7 @@ function DrugsPanel() {
   const [query, setQuery] = useState("");
   const { data, isFetching } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["drug-search", query],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/drugs?q=${encodeURIComponent(query)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/drugs?q=${encodeURIComponent(query)}`),
     enabled: query.length >= 2,
   });
   const results = data?.data ?? [];
@@ -300,7 +300,7 @@ function ConditionsPanel() {
   const [query, setQuery] = useState("");
   const { data, isFetching } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["condition-search", query],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/conditions?q=${encodeURIComponent(query)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/conditions?q=${encodeURIComponent(query)}`),
     enabled: query.length >= 2,
   });
   const results = data?.data ?? [];
@@ -381,7 +381,7 @@ function InteractionCheckerPanel() {
     setChecking(true);
     try {
       const resp = await apiClient.post<{ data: Array<{ pair: string; severity: string; description: string }> }>(
-        "/internal/v1/clinical-knowledge/interactions/check", { drugs: filled });
+        "/internal/v1/clinical/interactions/check", { drugs: filled });
       setResults(resp.data ?? []);
     } catch { setResults([]); } finally { setChecking(false); }
   }
@@ -563,7 +563,7 @@ function FormularyPanel() {
   const [query, setQuery] = useState("");
   const { data, isFetching } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["formulary-search", query],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/formulary?q=${encodeURIComponent(query)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/formulary?q=${encodeURIComponent(query)}`),
     enabled: query.length >= 2,
   });
   const results = data?.data ?? [];
@@ -710,7 +710,7 @@ function PillIdentifierPanel() {
 
   const { data, isFetching } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["pill-identify", shape, color, imprint],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/pill-identifier?shape=${encodeURIComponent(shape)}&color=${encodeURIComponent(color)}&imprint=${encodeURIComponent(imprint)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/pill-identifier?shape=${encodeURIComponent(shape)}&color=${encodeURIComponent(color)}&imprint=${encodeURIComponent(imprint)}`),
     enabled: shape.length > 0 || color.length > 0 || imprint.length > 1,
   });
   const results = data?.data ?? [];
@@ -776,7 +776,7 @@ function GuidelinesPanel() {
   const [category, setCategory] = useState<string>("all");
   const { data, isLoading } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["clinical-guidelines", category],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/guidelines?category=${encodeURIComponent(category)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/guidelines?category=${encodeURIComponent(category)}`),
   });
   const guidelines = data?.data ?? [];
 
@@ -835,7 +835,7 @@ function ProceduresPanel() {
   const [query, setQuery] = useState("");
   const { data, isFetching } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["procedures-search", query],
-    queryFn: () => apiClient.get(`/internal/v1/clinical-knowledge/procedures?q=${encodeURIComponent(query)}`),
+    queryFn: () => apiClient.get(`/internal/v1/clinical/procedures?q=${encodeURIComponent(query)}`),
     enabled: query.length >= 2,
   });
   const results = data?.data ?? [];
@@ -897,7 +897,7 @@ function ProceduresPanel() {
 function CasesPanel() {
   const { data, isLoading } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["clinical-cases"],
-    queryFn: () => apiClient.get("/internal/v1/clinical-knowledge/cases"),
+    queryFn: () => apiClient.get("/internal/v1/clinical/cases"),
   });
   const cases = data?.data ?? [];
 
@@ -967,7 +967,7 @@ function CasesPanel() {
 function PodcastsPanel() {
   const { data, isLoading } = useQuery<{ data: Array<Record<string, unknown>> }>({
     queryKey: ["clinical-podcasts"],
-    queryFn: () => apiClient.get("/internal/v1/clinical-knowledge/podcasts"),
+    queryFn: () => apiClient.get("/internal/v1/clinical/podcasts"),
   });
   const episodes = data?.data ?? [];
 

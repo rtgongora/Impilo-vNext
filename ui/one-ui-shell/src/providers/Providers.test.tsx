@@ -19,6 +19,11 @@ vi.mock("./AuthGuardProvider", () => ({
 
 vi.mock("./ExperienceEntryProvider", () => ({
   ExperienceEntryProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  useExperienceEntry: () => ({
+    facility: null,
+    workspace: null,
+    stage: "ready",
+  }),
 }));
 
 const sessionStorageMock = (() => {

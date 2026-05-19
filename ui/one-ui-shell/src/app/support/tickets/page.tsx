@@ -55,11 +55,14 @@ export default function TicketsPage() {
     staleTime: 30_000,
   });
 
-  const tickets: unknown[] = useProviderList
-    ? (providerQuery.data?.data ?? [])
-    : useCitizenList
-      ? (citizenQuery.data?.data ?? [])
-      : [];
+  const tickets: unknown[] = useMemo(
+    () => (useProviderList
+      ? (providerQuery.data?.data ?? [])
+      : useCitizenList
+        ? (citizenQuery.data?.data ?? [])
+        : []),
+    [citizenQuery.data?.data, providerQuery.data?.data, useCitizenList, useProviderList],
+  );
 
   const loading = useProviderList ? providerQuery.isPending : useCitizenList ? citizenQuery.isPending : false;
   const errored = useProviderList ? providerQuery.isError : useCitizenList ? citizenQuery.isError : false;

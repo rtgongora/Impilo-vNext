@@ -16,7 +16,7 @@
  * unauthorized access."
  */
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Shield, Lock, LogOut } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -87,6 +87,12 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
     };
   }, [isAuthenticated, isExempt, locked]);
 
+  const handleLogout = useCallback(() => {
+    clearAuth();
+    setLocked(false);
+    router.replace("/auth/login?reason=inactivity");
+  }, [clearAuth, router]);
+
   // Countdown to full logout while locked
   useEffect(() => {
     if (!locked) return;
@@ -104,19 +110,13 @@ export function InactivityLockProvider({ children }: { children: ReactNode }) {
     return () => {
       if (logoutTimerRef.current) clearInterval(logoutTimerRef.current);
     };
-  }, [locked]);
+  }, [handleLogout, locked]);
 
   function handleResume() {
     lastActivityRef.current = Date.now();
     // Restore previous privacy level
     usePrivacyDisplayStore.getState().setLevel(prevLevel.current);
     setLocked(false);
-  }
-
-  function handleLogout() {
-    clearAuth();
-    setLocked(false);
-    router.replace("/auth/login?reason=inactivity");
   }
 
   // Lock screen overlay

@@ -18,6 +18,11 @@ info:
     services. All events use the v1.1 EventEnvelope wrapper defined in
     `libs/shared-kernel-java`.
 
+    This v3 catalog is the canonical topology/taxonomy target. Some currently
+    implemented Java producer and listener literals remain in transitional topic
+    namespaces (for example `pct.*`, `oros.*`, `impilo.vito.*`) and are tracked
+    in `contracts/asyncapi/` and `docs/architecture/kafka-event-catalog.md`.
+
     ## Bus Topology
 
     Events flow through 6 logical Kafka channels:
@@ -187,6 +192,20 @@ channels:
       deathRecorded:
         $ref: "#/components/messages/DeathRecorded"
 
+  clinicalTeleconsultLifecycle:
+    address: clinical.teleconsult.lifecycle
+    description: Teleconsult and telehealth lifecycle state transitions
+    messages:
+      teleconsultLifecycle:
+        $ref: "#/components/messages/TeleconsultLifecycle"
+
+  telemedicineCommunicationLifecycle:
+    address: clinical.telemedicine.communication
+    description: Comms Hub telemedicine communication workflow outcomes and escalations
+    messages:
+      telemedicineCommunication:
+        $ref: "#/components/messages/TelemedicineCommunicationLifecycle"
+
   # ── Analytics Channel ───────────────────────────────────────────────────
 
   analyticsSurveillanceEvent:
@@ -202,6 +221,13 @@ channels:
     messages:
       surveillanceAlert:
         $ref: "#/components/messages/SurveillanceAlert"
+
+  integrationNotificationDispatched:
+    address: integration.notification.dispatched
+    description: Notification dispatch lifecycle event (attempted/sent/failed)
+    messages:
+      notificationDispatched:
+        $ref: "#/components/messages/NotificationDispatched"
 
 # ---------------------------------------------------------------------------
 # Operations — publish/subscribe bindings
@@ -271,6 +297,18 @@ operations:
       $ref: "#/channels/clinicalDispensed"
     summary: pharmacy-service publishes medication dispensed
 
+  publishTeleconsultLifecycle:
+    action: send
+    channel:
+      $ref: "#/channels/clinicalTeleconsultLifecycle"
+    summary: pct-service and experience-bff publish teleconsult lifecycle updates
+
+  publishTelemedicineCommunicationLifecycle:
+    action: send
+    channel:
+      $ref: "#/channels/telemedicineCommunicationLifecycle"
+    summary: experience-bff comms hub publishes telemedicine communication lifecycle updates
+
   # Analytics producers
   publishSurveillanceEvent:
     action: send
@@ -302,6 +340,12 @@ operations:
     channel:
       $ref: "#/channels/clinicalOrderPlaced"
     summary: Pharmacy, PACS, BUTANO consume order events
+
+  consumeNotificationDispatched:
+    action: receive
+    channel:
+      $ref: "#/channels/integrationNotificationDispatched"
+    summary: Experience and analytics consume notification lifecycle events
 
 # ---------------------------------------------------------------------------
 # Components
@@ -460,6 +504,22 @@ components:
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"
 
+    TeleconsultLifecycle:
+      name: TeleconsultLifecycle
+      title: Teleconsult Lifecycle Event
+      summary: Teleconsult workflow state transition emitted by clinical orchestration
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    TelemedicineCommunicationLifecycle:
+      name: TelemedicineCommunicationLifecycle
+      title: Telemedicine Communication Lifecycle Event
+      summary: Communication orchestration result for a telemedicine session
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
     # ── Analytics Events ──────────────────────────────────────────────────
 
     SurveillanceEvent:
@@ -474,6 +534,14 @@ components:
       name: SurveillanceAlert
       title: Surveillance Alert
       summary: Surveillance threshold breach alert
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+
+    NotificationDispatched:
+      name: NotificationDispatched
+      title: Notification Dispatched
+      summary: Notification send attempt lifecycle event
       contentType: application/json
       payload:
         $ref: "#/components/schemas/EventEnvelopeBase"

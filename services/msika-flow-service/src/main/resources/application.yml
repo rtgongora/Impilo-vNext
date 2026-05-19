@@ -58,13 +58,15 @@ springdoc:
 msika-flow:
   outbox:
     poll-interval-ms: 2000
+    dual-emit-core-transaction-enabled: ${MSIKA_FLOW_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${MSIKA_FLOW_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
   pickup:
     otp-length: 6
     expiry-hours: 48
     max-claim-attempts-per-hour: 5
   biometric-policy:
     enabled: ${MSIKA_FLOW_BIOMETRIC_POLICY_ENABLED:false}
-    tshepo-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
   routing:
     default-mode: INTERNAL
   pricing:

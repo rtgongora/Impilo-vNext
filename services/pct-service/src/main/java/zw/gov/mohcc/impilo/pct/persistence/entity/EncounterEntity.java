@@ -46,6 +46,33 @@ public class EncounterEntity {
     @Column(name = "encounter_type")
     private String encounterType;
 
+    @Column(name = "encounter_context")
+    private String encounterContext;
+
+    @Column(name = "entry_point")
+    private String entryPoint;
+
+    @Column(name = "modality", nullable = false)
+    private String modality = "in_person";
+
+    @Column(name = "virtual_mode")
+    private String virtualMode;
+
+    @Column(name = "care_setting")
+    private String careSetting;
+
+    @Column(name = "priority")
+    private String priority;
+
+    @Column(name = "triage_category")
+    private String triageCategory;
+
+    @Column(name = "pathway_ref")
+    private String pathwayRef;
+
+    @Column(name = "protocol_ref")
+    private String protocolRef;
+
     @Column(name = "started_at")
     private OffsetDateTime startedAt;
 
@@ -97,6 +124,33 @@ public class EncounterEntity {
 
     public String getEncounterType() { return encounterType; }
     public void setEncounterType(String encounterType) { this.encounterType = encounterType; }
+
+    public String getEncounterContext() { return encounterContext; }
+    public void setEncounterContext(String encounterContext) { this.encounterContext = encounterContext; }
+
+    public String getEntryPoint() { return entryPoint; }
+    public void setEntryPoint(String entryPoint) { this.entryPoint = entryPoint; }
+
+    public String getModality() { return modality; }
+    public void setModality(String modality) { this.modality = modality; }
+
+    public String getVirtualMode() { return virtualMode; }
+    public void setVirtualMode(String virtualMode) { this.virtualMode = virtualMode; }
+
+    public String getCareSetting() { return careSetting; }
+    public void setCareSetting(String careSetting) { this.careSetting = careSetting; }
+
+    public String getPriority() { return priority; }
+    public void setPriority(String priority) { this.priority = priority; }
+
+    public String getTriageCategory() { return triageCategory; }
+    public void setTriageCategory(String triageCategory) { this.triageCategory = triageCategory; }
+
+    public String getPathwayRef() { return pathwayRef; }
+    public void setPathwayRef(String pathwayRef) { this.pathwayRef = pathwayRef; }
+
+    public String getProtocolRef() { return protocolRef; }
+    public void setProtocolRef(String protocolRef) { this.protocolRef = protocolRef; }
 
     public OffsetDateTime getStartedAt() { return startedAt; }
     public void setStartedAt(OffsetDateTime startedAt) { this.startedAt = startedAt; }

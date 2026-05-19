@@ -6,9 +6,12 @@
  * Route: /wellness/goals | Zone: wellness | Guard: auth
  */
 
+import { useMemo, useState } from "react";
 import { Target, Plus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useCreateGoal, useWellnessGoals } from "@/hooks/queries/useSimba";
 
 const GOAL_TEMPLATES = [
   { title: "Steps & Movement", description: "Daily step count and active minutes targets", color: "bg-impilo-50 border-impilo-200" },
@@ -20,6 +23,35 @@ const GOAL_TEMPLATES = [
 ];
 
 export default function WellnessGoalsPage() {
+  const cpid = useAuthStore((s) => s.user?.id ?? null);
+  const goalsQ = useWellnessGoals(cpid);
+  const createGoal = useCreateGoal();
+  const [selectedTemplate, setSelectedTemplate] = useState<(typeof GOAL_TEMPLATES)[number] | null>(null);
+
+  const goals = useMemo(() => {
+    const payload = goalsQ.data;
+    if (!payload) return [] as Array<Record<string, unknown>>;
+    if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
+    if (Array.isArray((payload as { data?: unknown }).data)) {
+      return (payload as { data: Array<Record<string, unknown>> }).data;
+    }
+    return [] as Array<Record<string, unknown>>;
+  }, [goalsQ.data]);
+
+  const createFromTemplate = async (title: string) => {
+    if (!cpid) return;
+    const goalType = title.toUpperCase().replace(/\s+/g, "_");
+    await createGoal.mutateAsync({
+      person_cpid: cpid,
+      goal_type: goalType,
+      target_value: 1,
+      current_value: 0,
+      unit: "progress",
+      period: "WEEKLY",
+      status: "ACTIVE",
+    });
+  };
+
   return (
     <AppLayout>
       <PageShell
@@ -30,7 +62,10 @@ export default function WellnessGoalsPage() {
         <div className="space-y-6">
           {/* Actions */}
           <div className="flex items-center justify-end">
-            <button className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors">
+            <button
+              onClick={() => setSelectedTemplate(GOAL_TEMPLATES[0])}
+              className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors"
+            >
               <Plus className="h-4 w-4" />
               Set New Goal
             </button>
@@ -39,10 +74,28 @@ export default function WellnessGoalsPage() {
           {/* Active goals - empty state */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">Active Goals</h3>
-            <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
-              <Target className="mx-auto h-10 w-10 text-gray-400" />
-              <p className="mt-3 text-sm text-gray-600">No active goals. Choose a template below to get started.</p>
-            </div>
+            {goalsQ.isLoading ? (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                <p className="text-sm text-gray-600">Loading goals...</p>
+              </div>
+            ) : goals.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                <Target className="mx-auto h-10 w-10 text-gray-400" />
+                <p className="mt-3 text-sm text-gray-600">No active goals. Choose a template below to get started.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {goals.map((goal, idx) => (
+                  <div key={idx} className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm">
+                    <p className="font-medium text-gray-900">{String(goal.goalType ?? goal.goal_type ?? "Goal")}</p>
+                    <p className="text-gray-600">
+                      Current: {String(goal.currentValue ?? goal.current_value ?? 0)} / Target:{" "}
+                      {String(goal.targetValue ?? goal.target_value ?? 0)} {String(goal.unit ?? "")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Goal templates */}
@@ -52,7 +105,11 @@ export default function WellnessGoalsPage() {
               {GOAL_TEMPLATES.map(({ title, description, color }) => (
                 <div
                   key={title}
-                  className={`rounded-xl border p-5 hover:shadow-md transition-all cursor-pointer ${color}`}
+                  onClick={async () => {
+                    setSelectedTemplate({ title, description, color });
+                    await createFromTemplate(title);
+                  }}
+                  className={`rounded-xl border p-5 hover:shadow-md transition-all cursor-pointer ${selectedTemplate?.title === title ? "ring-2 ring-green-500" : ""} ${color}`}
                 >
                   <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
                   <p className="text-sm text-gray-600">{description}</p>

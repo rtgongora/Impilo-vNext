@@ -19,7 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle,
-  Wifi, Wrench, Layers, QrCode, Bell, FlaskConical, FileCheck, Clipboard, Play,
+  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -2042,7 +2042,7 @@ function TimelineFeed({ userId }: { userId?: string }) {
     Y: "bg-impilo-100 text-impilo-700",
   };
 
-  const livePosts = [
+  const livePosts = liveItems.length > 0 ? [
     ...liveItems.map((item) => ({
       id: item.id,
       author: (item.attributes.author as string) ?? "You",
@@ -2053,8 +2053,9 @@ function TimelineFeed({ userId }: { userId?: string }) {
       body: (item.attributes.body as string) ?? (item.attributes.title as string) ?? "",
       likes: (item.attributes.likes as number) ?? 0,
       comments: (item.attributes.comments as number) ?? 0,
+      type: "update" as const,
     })),
-  ];
+  ] : seededPosts;
 
   return (
     <div className="space-y-4">
@@ -2097,7 +2098,12 @@ function TimelineFeed({ userId }: { userId?: string }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-900 truncate">{post.author}</p>
-              <p className="text-xs text-gray-400">{post.time}</p>
+              <div className="mt-0.5 flex items-center gap-2">
+                <p className="text-xs text-gray-400">{post.time}</p>
+                <span className={`rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${typeColors[post.type] ?? "bg-gray-50 text-gray-600 border-gray-100"}`}>
+                  {post.type.replace("_", " ")}
+                </span>
+              </div>
             </div>
           </div>
           {/* Post body */}

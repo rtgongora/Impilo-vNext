@@ -23,5 +23,94 @@ paths:
                 type: object
                 additionalProperties: true
 
+  /internal/v1/gold/query:
+    get:
+      operationId: dataWarehouseGoldQuery
+      summary: Query tenant-scoped gold datasets by type
+      tags: [Gold]
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [encounters, medications, labs]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Gold query results for request tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Unsupported dataset type
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/gold/stats:
+    get:
+      operationId: dataWarehouseGoldStats
+      summary: Gold materialization stats
+      tags: [Gold]
+      responses:
+        '200':
+          description: Gold table counts and watermark details
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/gold/materialize:
+    post:
+      operationId: dataWarehouseMaterialize
+      summary: Materialize a bronze envelope into gold datasets
+      tags: [Gold]
+      responses:
+        '202':
+          description: Accepted and mapped (`MATERIALIZED` or `NO_MAPPED_TARGET`)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Invalid envelope payload (`INVALID_ENVELOPE`)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /external/v1/gold/datasets:
+    get:
+      operationId: dataWarehouseExternalDatasets
+      summary: List externally consumable dataset descriptors
+      tags: [Gold]
+      responses:
+        '200':
+          description: Dataset descriptor list
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
 components:
   schemas: {}

@@ -32,3 +32,33 @@ export function useFinanceBillingCharges(billId: string, enabled: boolean) {
     enabled: enabled && billId.trim().length > 0,
   });
 }
+
+export function useFinanceBillingInvoicesForEncounter(encounterId: string, enabled: boolean) {
+  const q = new URLSearchParams();
+  if (encounterId) q.set("encounterId", encounterId);
+  const suffix = q.toString();
+
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "billing-workspace", "invoices-by-encounter", encounterId],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/billing-workspace/lifecycle/invoices${suffix ? `?${suffix}` : ""}`,
+      ),
+    enabled: enabled && encounterId.trim().length > 0,
+  });
+}
+
+export function useFinanceBillingSubsidiesForEncounter(encounterId: string, enabled: boolean) {
+  const q = new URLSearchParams();
+  if (encounterId) q.set("encounterId", encounterId);
+  const suffix = q.toString();
+
+  return useQuery<FinanceWorkspaceJson>({
+    queryKey: ["finance", "billing-workspace", "subsidies-by-encounter", encounterId],
+    queryFn: () =>
+      apiClient.get<FinanceWorkspaceJson>(
+        `/internal/v1/finance/billing-workspace/lifecycle/subsidies${suffix ? `?${suffix}` : ""}`,
+      ),
+    enabled: enabled && encounterId.trim().length > 0,
+  });
+}

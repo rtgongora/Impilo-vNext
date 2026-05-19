@@ -33,7 +33,7 @@ export function ShellFileExplorer() {
   const { data, isLoading, isError } = usePersonalDocuments();
   const downloadMutation = usePersonalDocumentDownloadUrl();
 
-  const personal = data?.data ?? [];
+  const personal = useMemo(() => data?.data ?? [], [data?.data]);
   const filteredPersonal = useMemo(() => {
     if (!q.trim()) return personal;
     const n = q.toLowerCase();

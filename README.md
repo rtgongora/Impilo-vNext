@@ -12,15 +12,41 @@ Certain future ecosystem-facing artefacts may later be extracted and separately 
 
 Seven architectural planes:
 
-| Plane | Services |
+| Canonical Plane | Services |
 |-------|----------|
-| **Trust & Governance** | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
-| **Registry Spine** | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
-| **Clinical Execution** | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
-| **Finance** | Costing Engine, MUSheX (Payments/Claims) |
-| **Integration/Ops** | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
-| **Experience** | **Impilo web experience** (single orchestration layer on **3000** — zones WORK / EHR / CONTROL / MY PROFESSIONAL / MY LIFE; shipped as `one-ui-shell`), Ops Console, EHR, Portal — **Experience BFF** (`:8160`) aggregates sovereign APIs (e.g. PCT longitudinal summary + **Mvumo** `consentSummary` for chart banner/summary; see `docs/architecture/patient-care-consent-surface.md`) |
-| **Enterprise Resource Plane** | General Ledger, HR & Payroll, Procurement, enterprise reporting, and control surfaces |
+| **Trust** (Trust, Identity Assurance & Governance) | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
+| **Registry** (Registry & Sovereign Identity Spine) | VITO (Client), VARAPI (Provider), TUSO (Facility), ZIBO (Terminology), Product Registry |
+| **Clinical** (Clinical Execution & Shared Health Record) | BUTANO (SHR/FHIR), PCT (Patient Care Tracker), OROS (Orders & Results), Pharmacy, Inpatient |
+| **Data** (Data, Intelligence & Public Health) | NDR, Data Warehouse, Reporting, Surveillance, Search |
+| **Integration** (Integration, Interoperability & Edge) | Integration Hub, Offline Sync, Document Service, Notification, Jobs, PACS Adapter |
+| **Experience** (Experience, Workflow & Orchestration) | **Impilo web experience** (single orchestration layer on **3000** shipped as `one-ui-shell`), mobile journeys, and **Experience BFF** (`:8160`) orchestration |
+| **Enterprise** (Enterprise Resource & Market Operations) | Costing Engine, MUSheX, Coverage, Claims/Billing flows, General Ledger, HR & Payroll, Procurement, marketplace operations |
+
+Canonical doctrine and ownership maps are maintained under `docs/architecture/planes/` and `docs/registry/`.
+
+Core Transaction doctrine references:
+
+- `docs/doctrine/CORE_TRANSACTION_DOCTRINE.md`
+- `docs/doctrine/CORE_TRANSACTION_STATE_MACHINE.md`
+- `docs/doctrine/THREE_CORE_JOURNEYS.md`
+- `docs/doctrine/PERSON_JOURNEY.md`
+- `docs/doctrine/PROVIDER_JOURNEY.md`
+- `docs/doctrine/PLATFORM_BACK_OF_HOUSE_JOURNEY.md`
+- `docs/doctrine/NOMPILO_INTELLIGENT_JOURNEY_COMPANION.md`
+- `docs/architecture/core-transaction-plane-map.md`
+- `docs/architecture/core-transaction-event-model.md`
+- `docs/architecture/three-journey-core-transaction-map.md`
+- `docs/architecture/nompilo-journey-companion-architecture.md`
+- `docs/architecture/nompilo-accessibility-omnichannel-feedback.md`
+- `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md`
+
+Canonical service governance and classification references:
+
+- `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md`
+- `docs/architecture/services-registry.yaml`
+- `docs/architecture/service-update-policy.md`
+- `docs/architecture/ring-plane-taxonomy.md`
+- `docs/architecture/service-boundary-violations.md`
 
 ## Deployment Model
 
@@ -80,3 +106,21 @@ infra/              Envoy, Kubernetes, observability configs
 scripts/            Seed data and smoke tests
 docs/               Architecture docs and runbooks
 ```
+
+## Implementation Integrity Rules (Web + Mobile)
+
+To avoid floating frontend and fake capability drift:
+
+1. **Trace every feature end-to-end**: web route/mobile screen -> hook/client -> BFF endpoint -> backend service -> contract -> test.
+2. **Do not present fixture data as live**. Use explicit maturity labels (`Live`, `Partial`, `Fixture`, `Not wired`) in dev/internal surfaces.
+3. **Do not ship dead-end actions**. Buttons must either perform real actions or be disabled with a clear reason.
+4. **Wire both surfaces intentionally**. If a feature is web-only or mobile-only, document that explicitly in `docs/audits/*`.
+5. **Use canonical contracts** where possible (`contracts/*`) and avoid duplicate local enums/types.
+6. **Nompilo capabilities must be grounded** in real API/service support; do not imply unsupported actions.
+7. **Validate continuously** with lint/tests/build before calling work complete.
+
+For current evidence-based integrity status and remediation backlog, see:
+
+- `docs/audits/IMPLEMENTATION_INTEGRITY_AUDIT.md`
+- `docs/audits/WEB_MOBILE_PARITY_AUDIT.md`
+- `docs/audits/REMEDIATION_SUMMARY.md`

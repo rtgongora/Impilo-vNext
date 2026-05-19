@@ -56,7 +56,8 @@ public class WellnessServiceClient {
     public JsonNode listEnrollments(String participantId) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/enrollments");
         if (participantId != null && !participantId.isBlank()) {
-            b.queryParam("participantId", participantId);
+            // Canonical SIMBA query key; participantId accepted as compatibility alias in BFF.
+            b.queryParam("person_cpid", participantId);
         }
         String url = b.toUriString();
         log.debug("Wellness: listEnrollments [participantId={}]", participantId);
@@ -82,7 +83,8 @@ public class WellnessServiceClient {
     public JsonNode listGoals(String participantId) {
         UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/wellness/goals");
         if (participantId != null && !participantId.isBlank()) {
-            b.queryParam("participantId", participantId);
+            // Canonical SIMBA query key; participantId accepted as compatibility alias in BFF.
+            b.queryParam("person_cpid", participantId);
         }
         String url = b.toUriString();
         log.debug("Wellness: listGoals [participantId={}]", participantId);

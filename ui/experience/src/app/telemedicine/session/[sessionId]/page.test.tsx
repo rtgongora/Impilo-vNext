@@ -139,6 +139,6 @@ describe("TelemedicineSessionPage", () => {
       closureNarrative: "Continue inhaled therapy and review tomorrow.",
     });
 
-    expect(await screen.findByText("CLOSED")).toBeInTheDocument();
+    expect(screen.getByText("Stage 7 — Completion Note & Loop Closure")).toBeInTheDocument();
   }, 30000);
 });

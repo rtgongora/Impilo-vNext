@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/app-manifest.schema.json",
+  "title": "Health OS App Manifest",
+  "description": "Manifest for an APP capability listed in the Msika Apps Capability Marketplace. See docs/doctrine/HEALTH_OS_EXTENSIBILITY_DOCTRINE.md §3.1.",
+  "type": "object",
+  "required": [
+    "manifestVersion",
+    "artifactCode",
+    "type",
+    "name",
+    "description",
+    "category",
+    "publisher",
+    "version",
+    "platformCompatibility",
+    "supportedEnvironments",
+    "securityClassification",
+    "dataProtectionClassification",
+    "requiredScopes",
+    "launcher",
+    "requiredApis"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+    "artifactCode": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$" },
+    "type": { "const": "APP" },
+    "name": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "description": { "type": "string", "minLength": 10, "maxLength": 280 },
+    "category": {
+      "type": "string",
+      "enum": [
+        "CLINICAL", "DIAGNOSTICS", "PHARMACY", "PUBLIC_HEALTH",
+        "TELEMEDICINE", "IMAGING", "LABORATORY", "LOGISTICS",
+        "PAYMENT", "CLAIMS", "COMMUNICATIONS", "AI",
+        "TRAINING", "WELLNESS", "COMMUNITY", "REGISTRY",
+        "DEVICE", "OTHER"
+      ]
+    },
+    "publisher": {
+      "type": "object",
+      "required": ["id", "name", "technicalContact"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "legalName": { "type": "string" },
+        "websiteUrl": { "type": "string", "format": "uri" },
+        "technicalContact": { "$ref": "#/$defs/contactPoint" },
+        "dataProtectionContact": { "$ref": "#/$defs/contactPoint" },
+        "supportContact": { "$ref": "#/$defs/contactPoint" }
+      }
+    },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[a-z0-9.-]+)?$" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] }
+    },
+    "iconRef": { "type": "string" },
+    "documentationUrl": { "type": "string", "format": "uri" },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "clinicalSafetyClassification": {
+      "enum": ["NON_CLINICAL", "CLINICAL_INFORMATIONAL", "CLINICAL_DECISION_SUPPORT", "CLINICAL_DIRECT_CARE"]
+    },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "requiredEvents": { "type": "array", "items": { "type": "string" } },
+    "rolesAllowed": { "type": "array", "items": { "type": "string" } },
+    "pricingModel": { "enum": ["FREE", "PER_FACILITY", "PER_USER", "TRANSACTION_BASED", "CONTRACT"] },
+    "licensingModel": { "type": "string" },
+    "checksum": { "type": "string" },
+    "launcher": {
+      "type": "object",
+      "required": ["appCode", "href", "icon"],
+      "properties": {
+        "appCode": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "href": { "type": "string", "pattern": "^/" },
+        "icon": { "type": "string" },
+        "weight": { "type": "integer", "minimum": 0, "maximum": 9999 },
+        "pinByDefault": { "type": "boolean" }
+      }
+    },
+    "requiredApis": { "type": "array", "items": { "type": "string" } },
+    "webSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["routePattern", "title"],
+        "properties": {
+          "routePattern": { "type": "string" },
+          "title": { "type": "string" },
+          "requiredRole": { "type": "string" }
+        }
+      }
+    },
+    "mobileSurfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["platform", "routeKey", "title"],
+        "properties": {
+          "platform": { "enum": ["CITIZEN_APP", "PROVIDER_APP"] },
+          "routeKey": { "type": "string" },
+          "title": { "type": "string" },
+          "requiredRole": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "contactPoint": {
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" }
+      }
+    }
+  },
+  "additionalProperties": false
+}

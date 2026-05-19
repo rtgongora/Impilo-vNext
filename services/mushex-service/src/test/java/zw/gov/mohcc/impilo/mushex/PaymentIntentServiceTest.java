@@ -1,7 +1,10 @@
 package zw.gov.mohcc.impilo.mushex;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import zw.gov.mohcc.impilo.mushex.domain.enums.AdapterType;
 import zw.gov.mohcc.impilo.mushex.domain.enums.PaymentIntentType;
+import zw.gov.mohcc.impilo.mushex.domain.enums.RailSelectionReason;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,11 +24,20 @@ import zw.gov.mohcc.impilo.mushex.integration.MusheWalletAdapter;
 import zw.gov.mohcc.impilo.mushex.integration.ProviderContractClient;
 import zw.gov.mohcc.impilo.mushex.service.PaymentIntentService;
 import zw.gov.mohcc.impilo.mushex.service.ReceiptService;
+import zw.gov.mohcc.impilo.mushex.service.adapter.AdapterRegistry;
+import zw.gov.mohcc.impilo.mushex.service.adapter.AdapterResponse;
+import zw.gov.mohcc.impilo.mushex.service.adapter.PaymentRailAdapter;
+import zw.gov.mohcc.impilo.mushex.service.rail.DefaultRailSelectionPolicy;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionException;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionPolicy;
+import zw.gov.mohcc.impilo.mushex.service.rail.RailSelectionRequest;
 import zw.gov.mohcc.impilo.shared.auth.AccessMode;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,6 +63,8 @@ class PaymentIntentServiceTest {
     @Mock private MusheWalletAdapter walletAdapter;
 
     private PaymentIntentService service;
+    private MushexProperties mushexProperties;
+    private RailSelectionPolicy railSelectionPolicy;
 
     private static final CredentialVerificationClient NOOP_CREDENTIALS =
             (tenantId, providerId) -> new CredentialVerificationClient.CredentialVerificationResult(
@@ -63,12 +77,37 @@ class PaymentIntentServiceTest {
     @BeforeEach
     void setUp() {
         lenient().when(providerContractClient.hasActiveContract(any(), any(), any())).thenReturn(true);
+        mushexProperties = new MushexProperties();
+        railSelectionPolicy = new DefaultRailSelectionPolicy(
+                stubRegistry(AdapterType.SANDBOX, AdapterType.MOBILE_MONEY), mushexProperties);
         service = new PaymentIntentService(intentRepository, outboxRepository, receiptService, objectMapper,
-                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
         TrustContextHolder.set(new TrustContext(
             tenantId, "actor-1", "FACILITY_FINANCE", "BILLING",
             "device-1", correlationId, facilityId, null, null, AccessMode.INTERNAL
         ));
+    }
+
+    private static AdapterRegistry stubRegistry(AdapterType... types) {
+        return new AdapterRegistry(java.util.Arrays.stream(types)
+                .map(PaymentIntentServiceTest::stubAdapter)
+                .toList());
+    }
+
+    private static PaymentRailAdapter stubAdapter(AdapterType type) {
+        return new PaymentRailAdapter() {
+            @Override public String adapterType() { return type.name(); }
+            @Override public AdapterResponse initiatePayment(String i, BigDecimal a, String c, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+            @Override public AdapterResponse checkStatus(String r, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+            @Override public boolean verifyWebhook(String s, String p, Map<String, String> cfg) { return true; }
+            @Override public AdapterResponse initiateRefund(String r, BigDecimal a, Map<String, String> cfg) {
+                return new AdapterResponse("ref", "PENDING", "", Map.of());
+            }
+        };
     }
 
     @AfterEach
@@ -183,7 +222,7 @@ class PaymentIntentServiceTest {
     void createIntent_parsesIntentTypeFromMetadata_intentTypeKey() throws Exception {
         ObjectMapper realMapper = new ObjectMapper();
         PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
-                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
         when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -199,7 +238,7 @@ class PaymentIntentServiceTest {
     void createIntent_parsesIntentTypeFromMetadata_paymentIntentTypeAlias() throws Exception {
         ObjectMapper realMapper = new ObjectMapper();
         PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
-                NOOP_CREDENTIALS, providerContractClient, walletAdapter, new MushexProperties());
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
         when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
         when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -209,6 +248,217 @@ class PaymentIntentServiceTest {
                 facilityId, "idem-pre-1", metadata);
 
         assertEquals(PaymentIntentType.PRE_SERVICE_PAYMENT, result.getIntentType());
+    }
+
+    // ---------------------------------------------------------------
+    // createIntent — rail selection (G-4)
+    //
+    // See docs/design/g4-rail-selection-policy.md §13. The pure-policy cases live
+    // in DefaultRailSelectionPolicyTest; the cases below assert that the policy is
+    // actually invoked from the service, that the result is merged into
+    // payment_intents.metadata, that the outbox event carries the three new keys,
+    // and that idempotency replay does not re-run selection.
+    // ---------------------------------------------------------------
+
+    @Test
+    void createIntent_recordsRailSelectionInMetadata_andOutbox_explicitPreferred() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RailSelectionRequest selection = new RailSelectionRequest(
+                "MOBILE_MONEY", null, null,
+                SourceType.COSTA_BILL, new BigDecimal("75.00"), "USD", facilityId, false);
+
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-G4-1", new BigDecimal("75.00"), "USD",
+                facilityId, "idem-g4-1", "{\"patient\":\"P-001\"}", selection);
+
+        JsonNode mergedMeta = realMapper.readTree(result.getMetadata());
+        assertEquals("P-001", mergedMeta.get("patient").asText(),
+                "Existing metadata keys must survive the rail_selection merge");
+        JsonNode rs = mergedMeta.get("rail_selection");
+        assertNotNull(rs, "metadata.rail_selection must be present after createIntent");
+        assertEquals("MOBILE_MONEY", rs.get("effective_rail").asText());
+        assertEquals("MOBILE_MONEY", rs.get("preferred_rail").asText());
+        assertFalse(rs.get("fallback_applied").asBoolean());
+        assertEquals(RailSelectionReason.EXPLICIT_PREFERRED.name(), rs.get("reason").asText());
+        assertEquals("1", rs.get("selection_version").asText());
+
+        ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(outboxCaptor.capture());
+        String payload = outboxCaptor.getValue().getPayload();
+        JsonNode parsed = realMapper.readTree(payload);
+        assertEquals("MOBILE_MONEY", parsed.get("effectiveRail").asText());
+        assertEquals("MOBILE_MONEY", parsed.get("preferredRail").asText());
+        assertEquals(RailSelectionReason.EXPLICIT_PREFERRED.name(), parsed.get("railSelectionReason").asText());
+    }
+
+    @Test
+    void createIntent_recordsFallback_whenPreferredUnregistered_andFallbackAllowed() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        RailSelectionPolicy sandboxOnly = new DefaultRailSelectionPolicy(
+                stubRegistry(AdapterType.SANDBOX), mushexProperties);
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, sandboxOnly);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RailSelectionRequest selection = new RailSelectionRequest(
+                "CARD_GATEWAY", true, null,
+                SourceType.COSTA_BILL, new BigDecimal("50.00"), "USD", facilityId, false);
+
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-G4-2", new BigDecimal("50.00"), "USD",
+                facilityId, "idem-g4-2", null, selection);
+
+        JsonNode rs = realMapper.readTree(result.getMetadata()).get("rail_selection");
+        assertEquals("SANDBOX", rs.get("effective_rail").asText());
+        assertEquals("CARD_GATEWAY", rs.get("preferred_rail").asText());
+        assertTrue(rs.get("fallback_applied").asBoolean());
+        assertEquals(RailSelectionReason.PREFERRED_UNAVAILABLE_FALLBACK.name(),
+                rs.get("reason").asText());
+    }
+
+    @Test
+    void createIntent_rejects_whenPreferredUnregistered_andFallbackDisallowed() {
+        ObjectMapper realMapper = new ObjectMapper();
+        RailSelectionPolicy sandboxOnly = new DefaultRailSelectionPolicy(
+                stubRegistry(AdapterType.SANDBOX), mushexProperties);
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, sandboxOnly);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+        RailSelectionRequest selection = new RailSelectionRequest(
+                "CARD_GATEWAY", false, null,
+                SourceType.COSTA_BILL, new BigDecimal("50.00"), "USD", facilityId, false);
+
+        RailSelectionException ex = assertThrows(RailSelectionException.class,
+                () -> svc.createIntent(SourceType.COSTA_BILL, "BILL-G4-3", new BigDecimal("50.00"), "USD",
+                        facilityId, "idem-g4-3", null, selection));
+        assertEquals("RAIL_ADAPTER_UNAVAILABLE", ex.getErrorCode());
+
+        verify(intentRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+    }
+
+    @Test
+    void createIntent_rejects_unknownRailString() {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+
+        RailSelectionRequest selection = new RailSelectionRequest(
+                "BITCOIN", null, null,
+                SourceType.COSTA_BILL, new BigDecimal("50.00"), "USD", facilityId, false);
+
+        RailSelectionException ex = assertThrows(RailSelectionException.class,
+                () -> svc.createIntent(SourceType.COSTA_BILL, "BILL-G4-4", new BigDecimal("50.00"), "USD",
+                        facilityId, "idem-g4-4", null, selection));
+        assertEquals("RAIL_ADAPTER_UNKNOWN", ex.getErrorCode());
+
+        verify(intentRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+    }
+
+    @Test
+    void createIntent_legacy7ArgOverload_recordsDefaultNoPreference() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-G4-5", new BigDecimal("20.00"), "USD",
+                facilityId, "idem-g4-5", null);
+
+        JsonNode rs = realMapper.readTree(result.getMetadata()).get("rail_selection");
+        assertEquals("SANDBOX", rs.get("effective_rail").asText());
+        assertEquals(RailSelectionReason.DEFAULT_NO_PREFERENCE.name(), rs.get("reason").asText());
+        assertFalse(rs.get("direct_gateway_requested").asBoolean());
+
+        ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(outboxCaptor.capture());
+        JsonNode parsed = realMapper.readTree(outboxCaptor.getValue().getPayload());
+        assertEquals("SANDBOX", parsed.get("effectiveRail").asText());
+        assertEquals("NONE", parsed.get("preferredRail").asText());
+    }
+
+    @Test
+    void createIntent_impiloSimulationFlag_forcesSandboxRegardlessOfPreference() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RailSelectionRequest selection = new RailSelectionRequest(
+                "MOBILE_MONEY", null, true,
+                SourceType.COSTA_BILL, new BigDecimal("10.00"), "USD", facilityId, false);
+
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-G4-6", new BigDecimal("10.00"), "USD",
+                facilityId, "idem-g4-6", "{\"impilo_simulation\":true}", selection);
+
+        JsonNode rs = realMapper.readTree(result.getMetadata()).get("rail_selection");
+        assertEquals("SANDBOX", rs.get("effective_rail").asText());
+        assertEquals(RailSelectionReason.SAFETY_SWITCH_FORCED_SANDBOX.name(),
+                rs.get("reason").asText());
+    }
+
+    @Test
+    void createIntent_idempotencyReplay_returnsExisting_withoutRerunningSelection() {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+
+        PaymentIntentEntity existing = new PaymentIntentEntity();
+        existing.setIntentId("EXISTING-G4");
+        existing.setIdempotencyKey("idem-g4-replay");
+        existing.setStatus(IntentStatus.CREATED);
+        existing.setAmountTotal(new BigDecimal("99.00"));
+        existing.setMetadata("{\"rail_selection\":{\"effective_rail\":\"MOBILE_MONEY\"}}");
+        when(intentRepository.findByIdempotencyKey("idem-g4-replay")).thenReturn(Optional.of(existing));
+
+        RailSelectionRequest secondSelection = new RailSelectionRequest(
+                "CARD_GATEWAY", false, null,
+                SourceType.COSTA_BILL, new BigDecimal("99.00"), "USD", facilityId, false);
+
+        PaymentIntentEntity result = svc.createIntent(
+                SourceType.COSTA_BILL, "BILL-G4-REPLAY", new BigDecimal("99.00"), "USD",
+                facilityId, "idem-g4-replay", "{\"different\":\"metadata\"}", secondSelection);
+
+        assertEquals("EXISTING-G4", result.getIntentId());
+        assertEquals("{\"rail_selection\":{\"effective_rail\":\"MOBILE_MONEY\"}}", result.getMetadata(),
+                "Idempotent replay must return the original intent with its original metadata");
+        verify(intentRepository, never()).save(any());
+        verify(outboxRepository, never()).save(any());
+    }
+
+    @Test
+    void createIntent_outboxKeysAreStable_evenWithoutCallerSuppliedPreference() throws Exception {
+        ObjectMapper realMapper = new ObjectMapper();
+        PaymentIntentService svc = new PaymentIntentService(intentRepository, outboxRepository, receiptService, realMapper,
+                NOOP_CREDENTIALS, providerContractClient, walletAdapter, mushexProperties, railSelectionPolicy);
+        when(intentRepository.findByIdempotencyKey(any())).thenReturn(Optional.empty());
+        when(intentRepository.save(any(PaymentIntentEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        svc.createIntent(SourceType.COSTA_BILL, "BILL-G4-7", new BigDecimal("5.00"), "USD",
+                facilityId, "idem-g4-7", null);
+
+        ArgumentCaptor<EventOutboxEntity> outboxCaptor = ArgumentCaptor.forClass(EventOutboxEntity.class);
+        verify(outboxRepository).save(outboxCaptor.capture());
+        JsonNode parsed = realMapper.readTree(outboxCaptor.getValue().getPayload());
+        List<String> requiredKeys = List.of(
+                "intentId", "sourceType", "sourceId", "amount", "currency",
+                "facilityId", "status", "effectiveRail", "preferredRail", "railSelectionReason");
+        for (String key : requiredKeys) {
+            assertTrue(parsed.has(key), "Outbox payload must include key " + key);
+        }
     }
 
     // ---------------------------------------------------------------

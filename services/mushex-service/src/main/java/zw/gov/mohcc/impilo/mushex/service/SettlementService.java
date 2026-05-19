@@ -5,7 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import zw.gov.mohcc.impilo.mushex.domain.entity.EventOutboxEntity;
+import zw.gov.mohcc.impilo.mushex.domain.entity.LedgerEntryEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PaymentIntentEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PayoutBatchEntity;
 import zw.gov.mohcc.impilo.mushex.domain.entity.PayoutItemEntity;
@@ -20,6 +23,7 @@ import zw.gov.mohcc.impilo.mushex.domain.repository.PaymentIntentRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PayoutBatchRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.PayoutItemRepository;
 import zw.gov.mohcc.impilo.mushex.domain.repository.SettlementRepository;
+import zw.gov.mohcc.impilo.mushex.domain.repository.LedgerEntryRepository;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
@@ -48,6 +52,7 @@ public class SettlementService {
     private final PayoutBatchRepository batchRepository;
     private final PayoutItemRepository itemRepository;
     private final PaymentIntentRepository intentRepository;
+    private final LedgerEntryRepository ledgerEntryRepository;
     private final LedgerService ledgerService;
     private final EventOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
@@ -56,6 +61,7 @@ public class SettlementService {
                              PayoutBatchRepository batchRepository,
                              PayoutItemRepository itemRepository,
                              PaymentIntentRepository intentRepository,
+                             LedgerEntryRepository ledgerEntryRepository,
                              LedgerService ledgerService,
                              EventOutboxRepository outboxRepository,
                              ObjectMapper objectMapper) {
@@ -63,6 +69,7 @@ public class SettlementService {
         this.batchRepository = batchRepository;
         this.itemRepository = itemRepository;
         this.intentRepository = intentRepository;
+        this.ledgerEntryRepository = ledgerEntryRepository;
         this.ledgerService = ledgerService;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
@@ -171,6 +178,84 @@ public class SettlementService {
                 tenantId);
 
         return settlement;
+    }
+
+    /**
+     * List settlements for the current tenant, optionally narrowed by a specific intent.
+     * Intent filter semantics are additive and read-only: rows are included when the intent's
+     * creation date falls inside the settlement period, and any direct settlement ledger links
+     * found for the intent are appended if not already present.
+     */
+    public List<SettlementEntity> listSettlements(String intentId) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (intentId == null || intentId.isBlank()) {
+            Page<SettlementEntity> page = settlementRepository.findByTenantId(
+                    ctx.tenantId(), PageRequest.of(0, 100));
+            return page.getContent();
+        }
+
+        PaymentIntentEntity intent = intentRepository.findById(intentId)
+                .orElseThrow(() -> new IntentNotFoundException(intentId));
+        if (!ctx.tenantId().equals(intent.getTenantId())) {
+            throw new IntentNotFoundException(intentId);
+        }
+
+        Page<SettlementEntity> inPeriod = settlementRepository
+                .findByTenantIdAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
+                        ctx.tenantId(),
+                        intent.getCreatedAt().toLocalDate(),
+                        intent.getCreatedAt().toLocalDate(),
+                        PageRequest.of(0, 100));
+        List<SettlementEntity> rows = new java.util.ArrayList<>(inPeriod.getContent());
+
+        List<LedgerEntryEntity> linkedEntries = ledgerEntryRepository.findByTenantIdAndIntentId(ctx.tenantId(), intentId);
+        if (!linkedEntries.isEmpty()) {
+            var byId = new java.util.LinkedHashMap<String, SettlementEntity>();
+            for (SettlementEntity row : rows) {
+                byId.put(row.getSettlementId(), row);
+            }
+            for (LedgerEntryEntity entry : linkedEntries) {
+                if (!"SETTLEMENT".equalsIgnoreCase(entry.getReferenceType())) {
+                    continue;
+                }
+                String settlementId = entry.getReferenceId();
+                if (settlementId == null || settlementId.isBlank() || byId.containsKey(settlementId)) {
+                    continue;
+                }
+                settlementRepository.findById(settlementId).ifPresent(settlement -> {
+                    if (ctx.tenantId().equals(settlement.getTenantId())) {
+                        byId.put(settlement.getSettlementId(), settlement);
+                    }
+                });
+            }
+            rows = new java.util.ArrayList<>(byId.values());
+        }
+
+        rows.sort(java.util.Comparator.comparing(
+                SettlementEntity::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+        return rows;
+    }
+
+    public List<SettlementEntity> listSettlements(List<String> intentIds) {
+        TrustContextHolder.require();
+        if (intentIds == null || intentIds.isEmpty()) {
+            return listSettlements((String) null);
+        }
+        var byId = new java.util.LinkedHashMap<String, SettlementEntity>();
+        for (String id : intentIds) {
+            if (id == null || id.isBlank()) {
+                continue;
+            }
+            for (SettlementEntity row : listSettlements(id)) {
+                byId.putIfAbsent(row.getSettlementId(), row);
+            }
+        }
+        List<SettlementEntity> rows = new java.util.ArrayList<>(byId.values());
+        rows.sort(java.util.Comparator.comparing(
+                SettlementEntity::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+        return rows;
     }
 
     /**

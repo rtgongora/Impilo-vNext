@@ -1,0 +1,292 @@
+openapi: 3.0.3
+info:
+  title: MVUMO Trust Orchestration API
+  version: 1.0.0
+  description: Canonical internal MVUMO API for consent orchestration and remote consent sessions.
+servers:
+  - url: /internal/v1/mvumo
+paths:
+  /evaluate:
+    post:
+      summary: Evaluate consent decision through TSHEPO consent
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentEvaluateRequest'
+      responses:
+        '200':
+          description: Decision returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeDecision'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /remote-sessions/{id}/verify:
+    post:
+      summary: Verify a remote consent session token
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/PurposeHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/SessionIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Session verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Denied'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /remote-sessions/{id}/grant:
+    post:
+      summary: Grant consent through a verified remote session
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/PurposeHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/SessionIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Consent granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /remote-sessions/{id}/refuse:
+    post:
+      summary: Refuse consent through a verified remote session
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/PurposeHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/SessionIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Consent refused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /remote-sessions/{id}/withdraw:
+    post:
+      summary: Withdraw consent through a verified remote session
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/PurposeHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/SessionIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Consent withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/DependencyUnavailable'
+
+  /templates:
+    post:
+      summary: Create a new consent template version
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [templateKey, consentType, title, bodyMarkdown]
+              properties:
+                templateKey: { type: string }
+                version: { type: integer, minimum: 1 }
+                language: { type: string }
+                consentType: { type: string }
+                requiredAssurance: { type: string }
+                title: { type: string }
+                bodyMarkdown: { type: string }
+                allowedMethodsJson: { type: string }
+                ziboConceptCode: { type: string }
+                remoteAllowed: { type: boolean }
+                offlineAllowed: { type: boolean }
+      responses:
+        '200':
+          description: Template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeMap'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+components:
+  parameters:
+    TenantIdHeader:
+      name: X-Tenant-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+    CorrelationIdHeader:
+      name: X-Correlation-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ActorIdHeader:
+      name: X-Actor-Id
+      in: header
+      required: true
+      schema:
+        type: string
+    PurposeHeader:
+      name: X-Purpose-Of-Use
+      in: header
+      required: true
+      schema:
+        type: string
+    SessionIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Validation or trust-context error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiEnvelopeError'
+    Denied:
+      description: Policy or consent denied
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiEnvelopeError'
+    DependencyUnavailable:
+      description: Downstream trust dependency unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiEnvelopeError'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiEnvelopeError'
+  schemas:
+    ConsentEvaluateRequest:
+      type: object
+      required: [actorId, subjectRef]
+      properties:
+        tenantId:
+          type: string
+          format: uuid
+        actorId:
+          type: string
+        subjectRef:
+          type: string
+        purpose:
+          type: string
+        scope:
+          type: string
+    DecisionResponse:
+      type: object
+      properties:
+        decision: { type: string }
+        reason: { type: string }
+        code: { type: string }
+        consentId: { type: string }
+        correlationId: { type: string }
+        timestamp: { type: string, format: date-time }
+    ApiEnvelopeDecision:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          $ref: '#/components/schemas/DecisionResponse'
+        requestId: { type: string }
+    ApiEnvelopeMap:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          type: object
+          additionalProperties: true
+        requestId: { type: string }
+    ApiEnvelopeError:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+        requestId: { type: string }

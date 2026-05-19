@@ -72,10 +72,73 @@ public class DispatchServiceClient {
         return extractData(response);
     }
 
+    public JsonNode listDeliveries() {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries";
+        return responseBody(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getDelivery(String id) {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries/" + id;
+        return responseBody(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode createDelivery(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries";
+        return responseBody(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode patchDelivery(String id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries/" + id;
+        return responseBody(restTemplate.exchange(url, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    public JsonNode deliveryAction(String id, String action, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries/" + id + "/" + action;
+        return responseBody(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode getDeliveryTracking(String id) {
+        String url = baseUrl + "/internal/v1/dispatch/deliveries/" + id + "/tracking";
+        return responseBody(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getDashboard() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/dashboard", JsonNode.class)); }
+    public JsonNode getDispatcherConsole() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/dispatcher-console", JsonNode.class)); }
+
+    public JsonNode listFleet() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/fleet", JsonNode.class)); }
+    public JsonNode createFleet(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/fleet", body, JsonNode.class)); }
+    public JsonNode getFleet(String id) { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/fleet/" + id, JsonNode.class)); }
+    public JsonNode patchFleet(String id, Map<String, Object> body) {
+        return responseBody(restTemplate.exchange(baseUrl + "/internal/v1/dispatch/fleet/" + id, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    public JsonNode listCouriers() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/couriers", JsonNode.class)); }
+    public JsonNode createCourier(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/couriers", body, JsonNode.class)); }
+    public JsonNode getCourier(String id) { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/couriers/" + id, JsonNode.class)); }
+    public JsonNode patchCourier(String id, Map<String, Object> body) {
+        return responseBody(restTemplate.exchange(baseUrl + "/internal/v1/dispatch/couriers/" + id, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    public JsonNode listZones() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/zones", JsonNode.class)); }
+    public JsonNode createZone(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/zones", body, JsonNode.class)); }
+    public JsonNode listPolicies() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/policies", JsonNode.class)); }
+    public JsonNode createPolicy(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/policies", body, JsonNode.class)); }
+    public JsonNode listIntegrations() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/integrations", JsonNode.class)); }
+    public JsonNode createIntegration(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/integrations", body, JsonNode.class)); }
+    public JsonNode listMissions() { return responseBody(restTemplate.getForEntity(baseUrl + "/internal/v1/dispatch/autonomous-missions", JsonNode.class)); }
+    public JsonNode createMission(Map<String, Object> body) { return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/autonomous-missions", body, JsonNode.class)); }
+    public JsonNode webhook(String providerCode, Map<String, Object> body) {
+        return responseBody(restTemplate.postForEntity(baseUrl + "/internal/v1/dispatch/webhooks/" + providerCode, body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");
         }
+        return response.getBody();
+    }
+
+    private JsonNode responseBody(ResponseEntity<JsonNode> response) {
         return response.getBody();
     }
 }

@@ -7,8 +7,8 @@
 
 import { useState, useMemo, useCallback } from "react";
 import {
-  Pill, Search, AlertTriangle, AlertCircle, Info, X, Plus, Trash2,
-  Stethoscope, ClipboardList, Calculator, BookOpen, ChevronRight,
+  Pill, Search, AlertTriangle, AlertCircle, X, Plus, Trash2,
+  Calculator, BookOpen, ChevronRight,
   User, FileWarning,
 } from "lucide-react";
 
@@ -312,7 +312,7 @@ function resolveInitialTab(toolId?: string | null): ToolTab {
 }
 
 export function MedscapeTools({ open, onClose, toolId }: MedscapeToolsProps) {
-  const { currentMedications, allergies, activeConditions, recentVitals } = usePatientContext();
+  const { currentMedications, allergies } = usePatientContext();
   const [activeTab, setActiveTab] = useState<ToolTab>(resolveInitialTab(toolId));
   const [drugSearch, setDrugSearch] = useState("");
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);

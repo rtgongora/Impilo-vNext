@@ -30,7 +30,7 @@ public class NotificationServiceClient {
     }
 
     public JsonNode sendNotification(Map<String, Object> body) {
-        String url = baseUrl + "/internal/v1/notifications/send";
+        String url = baseUrl + "/internal/v1/notify";
         log.info("Notification: send");
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
@@ -61,9 +61,29 @@ public class NotificationServiceClient {
         return extractData(response);
     }
 
+    public JsonNode markAllAsRead() {
+        String url = baseUrl + "/internal/v1/notifications/read-all";
+        log.info("Notification: markAllAsRead");
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    public JsonNode unreadCount() {
+        String url = baseUrl + "/internal/v1/notifications/inbox/unread-count";
+        log.debug("Notification: unreadCount");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode getPreferences() {
         String url = baseUrl + "/internal/v1/notifications/preferences";
         log.debug("Notification: getPreferences");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getPreferences(String patientId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/notifications/preferences")
+                .queryParam("patientId", patientId)
+                .toUriString();
+        log.debug("Notification: getPreferences patientId={}", patientId);
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
@@ -72,6 +92,57 @@ public class NotificationServiceClient {
         log.info("Notification: updatePreferences");
         ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class);
         return extractData(response);
+    }
+
+    public JsonNode updatePreferences(String patientId, Map<String, Object> body) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/notifications/preferences")
+                .queryParam("patientId", patientId)
+                .toUriString();
+        log.info("Notification: updatePreferences patientId={}", patientId);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listTemplates() {
+        String url = baseUrl + "/internal/v1/templates";
+        log.debug("Notification: listTemplates");
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode getTemplateByKey(String key) {
+        String url = baseUrl + "/internal/v1/templates/" + key;
+        log.debug("Notification: getTemplateByKey key={}", key);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode createTemplate(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/templates";
+        log.info("Notification: createTemplate");
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode publishTemplate(String templateId) {
+        String url = baseUrl + "/internal/v1/templates/" + templateId + "/publish";
+        log.info("Notification: publishTemplate id={}", templateId);
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    public JsonNode retireTemplate(String templateId) {
+        String url = baseUrl + "/internal/v1/templates/" + templateId + "/retire";
+        log.info("Notification: retireTemplate id={}", templateId);
+        return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
+    }
+
+    public JsonNode listTemplateVersions(String templateId) {
+        String url = baseUrl + "/internal/v1/templates/" + templateId + "/versions";
+        log.debug("Notification: listTemplateVersions id={}", templateId);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode createTemplateVersion(String templateId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/templates/" + templateId + "/versions";
+        log.info("Notification: createTemplateVersion id={}", templateId);
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

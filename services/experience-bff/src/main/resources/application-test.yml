@@ -19,6 +19,10 @@ spring:
 
 impilo:
   bff:
+    queue:
+      # Keep deterministic integration harness behavior in JVM tests.
+      # Production default remains fail-closed (property defaults to false).
+      allow-local-fallback: true
     citizen-longtail:
       mode: stub
       failure-policy: stub_fallback
@@ -27,6 +31,10 @@ impilo:
       failure-policy: stub_fallback
     facilities:
       mode: stub
+  wallet:
+    # In-JVM tests/golden paths do not run Mushe Wallet, so allow the existing in-memory
+    # wallet shape. Production (application.yml) keeps this false.
+    allow-local-fallback: true
   security:
     allow-anonymous: true
   auth:

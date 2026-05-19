@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/content-pack-manifest.schema.json",
+  "title": "Health OS Content Pack Manifest",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes",
+    "contentCategory", "itemCount", "languageCodes", "bundleRef"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "CONTENT_PACK" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "contentCategory": {
+      "enum": [
+        "SMS_TEMPLATES", "WHATSAPP_TEMPLATES", "EMAIL_TEMPLATES",
+        "KNOWLEDGE_SNIPPETS", "COURSE_CONTENT", "NOMPILO_KB",
+        "PUBLIC_HEALTH_CAMPAIGN", "LOCAL_LANGUAGE_PACK"
+      ]
+    },
+    "itemCount": { "type": "integer", "minimum": 1 },
+    "languageCodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$" }
+    },
+    "bundleRef": { "type": "string" }
+  }
+}

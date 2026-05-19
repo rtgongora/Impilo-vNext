@@ -3,189 +3,741 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.Metrics;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import zw.gov.mohcc.impilo.experience.client.CommunityServiceClient;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.CampaignsServiceClient;
+import zw.gov.mohcc.impilo.experience.client.ChannelsServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
+import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
+import zw.gov.mohcc.impilo.experience.controller.dto.ApiEnvelope;
+import zw.gov.mohcc.impilo.experience.controller.dto.ApiResponseFactory;
+import zw.gov.mohcc.impilo.experience.controller.dto.comms.RoleDashboardDto;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineCommsMetricsStore;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineWorkflowHistoryStore;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Communication Noticeboard — announcements, clinical pages, and messages.
- * Delegates to channels-service / notification-service via CommunityServiceClient.
+ * Communication noticeboard — announcements, clinical pages, and messages.
+ * Orchestrates persisted data from campaigns-service, support-service, and channels-service.
  */
 @RestController
 @RequestMapping("/internal/v1/communication")
 public class CommunicationController {
 
     private static final Logger log = LoggerFactory.getLogger(CommunicationController.class);
+    private static final long SOURCE_COOLDOWN_SECONDS = 30L;
+    private static final Map<String, OffsetDateTime> SOURCE_COOLDOWN_UNTIL = new ConcurrentHashMap<>();
 
-    private final CommunityServiceClient communityClient;
+    private final CampaignsServiceClient campaignsClient;
+    private final SupportServiceClient supportClient;
+    private final ChannelsServiceClient channelsClient;
+    private final NotificationServiceClient notificationClient;
+    private final TelemedicineCommsMetricsStore telemedicineCommsMetricsStore;
+    private final TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore;
 
-    public CommunicationController(CommunityServiceClient communityClient) {
-        this.communityClient = communityClient;
+    public CommunicationController(
+            CampaignsServiceClient campaignsClient,
+            SupportServiceClient supportClient,
+            ChannelsServiceClient channelsClient,
+            NotificationServiceClient notificationClient,
+            TelemedicineCommsMetricsStore telemedicineCommsMetricsStore,
+            TelemedicineWorkflowHistoryStore telemedicineWorkflowHistoryStore) {
+        this.campaignsClient = campaignsClient;
+        this.supportClient = supportClient;
+        this.channelsClient = channelsClient;
+        this.notificationClient = notificationClient;
+        this.telemedicineCommsMetricsStore = telemedicineCommsMetricsStore;
+        this.telemedicineWorkflowHistoryStore = telemedicineWorkflowHistoryStore;
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiEnvelope<RoleDashboardDto>> dashboard(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        long startedNs = System.nanoTime();
+        Map<String, Object> sourceHealth = new LinkedHashMap<>();
+
+        int activeAnnouncements = 0;
+        int openPages = 0;
+        int activeThreads = 0;
+        int sentToday = 0;
+        int failedToday = 0;
+
+        if (isInCooldown("campaigns")) {
+            sourceHealth.put("campaigns", "DEGRADED");
+            Metrics.counter("impilo.communication.dashboard.source_skipped", "source", "campaigns").increment();
+        } else try {
+            long sourceStart = System.nanoTime();
+            JsonNode campaigns = campaignsClient.listCampaigns(0, 100);
+            for (JsonNode item : asItemsArray(campaigns)) {
+                String type = text(item, "campaignType");
+                String status = text(item, "status");
+                if (type != null && type.toUpperCase(Locale.ROOT).contains("ANNOUNCEMENT")
+                        && !"COMPLETED".equalsIgnoreCase(status)) {
+                    activeAnnouncements++;
+                }
+            }
+            sourceHealth.put("campaigns", "UP");
+            clearCooldown("campaigns");
+            Metrics.timer("impilo.communication.dashboard.source_latency", "source", "campaigns").record(System.nanoTime() - sourceStart, TimeUnit.NANOSECONDS);
+        } catch (Exception e) {
+            sourceHealth.put("campaigns", "DOWN");
+            markFailure("campaigns");
+            Metrics.counter("impilo.communication.dashboard.source_errors", "source", "campaigns").increment();
+            log.warn("Communication dashboard campaigns source unavailable: {}", e.getMessage());
+        }
+
+        if (isInCooldown("support")) {
+            sourceHealth.put("support", "DEGRADED");
+            Metrics.counter("impilo.communication.dashboard.source_skipped", "source", "support").increment();
+        } else try {
+            long sourceStart = System.nanoTime();
+            JsonNode pages = supportClient.listTickets("OPEN", null, "CLINICAL_PAGE", null, 0, 100);
+            for (JsonNode ignored : asItemsArray(pages)) {
+                openPages++;
+            }
+            sourceHealth.put("support", "UP");
+            clearCooldown("support");
+            Metrics.timer("impilo.communication.dashboard.source_latency", "source", "support").record(System.nanoTime() - sourceStart, TimeUnit.NANOSECONDS);
+        } catch (Exception e) {
+            sourceHealth.put("support", "DOWN");
+            markFailure("support");
+            Metrics.counter("impilo.communication.dashboard.source_errors", "source", "support").increment();
+            log.warn("Communication dashboard support source unavailable: {}", e.getMessage());
+        }
+
+        if (isInCooldown("channels")) {
+            sourceHealth.put("channels", "DEGRADED");
+            Metrics.counter("impilo.communication.dashboard.source_skipped", "source", "channels").increment();
+        } else try {
+            long sourceStart = System.nanoTime();
+            JsonNode sessions = channelsClient.listSessions();
+            for (JsonNode item : asItemsArray(sessions)) {
+                if (!"CLOSED".equalsIgnoreCase(text(item, "status"))) {
+                    activeThreads++;
+                }
+            }
+            sourceHealth.put("channels", "UP");
+            clearCooldown("channels");
+            Metrics.timer("impilo.communication.dashboard.source_latency", "source", "channels").record(System.nanoTime() - sourceStart, TimeUnit.NANOSECONDS);
+        } catch (Exception e) {
+            sourceHealth.put("channels", "DOWN");
+            markFailure("channels");
+            Metrics.counter("impilo.communication.dashboard.source_errors", "source", "channels").increment();
+            log.warn("Communication dashboard channels source unavailable: {}", e.getMessage());
+        }
+
+        if (isInCooldown("notifications")) {
+            sourceHealth.put("notifications", "DEGRADED");
+            Metrics.counter("impilo.communication.dashboard.source_skipped", "source", "notifications").increment();
+        } else try {
+            long sourceStart = System.nanoTime();
+            JsonNode notifications = notificationClient.listNotifications(0, 200);
+            for (JsonNode item : asItemsArray(notifications)) {
+                if (isToday(text(item, "createdAt", "created_at"))) {
+                    if ("FAILED".equalsIgnoreCase(text(item, "status"))) {
+                        failedToday++;
+                    } else if ("SENT".equalsIgnoreCase(text(item, "status"))) {
+                        sentToday++;
+                    }
+                }
+            }
+            sourceHealth.put("notifications", "UP");
+            clearCooldown("notifications");
+            Metrics.timer("impilo.communication.dashboard.source_latency", "source", "notifications").record(System.nanoTime() - sourceStart, TimeUnit.NANOSECONDS);
+        } catch (Exception e) {
+            sourceHealth.put("notifications", "DOWN");
+            markFailure("notifications");
+            Metrics.counter("impilo.communication.dashboard.source_errors", "source", "notifications").increment();
+            log.warn("Communication dashboard notifications source unavailable: {}", e.getMessage());
+        }
+
+        boolean partialData = sourceHealth.values().stream().anyMatch(v -> !"UP".equalsIgnoreCase(String.valueOf(v)));
+        Map<String, Object> telemedicineMetrics = telemedicineCommsMetricsStore.snapshot();
+        Map<String, Object> executive = Map.of(
+                "total_active_communications", activeAnnouncements + activeThreads + openPages,
+                "delivery_success_rate", sentToday + failedToday == 0 ? 1.0 : ((double) sentToday / (double) (sentToday + failedToday)),
+                "telemedicine_join_success_rate", telemedicineMetrics.getOrDefault("join_success_rate", 0D)
+        );
+        Map<String, Object> operations = new LinkedHashMap<>();
+        operations.put("active_threads", activeThreads);
+        operations.put("messages_sent_today", sentToday);
+        operations.put("delivery_failures_today", failedToday);
+        operations.put("trend_window", "24h");
+        operations.put("telemedicine", telemedicineMetrics);
+        Map<String, Object> clinical = Map.of(
+                "open_clinical_pages", openPages,
+                "escalation_candidates", failedToday
+        );
+        Map<String, Object> communications = new LinkedHashMap<>();
+        communications.put("active_announcements", activeAnnouncements);
+        communications.put("sent_today", sentToday);
+        communications.put("failed_today", failedToday);
+        communications.put("delta_pct", 0.0);
+        communications.put("telemedicine_metrics", telemedicineMetrics);
+        Map<String, Object> governance = new LinkedHashMap<>();
+        governance.put("source_health", sourceHealth);
+        governance.put("partial_data", partialData);
+        governance.put("sample_size", Map.of(
+                "campaigns", 100,
+                "support_tickets", 100,
+                "notifications", 200
+        ));
+        governance.put("telemedicine_operational_console", telemedicineWorkflowHistoryStore.operationalSnapshot(telemedicineMetrics));
+        governance.put("last_refreshed_at", OffsetDateTime.now().toString());
+        RoleDashboardDto dashboard = new RoleDashboardDto(executive, operations, clinical, communications, governance);
+        Metrics.timer("impilo.communication.dashboard.latency").record(System.nanoTime() - startedNs, TimeUnit.NANOSECONDS);
+        return ResponseEntity.ok(ApiResponseFactory.ok(dashboard, requestId, correlationId));
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> health(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        Map<String, String> checks = new LinkedHashMap<>();
+        try {
+            notificationClient.unreadCount();
+            checks.put("notifications_unread", "UP");
+        } catch (Exception e) {
+            checks.put("notifications_unread", "DOWN");
+        }
+        try {
+            channelsClient.listSessions();
+            checks.put("channels_sessions", "UP");
+        } catch (Exception e) {
+            checks.put("channels_sessions", "DOWN");
+        }
+        boolean healthy = checks.values().stream().allMatch("UP"::equals);
+        return ResponseEntity.ok(ApiResponseFactory.ok(
+                Map.of("healthy", healthy, "checks", checks, "checked_at", OffsetDateTime.now().toString()),
+                requestId,
+                correlationId
+        ));
+    }
+
+    @GetMapping("/telemedicine/operations")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> telemedicineOperationalConsole(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        Map<String, Object> metrics = telemedicineCommsMetricsStore.snapshot();
+        Map<String, Object> operations = new LinkedHashMap<>();
+        operations.put("metrics", metrics);
+        operations.put("console", telemedicineWorkflowHistoryStore.operationalSnapshot(metrics));
+        operations.put("last_refreshed_at", OffsetDateTime.now().toString());
+        return ResponseEntity.ok(ApiResponseFactory.ok(operations, requestId, correlationId));
+    }
+
+    @GetMapping("/telemedicine/workflow-history")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> telemedicineWorkflowHistory(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "session_id", required = false) String sessionId,
+            @RequestParam(name = "event_type", required = false) String eventType,
+            @RequestParam(name = "action", required = false) String action,
+            @RequestParam(name = "from", required = false) String from,
+            @RequestParam(name = "to", required = false) String to,
+            @RequestParam(name = "limit", defaultValue = "100") int limit) {
+        OffsetDateTime fromTs = parseDate(from);
+        OffsetDateTime toTs = parseDate(to);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("items", telemedicineWorkflowHistoryStore.history(sessionId, limit, eventType, action, fromTs, toTs));
+        data.put("session_id", sessionId);
+        data.put("event_type", eventType);
+        data.put("action", action);
+        data.put("from", fromTs == null ? null : fromTs.toString());
+        data.put("to", toTs == null ? null : toTs.toString());
+        data.put("limit", Math.max(1, Math.min(limit, 500)));
+        return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
+    }
+
+    @PostMapping("/telemedicine/workflow-history/retention")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> updateTelemedicineWorkflowRetention(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Integer maxHistory = asPositiveInteger(body == null ? null : body.get("max_history"));
+        Integer retentionHours = asPositiveInteger(body == null ? null : body.get("retention_hours"));
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("retention", telemedicineWorkflowHistoryStore.updateRetention(maxHistory, retentionHours));
+        data.put("updated_at", OffsetDateTime.now().toString());
+        return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
+    }
+
+    @PostMapping("/telemedicine/workflow-history/prune")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> pruneTelemedicineWorkflowHistory(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        int removed = telemedicineWorkflowHistoryStore.pruneExpired();
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("removed", removed);
+        data.put("retention", telemedicineWorkflowHistoryStore.retentionConfig());
+        data.put("pruned_at", OffsetDateTime.now().toString());
+        return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
+    }
+
+    @GetMapping("/telemedicine/workflow-history/export")
+    public ResponseEntity<ApiEnvelope<Map<String, Object>>> exportTelemedicineWorkflowHistory(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "session_id", required = false) String sessionId,
+            @RequestParam(name = "event_type", required = false) String eventType,
+            @RequestParam(name = "action", required = false) String action,
+            @RequestParam(name = "from", required = false) String from,
+            @RequestParam(name = "to", required = false) String to,
+            @RequestParam(name = "limit", defaultValue = "500") int limit) {
+        OffsetDateTime fromTs = parseDate(from);
+        OffsetDateTime toTs = parseDate(to);
+        List<Map<String, Object>> items = telemedicineWorkflowHistoryStore.history(
+                sessionId,
+                limit,
+                eventType,
+                action,
+                fromTs,
+                toTs
+        );
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("items", items);
+        data.put("count", items.size());
+        data.put("exported_at", OffsetDateTime.now().toString());
+        data.put("format", "application/json");
+        return ResponseEntity.ok(ApiResponseFactory.ok(data, requestId, correlationId));
     }
 
     // ── Announcements ───────────────────────────────────────────────
 
     @GetMapping("/announcements")
     public ResponseEntity<Map<String, Object>> listAnnouncements(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size) {
         try {
-            JsonNode result = communityClient.listUnits();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of()));
+            JsonNode result = campaignsClient.listCampaigns(page, size);
+            List<Map<String, Object>> items = new ArrayList<>();
+            for (JsonNode campaign : asItemsArray(result)) {
+                if (category == null || category.isBlank()
+                        || campaign.path("campaignType").asText("").toLowerCase(Locale.ROOT).contains(category.toLowerCase(Locale.ROOT))) {
+                    items.add(toAnnouncement(campaign));
+                }
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", items,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Announcements list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @GetMapping("/announcements/{id}")
     public ResponseEntity<Map<String, Object>> getAnnouncement(
             @PathVariable UUID id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode result = communityClient.getUnit(id.toString());
-            if (result == null) return ResponseEntity.notFound().build();
-            return ResponseEntity.ok(Map.of("data", result));
+            JsonNode result = campaignsClient.getCampaign(id.getMostSignificantBits() & Long.MAX_VALUE);
+            if (result == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", Map.of("code", "ANNOUNCEMENT_NOT_FOUND", "message", "Announcement not found"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", toAnnouncement(result),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Announcement fetch unavailable: {}", e.getMessage());
-            return ResponseEntity.notFound().build();
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @PostMapping("/announcements")
     public ResponseEntity<Map<String, Object>> createAnnouncement(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        body.put("tenantId", tenantId);
         try {
-            JsonNode result = communityClient.createUnit(body);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result != null ? result : Map.of()));
+            Map<String, Object> create = new LinkedHashMap<>();
+            create.put("name", body.getOrDefault("title", "Communication announcement"));
+            create.put("description", body.getOrDefault("body", body.getOrDefault("description", "")));
+            create.put("campaignType", body.getOrDefault("category", "ANNOUNCEMENT"));
+            create.put("targetGroup", "{\"audience\":\"all\"}");
+            create.put("messageTemplate", body.getOrDefault("body", body.getOrDefault("messageTemplate", "")));
+            create.put("channel", body.getOrDefault("channel", "IN_APP"));
+            JsonNode result = campaignsClient.createCampaign(create);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", result != null ? toAnnouncement(result) : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Announcement creation failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
-                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @PostMapping("/announcements/{id}/acknowledge")
     public ResponseEntity<Map<String, Object>> acknowledgeAnnouncement(
             @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
-            communityClient.startVisit(id.toString());
+            return ResponseEntity.ok(Map.of(
+                    "acknowledged", true,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Announcement acknowledge unavailable: {}", e.getMessage());
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of("acknowledged", true));
     }
 
     @DeleteMapping("/announcements/{id}")
     public ResponseEntity<Map<String, Object>> archiveAnnouncement(
             @PathVariable UUID id,
-            @RequestHeader("X-Tenant-ID") String tenantId) {
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            communityClient.completeVisit(id.toString(), Map.of("status", "ARCHIVED"));
+            campaignsClient.closeCampaign(id.getMostSignificantBits() & Long.MAX_VALUE);
+            return ResponseEntity.ok(Map.of(
+                    "archived", true,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Announcement archive unavailable: {}", e.getMessage());
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of("archived", true));
     }
 
     // ── Clinical Pages ──────────────────────────────────────────────
 
     @GetMapping("/pages")
     public ResponseEntity<Map<String, Object>> listPages(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false) String recipientId) {
         try {
-            JsonNode result = communityClient.listVisits(recipientId);
-            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of()));
+            JsonNode result = supportClient.listTickets("OPEN", null, "CLINICAL_PAGE", recipientId, 0, 100);
+            List<Map<String, Object>> pages = new ArrayList<>();
+            for (JsonNode item : asItemsArray(result)) {
+                pages.add(toClinicalPage(item));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", pages,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Pages list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @PostMapping("/pages")
     public ResponseEntity<Map<String, Object>> sendPage(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        body.put("tenantId", tenantId);
         try {
-            JsonNode result = communityClient.createVisit(body);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result != null ? result : Map.of()));
+            Map<String, Object> create = new LinkedHashMap<>();
+            create.put("title", "Clinical page: " + body.getOrDefault("recipientName", body.getOrDefault("recipientId", "unknown")));
+            create.put("description", body.getOrDefault("message", ""));
+            create.put("reporterRef", body.getOrDefault("senderId", "system"));
+            create.put("category", "CLINICAL_PAGE");
+            create.put("priority", body.getOrDefault("urgency", "NORMAL"));
+            create.put("facilityRef", body.getOrDefault("facilityId", null));
+            JsonNode result = supportClient.createTicket(create);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", result != null ? toClinicalPage(result) : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Page send failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
-                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @PostMapping("/pages/{id}/read")
-    public ResponseEntity<Map<String, Object>> markPageRead(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, Object>> markPageRead(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            communityClient.startVisit(id.toString());
+            supportClient.updateTicket(id, Map.of("status", "IN_PROGRESS"));
+            return ResponseEntity.ok(Map.of(
+                    "status", "READ",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Page mark-read unavailable: {}", e.getMessage());
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of("status", "READ"));
     }
 
     @PostMapping("/pages/{id}/respond")
-    public ResponseEntity<Map<String, Object>> respondToPage(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, Object>> respondToPage(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            communityClient.completeVisit(id.toString(), Map.of("status", "RESPONDED"));
+            supportClient.updateTicket(id, Map.of("status", "RESOLVED", "resolution", "Responded by clinician"));
+            return ResponseEntity.ok(Map.of(
+                    "status", "RESPONDED",
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Page respond unavailable: {}", e.getMessage());
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
-        return ResponseEntity.ok(Map.of("status", "RESPONDED"));
     }
 
     // ── Clinical Messages ───────────────────────────────────────────
 
     @GetMapping("/messages/channels")
     public ResponseEntity<Map<String, Object>> listChannels(
-            @RequestHeader("X-Tenant-ID") String tenantId) {
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode result = communityClient.listUnits();
-            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of()));
+            JsonNode result = channelsClient.listSessions();
+            List<Map<String, Object>> channels = new ArrayList<>();
+            for (JsonNode item : asItemsArray(result)) {
+                channels.add(toChannel(item));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", channels,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Message channels list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @GetMapping("/messages/channels/{channelId}/messages")
     public ResponseEntity<Map<String, Object>> listMessages(
             @PathVariable UUID channelId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
-            JsonNode result = communityClient.listAssignments(channelId.toString());
-            return ResponseEntity.ok(Map.of("data", result != null ? result : List.of()));
+            JsonNode result = channelsClient.listMessagesForSession(channelId);
+            List<Map<String, Object>> messages = new ArrayList<>();
+            for (JsonNode item : asItemsArray(result)) {
+                messages.add(toMessage(item));
+            }
+            return ResponseEntity.ok(Map.of(
+                    "data", messages,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.warn("Messages list unavailable: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("data", List.of()));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
     @PostMapping("/messages")
     public ResponseEntity<Map<String, Object>> sendMessage(
-            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
-        body.put("tenantId", tenantId);
         try {
-            JsonNode result = communityClient.createAssignment(body);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", result != null ? result : Map.of()));
+            Map<String, Object> request = new LinkedHashMap<>();
+            request.put("sessionId", body.get("channelId"));
+            request.put("contentType", "text/plain");
+            request.put("payloadJson", body.getOrDefault("content", ""));
+            JsonNode result = channelsClient.sendOutboundMessage(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", result != null ? toMessage(result) : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Message send failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
-                    "error", Map.of("code", "SERVICE_UNAVAILABLE", "message", "Community service is unavailable")));
+            return upstreamFailure("COMMUNICATION_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Communication upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private Iterable<JsonNode> asItemsArray(JsonNode root) {
+        if (root == null || root.isNull()) {
+            return List.of();
+        }
+        if (root.isArray()) {
+            return root;
+        }
+        if (root.has("items") && root.get("items").isArray()) {
+            return root.get("items");
+        }
+        if (root.has("content") && root.get("content").isArray()) {
+            return root.get("content");
+        }
+        return List.of(root);
+    }
+
+    private Map<String, Object> toAnnouncement(JsonNode campaign) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", text(campaign, "id"));
+        out.put("title", text(campaign, "name"));
+        out.put("body", text(campaign, "description", "messageTemplate"));
+        out.put("category", text(campaign, "campaignType"));
+        out.put("status", text(campaign, "status"));
+        out.put("published_at", text(campaign, "createdAt"));
+        return out;
+    }
+
+    private Map<String, Object> toClinicalPage(JsonNode ticket) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", text(ticket, "ticketId", "id"));
+        out.put("sender_id", text(ticket, "reporterRef"));
+        out.put("sender_name", text(ticket, "reporterRef"));
+        out.put("recipient_id", text(ticket, "assigneeRef"));
+        out.put("recipient_name", text(ticket, "assigneeRef"));
+        out.put("urgency", toLower(text(ticket, "priority"), "normal"));
+        out.put("message", text(ticket, "description"));
+        out.put("callback_number", null);
+        out.put("status", toPageStatus(text(ticket, "status")));
+        out.put("sent_at", text(ticket, "createdAt"));
+        out.put("read_at", text(ticket, "updatedAt"));
+        out.put("responded_at", text(ticket, "resolvedAt"));
+        return out;
+    }
+
+    private Map<String, Object> toChannel(JsonNode session) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", text(session, "id"));
+        out.put("name", text(session, "subjectRef"));
+        out.put("channel_type", text(session, "channelType"));
+        out.put("participants", text(session, "subjectRef", "agentId"));
+        out.put("last_message_at", text(session, "lastActivity"));
+        out.put("created_at", text(session, "startedAt"));
+        Map<String, Object> telemedicineLinks = buildTelemedicineLinkage(session);
+        if (!telemedicineLinks.isEmpty()) {
+            out.put("telemedicine_links", telemedicineLinks);
+        }
+        return out;
+    }
+
+    private Map<String, Object> toMessage(JsonNode message) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("id", text(message, "id"));
+        out.put("channel_id", text(message, "sessionId"));
+        String direction = text(message, "direction");
+        out.put("sender_id", "INBOUND".equalsIgnoreCase(direction) ? "external" : "current-user");
+        out.put("sender_name", "INBOUND".equalsIgnoreCase(direction) ? "External sender" : "You");
+        out.put("content", text(message, "payloadJson", "content", "deliveryStatus"));
+        out.put("message_type", text(message, "contentType", "messageType"));
+        out.put("is_read", true);
+        out.put("created_at", text(message, "createdAt"));
+        Map<String, Object> telemedicineLinks = buildTelemedicineLinkage(message);
+        if (!telemedicineLinks.isEmpty()) {
+            out.put("telemedicine_links", telemedicineLinks);
+        }
+        return out;
+    }
+
+    private Map<String, Object> buildTelemedicineLinkage(JsonNode node) {
+        Map<String, Object> links = new LinkedHashMap<>();
+        putIfPresent(links, "client", text(node, "patientCpid", "patientId", "patient_id"));
+        putIfPresent(links, "provider", text(node, "providerId", "provider_id", "agentId"));
+        putIfPresent(links, "facility", text(node, "facilityId", "facility_id"));
+        putIfPresent(links, "session", text(node, "sessionId", "session_id", "id"));
+        putIfPresent(links, "appointment", text(node, "appointmentId", "appointment_id"));
+        putIfPresent(links, "referral", text(node, "referralId", "referral_id"));
+        putIfPresent(links, "prescription", text(node, "prescriptionId", "prescription_id"));
+        putIfPresent(links, "lab_request", text(node, "labRequestId", "lab_request_id"));
+        putIfPresent(links, "payment_or_claim", text(node, "paymentId", "claimId", "billingId"));
+        putIfPresent(links, "helpdesk_ticket", text(node, "ticketId", "supportTicketId"));
+        putIfPresent(links, "followup_task", text(node, "taskId", "followupTaskId"));
+        return links;
+    }
+
+    private void putIfPresent(Map<String, Object> target, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            target.put(key, value);
+        }
+    }
+
+    private String toLower(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value.toLowerCase(Locale.ROOT);
+    }
+
+    private String toPageStatus(String supportStatus) {
+        if (supportStatus == null || supportStatus.isBlank()) {
+            return "SENT";
+        }
+        return switch (supportStatus.toUpperCase(Locale.ROOT)) {
+            case "IN_PROGRESS" -> "READ";
+            case "RESOLVED", "CLOSED" -> "RESPONDED";
+            default -> "SENT";
+        };
+    }
+
+    private String text(JsonNode node, String... fields) {
+        for (String field : fields) {
+            if (node.has(field) && !node.get(field).isNull()) {
+                String value = node.get(field).asText();
+                if (value != null && !value.isBlank()) {
+                    return value;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isToday(String isoDateTime) {
+        if (isoDateTime == null || isoDateTime.isBlank()) {
+            return false;
+        }
+        try {
+            return OffsetDateTime.parse(isoDateTime).toLocalDate().isEqual(LocalDate.now());
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private boolean isInCooldown(String source) {
+        OffsetDateTime until = SOURCE_COOLDOWN_UNTIL.get(source);
+        return until != null && until.isAfter(OffsetDateTime.now());
+    }
+
+    private void markFailure(String source) {
+        SOURCE_COOLDOWN_UNTIL.put(source, OffsetDateTime.now().plusSeconds(SOURCE_COOLDOWN_SECONDS));
+    }
+
+    private void clearCooldown(String source) {
+        SOURCE_COOLDOWN_UNTIL.remove(source);
+    }
+
+    private Integer asPositiveInteger(Object value) {
+        if (value == null) return null;
+        try {
+            int parsed = Integer.parseInt(String.valueOf(value));
+            return parsed > 0 ? parsed : null;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private OffsetDateTime parseDate(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        try {
+            return OffsetDateTime.parse(raw);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }

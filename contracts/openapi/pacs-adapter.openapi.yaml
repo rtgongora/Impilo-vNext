@@ -84,6 +84,11 @@ paths:
       tags: [ImagingStudy]
       summary: List imaging studies
       parameters:
+        - name: patientCpid
+          in: query
+          required: false
+          schema:
+            type: string
         - $ref: "#/components/parameters/TenantId"
         - $ref: "#/components/parameters/PodId"
         - $ref: "#/components/parameters/RequestId"
@@ -119,6 +124,32 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImagingStudy"
+
+  /internal/v1/imaging-studies/search:
+    post:
+      operationId: searchImagingStudies
+      tags: [ImagingStudy]
+      summary: Search imaging studies by patient/study/order metadata filters
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImagingSearchRequest"
+      responses:
+        "200":
+          description: Filtered studies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImagingStudy"
 
   /internal/v1/imaging-studies/{id}:
     get:
@@ -203,6 +234,413 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImagingStudy"
+
+  /internal/v1/imaging-studies/{id}/series:
+    get:
+      operationId: listImagingSeries
+      tags: [ImagingStudy]
+      summary: List DICOM series metadata for a study
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Study series rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /internal/v1/imaging-studies/{studyId}/series/{seriesId}/instances:
+    get:
+      operationId: listImagingInstances
+      tags: [ImagingStudy]
+      summary: List DICOM instance metadata for a series
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: studyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: seriesId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Series instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /internal/v1/imaging-studies/{id}/sync-hierarchy:
+    post:
+      operationId: syncImagingHierarchy
+      tags: [ImagingStudy]
+      summary: Pull Orthanc hierarchy metadata into PACS adapter tables
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Updated study
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImagingStudy"
+
+  /internal/v1/imaging-studies/{id}/viewer-sessions:
+    post:
+      operationId: launchImagingViewerSession
+      tags: [ImagingStudy]
+      summary: Persist viewer launch context and emit imaging.viewer.launched event
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Viewer session created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging-studies/{id}/viewer-launch-context:
+    get:
+      operationId: getImagingViewerLaunchContext
+      tags: [ImagingStudy]
+      summary: Resolve governed viewer launch context with backend and viewer-engine metadata
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: viewerType
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Viewer launch context
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging-studies/{id}/report-links:
+    post:
+      operationId: linkImagingReport
+      tags: [ImagingStudy]
+      summary: Link a report reference to the study
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Report link created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: listImagingReportLinks
+      tags: [ImagingStudy]
+      summary: List report links for a study
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Report links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /internal/v1/imaging-studies/{id}/order-links:
+    post:
+      operationId: linkImagingOrder
+      tags: [ImagingStudy]
+      summary: Link an OROS order reference to the study
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Order link created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+    get:
+      operationId: listImagingOrderLinks
+      tags: [ImagingStudy]
+      summary: List order links for a study
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Order links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /internal/v1/imaging-studies/ops/status:
+    get:
+      operationId: getPacsOpsStatus
+      tags: [ImagingStudy]
+      summary: Active PACS backend connectivity and capabilities probe
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: PACS adapter to Orthanc connectivity status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              examples:
+                embeddedOrthanc:
+                  summary: Embedded mode with default Orthanc provider
+                  value:
+                    reachable: true
+                    provider: ORTHANC
+                    mode: EMBEDDED
+                    baseUrl: http://orthanc:8042
+                externalPacs:
+                  summary: External PACS mode
+                  value:
+                    reachable: false
+                    provider: EXTERNAL
+                    mode: EXTERNAL
+                    baseUrl: https://pacs.example.org
+                    status: CONFIGURED_EXTERNAL_PROVIDER
+                hybridPolicy:
+                  summary: Hybrid mode policy surface (provider may vary by facility)
+                  value:
+                    reachable: true
+                    provider: ORTHANC
+                    mode: HYBRID
+                    baseUrl: http://orthanc:8042
+
+  /internal/v1/imaging-studies/ops/unmatched-studies:
+    get:
+      operationId: listPacsUnmatchedStudies
+      tags: [ImagingStudy]
+      summary: List studies awaiting correlation to OROS order context
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Unmatched studies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImagingStudy"
+
+  /internal/v1/imaging-studies/ops/failed-correlations:
+    get:
+      operationId: listPacsFailedCorrelations
+      tags: [ImagingStudy]
+      summary: List studies currently in FAILED state
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Failed studies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImagingStudy"
+
+  /internal/v1/imaging-studies/ops/failed-writebacks:
+    get:
+      operationId: listPacsFailedWritebacks
+      tags: [ImagingStudy]
+      summary: List outbox publication failures for imaging events
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Failed writeback / outbox rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+
+  /internal/v1/imaging-studies/ops/failed-writebacks/{outboxId}/retry:
+    post:
+      operationId: retryPacsFailedWriteback
+      tags: [ImagingStudy]
+      summary: Request immediate retry of a failed writeback row (idempotent)
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+        - name: outboxId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Retry status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /internal/v1/imaging-studies/ops/failed-writebacks/retry-all:
+    post:
+      operationId: retryAllPacsFailedWritebacks
+      tags: [ImagingStudy]
+      summary: Requeue and retry all currently failed writeback rows
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/PodId"
+        - $ref: "#/components/parameters/RequestId"
+        - $ref: "#/components/parameters/CorrelationId"
+      responses:
+        "200":
+          description: Batch retry summary
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
 
 components:
   securitySchemes:
@@ -303,12 +741,33 @@ components:
 
     ForwardStudyRequest:
       type: object
-      required: [orthancUrl]
       properties:
         orthancUrl:
           type: string
         priority:
           type: string
+
+    ImagingSearchRequest:
+      type: object
+      properties:
+        patientCpid:
+          type: string
+        studyUid:
+          type: string
+        accessionNumber:
+          type: string
+        modality:
+          type: string
+        facilityId:
+          type: string
+        reportStatus:
+          type: string
+        studyDateFrom:
+          type: string
+          format: date-time
+        studyDateTo:
+          type: string
+          format: date-time
 
     CorrelateStudyRequest:
       type: object

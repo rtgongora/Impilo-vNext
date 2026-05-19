@@ -1,14 +1,6 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { Providers } from "@/providers/Providers";
 import "@/styles/globals.css";
-
-const inter = localFont({
-  src: "../fonts/InterVariable.woff2",
-  variable: "--font-inter",
-  display: "swap",
-  weight: "100 900",
-});
 
 export const metadata: Metadata = {
   title: "Impilo — Health Operating System",
@@ -22,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className={inter.className}>
+    <html lang="en">
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

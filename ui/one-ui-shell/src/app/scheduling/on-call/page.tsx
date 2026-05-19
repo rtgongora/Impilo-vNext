@@ -93,8 +93,8 @@ export default function OnCallPage() {
   const patchSwap = usePatchOnCallSwap();
   const createSwap = useCreateOnCallSwap();
 
-  const schedule: OnCallAssignmentResource[] = weekRes?.data ?? [];
-  const swaps = swapsRes?.data ?? [];
+  const schedule: OnCallAssignmentResource[] = useMemo(() => weekRes?.data ?? [], [weekRes?.data]);
+  const swaps = useMemo(() => swapsRes?.data ?? [], [swapsRes?.data]);
 
   const dates = useMemo(() => {
     const set = new Set(schedule.map((s) => s.attributes.assignment_date));

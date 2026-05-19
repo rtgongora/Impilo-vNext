@@ -17,6 +17,35 @@ servers:
 
 paths:
   /mushex/v1/payment-intents:
+    get:
+      tags: [Payments]
+      summary: List payment intents by source (Phase 5 follow-on)
+      operationId: listPaymentIntentsBySource
+      parameters:
+        - name: source_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: source_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: source_ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: Intents returned (possibly empty).
+        '400':
+          description: '`VALIDATION_ERROR` — missing or invalid source filters.'
     post:
       tags: [Payments]
       summary: Create a payment intent
@@ -68,6 +97,97 @@ paths:
       responses:
         '200':
           description: Intent cancelled
+
+  /mushex/v1/payment-intents/{id}/attempts:
+    get:
+      tags: [Payments]
+      summary: List payment attempts persisted against an intent (Phase 3 follow-on)
+      description: >
+        Chronological (ascending by `requestedAt`) read endpoint. Returns the empty list
+        if the intent exists but has no attempts; returns `404 INTENT_NOT_FOUND` if the
+        intent does not exist.
+      operationId: listPaymentAttempts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attempts returned (possibly empty).
+        '404':
+          description: '`INTENT_NOT_FOUND` — no intent for the given id.'
+    post:
+      tags: [Payments]
+      summary: Initiate a payment attempt against an existing intent (Phase 3 — attempt-time rail enforcement)
+      description: >
+        Creates a payment attempt for the named intent and applies the rail-enforcement
+        contract documented in
+        `docs/design/phase-3-attempt-time-rail-enforcement-implementation.md`.
+        The effective rail is read from the intent's persisted
+        `metadata.rail_selection.effective_rail`. A three-leg safety gate
+        (`mushex.adapters.<rail>.{enabled,credentials-configured}` *and*
+        `PaymentRailAdapter.liveCapable()`) prevents real-money adapters from being
+        called unless an operator has explicitly opted in *and* a real provider client
+        is wired in. Blocked attempts are still persisted with
+        `enforcement_metadata.safety_gate` set to either `BLOCKED_PRE_LIVE` (config
+        flags off) or `BLOCKED_NOT_LIVE_CAPABLE` (adapter is a stub).
+      operationId: initiatePaymentAttempt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Idempotency-Key
+          in: header
+          required: false
+          description: Optional caller-supplied idempotency key. Body field `idempotencyKey` (when non-blank) takes precedence over this header.
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAttemptRequest'
+      responses:
+        '201':
+          description: Attempt created (or replayed when idempotent).
+        '404':
+          description: '`INTENT_NOT_FOUND` — no intent for the given id.'
+        '422':
+          description: '`INTENT_NOT_PAYABLE` or `RAIL_ADAPTER_UNAVAILABLE_AT_ATTEMPT`.'
+
+  /mushex/v1/payment-intents/{id}/attempts/reselect:
+    post:
+      tags: [Payments]
+      summary: Re-run rail selection for an existing intent (Phase 3 follow-on)
+      description: >
+        Re-runs `RailSelectionPolicy` against the persisted intent and writes the new
+        decision to `metadata.rail_selection`. The previous decision is preserved on
+        `metadata.rail_selection.history[]` (an array of snapshots). No adapter is
+        called and no money moves. Emits an `ATTEMPT_RESELECTED` outbox event on
+        `mushex.payment.attempt.reselected`.
+      operationId: reselectRail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReselectRequest'
+      responses:
+        '200':
+          description: Intent updated with new rail-selection decision; previous decision preserved on history[].
+        '404':
+          description: '`INTENT_NOT_FOUND` — no intent for the given id.'
 
   /mushex/v1/payment-intents/{id}/issue-remittance-slip:
     post:
@@ -134,6 +254,74 @@ paths:
       responses:
         '200':
           description: Remittance claimed
+
+  /mushex/v1/remittance-transfers/{transferId}:
+    get:
+      tags: [Remittance]
+      summary: Fetch a remittance transfer by id (Phase 4 follow-on)
+      operationId: getRemittanceTransferById
+      parameters:
+        - name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Remittance transfer found.
+        '404':
+          description: '`PLATFORM_RECORD_NOT_FOUND` — transfer id is unknown for this tenant.'
+
+  /mushex/v1/platform/wallets/{walletId}:
+    get:
+      tags: [Platform]
+      summary: Fetch a custodial wallet by id (Phase 4 follow-on)
+      operationId: getPlatformWalletById
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Wallet found.
+        '404':
+          description: '`PLATFORM_RECORD_NOT_FOUND` — wallet id is unknown for this tenant.'
+
+  /mushex/v1/platform/card-profiles/{cardProfileId}:
+    get:
+      tags: [Platform]
+      summary: Fetch a card profile by id (Phase 4 follow-on)
+      operationId: getCardProfileById
+      parameters:
+        - name: cardProfileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Card profile found.
+        '404':
+          description: '`PLATFORM_RECORD_NOT_FOUND` — card profile id is unknown for this tenant.'
+
+  /mushex/v1/platform/reversals/{reversalId}:
+    get:
+      tags: [Platform]
+      summary: Fetch a reversal record by id (Phase 4 follow-on)
+      operationId: getReversalById
+      parameters:
+        - name: reversalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reversal found.
+        '404':
+          description: '`PLATFORM_RECORD_NOT_FOUND` — reversal id is unknown for this tenant.'
 
   /mushex/v1/adapters/{adapterType}/webhook:
     post:
@@ -247,6 +435,30 @@ paths:
       responses:
         '200':
           description: Dispute filed
+
+  /mushex/v1/settlements:
+    get:
+      tags: [Settlements]
+      summary: List settlements, optionally filtered by intent linkage (Phase 5 follow-on)
+      operationId: listSettlements
+      parameters:
+        - name: intent_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: intent_ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: Settlements returned (possibly empty).
 
   /mushex/v1/settlements/run:
     post:
@@ -428,6 +640,35 @@ paths:
 
 components:
   schemas:
+    CreateAttemptRequest:
+      type: object
+      description: |
+        Phase 3 attempt-creation request. All fields are optional. When `idempotencyKey`
+        is supplied the attempt is idempotent against `(intentId, idempotencyKey)`;
+        replays return the existing attempt without re-invoking the rail adapter.
+        See `docs/design/phase-3-attempt-time-rail-enforcement-implementation.md`.
+      properties:
+        idempotencyKey:
+          type: string
+          description: |
+            Optional. Caller-supplied idempotency key for the attempt. Takes precedence
+            over the `X-Idempotency-Key` header when both are present and non-blank.
+          maxLength: 120
+        reason:
+          type: string
+          description: |
+            Optional human-readable reason for the attempt — informational only; not
+            persisted as a column (logged with the attempt).
+    ReselectRequest:
+      type: object
+      description: |
+        Phase 3 follow-on reselect request. All fields are optional. The operator-supplied
+        `reason` is recorded under `metadata.rail_selection.reason_detail` and emitted on
+        the `ATTEMPT_RESELECTED` outbox event payload.
+      properties:
+        reason:
+          type: string
+          description: Why the operator is reselecting (e.g. "provider-outage").
     CreateIntentRequest:
       type: object
       required: [sourceType, sourceId, amount, idempotencyKey]
@@ -450,6 +691,62 @@ components:
         idempotencyKey:
           type: string
         metadata:
+          type: string
+        # ----- G-4 rail-selection (additive, optional). See docs/design/g4-rail-selection-policy.md -----
+        preferredRailAdapter:
+          type: string
+          description: |
+            Optional. Caller's preferred payment rail. Must match a registered AdapterType
+            (MOBILE_MONEY, BANK_TRANSFER, CARD_GATEWAY, SANDBOX). When omitted, MusheX uses
+            its configured default rail.
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CARD_GATEWAY, SANDBOX]
+        allowFallback:
+          type: boolean
+          description: |
+            Optional. When the preferredRailAdapter is unavailable, allow MusheX to fall
+            back to the SANDBOX rail (when permitted by deployment config). Defaults to true
+            on the server side when omitted.
+        directGatewayAllowed:
+          type: boolean
+          description: |
+            Optional. Request that MusheX route directly to an external gateway adapter
+            (Mode A per the dual-mode doctrine), rather than the default orchestration/SANDBOX
+            path. Deployment configuration may override this to false in production.
+            Defaults to false on the server side when omitted.
+
+    RailSelection:
+      type: object
+      description: |
+        Server-recorded outcome of the G-4 rail-selection policy. Surfaced on each
+        payment-intent's metadata under the reserved `rail_selection` key, and as
+        `effectiveRail` / `preferredRail` / `railSelectionReason` fields on the
+        `INTENT_CREATED` outbox event. See docs/design/g4-rail-selection-policy.md.
+      properties:
+        effective_rail:
+          type: string
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CARD_GATEWAY, SANDBOX]
+        preferred_rail:
+          type: string
+          enum: [MOBILE_MONEY, BANK_TRANSFER, CARD_GATEWAY, SANDBOX]
+          nullable: true
+        fallback_applied:
+          type: boolean
+        direct_gateway_requested:
+          type: boolean
+        reason:
+          type: string
+          enum:
+            - EXPLICIT_PREFERRED
+            - DEFAULT_NO_PREFERENCE
+            - DIRECT_GATEWAY_REQUESTED
+            - PREFERRED_UNAVAILABLE_FALLBACK
+            - SAFETY_SWITCH_FORCED_SANDBOX
+        reason_detail:
+          type: string
+        selected_at:
+          type: string
+          format: date-time
+        selection_version:
           type: string
 
     RefundRequest:

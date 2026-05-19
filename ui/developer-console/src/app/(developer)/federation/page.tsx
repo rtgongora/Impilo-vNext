@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { listClients, getFederationReadiness } from "@/lib/developerApi";
 import type { DeveloperClient, FederationReadiness } from "@/types/developer";
 import { ReadinessBadge } from "@/components/StatusBadge";
 
-export default function FederationPage() {
+function FederationPageContent() {
   const searchParams = useSearchParams();
   const preselectedClientId = searchParams.get("clientId");
 
@@ -203,5 +203,13 @@ export default function FederationPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function FederationPage() {
+  return (
+    <Suspense fallback={<div className="text-sm text-neutral-500 py-20 text-center">Loading federation readiness...</div>}>
+      <FederationPageContent />
+    </Suspense>
   );
 }

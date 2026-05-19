@@ -29,3 +29,22 @@ vi.mock("react-native", async () => {
   };
 });
 
+// Expo icon package pulls runtime-specific internals in Node test environments.
+// Provide a stable test double so navigation/screen tests can render icon usages.
+vi.mock("@expo/vector-icons", async () => {
+  const React = await import("react");
+
+  const Icon = ({
+    testID,
+    name,
+  }: {
+    testID?: string;
+    name?: string;
+  }) => React.createElement("span", { "data-testid": testID ?? "mock-icon", "data-icon-name": name ?? "" });
+
+  return {
+    Ionicons: Icon,
+    AntDesign: Icon,
+  };
+});
+

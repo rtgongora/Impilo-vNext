@@ -5,8 +5,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Facility list/detail integration for {@code /internal/v1/facilities}.
  *
- * <p>{@code live} — try TUSO first, then seeded facilities (existing behaviour).<br>
- * {@code stub} — skip TUSO entirely; use seeded facilities only (deterministic CI / Maestro).</p>
+ * <p>{@code live} — use TUSO only and fail closed when unavailable.<br>
+ * {@code stub} — skip TUSO entirely; use seeded facilities only (deterministic test harness / Maestro).</p>
  *
  * <p>Environment: {@code IMPILO_BFF_FACILITIES_MODE}</p>
  */
@@ -24,7 +24,7 @@ public class BffFacilitiesProperties {
     }
 
     public enum Mode {
-        /** TUSO search/get when reachable, else seed data. */
+        /** TUSO search/get only; no synthetic fallback in production mode. */
         live,
         /** Never call TUSO; always serve seeded registry responses. */
         stub

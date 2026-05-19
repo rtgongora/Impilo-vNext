@@ -149,26 +149,6 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
 
   const activeItems = guidance.filter((g) => !g.dismissed);
 
-  // Load contextual guidance when patient is active
-  useEffect(() => {
-    if (hasActivePatient) {
-      const items = generateContextualGuidance();
-      setGuidance(items);
-      setCurrentIndex(0);
-      fetchAIGuidance();
-    }
-  }, [hasActivePatient]);
-
-  // Auto-rotate through non-dismissed items
-  useEffect(() => {
-    if (!expanded && activeItems.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % activeItems.length);
-      }, 8_000);
-      return () => clearInterval(timer);
-    }
-  }, [expanded, activeItems.length]);
-
   const fetchAIGuidance = useCallback(async () => {
     setIsLoadingAI(true);
     try {
@@ -204,6 +184,26 @@ export function ActiveCDSBanner({ hasActivePatient = true }: ActiveCDSBannerProp
       setIsLoadingAI(false);
     }
   }, []);
+
+  // Load contextual guidance when patient is active
+  useEffect(() => {
+    if (hasActivePatient) {
+      const items = generateContextualGuidance();
+      setGuidance(items);
+      setCurrentIndex(0);
+      fetchAIGuidance();
+    }
+  }, [fetchAIGuidance, hasActivePatient]);
+
+  // Auto-rotate through non-dismissed items
+  useEffect(() => {
+    if (!expanded && activeItems.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % activeItems.length);
+      }, 8_000);
+      return () => clearInterval(timer);
+    }
+  }, [expanded, activeItems.length]);
 
   const dismissItem = (id: string) => {
     setGuidance((prev) =>

@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Analytics Pipeline Service API
+  version: 0.1.0
+  description: Initial API scaffold for analytics pipeline orchestration.
+paths:
+  /internal/v1/health:
+    get:
+      summary: Analytics pipeline service health probe
+      operationId: getAnalyticsPipelineHealth
+      tags: [Health]
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+  /internal/v1/telemedicine/sla:
+    get:
+      summary: Query telemedicine SLA aggregates
+      operationId: getTelemedicineSlaAggregates
+      tags: [Telemedicine]
+      parameters:
+        - name: facility_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Telemedicine SLA aggregate payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /internal/v1/telemedicine/events:
+    post:
+      summary: Ingest telemedicine lifecycle analytics event
+      operationId: ingestTelemedicineLifecycleEvent
+      tags: [Telemedicine]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '202':
+          description: Event accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true

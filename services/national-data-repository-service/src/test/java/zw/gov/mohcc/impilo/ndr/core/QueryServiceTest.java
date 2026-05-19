@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.ndr.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,7 @@ class QueryServiceTest {
 
     @BeforeEach
     void setUp() {
-        queryService = new QueryService(viewRepository);
+        queryService = new QueryService(viewRepository, new ObjectMapper());
     }
 
     @Test
@@ -57,6 +58,22 @@ class QueryServiceTest {
                 Map.of("province", "Harare"));
         assertThat(result).hasSize(1);
         assertThat(result.getFirst()).contains("Harare");
+    }
+
+    @Test
+    @DisplayName("query does not match substring-only values")
+    void queryDoesNotMatchSubstrings() {
+        MaterializedViewEntity v1 = createView("row1",
+                "{\"province\": \"Harare\", \"district\": \"Harare Urban\"}");
+        MaterializedViewEntity v2 = createView("row2",
+                "{\"province\": \"Harare North\", \"district\": \"Mazowe\"}");
+        when(viewRepository.findByTenantIdAndDatasetKey(tenantId, "test_ds"))
+                .thenReturn(List.of(v1, v2));
+
+        List<String> result = queryService.query(tenantId, "test_ds",
+                Map.of("province", "Harare"));
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst()).contains("\"province\": \"Harare\"");
     }
 
     @Test

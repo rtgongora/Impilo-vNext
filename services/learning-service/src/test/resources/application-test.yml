@@ -19,6 +19,11 @@ learning:
   integration:
     varapi-internal-key: test-learning-key
     orchestration-internal-key: test-orch-key
+  outbox:
+    publisher:
+      # Disable scheduled Kafka publisher in tests — no broker available, and unit tests
+      # exercise the publisher directly with mocked KafkaTemplate.
+      enabled: false
 
 impilo:
   security:

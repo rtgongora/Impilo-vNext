@@ -3,9 +3,9 @@
 /**
  * New Teleconsultation — Stages 1-2: Create session + Build referral package.
  *
- * Six-component referral builder:
+ * Seven-stage referral builder:
  * ① Referral Letter   ② Patient Summary   ③ Visit Summary
- * ④ Attachments        ⑤ Routing           ⑥ Consent
+ * ④ Attachments        ⑤ Routing           ⑥ Consultation Mode   ⑦ Consent
  */
 
 import { useState } from "react";
@@ -36,9 +36,19 @@ const SPECIALTIES = [
 const ROUTING_TYPES = [
   { id: "PRACTITIONER", label: "Specific Practitioner", icon: Stethoscope },
   { id: "WORKSPACE", label: "Workspace / Ward", icon: MapPin },
+  { id: "UNIT", label: "Facility Unit", icon: MapPin },
   { id: "ON_CALL", label: "On-Call Team", icon: Users },
   { id: "FACILITY_SERVICE", label: "Facility Clinical Service", icon: ClipboardList },
-  { id: "SPECIALTY_POOL", label: "General / Specialty Pool", icon: Video },
+  { id: "SPECIALTY_POOL", label: "Specialty Pool", icon: Video },
+] as const;
+
+const TELEMEDICINE_MODES = [
+  { id: "async", label: "Asynchronous (store and forward)" },
+  { id: "chat", label: "Chat" },
+  { id: "audio", label: "Audio" },
+  { id: "video", label: "Video" },
+  { id: "scheduled", label: "Scheduled" },
+  { id: "board", label: "Board / MDT review" },
 ] as const;
 
 const CONSENT_TYPES = [
@@ -48,7 +58,7 @@ const CONSENT_TYPES = [
   { id: "EMERGENCY", label: "Emergency (implied consent)" },
 ] as const;
 
-type Step = "letter" | "summary" | "visit" | "attachments" | "routing" | "consent";
+type Step = "letter" | "summary" | "visit" | "attachments" | "routing" | "mode" | "consent";
 
 const STEPS: { id: Step; label: string; num: string; icon: React.ElementType; required?: boolean }[] = [
   { id: "letter", label: "Referral Letter", num: "①", icon: FileText, required: true },
@@ -56,7 +66,8 @@ const STEPS: { id: Step; label: string; num: string; icon: React.ElementType; re
   { id: "visit", label: "Visit Summary", num: "③", icon: Stethoscope },
   { id: "attachments", label: "Attachments", num: "④", icon: Upload },
   { id: "routing", label: "Routing", num: "⑤", icon: MapPin, required: true },
-  { id: "consent", label: "Consent", num: "⑥", icon: Lock, required: true },
+  { id: "mode", label: "Consultation Mode", num: "⑥", icon: Video, required: true },
+  { id: "consent", label: "Consent", num: "⑦", icon: Lock, required: true },
 ];
 
 export default function NewTeleconsultPage() {
@@ -82,19 +93,39 @@ export default function NewTeleconsultPage() {
   const [attachmentRefs, setAttachmentRefs] = useState("");
   const [routingType, setRoutingType] = useState("");
   const [routingTarget, setRoutingTarget] = useState("");
+  const [preferredMode, setPreferredMode] = useState("");
+  const [allowedModes, setAllowedModes] = useState<string[]>([]);
   const [consentType, setConsentType] = useState("");
   const [consentToken, setConsentToken] = useState<string | null>(null);
 
-  const canSubmit = referralLetter.trim() && routingType && consentToken;
+  const canSubmit = referralLetter.trim() && routingType && preferredMode && consentToken;
+
+  function toggleAllowedMode(mode: string) {
+    setAllowedModes((prev) =>
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode],
+    );
+  }
 
   async function handleRecordConsent() {
     if (!consentType) return;
     try {
-      const sid = sessionId || "temp";
+      let sid = sessionId;
+      if (!sid) {
+        const created = await apiClient.post<{ data: { id: string } }>("/internal/v1/teleconsult/sessions", {
+          patientId,
+          encounterId,
+          facilityId: facility?.id,
+          urgency,
+          specialty,
+        });
+        sid = created.data.id;
+        setSessionId(sid);
+      }
       const res = await apiClient.post<{ data: { consentToken: string } }>(`/internal/v1/teleconsult/sessions/${sid}/consent`, { type: consentType });
       setConsentToken(res.data.consentToken);
+      setError(null);
     } catch {
-      setConsentToken("consent-local-" + Date.now());
+      setError("Consent capture backend is unavailable for teleconsult in this environment.");
     }
   }
 
@@ -121,6 +152,8 @@ export default function NewTeleconsultPage() {
         attachments: attachmentRefs.split("\n").filter(Boolean),
         routingType,
         routingTarget,
+        preferredMode,
+        acceptableModes: allowedModes,
         urgency,
         specialty,
       });
@@ -130,8 +163,15 @@ export default function NewTeleconsultPage() {
 
       setSubmitted(true);
       setTimeout(() => router.push(`/telemedicine/session/${sid}`), 2000);
-    } catch (e) {
-      setError("Failed to submit referral. Please try again.");
+    } catch (e: unknown) {
+      const message =
+        typeof e === "object" &&
+        e !== null &&
+        "error" in e &&
+        typeof (e as { error?: { message?: unknown } }).error?.message === "string"
+          ? (e as { error: { message: string } }).error.message
+          : "Teleconsult backend is unavailable. No local fallback was used.";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -246,11 +286,11 @@ export default function NewTeleconsultPage() {
                 <h3 className="text-base font-semibold text-gray-900">② Patient Summary</h3>
                 <p className="text-sm text-gray-500">Auto-generated from the patient record. The consultant will see this.</p>
                 <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-2">
-                  <p><strong>Patient ID:</strong> {patientId || "Not specified"}</p>
-                  <p><strong>Encounter:</strong> {encounterId || "Active encounter"}</p>
+                  <p><strong>Patient ID:</strong> {patientId || "Not available"}</p>
+                  <p><strong>Encounter:</strong> {encounterId || "Not available"}</p>
                   <p><strong>Referring facility:</strong> {facility?.name || "Not selected"}</p>
                   <p><strong>Referring clinician:</strong> {user?.displayName || user?.email}</p>
-                  <p className="text-xs text-gray-400 mt-3">Active conditions, medications, allergies, and recent results will be auto-attached when the session is created.</p>
+                  <p className="text-xs text-gray-400 mt-3">Auto-attached patient chart extraction is pending canonical backend linkage. Current submission uses explicit referral fields only.</p>
                 </div>
               </div>
             )}
@@ -261,11 +301,11 @@ export default function NewTeleconsultPage() {
                 <h3 className="text-base font-semibold text-gray-900">③ Visit Summary</h3>
                 <p className="text-sm text-gray-500">Current encounter context — auto-generated from the active visit.</p>
                 <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 space-y-2">
-                  <p><strong>Encounter type:</strong> Outpatient</p>
-                  <p><strong>Chief complaint:</strong> {presentingProblems.split("\n")[0] || "—"}</p>
-                  <p><strong>Vitals:</strong> Will be auto-attached</p>
-                  <p><strong>Investigations:</strong> Will be auto-attached</p>
-                  <p className="text-xs text-gray-400 mt-3">This panel is read-only and auto-populated from the encounter record.</p>
+                  <p><strong>Encounter type:</strong> {encounterId ? "From active encounter context" : "Unavailable (no encounter context)"}</p>
+                  <p><strong>Chief complaint:</strong> {presentingProblems.split("\n")[0] || "Not captured in this form yet"}</p>
+                  <p><strong>Vitals:</strong> Pending backend summary integration</p>
+                  <p><strong>Investigations:</strong> Pending backend summary integration</p>
+                  <p className="text-xs text-gray-400 mt-3">This panel is intentionally non-authoritative until PCT/BUTANO/OROS summary aggregation is wired.</p>
                 </div>
               </div>
             )}
@@ -274,17 +314,19 @@ export default function NewTeleconsultPage() {
             {activeStep === "attachments" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
                 <h3 className="text-base font-semibold text-gray-900">④ Attachments</h3>
-                <p className="text-sm text-gray-500">Upload or reference supporting documents, images, or files.</p>
+                <p className="text-sm text-gray-500">
+                  Reference previously uploaded document-service IDs (UUIDs), one per line.
+                </p>
                 <label className="block">
-                  <span className="text-sm font-medium text-gray-700">Attachment references (one per line)</span>
+                  <span className="text-sm font-medium text-gray-700">Attachment document IDs (one UUID per line)</span>
                   <textarea value={attachmentRefs} onChange={(e) => setAttachmentRefs(e.target.value)} rows={4}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                    placeholder="e.g. X-ray chest PA — 2026-04-14&#10;Blood results — FBC, U&E&#10;ECG tracing" />
+                    placeholder="e.g. 9f813346-2d1c-4b3e-8d44-c96d9d0ce6f1" />
                 </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-400">
                   <Upload className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-sm">Drag & drop files here or click to browse</p>
-                  <p className="text-xs mt-1">PDF, JPEG, PNG, DICOM up to 25MB each</p>
+                  <p className="text-sm">File upload from this screen is not yet enabled.</p>
+                  <p className="text-xs mt-1">Use the clinical documents flow first, then paste document IDs here.</p>
                 </div>
               </div>
             )}
@@ -316,13 +358,67 @@ export default function NewTeleconsultPage() {
                       placeholder={routingType === "PRACTITIONER" ? "Dr. name or Provider ID..." : "Workspace, ward, or facility name..."} />
                   </label>
                 )}
+                {(routingType === "ON_CALL" || routingType === "SPECIALTY_POOL") && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                    This routing type is visible for workflow parity but remains unavailable until canonical on-call/team/pool directory support is implemented.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* ⑥ Consultation Mode */}
+            {activeStep === "mode" && (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+                <h3 className="text-base font-semibold text-gray-900">⑥ Consultation Mode *</h3>
+                <p className="text-sm text-gray-500">Select the preferred mode and any acceptable alternatives for this referral package.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {TELEMEDICINE_MODES.map((mode) => (
+                    <button
+                      key={mode.id}
+                      onClick={() => setPreferredMode(mode.id)}
+                      className={`text-left p-3 rounded-lg border transition-all ${
+                        preferredMode === mode.id
+                          ? "border-impilo-400 bg-impilo-50 ring-1 ring-impilo-300"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-gray-900">{mode.label}</p>
+                      <p className="mt-1 text-xs text-gray-500">{mode.id}</p>
+                    </button>
+                  ))}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Allowed fallback modes</p>
+                  <div className="flex flex-wrap gap-2">
+                    {TELEMEDICINE_MODES.map((mode) => {
+                      const selected = allowedModes.includes(mode.id);
+                      return (
+                        <button
+                          key={`${mode.id}-allowed`}
+                          type="button"
+                          onClick={() => toggleAllowedMode(mode.id)}
+                          className={`rounded-full border px-3 py-1 text-xs ${
+                            selected
+                              ? "border-impilo-400 bg-impilo-50 text-impilo-700"
+                              : "border-gray-300 text-gray-600"
+                          }`}
+                        >
+                          {mode.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400">
+                  Selecting a mode does not imply live WebRTC/session support in this environment; execution depends on canonical teleconsult backend readiness.
+                </p>
               </div>
             )}
 
             {/* ⑥ Consent */}
             {activeStep === "consent" && (
               <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-                <h3 className="text-base font-semibold text-gray-900">⑥ Digital Consent *</h3>
+                <h3 className="text-base font-semibold text-gray-900">⑦ Digital Consent *</h3>
                 <p className="text-sm text-gray-500">Patient consent is required before the referral can be submitted. The consent token verifies the identities of the patient, referrer, and intended receiver.</p>
                 <div className="grid grid-cols-2 gap-2">
                   {CONSENT_TYPES.map((ct) => (
@@ -357,6 +453,7 @@ export default function NewTeleconsultPage() {
               <div className="text-xs text-gray-400">
                 {referralLetter.trim() ? "✓ Letter" : "○ Letter"} ·{" "}
                 {routingType ? "✓ Routing" : "○ Routing"} ·{" "}
+                {preferredMode ? "✓ Mode" : "○ Mode"} ·{" "}
                 {consentToken ? "✓ Consent" : "○ Consent"}
               </div>
               <button

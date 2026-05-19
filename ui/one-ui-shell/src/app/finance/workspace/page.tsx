@@ -24,7 +24,7 @@ export default function FinanceWorkspacePage() {
     <AppLayout>
       <PageShell
         title="Finance workspace"
-        subtitle="COSTA lifecycle and MusheX custodial platform through the Experience BFF finance plane."
+        subtitle="COSTA lifecycle and MusheX custodial platform through the Experience BFF enterprise plane (finance domain)."
         icon={<Building2 className="h-6 w-6" />}
       >
         <div className="mb-4">

@@ -114,8 +114,9 @@ public class HoldService {
                     + " holdId=" + holdId);
         }
 
-        WalletEntity wallet = walletRepository.findByWalletId(hold.getWalletId())
-                .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + hold.getWalletId()));
+        UUID holdWalletId = hold.getWalletId();
+        WalletEntity wallet = walletRepository.findByWalletId(holdWalletId)
+                .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + holdWalletId));
 
         // Move from held_balance to actual balance deduction
         wallet.setBalance(wallet.getBalance().subtract(hold.getAmount()));
@@ -168,8 +169,9 @@ public class HoldService {
                     + " holdId=" + holdId);
         }
 
-        WalletEntity wallet = walletRepository.findByWalletId(hold.getWalletId())
-                .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + hold.getWalletId()));
+        UUID holdWalletId = hold.getWalletId();
+        WalletEntity wallet = walletRepository.findByWalletId(holdWalletId)
+                .orElseThrow(() -> new NoSuchElementException("Wallet not found: " + holdWalletId));
 
         // Restore available_balance, reduce held_balance
         wallet.setAvailableBalance(wallet.getAvailableBalance().add(hold.getAmount()));

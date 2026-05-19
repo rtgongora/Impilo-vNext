@@ -1,55 +1,51 @@
 /**
- * CommunitiesScreen — Community groups from BFF; join calls real POST /community/groups/{id}/join.
+ * CommunitiesScreen — Browse and join health communities. Backed by the
+ * social timeline via experience-bff /internal/v1/mobile/citizen/social/communities.
  */
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import React, { useMemo, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
+import { Badge, Button, LoadingSpinner, EmptyState } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@impilo/mobile-api-client";
-import { useAppStore } from "../../stores/appStore";
+import { fetchSocialCommunities, joinSocialCommunity, type SocialCommunity } from "../../services/socialService";
 
-interface CommunityGroup {
-  id: string;
-  type: string;
-  attributes: { name: string; description: string; groupType: string; category: string; memberCount: number; isPublic: boolean };
-}
+const CATEGORIES = [
+  { value: "", label: "All" },
+  { value: "maternal_health", label: "Maternal" },
+  { value: "diabetes", label: "Diabetes" },
+  { value: "hypertension", label: "Hypertension" },
+  { value: "youth_wellness", label: "Youth" },
+  { value: "mental_wellness", label: "Mental" },
+  { value: "fitness", label: "Fitness" },
+  { value: "nutrition", label: "Nutrition" },
+  { value: "community_of_practice", label: "Practice" },
+];
 
 export function CommunitiesScreen() {
   const queryClient = useQueryClient();
-  const profile = useAppStore().profile;
-  const memberId = profile?.cpid ?? "";
+  const [category, setCategory] = useState("");
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["community-groups-mobile"],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: CommunityGroup[] }>("/internal/v1/community/groups");
-      return res.data.data;
-    },
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["social-communities-mobile", category],
+    queryFn: () => fetchSocialCommunities(category || undefined),
   });
-  const groups = data ?? [];
+  const communities: SocialCommunity[] = useMemo(() => data ?? [], [data]);
 
-  const joinMutation = useMutation({
-    mutationFn: async (groupId: string) => {
-      if (!memberId) throw new Error("missing_member");
-      await apiClient.post(`/internal/v1/community/groups/${groupId}/join`, { memberId });
-    },
+  const join = useMutation({
+    mutationFn: (id: string) => joinSocialCommunity(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-groups-mobile"] });
+      queryClient.invalidateQueries({ queryKey: ["social-communities-mobile"] });
     },
   });
 
-  async function onJoin(groupId: string) {
-    if (!memberId) {
-      Alert.alert("Profile required", "Sign in with a citizen profile (CPID) before joining a group.");
-      return;
-    }
-    setJoiningId(groupId);
+  async function onJoin(c: SocialCommunity) {
+    setJoiningId(c.id);
     try {
-      await joinMutation.mutateAsync(groupId);
-      Alert.alert("Joined", "Your membership was recorded in Experience BFF.");
-    } catch (e) {
-      Alert.alert("Join failed", "The server could not record membership. Check your session and try again.");
+      await join.mutateAsync(c.id);
+      Alert.alert("Joined", `You're now a member of ${c.name}.`);
+      refetch();
+    } catch {
+      Alert.alert("Couldn’t join", "The service is unavailable right now. Please try again later.");
     } finally {
       setJoiningId(null);
     }
@@ -59,30 +55,50 @@ export function CommunitiesScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Community Groups</Text>
-      {!memberId ? (
-        <Text style={styles.hint}>Set a citizen profile (CPID) to enable Join — the BFF requires memberId.</Text>
-      ) : null}
-      {groups.length === 0 ? (
-        <Text style={styles.empty}>No community groups available</Text>
+      <Text style={styles.title}>Communities</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+        {CATEGORIES.map((c) => (
+          <Button
+            key={c.value || "all"}
+            title={c.label}
+            size="sm"
+            variant={category === c.value ? "primary" : "ghost"}
+            onPress={() => setCategory(c.value)}
+            testID={`comm-filter-${c.value || "all"}`}
+          />
+        ))}
+      </ScrollView>
+
+      {communities.length === 0 ? (
+        <EmptyState title="No communities" message="Try a different category or check back later." />
       ) : (
-        groups.map((g) => (
-          <View key={g.id} style={styles.card}>
-            <View style={styles.header}>
-              <Text style={styles.name}>{g.attributes.name}</Text>
-              <Badge label={g.attributes.groupType} variant="info" />
+        communities.map((c) => {
+          const isMember = c.viewerMembership && c.viewerMembership !== "none";
+          return (
+            <View key={c.id} style={styles.card}>
+              <View style={styles.header}>
+                <View style={[styles.avatar, { backgroundColor: c.coverColor || "#4F46E5" }]}>
+                  <Text style={styles.avatarText}>{c.name.charAt(0).toUpperCase()}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.name}>{c.name}</Text>
+                  <Text style={styles.meta}>{c.category} · {c.memberCount} members · {c.kind}</Text>
+                </View>
+                <Badge label={c.kind === "verified" ? "Verified" : c.kind} variant={c.kind === "verified" ? "info" : "default"} />
+              </View>
+              {c.description ? <Text style={styles.desc}>{c.description}</Text> : null}
+              <TouchableOpacity
+                style={[styles.joinButton, (joiningId === c.id || isMember) && styles.joinButtonDisabled]}
+                disabled={joiningId === c.id || !!isMember}
+                onPress={() => onJoin(c)}
+              >
+                <Text style={styles.joinText}>
+                  {isMember ? "Joined" : joiningId === c.id ? "Joining…" : "Join community"}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.desc}>{g.attributes.description}</Text>
-            <Text style={styles.meta}>{g.attributes.category} · {g.attributes.memberCount} members · {g.attributes.isPublic ? "Public" : "Private"}</Text>
-            <TouchableOpacity
-              style={[styles.joinButton, (joiningId === g.id || joinMutation.isPending) && styles.joinButtonDisabled]}
-              disabled={joiningId === g.id || joinMutation.isPending}
-              onPress={() => onJoin(g.id)}
-            >
-              <Text style={styles.joinText}>{joiningId === g.id ? "Joining…" : "Join Group"}</Text>
-            </TouchableOpacity>
-          </View>
-        ))
+          );
+        })
       )}
     </View>
   );
@@ -91,11 +107,12 @@ export function CommunitiesScreen() {
 const styles = StyleSheet.create({
   container: { gap: 12 },
   title: { fontSize: 18, fontWeight: "700", color: "#111827" },
-  hint: { fontSize: 13, color: "#B45309", backgroundColor: "#FEF3C7", padding: 10, borderRadius: 8 },
-  empty: { color: "#9CA3AF", fontSize: 14, textAlign: "center", paddingVertical: 20 },
-  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 6 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  name: { fontSize: 15, fontWeight: "600", color: "#111827", flex: 1 },
+  filterRow: { gap: 6, paddingVertical: 4 },
+  card: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 8 },
+  header: { flexDirection: "row", alignItems: "center", gap: 10 },
+  avatar: { width: 40, height: 40, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: "#fff", fontWeight: "700" },
+  name: { fontSize: 15, fontWeight: "600", color: "#111827" },
   desc: { fontSize: 13, color: "#4B5563" },
   meta: { fontSize: 12, color: "#9CA3AF" },
   joinButton: { backgroundColor: "#7C3AED", borderRadius: 8, paddingVertical: 10, alignItems: "center", marginTop: 4 },

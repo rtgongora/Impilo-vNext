@@ -27,6 +27,7 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 |-------------|-----------------------------------|
 | `pct.encounter.started` | `encounterRef`, `journeyId`, `patientCpid` (see [`EncounterService`](../../services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/core/EncounterService.java) for full payload incl. `eventId`, `tenantId`) |
 | `pct.encounter.completed` | `encounterRef`, `journeyId` |
+| `clinical.teleconsult.lifecycle` | `eventType` (`telemedicine.session.*`), `payload.id`, `payload.patientCpid`, `payload.providerId`, `payload.facilityId` |
 | `oros.order.status_changed` | `orderId`, `status` |
 | `oros.result.available` | `orderId`, `resultId` |
 | `pharmacy.dispense.complete` | `prescriptionId` (canonical topic from pharmacy-service `OutboxPublisher`) |
@@ -71,6 +72,8 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 | `pct.encounter.completed` | costing-engine | `CostaEventConsumer` |
 | `oros.order.placed` | costing-engine, pharmacy | `CostaEventConsumer`, `OrosConsumer` |
 | `pharmacy.dispense.complete` | costing-engine, oros, experience-bff | `CostaEventConsumer`, `OrosEventConsumer`, `UpstreamEventConsumer` |
+| `clinical.teleconsult.lifecycle` | experience-bff | `TelemedicineLifecycleConsumer` |
+| `clinical.telemedicine.communication` | downstream analytics/comms consumers (producer in experience-bff) | `TelemedicineCommunicationEventPublisher` |
 | `inventory.ledger.event.created` | costing-engine | `CostaEventConsumer` |
 | `mushex.payment.status.changed` | costing-engine, experience-bff, pharmacy, pct, msika-flow | `CostaEventConsumer`, `UpstreamEventConsumer`, `MushexConsumer`, `PctEventConsumer`, `PaymentEventConsumer` |
 | `mushex.refund.status.changed` | costing-engine, experience-bff | `CostaEventConsumer`, `UpstreamEventConsumer` |
@@ -96,6 +99,23 @@ Group id: **`experience-bff`**. Intended for cache/local projection sync; handle
 | `vito.print` | card-print-agent | `PrintJobListener` |
 | `${impilo.telemetry.kafka.topic:impilo.iot.telemetry.device.raw}` | iot-ingestion | `TelemetryKafkaConsumer` |
 | `${ingestion.kafka.topic-pattern:impilo\..*}` | data-ingestion | `BronzeEventKafkaConsumer` (topic **pattern**) |
+
+---
+
+## 5b. Contract Parity Closure Findings (Final Hardening)
+
+The previously tracked parity drifts on the four target rails are now closed in
+runtime defaults and documented contracts.
+
+| Rail | Listener/Consumer | Producer Literal | Parity Status |
+|---|---|---|---|
+| Surveillance clinical encounter intake | `clinical.pct.encounter.completed`, `clinical.pct.death.recorded` | canonical clinical rails active in PCT bridge path | Fixed |
+| Data pipeline clinical journey/result rails | `clinical.pct.journey.completed`, `clinical.oros.result.available` | canonical clinical rails active | Fixed |
+| Data pipeline kernel client rail | `kernel.vito.client.registered` | bridged from VITO identity rail during closure window | Fixed |
+| Reporting aggregate rail | `analytics.reporting.aggregate` | explicit data-pipeline producer contract and emit path | Fixed |
+
+Phase traceability and rollback semantics remain in
+`docs/architecture/EVENT_CONTRACT_PARITY_CONVERGENCE_PLAN.md`.
 
 ---
 
@@ -215,6 +235,7 @@ Machine-readable anchors (incrementally enrich payloads under `components/messag
 - [`campaigns-outbound.asyncapi.yaml`](../../contracts/asyncapi/campaigns-outbound.asyncapi.yaml) — `impilo.campaigns.*`
 - [`document-store.asyncapi.yaml`](../../contracts/asyncapi/document-store.asyncapi.yaml) — `docstore.*`
 - [`data-ingestion-bronze.asyncapi.yaml`](../../contracts/asyncapi/data-ingestion-bronze.asyncapi.yaml) — topic pattern consumer
+- [`data-pipeline-reporting-aggregate.asyncapi.yaml`](../../contracts/asyncapi/data-pipeline-reporting-aggregate.asyncapi.yaml) — `analytics.reporting.aggregate`
 
 Conventions: [`contracts/asyncapi/README.md`](../../contracts/asyncapi/README.md).
 

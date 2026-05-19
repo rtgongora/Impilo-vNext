@@ -9,8 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
-import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Mobile referral endpoints.
@@ -57,12 +58,9 @@ public class MobileReferralController {
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @Valid @RequestBody CreateReferralRequest request) {
 
-        UUID referralId = UUID.randomUUID();
-        OffsetDateTime now = OffsetDateTime.now();
         String urgency = request.urgency() != null ? request.urgency() : "ROUTINE";
         String referralType = request.referral_type() != null ? request.referral_type() : "SPECIALIST";
 
-        // Delegate to PCT
         try {
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("patientId", request.patient_id());
@@ -75,38 +73,16 @@ public class MobileReferralController {
             if (request.specialty() != null) pctBody.put("specialty", request.specialty());
             if (request.clinical_summary() != null) pctBody.put("clinicalSummary", request.clinical_summary());
             JsonNode pctResult = pctClient.createReferral(pctBody);
-            if (pctResult != null && pctResult.has("id")) {
-                referralId = UUID.fromString(pctResult.get("id").asText());
+            if (pctResult == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No referral payload returned", requestId, correlationId);
             }
-        } catch (Exception ignored) {}
-
-        Map<String, Object> attributes = new LinkedHashMap<>();
-        attributes.put("patient_id", request.patient_id());
-        attributes.put("encounter_id", request.encounter_id());
-        attributes.put("referral_type", referralType);
-        attributes.put("specialty", request.specialty());
-        attributes.put("referred_to", request.referred_to());
-        attributes.put("referred_to_facility", request.referred_to_facility());
-        attributes.put("reason", request.reason());
-        attributes.put("urgency", urgency);
-        attributes.put("clinical_summary", request.clinical_summary());
-        attributes.put("referred_by", request.referred_by());
-        attributes.put("referred_by_name", request.referred_by_name());
-        attributes.put("status", "PENDING");
-        attributes.put("created_at", now);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of(
-                "id", referralId.toString(),
-                "type", "Referral",
-                "attributes", attributes
-        ));
-        response.put("meta", Map.of(
-                "request_id", requestId,
-                "correlation_id", correlationId
-        ));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", pctResult,
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
+        } catch (Exception ex) {
+            return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
+        }
     }
 
     /**
@@ -127,16 +103,14 @@ public class MobileReferralController {
             JsonNode result = pctClient.acceptReferral(id.toString(), body);
             if (result != null) {
                 Map<String, Object> response = new LinkedHashMap<>();
-                response.put("data", Map.of("id", id.toString(), "status", "ACCEPTED"));
+                response.put("data", result);
                 response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
                 return ResponseEntity.ok(response);
             }
-        } catch (Exception ignored) {}
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "ACCEPTED"));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+            return upstreamFailure("PCT_UNAVAILABLE", "No accept payload returned", requestId, correlationId);
+        } catch (Exception ex) {
+            return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
+        }
     }
 
     /**
@@ -154,21 +128,23 @@ public class MobileReferralController {
             @RequestBody Map<String, Object> body) {
 
         String responseNotes = body != null ? (String) body.get("response_notes") : null;
-        String outcome = body != null ? (String) body.get("outcome") : null;
-
         if (responseNotes == null || responseNotes.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", Map.of("code", "VALIDATION", "message", "response_notes is required")));
         }
 
         try {
-            pctClient.respondReferral(id.toString(), body);
-        } catch (Exception ignored) {}
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "RESPONDED", "outcome", outcome));
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.ok(response);
+            JsonNode result = pctClient.respondReferral(id.toString(), body);
+            if (result == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No response payload returned", requestId, correlationId);
+            }
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", result);
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        } catch (Exception ex) {
+            return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
+        }
     }
 
     @GetMapping
@@ -189,11 +165,21 @@ public class MobileReferralController {
                             "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
                     ));
                 }
-            } catch (Exception ignored) {}
+                return upstreamFailure("PCT_UNAVAILABLE", "No referrals payload returned", requestId, correlationId);
+            } catch (Exception ex) {
+                return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
+            }
         }
-        return ResponseEntity.ok(Map.of(
-                "data", List.of(),
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", Map.of("code", "MISSING_FILTER", "message", "patient_id is required"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
         ));
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Referral upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

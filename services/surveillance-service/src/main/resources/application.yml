@@ -45,8 +45,16 @@ spring:
 surv:
   outbox:
     poll-interval-ms: 2000
+  llm:
+    enabled: ${LLM_ENABLED:true}
+    base-url: ${LLM_ORCHESTRATION_BASE_URL:http://localhost:8265}
   v11:
     emit-mode: LEGACY_ONLY
+  kafka:
+    topics:
+      encounter-completed: ${SURV_KAFKA_TOPICS_ENCOUNTER_COMPLETED:clinical.pct.encounter.completed}
+      death-recorded: ${SURV_KAFKA_TOPICS_DEATH_RECORDED:clinical.pct.death.recorded}
+      alert: ${SURV_KAFKA_TOPICS_ALERT:analytics.surveillance.alert}
 
 management:
   endpoints:

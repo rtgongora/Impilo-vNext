@@ -14,7 +14,11 @@ import { useAuditLog } from "@/hooks/queries/useAudit";
 
 export default function AuditTrailPage() {
   const [page, setPage] = useState(0);
-  const { data, isLoading } = useAuditLog(page);
+  const [draftAggregateType, setDraftAggregateType] = useState("");
+  const [draftAggregateId, setDraftAggregateId] = useState("");
+  const [aggregateType, setAggregateType] = useState("");
+  const [aggregateId, setAggregateId] = useState("");
+  const { data, isLoading } = useAuditLog(page, { aggregateType, aggregateId });
 
   const entries = data?.data ?? [];
   const totalPages = data?.meta?.page?.total_pages ?? 1;
@@ -33,6 +37,43 @@ export default function AuditTrailPage() {
             <ArrowLeft className="w-4 h-4" />
             Back to administration
           </Link>
+        </div>
+
+        <div className="mb-4 rounded-lg border border-gray-200 bg-white p-3">
+          <p className="text-xs text-gray-500">
+            Optional aggregate filters (Phase 8D): scope audit rows by aggregate type/id.
+          </p>
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <label className="text-xs text-gray-600">
+              Aggregate type
+              <input
+                value={draftAggregateType}
+                onChange={(event) => setDraftAggregateType(event.target.value)}
+                className="mt-1 block rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                placeholder="PAYMENT_INTENT"
+              />
+            </label>
+            <label className="text-xs text-gray-600">
+              Aggregate id
+              <input
+                value={draftAggregateId}
+                onChange={(event) => setDraftAggregateId(event.target.value)}
+                className="mt-1 block rounded-lg border border-gray-300 px-2 py-1.5 text-sm"
+                placeholder="PI-123"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                setPage(0);
+                setAggregateType(draftAggregateType.trim());
+                setAggregateId(draftAggregateId.trim());
+              }}
+              className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-50"
+            >
+              Apply
+            </button>
+          </div>
         </div>
 
         {isLoading ? (

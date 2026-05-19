@@ -11,6 +11,7 @@ public record NotificationResponse(
         int attempts,
         String lastError,
         OffsetDateTime createdAt,
-        OffsetDateTime sentAt
+        OffsetDateTime sentAt,
+        OffsetDateTime readAt
 ) {
 }

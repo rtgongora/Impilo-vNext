@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
   BarChart3,
@@ -20,6 +21,7 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { apiClient } from "@/lib/api-client";
 
 type NationalTab =
   | "dhis2"
@@ -97,51 +99,33 @@ export default function ReportsHubPage() {
   const withPlane = (href: string) => (fromOrg ? `${href}?from=organization-admin` : href);
 
   const [tab, setTab] = useState<NationalTab>("dhis2");
+  const nationalKpiQuery = useQuery({
+    queryKey: ["reports", "national-kpis"],
+    queryFn: () => apiClient.get<{ data: { gold_stats?: Record<string, unknown> } }>("/internal/v1/operations/national-kpis"),
+  });
+  const goldStats = (nationalKpiQuery.data?.data?.gold_stats ?? {}) as Record<string, unknown>;
+  const numberOrUnavailable = (value: unknown) => (typeof value === "number" ? value.toLocaleString() : "Unavailable");
 
   const dhis2Rows = useMemo(
-    () => [
-      { indicator: "OPD attendance", value: "12,402", trend: "+2.1%", district: "National" },
-      { indicator: "ANC 1st visit coverage", value: "87%", trend: "+0.4%", district: "National" },
-      { indicator: "TB case notification", value: "214", trend: "−3.2%", district: "National" },
-    ],
-    [],
+    () =>
+      Object.entries(goldStats)
+        .filter(([key, value]) => key !== "last_receipt_id" && key !== "last_stored_at" && key !== "watermark_updated_at" && typeof value !== "object")
+        .map(([key, value]) => ({
+          indicator: key,
+          value: typeof value === "number" ? value.toLocaleString() : String(value ?? "—"),
+          trend: "Warehouse snapshot",
+          district: "National",
+        })),
+    [goldStats]
   );
 
-  const facilityRows = useMemo(
-    () => [
-      { facility: "Central Hospital", score: "92", wait: "38m", throughput: "412/day" },
-      { facility: "District A — clinic hub", score: "88", wait: "52m", throughput: "305/day" },
-      { facility: "District B — rural", score: "81", wait: "61m", throughput: "198/day" },
-    ],
-    [],
-  );
+  const facilityRows = useMemo(() => [], []);
 
-  const diseaseRows = useMemo(
-    () => [
-      { condition: "Malaria (suspected)", period: "Last 28d", rate: "4.2 / 10k", flag: "Watch" },
-      { condition: "Acute respiratory", period: "Last 28d", rate: "11.0 / 10k", flag: "Stable" },
-      { condition: "Watery diarrhoea", period: "Last 28d", rate: "2.1 / 10k", flag: "Stable" },
-    ],
-    [],
-  );
+  const diseaseRows = useMemo(() => [], []);
 
-  const mortalityRows = useMemo(
-    () => [
-      { cohort: "Under-5 (facility)", deaths: "12", pmr: "—", notes: "National aggregate (demo)" },
-      { cohort: "Maternal", deaths: "2", pmr: "—", notes: "Confidential enquiry pipeline" },
-      { cohort: "Adult medical", deaths: "48", pmr: "—", notes: "Linked to DHIS2 facility returns" },
-    ],
-    [],
-  );
+  const mortalityRows = useMemo(() => [], []);
 
-  const immRows = useMemo(
-    () => [
-      { antigen: "MR1", coverage: "94.2%", drop: "0.6%", cohort: "12–23m" },
-      { antigen: "DTP3", coverage: "91.8%", drop: "1.1%", cohort: "12–23m" },
-      { antigen: "PCV3", coverage: "90.4%", drop: "0.9%", cohort: "12–23m" },
-    ],
-    [],
-  );
+  const immRows = useMemo(() => [], []);
 
   return (
     <AppLayout>
@@ -154,8 +138,8 @@ export default function ReportsHubPage() {
             <h2 className="text-lg font-semibold text-slate-900">National reporting dashboard</h2>
           </div>
           <p className="text-sm text-slate-600">
-            Summary views for DHIS2-aligned indicators, facility performance, disease trends, mortality, and immunization
-            coverage. Tables use illustrative national aggregates until analytics services are wired.
+            National aggregate reporting is now wired to governed Data Plane warehouse statistics where available.
+            Tabs without governed feeds continue to show explicit unavailable states (no synthetic values).
           </p>
 
           <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
@@ -186,16 +170,16 @@ export default function ReportsHubPage() {
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Reporting completeness</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">96.4%</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold encounters</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_encounters)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Timeliness (&lt; 48h)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">91%</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold medications</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_medications)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Data quality score</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">A−</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Gold labs</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">{numberOrUnavailable(goldStats.gold_labs)}</p>
                 </div>
               </div>
               <TabTable
@@ -215,15 +199,15 @@ export default function ReportsHubPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Facilities on target</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">78%</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Avg. wait (OPD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">47m</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Stock-out alerts (7d)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">14</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -243,15 +227,15 @@ export default function ReportsHubPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">IDSR alerts open</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">6</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Signals above threshold</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">3</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Clusters under review</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">1</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -271,15 +255,15 @@ export default function ReportsHubPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">U5 deaths (MTD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">12</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Maternal deaths (YTD)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">2</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Audit coverage</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">64%</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
               </div>
               <TabTable
@@ -299,15 +283,15 @@ export default function ReportsHubPage() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Full course (DTP3)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">91.8%</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Drop-out (Penta1→3)</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">4.6%</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-4">
                   <p className="text-xs uppercase tracking-wide text-slate-500">Zero-dose catch-up</p>
-                  <p className="mt-1 text-2xl font-semibold text-slate-900">18k</p>
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">Unavailable</p>
                 </div>
               </div>
               <TabTable

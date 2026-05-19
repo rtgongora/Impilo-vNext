@@ -57,6 +57,18 @@ describe("CoveragePage", () => {
       if (url.includes("/internal/v1/coverage/remittances")) {
         return Promise.resolve({ data: [] });
       }
+      if (url.includes("/internal/v1/coverage/contributions")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/preauths")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/utilization")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/appeals")) {
+        return Promise.resolve({ data: [] });
+      }
       return Promise.reject(new Error(`unexpected GET ${url}`));
     });
   });
@@ -79,6 +91,18 @@ describe("CoveragePage", () => {
         return Promise.resolve({ data: [] });
       }
       if (url.includes("/internal/v1/coverage/remittances")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/contributions")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/preauths")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/utilization")) {
+        return Promise.resolve({ data: [] });
+      }
+      if (url.includes("/internal/v1/coverage/appeals")) {
         return Promise.resolve({ data: [] });
       }
       if (url.includes("/internal/v1/coverage/claims")) {
@@ -113,5 +137,93 @@ describe("CoveragePage", () => {
       expect(screen.getByText("CN-1")).toBeInTheDocument();
     });
     expect(get.mock.calls.some((c) => String(c[0]).includes("coverage/claims?coverageId=cov-a"))).toBe(true);
+  });
+
+  it("preauth tab renders rows from coverage preauth list endpoint", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/plans")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/remittances")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/contributions")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/utilization")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/appeals")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/preauths")) {
+        return Promise.resolve({
+          data: [{ id: "pa-1", request_type: "SURGERY", status: "APPROVED", coverage_id: "cov-22" }],
+        });
+      }
+      return Promise.reject(new Error(`unexpected GET ${url}`));
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Pre-Auth/i }));
+    await waitFor(() => expect(screen.getByText("pa-1")).toBeInTheDocument());
+    expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/preauths"))).toBe(true);
+  });
+
+  it("contributions tab renders list rows from coverage contributions endpoint", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/plans")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/remittances")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/preauths")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/utilization")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/appeals")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/contributions")) {
+        return Promise.resolve({
+          data: [{ id: "ctr-1", member_id: "mem-1", period_start: "2026-04-01", period_end: "2026-04-30", amount: 55, currency: "USD", status: "PAID" }],
+        });
+      }
+      return Promise.reject(new Error(`unexpected GET ${url}`));
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Contributions/i }));
+    await waitFor(() => expect(screen.getByText("ctr-1")).toBeInTheDocument());
+    expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/contributions"))).toBe(true);
+  });
+
+  it("appeals tab renders list rows from coverage appeals endpoint", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/plans")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/remittances")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/contributions")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/preauths")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/utilization")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/appeals")) {
+        return Promise.resolve({
+          data: [{ id: "appeal-1", claim_id: "claim-9", coverage_id: "cov-9", status: "UNDER_REVIEW" }],
+        });
+      }
+      return Promise.reject(new Error(`unexpected GET ${url}`));
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Appeals/i }));
+    await waitFor(() => expect(screen.getByText("appeal-1")).toBeInTheDocument());
+    expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/appeals"))).toBe(true);
+  });
+
+  it("intelligence tab reads utilization list endpoint", async () => {
+    const user = userEvent.setup();
+    get.mockImplementation((url: string) => {
+      if (url.includes("/internal/v1/coverage/plans")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/remittances")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/contributions")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/preauths")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/appeals")) return Promise.resolve({ data: [] });
+      if (url.includes("/internal/v1/coverage/utilization")) {
+        return Promise.resolve({
+          data: [{ id: "util-1", metric_name: "utilization-rate", metric_value: "84", period_label: "2026-04" }],
+        });
+      }
+      return Promise.reject(new Error(`unexpected GET ${url}`));
+    });
+
+    renderPage();
+    await user.click(screen.getByRole("button", { name: /Intelligence/i }));
+    await waitFor(() => expect(screen.getByText("utilization-rate")).toBeInTheDocument());
+    expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/utilization"))).toBe(true);
   });
 });

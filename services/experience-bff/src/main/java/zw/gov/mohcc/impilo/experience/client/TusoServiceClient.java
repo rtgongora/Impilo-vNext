@@ -410,6 +410,14 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Get a workspace by UUID. */
+    public JsonNode getWorkspace(UUID workspaceId) {
+        String url = baseUrl + "/v1/internal/workspaces/" + workspaceId;
+        log.info("TUSO: Getting workspace id={}", workspaceId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     // ── Locality gazetteer ───────────────────────────────────────────
 
     public JsonNode searchLocalities(String districtCode, String q, int limit) {

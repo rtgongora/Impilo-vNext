@@ -100,6 +100,27 @@ public class PharmacyServiceClient {
         return extractData(response);
     }
 
+    public JsonNode createPrescription(Map<String, Object> body) {
+        String url = baseUrl + "/v1/prescriptions";
+        log.info("Pharmacy: Creating prescription");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode cancelPrescription(UUID prescriptionId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/prescriptions/" + prescriptionId + "/cancel";
+        log.info("Pharmacy: Cancelling prescription={}", prescriptionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode dispensePrescription(UUID prescriptionId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/prescriptions/" + prescriptionId + "/dispense";
+        log.info("Pharmacy: Dispensing prescription={}", prescriptionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

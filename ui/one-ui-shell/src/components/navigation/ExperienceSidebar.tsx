@@ -22,6 +22,7 @@ import {
   FileText,
   FolderOpen,
   FlaskConical,
+  GraduationCap,
   Heart,
   HeartHandshake,
   IdCard,
@@ -82,6 +83,7 @@ const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
 const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const PUBLIC_HEALTH_ROLES = ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
 
 /**
  * Returns true when the user should see citizen-only experience.
@@ -111,10 +113,14 @@ const ZONES: SidebarZone[] = [
       { href: "/clinical-tools", label: "Clinical References", icon: BookMarked, requiredRoles: CLINICAL_ROLES },
       { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance, requiredRoles: QUEUE_ROLES },
       { href: "/queue", label: "Queue", icon: Users, requiredRoles: QUEUE_ROLES },
+      { href: "/telemedicine", label: "Telemedicine", icon: Stethoscope, requiredRoles: CLINICAL_ROLES },
+      { href: "/communication/secure-messaging", label: "Secure Messaging", icon: MessageSquare, requiredRoles: QUEUE_ROLES },
+      { href: "/beds", label: "Bed Management", icon: Building2, requiredRoles: CLINICAL_ROLES },
       { href: "/scheduling", label: "Scheduling", icon: Calendar, requiredRoles: CLINICAL_ROLES },
       { href: "/pharmacy", label: "Pharmacy", icon: Pill, requiredRoles: DISPENSER_ROLES },
       { href: "/inventory", label: "Inventory", icon: Package },
       { href: "/enterprise", label: "Enterprise resources", icon: Boxes },
+      { href: "/erp", label: "Institutional ERP", icon: Wallet, requiredRoles: FINANCE_ROLES },
       { href: "/marketplace", label: "Marketplace", icon: BriefcaseBusiness },
       { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
       // Absorbed sidecars: oros-web → /lab
@@ -126,9 +132,12 @@ const ZONES: SidebarZone[] = [
     label: "My Professional",
     items: [
       { href: "/professional", label: "Professional Profile", icon: Stethoscope },
+      { href: "/learning", label: "Impilo Fundo", icon: GraduationCap },
       { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
       { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck, requiredRoles: ["SYSTEM_ADMIN", "HIE_ADMIN"] },
       { href: "/registry", label: "Registry", icon: Building2 },
+      { href: "/public-health", label: "Public Health", icon: Heart, requiredRoles: PUBLIC_HEALTH_ROLES },
+      { href: "/operations/facility-operations", label: "Facility Operations", icon: Building2, requiredRoles: ADMIN_ROLES },
       { href: "/organization-admin", label: "Org administration", icon: BriefcaseBusiness, requiredRoles: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"] },
       { href: "/reports", label: "Reports", icon: FileBarChart2 },
       { href: "/admin", label: "Administration", icon: Shield, requiredRoles: ADMIN_ROLES },
@@ -146,11 +155,15 @@ const ZONES: SidebarZone[] = [
       items: [
         { href: "/home", label: "Home", icon: LayoutDashboard },
         // Health OS §2a: Intelligent experience layer
+        { href: "/social", label: "Social timeline", icon: Users },
+        { href: "/communities", label: "Communities", icon: HeartHandshake },
+        { href: "/pages", label: "Pages", icon: BookMarked },
         { href: "/ask", label: "Ask", icon: MessageSquare },
+        { href: "/intelligence", label: "Intelligence", icon: Sparkles },
         { href: "/search", label: "Search", icon: Search },
         { href: "/guidance", label: "Guidance", icon: Lightbulb },
         { href: "/citizen", label: "Citizen services", icon: IdCard },
-        // Health OS Finance Plane: Mushe digital wallet
+        // Health OS Enterprise Plane (finance domain): Mushe digital wallet
         { href: "/wallet", label: "My Wallet", icon: Wallet },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
@@ -194,7 +207,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Registry governance plane",
       description: "Sovereign registry administration — elevated trust, separate from facility shift work.",
-      tone: "border-amber-400/30 bg-amber-950/40 text-amber-100",
+      tone: "border-[color:var(--warning)]/35 bg-[color:var(--warning-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/registry/intake", label: "Intake hub", icon: Route },
         { href: "/registry/providers", label: "Providers", icon: Users },
@@ -207,7 +220,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Mushe Wallet",
       description: "Digital wallet for health payments — send, receive, deposit, and manage smart cards.",
-      tone: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--primary-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/wallet", label: "Dashboard", icon: Wallet },
         { href: "/wallet/send", label: "Send Money", icon: ArrowUpRight },
@@ -220,7 +233,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Organization administration",
       description: "Facility and enterprise operations — policies, devices, reporting, settings.",
-      tone: "border-violet-400/30 bg-violet-950/40 text-violet-100",
+      tone: "border-[color:var(--nompilo)]/28 bg-[color:var(--nompilo-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/admin", label: "Admin home", icon: Shield },
         { href: "/reports", label: "Reports", icon: FileBarChart2 },
@@ -237,7 +250,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Clinical coordination",
       description: "Stay in the patient workflow with quick access to queue, ED activations, consults, and telemedicine.",
-      tone: "border-emerald-400/20 bg-emerald-400/10 text-emerald-100",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--primary-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/clinical/emergency", label: "ED / Casualty", icon: Ambulance },
         { href: "/queue", label: "Queue", icon: Users },
@@ -250,7 +263,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Finance operations",
       description: "Billing, payments, and claims are grouped together for faster revenue-cycle work.",
-      tone: "border-sky-400/20 bg-sky-400/10 text-sky-100",
+      tone: "border-[color:var(--info)]/25 bg-[color:var(--info-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/finance/billing", label: "Billing", icon: CreditCard },
         { href: "/finance/payments", label: "Payments", icon: Wallet },
@@ -263,7 +276,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
       title: "Enterprise resource plane",
       description:
         "Commodities, pharmacy stock, procurement, finance rails, logistics, and assets — scoped to your facility and roles, not isolated admin consoles.",
-      tone: "border-amber-400/20 bg-amber-950/35 text-amber-100",
+      tone: "border-[color:var(--warning)]/35 bg-[color:var(--warning-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/enterprise", label: "Enterprise dashboard", icon: LayoutDashboard },
         { href: "/inventory", label: "Inventory", icon: Package },
@@ -281,7 +294,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Citizen self-service",
       description: "Health ID, recovery, public credential verification, and shared-document claim stay inside the same Experience shell.",
-      tone: "border-cyan-400/20 bg-cyan-400/10 text-cyan-100",
+      tone: "border-[color:var(--primary)]/25 bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/verify/credential", label: "Verify credential", icon: ShieldCheck },
         { href: "/citizen/health-id/qr", label: "Health ID QR", icon: IdCard },
@@ -295,7 +308,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "VITO — Identity Operations",
       description: "Client registry workflows: registration, issuance, smart cards, deduplication, biometrics, and recovery.",
-      tone: "border-indigo-400/30 bg-indigo-950/40 text-indigo-100",
+      tone: "border-[color:var(--nompilo)]/25 bg-[color:var(--nompilo-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/operations/vito/registration", label: "Registration", icon: Users },
         { href: "/operations/vito/issuance", label: "Issuance", icon: IdCard },
@@ -321,7 +334,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
     return {
       title: "Professional oversight",
       description: "Reference, governance, and reporting — use Registry plane or Org administration for explicit operational context.",
-      tone: "border-violet-400/20 bg-violet-400/10 text-violet-100",
+      tone: "border-[color:var(--nompilo)]/25 bg-[color:var(--nompilo-soft)] text-[color:var(--text-primary)]",
       actions: [
         { href: "/registry/intake", label: "Registry intake", icon: Route },
         { href: "/admin/clinical-curation", label: "Knowledge curation", icon: Lightbulb },
@@ -334,7 +347,7 @@ function getSidebarSpotlight(pathname: string): SidebarSpotlight {
   return {
     title: "One Experience Layer",
     description: "Move between work, professional, and personal contexts without losing your current facility and workspace state.",
-    tone: "border-white/10 bg-white/5 text-slate-100",
+    tone: "border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-primary)]",
     actions: [
       { href: "/home", label: "Home", icon: LayoutDashboard },
       { href: "/facility", label: "Facility", icon: Building2 },
@@ -399,7 +412,7 @@ export function ExperienceSidebar() {
       {navDrawerOpen ? (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-slate-950/50"
+          className="fixed inset-0 z-40 bg-[color:var(--impilo-charcoal)]/35 backdrop-blur-[1px]"
           aria-label="Close navigation overlay"
           onClick={closeDrawer}
         />
@@ -408,31 +421,32 @@ export function ExperienceSidebar() {
       <aside
         data-sidebar
         className={[
-          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200",
+          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r text-[color:var(--text-primary)] transition-transform duration-200 impilo-subtle-african-accent",
+          "border-[color:var(--border-soft)] bg-[linear-gradient(180deg,#f5fcf8_0%,#eef8f2_52%,#f7faf8_100%)]",
           shellClasses,
           navDrawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full pointer-events-none",
         ].join(" ")}
       >
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-4">
+        <div className="flex items-center justify-between border-b border-[color:var(--border-soft)] px-4 py-4">
           {!collapsed ? (
             <div className="min-w-0">
               <Link href="/home" className="block" onClick={closeDrawer}>
-                <ImpiloBrandLogo variant="full" tone="white" size={22} />
+                <ImpiloBrandLogo variant="full" tone="brand" size={22} />
               </Link>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-[color:var(--text-muted)]">
                 Health Operating System
               </p>
             </div>
           ) : (
             <Link href="/home" className="block" onClick={closeDrawer}>
-              <ImpiloBrandLogo variant="mark" tone="white" size={24} />
+              <ImpiloBrandLogo variant="mark" tone="brand" size={24} />
             </Link>
           )}
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setSwitcherOpen(true)}
-              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-impilo-500/20 hover:text-impilo-300"
+              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-white p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--primary)]"
               aria-label="Switch context"
               title="Switch context"
             >
@@ -441,14 +455,14 @@ export function ExperienceSidebar() {
             <button
               type="button"
               onClick={toggleCollapsed}
-              className="hidden rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-300 transition hover:bg-white/5 md:inline-flex"
+              className="hidden rounded-xl border border-[color:var(--border-soft)] bg-white px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)] md:inline-flex"
             >
               {collapsed ? "Expand" : "Collapse"}
             </button>
             <button
               type="button"
               onClick={closeDrawer}
-              className="inline-flex rounded-xl border border-white/10 p-2 text-slate-300 transition hover:bg-white/5"
+              className="inline-flex rounded-xl border border-[color:var(--border-soft)] bg-white p-2 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
               aria-label="Close navigation"
             >
               <X className="h-4 w-4" />
@@ -460,18 +474,18 @@ export function ExperienceSidebar() {
         {!collapsed && <ProviderActivationBanner />}
 
         {!collapsed && !citizenOnly && (
-          <div className="border-b border-white/10 px-4 py-4">
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+          <div className="border-b border-[color:var(--border-soft)] px-4 py-4">
+            <div className="rounded-3xl border border-[color:var(--border-soft)] bg-white p-4 shadow-impilo-card">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
                     Experience Entry
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-white">
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--text-primary)]">
                     {currentRoute?.pageTitle ?? "Workspace"}
                   </p>
                 </div>
-                <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
+                <span className="rounded-full border border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--primary-hover)]">
                   {WORK_MODE_LABELS[workMode]}
                 </span>
               </div>
@@ -492,8 +506,8 @@ export function ExperienceSidebar() {
                       className={[
                         "rounded-2xl border px-3 py-2 text-xs",
                         done
-                          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
-                          : "border-white/10 bg-slate-950/20 text-slate-400",
+                          ? "border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
+                          : "border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] text-[color:var(--text-muted)]",
                       ].join(" ")}
                     >
                       {entry.label}
@@ -507,13 +521,13 @@ export function ExperienceSidebar() {
 
         {/* Health OS §4: Role context switching — switch roles in-session (hidden for citizen-only) */}
         {!collapsed && user && !citizenOnly && (
-          <div className="border-b border-white/10 px-4 py-3">
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 mb-2">Active Role</p>
+          <div className="border-b border-[color:var(--border-soft)] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-widest text-[color:var(--text-muted)] mb-2">Active Role</p>
             <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs font-medium text-white">{user.actorType}</span>
+              <ShieldCheck className="h-4 w-4 text-[color:var(--primary)]" />
+              <span className="text-xs font-medium text-[color:var(--text-primary)]">{user.actorType}</span>
               {user.providerId && (
-                <span className="text-[10px] bg-impilo-500/20 text-impilo-300 rounded-full px-2 py-0.5">Provider</span>
+                <span className="text-[10px] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)] rounded-full px-2 py-0.5">Provider</span>
               )}
             </div>
             <div className="flex gap-1 flex-wrap">
@@ -527,7 +541,7 @@ export function ExperienceSidebar() {
                   <Link
                     key={role}
                     href={role === "PROVIDER" ? "/provider/activate?returnTo=" + encodeURIComponent(pathname) : "/home"}
-                    className="text-[10px] rounded-full border border-white/10 px-2 py-1 text-slate-400 hover:bg-white/10 hover:text-white transition"
+                    className="text-[10px] rounded-full border border-[color:var(--border-soft)] px-2 py-1 text-[color:var(--text-secondary)] hover:bg-white hover:text-[color:var(--text-primary)] transition"
                   >
                     Switch to {role.charAt(0) + role.slice(1).toLowerCase()}
                   </Link>
@@ -538,13 +552,13 @@ export function ExperienceSidebar() {
         )}
 
         {!collapsed && !citizenOnly && (
-          <div className="border-b border-white/10 px-4 py-4">
+          <div className="border-b border-[color:var(--border-soft)] px-4 py-4">
             <div className={`rounded-3xl border p-4 ${spotlight.tone}`}>
               <p className="text-[11px] uppercase tracking-[0.24em] text-slate-400">
                 Context Spotlight
               </p>
-              <p className="mt-2 text-sm font-semibold text-white">{spotlight.title}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-300">{spotlight.description}</p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--text-primary)]">{spotlight.title}</p>
+              <p className="mt-1 text-xs leading-5 text-[color:var(--text-secondary)]">{spotlight.description}</p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {spotlight.actions.map((action) => {
                   const Icon = action.icon;
@@ -553,13 +567,13 @@ export function ExperienceSidebar() {
                       key={action.href}
                       href={action.href}
                       onClick={closeDrawer}
-                      className="inline-flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/20 px-3 py-2 text-xs font-medium text-slate-100 transition hover:bg-white/10"
+                      className="inline-flex items-center justify-between rounded-2xl border border-[color:var(--border-soft)] bg-white px-3 py-2 text-xs font-medium text-[color:var(--text-primary)] transition hover:bg-[color:var(--surface-soft)]"
                     >
                       <span className="inline-flex items-center gap-2">
                         <Icon className="h-3.5 w-3.5" />
                         {action.label}
                       </span>
-                      <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+                      <ArrowUpRight className="h-3.5 w-3.5 text-[color:var(--text-muted)]" />
                     </Link>
                   );
                 })}
@@ -597,8 +611,8 @@ export function ExperienceSidebar() {
                       className={[
                         "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm transition",
                         active
-                          ? "bg-white text-slate-950 shadow-sm"
-                          : "text-slate-300 hover:bg-white/10 hover:text-white",
+                          ? "bg-white text-[color:var(--text-primary)] shadow-impilo-card"
+                          : "text-[color:var(--text-secondary)] hover:bg-white hover:text-[color:var(--text-primary)]",
                         collapsed ? "justify-center" : "",
                       ].join(" ")}
                     >
@@ -612,14 +626,14 @@ export function ExperienceSidebar() {
           ))}
         </div>
 
-        <div className="border-t border-white/10 px-4 py-4">
+        <div className="border-t border-[color:var(--border-soft)] px-4 py-4">
           {!collapsed ? (
-            <div className="space-y-2 rounded-3xl border border-white/10 bg-white/5 p-4">
+            <div className="space-y-2 rounded-3xl border border-[color:var(--border-soft)] bg-white p-4 shadow-impilo-card">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-[color:var(--text-muted)]">
                   {citizenOnly ? "My Account" : "Active Context"}
                 </p>
-                <p className="mt-2 truncate text-sm font-medium text-white">
+                <p className="mt-2 truncate text-sm font-medium text-[color:var(--text-primary)]">
                   {user?.displayName ?? user?.email ?? "Impilo user"}
                 </p>
               </div>
@@ -628,21 +642,21 @@ export function ExperienceSidebar() {
                   <Link
                     href="/home/profile"
                     onClick={closeDrawer}
-                    className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                    className="inline-flex rounded-xl border border-[color:var(--border-soft)] px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
                   >
                     Profile
                   </Link>
                   <Link
                     href="/settings"
                     onClick={closeDrawer}
-                    className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                    className="inline-flex rounded-xl border border-[color:var(--border-soft)] px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
                   >
                     Settings
                   </Link>
                 </div>
               ) : (
               <>
-              <div className="space-y-1 text-xs text-slate-300">
+              <div className="space-y-1 text-xs text-[color:var(--text-secondary)]">
                 <p className="truncate">
                   Facility: {facility?.name ?? "Not selected"}
                 </p>
@@ -657,14 +671,14 @@ export function ExperienceSidebar() {
                 <Link
                   href="/facility"
                   onClick={closeDrawer}
-                  className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                    className="inline-flex rounded-xl border border-[color:var(--border-soft)] px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
                 >
                   Facility
                 </Link>
                 <Link
                   href="/workspace"
                   onClick={closeDrawer}
-                  className="inline-flex rounded-xl border border-white/10 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                    className="inline-flex rounded-xl border border-[color:var(--border-soft)] px-3 py-2 text-xs text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]"
                 >
                   Workspace
                 </Link>
@@ -676,10 +690,10 @@ export function ExperienceSidebar() {
             <div className="flex flex-col items-center gap-3">
               {!citizenOnly && (
               <>
-              <Link href="/facility" title={facility?.name ?? "Facility"} onClick={closeDrawer} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+              <Link href="/facility" title={facility?.name ?? "Facility"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-white p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
                 <Building2 className="h-4 w-4" />
               </Link>
-              <Link href="/workspace" title={workspace?.name ?? "Workspace"} onClick={closeDrawer} className="rounded-2xl border border-white/10 p-3 text-slate-200 transition hover:bg-white/10">
+              <Link href="/workspace" title={workspace?.name ?? "Workspace"} onClick={closeDrawer} className="rounded-2xl border border-[color:var(--border-soft)] bg-white p-3 text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-soft)]">
                 <BriefcaseBusiness className="h-4 w-4" />
               </Link>
               <div className={shiftActive ? "rounded-full bg-emerald-400 p-1" : "rounded-full bg-amber-400 p-1"}>

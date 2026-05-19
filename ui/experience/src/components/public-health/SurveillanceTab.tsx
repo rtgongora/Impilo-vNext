@@ -5,16 +5,74 @@ import {
   AlertTriangle, Plus, Eye, Loader2,
 } from "lucide-react";
 import {
+  useIngestPublicHealthEvent,
+  useCreatePublicHealthSignal,
   usePublicHealthCases,
   usePublicHealthCounters,
   usePublicHealthSignals,
+  usePublicHealthWeeklyIdsr,
 } from "@/hooks/queries/usePublicHealth";
-import { DEMO_WEEKLY_IDSR_FACILITIES } from "./publicHealthDemoFixtures";
+
+interface NewSignalEventForm {
+  disease: string;
+  facility: string;
+  cases: string;
+  detectedOn: string;
+  location: string;
+  source: string;
+  notes: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+}
+
+const EMPTY_SIGNAL_EVENT: NewSignalEventForm = {
+  disease: "",
+  facility: "",
+  cases: "1",
+  detectedOn: new Date().toISOString().slice(0, 10),
+  location: "",
+  source: "",
+  notes: "",
+  priority: "MEDIUM",
+};
+
+interface NewCaseReportForm {
+  disease: string;
+  patientRef: string;
+  facilityId: string;
+  dateOnset: string;
+  dateNotification: string;
+  classification: string;
+  outcome: string;
+  summary: string;
+}
+
+const EMPTY_CASE_REPORT: NewCaseReportForm = {
+  disease: "",
+  patientRef: "",
+  facilityId: "",
+  dateOnset: "",
+  dateNotification: new Date().toISOString().slice(0, 10),
+  classification: "suspected",
+  outcome: "admitted",
+  summary: "",
+};
+
+function normalizeEventType(disease: string): string {
+  if (!disease) return "SURVEILLANCE_EVENT";
+  return `SURVEILLANCE_${disease.trim().toUpperCase().replace(/[^A-Z0-9]+/g, "_")}`;
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
 
 export function SurveillanceTab() {
   const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
   const { data: apiCases = [], isLoading: caseLoading, isError: caseError } = usePublicHealthCases();
   const { data: counters = [], isLoading: ctrLoading, isError: ctrError } = usePublicHealthCounters();
+  const { data: weeklyRows = [], isLoading: weeklyLoading, isError: weeklyError } = usePublicHealthWeeklyIdsr();
+  const createSignal = useCreatePublicHealthSignal();
+  const ingestEvent = useIngestPublicHealthEvent();
 
   const [filter, setFilter] = useState("all");
   const [showNewEvent, setShowNewEvent] = useState(false);
@@ -22,19 +80,100 @@ export function SurveillanceTab() {
   const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<"signals" | "cases" | "weekly">("signals");
+  const [signalForm, setSignalForm] = useState<NewSignalEventForm>(EMPTY_SIGNAL_EVENT);
+  const [signalFormError, setSignalFormError] = useState<string | null>(null);
+  const [signalFormSuccess, setSignalFormSuccess] = useState<string | null>(null);
+  const [caseForm, setCaseForm] = useState<NewCaseReportForm>(EMPTY_CASE_REPORT);
+  const [caseFormError, setCaseFormError] = useState<string | null>(null);
+  const [caseFormSuccess, setCaseFormSuccess] = useState<string | null>(null);
 
   const filteredSignals = apiSignals.filter((s) => {
     if (filter === "all") return true;
     return s.status.toUpperCase() === filter.toUpperCase();
   });
 
+  function updateSignalForm(field: keyof NewSignalEventForm, value: string) {
+    setSignalForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function submitSignalEvent() {
+    if (!signalForm.disease.trim()) {
+      setSignalFormError("Disease/condition is required.");
+      return;
+    }
+    const threshold = Number(signalForm.cases);
+    if (Number.isNaN(threshold) || threshold < 1) {
+      setSignalFormError("Number of cases must be 1 or higher.");
+      return;
+    }
+    setSignalFormError(null);
+    setSignalFormSuccess(null);
+    try {
+      await createSignal.mutateAsync({
+        name: `${signalForm.disease} signal`,
+        description: [
+          signalForm.notes.trim(),
+          signalForm.facility.trim() ? `Facility: ${signalForm.facility.trim()}` : "",
+          signalForm.location.trim() ? `Location: ${signalForm.location.trim()}` : "",
+          signalForm.source.trim() ? `Source: ${signalForm.source.trim()}` : "",
+          signalForm.detectedOn ? `Detected: ${signalForm.detectedOn}` : "",
+        ]
+          .filter(Boolean)
+          .join(" | "),
+        eventType: normalizeEventType(signalForm.disease),
+        conditionField: "syndrome_code",
+        threshold,
+        windowHours: 24,
+        severity: signalForm.priority,
+      });
+      setSignalFormSuccess("Surveillance event submitted successfully.");
+      setSignalForm(EMPTY_SIGNAL_EVENT);
+      setShowNewEvent(false);
+    } catch {
+      setSignalFormError("Unable to submit event right now. Please verify surveillance connectivity.");
+    }
+  }
+
+  function updateCaseForm(field: keyof NewCaseReportForm, value: string) {
+    setCaseForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function submitCaseReport() {
+    if (!caseForm.disease.trim()) {
+      setCaseFormError("Disease is required.");
+      return;
+    }
+    setCaseFormError(null);
+    setCaseFormSuccess(null);
+    const payload = JSON.stringify({
+      disease: caseForm.disease,
+      patientRef: caseForm.patientRef,
+      dateOnset: caseForm.dateOnset,
+      dateNotification: caseForm.dateNotification,
+      classification: caseForm.classification,
+      outcome: caseForm.outcome,
+      summary: caseForm.summary,
+    });
+    try {
+      await ingestEvent.mutateAsync({
+        eventType: `CASE_REPORT_${normalizeEventType(caseForm.disease)}`,
+        payload,
+        facilityId: isUuid(caseForm.facilityId) ? caseForm.facilityId : null,
+      });
+      setCaseFormSuccess("Case-based report submitted successfully.");
+      setCaseForm(EMPTY_CASE_REPORT);
+      setShowNewCase(false);
+    } catch {
+      setCaseFormError("Unable to submit case report. Check surveillance/BFF availability.");
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="rounded-lg border border-impilo-200 bg-impilo-50/80 p-3 text-xs text-impilo-800">
         <strong>Live data:</strong> threshold signals, case-based reports, and counter snapshots load from the Experience BFF
-        → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> uses the
-        &quot;Weekly Aggregate&quot; sub-tab: an <strong>illustrative</strong> facility grid until{" "}
-        <code className="text-[10px]">GET …/weekly-idsr</code> exists.
+        → surveillance-service (empty if the service is down or unseeded). <strong>Weekly IDSR / eIDSR</strong> loads from
+        <code className="text-[10px]"> GET /internal/v1/public-health/weekly-idsr </code>.
       </div>
 
       {/* KPI Strip */}
@@ -58,8 +197,13 @@ export function SurveillanceTab() {
             color: "text-impilo-600",
             sub: ctrError ? "Could not reach counters" : "From /public-health/counters",
           },
-          { label: "Weekly IDSR", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
-          { label: "Reporting completeness", value: "—", color: "text-gray-500", sub: "Pending weekly aggregate endpoint" },
+          {
+            label: "Weekly IDSR",
+            value: weeklyLoading ? "…" : String(weeklyRows.length),
+            color: "text-impilo-700",
+            sub: weeklyError ? "Could not reach weekly aggregate" : "From /public-health/weekly-idsr",
+          },
+          { label: "Reporting completeness", value: weeklyError ? "Unavailable" : "Live", color: "text-emerald-700", sub: "Derived from weekly aggregate feed" },
         ].map((kpi, i) => (
           <div key={i} className="bg-white rounded-lg border border-gray-200 p-3 text-center">
             <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
@@ -74,13 +218,12 @@ export function SurveillanceTab() {
         {[
           { key: "signals" as const, label: "Threshold Signals" },
           { key: "cases" as const, label: "Case-Based Reports" },
-          { key: "weekly" as const, label: "Weekly Aggregate (pending)" },
+          { key: "weekly" as const, label: "Weekly Aggregate" },
         ].map((tab) => (
-          <button key={tab.key} onClick={() => tab.key !== "weekly" && setActiveSubTab(tab.key)}
-            disabled={tab.key === "weekly"}
+          <button key={tab.key} onClick={() => setActiveSubTab(tab.key)}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeSubTab === tab.key ? "border-amber-600 text-amber-600" : "border-transparent text-gray-500 hover:text-gray-700"
-            } ${tab.key === "weekly" ? "cursor-not-allowed opacity-50" : ""}`}>
+            }`}>
             {tab.label}
           </button>
         ))}
@@ -105,23 +248,41 @@ export function SurveillanceTab() {
               </select>
               <button
                 type="button"
-                disabled
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg cursor-not-allowed"
+                onClick={() => {
+                  setShowNewEvent((prev) => !prev);
+                  setSignalFormError(null);
+                  setSignalFormSuccess(null);
+                }}
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
               >
-                <Plus className="h-3.5 w-3.5" /> Report Event (pending)
+                <Plus className="h-3.5 w-3.5" /> {showNewEvent ? "Close form" : "Report Event"}
               </button>
             </div>
           </div>
 
           <div className="p-4 space-y-4">
+            {signalFormSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                {signalFormSuccess}
+              </div>
+            )}
             {/* New Event Form */}
             {showNewEvent && (
               <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">Report New Surveillance Event</h4>
+                {signalFormError && (
+                  <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                    {signalFormError}
+                  </div>
+                )}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs font-medium text-gray-600">Disease / Condition</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                    <select
+                      value={signalForm.disease}
+                      onChange={(e) => updateSignalForm("disease", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    >
                       <option value="">Select disease</option>
                       <option value="cholera">Cholera</option>
                       <option value="typhoid">Typhoid</option>
@@ -136,23 +297,48 @@ export function SurveillanceTab() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Reporting Facility</label>
-                    <input placeholder="Search facility..." className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      value={signalForm.facility}
+                      onChange={(e) => updateSignalForm("facility", e.target.value)}
+                      placeholder="Search facility..."
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Number of Cases</label>
-                    <input type="number" defaultValue={1} className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      type="number"
+                      min={1}
+                      value={signalForm.cases}
+                      onChange={(e) => updateSignalForm("cases", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Date of Detection</label>
-                    <input type="date" defaultValue="2026-04-06" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      type="date"
+                      value={signalForm.detectedOn}
+                      onChange={(e) => updateSignalForm("detectedOn", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Location / Ward</label>
-                    <input placeholder="e.g. Ward 22, Budiriro" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      value={signalForm.location}
+                      onChange={(e) => updateSignalForm("location", e.target.value)}
+                      placeholder="e.g. Ward 22, Budiriro"
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Source</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                    <select
+                      value={signalForm.source}
+                      onChange={(e) => updateSignalForm("source", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    >
                       <option value="">Source</option>
                       <option value="facility">Facility Report</option>
                       <option value="community">Community Alert</option>
@@ -163,12 +349,43 @@ export function SurveillanceTab() {
                   </div>
                 </div>
                 <div className="mt-3">
+                  <label className="text-xs font-medium text-gray-600">Priority</label>
+                  <select
+                    value={signalForm.priority}
+                    onChange={(e) => updateSignalForm("priority", e.target.value)}
+                    className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Moderate</option>
+                    <option value="HIGH">High</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
+                </div>
+                <div className="mt-3">
                   <label className="text-xs font-medium text-gray-600">Clinical Details / Notes</label>
-                  <textarea placeholder="Describe symptoms, clinical presentation, epidemiological context..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]" />
+                  <textarea
+                    value={signalForm.notes}
+                    onChange={(e) => updateSignalForm("notes", e.target.value)}
+                    placeholder="Describe symptoms, clinical presentation, epidemiological context..."
+                    className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                  />
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Submit Event</button>
-                  <button onClick={() => setShowNewEvent(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
+                  <button
+                    type="button"
+                    onClick={submitSignalEvent}
+                    disabled={createSignal.isPending}
+                    className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-60"
+                  >
+                    {createSignal.isPending ? "Submitting..." : "Submit Event"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewEvent(false)}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
@@ -368,63 +585,84 @@ export function SurveillanceTab() {
             </div>
             <button
               type="button"
-              disabled
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-200 text-gray-500 text-xs font-medium rounded-lg cursor-not-allowed"
+              onClick={() => {
+                setShowNewCase((prev) => !prev);
+                setCaseFormError(null);
+                setCaseFormSuccess(null);
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600"
             >
-              <Plus className="h-3.5 w-3.5" /> New Case Report (pending)
+              <Plus className="h-3.5 w-3.5" /> {showNewCase ? "Close form" : "New Case Report"}
             </button>
           </div>
 
           <div className="p-4 space-y-4">
+            {caseFormSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-800">
+                {caseFormSuccess}
+              </div>
+            )}
             {showNewCase && (
               <div className="p-4 border border-impilo-200 bg-impilo-50 rounded-lg">
                 <h4 className="font-semibold text-sm mb-3">New Case-Based Report (CBR)</h4>
+                {caseFormError && (
+                  <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-800">
+                    {caseFormError}
+                  </div>
+                )}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-xs font-medium text-gray-600">Disease</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
-                      <option value="">Select</option>
-                      <option value="cholera">Cholera</option>
-                      <option value="typhoid">Typhoid</option>
-                      <option value="measles">Measles</option>
-                      <option value="afp">AFP</option>
-                      <option value="neonatal_tetanus">Neonatal Tetanus</option>
-                      <option value="meningitis">Meningitis</option>
-                      <option value="yellow_fever">Yellow Fever</option>
-                    </select>
+                    <input
+                      value={caseForm.disease}
+                      onChange={(e) => updateCaseForm("disease", e.target.value)}
+                      placeholder="e.g. cholera"
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Patient (CPID)</label>
-                    <input placeholder="Search or enter CPID" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      value={caseForm.patientRef}
+                      onChange={(e) => updateCaseForm("patientRef", e.target.value)}
+                      placeholder="Search or enter CPID"
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-600">Age</label>
-                    <input type="number" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600">Sex</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
-                      <option value="">Select</option>
-                      <option value="M">Male</option>
-                      <option value="F">Female</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-gray-600">Reporting Facility</label>
-                    <input placeholder="Search facility" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <label className="text-xs font-medium text-gray-600">Reporting Facility UUID</label>
+                    <input
+                      value={caseForm.facilityId}
+                      onChange={(e) => updateCaseForm("facilityId", e.target.value)}
+                      placeholder="optional UUID"
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Date of Onset</label>
-                    <input type="date" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      type="date"
+                      value={caseForm.dateOnset}
+                      onChange={(e) => updateCaseForm("dateOnset", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Date of Notification</label>
-                    <input type="date" defaultValue="2026-04-06" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                    <input
+                      type="date"
+                      value={caseForm.dateNotification}
+                      onChange={(e) => updateCaseForm("dateNotification", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Initial Classification</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
-                      <option value="">Select</option>
+                    <select
+                      value={caseForm.classification}
+                      onChange={(e) => updateCaseForm("classification", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    >
                       <option value="suspected">Suspected</option>
                       <option value="probable">Probable</option>
                       <option value="confirmed">Confirmed</option>
@@ -432,8 +670,11 @@ export function SurveillanceTab() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-600">Outcome</label>
-                    <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
-                      <option value="">Select</option>
+                    <select
+                      value={caseForm.outcome}
+                      onChange={(e) => updateCaseForm("outcome", e.target.value)}
+                      className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                    >
                       <option value="admitted">Admitted</option>
                       <option value="outpatient">Outpatient</option>
                       <option value="recovering">Recovering</option>
@@ -443,11 +684,29 @@ export function SurveillanceTab() {
                 </div>
                 <div className="mt-3">
                   <label className="text-xs font-medium text-gray-600">Clinical Summary</label>
-                  <textarea placeholder="Symptoms, signs, treatment given..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]" />
+                  <textarea
+                    value={caseForm.summary}
+                    onChange={(e) => updateCaseForm("summary", e.target.value)}
+                    placeholder="Symptoms, signs, treatment given..."
+                    className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                  />
                 </div>
                 <div className="flex gap-2 mt-3">
-                  <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Submit CBR</button>
-                  <button onClick={() => setShowNewCase(false)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
+                  <button
+                    type="button"
+                    onClick={submitCaseReport}
+                    disabled={ingestEvent.isPending}
+                    className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-60"
+                  >
+                    {ingestEvent.isPending ? "Submitting..." : "Submit CBR"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCase(false)}
+                    className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
@@ -560,100 +819,26 @@ export function SurveillanceTab() {
 
       {/* Weekly IDSR / eIDSR — illustrative facility grid (Lovable parity); replace with API when available */}
       {activeSubTab === "weekly" && (
-        <div className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-            <p className="font-medium">Weekly aggregate (IDSR / eIDSR)</p>
-            <p className="mt-2 text-xs leading-relaxed text-amber-900/90">
-              The facility grid below matches the <strong>Lovable / impilo-structure</strong> eIDSR layout for training and
-              demos. There is still no <code className="text-[11px]">GET /internal/v1/public-health/weekly-idsr</code> on the
-              BFF — when reporting services publish it, swap <code className="text-[11px]">DEMO_WEEKLY_IDSR_FACILITIES</code> for
-              live rows.
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+          <p className="font-medium">Weekly aggregate (IDSR / eIDSR)</p>
+          {weeklyLoading && <p className="mt-2 text-xs leading-relaxed text-emerald-900/90">Loading weekly aggregate feed…</p>}
+          {weeklyError && (
+            <p className="mt-2 text-xs leading-relaxed text-red-800">
+              Weekly aggregate feed unavailable. This view fails closed when the BFF route cannot be reached.
             </p>
-          </div>
-
-          <div className="rounded-lg border border-gray-200 bg-white">
-            <div className="border-b px-4 py-3">
-              <h4 className="text-sm font-semibold text-gray-900">Facility reporting completeness (demo W14-2026)</h4>
-              <p className="text-xs text-gray-500">Zero reporting vs positive counts per notifiable week</p>
-            </div>
-            <div className="overflow-x-auto p-2">
-              <table className="w-full min-w-[640px] text-xs">
-                <thead>
-                  <tr className="border-b bg-gray-50 text-left">
-                    <th className="px-3 py-2 font-medium text-gray-600">Facility</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Week</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Submitted</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">On time</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Diseases</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Zero reports</th>
-                    <th className="px-3 py-2 font-medium text-gray-600">Positive</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {DEMO_WEEKLY_IDSR_FACILITIES.map((w) => (
-                    <tr key={w.facility} className="border-b hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-900">{w.facility}</td>
-                      <td className="px-3 py-2 font-mono text-gray-600">{w.week}</td>
-                      <td className="px-3 py-2">{w.submitted ? "Yes" : <span className="font-semibold text-red-700">No</span>}</td>
-                      <td className="px-3 py-2">{w.onTime ? "Yes" : <span className="text-amber-800">Late</span>}</td>
-                      <td className="px-3 py-2 tabular-nums">{w.diseases}</td>
-                      <td className="px-3 py-2 tabular-nums">{w.zero}</td>
-                      <td className="px-3 py-2 tabular-nums font-medium text-gray-900">{w.positive}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-gray-900">Aggregate disease counts (demo)</h5>
-              <p className="mb-3 text-xs text-gray-500">Cross-facility roll-up for the same reporting week</p>
-              <ul className="space-y-2 text-xs">
-                {[
-                  { disease: "Acute watery diarrhoea", n: 34, trend: "+12% vs W13" },
-                  { disease: "Typhoid", n: 18, trend: "stable" },
-                  { disease: "Malaria (confirmed)", n: 412, trend: "seasonal rise" },
-                  { disease: "Measles (suspected)", n: 6, trend: "watch" },
-                ].map((d) => (
-                  <li key={d.disease} className="flex justify-between rounded border border-gray-100 px-2 py-1.5">
-                    <span className="font-medium text-gray-800">{d.disease}</span>
-                    <span className="tabular-nums text-gray-700">
-                      {d.n} <span className="text-[10px] text-gray-500">({d.trend})</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-lg border border-gray-200 bg-white p-4">
-              <h5 className="text-sm font-semibold text-gray-900">Timeliness &amp; completeness (demo KPIs)</h5>
-              <p className="mb-3 text-xs text-gray-500">Aligns with MoHCC IDSR targets — wire to analytics when ready</p>
-              <ul className="space-y-3 text-xs">
-                {[
-                  { label: "Weekly IDSR completeness", value: 89, target: 80 },
-                  { label: "Timeliness of reporting", value: 76, target: 80 },
-                  { label: "Case investigation rate", value: 92, target: 90 },
-                  { label: "Lab confirmation rate", value: 68, target: 75 },
-                ].map((m) => (
-                  <li key={m.label}>
-                    <div className="mb-1 flex justify-between">
-                      <span className="font-medium text-gray-800">{m.label}</span>
-                      <span className={m.value >= m.target ? "text-emerald-700" : "text-amber-800"}>
-                        {m.value}% (target {m.target}%)
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className={`h-full rounded-full ${m.value >= m.target ? "bg-emerald-500" : "bg-amber-500"}`}
-                        style={{ width: `${Math.min(100, m.value)}%` }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          )}
+          {!weeklyLoading && !weeklyError && weeklyRows.length === 0 && (
+            <p className="mt-2 text-xs leading-relaxed text-emerald-900/90">No weekly aggregate rows returned for this tenant.</p>
+          )}
+          {!weeklyLoading && !weeklyError && weeklyRows.length > 0 && (
+            <ul className="mt-3 space-y-1 text-xs">
+              {weeklyRows.map((row) => (
+                <li key={row.id} className="rounded bg-white px-2 py-1 text-gray-800">
+                  {row.label}: {row.value} <span className="text-gray-500">({row.detail || "no detail"})</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

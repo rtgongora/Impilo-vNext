@@ -1,0 +1,6 @@
+apiVersion: v2
+name: learning
+description: Learning Service — Impilo Fundo backend (catalog, paths, learner progress, CPD/workflow/helpdesk linkages)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

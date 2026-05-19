@@ -29,7 +29,7 @@ public class GatewayRouteController {
 
     private static final Set<String> CLINICAL_FHIR_RESOURCE_TYPES = Set.of(
             "Patient", "Encounter", "Observation", "Condition", "MedicationRequest",
-            "DiagnosticReport", "Procedure", "MedicationAdministration", "Immunization",
+            "DiagnosticReport", "ImagingStudy", "Procedure", "MedicationAdministration", "Immunization",
             "CarePlan", "ClinicalImpression", "ServiceRequest", "Specimen", "DocumentReference",
             "AllergyIntolerance", "MedicationStatement", "FamilyMemberHistory", "RiskAssessment",
             "QuestionnaireResponse", "EpisodeOfCare"

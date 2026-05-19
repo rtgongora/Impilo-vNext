@@ -1,0 +1,276 @@
+# =============================================================================
+# Ndila — AsyncAPI event contract
+#
+# Ndila publishes geospatial lifecycle, intelligence, provider and tracking
+# events onto the Impilo Kafka bus using the canonical outbox pattern.
+# Consumed by: Tuso, Indawo, Nhume/Dispatch, Public Health Ops,
+# Data/Intelligence, Comms Hub, Nompilo and the Experience Layer.
+# =============================================================================
+asyncapi: "2.6.0"
+
+info:
+  title: Ndila Events
+  version: "1.0.0"
+  description: |
+    Event contract for the Ndila Geospatial Intelligence, Routing, Location and
+    Spatial Orchestration Service. Events flow through Apache Kafka and follow
+    the canonical Impilo `EventEnvelope` shape: typed payload, tenant scope,
+    correlation id, and outbox-published delivery.
+
+defaultContentType: application/json
+
+servers:
+  development:
+    url: kafka:9092
+    protocol: kafka
+    description: Local Docker Compose Kafka broker
+
+channels:
+  # ── Location lifecycle ─────────────────────────────────────────────────────
+  ndila.location.created:
+    publish:
+      summary: A new Ndila canonical location was registered.
+      message: { $ref: '#/components/messages/NdilaLocationEvent' }
+  ndila.location.updated:
+    publish:
+      summary: A Ndila location's coordinates or attributes changed.
+      message: { $ref: '#/components/messages/NdilaLocationEvent' }
+  ndila.location.verified:
+    publish:
+      summary: A Ndila location was field- or authority-verified.
+      message: { $ref: '#/components/messages/NdilaLocationEvent' }
+  ndila.location.rejected:
+    publish:
+      summary: A Ndila location's coordinates were rejected.
+      message: { $ref: '#/components/messages/NdilaLocationEvent' }
+
+  # ── Routing ────────────────────────────────────────────────────────────────
+  ndila.route.calculated:
+    publish:
+      summary: A point-to-point or multi-stop route was calculated.
+      message: { $ref: '#/components/messages/NdilaRouteCalculated' }
+  ndila.route.deviation.detected:
+    publish:
+      summary: A tracked asset deviated from a planned route corridor.
+      message: { $ref: '#/components/messages/NdilaRouteDeviation' }
+
+  # ── Provider audit ─────────────────────────────────────────────────────────
+  ndila.provider.selected:
+    publish:
+      summary: Ndila selected a provider for a request (with policy reason).
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+  ndila.provider.failed:
+    publish:
+      summary: A provider call failed.
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+  ndila.provider.fallback.used:
+    publish:
+      summary: A fallback provider was used after primary selection failed.
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+  ndila.provider.policy.denied:
+    publish:
+      summary: Provider access was denied by Tshepo or provider policy.
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+  ndila.provider.cache.hit:
+    publish:
+      summary: A provider response was served from cache.
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+  ndila.provider.cache.miss:
+    publish:
+      summary: A provider response was not in cache and required a fresh call.
+      message: { $ref: '#/components/messages/NdilaProviderEvent' }
+
+  # ── Geofence + catchment ───────────────────────────────────────────────────
+  ndila.geofence.created:
+    publish: { message: { $ref: '#/components/messages/NdilaGeofenceEvent' } }
+  ndila.geofence.updated:
+    publish: { message: { $ref: '#/components/messages/NdilaGeofenceEvent' } }
+  ndila.geofence.breach.detected:
+    publish: { message: { $ref: '#/components/messages/NdilaGeofenceBreach' } }
+  ndila.catchment.created:
+    publish: { message: { $ref: '#/components/messages/NdilaCatchmentEvent' } }
+  ndila.catchment.updated:
+    publish: { message: { $ref: '#/components/messages/NdilaCatchmentEvent' } }
+  ndila.catchment.overlap.detected:
+    publish: { message: { $ref: '#/components/messages/NdilaCatchmentEvent' } }
+
+  # ── Tracking ───────────────────────────────────────────────────────────────
+  ndila.tracking.asset.created:
+    publish: { message: { $ref: '#/components/messages/NdilaTrackingAssetEvent' } }
+  ndila.tracking.location.updated:
+    publish: { message: { $ref: '#/components/messages/NdilaTrackingEvent' } }
+  ndila.tracking.asset.outside-zone:
+    publish: { message: { $ref: '#/components/messages/NdilaTrackingEvent' } }
+
+  # ── Intelligence ───────────────────────────────────────────────────────────
+  ndila.intelligence.risk-cluster.detected:
+    publish: { message: { $ref: '#/components/messages/NdilaIntelligenceSignal' } }
+  ndila.intelligence.service-gap.detected:
+    publish: { message: { $ref: '#/components/messages/NdilaIntelligenceSignal' } }
+  ndila.intelligence.coordinate-quality-issue.detected:
+    publish: { message: { $ref: '#/components/messages/NdilaIntelligenceSignal' } }
+  ndila.intelligence.recommendation.generated:
+    publish: { message: { $ref: '#/components/messages/NdilaIntelligenceSignal' } }
+
+components:
+  schemas:
+    Envelope:
+      type: object
+      properties:
+        eventType: { type: string }
+        eventId: { type: string, format: uuid }
+        tenantId: { type: string }
+        correlationId: { type: string }
+        occurredAt: { type: string, format: date-time }
+        source: { type: string, example: ndila-service }
+        sensitivity: { type: string, enum: [PUBLIC, INTERNAL, RESTRICTED, HIGHLY_RESTRICTED] }
+      required: [eventType, eventId, tenantId, occurredAt]
+
+    LocationEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            locationId: { type: string }
+            ownerService: { type: string }
+            ownerEntityType: { type: string }
+            ownerEntityId: { type: string }
+            latitude: { type: number, format: double }
+            longitude: { type: number, format: double }
+            verificationStatus: { type: string }
+
+    RouteCalculatedPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            origin: { type: object, properties: { latitude: { type: number }, longitude: { type: number } } }
+            destination: { type: object, properties: { latitude: { type: number }, longitude: { type: number } } }
+            mode: { type: string }
+            distanceMeters: { type: number, format: double }
+            durationSeconds: { type: number, format: double }
+            provider: { type: string }
+            fallbackUsed: { type: boolean }
+
+    RouteDeviationPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            assetId: { type: string }
+            corridorId: { type: string }
+            deviationMeters: { type: number, format: double }
+            severity: { type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL] }
+
+    ProviderEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            provider: { type: string }
+            operation: { type: string }
+            chosen: { type: string }
+            fallbackChain: { type: array, items: { type: string } }
+            reasonCode: { type: string }
+            policyDecisionId: { type: string }
+            latencyMs: { type: integer }
+            cacheHit: { type: boolean }
+
+    GeofenceEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            geofenceId: { type: string }
+            geofenceType: { type: string }
+            ownerService: { type: string }
+            ownerEntityId: { type: string }
+
+    GeofenceBreachPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            geofenceId: { type: string }
+            assetId: { type: string }
+            breachType: { type: string, enum: [ENTRY, EXIT] }
+            latitude: { type: number, format: double }
+            longitude: { type: number, format: double }
+            detectedAt: { type: string, format: date-time }
+
+    CatchmentEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            catchmentId: { type: string }
+            ownerService: { type: string }
+            ownerEntityId: { type: string }
+
+    TrackingAssetEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            assetId: { type: string }
+            assetType: { type: string }
+            ownerService: { type: string }
+            ownerEntityId: { type: string }
+
+    TrackingEventPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            assetId: { type: string }
+            latitude: { type: number, format: double }
+            longitude: { type: number, format: double }
+            speedMps: { type: number, format: double }
+            headingDegrees: { type: number, format: double }
+            accuracyMeters: { type: number, format: double }
+            telemetrySource: { type: string }
+
+    IntelligenceSignalPayload:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            signalId: { type: string }
+            signalType: { type: string }
+            severity: { type: string, enum: [LOW, MEDIUM, HIGH, CRITICAL] }
+            areaLevel: { type: string }
+            areaId: { type: string }
+            confidence: { type: number, format: double }
+            description: { type: string }
+
+  messages:
+    NdilaLocationEvent:
+      name: NdilaLocationEvent
+      payload: { $ref: '#/components/schemas/LocationEventPayload' }
+    NdilaRouteCalculated:
+      name: NdilaRouteCalculated
+      payload: { $ref: '#/components/schemas/RouteCalculatedPayload' }
+    NdilaRouteDeviation:
+      name: NdilaRouteDeviation
+      payload: { $ref: '#/components/schemas/RouteDeviationPayload' }
+    NdilaProviderEvent:
+      name: NdilaProviderEvent
+      payload: { $ref: '#/components/schemas/ProviderEventPayload' }
+    NdilaGeofenceEvent:
+      name: NdilaGeofenceEvent
+      payload: { $ref: '#/components/schemas/GeofenceEventPayload' }
+    NdilaGeofenceBreach:
+      name: NdilaGeofenceBreach
+      payload: { $ref: '#/components/schemas/GeofenceBreachPayload' }
+    NdilaCatchmentEvent:
+      name: NdilaCatchmentEvent
+      payload: { $ref: '#/components/schemas/CatchmentEventPayload' }
+    NdilaTrackingAssetEvent:
+      name: NdilaTrackingAssetEvent
+      payload: { $ref: '#/components/schemas/TrackingAssetEventPayload' }
+    NdilaTrackingEvent:
+      name: NdilaTrackingEvent
+      payload: { $ref: '#/components/schemas/TrackingEventPayload' }
+    NdilaIntelligenceSignal:
+      name: NdilaIntelligenceSignal
+      payload: { $ref: '#/components/schemas/IntelligenceSignalPayload' }

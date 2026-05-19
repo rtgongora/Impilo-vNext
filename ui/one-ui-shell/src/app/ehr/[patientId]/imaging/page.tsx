@@ -11,7 +11,7 @@ import {
   Contrast,
   FileText,
   Grid3X3,
-  Image,
+  Image as ImageIcon,
   Loader2,
   Maximize2,
   Minimize2,
@@ -209,7 +209,7 @@ export default function ImagingPage() {
         <div className="space-y-6">
           <ClinicalReviewHeader
             badge="Imaging continuity"
-            badgeIcon={Image}
+            badgeIcon={ImageIcon}
             title="Keep imaging review attached to patient context, ordering follow-up, and clinical communication rather than opening a detached PACS tool."
             description="The viewer now makes it clear whether it found patient-matched PACS studies, what the next imaging action is, and where to continue into orders, results, documents, or notes."
             facilityName={facility?.name}
@@ -628,7 +628,7 @@ function SeriesBrowser({
           className="rounded-xl border border-gray-700 bg-gray-800 p-3 text-left transition-colors hover:border-impilo-400"
         >
           <div className="mb-2 flex aspect-square items-center justify-center rounded-lg bg-gray-900">
-            <Image className="h-8 w-8 text-gray-600" />
+            <ImageIcon className="h-8 w-8 text-gray-600" />
           </div>
           <p className="truncate text-xs font-medium text-white">{entry.label}</p>
           <p className="text-xs text-gray-400">

@@ -65,3 +65,10 @@ springdoc:
 pipeline:
   outbox:
     poll-interval-ms: 2000
+    reporting-aggregate-emit-enabled: ${PIPELINE_OUTBOX_REPORTING_AGGREGATE_EMIT_ENABLED:true}
+    reporting-aggregate-topic: ${PIPELINE_OUTBOX_REPORTING_AGGREGATE_TOPIC:analytics.reporting.aggregate}
+  kafka:
+    topics:
+      journey-completed: ${PIPELINE_KAFKA_TOPICS_JOURNEY_COMPLETED:clinical.pct.journey.completed}
+      client-registered: ${PIPELINE_KAFKA_TOPICS_CLIENT_REGISTERED:kernel.vito.client.registered}
+      result-available: ${PIPELINE_KAFKA_TOPICS_RESULT_AVAILABLE:clinical.oros.result.available}

@@ -29,3 +29,7 @@ Each rule object inside `costa_charging_rulesets.rules` may optionally include `
 ## Acceptance criteria (summary)
 
 Billing is never assumed to be only after discharge; COSTA and MusheX cooperate across pre-service, point-of-care, post-service, claim-based, package, periodic, and deferred paths while costing continues independently until policies merge into financial closure.
+
+## Related
+
+- [`mushex-gateway-neutrality.md`](./mushex-gateway-neutrality.md) — MusheX as a dual-mode (orchestration gateway + direct/default gateway) health payment platform; complements the billing-timing separation defined here.

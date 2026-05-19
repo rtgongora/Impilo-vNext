@@ -27,10 +27,17 @@ import {
   type MarketplaceService,
   type ServiceRequest,
 } from "../../services/marketplaceService";
+import {
+  createCitizenDeliveryRequest,
+  getCitizenDeliveryTracking,
+  listCitizenDeliveries,
+} from "../../services/citizenDeliveryService";
 import type { MarketplaceService as MktService, ServiceRequest as SvcReq } from "../../types";
 import { CartScreen } from "./CartScreen";
+import { HealthOsAppsScreen } from "./HealthOsAppsScreen";
+import { useAppStore } from "../../stores/appStore";
 
-type MarketplaceTab = "browse" | "requests" | "cart";
+type MarketplaceTab = "browse" | "requests" | "deliveries" | "cart" | "apps";
 
 const CATEGORIES = [
   { label: "All", value: "" },
@@ -53,10 +60,14 @@ const REQUEST_STATUS_COLORS: Record<string, "default" | "secondary" | "destructi
 const TABS: { id: MarketplaceTab; label: string; icon: React.ComponentProps<typeof Ionicons>["name"] }[] = [
   { id: "browse", label: "Browse", icon: "search-outline" },
   { id: "requests", label: "Requests", icon: "receipt-outline" },
+  { id: "deliveries", label: "Deliveries", icon: "bicycle-outline" },
   { id: "cart", label: "Cart", icon: "cart-outline" },
+  { id: "apps", label: "Apps", icon: "apps-outline" },
 ];
 
 export function MarketplaceScreen() {
+  const isOnline = useAppStore((s) => s.isOnline);
+  const setGlobalError = useAppStore((s) => s.setGlobalError);
   const [tab, setTab] = useState<MarketplaceTab>("browse");
   const [services, setServices] = useState<MktService[]>([]);
   const [requests, setRequests] = useState<SvcReq[]>([]);
@@ -68,6 +79,8 @@ export function MarketplaceScreen() {
   const [preferredDate, setPreferredDate] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deliveries, setDeliveries] = useState<Array<{ id: string; status: string; pickupLocation: string; dropoffLocation: string; updatedAt: string }>>([]);
+  const [deliveryTracking, setDeliveryTracking] = useState<Record<string, any>>({});
 
   const loadServices = useCallback(async () => {
     setIsLoading(true);
@@ -101,8 +114,47 @@ export function MarketplaceScreen() {
 
   useEffect(() => {
     if (tab === "browse") loadServices();
-    else loadRequests();
+    else if (tab === "requests") loadRequests();
+    else if (tab === "deliveries") {
+      setIsLoading(true);
+      listCitizenDeliveries()
+        .then(setDeliveries)
+        .catch((err) => setError(err instanceof Error ? err : new Error(String(err))))
+        .finally(() => setIsLoading(false));
+    }
   }, [tab, loadServices, loadRequests]);
+
+  const requestPresetDelivery = useCallback(async (preset: "medicine" | "sample_pickup") => {
+    if (!isOnline) {
+      setGlobalError({
+        code: "DELIVERY_SYNC_REQUIRED",
+        message: "You are offline. Delivery request will need sync when connection is restored.",
+      });
+      return;
+    }
+    try {
+      await createCitizenDeliveryRequest({
+        pickupLocation: preset === "medicine" ? "Pharmacy Counter" : "Home Sample Pickup",
+        dropoffLocation: "Citizen Address",
+        priority: preset === "medicine" ? "HIGH" : "NORMAL",
+        externalRef: `preset-${preset}-${Date.now()}`,
+      });
+      const updated = await listCitizenDeliveries();
+      setDeliveries(updated);
+      setTab("deliveries");
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [isOnline, setGlobalError]);
+
+  const openTracking = useCallback(async (id: string) => {
+    try {
+      const tracking = await getCitizenDeliveryTracking(id);
+      setDeliveryTracking((prev) => ({ ...prev, [id]: tracking }));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, []);
 
   const handleRequest = useCallback(async () => {
     if (!selectedService) return;
@@ -347,7 +399,55 @@ export function MarketplaceScreen() {
           </>
         ) : null}
 
+        {tab === "deliveries" ? (
+          <View style={styles.formContainer}>
+            <View style={styles.bookingBtnRow}>
+              <TouchableOpacity style={styles.confirmBtn} onPress={() => requestPresetDelivery("medicine")} testID="delivery-request-medicine">
+                <Text style={styles.confirmBtnText}>Request Medicine Delivery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => requestPresetDelivery("sample_pickup")} testID="delivery-request-sample">
+                <Text style={styles.cancelBtnText}>Request Sample Pickup</Text>
+              </TouchableOpacity>
+            </View>
+            {!isOnline ? (
+              <Text style={styles.emptyMessage}>Offline mode: delivery commands require sync when back online.</Text>
+            ) : null}
+            {isLoading ? (
+              <View style={styles.centered}><LoadingSpinner size="md" /></View>
+            ) : deliveries.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="bicycle-outline" size={48} color="#D1D5DB" />
+                <Text style={styles.emptyTitle}>No deliveries yet</Text>
+              </View>
+            ) : (
+              deliveries.map((delivery) => (
+                <View key={delivery.id} style={styles.requestCard}>
+                  <View style={styles.requestTop}>
+                    <View style={styles.requestInfo}>
+                      <Text style={styles.requestServiceName}>{delivery.pickupLocation} → {delivery.dropoffLocation}</Text>
+                      <Text style={styles.requestDate}>Updated {new Date(delivery.updatedAt).toLocaleString()}</Text>
+                      {deliveryTracking[delivery.id] ? (
+                        <Text style={styles.scheduledText}>
+                          Tracking events: {Array.isArray(deliveryTracking[delivery.id]?.tracking) ? deliveryTracking[delivery.id].tracking.length : 0}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.requestActions}>
+                      <Badge variant={REQUEST_STATUS_COLORS[delivery.status] ?? "outline"}>{delivery.status}</Badge>
+                      <TouchableOpacity style={styles.cancelRequestBtn} onPress={() => openTracking(delivery.id)}>
+                        <Text style={styles.cancelRequestBtnText}>Tracking</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        ) : null}
+
         {tab === "cart" ? <CartScreen /> : null}
+
+        {tab === "apps" ? <HealthOsAppsScreen /> : null}
       </ScrollView>
     </Screen>
   );

@@ -38,6 +38,8 @@ export interface UserInfo {
   family_name?: string;
   realm_access?: { roles: string[] };
   resource_access?: Record<string, { roles: string[] }>;
+  /** CPID claim — populated by the cpid Keycloak protocol mapper for citizen users. */
+  cpid?: string;
 }
 
 /**

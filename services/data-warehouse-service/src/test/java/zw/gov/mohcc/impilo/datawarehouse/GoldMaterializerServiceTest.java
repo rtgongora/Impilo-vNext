@@ -52,9 +52,11 @@ class GoldMaterializerServiceTest {
                 .thenReturn(Optional.empty());
         when(encounterRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        int count = service.materializeEvent(json, tenantId, "evt-1", "impilo.clinical.encounter.created.v1");
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent(json, tenantId, "evt-1", "impilo.clinical.encounter.created.v1");
 
-        assertThat(count).isEqualTo(1);
+        assertThat(outcome.upsertedCount()).isEqualTo(1);
+        assertThat(outcome.status()).isEqualTo("MATERIALIZED");
         ArgumentCaptor<GoldEncounterEntity> captor = ArgumentCaptor.forClass(GoldEncounterEntity.class);
         verify(encounterRepository).save(captor.capture());
         GoldEncounterEntity saved = captor.getValue();
@@ -75,9 +77,11 @@ class GoldMaterializerServiceTest {
                 .thenReturn(Optional.empty());
         when(medicationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        int count = service.materializeEvent(json, tenantId, "evt-2", "impilo.pharmacy.medication.dispensed.v1");
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent(json, tenantId, "evt-2", "impilo.pharmacy.medication.dispensed.v1");
 
-        assertThat(count).isEqualTo(1);
+        assertThat(outcome.upsertedCount()).isEqualTo(1);
+        assertThat(outcome.status()).isEqualTo("MATERIALIZED");
         ArgumentCaptor<GoldMedicationEntity> captor = ArgumentCaptor.forClass(GoldMedicationEntity.class);
         verify(medicationRepository).save(captor.capture());
         assertThat(captor.getValue().getDrugCode()).isEqualTo("ART-001");
@@ -95,9 +99,11 @@ class GoldMaterializerServiceTest {
                 .thenReturn(Optional.empty());
         when(labRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        int count = service.materializeEvent(json, tenantId, "evt-3", "impilo.lab.observation.reported.v1");
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent(json, tenantId, "evt-3", "impilo.lab.observation.reported.v1");
 
-        assertThat(count).isEqualTo(1);
+        assertThat(outcome.upsertedCount()).isEqualTo(1);
+        assertThat(outcome.status()).isEqualTo("MATERIALIZED");
         ArgumentCaptor<GoldLabEntity> captor = ArgumentCaptor.forClass(GoldLabEntity.class);
         verify(labRepository).save(captor.capture());
         assertThat(captor.getValue().getTestCode()).isEqualTo("HIV-VL");
@@ -111,8 +117,10 @@ class GoldMaterializerServiceTest {
                 {"data": {"some_id": "x"}}
                 """;
 
-        int count = service.materializeEvent(json, tenantId, "evt-4", "impilo.unknown.event.v1");
-        assertThat(count).isEqualTo(0);
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent(json, tenantId, "evt-4", "impilo.unknown.event.v1");
+        assertThat(outcome.upsertedCount()).isEqualTo(0);
+        assertThat(outcome.status()).isEqualTo("NO_MAPPED_TARGET");
     }
 
     @Test
@@ -130,16 +138,20 @@ class GoldMaterializerServiceTest {
                 .thenReturn(Optional.of(existing));
         when(encounterRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        int count = service.materializeEvent(json, tenantId, "evt-5", "impilo.clinical.encounter.updated.v1");
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent(json, tenantId, "evt-5", "impilo.clinical.encounter.updated.v1");
 
-        assertThat(count).isEqualTo(1);
+        assertThat(outcome.upsertedCount()).isEqualTo(1);
+        assertThat(outcome.status()).isEqualTo("MATERIALIZED");
         verify(encounterRepository, times(1)).save(any());
     }
 
     @Test
     @DisplayName("Malformed JSON returns 0 upserts")
     void malformedJsonReturnsZero() {
-        int count = service.materializeEvent("not-json{{", tenantId, "evt-6", "impilo.lab.observation.v1");
-        assertThat(count).isEqualTo(0);
+        GoldMaterializerService.MaterializationOutcome outcome =
+                service.materializeEvent("not-json{{", tenantId, "evt-6", "impilo.lab.observation.v1");
+        assertThat(outcome.upsertedCount()).isEqualTo(0);
+        assertThat(outcome.status()).isEqualTo("INVALID_ENVELOPE");
     }
 }

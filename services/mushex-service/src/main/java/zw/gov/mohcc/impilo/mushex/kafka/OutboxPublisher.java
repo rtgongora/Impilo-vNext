@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.mushex.kafka;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,11 +20,17 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitCoreTransactionEnabled;
+    private final String coreTransactionTopic;
 
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${mushex.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
+                           @Value("${mushex.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
+        this.coreTransactionTopic = coreTransactionTopic;
     }
 
     @Scheduled(fixedDelayString = "${mushex.outbox.poll-interval-ms:2000}")
@@ -38,6 +45,10 @@ public class OutboxPublisher {
             try {
                 String topic = routeTopic(event.getEventType());
                 kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload());
+                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
+                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
+                    kafkaTemplate.send(coreTransactionTopic, event.getAggregateId(), event.getPayload());
+                }
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
                 log.debug("Published event {} to topic {}", event.getId(), topic);
@@ -61,7 +72,29 @@ public class OutboxPublisher {
             case "WALLET_CREATED" -> "mushex.wallet.created";
             case "WALLET_TRANSACTION_RECORDED" -> "mushex.wallet.transaction.recorded";
             case "REMITTANCE_REQUESTED" -> "mushex.remittance.requested";
+            case "ATTEMPT_INITIATED" -> "mushex.payment.attempt.initiated";
+            case "ATTEMPT_FAILED_PRE_INITIATION" -> "mushex.payment.attempt.failed";
+            case "ATTEMPT_RESELECTED" -> "mushex.payment.attempt.reselected";
             default -> "mushex.events";
+        };
+    }
+
+    public static String resolveCoreTransactionTopic(String eventType) {
+        if (eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "INTENT_CREATED",
+                 "STATUS_CHANGED",
+                 "CLAIM_SUBMITTED",
+                 "CLAIM_ADJUDICATED",
+                 "CLAIM_PAID",
+                 "SETTLEMENT_BATCH_RELEASED",
+                 "REMITTANCE_ISSUED",
+                 "REMITTANCE_CLAIMED",
+                 "ATTEMPT_INITIATED",
+                 "ATTEMPT_RESELECTED" -> "core.transaction.events";
+            default -> null;
         };
     }
 }

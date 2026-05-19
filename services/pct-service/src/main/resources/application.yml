@@ -66,7 +66,23 @@ springdoc:
 pct:
   outbox:
     poll-interval-ms: 2000
+    dual-emit-canonical-enabled: ${PCT_OUTBOX_DUAL_EMIT_CANONICAL_ENABLED:false}
+    dual-emit-core-transaction-enabled: ${PCT_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${PCT_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
+    canonical-topics:
+      journey-completed: ${PCT_OUTBOX_CANONICAL_TOPIC_JOURNEY_COMPLETED:clinical.pct.journey.completed}
+      encounter-completed: ${PCT_OUTBOX_CANONICAL_TOPIC_ENCOUNTER_COMPLETED:clinical.pct.encounter.completed}
+      death-recorded: ${PCT_OUTBOX_CANONICAL_TOPIC_DEATH_RECORDED:clinical.pct.death.recorded}
   queue:
     default-sla-minutes: 30
   discharge:
     require-payment-clearance: true
+  telemedicine:
+    provider:
+      external:
+        enabled: ${PCT_TELEMED_EXTERNAL_ENABLED:false}
+        base-url: ${PCT_TELEMED_EXTERNAL_BASE_URL:}
+        session-path: ${PCT_TELEMED_EXTERNAL_SESSION_PATH:/v1/sessions}
+        api-key: ${PCT_TELEMED_EXTERNAL_API_KEY:}
+      fallback:
+        allow-managed-primary-fallback: ${PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY:true}

@@ -230,6 +230,63 @@ export function useCoverageRemittances() {
   });
 }
 
+// Phase 6 — Slice 6A. Read-only list hooks for the four CoverageController
+// list endpoints that the BFF already exposes but no UI hook consumes yet.
+// Each is envelope-tolerant (top-level array, `{ data: [] }`, `{ items: [] }`)
+// and returns `unknown[]` so consumers must defensively probe fields rather
+// than rely on a typed shape that has not yet been agreed across services.
+// See docs/audits/phase-6-claims-coverage-remittance-subsidy-audit.md.
+export function coverageListRows(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === "object") {
+    const root = payload as Record<string, unknown>;
+    if (Array.isArray(root.data)) return root.data;
+    if (Array.isArray(root.items)) return root.items;
+    if (Array.isArray(root.content)) return root.content;
+  }
+  return [];
+}
+
+export function useCoverageContributionsList() {
+  return useQuery({
+    queryKey: ["coverage-contributions-list"],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>("/internal/v1/coverage/contributions");
+      return coverageListRows(res);
+    },
+  });
+}
+
+export function useCoveragePreauthsList() {
+  return useQuery({
+    queryKey: ["coverage-preauths-list"],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>("/internal/v1/coverage/preauths");
+      return coverageListRows(res);
+    },
+  });
+}
+
+export function useCoverageUtilizationList() {
+  return useQuery({
+    queryKey: ["coverage-utilization-list"],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>("/internal/v1/coverage/utilization");
+      return coverageListRows(res);
+    },
+  });
+}
+
+export function useCoverageAppealsList() {
+  return useQuery({
+    queryKey: ["coverage-appeals-list"],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>("/internal/v1/coverage/appeals");
+      return coverageListRows(res);
+    },
+  });
+}
+
 export function useCheckCoverageEligibility() {
   return useMutation({
     mutationFn: async (body: Record<string, string>) => {

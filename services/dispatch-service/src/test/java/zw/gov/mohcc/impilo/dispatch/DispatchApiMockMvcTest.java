@@ -432,6 +432,69 @@ public class DispatchApiMockMvcTest {
         }
     }
 
+    @Nested
+    @DisplayName("H) Delivery lifecycle endpoints")
+    class DeliveryLifecycle {
+        @Test
+        @DisplayName("delivery create->assign->pickup->in_transit->delivered with proof/custody")
+        void deliveryLifecycleHappyPath() throws Exception {
+            String corr = UUID.randomUUID().toString();
+            MvcResult create = mockMvc.perform(post("/internal/v1/dispatch/deliveries")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-dlv-1")
+                            .header("X-Correlation-ID", corr)
+                            .header("Idempotency-Key", "dlv-create-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"pickupLocation\":\"PHARMACY-A\",\"dropoffLocation\":\"HOME-12\"}"))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String deliveryId = MAPPER.readTree(create.getResponse().getContentAsString()).get("id").asText();
+
+            postAction(deliveryId, "submit", "{\"notes\":\"submit\"}");
+            postAction(deliveryId, "approve", "{\"notes\":\"approve\"}");
+            postAction(deliveryId, "assign", "{\"courierProfileId\":\"11111111-1111-1111-1111-111111111111\"}");
+            postAction(deliveryId, "pickup", "{\"actorId\":\"courier-1\"}");
+            postAction(deliveryId, "start", "{\"actorId\":\"courier-1\"}");
+            postAction(deliveryId, "location", "{\"latitude\":-17.82,\"longitude\":31.05}");
+            postAction(deliveryId, "proof", "{\"proofType\":\"OTP\",\"otp\":\"123456\",\"capturedBy\":\"courier-1\"}");
+
+            mockMvc.perform(get("/internal/v1/dispatch/deliveries/" + deliveryId)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-dlv-2")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("DELIVERED"));
+
+            mockMvc.perform(get("/internal/v1/dispatch/deliveries/" + deliveryId + "/tracking")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-dlv-3")
+                            .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.tracking").isArray())
+                    .andExpect(jsonPath("$.proofs").isArray())
+                    .andExpect(jsonPath("$.custody_events").isArray());
+
+            assertThat(outboxRepository.findByAggregateIdAndEventType(deliveryId, "dispatch.delivery.assign")).isNotEmpty();
+            assertThat(outboxRepository.findByAggregateIdAndEventType(deliveryId, "dispatch.delivery.proof")).isNotEmpty();
+        }
+
+        private void postAction(String deliveryId, String action, String payload) throws Exception {
+            mockMvc.perform(post("/internal/v1/dispatch/deliveries/" + deliveryId + "/" + action)
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .header("X-Pod-ID", "national")
+                            .header("X-Request-ID", "req-dlv-" + action)
+                            .header("X-Correlation-ID", UUID.randomUUID().toString())
+                            .header("Idempotency-Key", "dlv-" + action + "-" + System.nanoTime())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(payload))
+                    .andExpect(status().isOk());
+        }
+    }
+
     // ── Helpers ──
 
     private void assertErrorEnvelope(MvcResult result, String expectedCode) throws Exception {

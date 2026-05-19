@@ -122,7 +122,7 @@ export function RecordSharingScreen() {
 
         issued_at: data.issued_at,
 
-        purpose: data.purpose ?? purpose.trim() || null,
+        purpose: (data.purpose ?? purpose.trim()) || null,
 
       });
 
@@ -132,7 +132,7 @@ export function RecordSharingScreen() {
 
         issued_at: data.issued_at,
 
-        purpose: data.purpose ?? purpose.trim() || null,
+        purpose: (data.purpose ?? purpose.trim()) || null,
 
       });
 

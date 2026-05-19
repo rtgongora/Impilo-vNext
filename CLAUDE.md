@@ -59,8 +59,8 @@ Impilo is not a single application — it is a governed execution environment pr
 9. Extension points for modules, apps, and integrations
 10. A coherent unified experience shell
 
-### 6 Planes
-Trust & Governance, Registry Spine, Clinical Execution, Finance, Integration/Ops, Experience
+### Canonical 7 Planes
+trust, registry, clinical, data, integration, experience, enterprise
 
 ### Core Principles
 - **Trust-first**: Every request flows through Envoy ext_authz → TSHEPO before reaching any service
@@ -107,10 +107,39 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - One coherent experience shell, not fragmented portals
 - Role-based: adapts visibility/enablement by active role and context
 - "Unified" ≠ identical — workspaces may differ but share governed trust model
-- Experience UI (`ui/experience/`) is the primary shell; all 22 sidecars absorbed
+- Experience orchestration shell is canonicalized in `ui/one-ui-shell`; deprecated paths such as `ui/experience/` are continuity surfaces, not parallel ownership.
 - **Intelligent**: searchable, conversational, context-aware, proactive guidance
 - **Consumer-grade wellness**: diet, sleep, fitness, clubs, coaching — genuine product pillars
 - **Graduated friction**: MINIMAL (wellness/search) → MAXIMUM (prescribing/claims)
+
+## Production Architecture Guardrails
+
+- Do not invent new plane names.
+- Do not create duplicate system-of-record functionality.
+- Do not move service folders by plane unless explicitly approved.
+- Do not treat `secondary_planes` as ownership.
+- Do not add mocks/stubs to production paths.
+- Before feature work, verify ownership in `docs/registry/services-registry.yaml` and `docs/registry/system-of-record-map.md`.
+- Before introducing a new service, prove no existing service already owns that capability.
+- Backend work is incomplete unless wired through BFF/API contracts and surfaced in experience where applicable.
+- Frontend work is incomplete unless backed by real APIs and real service logic.
+- Every production route must include authz, audit, error handling, observability, and tests.
+
+## Core Transaction Doctrine Compliance
+
+- Map each feature to a core transaction type and lifecycle stage.
+- Map each feature to person/provider/platform journey stage(s) where applicable.
+- Reject orphan capabilities that do not attach to a canonical transaction journey.
+- Never create duplicate patient/provider/facility/service/terminology/payment/consent/clinical truth models.
+- Backend changes are incomplete until journey wiring exists in BFF and UI surfaces where applicable.
+- Frontend-only experiences are incomplete unless bound to domain truth or clearly marked as prototype.
+- Experience and BFF are composition/orchestration layers, not source-of-truth services.
+- Require state transition, event, permission, and audit meaning for meaningful actions.
+- Include failure-path and offline/federated behavior in implementation scope when relevant.
+- Include Nompilo guidance, accessibility, and feedback capture consideration for user-facing changes.
+- Nompilo never overrides provider judgement and must remain auditable.
+- Preserve existing architecture and unrelated work.
+- Enforce `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` during feature delivery.
 
 ## Golden Thread (UI → DB proof path)
 1. `ui/experience/src/lib/api-client.ts` — injects trust headers

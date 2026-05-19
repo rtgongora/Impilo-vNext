@@ -48,6 +48,15 @@ class DispatchControllerTest {
         assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
+    @Test
+    void listDeliveries_returnsDataAndMeta() {
+        DispatchController controller = new DispatchController(new StubDispatchClient());
+        ResponseEntity<Map<String, Object>> response = controller.listDeliveries("req-dlv", "corr-dlv");
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("req-dlv", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -78,6 +87,14 @@ class DispatchControllerTest {
 
         @Override public JsonNode completeTask(String id, Map<String, Object> body) {
             return mapper.createObjectNode().put("id", id).put("status", "COMPLETED");
+        }
+
+        @Override public JsonNode listDeliveries() {
+            ArrayNode arr = mapper.createArrayNode();
+            arr.add(mapper.createObjectNode().put("id", "delivery-1").put("status", "IN_TRANSIT"));
+            ObjectNode root = mapper.createObjectNode();
+            root.set("items", arr);
+            return root;
         }
     }
 }

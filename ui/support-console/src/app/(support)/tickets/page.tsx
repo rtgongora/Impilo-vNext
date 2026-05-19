@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { listTickets } from "@/lib/supportApi";
@@ -11,7 +11,7 @@ const STATUS_OPTIONS: TicketStatus[] = ["OPEN", "IN_PROGRESS", "WAITING", "RESOL
 const PRIORITY_OPTIONS: TicketPriority[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 const CATEGORY_OPTIONS: TicketCategory[] = ["GENERAL", "INCIDENT", "BUG", "FEATURE_REQUEST", "ACCESS", "CONFIGURATION", "DATA"];
 
-export default function TicketsListPage() {
+function TicketsListPageContent() {
   const searchParams = useSearchParams();
 
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -187,5 +187,13 @@ export default function TicketsListPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TicketsListPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm text-neutral-500">Loading tickets...</div>}>
+      <TicketsListPageContent />
+    </Suspense>
   );
 }

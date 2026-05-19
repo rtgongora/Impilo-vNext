@@ -1,15 +1,20 @@
 package zw.gov.mohcc.impilo.tshepo.consent.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.tshepo.contracts.dto.ConsentDecision;
+import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentAuditEntity;
+import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentAuditRepository;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveEntity;
 import zw.gov.mohcc.impilo.tshepo.consent.persistence.ConsentDirectiveRepository;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,11 +46,17 @@ public class ConsentEvaluationService {
 
     private final ConsentDirectiveRepository consentRepo;
     private final ConsentCacheService cacheService;
+    private final ConsentAuditRepository consentAuditRepository;
+    private final ObjectMapper objectMapper;
 
     public ConsentEvaluationService(ConsentDirectiveRepository consentRepo,
-                                     ConsentCacheService cacheService) {
+                                     ConsentCacheService cacheService,
+                                     ConsentAuditRepository consentAuditRepository,
+                                     ObjectMapper objectMapper) {
         this.consentRepo = consentRepo;
         this.cacheService = cacheService;
+        this.consentAuditRepository = consentAuditRepository;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -81,6 +92,7 @@ public class ConsentEvaluationService {
 
         // Cache the result
         cacheService.cacheDecision(tenantId, patientRef, actorId, purpose, scope, decision);
+        persistEvaluationAudit(tenantId, actorId, patientRef, purpose, scope, decision);
 
         return decision;
     }
@@ -148,7 +160,13 @@ public class ConsentEvaluationService {
             ConsentDirectiveEntity denyDirective = denies.get(0);
             log.info("DENY: Explicit deny consent id={} for patient={} purpose={}",
                     denyDirective.getId(), patientRef, purpose);
-            return ConsentDecision.deny("CONSENT_DENIED");
+            return new ConsentDecision(
+                    false,
+                    denyDirective.getId().toString(),
+                    "deny",
+                    null,
+                    List.of(scope),
+                    "CONSENT_DENIED");
         }
 
         // Rule 3: Check for matching permits
@@ -193,5 +211,35 @@ public class ConsentEvaluationService {
             return true;
         }
         return false;
+    }
+
+    private void persistEvaluationAudit(
+            UUID tenantId, String actorId, String patientRef, String purpose, String scope, ConsentDecision decision) {
+        if (decision == null || decision.consentId() == null || decision.consentId().isBlank()) {
+            return;
+        }
+        UUID consentId;
+        try {
+            consentId = UUID.fromString(decision.consentId());
+        } catch (IllegalArgumentException ex) {
+            return;
+        }
+        ConsentAuditEntity audit = new ConsentAuditEntity();
+        audit.setTenantId(tenantId);
+        audit.setConsentId(consentId);
+        audit.setAction("EVALUATE_" + (decision.permitted() ? "PERMIT" : "DENY"));
+        audit.setActorId(actorId != null && !actorId.isBlank() ? actorId : "system");
+        try {
+            var detail = new HashMap<String, Object>();
+            detail.put("patientRef", patientRef);
+            detail.put("purpose", purpose);
+            detail.put("scope", scope);
+            detail.put("reason", decision.reason());
+            detail.put("provision", decision.provision());
+            audit.setDetail(objectMapper.writeValueAsString(detail));
+        } catch (JsonProcessingException ex) {
+            audit.setDetail("{}");
+        }
+        consentAuditRepository.save(audit);
     }
 }

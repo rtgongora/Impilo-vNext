@@ -12,13 +12,14 @@ import {
   Card,
   CardBody,
   Button,
-  Badge,
+  FeatureMaturityBadge,
   LoadingSpinner,
   EmptyState,
   ErrorState,
   Avatar,
 } from "@impilo/mobile-design-system";
 import type { Provider } from "../../types";
+import { discoverProviders } from "../../services/personalHealthService";
 
 const SPECIALTY_VARIANTS: Record<string, string> = {
   DOCTOR: "primary",
@@ -42,14 +43,14 @@ export function ProviderDiscoveryScreen({ onSelectProvider }: ProviderDiscoveryS
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      setProviders([]);
+      const result = await discoverProviders(searchQuery, selectedSpecialty ?? undefined);
+      setProviders(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [searchQuery, selectedSpecialty]);
 
   useEffect(() => {
     load();
@@ -67,6 +68,18 @@ export function ProviderDiscoveryScreen({ onSelectProvider }: ProviderDiscoveryS
     <Screen>
       <Header title="Find Providers" />
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.statusRow}>
+          <FeatureMaturityBadge
+            status={providers.length > 0 ? "connected" : "partial"}
+            detail="Provider discovery is composed from /internal/v1/mobile/citizen/services/discover."
+          />
+          <Text style={styles.statusText}>
+            {providers.length > 0
+              ? "Provider discovery is now loaded from citizen service-discovery APIs."
+              : "No providers matched the current search from service-discovery APIs."}
+          </Text>
+        </View>
+
         {/* Search Bar */}
         <TextInput
           style={styles.searchInput}
@@ -140,6 +153,13 @@ export function ProviderDiscoveryScreen({ onSelectProvider }: ProviderDiscoveryS
 const styles = StyleSheet.create({
   content: { flex: 1 },
   contentContainer: { padding: 16, gap: 16 },
+  statusRow: {
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#6B7280",
+  },
   searchInput: {
     backgroundColor: "#F3F4F6",
     padding: 12,

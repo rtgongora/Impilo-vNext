@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface CostaPaymentHandoffRepository extends JpaRepository<CostaPaymentHandoffEntity, UUID> {
 
     List<CostaPaymentHandoffEntity> findTop30ByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+
+    List<CostaPaymentHandoffEntity> findByTenantIdAndInvoiceIdIn(UUID tenantId, List<String> invoiceIds);
 }

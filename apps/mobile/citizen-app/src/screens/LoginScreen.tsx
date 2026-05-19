@@ -3,7 +3,7 @@
  * Modern hero layout with green brand treatment.
  */
 
-import React, { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -27,28 +27,83 @@ export function LoginScreen() {
   const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [pendingState, setPendingState] = useState<string | null>(null);
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const callbackHandledRef = useRef(false);
+
+  // Surface store-level auth errors (e.g. token-exchange failure after remount)
+  const displayError = error ?? (auth.error?.message ?? null);
+
+  const completeAuth = useCallback(async (url: string, expectedState: string) => {
+    if (callbackHandledRef.current) {
+      return;
+    }
+
+    const parsed = Linking.parse(url);
+    const code = parsed.queryParams?.code as string | undefined;
+    const returnedState = parsed.queryParams?.state as string | undefined;
+
+    if (!code || !returnedState) {
+      return;
+    }
+
+    callbackHandledRef.current = true;
+    await auth.handleCallback(code, returnedState, expectedState);
+    setPendingState(null);
+  }, [auth]);
 
   const handleLogin = useCallback(async () => {
+    if (isSigningIn) {
+      return;
+    }
+
     setError(null);
+    setIsSigningIn(true);
+    callbackHandledRef.current = false;
+
     try {
       const { authUrl, state } = await auth.login();
       setPendingState(state);
-      const result = await WebBrowser.openAuthSessionAsync(
-        authUrl,
-        Linking.createURL("auth/callback")
+
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Authentication timed out. Please try again.")), 120_000)
       );
+
+      const result = await Promise.race([
+        WebBrowser.openAuthSessionAsync(authUrl, Linking.createURL("auth/callback")),
+        timeout,
+      ]);
+
       if (result.type === "success" && result.url) {
-        const parsed = Linking.parse(result.url);
-        const code = parsed.queryParams?.code as string | undefined;
-        const returnedState = parsed.queryParams?.state as string | undefined;
-        if (code && returnedState) {
-          await auth.handleCallback(code, returnedState, state);
-        }
+        await completeAuth(result.url, state);
+      } else {
+        setPendingState(null);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+      setPendingState(null);
+    } finally {
+      setIsSigningIn(false);
     }
-  }, [auth]);
+  }, [auth, completeAuth, isSigningIn]);
+
+  // Fallback: handle the callback URL if it arrives as a deep link rather than
+  // being intercepted by openAuthSessionAsync (can happen on iOS when the system
+  // browser dismisses before the session completes).
+  useEffect(() => {
+    const handleUrl = (event: { url: string }) => {
+      if (pendingState) {
+        completeAuth(event.url, pendingState).catch((err) => {
+          setError(err instanceof Error ? err.message : "Authentication failed");
+        });
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", handleUrl);
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl({ url });
+    });
+    return () => subscription.remove();
+  }, [completeAuth, pendingState]);
 
   return (
     <View testID="login-screen" style={styles.root}>
@@ -74,17 +129,17 @@ export function LoginScreen() {
           Access your personal health records, appointments, and more — all in one place.
         </Text>
 
-        {error ? (
+        {displayError ? (
           <View style={styles.errorBox}>
             <Ionicons name="alert-circle" size={16} color="#DC2626" />
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{displayError}</Text>
             <Pressable onPress={() => setError(null)} hitSlop={8}>
               <Ionicons name="close" size={16} color="#DC2626" />
             </Pressable>
           </View>
         ) : null}
 
-        {auth.isLoading ? (
+        {auth.isLoading || isSigningIn ? (
           <View style={styles.loadingRow}>
             <LoadingSpinner size="md" />
             <Text style={styles.loadingText}>Signing you in…</Text>
@@ -96,6 +151,7 @@ export function LoginScreen() {
             variant="primary"
             size="lg"
             fullWidth
+            disabled={isSigningIn}
             testID="login-button"
             accessibilityLabel="Sign in to Impilo Citizen App"
             icon={<Ionicons name="log-in-outline" size={20} color="#FFFFFF" />}

@@ -12,13 +12,14 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Button,
   Badge,
+  FeatureMaturityBadge,
   LoadingSpinner,
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
 import type { Condition } from "../../types";
+import { fetchConditions } from "../../services/personalHealthService";
 
 const STATUS_VARIANT: Record<string, "default" | "warning" | "success"> = {
   ACTIVE: "warning",
@@ -40,10 +41,8 @@ export function ConditionsSection({ patientId }: ConditionsSectionProps) {
     setIsLoading(true);
     setError(null);
     try {
-      // TODO: Wire to backend service
-      // const result = await fetchConditions({ patientId, status: filter });
-      // setConditions(result.items);
-      setConditions([]);
+      const result = await fetchConditions(filter);
+      setConditions(result);
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
@@ -73,6 +72,18 @@ export function ConditionsSection({ patientId }: ConditionsSectionProps) {
         }
       />
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.statusRow}>
+          <FeatureMaturityBadge
+            status={conditions.length > 0 ? "connected" : "partial"}
+            detail="Conditions now query /internal/v1/mobile/citizen/summary."
+          />
+          <Text style={styles.statusText}>
+            {conditions.length > 0
+              ? "Conditions are loaded from the citizen health summary endpoint."
+              : "No conditions returned yet from the citizen health summary endpoint."}
+          </Text>
+        </View>
+
         {/* Filter Tabs */}
         <View style={styles.filterTabs}>
           <Pressable 
@@ -166,6 +177,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 16,
     gap: 16,
+  },
+  statusRow: {
+    gap: 8,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#6B7280",
   },
   filterTabs: {
     flexDirection: "row",

@@ -1,0 +1,18 @@
+package zw.gov.mohcc.impilo.nhume.domain;
+
+public enum ProofMethod {
+    OTP,
+    QR_CODE_SCAN,
+    RECIPIENT_SIGNATURE,
+    FACILITY_STAMP,
+    PHOTO,
+    GPS_GEOFENCE,
+    BIOMETRIC,
+    PROVIDER_CONFIRMATION,
+    RECIPIENT_APP_CONFIRMATION,
+    NOMPILO_CONFIRMATION,
+    WEBHOOK_CONFIRMATION,
+    DRONE_LANDING,
+    ROBOT_BAY,
+    AUTONOMOUS_LOCKER
+}

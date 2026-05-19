@@ -55,4 +55,16 @@ public class AdapterRegistry {
     public PaymentRailAdapter getAdapter(String type) {
         return getAdapter(AdapterType.valueOf(type));
     }
+
+    /**
+     * Report whether an adapter is registered for the given type. Used by the
+     * rail-selection policy ({@code docs/design/g4-rail-selection-policy.md}) to decide
+     * between a preferred-rail path and a fallback path without throwing.
+     *
+     * @param type the adapter type; may be {@code null}, in which case this method returns {@code false}
+     * @return {@code true} if an adapter is registered for the type, {@code false} otherwise
+     */
+    public boolean has(AdapterType type) {
+        return type != null && adapters.containsKey(type);
+    }
 }

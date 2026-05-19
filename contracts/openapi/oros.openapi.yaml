@@ -1087,9 +1087,11 @@ paths:
       operationId: butanoWriteback
       summary: Writeback results to BUTANO
       description: |
-        Internal endpoint called to write finalized results back to the
-        Shared Health Record (BUTANO/HAPI FHIR) as DiagnosticReport and
-        Observation resources. Uses CPID only (no PII).
+        Internal endpoint used by OROS to write order context to the
+        Shared Health Record (BUTANO/HAPI FHIR) as a ServiceRequest
+        reference payload. Uses CPID-only linkage (no direct PII fields).
+        DiagnosticReport/Observation writeback remains a tracked follow-on
+        integration item.
       tags: [Internal]
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'

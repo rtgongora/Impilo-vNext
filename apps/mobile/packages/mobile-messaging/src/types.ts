@@ -59,6 +59,7 @@ export interface Conversation {
   unreadCount: number;
   createdAt: string;
   updatedAt: string;
+  telemedicineLinks?: TelemedicineLinks;
   metadata?: Record<string, unknown>;
 }
 
@@ -87,6 +88,21 @@ export interface Message {
   attachments?: Attachment[];
   replyTo?: string;
   status: MessageStatus;
+  telemedicineLinks?: TelemedicineLinks;
+}
+
+export interface TelemedicineLinks {
+  client?: string;
+  provider?: string;
+  facility?: string;
+  session?: string;
+  appointment?: string;
+  referral?: string;
+  prescription?: string;
+  lab_request?: string;
+  payment_or_claim?: string;
+  helpdesk_ticket?: string;
+  followup_task?: string;
 }
 
 export type MessageContentType = "TEXT" | "RICH_TEXT" | "IMAGE" | "DOCUMENT" | "SYSTEM";

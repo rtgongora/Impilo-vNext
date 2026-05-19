@@ -99,7 +99,7 @@ public class AccessChannelsController {
             return ResponseEntity.ok(envelope(result, requestId, correlationId));
         } catch (Exception e) {
             log.warn("Access channels GET failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.ok(envelope(new Object[0], requestId, correlationId));
+            return upstreamFailure("ACCESS_CHANNEL_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -109,8 +109,7 @@ public class AccessChannelsController {
             return ResponseEntity.status(HttpStatus.CREATED).body(envelope(result, requestId, correlationId));
         } catch (Exception e) {
             log.error("Access channels POST failed for {}: {}", url, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", Map.of("code", "ACCESS_CHANNEL_FAILED", "message", e.getMessage())));
+            return upstreamFailure("ACCESS_CHANNEL_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -119,5 +118,12 @@ public class AccessChannelsController {
         r.put("data", data != null ? data : new Object[0]);
         r.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return r;
+    }
+
+    private ResponseEntity<Map<String, Object>> upstreamFailure(
+            String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message != null ? message : "Access channels upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 }

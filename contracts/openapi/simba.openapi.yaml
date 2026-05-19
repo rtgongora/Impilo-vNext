@@ -96,6 +96,32 @@ paths:
           description: Profile found
         "404":
           description: Not found
+    put:
+      operationId: simbaUpsertWellnessProfile
+      tags: [Wellness]
+      summary: Create/update wellness profile by person CPID
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: cpid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
 
   /internal/v1/wellness/connect/ingest:
     post:
@@ -126,6 +152,519 @@ paths:
           description: New ingest recorded
         "200":
           description: Duplicate source_id (no-op)
+
+  /internal/v1/wellness/personal-data/sources:
+    get:
+      operationId: simbaListConnectedSources
+      tags: [Wellness]
+      summary: List connected personal health data sources
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Sources list, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+    post:
+      operationId: simbaConnectSource
+      tags: [Wellness]
+      summary: Connect a personal health data source
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, source_type, source_name]
+              additionalProperties: true
+      responses:
+        "201": { description: Source created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/personal-data/sources/{id}/permissions:
+    patch:
+      operationId: simbaUpdateSourcePermissions
+      tags: [Wellness]
+      summary: Update source-level sharing and consent controls
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200": { description: Updated }
+        "404": { description: Source not found }
+
+  /internal/v1/wellness/personal-data/readings/manual:
+    post:
+      operationId: simbaCreateManualReading
+      tags: [Wellness]
+      summary: Record manual wellness reading
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, category, value]
+              additionalProperties: true
+      responses:
+        "201": { description: Reading created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/personal-data/summary:
+    get:
+      operationId: simbaPersonalDataSummary
+      tags: [Wellness]
+      summary: Citizen-facing personal wellness summary
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Summary, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/personal-data/provider-summary:
+    get:
+      operationId: simbaProviderSummary
+      tags: [Wellness]
+      summary: Provider-facing patient-shared wellness summary
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Summary, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/personal-data/remote-alerts:
+    get:
+      operationId: simbaListRemoteAlerts
+      tags: [Wellness]
+      summary: List remote monitoring alerts
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: false
+          schema: { type: string }
+        - name: status
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200": { description: Alerts list, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+    post:
+      operationId: simbaCreateRemoteAlert
+      tags: [Wellness]
+      summary: Create remote monitoring alert
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, category]
+              additionalProperties: true
+      responses:
+        "201": { description: Alert created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/personal-data/remote-alerts/{id}/review:
+    post:
+      operationId: simbaReviewRemoteAlert
+      tags: [Wellness]
+      summary: Review/resolve remote monitoring alert
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200": { description: Alert reviewed }
+        "404": { description: Alert not found }
+
+  /internal/v1/wellness/activities:
+    get:
+      operationId: simbaListActivities
+      tags: [Wellness]
+      summary: List activities for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+        - name: type
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200": { description: Activities list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateActivity
+      tags: [Wellness]
+      summary: Record activity for a person
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, activity_type]
+              additionalProperties: true
+      responses:
+        "201": { description: Activity created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/sleep:
+    get:
+      operationId: simbaListSleepSegments
+      tags: [Wellness]
+      summary: List sleep segments for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Sleep segment list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateSleepSegment
+      tags: [Wellness]
+      summary: Record sleep segment
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, start_time, end_time]
+              additionalProperties: true
+      responses:
+        "201": { description: Sleep segment created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/exercise:
+    get:
+      operationId: simbaListExerciseSessions
+      tags: [Wellness]
+      summary: List exercise sessions for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Exercise sessions list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateExerciseSession
+      tags: [Wellness]
+      summary: Record exercise session
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, exercise_type, start_time]
+              additionalProperties: true
+      responses:
+        "201": { description: Exercise session created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/diet:
+    get:
+      operationId: simbaListDietEntries
+      tags: [Wellness]
+      summary: List diet entries for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Diet entries list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateDietEntry
+      tags: [Wellness]
+      summary: Record diet entry
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, meal_type]
+              additionalProperties: true
+      responses:
+        "201": { description: Diet entry created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/mood:
+    get:
+      operationId: simbaListMoodEntries
+      tags: [Wellness]
+      summary: List mood log entries for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Mood list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateMoodEntry
+      tags: [Wellness]
+      summary: Record mood log entry
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, mood_score]
+              additionalProperties: true
+      responses:
+        "201": { description: Mood entry created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/vitals:
+    get:
+      operationId: simbaListVitals
+      tags: [Wellness]
+      summary: List vitals for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Vitals list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateVital
+      tags: [Wellness]
+      summary: Record vital observation
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, vital_type]
+              additionalProperties: true
+      responses:
+        "201": { description: Vital created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/goals:
+    get:
+      operationId: simbaListGoals
+      tags: [Wellness]
+      summary: List goals for a person
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Goals list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateGoal
+      tags: [Wellness]
+      summary: Create wellness goal
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, goal_type]
+              additionalProperties: true
+      responses:
+        "201": { description: Goal created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/goals/{id}/progress:
+    put:
+      operationId: simbaUpdateGoalProgress
+      tags: [Wellness]
+      summary: Update goal progress
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_value]
+              additionalProperties: true
+      responses:
+        "200": { description: Goal progress updated, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/clubs:
+    get:
+      operationId: simbaListClubs
+      tags: [Wellness]
+      summary: List clubs
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      responses:
+        "200": { description: Clubs list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateClub
+      tags: [Wellness]
+      summary: Create club
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, club_type]
+              additionalProperties: true
+      responses:
+        "201": { description: Club created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/clubs/{id}/join:
+    post:
+      operationId: simbaJoinClub
+      tags: [Wellness]
+      summary: Join club
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid]
+              additionalProperties: true
+      responses:
+        "201": { description: Club joined, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/clubs/{id}/leave:
+    delete:
+      operationId: simbaLeaveClub
+      tags: [Wellness]
+      summary: Leave club
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: person_cpid
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Left club }
+
+  /internal/v1/wellness/challenges:
+    get:
+      operationId: simbaListChallenges
+      tags: [Wellness]
+      summary: List challenges
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      responses:
+        "200": { description: Challenges list, content: { application/json: { schema: { type: array, items: { type: object, additionalProperties: true } } } } }
+    post:
+      operationId: simbaCreateChallenge
+      tags: [Wellness]
+      summary: Create challenge
+      parameters: [ { $ref: "#/components/parameters/TenantId" } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, challenge_type, start_date, end_date]
+              additionalProperties: true
+      responses:
+        "201": { description: Challenge created, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/challenges/{id}/join:
+    post:
+      operationId: simbaJoinChallenge
+      tags: [Wellness]
+      summary: Join challenge
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid]
+              additionalProperties: true
+      responses:
+        "201": { description: Challenge joined, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+
+  /internal/v1/wellness/challenges/{id}/progress:
+    put:
+      operationId: simbaUpdateChallengeProgress
+      tags: [Wellness]
+      summary: Update challenge progress
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person_cpid, progress_value]
+              additionalProperties: true
+      responses:
+        "200": { description: Progress updated, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
 
 components:
   securitySchemes:

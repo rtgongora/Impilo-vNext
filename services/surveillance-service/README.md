@@ -27,6 +27,16 @@ and maintains a cases registry .
 | SIGNAL_HIT | `impilo.surv.signal.hit.v1` |
 | CASE_OPENED | `impilo.surv.case.opened.v1` |
 
+## Kafka Inbound Consumers
+
+The surveillance service also consumes upstream clinical and alert rails:
+
+| Topic | Purpose |
+|-------|---------|
+| `clinical.pct.encounter.completed` | Evaluate encounter-completion signals and trigger case logic where configured |
+| `clinical.pct.death.recorded` | Evaluate mortality-related surveillance triggers |
+| `analytics.surveillance.alert` | Ingest threshold alerts from analytics flows |
+
 ## Database Schema (`surv`)
 
 - `signals` — threshold-based trigger definitions (event type, condition field, threshold, window)

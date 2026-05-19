@@ -67,10 +67,10 @@ export function getSecureStorage(): SecureStorageAdapter {
 
 // Storage keys used by the auth module
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: "impilo:auth:access_token",
-  REFRESH_TOKEN: "impilo:auth:refresh_token",
-  TOKEN_EXPIRY: "impilo:auth:token_expiry",
-  SESSION_DATA: "impilo:auth:session_data",
-  TENANT_ID: "impilo:auth:tenant_id",
-  BIOMETRIC_ENABLED: "impilo:auth:biometric_enabled",
+  ACCESS_TOKEN: "impilo_auth_access_token",
+  REFRESH_TOKEN: "impilo_auth_refresh_token",
+  TOKEN_EXPIRY: "impilo_auth_token_expiry",
+  SESSION_DATA: "impilo_auth_session_data",
+  TENANT_ID: "impilo_auth_tenant_id",
+  BIOMETRIC_ENABLED: "impilo_auth_biometric_enabled",
 } as const;

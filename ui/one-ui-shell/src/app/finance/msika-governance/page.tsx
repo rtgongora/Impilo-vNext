@@ -43,10 +43,6 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
 function extractItems(payload: unknown) {
   const root = asRecord(payload);
   if (!root) return [];

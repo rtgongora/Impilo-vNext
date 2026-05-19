@@ -70,7 +70,10 @@ describe("FinancePayerClaimDetailPage", () => {
       expect(get).toHaveBeenCalledWith("/internal/v1/finance/payer-claims/CLM-1");
     });
 
-    await user.click(screen.getByRole("button", { name: /Submit claim/i }));
+    const submitButton = screen.getByRole("button", { name: /Submit claim/i });
+    expect(submitButton).toBeDisabled();
+    await user.click(screen.getByLabelText(/I confirm this submit action is intentional/i));
+    await user.click(submitButton);
 
     await waitFor(() => {
       expect(post).toHaveBeenCalledWith("/internal/v1/finance/payer-claims/CLM-1/submit");
@@ -79,7 +82,10 @@ describe("FinancePayerClaimDetailPage", () => {
     fireEvent.change(screen.getByLabelText("Payer claim dispute JSON"), {
       target: { value: '{"reason":"missing invoice","notes":"follow up"}' },
     });
-    await user.click(screen.getByRole("button", { name: /Dispute claim/i }));
+    const disputeButton = screen.getByRole("button", { name: /Dispute claim/i });
+    expect(disputeButton).toBeDisabled();
+    await user.click(screen.getByLabelText(/I confirm this dispute action is intentional/i));
+    await user.click(disputeButton);
 
     await waitFor(() => {
       expect(post).toHaveBeenCalledWith("/internal/v1/finance/payer-claims/CLM-1/dispute", {

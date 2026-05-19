@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
-import zw.gov.mohcc.impilo.pacs.integration.OrthancClient;
 import zw.gov.mohcc.impilo.pacs.integration.OrthancMainDicomHelper;
+import zw.gov.mohcc.impilo.pacs.integration.PacsBackendClient;
 import zw.gov.mohcc.impilo.pacs.integration.OrthancTagParser;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingArchiveObjectEntity;
@@ -41,7 +41,7 @@ public class ImagingHierarchySyncService {
     public static final String AGGREGATE_IMAGING_STUDY = "IMAGING_STUDY";
     public static final String EVENT_HIERARCHY_SYNCED = "imaging.study.hierarchy_synced";
 
-    private final OrthancClient orthancClient;
+    private final PacsBackendClient pacsBackendClient;
     private final ImagingStudyRepository studyRepository;
     private final ImagingSeriesRepository seriesRepository;
     private final ImagingInstanceRepository instanceRepository;
@@ -51,7 +51,7 @@ public class ImagingHierarchySyncService {
     private final ObjectMapper objectMapper;
 
     public ImagingHierarchySyncService(
-            OrthancClient orthancClient,
+            PacsBackendClient pacsBackendClient,
             ImagingStudyRepository studyRepository,
             ImagingSeriesRepository seriesRepository,
             ImagingInstanceRepository instanceRepository,
@@ -59,7 +59,7 @@ public class ImagingHierarchySyncService {
             ImagingAccessAuditRepository accessAuditRepository,
             EventOutboxRepository outboxRepository,
             ObjectMapper objectMapper) {
-        this.orthancClient = orthancClient;
+        this.pacsBackendClient = pacsBackendClient;
         this.studyRepository = studyRepository;
         this.seriesRepository = seriesRepository;
         this.instanceRepository = instanceRepository;
@@ -77,10 +77,14 @@ public class ImagingHierarchySyncService {
         if (study.getOrthancId() == null || study.getOrthancId().isBlank()) {
             throw new IllegalStateException("Cannot sync hierarchy: study has no orthanc_id (study id=" + studyId + ")");
         }
+        if (!pacsBackendClient.supportsHierarchySync()) {
+            throw new IllegalStateException(
+                    "Hierarchy sync is unavailable for PACS provider " + pacsBackendClient.backendProvider());
+        }
 
         seriesRepository.deleteByStudy_Id(study.getId());
 
-        JsonNode orthancStudy = orthancClient.getStudy(study.getOrthancId());
+        JsonNode orthancStudy = pacsBackendClient.getStudy(study.getOrthancId());
         JsonNode seriesIds = orthancStudy.get("Series");
         if (seriesIds == null || !seriesIds.isArray() || seriesIds.isEmpty()) {
             study.setArchiveStatus("EMPTY_REMOTE");
@@ -98,7 +102,7 @@ public class ImagingHierarchySyncService {
                 continue;
             }
             String orthancSeriesId = sid.asText();
-            JsonNode ser = orthancClient.getSeries(orthancSeriesId);
+            JsonNode ser = pacsBackendClient.getSeries(orthancSeriesId);
             JsonNode main = ser.get("MainDicomTags");
 
             String seriesUid = OrthancMainDicomHelper.stringField(main, "SeriesInstanceUID");
@@ -125,7 +129,7 @@ public class ImagingHierarchySyncService {
                         continue;
                     }
                     String orthancInstanceId = iid.asText();
-                    JsonNode tags = orthancClient.getInstanceSimplifiedTags(orthancInstanceId);
+                    JsonNode tags = pacsBackendClient.getInstanceSimplifiedTags(orthancInstanceId);
                     String sop = OrthancTagParser.stringTag(tags, "00080018");
                     if (sop == null || sop.isBlank()) {
                         log.warn("Skipping Orthanc instance {} — missing SOPInstanceUID", orthancInstanceId);

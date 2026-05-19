@@ -75,12 +75,15 @@ export function useAiInferenceRecords(page = 0, size = 50) {
   });
 }
 
-export function useAiDriftEvents(page = 0, size = 50) {
+export function useAiDriftEvents(page = 0, size = 50, modelId?: string) {
   return useQuery({
-    queryKey: ["ai-drift-events", page, size],
+    queryKey: ["ai-drift-events", page, size, modelId],
     queryFn: async () => {
+      if (!modelId) {
+        return [];
+      }
       const res = await apiClient.get<ApiResponse<unknown> | unknown>(
-        withQuery("/internal/v1/ai/drift-events", { page, size }),
+        withQuery("/internal/v1/ai/drift-events", { page, size, model_id: modelId }),
       );
       return unwrapRows(res);
     },

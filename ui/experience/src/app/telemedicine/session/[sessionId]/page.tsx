@@ -10,14 +10,10 @@
  * Also handles Stage 6 (submit response) and Stage 7 (completion note).
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  ArrowLeft, CheckCircle2, Clock, FileText, Loader2, Lock,
-  MessageCircle, Mic, Phone, PhoneOff, Send, Shield, User,
-  Video, VideoOff, AlertTriangle, ClipboardList, Activity,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileText, Loader2, Lock, Mic, Send, Shield, User, Video, AlertTriangle, Activity } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { TelemedicineWorkflowStrip } from "@/components/clinical/TelemedicineWorkflowStrip";
 import { apiClient } from "@/lib/api-client";
@@ -44,12 +40,7 @@ export default function TeleconsultSessionPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-
-  // Communication state
-  const [callActive, setCallActive] = useState(false);
-  const [videoActive, setVideoActive] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Response draft (Stage 6)
   const [responseNote, setResponseNote] = useState("");
@@ -58,7 +49,6 @@ export default function TeleconsultSessionPage() {
   const [redFlags, setRedFlags] = useState("");
   const [followUp, setFollowUp] = useState("");
   const [orders, setOrders] = useState("");
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [submittingResponse, setSubmittingResponse] = useState(false);
 
   // Completion (Stage 7)
@@ -104,25 +94,18 @@ export default function TeleconsultSessionPage() {
     }
   }, [messages]);
 
-  // Auto-save draft every 10 seconds
-  useEffect(() => {
-    if (!responseNote.trim()) return;
-    const timer = setInterval(() => {
-      setLastSaved(new Date().toLocaleTimeString());
-    }, 10000);
-    return () => clearInterval(timer);
-  }, [responseNote]);
-
-  // Call timer
-  useEffect(() => {
-    if (callActive) {
-      callTimer.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
-    } else {
-      if (callTimer.current) clearInterval(callTimer.current);
-      setCallDuration(0);
-    }
-    return () => { if (callTimer.current) clearInterval(callTimer.current); };
-  }, [callActive]);
+  const responseDraftDirty = useMemo(
+    () =>
+      Boolean(
+        responseNote.trim() ||
+          diagnosis.trim() ||
+          actionPlan.trim() ||
+          redFlags.trim() ||
+          followUp.trim() ||
+          orders.trim(),
+      ),
+    [actionPlan, diagnosis, followUp, orders, redFlags, responseNote],
+  );
 
   async function handleSendMessage() {
     if (!newMessage.trim()) return;
@@ -134,15 +117,9 @@ export default function TeleconsultSessionPage() {
         type: "TEXT",
       });
       setMessages((prev) => [...prev, res.data]);
+      setActionError(null);
     } catch {
-      setMessages((prev) => [...prev, {
-        id: "local-" + Date.now(),
-        senderId: user?.id || "",
-        senderName: user?.displayName || "You",
-        content: newMessage.trim(),
-        type: "TEXT",
-        timestamp: new Date().toISOString(),
-      }]);
+      setActionError("Messaging backend is unavailable. Message was not sent.");
     }
     setNewMessage("");
     setSending(false);
@@ -155,8 +132,10 @@ export default function TeleconsultSessionPage() {
         responseNote, diagnosis, actionPlan, redFlags, followUp,
         orders: orders.split("\n").filter(Boolean),
       });
-      setSession((s) => s ? { ...s, status: "RESPONDED", stage: 6 } : s);
-    } catch { /* fallback — mark locally */ }
+      setActionError(null);
+    } catch {
+      setActionError("Unable to submit response package because teleconsult backend is unavailable.");
+    }
     setSubmittingResponse(false);
   }
 
@@ -166,12 +145,13 @@ export default function TeleconsultSessionPage() {
       await apiClient.post(`/internal/v1/teleconsult/sessions/${sessionId}/complete`, {
         actionsTaken, patientOutcome, followUpExecution, closureNarrative,
       });
-      setSession((s) => s ? { ...s, status: "CLOSED", stage: 7 } : s);
-    } catch { /* fallback */ }
+      setActionError(null);
+    } catch {
+      setActionError("Unable to close this case because teleconsult backend is unavailable.");
+    }
     setSubmittingCompletion(false);
   }
 
-  const formatTime = (secs: number) => `${Math.floor(secs / 60).toString().padStart(2, "0")}:${(secs % 60).toString().padStart(2, "0")}`;
   const status = (session?.status as string) || "ACTIVE";
   const isResponded = status === "RESPONDED" || status === "CLOSED";
   const isClosed = status === "CLOSED";
@@ -297,14 +277,10 @@ export default function TeleconsultSessionPage() {
           <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
             isClosed ? "bg-gray-100 text-gray-600"
             : isResponded ? "bg-blue-100 text-blue-700"
-            : callActive ? "bg-green-100 text-green-700"
             : "bg-amber-100 text-amber-700"
           }`}>
-            {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : callActive ? "IN CALL" : status}
+            {isClosed ? "CLOSED" : isResponded ? "RESPONDED" : status}
           </span>
-          {callActive && (
-            <span className="text-xs text-green-600 font-mono">{formatTime(callDuration)}</span>
-          )}
         </div>
         <div className="flex items-center gap-2">
           {isResponded && !isClosed && (
@@ -323,35 +299,32 @@ export default function TeleconsultSessionPage() {
           bffStage={typeof session?.stage === "number" ? (session.stage as number) : null}
         />
       </div>
+      {actionError && (
+        <div className="shrink-0 border-b border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {actionError}
+        </div>
+      )}
 
       {/* 3-pane body */}
       <div className="flex flex-1 min-h-0">
 
         {/* ═══ LEFT PANE — Communication ═══ */}
         <div className="w-80 border-r bg-white flex flex-col shrink-0">
-          {/* Call controls */}
+          {/* Call controls (mode represented; live execution blocked) */}
           <div className="p-3 border-b flex items-center justify-center gap-2">
-            <button onClick={() => { setCallActive(!callActive); setVideoActive(false); }}
-              className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
-              title={callActive ? "End call" : "Audio call"}>
-              {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
+            <button disabled className="p-2.5 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed" title="Audio mode not available">
+              <Mic className="w-5 h-5" />
             </button>
-            <button onClick={() => { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }}
-              className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-              title={videoActive ? "Stop video" : "Video call"}>
-              {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+            <button disabled className="p-2.5 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed" title="Video mode not available">
+              <Video className="w-5 h-5" />
             </button>
-            <button className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Voice note">
+            <button disabled className="p-2.5 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed" title="Voice note mode not available">
               <Mic className="w-5 h-5" />
             </button>
           </div>
-
-          {/* Video preview */}
-          {videoActive && (
-            <div className="h-40 bg-gray-900 flex items-center justify-center text-gray-500 text-xs">
-              <Video className="w-8 h-8 opacity-30" />
-            </div>
-          )}
+          <div className="px-3 py-2 text-[11px] text-gray-500 border-b">
+            Live audio/video execution is unavailable until canonical teleconsult backend wiring is complete.
+          </div>
 
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -399,8 +372,7 @@ export default function TeleconsultSessionPage() {
               <FileText className="w-4 h-4 text-gray-500" /> Response Note
             </h3>
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              {lastSaved && <span>Saved {lastSaved}</span>}
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span>{responseDraftDirty ? "Draft changed locally (not persisted)" : "No local draft changes"}</span>
             </div>
           </div>
 

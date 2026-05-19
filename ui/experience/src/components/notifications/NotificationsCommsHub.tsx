@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNotifications, useMarkNotificationRead } from '@/hooks/queries/useNotifications';
 import { useMvumoCommunicationEvaluate } from '@/hooks/queries/useMvumoCommsEvaluate';
+import { apiClient } from '@/lib/api-client';
 
 // ─── Types ───
 
@@ -135,13 +136,22 @@ export function NotificationsCommsHub({ triggerLabel = "Comms", chartPatientCpid
           return;
         }
       } catch {
-        // Fail open when Mvumo/BFF is unavailable
+        setPrefGateMessage("Unable to verify communication preferences right now. Message not sent.");
+        return;
       }
     }
-    setNotifications(prev => [{
-      id: `sent-${Date.now()}`, category: 'message' as const, priority: composePriority, title: composeSubject || 'Message', body: composeBody,
-      timestamp: 'Just now', read: true, sender: 'You → ' + composeRecipient, workspaceScoped: false,
-    }, ...prev]);
+    try {
+      await apiClient.post("/internal/v1/notifications/send", {
+        recipientId: composeRecipient,
+        title: composeSubject || "Message",
+        body: composeBody,
+        category: "message",
+        priority: composePriority,
+      });
+    } catch {
+      setPrefGateMessage("Notification service is unavailable. Message not sent.");
+      return;
+    }
     setComposeRecipient(''); setComposeSubject(''); setComposeBody(''); setComposePriority('normal');
     setPanelView('list');
   };
@@ -162,14 +172,22 @@ export function NotificationsCommsHub({ triggerLabel = "Comms", chartPatientCpid
           return;
         }
       } catch {
-        // fail open
+        setPrefGateMessage("Unable to verify communication preferences right now. Page not sent.");
+        return;
       }
     }
-    setNotifications(prev => [{
-      id: `page-${Date.now()}`, category: 'alert' as const, priority: pageUrgency === 'stat' ? 'critical' as const : pageUrgency === 'urgent' ? 'high' as const : 'normal' as const,
-      title: `Page: ${pageRecipient}`, body: pageMessage + (pageCallback ? ` [Callback: ${pageCallback}]` : ''),
-      timestamp: 'Just now', read: true, sender: 'You', workspaceScoped: false,
-    }, ...prev]);
+    try {
+      await apiClient.post("/internal/v1/notifications/send", {
+        recipientId: pageRecipient,
+        title: `Page: ${pageRecipient}`,
+        body: pageMessage + (pageCallback ? ` [Callback: ${pageCallback}]` : ""),
+        category: "alert",
+        priority: pageUrgency === "stat" ? "critical" : pageUrgency === "urgent" ? "high" : "normal",
+      });
+    } catch {
+      setPrefGateMessage("Notification service is unavailable. Page not sent.");
+      return;
+    }
     setPageRecipient(''); setPageMessage(''); setPageCallback(''); setPageUrgency('routine');
     setPanelView('list');
   };
@@ -281,7 +299,7 @@ export function NotificationsCommsHub({ triggerLabel = "Comms", chartPatientCpid
               <div className="p-3 border-b border-gray-200 bg-impilo-50/30 space-y-2">
                 <h4 className="text-xs font-semibold text-gray-700">New Message</h4>
                 {chartPatientCpid ? (
-                  <p className="text-[10px] text-slate-500">Patient context: {chartPatientCpid} — Comms Hub runs a Mvumo preference check before this stub send.</p>
+                  <p className="text-[10px] text-slate-500">Patient context: {chartPatientCpid} — Comms Hub runs a Mvumo preference check before sending.</p>
                 ) : null}
                 {prefGateMessage ? (
                   <p className="text-[10px] text-red-800 bg-red-50 border border-red-100 rounded p-1.5">{prefGateMessage}</p>

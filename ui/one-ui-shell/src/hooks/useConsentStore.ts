@@ -41,7 +41,7 @@ interface ConsentState {
   hydrate: (userId: string) => void;
 }
 
-export const useConsentStore = create<ConsentState>((set, get) => ({
+export const useConsentStore = create<ConsentState>((set) => ({
   hasConsented: false,
   record: null,
 

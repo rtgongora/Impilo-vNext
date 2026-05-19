@@ -28,7 +28,11 @@ import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
 import { DeveloperHubScreen } from "./DeveloperHubScreen";
 import { ProfessionalSettingsHubScreen } from "./ProfessionalSettingsHubScreen";
 import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
+import { PublicHealthFieldTasksScreen } from "./PublicHealthFieldTasksScreen";
 import { TelemedicineScreen } from "./TelemedicineScreen";
+import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
+import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
+import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type ToolTab =
@@ -54,7 +58,11 @@ type ToolTab =
   | "developer_hub"
   | "prof_settings"
   | "prof_channels"
-  | "telemedicine";
+  | "telemedicine"
+  | "learning"
+  | "core_transaction"
+  | "workflow_dispatch"
+  | "ph_field_tasks";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -71,6 +79,10 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "developer_hub", label: "Dev" },
   { id: "prof_settings", label: "Prefs" },
   { id: "prof_channels", label: "CX+" },
+  { id: "learning", label: "Learning" },
+  { id: "core_transaction", label: "Core Tx" },
+  { id: "workflow_dispatch", label: "Flow/Ops" },
+  { id: "ph_field_tasks", label: "PH Field" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -122,6 +134,10 @@ export function ClinicalToolsScreen() {
         {tab === "developer_hub" && <DeveloperHubScreen />}
         {tab === "prof_settings" && <ProfessionalSettingsHubScreen />}
         {tab === "prof_channels" && <ProfessionalChannelsHubScreen />}
+        {tab === "learning" && <FundoLearningShellScreen />}
+        {tab === "core_transaction" && <CoreTransactionJourneyShellScreen />}
+        {tab === "workflow_dispatch" && <WorkflowDispatchOpsScreen />}
+        {tab === "ph_field_tasks" && <PublicHealthFieldTasksScreen />}
       </ScrollView>
     </Screen>
   );

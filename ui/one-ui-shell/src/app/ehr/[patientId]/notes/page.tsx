@@ -89,7 +89,7 @@ export default function ClinicalNotesPage() {
     }));
   }, [defaultAuthorId, defaultAuthorName]);
 
-  const allNotes = notesData?.data ?? [];
+  const allNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
   const sortedNotes = useMemo(
     () =>
       [...allNotes].sort(

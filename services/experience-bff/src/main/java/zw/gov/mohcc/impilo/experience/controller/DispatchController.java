@@ -118,4 +118,147 @@ public class DispatchController {
                     "error", Map.of("code", "COMPLETE_FAILED", "message", e.getMessage())));
         }
     }
+
+    @GetMapping("/deliveries")
+    public ResponseEntity<Map<String, Object>> listDeliveries(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        JsonNode data = client.listDeliveries();
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/deliveries")
+    public ResponseEntity<Map<String, Object>> createDelivery(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode data = client.createDelivery(body);
+        return ResponseEntity.status(201).body(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/deliveries/{id}")
+    public ResponseEntity<Map<String, Object>> getDelivery(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        JsonNode data = client.getDelivery(id);
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PatchMapping("/deliveries/{id}")
+    public ResponseEntity<Map<String, Object>> patchDelivery(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode data = client.patchDelivery(id, body);
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/deliveries/{id}/{action}")
+    public ResponseEntity<Map<String, Object>> deliveryAction(
+            @PathVariable String id,
+            @PathVariable String action,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        JsonNode data = client.deliveryAction(id, action, body != null ? body : Map.of());
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/deliveries/{id}/tracking")
+    public ResponseEntity<Map<String, Object>> tracking(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        JsonNode data = client.getDeliveryTracking(id);
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> dashboard(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        JsonNode data = client.getDashboard();
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/dispatcher-console")
+    public ResponseEntity<Map<String, Object>> dispatcherConsole(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        JsonNode data = client.getDispatcherConsole();
+        return ResponseEntity.ok(Map.of("data", data, "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/fleet")
+    public ResponseEntity<Map<String, Object>> listFleet(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listFleet(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/fleet")
+    public ResponseEntity<Map<String, Object>> createFleet(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createFleet(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @GetMapping("/fleet/{id}")
+    public ResponseEntity<Map<String, Object>> getFleet(@PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.getFleet(id), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PatchMapping("/fleet/{id}")
+    public ResponseEntity<Map<String, Object>> patchFleet(@PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(Map.of("data", client.patchFleet(id, body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/couriers")
+    public ResponseEntity<Map<String, Object>> listCouriers(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listCouriers(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/couriers")
+    public ResponseEntity<Map<String, Object>> createCourier(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createCourier(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @GetMapping("/couriers/{id}")
+    public ResponseEntity<Map<String, Object>> getCourier(@PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.getCourier(id), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PatchMapping("/couriers/{id}")
+    public ResponseEntity<Map<String, Object>> patchCourier(@PathVariable String id, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(Map.of("data", client.patchCourier(id, body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @GetMapping("/zones")
+    public ResponseEntity<Map<String, Object>> listZones(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listZones(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/zones")
+    public ResponseEntity<Map<String, Object>> createZone(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createZone(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @GetMapping("/policies")
+    public ResponseEntity<Map<String, Object>> listPolicies(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listPolicies(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/policies")
+    public ResponseEntity<Map<String, Object>> createPolicy(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createPolicy(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @GetMapping("/integrations")
+    public ResponseEntity<Map<String, Object>> listIntegrations(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listIntegrations(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/integrations")
+    public ResponseEntity<Map<String, Object>> createIntegration(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createIntegration(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @GetMapping("/autonomous-missions")
+    public ResponseEntity<Map<String, Object>> listMissions(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of("data", client.listMissions(), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/autonomous-missions")
+    public ResponseEntity<Map<String, Object>> createMission(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.status(201).body(Map.of("data", client.createMission(body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+    @PostMapping("/webhooks/{providerCode}")
+    public ResponseEntity<Map<String, Object>> webhook(@PathVariable String providerCode, @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId, @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId, @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(Map.of("data", client.webhook(providerCode, body), "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
 }

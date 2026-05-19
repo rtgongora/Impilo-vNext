@@ -52,6 +52,8 @@ tags:
     description: Step-up authentication challenge and verification
   - name: Device
     description: Device reputation and blocking
+  - name: Legacy-Compatibility
+    description: Temporary compatibility proxy routes during tshepo-service retirement
 
 paths:
   # ── Internal probes ───────────────────────────────────────────────────────
@@ -118,6 +120,87 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthzResponse"
+
+  /v1/biometric-policy/evaluate:
+    post:
+      operationId: biometricPolicyEvaluateCompatibility
+      tags: [Legacy-Compatibility]
+      summary: Temporary compatibility proxy for biometric policy evaluation
+      deprecated: true
+      description: |
+        Temporary migration-only route. Response includes deprecation semantics
+        and route-usage telemetry is tracked for retirement gating.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Compatibility response from legacy policy evaluator
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "503":
+          description: Legacy dependency unavailable
+
+  /v1/patient-share-policy/evaluate:
+    post:
+      operationId: patientSharePolicyEvaluateCompatibility
+      tags: [Legacy-Compatibility]
+      summary: Temporary compatibility proxy for patient-share policy evaluation
+      deprecated: true
+      description: |
+        Temporary migration-only route. Response includes deprecation semantics
+        and route-usage telemetry is tracked for retirement gating.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Compatibility response from legacy policy evaluator
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "503":
+          description: Legacy dependency unavailable
+
+  /v1/council-regulatory/evaluate:
+    post:
+      operationId: councilRegulatoryEvaluateCompatibility
+      tags: [Legacy-Compatibility]
+      summary: Temporary compatibility proxy for council-regulatory policy evaluation
+      deprecated: true
+      description: |
+        Temporary migration-only route. Response includes deprecation semantics
+        and route-usage telemetry is tracked for retirement gating.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Compatibility response from legacy policy evaluator
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "503":
+          description: Legacy dependency unavailable
         "401":
           description: STEP_UP_REQUIRED — client must complete step-up challenge
           content:

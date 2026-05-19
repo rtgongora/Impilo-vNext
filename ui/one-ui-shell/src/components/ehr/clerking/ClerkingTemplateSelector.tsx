@@ -9,9 +9,7 @@ import {
   AlertTriangle,
   Bone,
   Heart,
-  Zap,
   ChevronRight,
-  User,
   GraduationCap,
 } from "lucide-react";
 import {
@@ -26,7 +24,7 @@ interface ClerkingTemplateSelectorProps {
   onCancel?: () => void;
 }
 
-const specialtyIcons: Record<Specialty, any> = {
+const specialtyIcons: Record<Specialty, React.ComponentType<{ className?: string }>> = {
   'general-medicine': Stethoscope,
   'surgery': Scissors,
   'obstetrics-gynecology': Baby,

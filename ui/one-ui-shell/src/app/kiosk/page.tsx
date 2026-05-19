@@ -86,16 +86,18 @@ export default function KioskPage() {
   // ── Step 3: Check-in complete ──────────────────────────────────
   if (step === "done") {
     return (
-      <div className="min-h-screen bg-green-50 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[color:var(--surface-soft)] flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
-          <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Check-In Complete</h1>
-          <p className="text-lg text-gray-600 mb-2">{checkedInName}</p>
-          <p className="text-sm text-gray-500 mb-8">
+          <CheckCircle2 className="w-20 h-20 text-[color:var(--success)] mx-auto mb-6" />
+          <h1 className="text-3xl font-bold text-[color:var(--text-primary)] mb-2">Check-In Complete</h1>
+          <p className="text-lg text-[color:var(--text-secondary)] mb-2">{checkedInName}</p>
+          <p className="text-sm text-[color:var(--text-muted)] mb-8">
             You have been added to the queue at {facility?.name}. Please wait to be called.
           </p>
-          <button onClick={resetKiosk}
-            className="px-8 py-4 bg-green-600 text-white text-lg font-medium rounded-xl hover:bg-green-700 transition-colors">
+          <button
+            onClick={resetKiosk}
+            className="px-8 py-4 bg-[color:var(--primary)] text-white text-lg font-medium rounded-3xl hover:bg-[color:var(--primary-hover)] transition-colors shadow-impilo-card"
+          >
             Next Patient
           </button>
         </div>
@@ -106,43 +108,43 @@ export default function KioskPage() {
   // ── Step 1: Consent ────────────────────────────────────────────
   if (step === "consent") {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen bg-[color:var(--background)] flex flex-col items-center justify-center p-8">
         <div className="max-w-lg w-full">
           <div className="text-center mb-8">
-            <Shield className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900">Privacy Consent</h1>
-            <p className="text-gray-500 mt-2">
+            <Shield className="w-16 h-16 text-[color:var(--primary)] mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-[color:var(--text-primary)]">Privacy Consent</h1>
+            <p className="text-[color:var(--text-secondary)] mt-2">
               {facility ? facility.name : "Impilo Health Kiosk"}
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-8">
-            <p className="text-base text-gray-700 mb-6">
+          <div className="bg-white rounded-[2rem] border-2 border-[color:var(--border-soft)] p-8 shadow-impilo-floating">
+            <p className="text-base text-[color:var(--text-secondary)] mb-6">
               Before checking in, please acknowledge the Impilo Privacy Policy
               and Terms of Use. Your information is protected under privacy-by-design
               principles.
             </p>
 
-            <div className="space-y-3 mb-6 text-sm text-gray-600">
-              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
-                <Shield className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+            <div className="space-y-3 mb-6 text-sm text-[color:var(--text-secondary)]">
+              <div className="flex items-start gap-3 p-3 bg-[color:var(--surface-soft)] rounded-2xl">
+                <Shield className="w-5 h-5 text-[color:var(--primary)] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-gray-800">Privacy Policy</p>
-                  <p className="text-xs mt-0.5">
+                  <p className="font-medium text-[color:var(--text-primary)]">Privacy Policy</p>
+                  <p className="text-xs mt-0.5 text-[color:var(--text-secondary)]">
                     How we handle your personal data and health information.{" "}
-                    <Link href="/privacy" target="_blank" className="text-blue-600 underline">
+                    <Link href="/privacy" target="_blank" className="text-[color:var(--info)] underline">
                       Read full policy
                     </Link>
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 bg-indigo-50 rounded-lg">
-                <Shield className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 bg-[color:var(--nompilo-soft)] rounded-2xl">
+                <Shield className="w-5 h-5 text-[color:var(--nompilo)] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-gray-800">Terms of Use</p>
-                  <p className="text-xs mt-0.5">
+                  <p className="font-medium text-[color:var(--text-primary)]">Terms of Use</p>
+                  <p className="text-xs mt-0.5 text-[color:var(--text-secondary)]">
                     The rules governing use of the Impilo platform.{" "}
-                    <Link href="/terms" target="_blank" className="text-blue-600 underline">
+                    <Link href="/terms" target="_blank" className="text-[color:var(--info)] underline">
                       Read full terms
                     </Link>
                   </p>
@@ -152,13 +154,13 @@ export default function KioskPage() {
 
             <button
               onClick={handleConsentAccept}
-              className="w-full py-5 bg-blue-600 text-white text-xl font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-3"
+              className="w-full py-5 bg-[color:var(--primary)] text-white text-xl font-bold rounded-3xl hover:bg-[color:var(--primary-hover)] transition-colors flex items-center justify-center gap-3"
             >
               <CheckCircle2 className="w-7 h-7" />
               I Accept — Continue to Check-In
             </button>
 
-            <p className="mt-4 text-center text-xs text-gray-400">
+            <p className="mt-4 text-center text-xs text-[color:var(--text-muted)]">
               By tapping Accept, you agree to the Privacy Policy and Terms of Use (v{CURRENT_CONSENT_VERSION}).
             </p>
           </div>
@@ -169,20 +171,20 @@ export default function KioskPage() {
 
   // ── Step 2: Search and check-in ────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-8">
+    <div className="min-h-screen bg-[color:var(--background)] flex flex-col items-center justify-center p-8">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <UserPlus className="w-16 h-16 text-impilo-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-gray-900">Self Check-In</h1>
-          <p className="text-gray-500 mt-2">
+          <UserPlus className="w-16 h-16 text-[color:var(--primary)] mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-[color:var(--text-primary)]">Self Check-In</h1>
+          <p className="text-[color:var(--text-secondary)] mt-2">
             {facility ? facility.name : "Welcome"}
           </p>
         </div>
 
         {!facility ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="bg-white rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
             <AlertCircle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-            <p className="text-gray-600">Kiosk not configured. Please set up facility context.</p>
+            <p className="text-[color:var(--text-secondary)]">Kiosk not configured. Please set up facility context.</p>
           </div>
         ) : (
           <>
@@ -193,11 +195,11 @@ export default function KioskPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Enter your name or ID number"
-                  className="flex-1 px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-impilo-400 focus:ring-2 focus:ring-impilo-200"
+                  className="flex-1 px-5 py-4 text-lg border-2 border-[color:var(--border-soft)] rounded-3xl focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary-soft)]"
                   autoFocus
                 />
                 <button type="submit"
-                  className="px-6 py-4 bg-impilo-500 text-white rounded-xl hover:bg-impilo-600 transition-colors">
+                  className="px-6 py-4 bg-[color:var(--primary)] text-white rounded-3xl hover:bg-[color:var(--primary-hover)] transition-colors">
                   <Search className="w-6 h-6" />
                 </button>
               </div>
@@ -205,7 +207,7 @@ export default function KioskPage() {
 
             {searching && (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-[color:var(--text-muted)]" />
               </div>
             )}
 
@@ -215,11 +217,11 @@ export default function KioskPage() {
                   <button key={patient.id}
                     onClick={() => handleCheckIn(patient.id, patient.attributes.displayName ?? patient.attributes.givenName ?? "Patient")}
                     disabled={checkIn.isPending}
-                    className="w-full text-left bg-white rounded-xl border-2 border-gray-200 p-5 hover:border-impilo-400 hover:shadow-md transition-all">
-                    <p className="text-lg font-semibold text-gray-900">
+                    className="w-full text-left bg-white rounded-3xl border-2 border-[color:var(--border-soft)] p-5 hover:border-[color:var(--primary-muted)] hover:shadow-impilo-card transition-all">
+                    <p className="text-lg font-semibold text-[color:var(--text-primary)]">
                       {patient.attributes.displayName ?? `${patient.attributes.givenName} ${patient.attributes.familyName}`}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[color:var(--text-secondary)] mt-1">
                       DOB: {patient.attributes.dateOfBirth ?? "—"} · {patient.attributes.gender ?? "—"}
                     </p>
                   </button>
@@ -228,9 +230,9 @@ export default function KioskPage() {
             )}
 
             {searchSubmitted && !searching && patients.length === 0 && (
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">No patients found for &quot;{searchSubmitted}&quot;</p>
-                <p className="text-sm text-gray-400 mt-1">Please check your name or ID and try again.</p>
+              <div className="bg-white rounded-3xl border border-[color:var(--border-soft)] p-8 text-center shadow-impilo-card">
+                <p className="text-[color:var(--text-secondary)]">No patients found for &quot;{searchSubmitted}&quot;</p>
+                <p className="text-sm text-[color:var(--text-muted)] mt-1">Please check your name or ID and try again.</p>
               </div>
             )}
           </>

@@ -2,12 +2,13 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Pin, PinOff, X } from "lucide-react";
+import { Pin, PinOff, X, ShoppingBag, AlertCircle } from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { listVisibleShellApps } from "@/lib/shell/app-registry";
 import type { AppDefinition, ShellAppCategory } from "@/lib/shell/types";
 import { ShellIcon } from "./ShellIcon";
+import { useHealthOsLauncher, type LauncherApp } from "@/hooks/queries/useHealthOsLauncher";
 
 const CATEGORY_LABEL: Record<ShellAppCategory, string> = {
   clinical: "Clinical & care",
@@ -18,6 +19,19 @@ const CATEGORY_LABEL: Record<ShellAppCategory, string> = {
   intelligence: "Intelligence",
   system: "System",
 };
+
+function formatLauncherState(state: LauncherApp["state"]): string {
+  switch (state) {
+    case "REQUEST_ACCESS":             return "Available in marketplace — request access";
+    case "PENDING_APPROVAL":           return "Pending approval";
+    case "NOT_AVAILABLE_AT_FACILITY":  return "Not enabled for this facility";
+    case "REQUIRES_CONFIGURATION":     return "Awaiting configuration";
+    case "TEMPORARILY_UNAVAILABLE":    return "Temporarily unavailable";
+    case "SUSPENDED":                  return "Suspended pending review";
+    case "DEPRECATED":                 return "Deprecated";
+    default:                           return state;
+  }
+}
 
 export function ShellStartMenu() {
   const router = useRouter();
@@ -40,6 +54,12 @@ export function ShellStartMenu() {
     }
     return map;
   }, [apps]);
+
+  // Marketplace-installed capabilities (apps + AI skills) for this user/facility.
+  // Failures are silent — the static SHELL_APPS catalogue above always renders,
+  // preserving existing functionality when the BFF endpoint is unreachable.
+  const launcherQuery = useHealthOsLauncher({});
+  const marketplaceApps = launcherQuery.data ?? [];
 
   return (
     <div className="fixed inset-0 z-[10001] flex items-end justify-start">
@@ -94,6 +114,62 @@ export function ShellStartMenu() {
                     </button>
                   </li>
                 ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {marketplaceApps.length > 0 ? (
+            <section className="mb-4">
+              <h3 className="mb-2 flex items-center gap-1.5 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <ShoppingBag className="h-3 w-3" />
+                Marketplace apps
+              </h3>
+              <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                {marketplaceApps.map((app: LauncherApp) => {
+                  const isActionable = app.state === "INSTALLED" && !!app.launchUrl;
+                  return (
+                    <li
+                      key={app.id}
+                      className="flex items-center gap-1 rounded-lg border border-transparent hover:border-slate-200 hover:bg-slate-50 dark:hover:border-slate-700 dark:hover:bg-slate-900"
+                    >
+                      <button
+                        type="button"
+                        disabled={!isActionable}
+                        className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2 text-left disabled:cursor-not-allowed disabled:opacity-70"
+                        title={app.reason ?? undefined}
+                        onClick={() => {
+                          if (!isActionable) {
+                            router.push(`/marketplace/${encodeURIComponent(app.itemCode)}`);
+                          } else if (app.launchUrl) {
+                            router.push(app.launchUrl);
+                          }
+                          setStartOpen(false);
+                        }}
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
+                          {app.iconRef ? (
+                            <ShellIcon name={app.iconRef} className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+                          ) : (
+                            <ShoppingBag className="h-5 w-5 text-slate-500" />
+                          )}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                            {app.name}
+                          </span>
+                          <span className="block truncate text-[11px] text-slate-500">
+                            {isActionable ? app.description : (
+                              <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                                <AlertCircle className="h-3 w-3" />
+                                {formatLauncherState(app.state)}
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ) : null}

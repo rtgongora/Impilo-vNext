@@ -186,7 +186,18 @@ class PatientJourneyIntegrationTest {
             assertThat(calledItem.getCalledBy()).isEqualTo(ACTOR_ID);
 
             // ======== Step 6: Start Encounter ========
-            EncounterEntity encounter = encounterService.startEncounter(journeyId, "CONSULTATION");
+            EncounterEntity encounter = encounterService.startEncounter(
+                    journeyId,
+                    "CONSULTATION",
+                    "outpatient",
+                    "walk_in",
+                    "in_person",
+                    null,
+                    "facility",
+                    "routine",
+                    null,
+                    null,
+                    null);
             assertThat(encounter.getEncounterType()).isEqualTo("CONSULTATION");
             assertThat(encounter.getStatus()).isEqualTo("STARTED");
             assertThat(journey.getState()).isEqualTo(JourneyState.IN_SERVICE);

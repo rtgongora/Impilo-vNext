@@ -75,20 +75,26 @@ def main() -> int:
             "",
             "## Services & agents",
             "",
-            "| Maven module | ID | Plane | Sovereign | Group | Protocol | HTTP port | Product names |",
-            "|--------------|-----|-------|-----------|-------|----------|-----------|---------------|",
+            "| ID | Maven module | Primary plane | Domain | Secondary planes | Sovereign group | Product names | Protocol | Port | SoR responsibilities | Forbidden responsibilities | Consumes from | Exposes to | Impl status | Frontend wiring | API contract | Authz/Audit | Observability | Production status |",
+            "|----|--------------|---------------|--------|------------------|-----------------|---------------|----------|------|----------------------|----------------------------|---------------|------------|-------------|-----------------|-------------|-------------|---------------|-------------------|",
         ]
     )
     for e in services:
         names = e.get("product_names") or []
         names_s = ", ".join(names) if names else "—"
-        sg = e.get("sovereign_group") or "—"
-        sov = "yes" if e.get("sovereign") else "—"
+        sg = e.get("sovereign_group") or ("yes" if e.get("sovereign") else "—")
         port = e.get("default_http_port")
         port_s = str(port) if port is not None else "—"
+        sec_s = ", ".join(e.get("secondary_planes") or []) or "—"
+        sor_s = "; ".join(e.get("system_of_record_for") or []) or "—"
+        forb_s = "; ".join(e.get("forbidden_responsibilities") or []) or "—"
+        upstream_s = ", ".join(e.get("consumes_from") or []) or "—"
+        downstream_s = ", ".join(e.get("exposes_to") or []) or "—"
         lines.append(
-            f"| `{e.get('maven_module', '')}` | `{e.get('id', '')}` | {e.get('plane', '')} | {sov} | {sg} | "
-            f"{e.get('primary_protocol', '')} | {port_s} | {names_s} |"
+            f"| `{e.get('id', '')}` | `{e.get('maven_module', '')}` | {e.get('primary_plane', e.get('plane', ''))} | {e.get('domain', '—')} | {sec_s} | {sg} | "
+            f"{names_s} | {e.get('primary_protocol', '')} | {port_s} | {sor_s} | {forb_s} | {upstream_s} | {downstream_s} | "
+            f"{e.get('implementation_status', '—')} | {e.get('frontend_wiring_status', '—')} | {e.get('api_contract_status', '—')} | "
+            f"{e.get('authz_audit_status', '—')} | {e.get('observability_status', '—')} | {e.get('production_status', '—')} |"
         )
     lines.append("")
     lines.append("---")

@@ -79,6 +79,7 @@ export default function ClaimsPage() {
       : null,
     { href: withHandoff("/finance/billing"), label: "Billing", icon: Receipt, tone: "secondary" as const },
     { href: withHandoff("/finance/payments"), label: "Payments", icon: CreditCard, tone: "secondary" as const },
+    { href: withHandoff("/finance/payer-claims"), label: "Payer queue", icon: FileText, tone: "secondary" as const },
   ].filter((value): value is NonNullable<typeof value> => Boolean(value));
 
   return (

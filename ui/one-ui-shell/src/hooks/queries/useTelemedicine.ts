@@ -42,6 +42,13 @@ interface CreateTelemedicineSessionPayload {
 
 type SessionsResponse = ApiResponse<TelemedicineSession[]>;
 type SessionResponse = ApiResponse<TelemedicineSession>;
+type TelemedicineOpsResponse = ApiResponse<{
+  facilityId: string;
+  submittedReferralBacklog: number;
+  inProgressSessions: number;
+  scheduledSessions: number;
+  overdueScheduledSessions: number;
+}>;
 
 export function useTelemedicineSessions(params?: {
   providerId?: string;
@@ -115,4 +122,35 @@ export function useCreateTelemedicineSession() {
       },
     }
   );
+}
+
+export function useTelemedicineOpsSla(facilityId?: string | null) {
+  const path = facilityId
+    ? `/internal/v1/teleconsult/ops/sla?facility_id=${encodeURIComponent(String(facilityId))}`
+    : "/internal/v1/teleconsult/ops/sla";
+  return useQuery<TelemedicineOpsResponse>({
+    queryKey: ["telemedicine-ops-sla", facilityId ?? null],
+    queryFn: () => apiClient.get<TelemedicineOpsResponse>(path),
+    staleTime: 15_000,
+  });
+}
+
+export function useTelemedicineSpecialtyWorkbench(params: {
+  facilityId?: string | null;
+  specialty?: string | null;
+  page?: number;
+  size?: number;
+}) {
+  const qp = new URLSearchParams();
+  if (params.facilityId) qp.set("facility_id", String(params.facilityId));
+  if (params.specialty) qp.set("specialty", params.specialty);
+  qp.set("page", String(params.page ?? 0));
+  qp.set("size", String(params.size ?? 50));
+  const qs = qp.toString();
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["telemedicine-specialty-workbench", params.facilityId ?? null, params.specialty ?? null, params.page ?? 0, params.size ?? 50],
+    queryFn: () =>
+      apiClient.get<ApiResponse<unknown>>(`/internal/v1/teleconsult/ops/specialty-workbench${qs ? `?${qs}` : ""}`),
+    staleTime: 15_000,
+  });
 }

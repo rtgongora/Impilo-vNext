@@ -59,6 +59,10 @@ export const ROUTES: RouteDefinition[] = [
   // ── Zone: Home ──────────────────────────────────────────────────
   // ── Zone: Clinical Hub ──────────────────────────────────────────
   { path: "/clinical", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Care", navLabel: "Clinical Hub", navZone: "work" },
+  { path: "/core-transaction", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Core Transaction", navLabel: "Core Transaction", navZone: "work" },
+  { path: "/client-journey", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Client Journey", navLabel: "Client Journey", navZone: "life" },
+  { path: "/provider-workspace", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Provider Workspace", navLabel: "Provider Workspace", navZone: "work" },
+  { path: "/platform-journey", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Platform Journey", navLabel: "Platform Journey", navZone: "professional" },
 
   // ── Zone: Clinical Tools ────────────────────────────────────────
   { path: "/clinical-tools", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Clinical Tools", navLabel: "Tools", navZone: "work" },
@@ -97,6 +101,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Profile", navLabel: "Profile", navZone: "life" },
   { path: "/home/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Preferences", navLabel: "Preferences", navZone: "life" },
   { path: "/home/credentials", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Credentials & CPD", navLabel: "Credentials", navZone: "professional" },
+  { path: "/home/referrals", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Referrals", navLabel: "Referrals", navZone: "life" },
   { path: "/home/medications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Medications", navLabel: "Medications", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
@@ -172,6 +177,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/ehr/[patientId]/goals", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Goals", navLabel: "Goals", navZone: "work" },
   { path: "/ehr/[patientId]/assessments", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Assessments", navLabel: "Assessments", navZone: "work" },
   { path: "/ehr/[patientId]/charts", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Ward Charts", navLabel: "Charts", navZone: "work" },
+  { path: "/ehr/[patientId]/imaging", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "Imaging", navLabel: "Imaging", navZone: "work" },
+  { path: "/ehr/[patientId]/imaging/viewer", zone: "ehr", layout: "ehr", sidebar: "ehr", guard: "facility", pageTitle: "DICOM Viewer", navLabel: "Viewer", navZone: "work" },
 
   // ── Zone: Admin / TSHEPO Governance ─────────────────────────────
   { path: "/admin", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Administration", navLabel: "Admin", navZone: "professional" },
@@ -195,6 +202,8 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/admin/system-monitor", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "System Monitor", navLabel: "System Monitor", navZone: "professional" },
   { path: "/admin/integration-status", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Integration Status", navLabel: "Integrations", navZone: "professional" },
   { path: "/admin/sidecar-retirement", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Sidecar Retirement", navLabel: "Sidecar Retirement", navZone: "professional" },
+  { path: "/dags", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Access Governance", navLabel: "DAGS", navZone: "professional" },
+  { path: "/dags/policy", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Data Access Policy", navLabel: "DAGS Policy", navZone: "professional" },
 
   // ── Administrative plane landings (operational context: registry_admin / organization_admin) ──
   { path: "/registry-admin", zone: "admin", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Registry Administration", navLabel: "Registry Admin", navZone: "professional" },
@@ -246,12 +255,20 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/ledger", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Ledger", navLabel: "Ledger", navZone: "work" },
   { path: "/finance/workspace", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Finance Workspace", navLabel: "Workspace", navZone: "work" },
   { path: "/finance/settlements", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Settlements", navLabel: "Settlements", navZone: "work" },
+  { path: "/finance/remittances", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittances", navLabel: "Remittances", navZone: "work" },
   { path: "/finance/reconciliation", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Reconciliation", navLabel: "Reconciliation", navZone: "work" },
   { path: "/finance/refunds", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Refunds", navLabel: "Refunds", navZone: "work" },
   { path: "/finance/payer-ops", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Operations", navLabel: "Payer Ops", navZone: "work" },
   { path: "/finance/payer-claims", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claims Queue", navLabel: "Payer Claims", navZone: "work" },
   { path: "/finance/payer-claims/[claimId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "PAYER_OPS", pageTitle: "Payer Claim", navLabel: "Payer Claim", navZone: "work" },
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
+  { path: "/finance/costa", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA hub", navLabel: "COSTA", navZone: "work" },
+  { path: "/finance/costa/encounter/[encounterId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA encounter timeline", navLabel: "Encounter timeline", navZone: "work" },
+  { path: "/finance/mushex-platform", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "MusheX platform admin", navLabel: "MusheX platform", navZone: "work" },
+  { path: "/finance/mushex-platform/wallets/[walletId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Custodial wallet", navLabel: "Custodial wallet", navZone: "work" },
+  { path: "/finance/mushex-platform/remittance/[transferId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittance transfer", navLabel: "Remittance transfer", navZone: "work" },
+  { path: "/finance/mushex-platform/cards/[cardId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Card profile", navLabel: "Card profile", navZone: "work" },
+  { path: "/finance/mushex-platform/reversals/[reversalId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Reversal record", navLabel: "Reversal record", navZone: "work" },
   { path: "/finance/commerce-integrations", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Commerce & Payer Stack", navLabel: "Commerce Integrations", navZone: "work" },
   { path: "/finance/reports", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Financial reports", navLabel: "Financial reports", navZone: "work" },
   { path: "/finance/my-account", zone: "finance", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Healthcare Account", navLabel: "My healthcare costs", navZone: "life" },
@@ -363,6 +380,9 @@ export const ROUTES: RouteDefinition[] = [
 
   // ── Zone: Operations (absorbs ops-console sidecar) ─────────────────
   { path: "/operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Operations", navLabel: "Operations", navZone: "professional" },
+  { path: "/operations/facility-operations", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Facility Operations", navLabel: "Facility Operations", navZone: "professional" },
+  { path: "/operations/workflows", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Workflow Orchestration", navLabel: "Workflows", navZone: "professional" },
+  { path: "/operations/dispatch", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Dispatch Operations", navLabel: "Dispatch", navZone: "professional" },
   { path: "/operations/vito", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Identity Operations", navLabel: "Identity Ops", navZone: "professional" },
   { path: "/operations/vito/registration", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Client Registration", navLabel: "Registration", navZone: "professional" },
   { path: "/operations/vito/registration/new", zone: "operations", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "New Registration", navLabel: "New Registration", navZone: "professional" },
@@ -420,10 +440,98 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/guidance", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Guidance", navLabel: "Guidance", navZone: "life" },
   { path: "/guidance/reminders", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Reminders & Prompts", navLabel: "Reminders", navZone: "life" },
   { path: "/guidance/education", zone: "intelligent", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Education", navLabel: "Education", navZone: "life" },
+
+  // ── Zone: Impilo Fundo (workforce learning workspace — backed by services/learning-service) ──
+  // Note: sidebar uses "main" because `SidebarContext` does not include a "professional" variant;
+  // this mirrors `/home/credentials`, which is also in navZone: "professional".
+  { path: "/learning", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo", navLabel: "Impilo Fundo", navZone: "professional" },
+  { path: "/learning/catalog", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Catalogue", navLabel: "Catalogue", navZone: "professional" },
+  // Phase 6B (May 2026) — native course-detail surface backed by Phase 5B /v11/courses/{id}/structure.
+  { path: "/learning/courses/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Fundo Course", navLabel: "Course" },
+  { path: "/learning/my-learning", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Learning", navLabel: "My Learning", navZone: "professional" },
+  { path: "/learning/enrolments/[enrolmentId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Enrolment Player", navLabel: "Enrolment" },
+  { path: "/learning/enrolments/[enrolmentId]/lessons/[lessonId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Lesson Player", navLabel: "Lesson" },
+  { path: "/learning/pathways", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Pathways", navLabel: "Pathways", navZone: "professional" },
+  { path: "/learning/pathways/[pathwayId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Pathway Detail", navLabel: "Pathway" },
+  { path: "/learning/record", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Record", navLabel: "Transcript", navZone: "professional" },
+  { path: "/learning/assessments/[assessmentId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment", navLabel: "Assessment" },
+  { path: "/learning/assessments/[assessmentId]/attempt", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment Attempt", navLabel: "Attempt" },
+  { path: "/learning/attempts/[attemptId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Attempt Result", navLabel: "Attempt Result" },
+  { path: "/learning/certificates", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Certificates", navLabel: "Certificates", navZone: "professional" },
+  { path: "/learning/certificates/[certificateId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Certificate Detail", navLabel: "Certificate" },
+  { path: "/learning/cpd", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "CPD Evidence", navLabel: "CPD Evidence", navZone: "professional" },
+  { path: "/learning/reports", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Reports", navLabel: "Reports", navZone: "professional" },
+  { path: "/learning/reports/cohorts", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Cohort Report", navLabel: "Cohorts" },
+  { path: "/learning/reports/courses", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Course Report", navLabel: "Courses" },
+  { path: "/learning/reports/overdue", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Overdue Learning", navLabel: "Overdue" },
+  { path: "/learning/reports/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment Report", navLabel: "Assessments" },
+  { path: "/learning/admin", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Fundo Admin", navLabel: "Fundo Admin", navZone: "professional" },
+  { path: "/learning/admin/courses", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Courses", navLabel: "Admin Courses" },
+  { path: "/learning/admin/courses/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Course", navLabel: "New Course" },
+  { path: "/learning/admin/courses/[courseId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Course", navLabel: "Edit Course" },
+  { path: "/learning/admin/pathways", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Pathways", navLabel: "Admin Pathways" },
+  { path: "/learning/admin/pathways/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Pathway", navLabel: "New Pathway" },
+  { path: "/learning/admin/pathways/[pathwayId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Pathway", navLabel: "Edit Pathway" },
+  { path: "/learning/admin/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Assessments", navLabel: "Admin Assessments" },
+  { path: "/learning/admin/assessments/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Assessment", navLabel: "New Assessment" },
+  { path: "/learning/admin/assessments/[assessmentId]/edit", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Edit Assessment", navLabel: "Edit Assessment" },
+
+  // ── Zone: Nhume — Dispatch, Delivery, Fleet Tracking & Last-Mile Logistics ──
+  // Nhume is the logistics nervous system of Impilo. Routes are mounted under
+  // /nhume so that dispatchers, facility runners, programme managers, fleet
+  // operators, autonomous-platform operators and citizens can all reach the
+  // surfaces they are authorised for. Backend: services/nhume-service.
+  { path: "/nhume", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Logistics", navLabel: "Nhume", navZone: "work" },
+  { path: "/nhume/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Operations Dashboard", navLabel: "Operations Dashboard", navZone: "work" },
+  { path: "/nhume/deliveries", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Nhume Deliveries", navLabel: "Deliveries", navZone: "work" },
+  { path: "/nhume/deliveries/new", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "New Delivery Request", navLabel: "New Delivery", navZone: "work" },
+  { path: "/nhume/deliveries/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Delivery Detail", navLabel: "Delivery", navZone: "work" },
+  { path: "/nhume/dispatcher", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Nhume Dispatcher Console", navLabel: "Dispatcher Console", navZone: "work" },
+  { path: "/nhume/map", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fleet Tracking Map", navLabel: "Fleet Map", navZone: "work" },
+  { path: "/nhume/courier", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Courier / Driver Console", navLabel: "Courier Console", navZone: "work" },
+  { path: "/nhume/fleet", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet & Asset Management", navLabel: "Fleet & Assets", navZone: "work" },
+  { path: "/nhume/fleet/[assetId]", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet Asset", navLabel: "Asset Detail", navZone: "work" },
+  { path: "/nhume/couriers", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Drivers & Couriers", navLabel: "Drivers & Couriers", navZone: "work" },
+  { path: "/nhume/couriers/[courierId]", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Courier Profile", navLabel: "Courier Profile", navZone: "work" },
+  { path: "/nhume/policies", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Delivery Policies", navLabel: "Delivery Policies", navZone: "work" },
+  { path: "/nhume/autonomous", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Autonomous Delivery", navLabel: "Autonomous", navZone: "work" },
+  { path: "/nhume/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Nhume Analytics", navLabel: "Analytics", navZone: "work" },
+  { path: "/nhume/custody/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chain of Custody", navLabel: "Chain of Custody", navZone: "work" },
+  // Citizen-facing track page (privacy-safe, role-aware).
+  { path: "/nhume/track/[deliveryId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Delivery", navLabel: "Track Delivery", navZone: "life" },
 ];
 
-// Total route count assertion
-export const EXPECTED_ROUTE_COUNT = 278;
+// Total route count assertion.
+//
+// Phase 1 Impilo Fundo registration added 2 routes (/learning, /learning/catalog).
+// The previously-declared constant of 264 was already stale by 1 against the actual
+// ROUTES array before this change (true pre-edit count was 265), so the new total
+// is 267. Track this constant whenever ROUTES is extended.
+//
+// Stage 3.4C housekeeping (May 2026): added `/finance/costa` (Stage 3.2 / G-1)
+// and `/finance/mushex-platform` (Stage 3.3 / G-2) to the canonical route
+// registry so that breadcrumbs, the role-guard, and the taskbar/title resolver
+// all see them. New total was 269.
+// Phase 4 (May 2026): added `/finance/mushex-platform/wallets/[walletId]`
+// (read-only custodial wallet detail drill-down). New total is 270.
+// Phase 5 (May 2026): added `/finance/costa/encounter/[encounterId]`
+// (read-only COSTA encounter timeline). New total is 271.
+// Phase 6B (May 2026): added `/learning/courses/[courseId]`
+// (native Impilo Fundo course-detail page over Phase 5B course structure
+// endpoint). New total is 272.
+// Phase 4 follow-on (May 2026): added three MusheX per-record detail pages
+// (`/finance/mushex-platform/remittance/[transferId]`,
+// `/finance/mushex-platform/cards/[cardId]`,
+// `/finance/mushex-platform/reversals/[reversalId]`). New total is 275.
+// Phase 6 (May 2026): added `/finance/remittances` as a canonical
+// read-only remittance hub over the existing coverage remittance feed.
+// New total is 276.
+// Additional upstream route registrations on this branch increase the current
+// canonical total to 326.
+// Nhume (May 2026): 17 new routes under /nhume for the Dispatch, Delivery,
+// Fleet Tracking and Last-Mile Logistics service (services/nhume-service).
+// Combined with upstream additions on this branch the canonical total is 346.
+export const EXPECTED_ROUTE_COUNT = 346;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

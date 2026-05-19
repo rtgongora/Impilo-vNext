@@ -12,5 +12,14 @@ import jakarta.validation.constraints.NotBlank;
  * @param encounterType the type of clinical encounter to initiate
  */
 public record StartEncounterRequest(
-        @NotBlank String encounterType
+        @NotBlank String encounterType,
+        String encounterContext,
+        String entryPoint,
+        String modality,
+        String virtualMode,
+        String careSetting,
+        String priority,
+        String triageCategory,
+        String pathwayRef,
+        String protocolRef
 ) {}

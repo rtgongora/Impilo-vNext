@@ -49,6 +49,7 @@ public class TimelineService {
         TIMELINE_RESOURCES.put(MedicationRequest.class, "subject");
         TIMELINE_RESOURCES.put(Immunization.class, "patient");
         TIMELINE_RESOURCES.put(DiagnosticReport.class, "subject");
+        TIMELINE_RESOURCES.put(ImagingStudy.class, "subject");
         TIMELINE_RESOURCES.put(Procedure.class, "subject");
         TIMELINE_RESOURCES.put(CarePlan.class, "subject");
         TIMELINE_RESOURCES.put(AllergyIntolerance.class, "patient");
@@ -250,6 +251,10 @@ public class TimelineService {
             if (diag.hasEffectiveDateTimeType()) {
                 return diag.getEffectiveDateTimeType().getValue().toInstant();
             }
+        } else if (resource instanceof ImagingStudy imagingStudy) {
+            if (imagingStudy.hasStarted()) {
+                return imagingStudy.getStarted().toInstant();
+            }
         } else if (resource instanceof Procedure proc) {
             if (proc.hasPerformedDateTimeType()) {
                 return proc.getPerformedDateTimeType().getValue().toInstant();
@@ -323,6 +328,22 @@ public class TimelineService {
                 return diag.getCode().getText();
             }
             return "Diagnostic Report";
+        } else if (resource instanceof ImagingStudy imagingStudy) {
+            String modality = imagingStudy.hasModality() && imagingStudy.getModalityFirstRep().hasCode()
+                    ? imagingStudy.getModalityFirstRep().getCode()
+                    : null;
+            String accession = imagingStudy.getIdentifier().stream()
+                    .filter(i -> i.hasSystem() && "https://impilo.gov.zw/pacs/accession".equals(i.getSystem()))
+                    .findFirst()
+                    .map(i -> i.getValue())
+                    .orElse(null);
+            if (modality != null && accession != null) {
+                return "Imaging Study (" + modality + " / " + accession + ")";
+            }
+            if (modality != null) {
+                return "Imaging Study (" + modality + ")";
+            }
+            return "Imaging Study";
         } else if (resource instanceof Procedure proc) {
             if (proc.hasCode() && proc.getCode().hasText()) {
                 return proc.getCode().getText();
@@ -358,6 +379,8 @@ public class TimelineService {
             return med.getEncounter().getReference();
         } else if (resource instanceof DiagnosticReport diag && diag.hasEncounter()) {
             return diag.getEncounter().getReference();
+        } else if (resource instanceof ImagingStudy imagingStudy && imagingStudy.hasEncounter()) {
+            return imagingStudy.getEncounter().getReference();
         } else if (resource instanceof Procedure proc && proc.hasEncounter()) {
             return proc.getEncounter().getReference();
         } else if (resource instanceof ServiceRequest sr && sr.hasEncounter()) {

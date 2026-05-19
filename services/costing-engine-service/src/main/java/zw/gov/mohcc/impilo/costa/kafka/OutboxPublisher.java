@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.costa.kafka;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,17 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitCoreTransactionEnabled;
+    private final String coreTransactionEventsTopic;
 
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${costa.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
+                           @Value("${costa.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionEventsTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
+        this.coreTransactionEventsTopic = coreTransactionEventsTopic;
     }
 
     @Scheduled(fixedDelayString = "${costa.outbox.poll-interval-ms:2000}")
@@ -41,6 +48,9 @@ public class OutboxPublisher {
             try {
                 String topic = routeTopic(event.getEventType());
                 kafkaTemplate.send(topic, event.getAggregateId(), event.getPayload());
+                if (dualEmitCoreTransactionEnabled && shouldEmitCoreTransaction(event.getEventType())) {
+                    kafkaTemplate.send(coreTransactionEventsTopic, event.getAggregateId(), event.getPayload());
+                }
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
                 successCount++;
@@ -65,7 +75,7 @@ public class OutboxPublisher {
             case "BILL_VOIDED" -> "costa.bill.voided";
             case "INVOICE_ISSUED" -> "costa.invoice.issued";
             case "PAYMENT_INTENT_CREATED" -> "costa.payment.intent.created";
-            case "PAYMENT_STATUS_CHANGED" -> "costa.payment.status_changed";
+            case "PAYMENT_STATUS_CHANGED", "PAYMENT_CANCELLED" -> "costa.payment.status_changed";
             case "PAYMENT_ALLOCATED" -> "costa.payment.allocated";
             case "CHARGE_CREATED" -> "costa.charge.created";
             case "INVOICE_REFUND_APPLIED" -> "costa.invoice.refund_applied";
@@ -74,6 +84,21 @@ public class OutboxPublisher {
             case "ESTIMATE_CREATED" -> "costa.estimate.created";
             case "RULESET_PUBLISHED" -> "costa.ruleset.published";
             default -> "costa.events";
+        };
+    }
+
+    static boolean shouldEmitCoreTransaction(String eventType) {
+        if (eventType == null) return false;
+        return switch (eventType) {
+            case "BILL_DRAFT_CREATED",
+                 "BILL_FINALIZED",
+                 "INVOICE_ISSUED",
+                 "PAYMENT_INTENT_CREATED",
+                 "PAYMENT_STATUS_CHANGED",
+                 "PAYMENT_CANCELLED",
+                 "CLAIM_PACK_CREATED",
+                 "REFUND_CREATED" -> true;
+            default -> false;
         };
     }
 }

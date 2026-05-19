@@ -31,7 +31,7 @@ This audit adds:
 | integration-hub | `services/integration-hub` | LIVE | Not directly surfaced in ops hub UI |
 | vito-service | `services/vito-service` | LIVE | MPI / patient pickers |
 | oros-service | `services/oros-service` | LIVE | Orders/results; linked from queue workflows |
-| mushex / costing | mushex + costing-engine | LIVE | Finance plane; optional ops constraints |
+| mushex / costing | mushex + costing-engine | LIVE | Enterprise plane (finance domain); optional platform-ops constraints |
 
 ---
 

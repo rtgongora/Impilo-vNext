@@ -7,7 +7,12 @@ version: "3.9"
 
 services:
   # ---------------------------------------------------------------------------
-  # PostgreSQL 16 — one instance, per-service databases created via init script
+  # PostgreSQL 16 — one instance, per-service databases created via init script.
+  #
+  # Note: services that need PostGIS (e.g. ndila-service) treat the extension
+  # as optional. Run with the standard postgres image for dev (PostGIS will be
+  # absent and Ndila falls back to JSONB + pure-Java spatial math), or swap to
+  # postgis/postgis:16-3.4 for a PostGIS-enabled cluster — both modes work.
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
@@ -118,6 +123,11 @@ services:
       - "4242:4242"
     volumes:
       - orthanc_data:/var/lib/orthanc/db
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8042/system > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
 volumes:
   pg_data:

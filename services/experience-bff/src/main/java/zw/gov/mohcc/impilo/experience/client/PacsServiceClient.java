@@ -101,6 +101,16 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    public JsonNode viewerLaunchContext(String studyId, String viewerType) {
+        UriComponentsBuilder b = UriComponentsBuilder
+                .fromHttpUrl(baseUrl + "/internal/v1/imaging-studies/" + studyId + "/viewer-launch-context");
+        Optional.ofNullable(viewerType)
+                .filter(s -> !s.isBlank())
+                .ifPresent(v -> b.queryParam("viewerType", v));
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
     public JsonNode searchStudies(Map<String, Object> body) {
         String url = baseUrl + "/internal/v1/imaging-studies/search";
         ResponseEntity<JsonNode> response =
@@ -118,6 +128,42 @@ public class PacsServiceClient {
     public JsonNode listReportLinks(String studyId) {
         String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/report-links";
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode opsStatus() {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/status";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode opsUnmatchedStudies() {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/unmatched-studies";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode opsFailedCorrelations() {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/failed-correlations";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode opsFailedWritebacks() {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/failed-writebacks";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode retryFailedWriteback(Long outboxId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/failed-writebacks/" + outboxId + "/retry";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode retryAllFailedWritebacks() {
+        String url = baseUrl + "/internal/v1/imaging-studies/ops/failed-writebacks/retry-all";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
         return extractData(response);
     }
 

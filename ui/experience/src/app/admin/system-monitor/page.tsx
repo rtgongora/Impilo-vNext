@@ -15,6 +15,15 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuditLogSized } from "@/hooks/queries/useAudit";
 import { useBffHealthQuery } from "@/hooks/queries/useAdminObservability";
+import {
+  useImagingOpsFailedCorrelations,
+  useImagingOpsFailedWritebacks,
+  useImagingOpsStatus,
+  useImagingOpsUnmatchedStudies,
+  useRetryAllImagingWritebacks,
+  useRetryImagingWriteback,
+} from "@/hooks/queries/useImaging";
+import { useTelemedicineOpsSla, useTelemedicineSpecialtyWorkbench } from "@/hooks/queries/useTelemedicine";
 
 interface ServiceCard {
   name: string;
@@ -60,6 +69,14 @@ export default function SystemMonitorPage() {
   const queryClient = useQueryClient();
   const healthQ = useBffHealthQuery();
   const auditQ = useAuditLogSized(0, 40);
+  const imagingStatusQ = useImagingOpsStatus();
+  const unmatchedQ = useImagingOpsUnmatchedStudies();
+  const failedCorrelationQ = useImagingOpsFailedCorrelations();
+  const failedWritebackQ = useImagingOpsFailedWritebacks();
+  const retryWriteback = useRetryImagingWriteback();
+  const retryAllWritebacks = useRetryAllImagingWritebacks();
+  const teleOpsQ = useTelemedicineOpsSla();
+  const specialtyWorkbenchQ = useTelemedicineSpecialtyWorkbench({});
 
   const services: ServiceCard[] = useMemo(() => {
     if (healthQ.isLoading) return [];
@@ -113,10 +130,48 @@ export default function SystemMonitorPage() {
   const downCount = services.filter((s) => s.status === "down").length;
 
   const isLoading = healthQ.isLoading || auditQ.isLoading;
+  const imagingOpsLoading =
+    imagingStatusQ.isLoading || unmatchedQ.isLoading || failedCorrelationQ.isLoading || failedWritebackQ.isLoading;
+  const imagingOpsError =
+    imagingStatusQ.isError || unmatchedQ.isError || failedCorrelationQ.isError || failedWritebackQ.isError;
+  const imagingReachable = Boolean(
+    (imagingStatusQ.data?.data as { reachable?: boolean } | undefined)?.reachable,
+  );
+  const imagingProvider = String(
+    (imagingStatusQ.data?.data as { provider?: string } | undefined)?.provider ?? "UNKNOWN",
+  );
+  const imagingMode = String(
+    (imagingStatusQ.data?.data as { mode?: string } | undefined)?.mode ?? "UNSPECIFIED",
+  );
+  const unmatchedCount = Array.isArray(unmatchedQ.data?.data) ? unmatchedQ.data.data.length : 0;
+  const failedCorrelationCount = Array.isArray(failedCorrelationQ.data?.data) ? failedCorrelationQ.data.data.length : 0;
+  const failedWritebackCount = Array.isArray(failedWritebackQ.data?.data) ? failedWritebackQ.data.data.length : 0;
+  const unmatchedRows = (Array.isArray(unmatchedQ.data?.data) ? unmatchedQ.data?.data : []) as Array<Record<string, unknown>>;
+  const failedCorrelationRows = (Array.isArray(failedCorrelationQ.data?.data)
+    ? failedCorrelationQ.data?.data
+    : []) as Array<Record<string, unknown>>;
+  const failedWritebackRows = (Array.isArray(failedWritebackQ.data?.data)
+    ? failedWritebackQ.data?.data
+    : []) as Array<Record<string, unknown>>;
+  const teleOps = (teleOpsQ.data?.data ?? {}) as {
+    submittedReferralBacklog?: number;
+    inProgressSessions?: number;
+    scheduledSessions?: number;
+    overdueScheduledSessions?: number;
+  };
+  const specialtyRows = (Array.isArray(specialtyWorkbenchQ.data?.data) ? specialtyWorkbenchQ.data?.data : []) as Array<
+    Record<string, unknown>
+  >;
 
   const onRefresh = () => {
     void queryClient.invalidateQueries({ queryKey: ["observability", "bff-health"] });
     void queryClient.invalidateQueries({ queryKey: ["audit"] });
+    void queryClient.invalidateQueries({ queryKey: ["imaging-ops-status"] });
+    void queryClient.invalidateQueries({ queryKey: ["imaging-ops-unmatched"] });
+    void queryClient.invalidateQueries({ queryKey: ["imaging-ops-failed-correlations"] });
+    void queryClient.invalidateQueries({ queryKey: ["imaging-ops-failed-writebacks"] });
+    void queryClient.invalidateQueries({ queryKey: ["telemedicine-ops-sla"] });
+    void queryClient.invalidateQueries({ queryKey: ["telemedicine-specialty-workbench"] });
   };
 
   return (
@@ -192,6 +247,170 @@ export default function SystemMonitorPage() {
                 Connection pools, Kafka lag, CPU, and disk for dependency services are{" "}
                 <strong>not published</strong> on the Experience BFF. Export them from your hosting environment or
                 observability stack.
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-indigo-500" />
+                <h3 className="font-medium text-gray-900">Telemedicine Ops (Virtual Care)</h3>
+                <span className="text-xs text-gray-400 ml-auto">/internal/v1/teleconsult/ops/*</span>
+              </div>
+              <div className="p-5">
+                {teleOpsQ.isLoading || specialtyWorkbenchQ.isLoading ? (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Loading telemedicine ops signals...
+                  </div>
+                ) : teleOpsQ.isError ? (
+                  <div className="text-sm text-amber-700">Telemedicine ops signals are unavailable.</div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Submitted backlog</p>
+                        <p className="text-sm font-semibold text-gray-900">{Number(teleOps.submittedReferralBacklog ?? 0)}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">In-progress sessions</p>
+                        <p className="text-sm font-semibold text-gray-900">{Number(teleOps.inProgressSessions ?? 0)}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Scheduled sessions</p>
+                        <p className="text-sm font-semibold text-gray-900">{Number(teleOps.scheduledSessions ?? 0)}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Overdue scheduled</p>
+                        <p className="text-sm font-semibold text-gray-900">{Number(teleOps.overdueScheduledSessions ?? 0)}</p>
+                      </div>
+                    </div>
+                    <div className="rounded-lg border border-gray-200 p-3">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">Specialty workbench backlog</p>
+                      <div className="space-y-1">
+                        {specialtyRows.slice(0, 8).map((row, ix) => (
+                          <div key={`s-${ix}`} className="rounded border border-slate-100 p-2 text-[11px] text-slate-700">
+                            <div className="font-mono">{String(row.id ?? "unknown-referral")} · {String(row.specialty ?? "GENERAL")}</div>
+                            <div>Status {String(row.status ?? "SUBMITTED")} · Urgency {String(row.urgency ?? "ROUTINE")}</div>
+                          </div>
+                        ))}
+                        {specialtyRows.length === 0 && <p className="text-[11px] text-slate-500">No pending specialty referrals.</p>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200 flex items-center gap-2">
+                <Monitor className="w-4 h-4 text-indigo-500" />
+                <h3 className="font-medium text-gray-900">Imaging Ops (PACS Adapter)</h3>
+                <span className="text-xs text-gray-400 ml-auto">/internal/v1/imaging/ops/*</span>
+              </div>
+              <div className="p-5">
+                {imagingOpsLoading ? (
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Loading imaging ops signals...
+                  </div>
+                ) : imagingOpsError ? (
+                  <div className="text-sm text-amber-700">
+                    Imaging ops signals are unavailable (governance, auth, or PACS adapter connectivity issue).
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Backend</p>
+                        <p className="text-sm font-semibold text-gray-900">{imagingProvider}</p>
+                        <p className="text-[11px] text-gray-500">Mode {imagingMode}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Connectivity</p>
+                        <p className={`text-sm font-semibold ${imagingReachable ? "text-green-700" : "text-red-700"}`}>
+                          {imagingReachable ? "Reachable" : "Unavailable"}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Unmatched studies</p>
+                        <p className="text-sm font-semibold text-gray-900">{unmatchedCount}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-[11px] uppercase text-gray-500">Failed correlations</p>
+                        <p className="text-sm font-semibold text-gray-900">{failedCorrelationCount}</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-200 p-3 md:col-span-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-[11px] uppercase text-gray-500">Failed writebacks</p>
+                            <p className="text-sm font-semibold text-gray-900">{failedWritebackCount}</p>
+                          </div>
+                          <button
+                            type="button"
+                            className="rounded-md border border-slate-300 px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            disabled={retryAllWritebacks.isPending || failedWritebackCount === 0}
+                            onClick={() => retryAllWritebacks.mutate()}
+                          >
+                            Retry all
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-1">Outbox publish failures from imaging pipeline</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Unmatched studies</p>
+                        <div className="space-y-1">
+                          {unmatchedRows.slice(0, 5).map((row, ix) => (
+                            <div key={`u-${ix}`} className="rounded border border-slate-100 p-2 text-[11px] text-slate-700">
+                              <div className="font-mono">{String(row.studyUid ?? row.study_uid ?? "unknown-study")}</div>
+                              <div>CPID {String(row.patientCpid ?? row.patient_cpid ?? "unknown")}</div>
+                            </div>
+                          ))}
+                          {unmatchedRows.length === 0 && <p className="text-[11px] text-slate-500">No unmatched studies.</p>}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Failed correlations</p>
+                        <div className="space-y-1">
+                          {failedCorrelationRows.slice(0, 5).map((row, ix) => (
+                            <div key={`f-${ix}`} className="rounded border border-slate-100 p-2 text-[11px] text-slate-700">
+                              <div className="font-mono">{String(row.studyUid ?? row.study_uid ?? "unknown-study")}</div>
+                              <div>Order {String(row.orosOrderId ?? row.oros_order_id ?? "unlinked")}</div>
+                            </div>
+                          ))}
+                          {failedCorrelationRows.length === 0 && <p className="text-[11px] text-slate-500">No failed correlations.</p>}
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-gray-200 p-3">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Failed writebacks</p>
+                        <div className="space-y-1">
+                          {failedWritebackRows.slice(0, 5).map((row, ix) => {
+                            const outboxId = Number(row.outboxId);
+                            return (
+                              <div key={`w-${ix}`} className="rounded border border-slate-100 p-2 text-[11px] text-slate-700">
+                                <div className="font-mono">#{String(row.outboxId ?? "n/a")} · {String(row.eventType ?? row.event_type ?? "event")}</div>
+                                <div className="truncate">{String(row.publishError ?? row.publish_error ?? "unknown failure")}</div>
+                                <button
+                                  type="button"
+                                  className="mt-1 rounded border border-slate-300 px-2 py-0.5 text-[10px] hover:bg-slate-50 disabled:opacity-50"
+                                  disabled={!Number.isFinite(outboxId) || retryWriteback.isPending}
+                                  onClick={() => retryWriteback.mutate({ outboxId })}
+                                >
+                                  Retry
+                                </button>
+                              </div>
+                            );
+                          })}
+                          {failedWritebackRows.length === 0 && <p className="text-[11px] text-slate-500">No failed writebacks.</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

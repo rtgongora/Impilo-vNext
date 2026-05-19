@@ -14,7 +14,7 @@ import { useState } from "react";
 import { Activity, ClipboardList, Clock, Droplets, FileText, Pill, RotateCw, Utensils } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
-import { WARD_CHARTS, type WardChartType } from "@/data/wardChartTypes";
+import { WARD_CHARTS } from "@/data/wardChartTypes";
 
 const CHART_ICONS: Record<string, React.ReactNode> = {
   "fluid-balance": <Droplets className="h-5 w-5" />,

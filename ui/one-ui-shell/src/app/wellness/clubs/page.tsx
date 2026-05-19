@@ -1,31 +1,51 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Users2, Search, MapPin, Calendar, ChevronRight } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useJoinClub, useLeaveClub, useWellnessClubs } from "@/hooks/queries/useSimba";
 
-type Club = { id: number; name: string; type: string; members: number; location: string; nextEvent: string; joined: boolean; color: string };
-
-const CLUBS: Club[] = [
-  { id: 1, name: "Sunrise Striders", type: "Walking", members: 134, location: "Green Point Park", nextEvent: "Sat 06:30", joined: true, color: "bg-amber-500" },
-  { id: 2, name: "Table Mountain Runners", type: "Running", members: 89, location: "Newlands Forest", nextEvent: "Sun 07:00", joined: true, color: "bg-red-500" },
-  { id: 3, name: "Flow Yoga Collective", type: "Yoga", members: 56, location: "Sea Point Studio", nextEvent: "Mon 17:30", joined: false, color: "bg-purple-500" },
-  { id: 4, name: "CBD Bootcamp Crew", type: "Fitness", members: 72, location: "Company Gardens", nextEvent: "Tue 06:00", joined: false, color: "bg-emerald-500" },
-  { id: 5, name: "Waterfront Wheelers", type: "Cycling", members: 45, location: "V&A Waterfront", nextEvent: "Sat 08:00", joined: false, color: "bg-impilo-500" },
-  { id: 6, name: "Khayelitsha Pacers", type: "Running", members: 112, location: "Khayelitsha Sports Ground", nextEvent: "Sat 06:00", joined: true, color: "bg-red-500" },
-  { id: 7, name: "Pilates & Stretch", type: "Fitness", members: 38, location: "Observatory Community Hall", nextEvent: "Wed 18:00", joined: false, color: "bg-emerald-500" },
-  { id: 8, name: "Nature Walk Society", type: "Walking", members: 201, location: "Kirstenbosch Gardens", nextEvent: "Sun 09:00", joined: false, color: "bg-amber-500" },
-];
+type Club = { id: string; name: string; type: string; members: number; location: string; nextEvent: string; joined: boolean; color: string };
 
 const TYPES = ["All", "Walking", "Running", "Fitness", "Yoga", "Cycling"];
 
 /** Clubs & Communities — Health OS §6: social participation for healthier living. */
 export default function ClubsPage() {
-  const [clubs, setClubs] = useState(CLUBS);
+  const cpid = useAuthStore((s) => s.user?.id ?? null);
+  const clubsQ = useWellnessClubs();
+  const joinClub = useJoinClub();
+  const leaveClub = useLeaveClub();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
-  const toggle = (id: number) => setClubs((prev) => prev.map((c) => c.id === id ? { ...c, joined: !c.joined } : c));
+  const clubs = useMemo(() => {
+    const payload = clubsQ.data;
+    const rows = Array.isArray(payload)
+      ? (payload as Array<Record<string, unknown>>)
+      : Array.isArray((payload as { data?: unknown })?.data)
+        ? ((payload as { data: Array<Record<string, unknown>> }).data)
+        : [];
+    return rows.map((row, idx) => ({
+      id: String(row.id ?? idx),
+      name: String(row.name ?? row.title ?? "Club"),
+      type: String(row.clubType ?? row.club_type ?? "General"),
+      members: Number(row.memberCount ?? row.member_count ?? 0),
+      location: String(row.location ?? "Facility community"),
+      nextEvent: String(row.nextEvent ?? "TBD"),
+      joined: Boolean(row.joined ?? false),
+      color: idx % 3 === 0 ? "bg-amber-500" : idx % 3 === 1 ? "bg-emerald-500" : "bg-impilo-500",
+    })) satisfies Club[];
+  }, [clubsQ.data]);
+
+  const toggle = async (club: Club) => {
+    if (!cpid) return;
+    if (club.joined) {
+      await leaveClub.mutateAsync({ id: club.id });
+    } else {
+      await joinClub.mutateAsync({ id: club.id, body: { person_cpid: cpid, role: "MEMBER" } });
+    }
+  };
   const myClubs = clubs.filter((c) => c.joined);
   const filtered = clubs.filter((c) => (filter === "All" || c.type === filter) && c.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -82,7 +102,7 @@ export default function ClubsPage() {
                   <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-gray-400" />Next: {c.nextEvent}</div>
                   <div className="flex items-center gap-2"><Users2 className="h-3.5 w-3.5 text-gray-400" />{c.members} members</div>
                 </div>
-                <button onClick={() => toggle(c.id)} className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-impilo-500 text-white hover:bg-impilo-600"}`}>
+                <button onClick={() => void toggle(c)} className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-impilo-500 text-white hover:bg-impilo-600"}`}>
                   {c.joined ? "Leave Club" : "Join Club"}<ChevronRight className="h-4 w-4" />
                 </button>
               </div>

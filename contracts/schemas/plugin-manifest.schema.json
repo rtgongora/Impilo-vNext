@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/plugin-manifest.schema.json",
+  "title": "Health OS Plugin Manifest",
+  "description": "Manifest for a PLUGIN capability. See doctrine §3.3 and runtime safety rules §10.",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes", "runtime"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "PLUGIN" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[a-z0-9.-]+)?$" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "clinicalSafetyClassification": {
+      "enum": ["NON_CLINICAL", "CLINICAL_INFORMATIONAL", "CLINICAL_DECISION_SUPPORT", "CLINICAL_DIRECT_CARE"]
+    },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "rolesAllowed": { "type": "array", "items": { "type": "string" } },
+    "runtime": { "enum": ["FRONTEND_REACT", "BACKEND_RULE", "BACKEND_FORM", "EDGE_OFFLINE"] },
+    "mountPoint": { "type": "string", "description": "When runtime is FRONTEND_REACT, the named ExtensionFrame mount point." },
+    "assetBundleRef": { "type": "string" },
+    "ruleId": { "type": "string" },
+    "allowedProxyPaths": {
+      "type": "array",
+      "description": "Strict allow-list of paths the plugin may call via /internal/v1/plugins/{pluginId}/proxy/* (BFF brokered).",
+      "items": { "type": "string", "pattern": "^/" }
+    },
+    "requiresConfirmation": { "type": "boolean" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "runtime": { "const": "FRONTEND_REACT" } } },
+      "then": { "required": ["mountPoint", "assetBundleRef"] }
+    },
+    {
+      "if": { "properties": { "runtime": { "const": "BACKEND_RULE" } } },
+      "then": { "required": ["ruleId"] }
+    }
+  ],
+  "additionalProperties": false
+}

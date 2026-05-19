@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/integration-contract.schema.json",
+  "title": "External Integration Contract",
+  "description": "Formal contract between Impilo and a registered external application. See doctrine §6.",
+  "type": "object",
+  "required": [
+    "externalAppId", "contractCode", "version", "integrationCategory",
+    "environment", "effectiveFrom", "allowedApis", "scopes",
+    "purposeOfUse", "signatureMethod", "status"
+  ],
+  "properties": {
+    "externalAppId": { "type": "string" },
+    "contractCode": { "type": "string" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "integrationCategory": {
+      "enum": [
+        "IMAGING_PACS_RIS", "LABORATORY_LIMS", "LOGISTICS_ELMIS", "TELEMEDICINE_VIDEO",
+        "COMMUNICATIONS_OMNICHANNEL", "PAYMENTS", "CLAIMS_SWITCH", "INSURANCE",
+        "DHIS2", "CRVS_NATIONAL_ID", "BIOMETRIC", "PHARMACY_EXTERNAL",
+        "EPRESCRIBING", "SURVEILLANCE_EXTERNAL", "PORTS_OF_ENTRY",
+        "SCHOOL_HEALTH", "COMMUNITY_HEALTH", "EMERGENCY_RESPONSE",
+        "CALL_CENTRE_HELPDESK", "LMS_EXTERNAL", "DATA_WAREHOUSE_EXTERNAL",
+        "ANALYTICS_BI", "AI_DECISION_SUPPORT", "IOT_WEARABLE",
+        "REMOTE_MONITORING", "AMBULANCE_TRANSPORT", "REGULATORY_COUNCIL",
+        "FACILITY_LICENSING", "MARKETPLACE_VENDOR", "DONOR_PROGRAMME", "OTHER"
+      ]
+    },
+    "environment": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] },
+    "effectiveFrom": { "type": "string", "format": "date-time" },
+    "effectiveUntil": { "type": "string", "format": "date-time" },
+    "allowedApis": { "type": "array", "items": { "type": "string" } },
+    "allowedEvents": { "type": "array", "items": { "type": "string" } },
+    "allowedWebhookCallbacks": { "type": "array", "items": { "type": "string", "format": "uri" } },
+    "scopes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "purposeOfUse": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["TREATMENT", "PAYMENT", "OPERATIONS", "PUBLIC_HEALTH", "EMERGENCY", "RESEARCH", "SELF_SERVICE"] }
+    },
+    "consentBasis": {
+      "enum": ["PATIENT_CONSENT_REQUIRED", "LEGAL_OBLIGATION", "PUBLIC_INTEREST", "VITAL_INTEREST", "LEGITIMATE_INTEREST", "NOT_APPLICABLE"]
+    },
+    "signatureMethod": { "enum": ["HMAC_SHA256", "ED25519", "NONE_SANDBOX_ONLY"] },
+    "rateLimit": {
+      "type": "object",
+      "properties": {
+        "requestsPerMinute": { "type": "integer", "minimum": 1 },
+        "burst": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "errorHandlingPolicy": { "enum": ["FAIL_OPEN_SANDBOX", "FAIL_CLOSED_PRODUCTION"] },
+    "dataRetentionDays": { "type": "integer", "minimum": 0 },
+    "incidentReportingHours": { "type": "integer", "minimum": 0 },
+    "status": { "enum": ["DRAFT", "ACTIVE", "EXPIRED", "SUSPENDED", "TERMINATED"] },
+    "documentRef": { "type": "string" }
+  }
+}

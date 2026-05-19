@@ -13,4 +13,12 @@ import java.util.UUID;
 public interface SettlementRepository extends JpaRepository<SettlementEntity, String> {
 
     Page<SettlementEntity> findByTenantIdAndStatus(UUID tenantId, SettlementStatus status, Pageable pageable);
+
+    Page<SettlementEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
+    Page<SettlementEntity> findByTenantIdAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
+            UUID tenantId,
+            java.time.LocalDate periodStart,
+            java.time.LocalDate periodEnd,
+            Pageable pageable);
 }

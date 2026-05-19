@@ -5,17 +5,19 @@ import Link from "next/link";
 import {
   AlertTriangle,
   Calendar,
-  ChevronDown,
   Loader2,
   MapPin,
   Plus,
   Shield,
   Siren,
   Users,
-  X,
 } from "lucide-react";
-import { usePublicHealthCases } from "@/hooks/queries/usePublicHealth";
-import { apiClient } from "@/lib/api-client";
+import {
+  useCreatePublicHealthOutbreak,
+  usePublicHealthCases,
+  usePublicHealthOutbreaks,
+  useTransitionPublicHealthOutbreak,
+} from "@/hooks/queries/usePublicHealth";
 
 const EVENT_TYPES = [
   "Disease Outbreak",
@@ -101,8 +103,18 @@ const EMPTY_EVENT: NewEvent = {
   reporterDesignation: "",
 };
 
+const OUTBREAK_TRANSITIONS: Record<string, string> = {
+  RECORDED: "CONFIRMED",
+  CONFIRMED: "INVESTIGATING",
+  INVESTIGATING: "CONTAINED",
+  CONTAINED: "CLOSED",
+};
+
 export function OutbreaksTab() {
-  const { data: cases = [], isLoading } = usePublicHealthCases();
+  const { data: cases = [], isLoading: casesLoading } = usePublicHealthCases();
+  const { data: outbreaks = [], isLoading: outbreaksLoading } = usePublicHealthOutbreaks();
+  const createOutbreak = useCreatePublicHealthOutbreak();
+  const transitionOutbreak = useTransitionPublicHealthOutbreak();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<NewEvent>(EMPTY_EVENT);
   const [submitting, setSubmitting] = useState(false);
@@ -121,17 +133,22 @@ export function OutbreaksTab() {
     setSubmitting(true);
     setError(null);
     try {
-      await apiClient.post("/internal/v1/public-health/outbreaks", {
-        ...form,
+      await createOutbreak.mutateAsync({
+        name: form.title,
+        description: form.description,
+        eventType: form.eventType,
+        severity: form.severity,
+        province: form.province,
+        district: form.district,
+        gpsLat: form.gpsLat,
+        gpsLng: form.gpsLng,
+        disease: form.disease === "Other (specify below)" ? form.diseaseOther : form.disease,
         initialCases: Number(form.initialCases) || 0,
-        initialDeaths: Number(form.initialDeaths) || 0,
-        populationAtRisk: Number(form.populationAtRisk) || 0,
-        coordinates: form.gpsLat && form.gpsLng
-          ? { latitude: parseFloat(form.gpsLat), longitude: parseFloat(form.gpsLng) }
-          : null,
       });
     } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setSubmitting(false);
+      setError("Failed to submit outbreak event. Verify the BFF and surveillance service are available.");
+      return;
     }
     setSubmitting(false);
     setSubmitted(true);
@@ -153,17 +170,69 @@ export function OutbreaksTab() {
         </div>
         <button
           type="button"
-          disabled
-          className="flex items-center gap-1.5 px-4 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+          onClick={() => setShowForm((s) => !s)}
+          className="flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"
         >
           <Plus className="w-4 h-4" />
-          Record New Event (pending)
+          Record New Event
         </button>
       </div>
 
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950">
-        New outbreak and incident creation stays disabled until the Experience BFF exposes a governed outbreak write
-        endpoint. Live case visibility remains available below from surveillance-service.
+        Outbreak register and lifecycle transitions use persisted outbreak events (signal-linked). Surveillance cases remain below for case-level tracking.
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="px-4 py-3 border-b flex items-center justify-between">
+          <h4 className="text-sm font-semibold text-gray-900">Outbreak register (lifecycle)</h4>
+          <span className="text-xs text-gray-400">{outbreaks.length} outbreaks</span>
+        </div>
+        <div className="p-4 overflow-x-auto">
+          {outbreaksLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500 py-4"><Loader2 className="w-4 h-4 animate-spin" /> Loading outbreaks…</div>
+          ) : outbreaks.length === 0 ? (
+            <p className="text-sm text-gray-400">No outbreaks recorded yet.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-left text-xs text-gray-600">
+                <tr>
+                  <th className="px-3 py-2">Name</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Severity</th>
+                  <th className="px-3 py-2">Location</th>
+                  <th className="px-3 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {outbreaks.map((o) => {
+                  const next = OUTBREAK_TRANSITIONS[o.lifecycleStatus];
+                  return (
+                    <tr key={o.id} className="border-t border-gray-100">
+                      <td className="px-3 py-2 font-medium">{o.name}</td>
+                      <td className="px-3 py-2"><span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">{o.lifecycleStatus}</span></td>
+                      <td className="px-3 py-2 text-gray-600">{o.severity}</td>
+                      <td className="px-3 py-2 text-gray-500 text-xs">{o.district !== "—" ? `${o.district}, ${o.province}` : o.province}</td>
+                      <td className="px-3 py-2">
+                        {next ? (
+                          <button
+                            type="button"
+                            disabled={transitionOutbreak.isPending}
+                            onClick={() => transitionOutbreak.mutate({ outbreakId: o.id, lifecycleStatus: next })}
+                            className="text-[10px] text-impilo-600 hover:underline"
+                          >
+                            → {next}
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-gray-400">Closed</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Success banner */}
@@ -399,7 +468,7 @@ export function OutbreaksTab() {
           <span className="text-xs text-gray-400">{cases.length} records</span>
         </div>
         <div className="p-4">
-          {isLoading ? (
+          {casesLoading ? (
             <div className="flex items-center gap-2 text-sm text-gray-500 py-8 justify-center">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading...
             </div>

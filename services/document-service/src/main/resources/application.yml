@@ -50,6 +50,23 @@ spring:
 document-store:
   v11:
     emit-mode: ${DOCUMENT_STORE_EMIT_MODE:DUAL}
+  storage:
+    provider-type: ${DOCUMENT_STORAGE_PROVIDER:MINIO}
+  ocr:
+    provider-type: ${DOCUMENT_OCR_PROVIDER:NOOP}
+  ocr-stub:
+    base-url: ${DOCUMENT_OCR_STUB_BASE_URL:}
+    path: ${DOCUMENT_OCR_STUB_PATH:/v1/ocr/extract}
+    api-key: ${DOCUMENT_OCR_STUB_API_KEY:}
+  signature:
+    provider-type: ${DOCUMENT_SIGNATURE_PROVIDER:NOOP}
+  signature-stub:
+    base-url: ${DOCUMENT_SIGNATURE_STUB_BASE_URL:}
+    path: ${DOCUMENT_SIGNATURE_STUB_PATH:/v1/signature/sign}
+    api-key: ${DOCUMENT_SIGNATURE_STUB_API_KEY:}
+  landela-adapter:
+    base-url: ${LANDELA_ADAPTER_BASE_URL:}
+    api-key: ${LANDELA_ADAPTER_API_KEY:}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     bucket: ${MINIO_BUCKET:impilo-documents}

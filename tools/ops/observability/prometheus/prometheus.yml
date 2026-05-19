@@ -52,13 +52,13 @@ scrape_configs:
           plane: clinical
           service: zibo
 
-  # ── Finance ──
+  # ── Enterprise (finance domain) ──
   - job_name: pct
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['pct-service:8088']
         labels:
-          plane: finance
+          plane: enterprise
           service: pct
 
   - job_name: oros
@@ -66,16 +66,16 @@ scrape_configs:
     static_configs:
       - targets: ['oros-service:8089']
         labels:
-          plane: finance
+          plane: enterprise
           service: oros
 
-  # ── Resilience & Operations ──
+  # ── Integration (platform-ops domain) ──
   - job_name: support-service
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['support-service:8340']
         labels:
-          plane: operations
+          plane: integration
           service: support
 
   - job_name: audit-ledger-service
@@ -83,7 +83,7 @@ scrape_configs:
     static_configs:
       - targets: ['audit-ledger-service:8350']
         labels:
-          plane: operations
+          plane: integration
           service: audit-ledger
 
   - job_name: offline-edge-service
@@ -91,16 +91,16 @@ scrape_configs:
     static_configs:
       - targets: ['offline-edge-service:8360']
         labels:
-          plane: operations
+          plane: integration
           service: offline-edge
 
-  # ── Supply & IoT ──
+  # ── Integration (supply/iot domains) ──
   - job_name: asset-registry-service
     metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['asset-registry-service:8310']
         labels:
-          plane: supply
+          plane: integration
           service: asset-registry
 
   - job_name: dispatch-service
@@ -108,7 +108,7 @@ scrape_configs:
     static_configs:
       - targets: ['dispatch-service:8320']
         labels:
-          plane: supply
+          plane: integration
           service: dispatch
 
   - job_name: iot-ingestion-service
@@ -116,7 +116,7 @@ scrape_configs:
     static_configs:
       - targets: ['iot-ingestion-service:8330']
         labels:
-          plane: supply
+          plane: integration
           service: iot-ingestion
 
   # ── Experience Platform ──
@@ -141,7 +141,7 @@ scrape_configs:
     static_configs:
       - targets: ['inventory:8098']
         labels:
-          plane: supply
+          plane: integration
           service: inventory
 
   - job_name: mushex
@@ -149,7 +149,7 @@ scrape_configs:
     static_configs:
       - targets: ['mushex:8102']
         labels:
-          plane: finance
+          plane: enterprise
           service: mushex
 
   - job_name: costing-engine
@@ -157,7 +157,7 @@ scrape_configs:
     static_configs:
       - targets: ['costing-engine:8101']
         labels:
-          plane: finance
+          plane: enterprise
           service: costing-engine
 
   - job_name: ubomi
@@ -173,7 +173,7 @@ scrape_configs:
     static_configs:
       - targets: ['msika:8086']
         labels:
-          plane: supply
+          plane: integration
           service: msika
 
   # ── OTel Collector self-metrics ──

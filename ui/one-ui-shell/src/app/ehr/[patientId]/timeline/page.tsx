@@ -99,10 +99,10 @@ export default function TimelinePage() {
   const { data: referralsData } = useReferrals(patientId);
   const { data: notesData } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
-  const entries: TimelineEntryResource[] = timelineData?.data ?? [];
-  const referrals = referralsData?.data ?? [];
-  const clinicalNotes = notesData?.data ?? [];
-  const telemedicineSessions = telemedicineData?.data ?? [];
+  const entries: TimelineEntryResource[] = useMemo(() => timelineData?.data ?? [], [timelineData?.data]);
+  const referrals = useMemo(() => referralsData?.data ?? [], [referralsData?.data]);
+  const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
+  const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const coordinationPulse = useMemo(() => {
     const referralEvents = entries.filter((entry) => entry.attributes.eventType === "REFERRAL").length;
     const receivingHere = referrals.filter((referral) => isReferralReceivingHere(referral, facility)).length;

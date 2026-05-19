@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Shield,
   Clock,
-  FileCheck,
   Building,
   Users,
   Award,

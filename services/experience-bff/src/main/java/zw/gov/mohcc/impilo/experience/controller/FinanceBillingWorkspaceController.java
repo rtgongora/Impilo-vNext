@@ -51,6 +51,42 @@ public class FinanceBillingWorkspaceController {
         }
     }
 
+    @GetMapping("/lifecycle/invoices")
+    public ResponseEntity<String> listInvoicesByEncounter(@RequestParam(name = "encounterId") String encounterId,
+                                                          @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                                          @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertBillingWorkspaceAccess("GET");
+        String path = UriComponentsBuilder.fromPath("/invoices")
+                .queryParam("encounter_id", encounterId)
+                .build()
+                .toUriString();
+        try {
+            ResponseEntity<String> upstream = costaClient.financeLifecycleGet(path);
+            return withHeaders(upstream, requestId, correlationId);
+        } catch (HttpStatusCodeException exception) {
+            log.warn("Finance billing-workspace invoice list failed status={}", exception.getStatusCode());
+            return withHeaders(exception, requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/lifecycle/subsidies")
+    public ResponseEntity<String> listSubsidiesByEncounter(@RequestParam(name = "encounterId") String encounterId,
+                                                            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                                            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        financePlaneAuthorizationService.assertBillingWorkspaceAccess("GET");
+        String path = UriComponentsBuilder.fromPath("/subsidies")
+                .queryParam("encounter_id", encounterId)
+                .build()
+                .toUriString();
+        try {
+            ResponseEntity<String> upstream = costaClient.financeLifecycleGet(path);
+            return withHeaders(upstream, requestId, correlationId);
+        } catch (HttpStatusCodeException exception) {
+            log.warn("Finance billing-workspace subsidy list failed status={}", exception.getStatusCode());
+            return withHeaders(exception, requestId, correlationId);
+        }
+    }
+
     @GetMapping("/lifecycle/invoices/{invoiceId}/lines")
     public ResponseEntity<String> listInvoiceLines(@PathVariable String invoiceId,
                                                     @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

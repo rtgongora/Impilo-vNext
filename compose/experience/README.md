@@ -129,6 +129,19 @@ cd ui/experience && npm run test:routes
                     └─────────────┘
 ```
 
+## Core Transaction Doctrine References
+
+- `docs/doctrine/CORE_TRANSACTION_DOCTRINE.md`
+- `docs/doctrine/CORE_TRANSACTION_STATE_MACHINE.md`
+- `docs/architecture/core-transaction-bff-composition.md`
+- `contracts/openapi/core-transaction-openapi.yaml`
+
+Core Transaction runtime + validation assets:
+
+- `compose/core-transaction/docker-compose.core-transaction-e2e.yml`
+- `test/integration/core-transaction-runtime.sh`
+- `tests/performance/k6-core-transaction.js`
+
 ## API Endpoints
 
 ### Auth
@@ -185,3 +198,15 @@ cd ui/experience && npm run test:routes
 
 ### Reports
 - `POST /internal/v1/reports/generate` — Generate report
+
+### Core Transaction
+- `GET /internal/v1/core-transactions` — List composed transactions
+- `GET /internal/v1/core-transactions/{transactionId}` — Get composed transaction
+- `POST /internal/v1/core-transactions/{transactionId}/actions/{actionCode}` — Apply action
+- `GET /internal/v1/core-transactions/{transactionId}/timeline` — Get timeline
+- `GET /internal/v1/core-transactions/{transactionId}/next-actions` — Get next actions
+- `GET /internal/v1/core-transactions/{transactionId}/journeys` — Get person/provider/platform journey views
+- `GET /internal/v1/core-transactions/{transactionId}/nompilo` — Get Nompilo companion context
+- `POST /internal/v1/core-transactions/{transactionId}/feedback` — Submit feedback
+- `POST /internal/v1/core-transactions/{transactionId}/nompilo/handoff` — Request human handoff
+- `/experience/core-transactions/*` — doctrine-facing alias route family

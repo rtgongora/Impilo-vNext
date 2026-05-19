@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/device-integration-manifest.schema.json",
+  "title": "Health OS Device Integration Manifest",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes",
+    "deviceCategory", "vendorName", "ingestionProtocol", "ingestionEventTopic",
+    "requiresDeviceProvisioning"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "DEVICE_INTEGRATION" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "deviceCategory": {
+      "enum": [
+        "BIOMETRIC", "VITALS_GLUCOMETER", "VITALS_BP", "VITALS_SPO2",
+        "VITALS_THERMOMETER", "COLD_CHAIN_SENSOR", "VEHICLE_TRACKER",
+        "DRONE_TELEMETRY", "WEARABLE_FITNESS", "REMOTE_MONITORING", "OTHER"
+      ]
+    },
+    "vendorName": { "type": "string" },
+    "ingestionProtocol": { "enum": ["MQTT", "HTTP_WEBHOOK", "HEALTH_CONNECT", "BLE", "OTHER"] },
+    "ingestionEventTopic": { "type": "string" },
+    "requiresDeviceProvisioning": { "type": "boolean" }
+  }
+}

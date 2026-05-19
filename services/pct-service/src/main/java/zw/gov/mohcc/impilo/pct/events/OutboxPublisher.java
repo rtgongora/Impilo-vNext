@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.pct.events;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -50,11 +51,29 @@ public class OutboxPublisher {
 
     private final EventOutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final boolean dualEmitCanonicalEnabled;
+    private final boolean dualEmitCoreTransactionEnabled;
+    private final String coreTransactionTopic;
+    private final String canonicalJourneyCompletedTopic;
+    private final String canonicalEncounterCompletedTopic;
+    private final String canonicalDeathRecordedTopic;
 
     public OutboxPublisher(EventOutboxRepository outboxRepository,
-                           KafkaTemplate<String, String> kafkaTemplate) {
+                           KafkaTemplate<String, String> kafkaTemplate,
+                           @Value("${pct.outbox.dual-emit-canonical-enabled:false}") boolean dualEmitCanonicalEnabled,
+                           @Value("${pct.outbox.dual-emit-core-transaction-enabled:true}") boolean dualEmitCoreTransactionEnabled,
+                           @Value("${pct.outbox.core-transaction-topic:core.transaction.events}") String coreTransactionTopic,
+                           @Value("${pct.outbox.canonical-topics.journey-completed:clinical.pct.journey.completed}") String canonicalJourneyCompletedTopic,
+                           @Value("${pct.outbox.canonical-topics.encounter-completed:clinical.pct.encounter.completed}") String canonicalEncounterCompletedTopic,
+                           @Value("${pct.outbox.canonical-topics.death-recorded:clinical.pct.death.recorded}") String canonicalDeathRecordedTopic) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.dualEmitCanonicalEnabled = dualEmitCanonicalEnabled;
+        this.dualEmitCoreTransactionEnabled = dualEmitCoreTransactionEnabled;
+        this.coreTransactionTopic = coreTransactionTopic;
+        this.canonicalJourneyCompletedTopic = canonicalJourneyCompletedTopic;
+        this.canonicalEncounterCompletedTopic = canonicalEncounterCompletedTopic;
+        this.canonicalDeathRecordedTopic = canonicalDeathRecordedTopic;
     }
 
     /**
@@ -87,6 +106,14 @@ public class OutboxPublisher {
                 String payload = event.getPayload();
 
                 kafkaTemplate.send(topic, key, payload);
+                String canonicalTopic = resolveCanonicalCompanionTopic(event.getEventType());
+                if (canonicalTopic != null && !canonicalTopic.equals(topic)) {
+                    kafkaTemplate.send(canonicalTopic, key, payload);
+                }
+                String coreTransactionRoutedTopic = resolveCoreTransactionTopic(event.getEventType());
+                if (dualEmitCoreTransactionEnabled && coreTransactionRoutedTopic != null) {
+                    kafkaTemplate.send(coreTransactionTopic, key, payload);
+                }
 
                 event.setPublishedAt(OffsetDateTime.now());
                 outboxRepository.save(event);
@@ -114,6 +141,9 @@ public class OutboxPublisher {
         if (eventType == null) {
             return "pct.events";
         }
+        if (eventType.startsWith("telemedicine.session.")) {
+            return "clinical.teleconsult.lifecycle";
+        }
 
         return switch (eventType) {
             case "JOURNEY_CREATED", "JOURNEY_STATE_CHANGED" -> "pct.journey.state_changed";
@@ -140,6 +170,37 @@ public class OutboxPublisher {
             case "TRANSFER_REQUESTED", "TRANSFER_COMPLETED" -> "pct.transfer.updated";
 
             default -> "pct.events";
+        };
+    }
+
+    private String resolveCanonicalCompanionTopic(String eventType) {
+        if (!dualEmitCanonicalEnabled || eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "JOURNEY_STATE_CHANGED" -> canonicalJourneyCompletedTopic;
+            case "ENCOUNTER_COMPLETED" -> canonicalEncounterCompletedTopic;
+            case "DEATH_RECORDED" -> canonicalDeathRecordedTopic;
+            default -> null;
+        };
+    }
+
+    private static String resolveCoreTransactionTopic(String eventType) {
+        if (eventType == null) {
+            return null;
+        }
+        return switch (eventType) {
+            case "JOURNEY_CREATED",
+                 "JOURNEY_STATE_CHANGED",
+                 "TRIAGE_RECORDED",
+                 "QUEUE_ITEM_ENQUEUED",
+                 "QUEUE_ITEM_CALLED",
+                 "ENCOUNTER_STARTED",
+                 "ENCOUNTER_COMPLETED",
+                 "DISCHARGE_COMPLETED",
+                 "TASK_CREATED",
+                 "TASK_COMPLETED" -> "core.transaction.events";
+            default -> null;
         };
     }
 }

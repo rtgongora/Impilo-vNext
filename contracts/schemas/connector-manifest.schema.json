@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://impilo.gov.zw/schemas/health-os/connector-manifest.schema.json",
+  "title": "Health OS Connector Manifest",
+  "type": "object",
+  "required": [
+    "manifestVersion", "artifactCode", "type", "name", "description",
+    "category", "publisher", "version", "platformCompatibility",
+    "supportedEnvironments", "securityClassification",
+    "dataProtectionClassification", "requiredScopes",
+    "integrationCategory", "externalSystemName",
+    "authenticationMethod", "signatureMethod", "endpoints"
+  ],
+  "properties": {
+    "manifestVersion": { "type": "string" },
+    "artifactCode": { "type": "string" },
+    "type": { "const": "CONNECTOR" },
+    "name": { "type": "string" },
+    "description": { "type": "string", "maxLength": 280 },
+    "category": { "type": "string" },
+    "publisher": { "type": "object" },
+    "version": { "type": "string" },
+    "platformCompatibility": { "type": "string" },
+    "supportedEnvironments": { "type": "array", "items": { "enum": ["SANDBOX", "STAGING", "PRODUCTION"] } },
+    "securityClassification": { "enum": ["LOW", "STANDARD", "ELEVATED", "CRITICAL"] },
+    "dataProtectionClassification": { "enum": ["NO_PHI", "PSEUDONYMOUS", "PHI_LIMITED", "PHI_FULL"] },
+    "clinicalSafetyClassification": {
+      "enum": ["NON_CLINICAL", "CLINICAL_INFORMATIONAL", "CLINICAL_DECISION_SUPPORT", "CLINICAL_DIRECT_CARE"]
+    },
+    "requiredScopes": { "type": "array", "items": { "type": "string" } },
+    "integrationCategory": {
+      "enum": [
+        "IMAGING_PACS_RIS", "LABORATORY_LIMS", "LOGISTICS_ELMIS", "TELEMEDICINE_VIDEO",
+        "COMMUNICATIONS_OMNICHANNEL", "PAYMENTS", "CLAIMS_SWITCH", "INSURANCE",
+        "DHIS2", "CRVS_NATIONAL_ID", "BIOMETRIC", "PHARMACY_EXTERNAL",
+        "EPRESCRIBING", "SURVEILLANCE_EXTERNAL", "PORTS_OF_ENTRY",
+        "SCHOOL_HEALTH", "COMMUNITY_HEALTH", "EMERGENCY_RESPONSE",
+        "CALL_CENTRE_HELPDESK", "LMS_EXTERNAL", "DATA_WAREHOUSE_EXTERNAL",
+        "ANALYTICS_BI", "AI_DECISION_SUPPORT", "IOT_WEARABLE",
+        "REMOTE_MONITORING", "AMBULANCE_TRANSPORT", "REGULATORY_COUNCIL",
+        "FACILITY_LICENSING", "MARKETPLACE_VENDOR", "DONOR_PROGRAMME", "OTHER"
+      ]
+    },
+    "externalSystemName": { "type": "string" },
+    "externalSystemVersion": { "type": "string" },
+    "authenticationMethod": {
+      "enum": ["OAUTH2_CLIENT_CREDENTIALS", "OAUTH2_AUTHORIZATION_CODE_PKCE", "MTLS", "API_KEY_SANDBOX_ONLY"]
+    },
+    "signatureMethod": { "enum": ["HMAC_SHA256", "ED25519", "NONE_SANDBOX_ONLY"] },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url", "method"],
+        "properties": {
+          "name": { "type": "string" },
+          "url": { "type": "string", "format": "uri" },
+          "method": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] }
+        }
+      }
+    },
+    "inboundWebhookTopics": { "type": "array", "items": { "type": "string" } },
+    "outboundEventTopics": { "type": "array", "items": { "type": "string" } }
+  }
+}

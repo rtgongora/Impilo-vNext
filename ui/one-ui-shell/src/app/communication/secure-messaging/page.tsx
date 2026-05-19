@@ -22,7 +22,7 @@ export default function SecureMessagingPage() {
   const requestedChannelId = searchParams.get("channelId");
   const user = useAuthStore((state) => state.user);
   const { data: channelsData, isLoading: channelsLoading } = useMessageChannels();
-  const channels = channelsData?.data ?? [];
+  const channels = useMemo(() => channelsData?.data ?? [], [channelsData?.data]);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(requestedChannelId);
   const [draftMessage, setDraftMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");

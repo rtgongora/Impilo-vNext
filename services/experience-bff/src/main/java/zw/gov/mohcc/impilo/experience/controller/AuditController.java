@@ -33,19 +33,27 @@ public class AuditController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String aggregateType,
+            @RequestParam(required = false) String aggregateId) {
         try {
-            JsonNode data = auditClient.queryEvents(null, null, null, null, null, page, size);
+            String eventTypeFilter = (aggregateType == null || aggregateType.isBlank()) ? null : aggregateType;
+            String subjectRefFilter = (aggregateId == null || aggregateId.isBlank()) ? null : aggregateId;
+            JsonNode data = auditClient.queryEvents(null, subjectRefFilter, eventTypeFilter, null, null, page, size);
             return ResponseEntity.ok(Map.of(
                     "data", data != null ? data : List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                            "page", page, "size", size,
+                            "aggregate_type", aggregateType == null ? "" : aggregateType,
+                            "aggregate_id", aggregateId == null ? "" : aggregateId)));
         } catch (Exception e) {
             log.error("Audit list failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of(
                     "data", List.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId,
-                            "page", page, "size", size)));
+                            "page", page, "size", size,
+                            "aggregate_type", aggregateType == null ? "" : aggregateType,
+                            "aggregate_id", aggregateId == null ? "" : aggregateId)));
         }
     }
 

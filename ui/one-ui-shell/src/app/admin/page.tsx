@@ -100,6 +100,55 @@ const ADMIN_SECTIONS = [
     icon: BookHeart,
     color: "bg-rose-100 text-rose-600",
   },
+  {
+    title: "Beds & Wards Admin",
+    description: "Configure bed inventory and ward-level operations",
+    href: "/admin/beds",
+    icon: Building,
+    color: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    title: "Queue Configuration",
+    description: "Manage queue definitions and operational queue policies",
+    href: "/admin/queues",
+    icon: ScrollText,
+    color: "bg-blue-100 text-blue-700",
+  },
+  {
+    title: "Data Export",
+    description: "Govern controlled exports and evidence extraction workflows",
+    href: "/admin/data-export",
+    icon: FileSearch,
+    color: "bg-amber-100 text-amber-700",
+  },
+  {
+    title: "Data Governance",
+    description: "Review data-governance controls and policy compliance surfaces",
+    href: "/admin/data-governance",
+    icon: Shield,
+    color: "bg-violet-100 text-violet-700",
+  },
+  {
+    title: "Integration Status",
+    description: "Monitor upstream and downstream integration health and drift",
+    href: "/admin/integration-status",
+    icon: Globe,
+    color: "bg-teal-100 text-teal-700",
+  },
+  {
+    title: "System Monitor",
+    description: "View runtime health, performance, and service stability telemetry",
+    href: "/admin/system-monitor",
+    icon: AlertTriangle,
+    color: "bg-orange-100 text-orange-700",
+  },
+  {
+    title: "Sidecar Retirement",
+    description: "Track consolidation and retirement progress for legacy sidecars",
+    href: "/admin/sidecar-retirement",
+    icon: BookHeart,
+    color: "bg-slate-100 text-slate-700",
+  },
 ] as const;
 
 export default function AdminPage() {

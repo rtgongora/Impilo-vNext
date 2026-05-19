@@ -124,6 +124,15 @@ public class DischargeWorkflow {
 
         JourneyEntity journey = journeyRepository.findByJourneyId(journeyId)
                 .orElseThrow(() -> new IllegalArgumentException("Journey not found: " + journeyId));
+        if (!Set.of(JourneyState.IN_SERVICE, JourneyState.ADMITTED, JourneyState.DISCHARGE_PENDING).contains(journey.getState())) {
+            throw new IllegalStateException("Journey is not in a discharge-eligible state: " + journey.getState());
+        }
+
+        dischargeCaseRepository.findByTenantIdAndJourneyId(ctx.tenantId(), journeyId)
+                .filter(existing -> !"COMPLETED".equals(existing.getStatus()))
+                .ifPresent(existing -> {
+                    throw new IllegalStateException("Active discharge case already exists for journey: " + journeyId);
+                });
 
         // Select blockers based on discharge type
         List<String> blockers = selectBlockers(dischargeType);

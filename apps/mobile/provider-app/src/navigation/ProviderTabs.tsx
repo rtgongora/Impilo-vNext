@@ -16,6 +16,8 @@ import { QueueManagementScreen } from "../screens/provider/QueueManagementScreen
 import { ClinicalToolsScreen } from "../screens/provider/ClinicalToolsScreen";
 import { EncounterScreen } from "../screens/provider/EncounterScreen";
 import { MessagingScreen } from "../screens/provider/MessagingScreen";
+import { HealthOsAppsScreen } from "../screens/provider/HealthOsAppsScreen";
+import { ProviderSocialScreen } from "../screens/provider/ProviderSocialScreen";
 import { useAppStore } from "../stores/appStore";
 import { useEncounterStore } from "../stores/encounterStore";
 import type { ProviderTabKey } from "../types";
@@ -78,9 +80,19 @@ export function ProviderTabs() {
       icon: tabIcon(providerTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", providerTab === "messaging"),
     },
     {
+      key: "social" as const,
+      label: "Network",
+      icon: tabIcon(providerTab === "social" ? "people-circle" : "people-circle-outline", providerTab === "social"),
+    },
+    {
       key: "tools" as const,
       label: "Tools",
       icon: tabIcon(providerTab === "tools" ? "construct" : "construct-outline", providerTab === "tools"),
+    },
+    {
+      key: "apps" as const,
+      label: "Apps",
+      icon: tabIcon(providerTab === "apps" ? "apps" : "apps-outline", providerTab === "apps"),
     },
     {
       key: "professional" as const,
@@ -103,8 +115,12 @@ export function ProviderTabs() {
         return <QueueManagementScreen />;
       case "messaging":
         return <MessagingScreen />;
+      case "social":
+        return <ProviderSocialScreen />;
       case "tools":
         return <ClinicalToolsScreen />;
+      case "apps":
+        return <HealthOsAppsScreen />;
       case "professional":
         return <ProfessionalProfileScreen />;
       default:

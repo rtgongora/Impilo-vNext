@@ -39,6 +39,16 @@ class SettlementControllerTest {
         assertEquals("{\"settlementId\":\"SET-001\",\"status\":\"RELEASED\"}", response.getBody());
     }
 
+    @Test
+    void listSettlementsForwardsIntentFilters() {
+        SettlementController controller = new SettlementController(new StubMushexClient());
+
+        ResponseEntity<String> response = controller.listSettlements("PI-1", java.util.List.of("PI-1", "PI-2"), "req-3", "corr-3");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"data\":[{\"settlementId\":\"SET-001\"}]}", response.getBody());
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         // Pass all nulls — the compact constructor defaults every field to localhost URLs
         return ServiceClientConfig.testServiceEndpoints();
@@ -61,6 +71,13 @@ class SettlementControllerTest {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("{\"settlementId\":\"" + settlementId + "\",\"status\":\"RELEASED\"}");
+        }
+
+        @Override
+        public ResponseEntity<String> listSettlements(String intentId, java.util.List<String> intentIds) {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"data\":[{\"settlementId\":\"SET-001\"}]}");
         }
     }
 }

@@ -25,7 +25,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${air.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
+            @Value("${air.security.oauth2-enabled:true}") boolean oauth2Enabled,
+            @Value("${air.security.allow-insecure-permit-all:false}") boolean allowInsecurePermitAll) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -42,14 +43,16 @@ public class SecurityConfig {
                                     "/actuator/metrics/**",
                                     "/v3/api-docs/**",
                                     "/swagger-ui/**",
-                                    "/swagger-ui.html",
-                                    "/internal/v1/health",
-                                    "/internal/v1/test-command")
+                                    "/swagger-ui.html")
                             .permitAll()
                             .anyRequest()
                             .authenticated())
                     .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         } else {
+            if (!allowInsecurePermitAll) {
+                throw new IllegalStateException(
+                        "Refusing insecure permit-all mode: set air.security.allow-insecure-permit-all=true only in isolated test environments");
+            }
             http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         }
 

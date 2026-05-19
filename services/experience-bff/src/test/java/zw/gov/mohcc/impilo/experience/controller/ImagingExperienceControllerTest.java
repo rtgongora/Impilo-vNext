@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.imaging.ImagingAccessPolicyService;
@@ -21,6 +22,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ImagingExperienceControllerTest {
 
@@ -141,5 +143,67 @@ class ImagingExperienceControllerTest {
                         Mockito.any(),
                         Mockito.any());
         assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void launchViewer_denied_emitsDeniedAudit() {
+        Mockito.doThrow(new ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "deny"))
+                .when(governance).assertViewerLaunch();
+
+        assertThrows(ResponseStatusException.class, () ->
+                controller.launchViewer(request, "st-denied", Map.of("viewerType", "DICOMWEB_STACK"), "cpid-x"));
+
+        Mockito.verify(governance)
+                .recordImagingAudit(
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.eq("IMAGING_VIEWER_ACCESS_DENIED"),
+                        Mockito.eq("POST:imaging/viewer-sessions"),
+                        Mockito.eq("DENIED"),
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.any(),
+                        Mockito.eq("imaging_study"),
+                        Mockito.eq("st-denied"),
+                        Mockito.any());
+    }
+
+    @Test
+    void imagingOpsEndpoints_areGovernedAndAudited() {
+        ObjectNode status = mapper.createObjectNode().put("reachable", true);
+        ObjectNode retry = mapper.createObjectNode().put("status", "RETRY_REQUESTED");
+        ObjectNode study = mapper.createObjectNode().put("id", "st-ctx");
+        ObjectNode launchContext = mapper.createObjectNode().put("viewerEngine", "DICOMWEB_STACK");
+        Mockito.when(pacs.getStudy("st-ctx")).thenReturn(study);
+        Mockito.when(pacs.viewerLaunchContext("st-ctx", "OHIF")).thenReturn(launchContext);
+        Mockito.doNothing().when(policy).assertStudyMatchesPatient(study, "cpid-ctx");
+        Mockito.when(pacs.opsStatus()).thenReturn(status);
+        Mockito.when(pacs.opsUnmatchedStudies()).thenReturn(mapper.createArrayNode());
+        Mockito.when(pacs.opsFailedCorrelations()).thenReturn(mapper.createArrayNode());
+        Mockito.when(pacs.opsFailedWritebacks()).thenReturn(mapper.createArrayNode());
+        Mockito.when(pacs.retryFailedWriteback(11L)).thenReturn(retry);
+        Mockito.when(pacs.retryAllFailedWritebacks()).thenReturn(retry);
+
+        ResponseEntity<Map<String, Object>> ctx = controller.viewerLaunchContext(
+                request, "st-ctx", "OHIF", "cpid-ctx");
+        ResponseEntity<Map<String, Object>> s = controller.opsStatus(request);
+        ResponseEntity<Map<String, Object>> u = controller.opsUnmatchedStudies(request);
+        ResponseEntity<Map<String, Object>> c = controller.opsFailedCorrelations(request);
+        ResponseEntity<Map<String, Object>> w = controller.opsFailedWritebacks(request);
+        ResponseEntity<Map<String, Object>> r1 = controller.retryFailedWriteback(request, 11L);
+        ResponseEntity<Map<String, Object>> r2 = controller.retryAllFailedWritebacks(request);
+
+        Mockito.verify(governance, Mockito.times(4)).assertGovernedRead();
+        Mockito.verify(governance, Mockito.times(1)).assertViewerLaunch();
+        Mockito.verify(governance, Mockito.times(2)).assertGovernedMutate();
+        assertEquals(200, ctx.getStatusCode().value());
+        assertEquals(200, s.getStatusCode().value());
+        assertEquals(200, u.getStatusCode().value());
+        assertEquals(200, c.getStatusCode().value());
+        assertEquals(200, w.getStatusCode().value());
+        assertEquals(200, r1.getStatusCode().value());
+        assertEquals(200, r2.getStatusCode().value());
     }
 }

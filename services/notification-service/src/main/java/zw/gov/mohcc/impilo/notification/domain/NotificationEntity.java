@@ -56,6 +56,9 @@ public class NotificationEntity {
     @Column(name = "sent_at")
     private OffsetDateTime sentAt;
 
+    @Column(name = "read_at")
+    private OffsetDateTime readAt;
+
     @PrePersist
     protected void onCreate() {
         if (id == null) {
@@ -106,4 +109,7 @@ public class NotificationEntity {
 
     public OffsetDateTime getSentAt() { return sentAt; }
     public void setSentAt(OffsetDateTime sentAt) { this.sentAt = sentAt; }
+
+    public OffsetDateTime getReadAt() { return readAt; }
+    public void setReadAt(OffsetDateTime readAt) { this.readAt = readAt; }
 }

@@ -91,10 +91,10 @@ export default function PatientSummaryPage() {
   });
 
   const patient = patientData?.data;
-  const encounters = encountersData?.data ?? [];
-  const referrals = referralsData?.data ?? [];
-  const clinicalNotes = notesData?.data ?? [];
-  const telemedicineSessions = telemedicineData?.data ?? [];
+  const encounters = useMemo(() => encountersData?.data ?? [], [encountersData?.data]);
+  const referrals = useMemo(() => referralsData?.data ?? [], [referralsData?.data]);
+  const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
+  const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const allergies = (allergiesData?.data ?? []);
   const conditions = (conditionsData?.data ?? []);
   const medications = (medsData?.data ?? []);

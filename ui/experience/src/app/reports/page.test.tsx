@@ -25,6 +25,12 @@ vi.mock("@/components/experience/OrganizationPlaneContextBar", () => ({
   OrganizationPlaneContextBar: () => null,
 }));
 
+vi.mock("@/lib/api-client", () => ({
+  apiClient: {
+    get: vi.fn().mockResolvedValue({ data: { gold_stats: {} } }),
+  },
+}));
+
 function renderPage() {
   const client = new QueryClient();
   return render(

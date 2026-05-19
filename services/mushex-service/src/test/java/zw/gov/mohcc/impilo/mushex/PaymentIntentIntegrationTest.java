@@ -177,6 +177,41 @@ class PaymentIntentIntegrationTest {
     // ---------------------------------------------------------------
 
     @Test
+    void listIntents_bySourceIds_returnsMatchingRows() throws Exception {
+        CreateIntentRequest request = new CreateIntentRequest(
+                "COSTA_BILL", "BILL-LIST-001",
+                new BigDecimal("45.00"), "USD",
+                facilityId.toString(), "idem-list-source-1", null
+        );
+        mockMvc.perform(post("/mushex/v1/payment-intents")
+                        .header("X-Tenant-Id", tenantId.toString())
+                        .header("X-Actor-Id", "test-actor")
+                        .header("X-Actor-Type", "FACILITY_FINANCE")
+                        .header("X-Purpose-Of-Use", "BILLING")
+                        .header("X-Device-Fingerprint", "test-device")
+                        .header("X-Correlation-Id", correlationId.toString())
+                        .header("X-Facility-Id", facilityId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/mushex/v1/payment-intents")
+                        .param("source_type", "COSTA_BILL")
+                        .param("source_ids", "BILL-LIST-001")
+                        .header("X-Tenant-Id", tenantId.toString())
+                        .header("X-Actor-Id", "test-actor")
+                        .header("X-Actor-Type", "FACILITY_FINANCE")
+                        .header("X-Purpose-Of-Use", "BILLING")
+                        .header("X-Device-Fingerprint", "test-device")
+                        .header("X-Correlation-Id", correlationId.toString())
+                        .header("X-Facility-Id", facilityId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].sourceType").value("COSTA_BILL"))
+                .andExpect(jsonPath("$.data[0].sourceId").value("BILL-LIST-001"));
+    }
+
+    @Test
     void getIntent_existingId_returnsData() throws Exception {
         // Seed a payment intent directly
         PaymentIntentEntity intent = new PaymentIntentEntity();
@@ -274,5 +309,95 @@ class PaymentIntentIntegrationTest {
         assertFalse(outboxEvents.isEmpty());
         assertEquals("INTENT_CREATED", outboxEvents.get(0).getEventType());
         assertEquals("PAYMENT_INTENT", outboxEvents.get(0).getAggregateType());
+    }
+
+    // ---------------------------------------------------------------
+    // G-4 rail-selection (docs/design/g4-rail-selection-policy.md)
+    // ---------------------------------------------------------------
+
+    @Test
+    void createIntent_withPreferredRailAdapter_recordsItOnMetadataAndOutbox() throws Exception {
+        CreateIntentRequest request = new CreateIntentRequest(
+                "COSTA_BILL", "BILL-G4-IT-1",
+                new BigDecimal("100.00"), "USD",
+                facilityId.toString(), "idem-g4-it-1", null,
+                "SANDBOX", null, null
+        );
+
+        mockMvc.perform(post("/mushex/v1/payment-intents")
+                .header("X-Tenant-Id", tenantId.toString())
+                .header("X-Actor-Id", "test-actor")
+                .header("X-Actor-Type", "FACILITY_FINANCE")
+                .header("X-Purpose-Of-Use", "BILLING")
+                .header("X-Device-Fingerprint", "test-device")
+                .header("X-Correlation-Id", correlationId.toString())
+                .header("X-Facility-Id", facilityId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.metadata", containsString("\"effective_rail\":\"SANDBOX\"")))
+            .andExpect(jsonPath("$.data.metadata", containsString("\"reason\":\"EXPLICIT_PREFERRED\"")));
+
+        var outboxEvents = outboxRepository.findTop100ByPublishedAtIsNullOrderByCreatedAtAsc();
+        assertFalse(outboxEvents.isEmpty());
+        String payload = outboxEvents.get(0).getPayload();
+        assertTrue(payload.contains("\"effectiveRail\":\"SANDBOX\""),
+                "INTENT_CREATED outbox payload must include effectiveRail");
+        assertTrue(payload.contains("\"preferredRail\":\"SANDBOX\""),
+                "INTENT_CREATED outbox payload must include preferredRail");
+        assertTrue(payload.contains("\"railSelectionReason\":\"EXPLICIT_PREFERRED\""),
+                "INTENT_CREATED outbox payload must include railSelectionReason");
+    }
+
+    @Test
+    void createIntent_withUnknownRailAdapter_returns400WithStableErrorCode() throws Exception {
+        CreateIntentRequest request = new CreateIntentRequest(
+                "COSTA_BILL", "BILL-G4-IT-2",
+                new BigDecimal("100.00"), "USD",
+                facilityId.toString(), "idem-g4-it-2", null,
+                "BITCOIN", null, null
+        );
+
+        mockMvc.perform(post("/mushex/v1/payment-intents")
+                .header("X-Tenant-Id", tenantId.toString())
+                .header("X-Actor-Id", "test-actor")
+                .header("X-Actor-Type", "FACILITY_FINANCE")
+                .header("X-Purpose-Of-Use", "BILLING")
+                .header("X-Device-Fingerprint", "test-device")
+                .header("X-Correlation-Id", correlationId.toString())
+                .header("X-Facility-Id", facilityId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.success").value(false))
+            .andExpect(jsonPath("$.error.code").value("RAIL_ADAPTER_UNKNOWN"));
+
+        assertEquals(0, intentRepository.count(),
+                "A rejected rail selection must not persist any intent");
+    }
+
+    @Test
+    void createIntent_withoutRailSelectionFields_remainsBackwardCompatible() throws Exception {
+        // This test re-uses the legacy 7-arg constructor to confirm that callers who
+        // have not yet adopted the G-4 fields still get a 201 and a valid response.
+        CreateIntentRequest request = new CreateIntentRequest(
+                "COSTA_BILL", "BILL-G4-IT-3",
+                new BigDecimal("12.00"), "USD",
+                facilityId.toString(), "idem-g4-it-3", null
+        );
+
+        mockMvc.perform(post("/mushex/v1/payment-intents")
+                .header("X-Tenant-Id", tenantId.toString())
+                .header("X-Actor-Id", "test-actor")
+                .header("X-Actor-Type", "FACILITY_FINANCE")
+                .header("X-Purpose-Of-Use", "BILLING")
+                .header("X-Device-Fingerprint", "test-device")
+                .header("X-Correlation-Id", correlationId.toString())
+                .header("X-Facility-Id", facilityId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.data.metadata", containsString("\"reason\":\"DEFAULT_NO_PREFERENCE\"")));
     }
 }

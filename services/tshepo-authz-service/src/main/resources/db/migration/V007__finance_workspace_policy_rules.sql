@@ -1,4 +1,4 @@
--- Experience BFF finance plane — synthetic ext_authz paths:
+-- Experience BFF enterprise-plane finance-domain routes — synthetic ext_authz paths:
 --   GET/POST /internal/v1/finance/billing-workspace  → resource_type billing-workspace
 --   GET/POST /internal/v1/finance/mushex-platform     → resource_type mushex-platform
 

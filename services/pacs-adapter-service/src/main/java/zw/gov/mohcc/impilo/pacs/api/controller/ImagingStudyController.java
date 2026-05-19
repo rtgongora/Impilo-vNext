@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.shared.auth.TrustContext;
+import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 import zw.gov.mohcc.impilo.pacs.api.dto.CorrelateStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.CreateImagingStudyRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ForwardStudyRequest;
@@ -25,6 +27,7 @@ import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingViewerSessionEntity;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controller for imaging study registration, Orthanc forwarding, DICOM hierarchy, viewer sessions,
@@ -109,6 +112,13 @@ public class ImagingStudyController {
                 .body(imagingStudyService.launchViewerSession(id, request, actorId(), actorType()));
     }
 
+    @GetMapping("/{id}/viewer-launch-context")
+    public ResponseEntity<Map<String, Object>> viewerLaunchContext(
+            @PathVariable Long id,
+            @RequestParam(name = "viewerType", required = false) String viewerType) {
+        return ResponseEntity.ok(imagingStudyService.viewerLaunchContext(id, viewerType, actorId(), actorType()));
+    }
+
     @PostMapping("/{id}/report-links")
     public ResponseEntity<ImagingReportLinkEntity> linkReport(
             @PathVariable Long id,
@@ -135,7 +145,41 @@ public class ImagingStudyController {
         return ResponseEntity.ok(imagingStudyService.listOrderLinks(id));
     }
 
+    @GetMapping("/ops/status")
+    public ResponseEntity<Map<String, Object>> pacsStatus() {
+        return ResponseEntity.ok(imagingStudyService.orthancConnectivityStatus());
+    }
+
+    @GetMapping("/ops/unmatched-studies")
+    public ResponseEntity<List<ImagingStudyEntity>> listUnmatchedStudies() {
+        return ResponseEntity.ok(imagingStudyService.listUnmatchedStudies());
+    }
+
+    @GetMapping("/ops/failed-correlations")
+    public ResponseEntity<List<ImagingStudyEntity>> listFailedCorrelations() {
+        return ResponseEntity.ok(imagingStudyService.listFailedCorrelations());
+    }
+
+    @GetMapping("/ops/failed-writebacks")
+    public ResponseEntity<List<Map<String, Object>>> listFailedWritebacks() {
+        return ResponseEntity.ok(imagingStudyService.listFailedWritebacks());
+    }
+
+    @PostMapping("/ops/failed-writebacks/{outboxId}/retry")
+    public ResponseEntity<Map<String, Object>> retryFailedWriteback(@PathVariable Long outboxId) {
+        return ResponseEntity.ok(imagingStudyService.retryFailedWriteback(outboxId));
+    }
+
+    @PostMapping("/ops/failed-writebacks/retry-all")
+    public ResponseEntity<Map<String, Object>> retryAllFailedWritebacks() {
+        return ResponseEntity.ok(imagingStudyService.retryAllFailedWritebacks());
+    }
+
     private static String actorId() {
+        TrustContext trust = TrustContextHolder.get();
+        if (trust != null && trust.actorId() != null && !trust.actorId().isBlank()) {
+            return trust.actorId();
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return "anonymous";
@@ -148,6 +192,10 @@ public class ImagingStudyController {
     }
 
     private static String actorType() {
+        TrustContext trust = TrustContextHolder.get();
+        if (trust != null && trust.actorType() != null && !trust.actorType().isBlank()) {
+            return trust.actorType();
+        }
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return "UNKNOWN";

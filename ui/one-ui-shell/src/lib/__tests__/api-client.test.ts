@@ -366,7 +366,7 @@ describe("apiClient", () => {
     sessionStorageMock.setItem("exp:work_mode", "clinical");
     sessionStorageMock.setItem("exp:work_mode_context", JSON.stringify({ licenseNumber: "LIC-123" }));
     sessionStorageMock.setItem("exp:purpose_of_use", "TREATMENT");
-    window.history.pushState({}, "", "/auth/login");
+    window.history.pushState({}, "", "/clinical");
 
     useFacilityStore.getState().setFacility({
       id: "facility-1",
@@ -392,7 +392,7 @@ describe("apiClient", () => {
       user: null,
       token: "expired-token",
       refreshToken: null,
-      expiresAt: null,
+      expiresAt: "2000-01-01T00:00:00.000Z",
       isAuthenticated: true,
     });
 

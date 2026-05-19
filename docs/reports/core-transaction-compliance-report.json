@@ -1,0 +1,81 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "id": "doctrine-docs",
+      "description": "Core doctrine documents exist",
+      "status": "pass",
+      "details": "All required files exist"
+    },
+    {
+      "id": "canonical-contracts",
+      "description": "Canonical core transaction contracts exist",
+      "status": "pass",
+      "details": "All required files exist"
+    },
+    {
+      "id": "checklist-artifacts",
+      "description": "Checklist artifacts exist",
+      "status": "pass",
+      "details": "All required files exist"
+    },
+    {
+      "id": "bff-dual-surface",
+      "description": "Experience BFF dual-surface routes",
+      "status": "pass",
+      "details": "Internal + alias routes found"
+    },
+    {
+      "id": "ci-core-transaction-jobs",
+      "description": "CI includes core transaction gates",
+      "status": "pass",
+      "details": "All core transaction jobs present"
+    },
+    {
+      "id": "checklist-complete",
+      "description": "Checklist matrix is complete and strict-core services have event mappings",
+      "status": "pass",
+      "details": "Validated 109 service checklist entries"
+    },
+    {
+      "id": "dual-emit-pct-service",
+      "description": "pct-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    },
+    {
+      "id": "dual-emit-costing-engine-service",
+      "description": "costing-engine-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    },
+    {
+      "id": "dual-emit-oros-service",
+      "description": "oros-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    },
+    {
+      "id": "dual-emit-pharmacy-service",
+      "description": "pharmacy-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    },
+    {
+      "id": "dual-emit-msika-flow-service",
+      "description": "msika-flow-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    },
+    {
+      "id": "dual-emit-mushex-service",
+      "description": "mushex-service dual-emits core.transaction.events",
+      "status": "pass",
+      "details": "Publisher + config present"
+    }
+  ]
+}

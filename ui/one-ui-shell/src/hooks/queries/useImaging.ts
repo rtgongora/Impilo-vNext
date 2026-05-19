@@ -99,3 +99,78 @@ export function useLaunchImagingViewer(chartPatientCpid?: string | null) {
     },
   });
 }
+
+export function useImagingViewerLaunchContext(
+  studyId?: string | number | null,
+  options?: { chartPatientCpid?: string | null; viewerType?: string | null },
+) {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-viewer-launch-context", studyId, options?.chartPatientCpid ?? null, options?.viewerType ?? null],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      if (options?.chartPatientCpid) searchParams.set("chart_patient_cpid", options.chartPatientCpid);
+      if (options?.viewerType) searchParams.set("viewerType", options.viewerType);
+      const qs = searchParams.toString();
+      const path = `/internal/v1/imaging/studies/${studyId}/viewer-launch-context${qs ? `?${qs}` : ""}`;
+      return apiClient.get<ApiResponse<unknown>>(path);
+    },
+    enabled: !!studyId,
+  });
+}
+
+export function useImagingOpsStatus() {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-ops-status"],
+    queryFn: () => apiClient.get<ApiResponse<unknown>>("/internal/v1/imaging/ops/status"),
+    staleTime: 15_000,
+  });
+}
+
+export function useImagingOpsUnmatchedStudies() {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-ops-unmatched"],
+    queryFn: () => apiClient.get<ApiResponse<unknown>>("/internal/v1/imaging/ops/unmatched-studies"),
+    staleTime: 15_000,
+  });
+}
+
+export function useImagingOpsFailedCorrelations() {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-ops-failed-correlations"],
+    queryFn: () => apiClient.get<ApiResponse<unknown>>("/internal/v1/imaging/ops/failed-correlations"),
+    staleTime: 15_000,
+  });
+}
+
+export function useImagingOpsFailedWritebacks() {
+  return useQuery<ApiResponse<unknown>>({
+    queryKey: ["imaging-ops-failed-writebacks"],
+    queryFn: () => apiClient.get<ApiResponse<unknown>>("/internal/v1/imaging/ops/failed-writebacks"),
+    staleTime: 15_000,
+  });
+}
+
+export function useRetryImagingWriteback() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown, { outboxId: number }>({
+    mutationFn: ({ outboxId }) =>
+      apiClient.post<ApiResponse<unknown>>(`/internal/v1/imaging/ops/failed-writebacks/${outboxId}/retry`, {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-status"] });
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-failed-writebacks"] });
+    },
+  });
+}
+
+export function useRetryAllImagingWritebacks() {
+  const queryClient = useQueryClient();
+  return useMutation<ApiResponse<unknown>, unknown>({
+    mutationFn: () => apiClient.post<ApiResponse<unknown>>("/internal/v1/imaging/ops/failed-writebacks/retry-all", {}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-status"] });
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-failed-writebacks"] });
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-failed-correlations"] });
+      void queryClient.invalidateQueries({ queryKey: ["imaging-ops-unmatched"] });
+    },
+  });
+}

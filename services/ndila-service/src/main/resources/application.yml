@@ -1,0 +1,149 @@
+server:
+  port: ${SERVER_PORT:8155}
+
+spring:
+  application:
+    name: ndila-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_ndila
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:impilo}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}
+
+impilo:
+  companion:
+    enabled: true
+  ops:
+    enabled: true
+    outbox-table: ndila_event_outbox
+  security:
+    allow-anonymous: ${NDILA_ALLOW_ANONYMOUS:false}
+
+# ---------------------------------------------------------------------------
+# Ndila configuration — provider stack, sovereignty, sensitivity, tiles.
+#
+# Doctrine:
+#   - Default provider stack is open + sovereign-friendly (Mock + PostGIS for
+#     dev, plus optional OSRM-compatible routing / Nominatim- or Pelias-
+#     compatible geocoding when self-hosted hosts are configured).
+#   - Commercial providers (Mapbox, Google Maps, HERE Maps, Azure Maps) are
+#     OPTIONAL fallbacks; never the default; never used in tests.
+#   - PUBLIC OPENSTREETMAP TILE SERVERS MUST NOT be used for production tile
+#     rendering. The configuration below refuses to select them in production
+#     mode.
+# ---------------------------------------------------------------------------
+ndila:
+  environment: ${NDILA_ENVIRONMENT:development}            # development | staging | production
+  country: ${NDILA_COUNTRY:ZW}
+  tenant-default: ${NDILA_TENANT_DEFAULT:zw-mohcc}
+
+  # PostGIS toggle — Ndila migrations conditionally enable PostGIS where
+  # available. Set false on dev clusters where the extension is unavailable.
+  postgis:
+    enabled: ${NDILA_POSTGIS_ENABLED:true}
+    fallback-to-jsonb: true
+
+  # Sovereignty / privacy posture
+  sovereignty:
+    prefer-internal-for-sensitive: true
+    block-public-osm-tiles-in-production: true
+    minimize-third-party-payloads: true
+
+  # Provider stack — every adapter advertises capability metadata and is
+  # selected by NdilaProviderPolicyService at runtime.
+  providers:
+    default-geocoding: ${NDILA_DEFAULT_GEOCODING:MOCK}
+    default-routing: ${NDILA_DEFAULT_ROUTING:MOCK}
+    default-tiles: ${NDILA_DEFAULT_TILES:MOCK}
+    default-boundaries: ${NDILA_DEFAULT_BOUNDARIES:INTERNAL}
+    fallback-chain-geocoding: ${NDILA_FALLBACK_GEOCODING:MOCK}
+    fallback-chain-routing: ${NDILA_FALLBACK_ROUTING:MOCK}
+
+    # OpenStreetMap / OSRM / Nominatim — self-hosted only.
+    osm:
+      enabled: ${NDILA_OSM_ENABLED:false}
+      tile-base-url: ${NDILA_OSM_TILE_BASE_URL:}
+    osrm:
+      enabled: ${NDILA_OSRM_ENABLED:false}
+      base-url: ${NDILA_OSRM_BASE_URL:}
+    nominatim:
+      enabled: ${NDILA_NOMINATIM_ENABLED:false}
+      base-url: ${NDILA_NOMINATIM_BASE_URL:}
+      user-agent: impilo-ndila/0.1
+    pelias:
+      enabled: ${NDILA_PELIAS_ENABLED:false}
+      base-url: ${NDILA_PELIAS_BASE_URL:}
+
+    # Commercial providers — optional, credentialed, audited.
+    mapbox:
+      enabled: ${NDILA_MAPBOX_ENABLED:false}
+      access-token: ${NDILA_MAPBOX_ACCESS_TOKEN:}
+    google:
+      enabled: ${NDILA_GOOGLE_ENABLED:false}
+      api-key: ${NDILA_GOOGLE_API_KEY:}
+    here:
+      enabled: ${NDILA_HERE_ENABLED:false}
+      api-key: ${NDILA_HERE_API_KEY:}
+    azure:
+      enabled: ${NDILA_AZURE_ENABLED:false}
+      subscription-key: ${NDILA_AZURE_KEY:}
+
+    # Sovereign / sovereign-leaning sources
+    zw-gis:
+      enabled: ${NDILA_ZWGIS_ENABLED:false}
+      base-url: ${NDILA_ZWGIS_BASE_URL:}
+
+    # Offline-cached tiles (MinIO bucket reference)
+    offline-tiles:
+      enabled: ${NDILA_OFFLINE_TILES_ENABLED:true}
+      bucket: ${NDILA_OFFLINE_TILES_BUCKET:impilo-ndila-tiles}
+
+  # Cache policy
+  cache:
+    route-ttl-seconds: 900
+    geocode-ttl-seconds: 86400
+    tile-ttl-seconds: 604800
+
+  # Tracking policy
+  tracking:
+    accept-events: true
+    retain-history-days: 90
+    geofence-breach-events: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: ndila-service
+  health:
+    db:
+      enabled: true

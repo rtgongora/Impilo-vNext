@@ -9,7 +9,7 @@
  * Uses the real SchedulingController BFF API with TUSO booking bridge.
  */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -187,11 +187,7 @@ export default function SchedulingPage() {
     }).catch(() => setAvailabilitySlots([])).finally(() => setLoadingAvailability(false));
   }, [selectedResourceId, form.date]);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [facility?.id, activeTab, viewMode, weekStart]);
-
-  async function fetchAppointments() {
+  const fetchAppointments = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -211,7 +207,11 @@ export default function SchedulingPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [activeTab, facility?.id]);
+
+  useEffect(() => {
+    void fetchAppointments();
+  }, [fetchAppointments, viewMode, weekStart]);
 
   async function handleCreate() {
     if (!facility || !selectedPatient || !form.date) return;

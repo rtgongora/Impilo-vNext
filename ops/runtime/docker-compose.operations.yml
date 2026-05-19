@@ -296,6 +296,15 @@ services:
       MOODLE_WS_TOKEN: ${MOODLE_WS_TOKEN:-}
       MOODLE_WS_ENDPOINT_URL: ${MOODLE_WS_ENDPOINT_URL:-}
       LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+      # Phase 3B — compose/dev Kafka noise reduction.
+      # Helm production default remains "true" (see helm/learning/values.yaml),
+      # but in local Compose the scheduled outbox publisher is intentionally
+      # disabled by default so a developer running `docker compose up
+      # learning-service` (or any partial profile that omits Kafka) does not
+      # see repeated ERROR-level Kafka publisher logs every 500ms. Set this
+      # to "true" with `KAFKA_BOOTSTRAP_SERVERS` reachable to exercise the
+      # outbox → Kafka path end-to-end in dev.
+      LEARNING_OUTBOX_PUBLISHER_ENABLED: ${LEARNING_OUTBOX_PUBLISHER_ENABLED:-false}
     ports:
       - "8235:8235"
     depends_on:

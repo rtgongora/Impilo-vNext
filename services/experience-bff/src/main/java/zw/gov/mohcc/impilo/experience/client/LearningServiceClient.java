@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -147,6 +148,72 @@ public class LearningServiceClient {
         }
     }
 
+    /**
+     * Phase 6B — BFF passthrough for the Phase 5B native Fundo catalogue
+     * list endpoint. Returns the {@code data} envelope unwrapped, or {@code
+     * null} when the learning-service base URL is not configured / the
+     * request fails. Errors are logged at debug-level so the BFF degrades
+     * gracefully when the upstream is unavailable.
+     */
+    public JsonNode getV11Catalog(
+            String status,
+            String category,
+            String level,
+            Boolean cpdEligible,
+            Boolean mandatory,
+            String language,
+            int limit) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/v11/catalog");
+        if (status != null && !status.isBlank()) b.queryParam("status", status);
+        if (category != null && !category.isBlank()) b.queryParam("category", category);
+        if (level != null && !level.isBlank()) b.queryParam("level", level);
+        if (cpdEligible != null) b.queryParam("cpdEligible", cpdEligible);
+        if (mandatory != null) b.queryParam("mandatory", mandatory);
+        if (language != null && !language.isBlank()) b.queryParam("language", language);
+        b.queryParam("limit", limit);
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 catalog list failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Phase 6B — BFF passthrough for {@code GET /v11/catalog/{courseId}}. */
+    public JsonNode getV11Course(String courseId) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/catalog/" + courseId;
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(url, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 course detail failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /** Phase 6B — BFF passthrough for {@code GET /v11/courses/{courseId}/structure}. */
+    public JsonNode getV11CourseStructure(String courseId) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/courses/" + courseId + "/structure";
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(url, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 course structure failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
     public JsonNode postSubjectProfile(Map<String, Object> body) {
         if (!props.isConfigured()) {
             return null;
@@ -160,6 +227,62 @@ public class LearningServiceClient {
             return unwrapData(res.getBody());
         } catch (Exception e) {
             log.debug("Learning subject-profile failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode getV11(String relativePath, Map<String, Object> queryParams) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(
+                trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath);
+        if (queryParams != null) {
+            queryParams.forEach((k, v) -> {
+                if (v != null && !v.toString().isBlank()) {
+                    b.queryParam(k, v);
+                }
+            });
+        }
+        try {
+            ResponseEntity<JsonNode> res = restTemplate.getForEntity(b.toUriString(), JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 GET {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode postV11(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.postForEntity(url, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 POST {} failed: {}", relativePath, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode putV11(String relativePath, Map<String, Object> body) {
+        if (!props.isConfigured()) {
+            return null;
+        }
+        String url = trim(props.getBaseUrl()) + "/internal/v1/learning/v11/" + relativePath;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body == null ? Map.of() : body, headers);
+            ResponseEntity<JsonNode> res = restTemplate.exchange(url, HttpMethod.PUT, entity, JsonNode.class);
+            return unwrapData(res.getBody());
+        } catch (Exception e) {
+            log.debug("Learning v11 PUT {} failed: {}", relativePath, e.getMessage());
             return null;
         }
     }

@@ -17,35 +17,29 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class NotificationControllerTest {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
-    void list_returnsDataAndMeta() {
-        NotificationController controller = new NotificationController(new StubNotificationClient());
-        ResponseEntity<Map<String, Object>> response =
-                controller.list(null, "req-1", "corr-1");
-        assertEquals(200, response.getStatusCode().value());
+    void listReturnsBadGatewayWhenNotificationsUnavailable() {
+        NotificationController controller = new NotificationController(new FailingNotificationClient());
+
+        var response = controller.list(null, "req-1", "corr-1");
+
+        assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("req-1", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+        assertEquals("NOTIFICATIONS_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
     }
 
     @Test
-    void send_returns201() {
+    void sendReturns201WithRealEnvelopeWhenUpstreamSucceeds() {
         NotificationController controller = new NotificationController(new StubNotificationClient());
+
         ResponseEntity<Map<String, Object>> response =
-                controller.send("req-2", "corr-2",
-                        Map.of("recipientId", "user-1", "subject", "Test", "body", "Hello"));
+                controller.send("req-2", "corr-2", Map.of("recipientId", "user-1", "subject", "Test", "body", "Hello"));
+
         assertEquals(201, response.getStatusCode().value());
+        assertNotNull(response.getBody());
         assertEquals("req-2", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
-    }
-
-    @Test
-    void markAsRead_returnsUpdatedNotification() {
-        NotificationController controller = new NotificationController(new StubNotificationClient());
-        ResponseEntity<Map<String, Object>> response =
-                controller.markAsRead("notif-1", "req-3", "corr-3");
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
@@ -53,31 +47,34 @@ class NotificationControllerTest {
     }
 
     private static final class StubNotificationClient extends NotificationServiceClient {
-        StubNotificationClient() { super(new RestTemplate(), endpoints()); }
+        private StubNotificationClient() {
+            super(new RestTemplate(), endpoints());
+        }
 
-        @Override public JsonNode listNotifications(String recipientId) {
-            ArrayNode arr = mapper.createArrayNode();
-            arr.add(mapper.createObjectNode().put("id", "notif-1").put("read", false));
+        @Override
+        public JsonNode listNotifications(String recipientId) {
+            ArrayNode arr = MAPPER.createArrayNode();
+            arr.add(MAPPER.createObjectNode().put("id", "notif-1").put("read", false));
             return arr;
         }
 
-        @Override public JsonNode sendNotification(Map<String, Object> body) {
-            ObjectNode node = mapper.createObjectNode();
+        @Override
+        public JsonNode sendNotification(Map<String, Object> body) {
+            ObjectNode node = MAPPER.createObjectNode();
             node.put("id", "notif-new");
             node.put("status", "SENT");
             return node;
         }
+    }
 
-        @Override public JsonNode markAsRead(String id) {
-            return mapper.createObjectNode().put("id", id).put("read", true);
+    private static final class FailingNotificationClient extends NotificationServiceClient {
+        private FailingNotificationClient() {
+            super(new RestTemplate(), endpoints());
         }
 
-        @Override public JsonNode getPreferences() {
-            return mapper.createObjectNode().put("email", true).put("sms", false);
-        }
-
-        @Override public JsonNode updatePreferences(Map<String, Object> body) {
-            return mapper.createObjectNode().put("email", true).put("sms", true);
+        @Override
+        public JsonNode listNotifications(String recipientId) {
+            throw new RuntimeException("notifications unavailable");
         }
     }
 }

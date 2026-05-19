@@ -128,7 +128,6 @@ export default function ClientDetailPage() {
   const pendingRegistrations = profile?.registrations.filter((registration) =>
     ["DRAFT", "INITIATED", "PARTIALLY_CAPTURED"].includes(registration.workflowState),
   ) ?? [];
-  const pendingMergeCases = profile?.mergeCases.filter((mergeCase) => mergeCase.status === "OPEN") ?? [];
   const openStewardshipActions = profile?.stewardshipActions.filter((action) => action.status === "OPEN" || action.status === "IN_PROGRESS") ?? [];
 
   const summaryCards = useMemo(

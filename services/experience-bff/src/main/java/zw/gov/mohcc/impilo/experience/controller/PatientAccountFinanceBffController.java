@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -36,7 +37,7 @@ public class PatientAccountFinanceBffController {
             return ResponseEntity.ok(wrap(data, correlationId));
         } catch (Exception e) {
             log.error("COSTA patient account fetch failed: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body(error(e.getMessage(), correlationId));
+            return failClose("COSTA_UNAVAILABLE", "Unable to fetch patient account", requestId, correlationId);
         }
     }
 
@@ -47,26 +48,28 @@ public class PatientAccountFinanceBffController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String dateFrom,
             @RequestParam(required = false) String dateTo,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = costaClient.getFinancePatientTransactions(cpid, page, size, dateFrom, dateTo);
             return ResponseEntity.ok(wrap(data, correlationId));
         } catch (Exception e) {
             log.error("COSTA patient transactions fetch failed: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body(error(e.getMessage(), correlationId));
+            return failClose("COSTA_UNAVAILABLE", "Unable to fetch patient transactions", requestId, correlationId);
         }
     }
 
     @GetMapping("/{cpid}/outstanding")
     public ResponseEntity<Map<String, Object>> outstanding(
             @PathVariable String cpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = costaClient.getFinancePatientOutstanding(cpid);
             return ResponseEntity.ok(wrap(data, correlationId));
         } catch (Exception e) {
             log.error("COSTA outstanding bills fetch failed: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body(error(e.getMessage(), correlationId));
+            return failClose("COSTA_UNAVAILABLE", "Unable to fetch outstanding bills", requestId, correlationId);
         }
     }
 
@@ -74,13 +77,14 @@ public class PatientAccountFinanceBffController {
     public ResponseEntity<Map<String, Object>> recordPayment(
             @PathVariable String cpid,
             @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = costaClient.postFinancePatientPayment(cpid, body);
             return ResponseEntity.ok(wrap(data, correlationId));
         } catch (Exception e) {
             log.error("COSTA record payment failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(error(e.getMessage(), correlationId));
+            return failClose("COSTA_UNAVAILABLE", "Unable to record patient payment", requestId, correlationId);
         }
     }
 
@@ -91,10 +95,11 @@ public class PatientAccountFinanceBffController {
         return out;
     }
 
-    private static Map<String, Object> error(String message, String correlationId) {
+    private static ResponseEntity<Map<String, Object>> failClose(String code, String message, String requestId, String correlationId) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("data", null);
-        out.put("error", Map.of("message", message, "correlation_id", correlationId));
-        return out;
+        out.put("error", Map.of("code", code, "message", message));
+        out.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(out);
     }
 }

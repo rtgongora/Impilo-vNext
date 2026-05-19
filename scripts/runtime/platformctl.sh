@@ -180,7 +180,7 @@ cmd_up() {
     step "Phase 3: Starting shared services (Layer 1)"
     docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d keycloak hapi-fhir
     if [[ "${profile}" != "lite" ]]; then
-        docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d orthanc 2>/dev/null || true
+        docker compose ${COMPOSE_INFRA} ${COMPOSE_SHARED} up -d orthanc
     fi
 
     # Phase 4: Edge

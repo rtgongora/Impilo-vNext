@@ -18,12 +18,12 @@
  * - Automated billing trigger on encounter close
  */
 
-import { useState, useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import {
-  CheckCircle2, Circle, Clock, AlertTriangle, ChevronRight,
+  CheckCircle2, Circle, AlertTriangle, ChevronRight,
   Stethoscope, FlaskConical, Pill, FileText, ClipboardList,
-  Activity, Heart, Thermometer, ArrowRight, Sparkles,
-  Shield, Bell, XCircle,
+  Activity, Heart, Thermometer, Sparkles,
+  Bell, XCircle,
 } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -152,11 +152,9 @@ interface SmartEncounterFlowProps {
 }
 
 export function SmartEncounterFlow({ context, onStepClick, compact = false }: SmartEncounterFlowProps) {
-  const [expandedCDS, setExpandedCDS] = useState(true);
   const steps = useMemo(() => buildSteps(context), [context]);
 
   const completedCount = steps.filter(s => s.status === "COMPLETED").length;
-  const totalRequired = steps.filter(s => s.required).length;
   const progress = Math.round((completedCount / steps.length) * 100);
 
   const criticalAlerts = context.cdsAlerts.filter(a => a.severity === "CRITICAL");
@@ -191,7 +189,7 @@ export function SmartEncounterFlow({ context, onStepClick, compact = false }: Sm
       </div>
 
       {/* CDS Alerts */}
-      {context.cdsAlerts.length > 0 && expandedCDS && (
+      {context.cdsAlerts.length > 0 && (
         <div className="border-b">
           {criticalAlerts.map(alert => (
             <div key={alert.id} className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-start gap-2">
@@ -221,10 +219,8 @@ export function SmartEncounterFlow({ context, onStepClick, compact = false }: Sm
 
       {/* Step list */}
       <div className="divide-y divide-gray-100">
-        {steps.map((step, index) => {
+        {steps.map((step) => {
           const Icon = step.icon;
-          const isLast = index === steps.length - 1;
-
           return (
             <button
               key={step.id}

@@ -1,9 +1,13 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.HrPayrollServiceClient;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/internal/v1/erp/hr")
@@ -16,62 +20,138 @@ public class ErpHrBffController {
     }
 
     @GetMapping("/employees")
-    public ResponseEntity<JsonNode> employees() {
-        return ResponseEntity.ok(client.getEmployees());
+    public ResponseEntity<?> employees(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                       @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getEmployees());
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch employees", requestId, correlationId);
+        }
     }
 
     @PostMapping("/employees")
-    public ResponseEntity<JsonNode> createEmployee(@RequestBody JsonNode body) {
-        return ResponseEntity.ok(client.postEmployee(body));
+    public ResponseEntity<?> createEmployee(@RequestBody JsonNode body,
+                                            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.postEmployee(body));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to create employee", requestId, correlationId);
+        }
     }
 
     @GetMapping("/contracts")
-    public ResponseEntity<JsonNode> contracts(@RequestParam("employee_id") String employeeId) {
-        return ResponseEntity.ok(client.getContracts(employeeId));
+    public ResponseEntity<?> contracts(@RequestParam("employee_id") String employeeId,
+                                       @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                       @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getContracts(employeeId));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch contracts", requestId, correlationId);
+        }
     }
 
     @GetMapping("/leave/types")
-    public ResponseEntity<JsonNode> leaveTypes() {
-        return ResponseEntity.ok(client.getLeaveTypes());
+    public ResponseEntity<?> leaveTypes(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                        @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getLeaveTypes());
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch leave types", requestId, correlationId);
+        }
     }
 
     @GetMapping("/leave/requests")
-    public ResponseEntity<JsonNode> leaveRequests(@RequestParam("employee_id") String employeeId) {
-        return ResponseEntity.ok(client.getLeaveRequests(employeeId));
+    public ResponseEntity<?> leaveRequests(@RequestParam("employee_id") String employeeId,
+                                           @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                           @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getLeaveRequests(employeeId));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch leave requests", requestId, correlationId);
+        }
     }
 
     @GetMapping("/attendance")
-    public ResponseEntity<JsonNode> attendance(@RequestParam("employee_id") String employeeId) {
-        return ResponseEntity.ok(client.getAttendance(employeeId));
+    public ResponseEntity<?> attendance(@RequestParam("employee_id") String employeeId,
+                                        @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                        @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getAttendance(employeeId));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch attendance", requestId, correlationId);
+        }
     }
 
     @GetMapping("/payroll/runs")
-    public ResponseEntity<JsonNode> payrollRuns() {
-        return ResponseEntity.ok(client.getPayrollRuns());
+    public ResponseEntity<?> payrollRuns(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                         @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getPayrollRuns());
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch payroll runs", requestId, correlationId);
+        }
     }
 
     @PostMapping("/payroll/runs")
-    public ResponseEntity<JsonNode> createPayrollRun(@RequestBody JsonNode body) {
-        return ResponseEntity.ok(client.postPayrollRun(body));
+    public ResponseEntity<?> createPayrollRun(@RequestBody JsonNode body,
+                                              @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                              @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.postPayrollRun(body));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to create payroll run", requestId, correlationId);
+        }
     }
 
     @PostMapping("/payroll/runs/{runId}/calculate")
-    public ResponseEntity<JsonNode> calculatePayroll(@PathVariable String runId) {
-        return ResponseEntity.ok(client.postPayrollCalculate(runId));
+    public ResponseEntity<?> calculatePayroll(@PathVariable String runId,
+                                              @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                              @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.postPayrollCalculate(runId));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to calculate payroll", requestId, correlationId);
+        }
     }
 
     @PostMapping("/payroll/runs/{runId}/pay")
-    public ResponseEntity<JsonNode> payPayroll(@PathVariable String runId, @RequestBody(required = false) JsonNode body) {
-        return ResponseEntity.ok(client.postPayrollPay(runId, body));
+    public ResponseEntity<?> payPayroll(@PathVariable String runId,
+                                        @RequestBody(required = false) JsonNode body,
+                                        @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                        @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.postPayrollPay(runId, body));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to pay payroll run", requestId, correlationId);
+        }
     }
 
     @GetMapping("/payroll/payslips")
-    public ResponseEntity<JsonNode> payslips(@RequestParam("run_id") String runId) {
-        return ResponseEntity.ok(client.getPayslips(runId));
+    public ResponseEntity<?> payslips(@RequestParam("run_id") String runId,
+                                      @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                      @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getPayslips(runId));
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch payslips", requestId, correlationId);
+        }
     }
 
     @GetMapping("/deductions")
-    public ResponseEntity<JsonNode> deductions() {
-        return ResponseEntity.ok(client.getDeductions());
+    public ResponseEntity<?> deductions(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+                                        @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(client.getDeductions());
+        } catch (Exception e) {
+            return failClose("HR_PAYROLL_UNAVAILABLE", "Unable to fetch deductions", requestId, correlationId);
+        }
+    }
+
+    private static ResponseEntity<Map<String, Object>> failClose(String code, String message, String requestId, String correlationId) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", Map.of("code", code, "message", message),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

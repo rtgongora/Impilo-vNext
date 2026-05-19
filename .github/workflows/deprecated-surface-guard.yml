@@ -1,0 +1,56 @@
+name: Deprecated Surface Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - claude/**
+
+jobs:
+  block-new-files-in-deprecated-folders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for newly added files in deprecated folders
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base_ref="${{ github.base_ref }}"
+            git fetch origin "${base_ref}" --depth=1
+            diff_range="origin/${base_ref}...HEAD"
+          else
+            before="${{ github.event.before }}"
+            if [[ -z "${before}" || "${before}" == "0000000000000000000000000000000000000000" ]]; then
+              diff_range="HEAD~1...HEAD"
+            else
+              diff_range="${before}...HEAD"
+            fi
+          fi
+
+          echo "Checking diff range: ${diff_range}"
+          added_files="$(git diff --name-status "${diff_range}" | awk '$1=="A"{print $2}')"
+
+          if [[ -z "${added_files}" ]]; then
+            echo "No added files detected."
+            exit 0
+          fi
+
+          blocked_regex='^(ui/mushex-finance-console/|ui/mushex-ops-console/|ui/mushex-payer-portal/|ui/experience/|ui/ehr/)'
+          blocked_hits="$(printf '%s\n' "${added_files}" | rg "${blocked_regex}" || true)"
+
+          if [[ -n "${blocked_hits}" ]]; then
+            echo "ERROR: New files were added under deprecated folders:"
+            printf '%s\n' "${blocked_hits}"
+            echo "Move new work to ui/one-ui-shell and keep deprecated folders retirement-only."
+            exit 1
+          fi
+
+          echo "Guard passed."

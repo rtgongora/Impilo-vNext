@@ -55,6 +55,251 @@ jobs:
         run: |
           mvn test -pl zw.gov.mohcc.impilo:tshepo-authz-service,zw.gov.mohcc.impilo:shared-core -am
 
+  trust-e2e-gates:
+    name: Trust E2E Gates
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: MVUMO remote session integration gate
+        working-directory: services
+        run: mvn -pl mvumo-service -am -Dtest=MvumoCrossServiceFlowIT test
+
+      - name: TSHEPO Authz denial gate
+        working-directory: services
+        run: mvn -pl tshepo-authz-service -am -Dtest=PolicyEngineTest test
+
+      - name: TSHEPO Consent denial + audit gate
+        working-directory: services
+        run: mvn -pl tshepo-consent-service -am -Dtest=ConsentEvaluationServiceTest test
+
+      - name: Legacy compatibility telemetry gate
+        working-directory: services
+        run: mvn -pl tshepo-service -am -Dtest=LegacyRouteTelemetryTest,LegacyRouteInventoryGuardTest test
+
+  trust-fullstack-runtime:
+    name: Trust Fullstack Runtime E2E
+    runs-on: ubuntu-latest
+    needs: [trust-e2e-gates]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build trust service jars for compose
+        working-directory: services
+        run: |
+          mvn -pl tshepo-authz-service,tshepo-consent-service,tshepo-audit-service,mvumo-service,tshepo-service -am -DskipTests package
+
+      - name: Docker/Compose preflight
+        run: |
+          docker version
+          docker compose version
+          docker info
+          docker compose -f compose/trust/docker-compose.trust-e2e.yml config > /dev/null
+
+      - name: Ensure harness is executable
+        run: chmod +x test/integration/trust-fullstack-runtime.sh
+
+      - name: Run trust fullstack runtime integration harness
+        env:
+          TRUST_E2E_COMPOSE_PROJECT: trust-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          TRUST_E2E_ARTIFACT_DIR: ${{ github.workspace }}/.tmp/trust-e2e-artifacts
+        run: bash test/integration/trust-fullstack-runtime.sh
+
+      - name: Upload trust runtime diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-fullstack-runtime-diagnostics
+          path: .tmp/trust-e2e-artifacts
+          retention-days: 14
+
+  registry-fullstack-runtime:
+    name: Registry Fullstack Runtime E2E
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build registry runtime jars for compose
+        working-directory: services
+        run: |
+          mvn -pl tshepo-authz-service,vito-service,varapi-service,tuso-service,zibo-service,msika-service,ubomi-service,experience-bff -am -DskipTests package
+
+      - name: Docker/Compose preflight
+        run: |
+          docker version
+          docker compose version
+          docker info
+          docker compose -f compose/registry/docker-compose.registry-e2e.yml config > /dev/null
+
+      - name: Ensure harness is executable
+        run: chmod +x test/integration/registry-fullstack-runtime.sh
+
+      - name: Run registry fullstack runtime integration harness
+        env:
+          REGISTRY_E2E_COMPOSE_PROJECT: registry-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          REGISTRY_E2E_ARTIFACT_DIR: ${{ github.workspace }}/.tmp/registry-e2e-artifacts
+        run: bash test/integration/registry-fullstack-runtime.sh
+
+      - name: Upload registry runtime diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-fullstack-runtime-diagnostics
+          path: .tmp/registry-e2e-artifacts
+          retention-days: 14
+
+  core-transaction-runtime:
+    name: Core Transaction Runtime E2E
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build experience-bff jar for compose
+        working-directory: services
+        run: |
+          mvn -pl experience-bff -am -DskipTests package
+
+      - name: Docker/Compose preflight
+        run: |
+          docker version
+          docker compose version
+          docker info
+          docker compose -f compose/core-transaction/docker-compose.core-transaction-e2e.yml config > /dev/null
+
+      - name: Ensure harness is executable
+        run: chmod +x test/integration/core-transaction-runtime.sh
+
+      - name: Run core transaction runtime integration harness
+        env:
+          CORE_TX_E2E_COMPOSE_PROJECT: core-tx-e2e-${{ github.run_id }}-${{ github.run_attempt }}
+          CORE_TX_E2E_ARTIFACT_DIR: ${{ github.workspace }}/.tmp/core-tx-e2e-artifacts
+        run: bash test/integration/core-transaction-runtime.sh
+
+      - name: Upload core transaction runtime diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-transaction-runtime-diagnostics
+          path: .tmp/core-tx-e2e-artifacts
+          retention-days: 14
+
+  core-transaction-doctrine-compliance:
+    name: Core Transaction Doctrine Compliance
+    runs-on: ubuntu-latest
+    needs: [core-transaction-runtime]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install compliance audit dependencies
+        run: pip install pyyaml
+
+      - name: Run core transaction doctrine audit
+        run: python scripts/architecture/audit-core-transaction-compliance.py
+
+      - name: Upload core transaction compliance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-transaction-compliance-report
+          path: |
+            docs/reports/core-transaction-compliance-report.json
+            docs/reports/core-transaction-compliance-report.md
+          retention-days: 14
+
+  core-transaction-load-baseline:
+    name: Core Transaction Load Baseline
+    runs-on: ubuntu-latest
+    needs: [core-transaction-doctrine-compliance]
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg ca-certificates
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
+      - name: Build experience-bff jar for compose
+        working-directory: services
+        run: |
+          mvn -pl experience-bff -am -DskipTests package
+
+      - name: Start core transaction compose stack
+        run: docker compose -p core-tx-k6-${{ github.run_id }}-${{ github.run_attempt }} -f compose/core-transaction/docker-compose.core-transaction-e2e.yml up -d --build
+
+      - name: Wait for BFF health
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:48161/actuator/health | python -c 'import json,sys; d=json.load(sys.stdin); assert d.get("status")=="UP"; print("UP")'; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "BFF did not become healthy in time" >&2
+          exit 1
+
+      - name: Run k6 core transaction baseline
+        run: |
+          mkdir -p tests/performance/results
+          BFF_URL=http://localhost:48161 TENANT_ID=tenant-core-tx-ci k6 run tests/performance/k6-core-transaction.js
+
+      - name: Upload k6 result artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-transaction-k6-results
+          path: tests/performance/results
+          retention-days: 14
+
+      - name: Stop core transaction compose stack
+        if: always()
+        run: docker compose -p core-tx-k6-${{ github.run_id }}-${{ github.run_attempt }} -f compose/core-transaction/docker-compose.core-transaction-e2e.yml down -v
+
   frontend-lint:
     name: Frontend Lint & Type Check
     runs-on: ubuntu-latest
@@ -101,6 +346,74 @@ jobs:
             docs/reports/completeness-report.json
             docs/reports/completeness-report.md
           retention-days: 14
+
+  architecture-registry-advisory:
+    name: Service Registry Validation (Advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validator dependencies
+        run: pip install pyyaml
+
+      - name: Run architecture registry validation in advisory mode
+        env:
+          SERVICE_REGISTRY_VALIDATION_MODE: advisory
+          OPENAPI_LEGACY_DEADLINE: 2026-10-31
+        run: python scripts/architecture/validate-service-registry.py
+
+  architecture-registry-soft-gate-readiness:
+    name: Service Registry Soft-Gate Readiness (Advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install validator dependencies
+        run: pip install pyyaml
+
+      - name: Run registry validator in soft mode with contract-closure readiness policy
+        env:
+          SERVICE_REGISTRY_VALIDATION_MODE: soft
+          SERVICE_REGISTRY_REQUIRE_SOFT_GATE_CONTRACT_CLOSURE: 'true'
+          OPENAPI_LEGACY_DEADLINE: 2026-10-31
+        run: python scripts/architecture/validate-service-registry.py
+
+  learning-rollout-readiness:
+    name: Learning rollout readiness gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.15.4
+
+      - name: Helm render validation (learning chart)
+        run: |
+          helm template helm/learning
+          helm template helm/learning -f helm/learning/values.minimal.yaml
+
+      - name: Run learning OpenAPI + rollout evidence checks
+        working-directory: scripts/completeness
+        run: |
+          npm ci
+          npm run lint-learning-openapi-local
+          npm run check-lms-rollout-evidence
 
   parity-matrix-check:
     name: Parity matrix up-to-date

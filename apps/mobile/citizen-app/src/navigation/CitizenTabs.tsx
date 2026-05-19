@@ -18,6 +18,7 @@ import { SocialHubScreen } from "../screens/social/SocialHubScreen";
 import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
+import { PublicHealthScreen } from "../screens/publicHealth/PublicHealthScreen";
 
 const ACCENT = "#059669";
 
@@ -28,6 +29,7 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   marketplace: MarketplaceScreen,
   messaging: MessagingInboxScreen,
   telehealth: TelehealthListScreen,
+  public_health: PublicHealthScreen,
 };
 
 function tabIcon(name: string, isActive: boolean): React.ReactNode {
@@ -64,6 +66,11 @@ export function CitizenTabs() {
       label: "Messages",
       icon: tabIcon(activeTab === "messaging" ? "chatbubbles" : "chatbubbles-outline", activeTab === "messaging"),
       badge: unreadMessages > 0 ? unreadMessages : undefined,
+    },
+    {
+      id: "public_health",
+      label: "Public",
+      icon: tabIcon(activeTab === "public_health" ? "pulse" : "pulse-outline", activeTab === "public_health"),
     },
   ];
 

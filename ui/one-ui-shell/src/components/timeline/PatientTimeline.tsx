@@ -151,7 +151,7 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-6 w-6 animate-spin text-impilo-500" />
-        <span className="ml-2 text-sm text-gray-500">Loading timeline...</span>
+        <span className="ml-2 text-sm text-[color:var(--text-secondary)]">Loading timeline...</span>
       </div>
     );
   }
@@ -168,13 +168,14 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
+      <div className="impilo-surface-card p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Activity className="h-5 w-5" />
+          <h2 className="text-lg font-semibold flex items-center gap-2 text-[color:var(--text-primary)]">
+            <Activity className="h-5 w-5 text-[color:var(--primary)]" />
             Patient Timeline
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[color:var(--text-secondary)]">
             Chronological view of all clinical events
           </p>
         </div>
@@ -183,14 +184,14 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setFilterOpen((prev) => !prev)}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-full border border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-soft)] transition-colors"
           >
             <Filter className="h-4 w-4 mr-2" />
             Filter ({visibleTypes.length})
           </button>
 
           {filterOpen && (
-            <div className="absolute right-0 mt-1 w-48 rounded-md border border-gray-200 bg-white shadow-lg z-50">
+            <div className="absolute right-0 mt-1 w-48 rounded-2xl border border-[color:var(--border-soft)] bg-white shadow-impilo-floating z-50">
               <div className="py-1">
                 {Object.entries(eventTypeConfig).map(([type, config]) => {
                   const isChecked = visibleTypes.includes(
@@ -220,11 +221,12 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
           )}
         </div>
       </div>
+      </div>
 
       {/* Timeline */}
-      <div className="overflow-y-auto max-h-[600px] space-y-6">
+      <div className="impilo-surface-card overflow-y-auto max-h-[600px] space-y-6 p-4">
         {Object.keys(groupedEvents).length === 0 && (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-[color:var(--text-muted)]">
             <Activity className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No timeline events found</p>
           </div>
@@ -233,14 +235,14 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
           <div key={date}>
             {/* Date header */}
             <div className="sticky top-0 bg-white/95 backdrop-blur py-2 z-10">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-700">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)]">
                 <Calendar className="h-3 w-3 mr-1" />
                 {date === new Date().toLocaleDateString() ? "Today" : date}
               </span>
             </div>
 
             {/* Events with vertical line */}
-            <div className="ml-4 border-l-2 border-gray-200 pl-6 space-y-4">
+            <div className="ml-4 border-l-2 border-[color:var(--border-soft)] pl-6 space-y-4">
               {dateEvents.map((event) => {
                 const config = eventTypeConfig[event.type];
                 const Icon = config.icon;
@@ -257,10 +259,10 @@ export function PatientTimeline({ patientId }: PatientTimelineProps) {
 
                     {/* Event card */}
                     <div
-                      className={`rounded-lg border bg-white p-4 transition-all hover:shadow-md ${
+                      className={`rounded-2xl border bg-white p-4 transition-all hover:shadow-impilo-card ${
                         event.isImportant
-                          ? "ring-1 ring-impilo-300 border-impilo-200"
-                          : "border-gray-200"
+                          ? "ring-1 ring-[color:var(--primary-muted)] border-[color:var(--primary-muted)]"
+                          : "border-[color:var(--border-soft)]"
                       }`}
                     >
                       <div className="flex items-start justify-between">

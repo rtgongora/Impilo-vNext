@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import io.micrometer.tracing.Tracer;
@@ -87,6 +88,36 @@ public class TshepoConsentClient {
         }
     }
 
+    /**
+     * GET /v1/consent/evaluate — delegates live consent enforcement decisioning to tshepo-consent-service.
+     */
+    public Map<String, Object> evaluateDirective(
+            UUID tenantId, String actorId, String subjectRef, String purpose, String scope) {
+        if (!enabled) {
+            throw new IllegalStateException("tshepo-consent integration is disabled");
+        }
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/v1/consent/evaluate")
+                .queryParam("tenantId", tenantId)
+                .queryParam("actorId", actorId)
+                .queryParam("subjectRef", subjectRef)
+                .queryParam("purpose", purpose)
+                .queryParam("scope", scope)
+                .build()
+                .encode()
+                .toUriString();
+        try {
+            ResponseEntity<String> response = tshepoRestTemplate.getForEntity(url, String.class);
+            return parseDataMap(response.getBody());
+        } catch (HttpStatusCodeException e) {
+            log.error("tshepo-consent evaluate failed: status={} body={}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw e;
+        } catch (Exception e) {
+            log.error("tshepo-consent evaluate failed: {}", e.getMessage());
+            throw new IllegalStateException("tshepo-consent evaluate failed: " + e.getMessage(), e);
+        }
+    }
+
     public void revokeDirective(UUID tshepoConsentId, String reason) {
         if (!enabled) {
             log.warn("Tshepo consent integration disabled; skipping revokeDirective");
@@ -128,5 +159,18 @@ public class TshepoConsentClient {
             throw new IllegalStateException("unexpected response shape from tshepo-consent");
         }
         return UUID.fromString(data.get("id").asText());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseDataMap(String responseBody) throws Exception {
+        if (responseBody == null || responseBody.isBlank()) {
+            throw new IllegalStateException("empty response from tshepo-consent");
+        }
+        JsonNode root = objectMapper.readTree(responseBody);
+        JsonNode data = root.get("data");
+        if (data == null || data.isNull() || !data.isObject()) {
+            throw new IllegalStateException("unexpected response shape from tshepo-consent");
+        }
+        return objectMapper.convertValue(data, Map.class);
     }
 }

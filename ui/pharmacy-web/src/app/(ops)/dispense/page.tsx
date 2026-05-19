@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   pharmacyApi,
@@ -41,7 +41,7 @@ const ITEM_STATUS_BADGE: Record<ItemStatus, string> = {
   RETURNED: "badge-item-returned",
 };
 
-export default function DispensePage() {
+function DispensePageContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get("id");
 
@@ -839,5 +839,13 @@ export default function DispensePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DispensePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-neutral-500">Loading dispense order...</div>}>
+      <DispensePageContent />
+    </Suspense>
   );
 }

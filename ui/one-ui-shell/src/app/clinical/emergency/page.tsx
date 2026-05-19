@@ -54,7 +54,10 @@ export default function EmergencyDepartmentPage() {
   const logAction = useLogEmergencyAction();
   const endEmergency = useEndEmergency();
 
-  const rows = (data?.data ?? []) as EmergencyActivationRow[];
+  const rows = useMemo(
+    () => ((data?.data ?? []) as EmergencyActivationRow[]),
+    [data?.data],
+  );
 
   const [protocolType, setProtocolType] = useState<string>(PROTOCOL_OPTIONS[0]);
   const [patientId, setPatientId] = useState("");

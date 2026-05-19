@@ -36,6 +36,11 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       group-id: product-registry-service
       auto-offset-reset: earliest
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8080/realms/impilo}
 
 # --- Actuator & Metrics ---
 management:

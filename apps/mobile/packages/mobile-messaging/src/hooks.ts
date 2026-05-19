@@ -255,3 +255,37 @@ export function useMessages(conversationId: string, params: { pageSize?: number 
     refresh: () => load(),
   };
 }
+
+/**
+ * Hook for communication dashboard KPIs (mobile parity with web comms hub).
+ */
+export function useCommunicationDashboard() {
+  const [dashboard, setDashboard] = useState<conversationService.CommunicationDashboard | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await conversationService.fetchCommunicationDashboard();
+      setDashboard(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return {
+    dashboard,
+    isLoading,
+    loading: isLoading,
+    error,
+    refresh: load,
+  };
+}

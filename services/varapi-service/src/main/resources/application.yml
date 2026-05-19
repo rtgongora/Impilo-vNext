@@ -106,7 +106,7 @@ varapi:
     base-url: http://localhost:8165
   biometric:
     policy-enabled: ${VARAPI_BIOMETRIC_POLICY_ENABLED:true}
-    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}
   mushex:
     enabled: ${VARAPI_MUSHEX_ENABLED:false}
     base-url: ${VARAPI_MUSHEX_BASE_URL:http://localhost:8102}
@@ -121,4 +121,4 @@ varapi:
     policy-enabled: ${VARAPI_COUNCIL_REGULATORY_POLICY_ENABLED:false}
     policy-deny-when-unreachable: ${VARAPI_COUNCIL_REGULATORY_POLICY_DENY_WHEN_UNREACHABLE:true}
     mushex-payment-status-kafka-enabled: ${VARAPI_MUSHEX_PAYMENT_STATUS_KAFKA_ENABLED:false}
-    tshepo-policy-base-url: ${TSHEPO_POLICY_BASE_URL:http://localhost:8079}
+    tshepo-policy-base-url: ${TSHEPO_AUTHZ_BASE_URL:http://localhost:8081}

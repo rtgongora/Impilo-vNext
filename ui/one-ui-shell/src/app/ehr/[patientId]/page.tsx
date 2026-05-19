@@ -73,10 +73,10 @@ export default function PatientChartPage() {
   const activeAdmission = admissions.find(
     (a) => a.attributes.status === "ACTIVE" || a.attributes.status === "ADMITTED",
   );
-  const encounters = encountersData?.data ?? [];
-  const referrals = referralsData?.data ?? [];
-  const clinicalNotes = notesData?.data ?? [];
-  const telemedicineSessions = telemedicineData?.data ?? [];
+  const encounters = useMemo(() => encountersData?.data ?? [], [encountersData?.data]);
+  const referrals = useMemo(() => referralsData?.data ?? [], [referralsData?.data]);
+  const clinicalNotes = useMemo(() => notesData?.data ?? [], [notesData?.data]);
+  const telemedicineSessions = useMemo(() => telemedicineData?.data ?? [], [telemedicineData?.data]);
   const activeEncounter = encounters.find(
     (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
   );

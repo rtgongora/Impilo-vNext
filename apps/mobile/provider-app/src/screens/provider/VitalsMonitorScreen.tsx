@@ -57,7 +57,9 @@ export function VitalsMonitorScreen() {
   const { data: vitals = [], isLoading } = useQuery({
     queryKey: ["vitals-monitor", pid],
     queryFn: async () => {
-      const r = await apiClient.get<{ data: Array<Record<string, unknown>> }>(`/internal/v1/mobile/provider/wellness/vitals?patientId=${pid}`);
+      const r = await apiClient.get<{ data: Array<Record<string, unknown>> }>(
+        `/internal/v1/mobile/provider/vitals?patient_id=${pid}`,
+      );
       return r.data.data;
     },
     enabled: !!pid,

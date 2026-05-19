@@ -6,7 +6,7 @@
  */
 
 import Link from "next/link";
-import { UserCheck, Building2, BookOpen, Package, Route } from "lucide-react";
+import { UserCheck, Building2, BookOpen, Package, Route, ShieldCheck, HeartHandshake, MapPin } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 
@@ -45,6 +45,34 @@ const REGISTRY_SECTIONS = [
     href: "/registry/products",
     icon: Package,
     color: "bg-orange-100 text-orange-600",
+  },
+  {
+    title: "Trust & Federation",
+    description: "Registry trust controls, federation posture, and identity alignment",
+    href: "/registry/trust",
+    icon: ShieldCheck,
+    color: "bg-indigo-100 text-indigo-700",
+  },
+  {
+    title: "Mvumo Consent",
+    description: "Digital consent orchestration and consent-governance workflows",
+    href: "/registry/mvumo",
+    icon: HeartHandshake,
+    color: "bg-pink-100 text-pink-700",
+  },
+  {
+    title: "Locality Review",
+    description: "Gazetteer and locality normalization review for registry quality",
+    href: "/registry/locality-review",
+    icon: MapPin,
+    color: "bg-teal-100 text-teal-700",
+  },
+  {
+    title: "Facility Lifecycle",
+    description: "Regulatory lifecycle view across facility onboarding and governance",
+    href: "/registry/facility-lifecycle",
+    icon: Building2,
+    color: "bg-cyan-100 text-cyan-700",
   },
 ] as const;
 

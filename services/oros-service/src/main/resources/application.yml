@@ -66,6 +66,11 @@ springdoc:
 oros:
   outbox:
     poll-interval-ms: 2000
+    dual-emit-canonical-enabled: ${OROS_OUTBOX_DUAL_EMIT_CANONICAL_ENABLED:false}
+    dual-emit-core-transaction-enabled: ${OROS_OUTBOX_DUAL_EMIT_CORE_TRANSACTION_ENABLED:true}
+    core-transaction-topic: ${OROS_OUTBOX_CORE_TRANSACTION_TOPIC:core.transaction.events}
+    canonical-topics:
+      result-available: ${OROS_OUTBOX_CANONICAL_TOPIC_RESULT_AVAILABLE:clinical.oros.result.available}
   sla:
     default-tat-minutes: 120
   escalation:

@@ -1,0 +1,194 @@
+asyncapi: 2.6.0
+info:
+  title: Health OS External Publishable Events
+  version: 0.1.0
+  description: |
+    The curated subset of Impilo internal events that MAY be projected to
+    approved external apps through `integration-hub` webhook subscriptions.
+
+    See doctrine `docs/doctrine/HEALTH_OS_EXTENSIBILITY_DOCTRINE.md` §5.
+
+    External apps NEVER subscribe directly to Kafka topics; they subscribe
+    to **webhook deliveries** filtered through registered Webhook
+    Subscriptions (`/internal/v1/webhook-subscriptions`).
+
+    Payloads MUST minimise PII and prefer references over full records.
+
+defaultContentType: application/json
+
+channels:
+  patient.registered:
+    description: A person was registered into the client registry. PII-free; sends Health ID only.
+    publish:
+      message: { $ref: '#/components/messages/PatientReference' }
+
+  patient.updated:
+    description: A registered person's record was updated. Sends Health ID + changed-field hint only.
+    publish:
+      message: { $ref: '#/components/messages/PatientReference' }
+
+  encounter.started:
+    publish: { message: { $ref: '#/components/messages/EncounterReference' } }
+  encounter.closed:
+    publish: { message: { $ref: '#/components/messages/EncounterReference' } }
+
+  lab.order.created:
+    publish: { message: { $ref: '#/components/messages/OrderReference' } }
+  lab.result.received:
+    publish: { message: { $ref: '#/components/messages/OrderReference' } }
+
+  imaging.order.created:
+    publish: { message: { $ref: '#/components/messages/OrderReference' } }
+  imaging.report.received:
+    publish: { message: { $ref: '#/components/messages/OrderReference' } }
+
+  stock.level.updated:
+    publish: { message: { $ref: '#/components/messages/StockReference' } }
+  stock.requisition.created:
+    publish: { message: { $ref: '#/components/messages/StockReference' } }
+
+  payment.initiated:
+    publish: { message: { $ref: '#/components/messages/PaymentReference' } }
+  payment.completed:
+    publish: { message: { $ref: '#/components/messages/PaymentReference' } }
+  claim.submitted:
+    publish: { message: { $ref: '#/components/messages/ClaimReference' } }
+  claim.status.updated:
+    publish: { message: { $ref: '#/components/messages/ClaimReference' } }
+
+  teleconsultation.scheduled:
+    publish: { message: { $ref: '#/components/messages/TelemedicineReference' } }
+  teleconsultation.completed:
+    publish: { message: { $ref: '#/components/messages/TelemedicineReference' } }
+
+  message.delivery.updated:
+    publish: { message: { $ref: '#/components/messages/MessageDeliveryReference' } }
+
+  consent.granted:
+    publish: { message: { $ref: '#/components/messages/ConsentReference' } }
+  consent.revoked:
+    publish: { message: { $ref: '#/components/messages/ConsentReference' } }
+
+  provider.verified:
+    publish: { message: { $ref: '#/components/messages/ProviderReference' } }
+  facility.updated:
+    publish: { message: { $ref: '#/components/messages/FacilityReference' } }
+
+components:
+  messageTraits:
+    BaseEnvelope:
+      headers:
+        type: object
+        required: [eventId, eventType, eventVersion, occurredAt, correlationId, classification, sensitivityTier]
+        properties:
+          eventId: { type: string, format: uuid }
+          eventType: { type: string }
+          eventVersion: { type: string }
+          occurredAt: { type: string, format: date-time }
+          correlationId: { type: string, format: uuid }
+          classification: { type: string, enum: [EXTERNALLY_PUBLISHABLE] }
+          sensitivityTier: { type: string, enum: [LOW, STANDARD, ELEVATED, CRITICAL] }
+          deliveryId: { type: string, description: "Stable id used by external app for idempotent processing." }
+          signatureAlgorithm: { type: string, enum: [HMAC-SHA256, ED25519] }
+
+  messages:
+    PatientReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          healthId: { type: string }
+          changeKind: { type: string, enum: [REGISTERED, UPDATED] }
+
+    EncounterReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          encounterId: { type: string }
+          patientHealthId: { type: string }
+          facilityId: { type: string }
+          status: { type: string }
+
+    OrderReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          orderId: { type: string }
+          orderType: { type: string, enum: [LAB, IMAGING, OTHER] }
+          status: { type: string }
+          encounterId: { type: string }
+          patientHealthId: { type: string }
+
+    StockReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          stockMovementId: { type: string }
+          productId: { type: string }
+          facilityId: { type: string }
+          balance: { type: number }
+
+    PaymentReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          paymentId: { type: string }
+          status: { type: string }
+          providerRef: { type: string }
+          amount: { type: number }
+          currency: { type: string }
+
+    ClaimReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          claimId: { type: string }
+          status: { type: string }
+          providerRef: { type: string }
+
+    TelemedicineReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          sessionId: { type: string }
+          status: { type: string }
+
+    MessageDeliveryReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          deliveryId: { type: string }
+          channel: { type: string }
+          status: { type: string }
+
+    ConsentReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          consentId: { type: string }
+          subjectHealthId: { type: string }
+          status: { type: string }
+
+    ProviderReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          providerId: { type: string }
+          verificationStatus: { type: string }
+
+    FacilityReference:
+      traits: [{ $ref: '#/components/messageTraits/BaseEnvelope' }]
+      payload:
+        type: object
+        properties:
+          facilityId: { type: string }
+          changeKind: { type: string }

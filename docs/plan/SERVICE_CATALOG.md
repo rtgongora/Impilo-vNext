@@ -1,5 +1,8 @@
 # Impilo vNext — Authoritative Service Catalog
 
+> Canonical ownership and classification now live in `docs/architecture/SERVICE_ARCHITECTURE_REGISTER.md` and `docs/architecture/services-registry.yaml`.  
+> This file is retained as a supporting planning artifact and historical catalog.
+
 **Version**: 1.0
 **Date**: 2026-02-14
 **Scope**: All services — existing (legacy + v1.1-native) and Outstanding 27

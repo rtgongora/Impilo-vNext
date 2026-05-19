@@ -181,9 +181,29 @@ public class PctServiceClient {
      * @param encounterType encounter type (CONSULTATION, PROCEDURE, TRIAGE, LAB)
      * @return the encounter response with encounterRef
      */
-    public JsonNode startEncounter(String journeyId, String encounterType) {
+    public JsonNode startEncounter(String journeyId,
+                                   String encounterType,
+                                   String encounterContext,
+                                   String entryPoint,
+                                   String modality,
+                                   String virtualMode,
+                                   String careSetting,
+                                   String priority,
+                                   String triageCategory,
+                                   String pathwayRef,
+                                   String protocolRef) {
         String url = baseUrl + "/v1/journeys/" + journeyId + "/encounter/start";
-        Map<String, Object> body = Map.of("encounterType", encounterType);
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("encounterType", encounterType);
+        if (encounterContext != null) body.put("encounterContext", encounterContext);
+        if (entryPoint != null) body.put("entryPoint", entryPoint);
+        if (modality != null) body.put("modality", modality);
+        if (virtualMode != null) body.put("virtualMode", virtualMode);
+        if (careSetting != null) body.put("careSetting", careSetting);
+        if (priority != null) body.put("priority", priority);
+        if (triageCategory != null) body.put("triageCategory", triageCategory);
+        if (pathwayRef != null) body.put("pathwayRef", pathwayRef);
+        if (protocolRef != null) body.put("protocolRef", protocolRef);
 
         log.info("PCT: Starting encounter for journey={}, type={}", journeyId, encounterType);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
@@ -201,6 +221,19 @@ public class PctServiceClient {
 
         log.info("PCT: Completing encounter={}", encounterId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Update pathway/protocol linkage for an encounter.
+     */
+    public JsonNode updateEncounterPathwayProtocol(Long encounterId, String pathwayRef, String protocolRef) {
+        String url = baseUrl + "/v1/encounters/" + encounterId + "/pathway-protocol";
+        Map<String, Object> body = new java.util.LinkedHashMap<>();
+        body.put("pathwayRef", pathwayRef);
+        body.put("protocolRef", protocolRef);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PATCH, new HttpEntity<>(body), JsonNode.class);
         return extractData(response);
     }
 
@@ -459,6 +492,51 @@ public class PctServiceClient {
         if (status != null) builder.queryParam("status", status);
         log.info("PCT: Listing incoming referrals for facility={}", facilityId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * List telehealth sessions for a facility/workspace operational hub.
+     */
+    public JsonNode listTelehealthSessions(String facilityId, String status, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/telehealth")
+                .queryParam("facilityId", facilityId)
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (status != null && !status.isBlank()) builder.queryParam("status", status);
+        log.info("PCT: Listing telehealth sessions for facility={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getTelemedicineOps(String facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/ops/telemedicine")
+                .queryParam("facilityId", facilityId)
+                .toUriString();
+        log.info("PCT: Telemedicine ops snapshot for facility={}", facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateReferralStage(String referralId, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/stage";
+        log.info("PCT: Updating referral stage for id={}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.exchange(
+                url, HttpMethod.PUT, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateReferralConsent(String referralId, Map<String, Object> request) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/consent";
+        log.info("PCT: Updating referral consent for id={}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode submitReferral(String referralId) {
+        String url = baseUrl + "/v1/referrals/" + referralId + "/submit";
+        log.info("PCT: Submitting referral id={}", referralId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
         return extractData(response);
     }
 

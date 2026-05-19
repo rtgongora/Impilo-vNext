@@ -17,7 +17,7 @@ import {
   ShieldAlert, Syringe, Pill, ClipboardList, FlaskConical,
   ArrowRightLeft, FileText, StickyNote, DoorOpen, Activity,
   User, MonitorDot, Target, Users, Scissors, TrendingUp,
-  Heart, Home, Shield, Brain, ChevronRight, Globe2,
+  Heart, Home, Shield, Brain, Globe2,
   ArrowRight, CheckCircle2, Circle, Baby,
 } from "lucide-react";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -308,8 +308,6 @@ export function EncounterMenu() {
 
   if (!patientId) return null;
 
-  const encBase = activeEncounter ? `/ehr/${patientId}/encounter/${activeEncounter.id}` : null;
-
   return (
     <aside className="w-52 bg-white border-r overflow-y-auto shrink-0 flex flex-col">
       {/* Patient header */}
@@ -376,7 +374,6 @@ export function EncounterMenu() {
                 const href = `/ehr/${patientId}/${step.segment}`;
                 const isActive = activeSegment === step.segment;
                 const isVisited = visited.has(step.segment);
-                const Icon = step.icon;
 
                 return (
                   <Link key={step.segment} href={href}

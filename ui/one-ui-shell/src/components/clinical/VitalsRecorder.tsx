@@ -149,12 +149,6 @@ export function VitalsRecorder({
     critical: "text-red-600 font-bold",
   };
 
-  const statusBgColors: Record<string, string> = {
-    normal: "bg-green-50 border-green-200",
-    abnormal: "bg-yellow-50 border-yellow-200",
-    critical: "bg-red-50 border-red-200 animate-pulse",
-  };
-
   const saving = recordVitalsMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {

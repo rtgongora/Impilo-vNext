@@ -14,9 +14,11 @@ import java.util.UUID;
 
 /**
  * BFF for national clinical knowledge (EDLIZ-aligned). Proxies to clinical-knowledge-platform-service.
+ * Canonical route prefix is {@code /internal/v1/clinical}; {@code /internal/v1/clinical-knowledge}
+ * is a temporary backward-compatibility alias.
  */
 @RestController
-@RequestMapping("/internal/v1/clinical")
+@RequestMapping({"/internal/v1/clinical", "/internal/v1/clinical-knowledge"})
 public class ClinicalKnowledgeController {
 
     private static final Logger log = LoggerFactory.getLogger(ClinicalKnowledgeController.class);

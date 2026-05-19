@@ -6,8 +6,9 @@
 
     <parent>
         <groupId>zw.gov.mohcc.impilo</groupId>
-        <artifactId>impilo-services</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <artifactId>impilo-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>mushe-wallet-service</artifactId>

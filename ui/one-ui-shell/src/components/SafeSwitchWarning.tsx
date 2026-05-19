@@ -12,8 +12,6 @@
  */
 
 import { AlertTriangle, X } from "lucide-react";
-import type { FacilityContext } from "@/hooks/useFacilityStore";
-import type { WorkspaceContext } from "@/hooks/useWorkspaceStore";
 
 interface SafeSwitchWarningProps {
   open: boolean;
@@ -72,6 +70,11 @@ export function SafeSwitchWarning({
         <p className="mt-2 text-sm leading-6 text-slate-600">
           You have an active work session at{" "}
           <span className="font-medium text-slate-900">{facilityName}</span>.
+          {workspaceName ? (
+            <>
+              {" "}Workspace: <span className="font-medium text-slate-900">{workspaceName}</span>.
+            </>
+          ) : null}
         </p>
 
         {/* Consequences */}

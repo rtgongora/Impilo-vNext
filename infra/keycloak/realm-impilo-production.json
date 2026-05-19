@@ -234,7 +234,7 @@
       },
       {
         "name": "CLINICIAN",
-        "description": "Generic clinician — maps to CLINICAL_ROLES in BFF",
+        "description": "Generic clinician \u2014 maps to CLINICAL_ROLES in BFF",
         "composite": false,
         "clientRole": false
       },
@@ -246,7 +246,7 @@
       },
       {
         "name": "DEVELOPER",
-        "description": "Platform developer — governed dev access across all role groups",
+        "description": "Platform developer \u2014 governed dev access across all role groups",
         "composite": false,
         "clientRole": false
       },
@@ -258,7 +258,7 @@
       },
       {
         "name": "SUPPORT_AGENT",
-        "description": "Support agent — queue and commerce access",
+        "description": "Support agent \u2014 queue and commerce access",
         "composite": false,
         "clientRole": false
       },
@@ -755,8 +755,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "impilo-citizen://auth/*",
-        "com.impilo.citizen://auth/*"
+        "impilo-citizen://auth/callback"
       ],
       "webOrigins": [
         "+"
@@ -780,6 +779,24 @@
         "impilo-trust-headers",
         "impilo-clinical",
         "impilo-admin"
+      ],
+      "protocolMappers": [
+        {
+          "name": "cpid",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "cpid",
+            "claim.name": "cpid",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        }
       ]
     },
     {
@@ -792,8 +809,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "impilo-provider://auth/*",
-        "com.impilo.provider://auth/*"
+        "impilo-provider://auth/callback"
       ],
       "webOrigins": [
         "+"
@@ -924,9 +940,15 @@
       "enabled": true,
       "emailVerified": true,
       "attributes": {
-        "health_id": ["b0000000-0000-4000-8000-000000000010"],
-        "actor_id":  ["b0000000-0000-4000-8000-000000000010"],
-        "actor_type": ["SYSTEM"]
+        "health_id": [
+          "b0000000-0000-4000-8000-000000000010"
+        ],
+        "actor_id": [
+          "b0000000-0000-4000-8000-000000000010"
+        ],
+        "actor_type": [
+          "SYSTEM"
+        ]
       },
       "credentials": [
         {
@@ -979,7 +1001,7 @@
       "alias": "mosip",
       "providerId": "oidc",
       "enabled": false,
-      "displayName": "MOSIP (national ID) — configure",
+      "displayName": "MOSIP (national ID) \u2014 configure",
       "trustEmail": false,
       "storeToken": false,
       "addReadTokenRoleOnCreate": false,
@@ -992,7 +1014,7 @@
       "alias": "facility-ldap",
       "providerId": "ldap",
       "enabled": false,
-      "displayName": "Facility directory LDAP — configure",
+      "displayName": "Facility directory LDAP \u2014 configure",
       "config": {
         "vendor": "other"
       }

@@ -43,6 +43,15 @@ const STATUS_BADGE: Record<string, string> = {
 
 const EMPTY_FORM = {
   encounter_type: "OUTPATIENT",
+  encounter_context: "outpatient",
+  entry_point: "walk_in",
+  modality: "in_person",
+  virtual_mode: "scheduled",
+  care_setting: "facility",
+  priority: "routine",
+  triage_category: "",
+  pathway_ref: "",
+  protocol_ref: "",
   chief_complaint: "" };
 
 /* ------------------------------------------------------------------ */
@@ -100,6 +109,15 @@ export default function EncountersPage() {
         patientId,
         facilityId: facility?.id ?? "",
         encounterType: form.encounter_type,
+        encounter_context: form.encounter_context,
+        entry_point: form.entry_point,
+        modality: form.modality,
+        virtual_mode: form.modality === "virtual" || form.modality === "hybrid" ? form.virtual_mode : undefined,
+        care_setting: form.care_setting,
+        priority: form.priority,
+        triage_category: form.triage_category || undefined,
+        pathway_ref: form.pathway_ref || undefined,
+        protocol_ref: form.protocol_ref || undefined,
         chief_complaint: form.chief_complaint.trim() || undefined },
       {
         onSuccess: (data) => {
@@ -233,6 +251,140 @@ export default function EncountersPage() {
                         <option value="TELEHEALTH">Telehealth</option>
                         <option value="HOME_VISIT">Home Visit</option>
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Context
+                      </label>
+                      <select
+                        value={form.encounter_context}
+                        onChange={(e) => updateField("encounter_context", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="outpatient">Outpatient</option>
+                        <option value="emergency">Emergency/Casualty</option>
+                        <option value="inpatient">Inpatient</option>
+                        <option value="community">Community</option>
+                        <option value="virtual">Virtual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Entry Point
+                      </label>
+                      <select
+                        value={form.entry_point}
+                        onChange={(e) => updateField("entry_point", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="walk_in">Walk-in</option>
+                        <option value="scheduled_appointment">Scheduled appointment</option>
+                        <option value="emergency_arrival">Emergency arrival</option>
+                        <option value="referral">Referral</option>
+                        <option value="community_outreach">Community outreach</option>
+                        <option value="virtual_request">Virtual request</option>
+                        <option value="inpatient_admission">Inpatient admission</option>
+                        <option value="transfer">Transfer</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Modality
+                      </label>
+                      <select
+                        value={form.modality}
+                        onChange={(e) => updateField("modality", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="in_person">In-person</option>
+                        <option value="virtual">Virtual</option>
+                        <option value="hybrid">Hybrid</option>
+                      </select>
+                    </div>
+                    {(form.modality === "virtual" || form.modality === "hybrid") && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Virtual Mode
+                        </label>
+                        <select
+                          value={form.virtual_mode}
+                          onChange={(e) => updateField("virtual_mode", e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                        >
+                          <option value="scheduled">Scheduled</option>
+                          <option value="video">Video</option>
+                          <option value="audio">Audio</option>
+                          <option value="chat">Chat</option>
+                          <option value="async">Async</option>
+                          <option value="board">Board</option>
+                        </select>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Care Setting
+                      </label>
+                      <select
+                        value={form.care_setting}
+                        onChange={(e) => updateField("care_setting", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="facility">Facility</option>
+                        <option value="community">Community</option>
+                        <option value="home">Home</option>
+                        <option value="mobile_outreach">Mobile outreach</option>
+                        <option value="virtual">Virtual</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Priority
+                      </label>
+                      <select
+                        value={form.priority}
+                        onChange={(e) => updateField("priority", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="routine">Routine</option>
+                        <option value="urgent">Urgent</option>
+                        <option value="emergency">Emergency</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Triage Category (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.triage_category}
+                        onChange={(e) => updateField("triage_category", e.target.value)}
+                        placeholder="e.g. P1, RED, YELLOW"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Pathway Ref (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.pathway_ref}
+                        onChange={(e) => updateField("pathway_ref", e.target.value)}
+                        placeholder="e.g. PATH-ANC-01"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Protocol Ref (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={form.protocol_ref}
+                        onChange={(e) => updateField("protocol_ref", e.target.value)}
+                        placeholder="e.g. PROTO-ED-01"
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">

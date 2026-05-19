@@ -2,8 +2,9 @@ openapi: 3.0.3
 info:
   title: Document Store Service API
   description: |
-    Internal MinIO/S3-backed document storage backend.
-    Used by landela-adapter-service when in INTERNAL mode.
+    Internal provider-neutral document storage backend.
+    Binary storage is routed through a pluggable provider contract (current adapter: MinIO/S3).
+    Used by experience-bff and landela-adapter-service for document object lifecycle operations.
   version: 0.1.0
 
 servers:
@@ -85,6 +86,101 @@ paths:
       responses:
         '200':
           description: Signed URL
+
+  /v1/internal/objects/{objectId}/preview:
+    get:
+      operationId: generatePreviewUrl
+      summary: Generate inline preview payload
+      description: Returns a signed URL with MIME/disposition hints for inline-safe preview clients.
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Preview payload
+
+  /v1/internal/objects/{objectId}/ocr:
+    post:
+      operationId: requestOcrExtraction
+      summary: Request OCR extraction
+      description: Runs OCR using configured provider abstraction and returns latest OCR job payload.
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: OCR job accepted/processed
+    get:
+      operationId: getLatestOcrExtraction
+      summary: Get latest OCR extraction payload
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OCR job payload
+
+  /v1/internal/objects/{objectId}/signature:
+    post:
+      operationId: requestDocumentSignature
+      summary: Request document signature
+      description: Runs signature workflow using configured provider abstraction and returns latest signature job payload.
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Signature job accepted/processed
+    get:
+      operationId: getLatestDocumentSignature
+      summary: Get latest signature job payload
+      tags: [Object Storage]
+      parameters:
+        - name: objectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Signature job payload
+
+  /v1/internal/objects/signatures/{jobId}/verify:
+    get:
+      operationId: verifyDocumentSignature
+      summary: Verify signature evidence for a job
+      tags: [Object Storage]
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Signature verification payload
 
   /v1/internal/objects/{objectId}/download:
     get:
