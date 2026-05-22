@@ -525,21 +525,6 @@ public class PublicHealthController {
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/situation-summary", requestId, Map.of(), 200);
     }
 
-    @PostMapping("/nompilo/ask")
-    public ResponseEntity<Map<String, Object>> nompiloAsk(
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestBody Map<String, Object> body) {
-        governance.assertGovernedRead();
-        return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/ask", requestId, body, 200);
-    }
-
-    @PostMapping("/nompilo/briefing")
-    public ResponseEntity<Map<String, Object>> nompiloBriefing(
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestBody Map<String, Object> body) {
-        governance.assertGovernedRead();
-        return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/briefing", requestId, body, 200);
-    }
 
     @GetMapping("/intelligence/alert-rules")
     public ResponseEntity<Map<String, Object>> listAlertRules(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {

@@ -580,8 +580,8 @@ services:
   # ── One UI Shell — unified user-facing Experience (port 3000) ───────
   one-ui-shell:
     build:
-      context: ./ui
-      dockerfile: one-ui-shell/Dockerfile
+      context: .
+      dockerfile: ui/one-ui-shell/Dockerfile
       args:
         NEXT_PUBLIC_BFF_URL: http://localhost:8160
         NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000

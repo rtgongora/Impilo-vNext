@@ -38,54 +38,54 @@ VALUES
 ON CONFLICT (council_code) DO NOTHING;
 
 INSERT INTO varapi.provider
-    (tenant_id, provider_ref, given_name, family_name, practice_number,
+    (tenant_id, provider_ref, impilo_health_id, given_name, family_name, practice_number,
      provider_public_id, title, date_of_birth, gender, nationality,
      email, phone, profession, cadre, primary_council_id, status)
 VALUES
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000001',
+     'c0000000-0000-4000-8000-000000000001', 'c0000000-0000-4000-8000-000000000001',
      'Tendai', 'Mapfumo', 'MDPCZ-2015-001',
      'PROV-ZW-00001', 'Dr', '1980-04-12', 'MALE', 'ZW',
      'mapfumo@hch.gov.zw', '+263771000001', 'MEDICAL_DOCTOR', 'GENERAL_PRACTITIONER',
      (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000002',
+     'c0000000-0000-4000-8000-000000000002', 'c0000000-0000-4000-8000-000000000002',
      'Grace', 'Musekwa', 'NMCZ-2010-042',
      'PROV-ZW-00002', 'Sr', '1975-08-30', 'FEMALE', 'ZW',
      'musekwa@hch.gov.zw', '+263771000002', 'NURSE', 'REGISTERED_NURSE',
      (SELECT id FROM varapi.councils WHERE council_code = 'NMCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000003',
+     'c0000000-0000-4000-8000-000000000003', 'c0000000-0000-4000-8000-000000000003',
      'Simba', 'Nyamukapa', 'MDPCZ-2008-019',
      'PROV-ZW-00003', 'Dr', '1973-12-05', 'MALE', 'ZW',
      'nyamukapa@pgh.gov.zw', '+263771000003', 'MEDICAL_DOCTOR', 'SURGEON',
      (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000004',
+     'c0000000-0000-4000-8000-000000000004', 'c0000000-0000-4000-8000-000000000004',
      'Faith', 'Zimba', 'PHCZ-2018-077',
      'PROV-ZW-00004', 'Ms', '1987-03-21', 'FEMALE', 'ZW',
      'zimba@hch.gov.zw', '+263771000004', 'PHARMACIST', 'PHARMACIST',
      (SELECT id FROM varapi.councils WHERE council_code = 'PHCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000005',
+     'c0000000-0000-4000-8000-000000000005', 'c0000000-0000-4000-8000-000000000005',
      'Blessing', 'Chiweshe', 'NMCZ-2012-091',
      'PROV-ZW-00005', 'Sr', '1982-06-14', 'FEMALE', 'ZW',
      'chiweshe@cch.gov.zw', '+263771000005', 'NURSE', 'CLINICAL_NURSE_SPECIALIST',
      (SELECT id FROM varapi.councils WHERE council_code = 'NMCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'c0000000-0000-4000-8000-000000000006',
+     'c0000000-0000-4000-8000-000000000006', 'c0000000-0000-4000-8000-000000000006',
      'Tapiwa', 'Chigumba', 'MDPCZ-2020-112',
      'PROV-ZW-00006', 'Dr', '1992-09-18', 'MALE', 'ZW',
      'chigumba@mpilo.gov.zw', '+263771000006', 'MEDICAL_DOCTOR', 'GENERAL_PRACTITIONER',
      (SELECT id FROM varapi.councils WHERE council_code = 'MDPCZ'), 'ACTIVE'),
 
     ('00000000-0000-4000-8000-000000000001',
-     'b0000000-0000-4000-8000-000000000010',
+     'b0000000-0000-4000-8000-000000000010', 'b0000000-0000-4000-8000-000000000010',
      'System', 'Admin', 'MOHCC-ADMIN-001',
      'PROV-ZW-ADMIN-001', 'Dr', '1985-01-01', 'MALE', 'ZW',
      'superadmin@impilo.gov.zw', '+263771000010', 'SYSTEM_ADMINISTRATOR', 'PLATFORM_ADMIN',

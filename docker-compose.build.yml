@@ -82,6 +82,7 @@ services:
     volumes:
       - ./ui/one-ui-shell:/build/ui/one-ui-shell:rw
       - ./ui/shared-ui:/build/ui/shared-ui:rw
+      - ./contracts:/build/contracts:ro
       # npm cache
       - ./vendor/node-cache:/root/.npm:rw
     environment:

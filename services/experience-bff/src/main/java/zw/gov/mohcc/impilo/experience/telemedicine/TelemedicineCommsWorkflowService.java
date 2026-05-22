@@ -2,6 +2,8 @@ package zw.gov.mohcc.impilo.experience.telemedicine;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SupportServiceClient;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
+@ConditionalOnBean(KafkaTemplate.class)
 public class TelemedicineCommsWorkflowService {
 
     private static final Logger log = LoggerFactory.getLogger(TelemedicineCommsWorkflowService.class);
