@@ -316,11 +316,11 @@ jobs:
 
       - name: Lint
         working-directory: ui/experience
-        run: npx next lint 2>/dev/null || echo "Lint completed with warnings"
+        run: npx next lint
 
       - name: Type check
         working-directory: ui/experience
-        run: npx tsc --noEmit --skipLibCheck 2>/dev/null || echo "Type check completed with warnings"
+        run: npx tsc --noEmit --skipLibCheck
 
   completeness-report:
     name: Completeness report (informational)
@@ -449,7 +449,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: ui/experience
-        run: npx vitest run --reporter=verbose 2>/dev/null || echo "Tests completed"
+        run: npx vitest run --reporter=verbose
 
   e2e-test:
     name: E2E Tests

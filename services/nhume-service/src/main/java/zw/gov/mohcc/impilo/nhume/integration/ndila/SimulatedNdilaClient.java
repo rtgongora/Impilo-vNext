@@ -1,7 +1,6 @@
 package zw.gov.mohcc.impilo.nhume.integration.ndila;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +15,6 @@ import java.util.Optional;
  * should override this component using {@code @ConditionalOnProperty}.
  */
 @Component
-@ConditionalOnMissingBean(NdilaClient.class)
 public class SimulatedNdilaClient implements NdilaClient {
 
     private static final double EARTH_RADIUS_M = 6_371_000.0;

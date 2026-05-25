@@ -3,7 +3,7 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   content: [
     "./src/**/*.{ts,tsx}",
-    "../shared-ui/**/*.{ts,tsx}",
+    "../shared-ui/src/**/*.{ts,tsx}",
   ],
   theme: {
     extend: {

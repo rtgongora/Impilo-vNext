@@ -525,7 +525,6 @@ public class PublicHealthController {
         return proxyPost(surveillanceUrl + "/internal/v1/public-health/nompilo/situation-summary", requestId, Map.of(), 200);
     }
 
-
     @GetMapping("/intelligence/alert-rules")
     public ResponseEntity<Map<String, Object>> listAlertRules(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
         governance.assertGovernedRead();

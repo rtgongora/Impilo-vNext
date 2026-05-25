@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/.next-build
+**/dist
+**/build
+**/.turbo
+**/.cache
+**/.pnpm-store
+**/coverage
+**/*.log

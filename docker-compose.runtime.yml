@@ -172,7 +172,7 @@ services:
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
       SERVER_PORT: 8081
-    mem_limit: 768m
+    mem_limit: 1280m
     ports:
       - "19090:9090"
       - "18082:8081"
@@ -233,7 +233,7 @@ services:
       # Disable OAuth2 resource server for dev (no realm configured yet)
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-    mem_limit: 768m
+    mem_limit: 1280m
     ports:
       - "18081:8081"
     depends_on:
@@ -268,7 +268,7 @@ services:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ""
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
       VITO_HMAC_PEPPER: impilo-dev-hmac-pepper-changeme-in-prod
-    mem_limit: 768m
+    mem_limit: 1024m
     ports:
       - "8092:8082"
     depends_on:
@@ -510,6 +510,68 @@ services:
       interval: 10s
       timeout: 5s
       retries: 15
+      start_period: 40s
+
+  # ── Ndila Service — Geospatial Intelligence (port 8155) ───────────────
+  ndila:
+    build:
+      context: ./services/ndila-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8155
+      NDILA_ALLOW_ANONYMOUS: "true"
+      NDILA_POSTGIS_ENABLED: "false"
+    mem_limit: 1536m
+    ports:
+      - "8330:8155"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8155/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
+  # ── Nhume Service — Dispatch & Delivery (port 8340) ───────────────────
+  nhume:
+    build:
+      context: ./services/nhume-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SERVER_PORT: 8340
+      NHUME_NDILA_BASE_URL: http://ndila:8155
+      NHUME_TSHEPO_PDP_URL: http://tshepo-authz:8081
+      NHUME_TRUST_ENFORCE: "false"
+      NHUME_COMMS_HUB_ENABLED: "false"
+    mem_limit: 1024m
+    ports:
+      - "8340:8340"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ndila:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8340/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
       start_period: 40s
 
   # ===========================================================================

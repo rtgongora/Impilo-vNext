@@ -37,6 +37,7 @@ This pass focused on:
 - `pnpm install` (from `apps/mobile`)
 - `pnpm -r type-check`
 - `pnpm -r test`
+- `powershell -ExecutionPolicy Bypass -File scripts/runtime/smoke-matrix.ps1`
 
 ## Key Breakages Found and Repaired
 
@@ -55,6 +56,11 @@ This pass focused on:
    - Invalid store selector usage in provider marketplace screen.
    - Duplicate style key in provider social screen.
    - `mobile-ndila` package had no tests and failed workspace test run.
+6. Runtime stack startup blockers in `docker-compose.runtime.yml` and `experience-bff`:
+   - UI docker build context included local `node_modules` and failed image build.
+   - `tshepo-authz` failed with duplicate Flyway migration version `V010`.
+   - `tshepo` was OOM-killed under `mem_limit: 768m`.
+   - `experience-bff` failed startup due constructor autowiring and duplicate Nompilo route mappings.
 
 ## Current Build Readiness State
 
@@ -62,6 +68,16 @@ This pass focused on:
 - Web workspaces type-check/lint/build: **Pass** (warnings remain in tailwind content globs and some lint warnings not escalated to errors).
 - Mobile workspace type-check: **Pass**.
 - Mobile workspace tests: **Pass**.
+- Runtime smoke matrix: **Partial pass (15/16 pass)** with Docker runtime up.
+
+## Runtime Smoke Evidence
+
+- Script: `scripts/runtime/smoke-matrix.ps1`
+- Report: `docs/operations/RUNTIME_SMOKE_REPORT.md`
+- Current result snapshot:
+  - Infra ports (`5432`, `6379`, `9092`): reachable
+  - Actuator checks passing: `TSHEPO-AUTHZ`, `TSHEPO`, `VITO`, `VARAPI`, `TUSO`, `ZIBO`, `PCT`, `OROS`, `Clinical-Knowledge-Platform`, `Guidance`, `Experience-BFF`, `Ndila`
+  - Remaining runtime failure: `Nhume` actuator endpoint (service wiring improved, but startup remains unstable in current local runtime due schema/entity mismatch cleanup and container orchestration churn)
 
 ## Notable Non-Blocking Warnings
 
