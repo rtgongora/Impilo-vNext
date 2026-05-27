@@ -20,7 +20,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SEED_DIR="$SCRIPT_DIR/seed"
 
-POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-impilo-vnext-postgres-1}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-impilo-vnext_postgres_1}"
 POSTGRES_USER="${POSTGRES_USER:-impilo}"
 
 RED='\033[0;31m'
