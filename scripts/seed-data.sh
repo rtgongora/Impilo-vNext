@@ -96,6 +96,7 @@ declare -A SERVICES=(
   [zibo]=8085
   [pct]=8088
   [oros]=18089
+  [bff]=8160
 )
 
 FAILED_SERVICES=()
@@ -109,13 +110,14 @@ done
 echo
 
 # Apply seeds (skip those whose service failed health check)
-[[ ! " ${FAILED_SERVICES[*]} " =~ " tuso "   ]] && apply_seed tuso   "$SEED_DIR/02-seed-tuso.sql"   "TUSO (Facility Registry)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " vito "   ]] && apply_seed vito   "$SEED_DIR/03-seed-vito.sql"   "VITO (Client Registry)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " varapi " ]] && apply_seed varapi "$SEED_DIR/04-seed-varapi.sql" "VARAPI (Provider Registry)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " tshepo " ]] && apply_seed tshepo "$SEED_DIR/05-seed-tshepo.sql" "TSHEPO (Trust & Governance)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " zibo "   ]] && apply_seed zibo   "$SEED_DIR/06-seed-zibo.sql"   "ZIBO (Terminology)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " pct "    ]] && apply_seed pct    "$SEED_DIR/07-seed-pct.sql"    "PCT (Patient Care Tracker)"
-[[ ! " ${FAILED_SERVICES[*]} " =~ " oros "   ]] && apply_seed oros   "$SEED_DIR/08-seed-oros.sql"   "OROS (Orders & Results)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " tuso "   ]] && apply_seed tuso          "$SEED_DIR/02-seed-tuso.sql"          "TUSO (Facility Registry)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " vito "   ]] && apply_seed vito          "$SEED_DIR/03-seed-vito.sql"          "VITO (Client Registry)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " varapi " ]] && apply_seed varapi        "$SEED_DIR/04-seed-varapi.sql"        "VARAPI (Provider Registry)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " tshepo " ]] && apply_seed tshepo        "$SEED_DIR/05-seed-tshepo.sql"        "TSHEPO (Trust & Governance)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " zibo "   ]] && apply_seed zibo          "$SEED_DIR/06-seed-zibo.sql"          "ZIBO (Terminology)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " pct "    ]] && apply_seed pct           "$SEED_DIR/07-seed-pct.sql"           "PCT (Patient Care Tracker)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " oros "   ]] && apply_seed oros          "$SEED_DIR/08-seed-oros.sql"          "OROS (Orders & Results)"
+[[ ! " ${FAILED_SERVICES[*]} " =~ " bff "    ]] && apply_seed postgres        "$SEED_DIR/09-seed-citizen-app.sql"  "Citizen App (BFF + TUSO bookings)"
 
 echo
 if [[ ${#FAILED_SERVICES[@]} -eq 0 ]]; then

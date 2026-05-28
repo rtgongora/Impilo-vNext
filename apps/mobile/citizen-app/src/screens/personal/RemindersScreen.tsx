@@ -1,332 +1,245 @@
-/**
- * RemindersScreen — Manage medication and appointment reminders.
- */
-
-import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  Card,
-  CardHeader,
-  CardBody,
-  Button,
-  Badge,
-  TextField,
-  Select,
-  LoadingSpinner,
-  EmptyState,
-  ErrorState,
-} from "@impilo/mobile-design-system";
-import { getReminders, createReminder, updateReminder, deleteReminder } from "../../services/remindersService";
-import type { Reminder, ReminderType, Recurrence } from "../../types";
+  View, Text, ScrollView, Pressable, StyleSheet,
+  RefreshControl, Switch, Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LoadingSpinner } from "@impilo/mobile-design-system";
+import { getReminders, updateReminder, deleteReminder } from "../../services/remindersService";
+import type { Reminder, ReminderType } from "../../types";
+import { USE_SEED_DATA, SEED_REMINDERS } from "../../data/seedHealthRecords";
+import { useToast } from "../../components/Toast";
+import {
+  APP_GREEN, APP_GREEN_DARK, APP_GREEN_LIGHT, APP_GREEN_XLIGHT,
+  APP_RED, APP_RED_LIGHT, APP_GOLD, APP_GOLD_LIGHT,
+  APP_SURFACE, APP_BG, APP_TEXT, APP_TEXT_2, APP_TEXT_3, APP_BORDER,
+} from "../../lib/colors";
 
-const TYPE_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  MEDICATION: "default",
-  APPOINTMENT: "secondary",
-  LAB_CHECK: "destructive",
-  FOLLOW_UP: "outline",
+const TYPE_CFG: Record<ReminderType, { label: string; icon: React.ComponentProps<typeof Ionicons>["name"]; color: string; bg: string }> = {
+  MEDICATION:  { label: "Medication",  icon: "medical",          color: APP_GREEN_DARK, bg: APP_GREEN_LIGHT  },
+  APPOINTMENT: { label: "Appointment", icon: "calendar",         color: APP_GREEN,      bg: APP_GREEN_XLIGHT },
+  LAB_CHECK:   { label: "Lab Check",   icon: "flask",            color: APP_GOLD,       bg: APP_GOLD_LIGHT   },
+  FOLLOW_UP:   { label: "Follow-up",   icon: "refresh-circle",   color: APP_TEXT_2,     bg: "#EEF2F2"        },
 };
 
+const RECURRENCE_LABEL: Record<string, string> = {
+  ONCE: "Once", DAILY: "Daily", WEEKLY: "Weekly",
+};
+
+function groupByType(reminders: Reminder[]): { type: ReminderType; items: Reminder[] }[] {
+  const map = new Map<ReminderType, Reminder[]>();
+  for (const r of reminders) {
+    if (!map.has(r.type)) map.set(r.type, []);
+    map.get(r.type)!.push(r);
+  }
+  return Array.from(map.entries()).map(([type, items]) => ({ type, items }));
+}
+
 export function RemindersScreen() {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const toast    = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<ReminderType>("MEDICATION");
-  const [description, setDescription] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const [recurrence, setRecurrence] = useState<Recurrence>("ONCE");
+  const [reminders, setReminders]       = useState<Reminder[]>([]);
+  const [isLoading, setIsLoading]       = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toggling, setToggling]         = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
-      const result = await getReminders({ size: 50 });
-      setReminders(result.items);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      if (USE_SEED_DATA) {
+        await new Promise((r) => setTimeout(r, 350));
+        setReminders(SEED_REMINDERS);
+      } else {
+        const r = await getReminders({ size: 50 });
+        setReminders(r.items);
+      }
+    } catch {
+      toastRef.current.error("Could not load reminders.");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
+  const onRefresh = useCallback(() => { setIsRefreshing(true); void load(true); }, [load]);
 
-  const resetForm = useCallback(() => {
-    setTitle("");
-    setType("MEDICATION");
-    setDescription("");
-    setDateTime("");
-    setRecurrence("ONCE");
-  }, []);
-
-  const handleCreate = useCallback(async () => {
-    setSubmitting(true);
+  const handleToggle = useCallback(async (rem: Reminder) => {
+    if (USE_SEED_DATA) {
+      setReminders((prev) => prev.map((r) => r.id === rem.id ? { ...r, enabled: !r.enabled } : r));
+      return;
+    }
+    setToggling(rem.id);
     try {
-      await createReminder({
-        title,
-        type,
-        description: description || undefined,
-        dateTime,
-        recurrence,
-      });
-      setShowForm(false);
-      resetForm();
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      await updateReminder(rem.id, { enabled: !rem.enabled });
+      void load(true);
+    } catch {
+      toastRef.current.error("Could not update reminder.");
     } finally {
-      setSubmitting(false);
-    }
-  }, [title, type, description, dateTime, recurrence, load, resetForm]);
-
-  const handleToggle = useCallback(async (reminder: Reminder) => {
-    try {
-      await updateReminder(reminder.id, { enabled: !reminder.enabled });
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      setToggling(null);
     }
   }, [load]);
 
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      await deleteReminder(id);
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    }
+  const handleDelete = useCallback((rem: Reminder) => {
+    Alert.alert(
+      "Delete Reminder",
+      `Delete "${rem.title}"?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete", style: "destructive",
+          onPress: async () => {
+            if (USE_SEED_DATA) {
+              setReminders((prev) => prev.filter((r) => r.id !== rem.id));
+              return;
+            }
+            try {
+              await deleteReminder(rem.id);
+              toastRef.current.success("Reminder deleted.");
+              void load(true);
+            } catch {
+              toastRef.current.error("Could not delete reminder.");
+            }
+          },
+        },
+      ],
+    );
   }, [load]);
 
-  if (isLoading) return <LoadingSpinner size="md" />;
-  if (error) return <ErrorState title="Error" message={error.message} onRetry={load} />;
+  const active  = reminders.filter((r) => r.enabled).length;
+  const groups  = groupByType(reminders);
+
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
 
   return (
-    <ScrollView testID="reminders-screen" style={styles.scrollView} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.heading}>Reminders</Text>
-          <Button
-            title={showForm ? "Cancel" : "Add Reminder"}
-            variant={showForm ? "ghost" : "primary"}
-            size="sm"
-            onPress={() => {
-              setShowForm(!showForm);
-              if (showForm) resetForm();
-            }}
-            testID="toggle-reminder-form"
-          />
+    <ScrollView
+      style={s.root}
+      contentContainerStyle={s.content}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={APP_GREEN} colors={[APP_GREEN]} />}
+    >
+      {/* Summary */}
+      <View style={s.summaryStrip}>
+        <View style={[s.summaryCard, { backgroundColor: APP_GREEN_LIGHT }]}>
+          <Text style={[s.summaryNum, { color: APP_GREEN_DARK }]}>{active}</Text>
+          <Text style={s.summaryLbl}>Active</Text>
         </View>
-
-        {showForm ? (
-          <Card>
-            <CardHeader title="New Reminder" />
-            <CardBody>
-              <View style={styles.formContainer}>
-                <TextField
-                  label="Title"
-                  value={title}
-                  onChange={setTitle}
-                  placeholder="Reminder title"
-                  testID="reminder-title"
-                />
-                <Select
-                  label="Type"
-                  value={type}
-                  onChange={(v) => setType(v as ReminderType)}
-                  options={[
-                    { label: "Medication", value: "MEDICATION" },
-                    { label: "Appointment", value: "APPOINTMENT" },
-                    { label: "Lab Check", value: "LAB_CHECK" },
-                    { label: "Follow-Up", value: "FOLLOW_UP" },
-                  ]}
-                  testID="reminder-type"
-                />
-                <TextField
-                  label="Description (optional)"
-                  value={description}
-                  onChange={setDescription}
-                  placeholder="Brief description"
-                  testID="reminder-description"
-                />
-                <TextField
-                  label="Date & Time"
-                  value={dateTime}
-                  onChange={setDateTime}
-                  placeholder="YYYY-MM-DD HH:MM"
-                  testID="reminder-datetime"
-                />
-                <Select
-                  label="Recurrence"
-                  value={recurrence}
-                  onChange={(v) => setRecurrence(v as Recurrence)}
-                  options={[
-                    { label: "Once", value: "ONCE" },
-                    { label: "Daily", value: "DAILY" },
-                    { label: "Weekly", value: "WEEKLY" },
-                  ]}
-                  testID="reminder-recurrence"
-                />
-                <Button
-                  title={submitting ? "Creating..." : "Create Reminder"}
-                  variant="primary"
-                  onPress={handleCreate}
-                  disabled={submitting || !title || !dateTime}
-                  testID="submit-reminder"
-                />
-              </View>
-            </CardBody>
-          </Card>
-        ) : null}
-
-        {reminders.length === 0 ? (
-          <EmptyState
-            title="No reminders"
-            message="Create your first reminder using the button above"
-          />
-        ) : (
-          reminders.map((reminder) => (
-            <Card key={reminder.id}>
-              <CardBody>
-                <View testID={`reminder-${reminder.id}`} style={styles.reminderRow}>
-                  <View style={styles.reminderContent}>
-                    <View style={styles.badgeRow}>
-                      <Text style={styles.reminderTitle}>{reminder.title}</Text>
-                      <Badge variant={TYPE_COLORS[reminder.type] ?? "outline"}>
-                        {reminder.type.replace(/_/g, " ")}
-                      </Badge>
-                    </View>
-                    <Text style={styles.dateTimeText}>
-                      {new Date(reminder.dateTime).toLocaleString()}
-                    </Text>
-                    <Text style={styles.recurrenceText}>
-                      {`Repeats: ${reminder.recurrence}`}
-                    </Text>
-                    {reminder.description ? (
-                      <Text style={styles.descriptionText}>{reminder.description}</Text>
-                    ) : null}
-                    <Text style={[styles.statusText, !reminder.enabled && styles.statusDisabled]}>
-                      {reminder.enabled ? "Active" : "Paused"}
-                    </Text>
-                  </View>
-                  <View style={styles.actionColumn}>
-                    <Pressable
-                      testID={`toggle-reminder-${reminder.id}`}
-                      onPress={() => handleToggle(reminder)}
-                      style={[
-                        styles.toggleButton,
-                        reminder.enabled ? styles.toggleOn : styles.toggleOff,
-                      ]}
-                    >
-                      <Text style={styles.toggleText}>
-                        {reminder.enabled ? "ON" : "OFF"}
-                      </Text>
-                    </Pressable>
-                    <Button
-                      title="Delete"
-                      variant="ghost"
-                      size="sm"
-                      onPress={() => handleDelete(reminder.id)}
-                      testID={`delete-reminder-${reminder.id}`}
-                    />
-                  </View>
-                </View>
-              </CardBody>
-            </Card>
-          ))
-        )}
+        <View style={[s.summaryCard, { backgroundColor: "#EEF2F2" }]}>
+          <Text style={[s.summaryNum, { color: APP_TEXT_2 }]}>{reminders.length - active}</Text>
+          <Text style={s.summaryLbl}>Paused</Text>
+        </View>
+        <View style={[s.summaryCard, { backgroundColor: APP_GREEN_XLIGHT }]}>
+          <Text style={[s.summaryNum, { color: APP_GREEN }]}>{reminders.length}</Text>
+          <Text style={s.summaryLbl}>Total</Text>
+        </View>
       </View>
+
+      {reminders.length === 0 ? (
+        <View style={s.empty}>
+          <Ionicons name="alarm-outline" size={52} color={APP_GREEN_LIGHT} />
+          <Text style={s.emptyTitle}>No reminders set</Text>
+          <Text style={s.emptySub}>Reminders for medications and appointments will appear here.</Text>
+        </View>
+      ) : (
+        groups.map(({ type, items }) => {
+          const cfg = TYPE_CFG[type] ?? TYPE_CFG.FOLLOW_UP;
+          return (
+            <View key={type}>
+              {/* Group header */}
+              <View style={s.groupHeader}>
+                <View style={[s.groupHeaderIcon, { backgroundColor: cfg.bg }]}>
+                  <Ionicons name={cfg.icon} size={13} color={cfg.color} />
+                </View>
+                <Text style={s.groupHeaderText}>{cfg.label}</Text>
+                <Text style={s.groupHeaderCount}>{items.length}</Text>
+              </View>
+
+              {/* Group card */}
+              <View style={s.groupCard}>
+                {items.map((rem, idx) => (
+                  <View key={rem.id}>
+                    <View style={s.reminderRow}>
+                      <View style={[s.reminderIcon, { backgroundColor: rem.enabled ? cfg.bg : "#F3F4F6" }]}>
+                        <Ionicons name={cfg.icon} size={16} color={rem.enabled ? cfg.color : APP_TEXT_3} />
+                      </View>
+                      <View style={s.reminderInfo}>
+                        <Text style={[s.reminderTitle, !rem.enabled && s.reminderTitleDisabled]}>
+                          {rem.title}
+                        </Text>
+                        <View style={s.reminderMetaRow}>
+                          <Text style={s.reminderTime}>
+                            {new Date(rem.dateTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </Text>
+                          <View style={s.recurrencePill}>
+                            <Text style={s.recurrenceText}>{RECURRENCE_LABEL[rem.recurrence] ?? rem.recurrence}</Text>
+                          </View>
+                        </View>
+                        {rem.description ? (
+                          <Text style={s.reminderDesc} numberOfLines={1}>{rem.description}</Text>
+                        ) : null}
+                      </View>
+                      <View style={s.reminderActions}>
+                        <Switch
+                          value={rem.enabled}
+                          onValueChange={() => handleToggle(rem)}
+                          trackColor={{ false: APP_BORDER, true: APP_GREEN_LIGHT }}
+                          thumbColor={rem.enabled ? APP_GREEN : "#FFFFFF"}
+                          disabled={toggling === rem.id}
+                        />
+                        <Pressable onPress={() => handleDelete(rem)} hitSlop={8} style={s.deleteBtn}>
+                          <Ionicons name="trash-outline" size={16} color={APP_TEXT_3} />
+                        </Pressable>
+                      </View>
+                    </View>
+                    {idx < items.length - 1 ? <View style={s.divider} /> : null}
+                  </View>
+                ))}
+              </View>
+            </View>
+          );
+        })
+      )}
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: APP_BG },
+  content: { padding: 16, gap: 14, paddingBottom: 40 },
+  centred: { flex: 1, alignItems: "center", justifyContent: "center" },
+  summaryStrip: { flexDirection: "row", gap: 10 },
+  summaryCard: { flex: 1, borderRadius: 14, padding: 14, alignItems: "center", gap: 4 },
+  summaryNum: { fontSize: 22, fontWeight: "800" },
+  summaryLbl: { fontSize: 11, fontWeight: "600", color: APP_TEXT_2 },
+
+  groupHeader: {
+    flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 4, marginBottom: 6,
   },
-  container: {
-    gap: 12,
+  groupHeaderIcon: { width: 22, height: 22, borderRadius: 6, alignItems: "center", justifyContent: "center" },
+  groupHeaderText: { fontSize: 12, fontWeight: "700", color: APP_TEXT_2, textTransform: "uppercase", letterSpacing: 0.8, flex: 1 },
+  groupHeaderCount: { fontSize: 12, color: APP_TEXT_3 },
+
+  groupCard: {
+    backgroundColor: APP_SURFACE, borderRadius: 16, overflow: "hidden",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  formContainer: {
-    gap: 12,
-  },
-  reminderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
-  reminderContent: {
-    flex: 1,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-    marginBottom: 4,
-    flexWrap: "wrap",
-  },
-  reminderTitle: {
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  dateTimeText: {
-    fontSize: 14,
-    color: "#374151",
-    marginVertical: 2,
-  },
-  recurrenceText: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginVertical: 2,
-  },
-  descriptionText: {
-    fontSize: 13,
-    color: "#9CA3AF",
-    marginVertical: 2,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#10B981",
-    marginTop: 4,
-  },
-  statusDisabled: {
-    color: "#9CA3AF",
-  },
-  actionColumn: {
-    alignItems: "center",
-    gap: 8,
-  },
-  toggleButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    minWidth: 44,
-    alignItems: "center",
-  },
-  toggleOn: {
-    backgroundColor: "#10B981",
-  },
-  toggleOff: {
-    backgroundColor: "#D1D5DB",
-  },
-  toggleText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
+  reminderRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  reminderIcon: { width: 38, height: 38, borderRadius: 11, alignItems: "center", justifyContent: "center" },
+  reminderInfo: { flex: 1 },
+  reminderTitle: { fontSize: 14, fontWeight: "600", color: APP_TEXT },
+  reminderTitleDisabled: { color: APP_TEXT_3 },
+  reminderMetaRow: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 3 },
+  reminderTime: { fontSize: 12, fontWeight: "600", color: APP_TEXT_2 },
+  recurrencePill: { backgroundColor: APP_GREEN_XLIGHT, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  recurrenceText: { fontSize: 10, fontWeight: "700", color: APP_GREEN },
+  reminderDesc: { fontSize: 12, color: APP_TEXT_3, marginTop: 2 },
+  reminderActions: { flexDirection: "row", alignItems: "center", gap: 4 },
+  deleteBtn: { padding: 4 },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: APP_BORDER, marginLeft: 64 },
+
+  empty: { alignItems: "center", paddingVertical: 60, gap: 12 },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: APP_TEXT },
+  emptySub: { fontSize: 13, color: APP_TEXT_3, textAlign: "center", paddingHorizontal: 32, lineHeight: 19 },
 });

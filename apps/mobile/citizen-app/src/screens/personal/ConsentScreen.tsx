@@ -1,322 +1,249 @@
-/**
- * ConsentScreen — View and manage data sharing consent preferences.
- */
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  StyleSheet,
-  ActivityIndicator,
-  Switch,
-  Alert,
+  View, Text, ScrollView, Pressable, StyleSheet,
+  Switch, RefreshControl, Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LoadingSpinner } from "@impilo/mobile-design-system";
+import { getConsents, updateConsent, type Consent } from "../../services/consentService";
+import { USE_SEED_DATA } from "../../data/seedHealthRecords";
+import { useToast } from "../../components/Toast";
 import {
-  getConsents,
-  updateConsent,
-  type Consent,
-} from "../../services/consentService";
+  APP_GREEN, APP_GREEN_DARK, APP_GREEN_LIGHT, APP_GREEN_XLIGHT,
+  APP_RED, APP_RED_LIGHT, APP_GOLD, APP_GOLD_LIGHT,
+  APP_SURFACE, APP_BG, APP_TEXT, APP_TEXT_2, APP_TEXT_3, APP_BORDER,
+} from "../../lib/colors";
 
-const CONSENT_CATEGORIES: { category: string; description: string }[] = [
-  { category: "Medical Records Sharing", description: "Allow sharing of your medical records with authorised healthcare providers." },
-  { category: "Research Participation", description: "Permit anonymised data to be used in approved medical research studies." },
-  { category: "Emergency Access", description: "Grant emergency responders access to critical health information." },
-  { category: "Third-Party Provider Access", description: "Allow third-party healthcare providers to view your health data." },
-  { category: "Telehealth Recording", description: "Permit recording of telehealth consultations for quality and records." },
+const SEED_CONSENTS: Consent[] = [
+  { id: "c-001", category: "Medical Records Sharing",     description: "Allow sharing of your medical records with authorised healthcare providers within the Impilo network.",        granted: true,  updatedAt: new Date(Date.now() - 365 * 86_400_000).toISOString() },
+  { id: "c-002", category: "Research Participation",      description: "Permit anonymised data to be used in approved medical research studies approved by the MoHCC research ethics board.", granted: false, updatedAt: new Date(Date.now() - 180 * 86_400_000).toISOString() },
+  { id: "c-003", category: "Emergency Access",            description: "Grant emergency responders access to critical health information (blood type, allergies, medications) in life-threatening situations.", granted: true,  updatedAt: new Date(Date.now() - 365 * 86_400_000).toISOString() },
+  { id: "c-004", category: "Third-Party Provider Access", description: "Allow third-party private healthcare providers, pharmacies, and specialists to view your health data when treating you.", granted: true,  updatedAt: new Date(Date.now() - 90 * 86_400_000).toISOString() },
+  { id: "c-005", category: "Telehealth Recording",        description: "Permit recording of telehealth consultations for quality assurance, medical records, and clinical audit purposes.", granted: false, updatedAt: new Date(Date.now() - 30 * 86_400_000).toISOString() },
 ];
 
-export function ConsentScreen({ onGoBack }: { onGoBack?: () => void }) {
-  const [consents, setConsents] = useState<Consent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+const CATEGORY_ICON: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
+  "Medical Records Sharing":     "folder-open-outline",
+  "Research Participation":      "flask-outline",
+  "Emergency Access":            "warning-outline",
+  "Third-Party Provider Access": "people-outline",
+  "Telehealth Recording":        "videocam-outline",
+};
+
+export function ConsentScreen() {
+  const toast    = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  const [consents, setConsents]           = useState<Consent[]>([]);
+  const [isLoading, setIsLoading]         = useState(true);
+  const [isRefreshing, setIsRefreshing]   = useState(false);
+  const [isSaving, setIsSaving]           = useState(false);
   const [pendingChanges, setPendingChanges] = useState<Record<string, boolean>>({});
 
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
-      const data = await getConsents();
-      setConsents(data);
+      if (USE_SEED_DATA) {
+        await new Promise((r) => setTimeout(r, 350));
+        setConsents(SEED_CONSENTS);
+      } else {
+        const data = await getConsents();
+        setConsents(data);
+      }
       setPendingChanges({});
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+    } catch {
+      toastRef.current.error("Could not load consent preferences.");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
+  const onRefresh = useCallback(() => { setIsRefreshing(true); void load(true); }, [load]);
 
-  const handleToggle = useCallback(
-    (consentId: string, newValue: boolean) => {
-      setPendingChanges((prev) => ({ ...prev, [consentId]: newValue }));
-    },
-    []
-  );
+  const handleToggle = useCallback((id: string, newValue: boolean) => {
+    setPendingChanges((prev) => ({ ...prev, [id]: newValue }));
+  }, []);
 
-  const getEffectiveValue = useCallback(
-    (consent: Consent): boolean => {
-      if (pendingChanges[consent.id] !== undefined) {
-        return pendingChanges[consent.id];
-      }
-      return consent.granted;
-    },
-    [pendingChanges]
-  );
+  const effectiveValue = useCallback((c: Consent) =>
+    pendingChanges[c.id] !== undefined ? pendingChanges[c.id] : c.granted,
+  [pendingChanges]);
+
+  const hasPending = Object.keys(pendingChanges).length > 0;
 
   const handleSave = useCallback(async () => {
-    const changedIds = Object.keys(pendingChanges);
-    if (changedIds.length === 0) {
-      Alert.alert("No Changes", "You have not made any changes to save.");
-      return;
-    }
-
+    if (!hasPending) return;
     setIsSaving(true);
     try {
-      const updates = await Promise.all(
-        changedIds.map((id) => updateConsent(id, pendingChanges[id]))
+      if (USE_SEED_DATA) {
+        await new Promise((r) => setTimeout(r, 600));
+        setConsents((prev) => prev.map((c) =>
+          pendingChanges[c.id] !== undefined ? { ...c, granted: pendingChanges[c.id]!, updatedAt: new Date().toISOString() } : c,
+        ));
+        setPendingChanges({});
+        toastRef.current.success("Consent preferences saved.");
+        return;
+      }
+      const updated = await Promise.all(
+        Object.entries(pendingChanges).map(([id, val]) => updateConsent(id, val)),
       );
-      setConsents((prev) =>
-        prev.map((c) => {
-          const updated = updates.find((u) => u.id === c.id);
-          return updated ?? c;
-        })
-      );
+      setConsents((prev) => prev.map((c) => updated.find((u) => u.id === c.id) ?? c));
       setPendingChanges({});
-      Alert.alert("Saved", "Your consent preferences have been updated.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      Alert.alert("Error", `Failed to save preferences: ${message}`);
+      toastRef.current.success("Consent preferences saved.");
+    } catch {
+      toastRef.current.error("Could not save changes. Please try again.");
     } finally {
       setIsSaving(false);
     }
-  }, [pendingChanges]);
+  }, [hasPending, pendingChanges]);
 
-  const hasPendingChanges = Object.keys(pendingChanges).length > 0;
+  const handleDiscard = useCallback(() => {
+    Alert.alert("Discard Changes", "Discard unsaved changes?", [
+      { text: "Keep editing", style: "cancel" },
+      { text: "Discard", style: "destructive", onPress: () => setPendingChanges({}) },
+    ]);
+  }, []);
 
-  if (isLoading) {
-    return (
-      <View testID="consent-screen-loading" style={styles.centered}>
-        <ActivityIndicator size="large" color="#2563EB" />
-        <Text style={styles.loadingText}>Loading consent preferences…</Text>
-      </View>
-    );
-  }
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
 
-  if (error) {
-    return (
-      <View testID="consent-screen-error" style={styles.centered}>
-        <Text style={styles.errorText}>{error.message}</Text>
-        <Pressable testID="retry-button" onPress={load} style={styles.retryButton}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  const grantedCount = consents.filter((c) => effectiveValue(c)).length;
 
   return (
-    <View testID="consent-screen" style={styles.container}>
-      {/* Go Back */}
-      <Pressable testID="go-back" onPress={onGoBack} style={styles.goBack}>
-        <Text style={styles.goBackText}>← Go Back</Text>
-      </Pressable>
+    <View style={s.root}>
+      <ScrollView
+        contentContainerStyle={s.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={APP_GREEN} colors={[APP_GREEN]} />}
+      >
+        {/* Header */}
+        <View style={s.hero}>
+          <View style={s.heroIcon}><Ionicons name="shield-checkmark" size={28} color={APP_GREEN} /></View>
+          <Text style={s.heroTitle}>Data Consent</Text>
+          <Text style={s.heroDesc}>Control how your health data is shared within the Impilo network. You can change these at any time.</Text>
+        </View>
 
-      <Text style={styles.heading}>Consent Management</Text>
-      <Text style={styles.subheading}>
-        Manage how your health data is shared and used.
-      </Text>
+        {/* Summary */}
+        <View style={s.summaryRow}>
+          <View style={[s.summaryCard, { backgroundColor: APP_GREEN_LIGHT }]}>
+            <Text style={[s.summaryNum, { color: APP_GREEN_DARK }]}>{grantedCount}</Text>
+            <Text style={s.summaryLbl}>Consented</Text>
+          </View>
+          <View style={[s.summaryCard, { backgroundColor: "#EEF2F2" }]}>
+            <Text style={[s.summaryNum, { color: APP_TEXT_2 }]}>{consents.length - grantedCount}</Text>
+            <Text style={s.summaryLbl}>Declined</Text>
+          </View>
+          <View style={[s.summaryCard, { backgroundColor: hasPending ? APP_GOLD_LIGHT : APP_GREEN_XLIGHT }]}>
+            <Text style={[s.summaryNum, { color: hasPending ? APP_GOLD : APP_GREEN }]}>{Object.keys(pendingChanges).length}</Text>
+            <Text style={s.summaryLbl}>Unsaved</Text>
+          </View>
+        </View>
 
-      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
-        <View style={styles.consentList}>
-          {consents.map((consent) => {
-            const meta = CONSENT_CATEGORIES.find(
-              (c) => c.category === consent.category
-            );
-            const granted = getEffectiveValue(consent);
+        {/* Pending changes banner */}
+        {hasPending ? (
+          <View style={s.pendingBanner}>
+            <Ionicons name="time-outline" size={15} color={APP_GOLD} />
+            <Text style={s.pendingText}>{Object.keys(pendingChanges).length} unsaved change{Object.keys(pendingChanges).length > 1 ? "s" : ""}. Review and save below.</Text>
+          </View>
+        ) : null}
 
+        {/* Consent items */}
+        <View style={s.listCard}>
+          {consents.map((c, idx) => {
+            const value    = effectiveValue(c);
+            const changed  = pendingChanges[c.id] !== undefined;
+            const icon     = CATEGORY_ICON[c.category] ?? "lock-closed-outline";
             return (
-              <View
-                key={consent.id}
-                testID={`consent-${consent.id}`}
-                style={styles.consentCard}
-              >
-                <View style={styles.consentHeader}>
-                  <View style={styles.consentTitleRow}>
-                    <Text style={styles.consentTitle}>{consent.category}</Text>
-                    <Text
-                      style={[
-                        styles.statusBadge,
-                        granted ? styles.statusGranted : styles.statusDenied,
-                      ]}
-                    >
-                      {granted ? "Granted" : "Denied"}
-                    </Text>
-                  </View>
-                  <Switch
-                    testID={`toggle-${consent.id}`}
-                    value={granted}
-                    onValueChange={(value: boolean) =>
-                      handleToggle(consent.id, value)
-                    }
-                    trackColor={{ false: "#D1D5DB", true: "#93C5FD" }}
-                    thumbColor={granted ? "#2563EB" : "#9CA3AF"}
-                    accessibilityLabel={`Toggle ${consent.category} consent`}
-                  />
+              <View key={c.id} style={[s.consentRow, idx < consents.length - 1 && s.rowDivider]}>
+                <View style={[s.consentIcon, { backgroundColor: value ? APP_GREEN_LIGHT : "#EEF2F2" }]}>
+                  <Ionicons name={icon} size={18} color={value ? APP_GREEN : APP_TEXT_3} />
                 </View>
-                <Text style={styles.consentDescription}>
-                  {meta?.description ?? consent.description}
-                </Text>
-                <Text style={styles.updatedAt}>
-                  Last updated: {new Date(consent.updatedAt).toLocaleDateString()}
-                </Text>
+                <View style={s.consentBody}>
+                  <View style={s.consentTitleRow}>
+                    <Text style={s.consentCategory}>{c.category}</Text>
+                    {changed ? (
+                      <View style={s.changedPill}>
+                        <Text style={s.changedText}>changed</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={s.consentDesc}>{c.description}</Text>
+                  <Text style={s.consentDate}>
+                    Last updated {new Date(c.updatedAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                <Switch
+                  value={value}
+                  onValueChange={(v) => handleToggle(c.id, v)}
+                  trackColor={{ false: APP_BORDER, true: APP_GREEN_LIGHT }}
+                  thumbColor={value ? APP_GREEN : "#FFFFFF"}
+                />
               </View>
             );
           })}
         </View>
+
+        {/* Legal note */}
+        <View style={s.legalNote}>
+          <Ionicons name="information-circle-outline" size={14} color={APP_TEXT_3} />
+          <Text style={s.legalNoteText}>
+            Your data is protected under the Zimbabwe Cyber and Data Protection Act (2021) and Impilo Data Governance Policy. Consent changes are logged and audited.
+          </Text>
+        </View>
       </ScrollView>
 
-      {/* Save Preferences */}
-      <Pressable
-        testID="save-preferences"
-        onPress={handleSave}
-        disabled={isSaving}
-        style={[
-          styles.saveButton,
-          !hasPendingChanges && styles.saveButtonDisabled,
-        ]}
-      >
-        {isSaving ? (
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        ) : (
-          <Text style={styles.saveButtonText}>Save Preferences</Text>
-        )}
-      </Pressable>
+      {/* Save footer */}
+      {hasPending ? (
+        <View style={s.footer}>
+          <Pressable onPress={handleDiscard} style={s.discardBtn}>
+            <Text style={s.discardBtnText}>Discard</Text>
+          </Pressable>
+          <Pressable onPress={handleSave} disabled={isSaving} style={[s.saveBtn, isSaving && s.saveBtnDisabled]}>
+            {isSaving ? <LoadingSpinner size="sm" /> : (
+              <>
+                <Ionicons name="checkmark-circle-outline" size={16} color="#FFFFFF" />
+                <Text style={s.saveBtnText}>Save Changes</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: 12,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginTop: 8,
-  },
-  errorText: {
-    fontSize: 14,
-    color: "#991B1B",
-    textAlign: "center",
-  },
-  retryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: "#2563EB",
-  },
-  retryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  goBack: {
-    paddingVertical: 8,
-  },
-  goBackText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2563EB",
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  subheading: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  scrollArea: {
-    flex: 1,
-  },
-  consentList: {
-    gap: 12,
-  },
-  consentCard: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#F3F4F6",
-    gap: 8,
-  },
-  consentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  consentTitleRow: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexWrap: "wrap",
-    marginRight: 12,
-  },
-  consentTitle: {
-    fontWeight: "700",
-    fontSize: 15,
-  },
-  statusBadge: {
-    fontSize: 11,
-    fontWeight: "600",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  statusGranted: {
-    backgroundColor: "#D1FAE5",
-    color: "#065F46",
-  },
-  statusDenied: {
-    backgroundColor: "#FEE2E2",
-    color: "#991B1B",
-  },
-  consentDescription: {
-    fontSize: 13,
-    color: "#6B7280",
-  },
-  updatedAt: {
-    fontSize: 12,
-    color: "#9CA3AF",
-  },
-  saveButton: {
-    backgroundColor: "#2563EB",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 16,
-  },
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: APP_BG },
+  centred: { flex: 1, alignItems: "center", justifyContent: "center" },
+  content: { padding: 16, gap: 14, paddingBottom: 32 },
+  hero: { alignItems: "center", paddingVertical: 16, gap: 10 },
+  heroIcon: { width: 64, height: 64, borderRadius: 20, backgroundColor: APP_GREEN_LIGHT, alignItems: "center", justifyContent: "center" },
+  heroTitle: { fontSize: 20, fontWeight: "800", color: APP_TEXT },
+  heroDesc: { fontSize: 13, color: APP_TEXT_2, textAlign: "center", paddingHorizontal: 20, lineHeight: 19 },
+  summaryRow: { flexDirection: "row", gap: 10 },
+  summaryCard: { flex: 1, borderRadius: 14, padding: 14, alignItems: "center", gap: 4 },
+  summaryNum: { fontSize: 22, fontWeight: "800" },
+  summaryLbl: { fontSize: 11, fontWeight: "600", color: APP_TEXT_2 },
+  pendingBanner: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: APP_GOLD_LIGHT, borderRadius: 12, padding: 12, borderLeftWidth: 3, borderLeftColor: APP_GOLD },
+  pendingText: { fontSize: 13, color: APP_GOLD, flex: 1 },
+  listCard: { backgroundColor: APP_SURFACE, borderRadius: 18, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  consentRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
+  rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: APP_BORDER },
+  consentIcon: { width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: 2 },
+  consentBody: { flex: 1 },
+  consentTitleRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  consentCategory: { fontSize: 14, fontWeight: "700", color: APP_TEXT, flex: 1 },
+  changedPill: { backgroundColor: APP_GOLD_LIGHT, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  changedText: { fontSize: 10, fontWeight: "700", color: APP_GOLD },
+  consentDesc: { fontSize: 12, color: APP_TEXT_2, lineHeight: 17, marginBottom: 4 },
+  consentDate: { fontSize: 10, color: APP_TEXT_3 },
+  legalNote: { flexDirection: "row", alignItems: "flex-start", gap: 8, backgroundColor: APP_GREEN_XLIGHT, borderRadius: 12, padding: 12 },
+  legalNoteText: { fontSize: 12, color: APP_TEXT_2, flex: 1, lineHeight: 17 },
+  footer: { flexDirection: "row", gap: 10, padding: 16, paddingBottom: 24, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: APP_BORDER, backgroundColor: APP_SURFACE },
+  discardBtn: { paddingHorizontal: 20, paddingVertical: 14, borderRadius: 14, backgroundColor: "#EEF2F2" },
+  discardBtnText: { fontSize: 14, fontWeight: "600", color: APP_TEXT_2 },
+  saveBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, backgroundColor: APP_GREEN, paddingVertical: 14, borderRadius: 14 },
+  saveBtnDisabled: { opacity: 0.5 },
+  saveBtnText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
 });

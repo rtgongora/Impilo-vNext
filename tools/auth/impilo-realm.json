@@ -281,6 +281,63 @@
       ]
     },
     {
+      "clientId": "citizen-app",
+      "name": "Impilo Citizen Mobile App",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "impilo.citizen://callback",
+        "impilo.citizen://auth/callback",
+        "exp://localhost:8081/*",
+        "exp://127.0.0.1:8081/*"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "impilo-tenant"
+      ],
+      "protocolMappers": [
+        {
+          "name": "cpid-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "cpid",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "cpid",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "actor-type-citizen",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "actor_type",
+            "claim.value": "CITIZEN",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
       "clientId": "citizen-portal",
       "name": "Impilo Citizen Portal",
       "enabled": true,

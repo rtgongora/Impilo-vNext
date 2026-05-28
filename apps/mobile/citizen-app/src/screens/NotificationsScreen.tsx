@@ -39,7 +39,7 @@ function formatTimestamp(ts: string): string {
   return date.toLocaleDateString();
 }
 
-export function NotificationsScreen() {
+export function NotificationsScreen({ onBack }: { onBack?: () => void }) {
   const { notifications, isLoading, error, refresh, markRead, markAllRead } = useNotifications();
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export function NotificationsScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <Header title="Notifications" />
+        <Header title="Notifications" onBack={onBack} />
         <LoadingSpinner size="md" />
       </Screen>
     );
@@ -59,7 +59,7 @@ export function NotificationsScreen() {
   if (error) {
     return (
       <Screen>
-        <Header title="Notifications" />
+        <Header title="Notifications" onBack={onBack} />
         <ErrorState
           title="Failed to load notifications"
           message={error.message}
@@ -71,7 +71,7 @@ export function NotificationsScreen() {
 
   return (
     <Screen>
-      <Header title="Notifications" />
+      <Header title="Notifications" onBack={onBack} />
       <View testID="notifications-screen" style={styles.container}>
         {notifications.length > 0 ? (
           <View style={styles.markAllReadRow}>

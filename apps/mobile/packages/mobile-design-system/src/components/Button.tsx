@@ -44,7 +44,7 @@ export interface ButtonProps {
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; text: string; border?: string }> = {
   primary:     { bg: "#059669", text: "#FFFFFF" },
-  secondary:   { bg: "#1E40AF", text: "#FFFFFF" },
+  secondary:   { bg: "#374151", text: "#FFFFFF" },
   outline:     { bg: "transparent", text: "#059669", border: "#059669" },
   ghost:       { bg: "transparent", text: "#374151" },
   destructive: { bg: "#DC2626", text: "#FFFFFF" },

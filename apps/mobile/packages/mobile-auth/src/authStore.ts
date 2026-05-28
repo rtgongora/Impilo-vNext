@@ -169,7 +169,7 @@ export const authStore = createStore<AuthState>((set, get) => ({
       const session: SessionContext = {
         tenantId,
         podId: "national-spine",
-        actorId: userInfo.sub,
+        actorId: (userInfo as Record<string, unknown>).cpid as string ?? userInfo.sub,
         actorType: resolveActorType(userInfo),
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,

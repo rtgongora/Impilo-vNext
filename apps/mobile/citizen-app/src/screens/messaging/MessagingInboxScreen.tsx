@@ -1,84 +1,115 @@
-/**
- * MessagingInboxScreen — Conversation inbox for citizen-provider and citizen-support messaging.
- */
-
-import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Screen,
   Header,
-  Card,
-  CardBody,
-  Button,
-  Badge,
   TextField,
   Select,
   Avatar,
   LoadingSpinner,
-  EmptyState,
-  ErrorState,
 } from "@impilo/mobile-design-system";
 import type { Conversation } from "@impilo/mobile-messaging";
 import {
   fetchConversations,
   createConversation,
 } from "../../services/messagingService";
-import { appStore } from "../../stores/appStore";
+import { useAppStore } from "../../stores/appStore";
 import { ThreadViewScreen } from "./ThreadViewScreen";
+import { useToast } from "../../components/Toast";
+import { SkeletonConversationList } from "../../components/SkeletonLoader";
+import {
+  APP_GREEN,
+  APP_GREEN_LIGHT,
+  APP_GREEN_XLIGHT,
+  APP_SURFACE,
+  APP_BG,
+  APP_TEXT,
+  APP_TEXT_2,
+  APP_TEXT_3,
+  APP_BORDER,
+} from "../../lib/colors";
+
+const FILTERS = [
+  { label: "All",      value: "" },
+  { label: "Provider", value: "DIRECT" },
+  { label: "Support",  value: "SUPPORT" },
+];
 
 export function MessagingInboxScreen() {
+  const toast = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  const setUnreadMessages = useAppStore((s) => s.setUnreadMessages);
+
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [filter, setFilter] = useState<string>("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filter, setFilter] = useState("");
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [showNewMessage, setShowNewMessage] = useState(false);
+  const [showCompose, setShowCompose] = useState(false);
   const [newRecipientId, setNewRecipientId] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [newType, setNewType] = useState<"DIRECT" | "SUPPORT">("DIRECT");
   const [submitting, setSubmitting] = useState(false);
 
-  const load = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
-      const result = await fetchConversations({
-        type: filter || undefined,
-        size: 50,
-      });
+      const result = await fetchConversations({ type: filter || undefined, size: 50 });
       setConversations(result.items);
       const totalUnread = result.items.reduce((sum, c) => sum + c.unreadCount, 0);
-      appStore.getState().setUnreadMessages(totalUnread);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      setUnreadMessages(totalUnread);
+    } catch {
+      toastRef.current.error("Could not load messages. Pull down to retry.");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [filter]);
+  }, [filter, setUnreadMessages]); // toast via ref — not a dep
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
-  const handleCreateConversation = useCallback(async () => {
+  const onRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    void load(true);
+  }, [load]);
+
+  const handleCompose = useCallback(async () => {
+    if (!newRecipientId.trim() || !newMessage.trim()) {
+      toastRef.current.warning("Please fill in the recipient and message fields.");
+      return;
+    }
     setSubmitting(true);
     try {
       const conv = await createConversation({
-        recipientId: newRecipientId,
+        recipientId: newRecipientId.trim(),
         subject: newSubject || undefined,
         type: newType,
         initialMessage: newMessage,
       });
-      setShowNewMessage(false);
+      setShowCompose(false);
       setNewRecipientId("");
       setNewSubject("");
       setNewMessage("");
+      toastRef.current.success("Message sent!");
       setSelectedConversation(conv);
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+      void load(true);
+    } catch {
+      toastRef.current.error("Failed to send message. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +121,7 @@ export function MessagingInboxScreen() {
         conversation={selectedConversation}
         onBack={() => {
           setSelectedConversation(null);
-          load();
+          void load(true);
         }}
       />
     );
@@ -98,141 +129,220 @@ export function MessagingInboxScreen() {
 
   return (
     <Screen>
-      <Header title="Messages" />
-      <ScrollView testID="messaging-inbox-screen" style={styles.scrollView} contentContainerStyle={styles.container}>
-        <View style={styles.actionsBar}>
-          <View style={styles.filterRow}>
-            {[
-              { label: "All", value: "" },
-              { label: "Provider", value: "DIRECT" },
-              { label: "Support", value: "SUPPORT" },
-            ].map((f) => (
-              <TouchableOpacity
-                key={f.value}
-                onPress={() => setFilter(f.value)}
-                style={[styles.filterPill, filter === f.value && styles.filterPillActive]}
-                testID={`filter-${f.value || "all"}`}
-              >
-                <Text style={[styles.filterPillText, filter === f.value && styles.filterPillTextActive]}>
-                  {f.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            onPress={() => setShowNewMessage(!showNewMessage)}
-            style={[styles.newMessageBtn, showNewMessage && styles.newMessageBtnCancel]}
-            testID="toggle-new-message"
+      <Header
+        title="Messages"
+        rightElement={
+          <Pressable
+            onPress={() => setShowCompose(!showCompose)}
+            style={[styles.composeBtn, showCompose && styles.composeBtnActive]}
+            hitSlop={8}
           >
-            {!showNewMessage && <Ionicons name="create-outline" size={16} color="#FFFFFF" style={styles.btnIcon} />}
-            <Text style={[styles.newMessageBtnText, showNewMessage && styles.newMessageBtnTextCancel]}>
-              {showNewMessage ? "Cancel" : "New"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <Ionicons
+              name={showCompose ? "close" : "create-outline"}
+              size={20}
+              color={showCompose ? APP_TEXT_2 : APP_GREEN}
+            />
+          </Pressable>
+        }
+      />
 
-        {showNewMessage ? (
-          <View style={styles.formCard}>
-            <Text style={styles.formTitle}>New Message</Text>
-            <View style={styles.formContainer}>
-              <Select
-                label="Type"
-                value={newType}
-                onChange={(v: string) => setNewType(v as "DIRECT" | "SUPPORT")}
-                options={[
-                  { label: "Message Provider", value: "DIRECT" },
-                  { label: "Contact Support", value: "SUPPORT" },
-                ]}
-                testID="new-msg-type"
-              />
+      {/* Compose Panel */}
+      {showCompose ? (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.composePanel}>
+            <Text style={styles.composePanelTitle}>New Message</Text>
+            <Select
+              label="Type"
+              value={newType}
+              onChange={(v: string) => setNewType(v as "DIRECT" | "SUPPORT")}
+              options={[
+                { label: "Message a Provider", value: "DIRECT" },
+                { label: "Contact Support", value: "SUPPORT" },
+              ]}
+              testID="new-msg-type"
+            />
+            <View style={styles.recipientHintRow}>
               <TextField
                 label={newType === "DIRECT" ? "Provider ID" : "Support Team ID"}
                 value={newRecipientId}
                 onChange={setNewRecipientId}
-                placeholder="Enter recipient ID"
+                placeholder={newType === "DIRECT" ? "Enter your provider's ID" : "Enter support team ID"}
                 testID="new-msg-recipient"
               />
-              <TextField
-                label="Subject (optional)"
-                value={newSubject}
-                onChange={setNewSubject}
-                placeholder="Message subject"
-                testID="new-msg-subject"
-              />
-              <TextField
-                label="Message"
-                value={newMessage}
-                onChange={setNewMessage}
-                placeholder="Type your message..."
-                testID="new-msg-body"
-              />
-              <TouchableOpacity
-                onPress={handleCreateConversation}
-                disabled={submitting || !newRecipientId || !newMessage}
-                style={[styles.sendBtn, (submitting || !newRecipientId || !newMessage) && styles.sendBtnDisabled]}
-                testID="send-new-message"
-              >
-                <Ionicons name="send" size={16} color="#FFFFFF" style={styles.btnIcon} />
-                <Text style={styles.sendBtnText}>{submitting ? "Sending..." : "Send"}</Text>
-              </TouchableOpacity>
+              <View style={styles.recipientHint}>
+                <Ionicons name="information-circle-outline" size={14} color={APP_TEXT_3} />
+                <Text style={styles.recipientHintText}>
+                  {newType === "DIRECT"
+                    ? "Find your provider's ID in your care team section"
+                    : "Use 'general-support' for general enquiries"}
+                </Text>
+              </View>
             </View>
+            <TextField
+              label="Subject (optional)"
+              value={newSubject}
+              onChange={setNewSubject}
+              placeholder="What is this about?"
+              testID="new-msg-subject"
+            />
+            <TextField
+              label="Message"
+              value={newMessage}
+              onChange={setNewMessage}
+              placeholder="Type your message..."
+              testID="new-msg-body"
+            />
+            <Pressable
+              onPress={handleCompose}
+              disabled={submitting}
+              style={[
+                styles.sendBtn,
+                (submitting || !newRecipientId.trim() || !newMessage.trim()) && styles.sendBtnDisabled,
+              ]}
+              testID="send-new-message"
+            >
+              {submitting ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <>
+                  <Ionicons name="send" size={16} color="#FFFFFF" />
+                  <Text style={styles.sendBtnText}>Send Message</Text>
+                </>
+              )}
+            </Pressable>
           </View>
-        ) : null}
+        </KeyboardAvoidingView>
+      ) : null}
 
-        {error ? (
-          <ErrorState title="Error" message={error.message} onRetry={load} />
+      {/* Filter Pills */}
+      <View style={styles.filterBar}>
+        {FILTERS.map((f) => (
+          <Pressable
+            key={f.value}
+            onPress={() => setFilter(f.value)}
+            style={[styles.filterPill, filter === f.value && styles.filterPillActive]}
+            testID={`filter-${f.value || "all"}`}
+          >
+            <Text style={[styles.filterPillText, filter === f.value && styles.filterPillTextActive]}>
+              {f.label}
+            </Text>
+          </Pressable>
+        ))}
+        <View style={styles.filterSpacer} />
+        {conversations.length > 0 ? (
+          <Text style={styles.countText}>{conversations.length} conversations</Text>
         ) : null}
+      </View>
 
+      <ScrollView
+        testID="messaging-inbox-screen"
+        style={styles.scroll}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={APP_GREEN}
+            colors={[APP_GREEN]}
+          />
+        }
+      >
         {isLoading ? (
-          <View style={styles.centered}>
-            <LoadingSpinner size="md" />
-          </View>
+          <SkeletonConversationList />
         ) : conversations.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="chatbubbles-outline" size={48} color="#D1D5DB" />
+          <View style={styles.emptyBox}>
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="chatbubbles-outline" size={32} color={APP_TEXT_3} />
+            </View>
             <Text style={styles.emptyTitle}>No conversations</Text>
-            <Text style={styles.emptyMessage}>Start a conversation with your provider or support team</Text>
+            <Text style={styles.emptyMessage}>
+              {filter
+                ? "No conversations match this filter"
+                : "Start a conversation with your provider or support team"}
+            </Text>
+            <Pressable
+              style={styles.emptyAction}
+              onPress={() => setShowCompose(true)}
+            >
+              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+              <Text style={styles.emptyActionText}>New Message</Text>
+            </Pressable>
           </View>
         ) : (
           conversations.map((conv) => (
-            <TouchableOpacity
+            <Pressable
               key={conv.id}
               testID={`conversation-${conv.id}`}
-              activeOpacity={0.7}
               onPress={() => setSelectedConversation(conv)}
+              style={({ pressed }) => [
+                styles.convCard,
+                conv.unreadCount > 0 && styles.convCardUnread,
+                pressed && { opacity: 0.92 },
+              ]}
             >
-              <View style={[styles.convCard, conv.unreadCount > 0 && styles.convCardUnread]}>
+              <View style={styles.avatarWrap}>
                 <Avatar
-                  name={conv.participants?.[0]?.displayName ?? "Unknown"}
+                  name={conv.participants?.[0]?.displayName ?? "?"}
                   size="md"
                 />
-                <View style={styles.conversationInfo}>
-                  <View style={styles.conversationHeader}>
-                    <Text style={styles.conversationTitle} numberOfLines={1}>
-                      {conv.subject ?? conv.participants?.map((p) => p.displayName).join(", ") ?? "Conversation"}
+                {conv.unreadCount > 0 ? (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>
+                      {conv.unreadCount > 9 ? "9+" : String(conv.unreadCount)}
                     </Text>
-                    {conv.unreadCount > 0 ? (
-                      <Badge variant="destructive">{String(conv.unreadCount)}</Badge>
-                    ) : null}
                   </View>
-                  {conv.lastMessage ? (
-                    <Text style={styles.lastMessageText} numberOfLines={1}>
-                      {conv.lastMessage.body}
-                    </Text>
-                  ) : null}
-                  <View style={styles.conversationMeta}>
-                    <View style={[styles.typePill, conv.type === "DIRECT" ? styles.typePillDirect : styles.typePillSupport]}>
-                      <Text style={[styles.typePillText, conv.type === "DIRECT" ? styles.typePillTextDirect : styles.typePillTextSupport]}>
-                        {conv.type === "DIRECT" ? "Provider" : "Support"}
-                      </Text>
-                    </View>
-                    <Text style={styles.dateText}>
-                      {new Date(conv.updatedAt).toLocaleDateString()}
+                ) : null}
+              </View>
+
+              <View style={styles.convInfo}>
+                <View style={styles.convTopRow}>
+                  <Text
+                    style={[styles.convTitle, conv.unreadCount > 0 && styles.convTitleUnread]}
+                    numberOfLines={1}
+                  >
+                    {conv.subject ?? conv.participants?.map((p) => p.displayName).join(", ") ?? "Conversation"}
+                  </Text>
+                  <Text style={styles.convDate}>
+                    {new Date(conv.updatedAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                {conv.lastMessage ? (
+                  <Text
+                    style={[styles.convPreview, conv.unreadCount > 0 && styles.convPreviewUnread]}
+                    numberOfLines={1}
+                  >
+                    {conv.lastMessage.body}
+                  </Text>
+                ) : null}
+                <View style={styles.convMeta}>
+                  <View
+                    style={[
+                      styles.typePill,
+                      conv.type === "DIRECT" ? styles.typePillDirect : styles.typePillSupport,
+                    ]}
+                  >
+                    <Ionicons
+                      name={conv.type === "DIRECT" ? "person-outline" : "headset-outline"}
+                      size={11}
+                      color={conv.type === "DIRECT" ? "#1E40AF" : "#7C3AED"}
+                    />
+                    <Text
+                      style={[
+                        styles.typePillText,
+                        conv.type === "DIRECT" ? styles.typePillDirect_text : styles.typePillSupport_text,
+                      ]}
+                    >
+                      {conv.type === "DIRECT" ? "Provider" : "Support"}
                     </Text>
                   </View>
                 </View>
               </View>
-            </TouchableOpacity>
+
+              <Ionicons name="chevron-forward" size={16} color={APP_TEXT_3} />
+            </Pressable>
           ))
         )}
       </ScrollView>
@@ -241,127 +351,115 @@ export function MessagingInboxScreen() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  container: {
-    padding: 16,
-    gap: 10,
-  },
-  actionsBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  composeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: APP_GREEN_LIGHT,
     alignItems: "center",
-    marginBottom: 4,
+    justifyContent: "center",
   },
-  filterRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  filterPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-  },
-  filterPillActive: {
-    backgroundColor: "#D1FAE5",
-  },
-  filterPillText: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  filterPillTextActive: {
-    color: "#059669",
-    fontWeight: "600",
-  },
-  newMessageBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#059669",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    gap: 4,
-  },
-  newMessageBtnCancel: {
-    backgroundColor: "#F3F4F6",
-  },
-  newMessageBtnText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  newMessageBtnTextCancel: {
-    color: "#6B7280",
-  },
-  btnIcon: {
-    marginRight: 2,
-  },
-  formCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
+  composeBtnActive: { backgroundColor: "#F3F4F6" },
+
+  composePanel: {
+    backgroundColor: APP_SURFACE,
     padding: 16,
+    gap: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: APP_BORDER,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
   },
-  formTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 14,
+  composePanelTitle: { fontSize: 15, fontWeight: "700", color: APP_TEXT },
+  recipientHintRow: { gap: 6 },
+  recipientHint: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 6,
+    paddingHorizontal: 4,
   },
-  formContainer: {
-    gap: 12,
-  },
+  recipientHintText: { fontSize: 12, color: APP_TEXT_3, flex: 1, lineHeight: 16 },
   sendBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#059669",
-    paddingVertical: 12,
-    borderRadius: 12,
+    gap: 8,
+    backgroundColor: APP_GREEN,
+    paddingVertical: 14,
+    borderRadius: 14,
+    shadowColor: APP_GREEN,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  sendBtnDisabled: { opacity: 0.5, shadowOpacity: 0 },
+  sendBtnText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+
+  filterBar: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: APP_SURFACE,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: APP_BORDER,
   },
-  sendBtnDisabled: {
-    opacity: 0.5,
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
   },
-  sendBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  centered: {
+  filterPillActive: { backgroundColor: APP_GREEN_XLIGHT, borderWidth: 1, borderColor: APP_GREEN_LIGHT },
+  filterPillText: { fontSize: 13, fontWeight: "500", color: APP_TEXT_2 },
+  filterPillTextActive: { color: APP_GREEN, fontWeight: "700" },
+  filterSpacer: { flex: 1 },
+  countText: { fontSize: 12, color: APP_TEXT_3 },
+
+  scroll: { flex: 1, backgroundColor: APP_BG },
+  container: { padding: 14, gap: 10, paddingBottom: 40 },
+
+  emptyBox: { alignItems: "center", paddingVertical: 64, gap: 12 },
+  emptyIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#F3F4F6",
     alignItems: "center",
-    paddingVertical: 40,
+    justifyContent: "center",
+    marginBottom: 4,
   },
-  emptyContainer: {
-    alignItems: "center",
-    paddingVertical: 56,
-    gap: 10,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-  },
+  emptyTitle: { fontSize: 17, fontWeight: "700", color: APP_TEXT },
   emptyMessage: {
     fontSize: 14,
-    color: "#9CA3AF",
+    color: APP_TEXT_3,
     textAlign: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
+    lineHeight: 20,
   },
+  emptyAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: APP_GREEN,
+    borderRadius: 14,
+  },
+  emptyActionText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
+
   convCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 14,
+    backgroundColor: APP_SURFACE,
+    borderRadius: 16,
     padding: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -371,58 +469,52 @@ const styles = StyleSheet.create({
   },
   convCardUnread: {
     borderLeftWidth: 3,
-    borderLeftColor: "#059669",
+    borderLeftColor: APP_GREEN,
+    shadowOpacity: 0.08,
+    elevation: 4,
   },
-  conversationInfo: {
-    flex: 1,
+  avatarWrap: { position: "relative" },
+  unreadBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: APP_GREEN,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: APP_SURFACE,
   },
-  conversationHeader: {
+  unreadBadgeText: { fontSize: 10, fontWeight: "700", color: "#FFFFFF" },
+
+  convInfo: { flex: 1 },
+  convTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 3,
   },
-  conversationTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#111827",
-    flex: 1,
-    marginRight: 8,
-  },
-  lastMessageText: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 6,
-  },
-  conversationMeta: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "center",
-  },
+  convTitle: { fontSize: 14, fontWeight: "600", color: APP_TEXT, flex: 1, marginRight: 8 },
+  convTitleUnread: { fontWeight: "800" },
+  convDate: { fontSize: 11, color: APP_TEXT_3 },
+  convPreview: { fontSize: 13, color: APP_TEXT_2, marginBottom: 6, lineHeight: 17 },
+  convPreviewUnread: { color: APP_TEXT, fontWeight: "500" },
+  convMeta: { flexDirection: "row", gap: 8 },
+
   typePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 10,
   },
-  typePillDirect: {
-    backgroundColor: "#EFF6FF",
-  },
-  typePillSupport: {
-    backgroundColor: "#F5F3FF",
-  },
-  typePillText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  typePillTextDirect: {
-    color: "#1E40AF",
-  },
-  typePillTextSupport: {
-    color: "#7C3AED",
-  },
-  dateText: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginLeft: "auto",
-  },
+  typePillDirect: { backgroundColor: "#EFF6FF" },
+  typePillSupport: { backgroundColor: "#F5F3FF" },
+  typePillText: { fontSize: 11, fontWeight: "600" },
+  typePillDirect_text: { color: "#1E40AF" },
+  typePillSupport_text: { color: "#7C3AED" },
 });

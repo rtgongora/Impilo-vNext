@@ -18,8 +18,7 @@ import { SocialHubScreen } from "../screens/social/SocialHubScreen";
 import { MarketplaceScreen } from "../screens/marketplace/MarketplaceScreen";
 import { MessagingInboxScreen } from "../screens/messaging/MessagingInboxScreen";
 import { TelehealthListScreen } from "../screens/telehealth/TelehealthListScreen";
-
-const ACCENT = "#059669";
+import { APP_GREEN } from "../lib/colors";
 
 const TAB_SCREENS: Record<CitizenTab, React.FC> = {
   home: HomeScreen,
@@ -31,7 +30,7 @@ const TAB_SCREENS: Record<CitizenTab, React.FC> = {
 };
 
 function tabIcon(name: string, isActive: boolean): React.ReactNode {
-  const color = isActive ? ACCENT : "#9CA3AF";
+  const color = isActive ? APP_GREEN : "#9CA3AF";
   return <Ionicons name={name as never} size={22} color={color} />;
 }
 
@@ -78,7 +77,7 @@ export function CitizenTabs() {
         tabs={tabs}
         activeTab={activeTab}
         onTabPress={(id: string) => setActiveTab(id as CitizenTab)}
-        accentColor={ACCENT}
+        accentColor={APP_GREEN}
       />
     </View>
   );

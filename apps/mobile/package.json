@@ -2,6 +2,18 @@
   "name": "@impilo/mobile",
   "private": true,
   "version": "0.1.0",
+  "scripts": {
+    "citizen:start": "pnpm --filter @impilo/citizen-app start",
+    "citizen:ios": "pnpm --filter @impilo/citizen-app ios",
+    "citizen:android": "pnpm --filter @impilo/citizen-app android",
+    "citizen:prebuild": "pnpm --filter @impilo/citizen-app prebuild",
+    "citizen:prebuild:clean": "pnpm --filter @impilo/citizen-app prebuild --clean",
+    "citizen:build:ios": "pnpm --filter @impilo/citizen-app build:ios",
+    "citizen:build:android": "pnpm --filter @impilo/citizen-app build:android",
+    "citizen:type-check": "pnpm --filter @impilo/citizen-app type-check",
+    "citizen:test": "pnpm --filter @impilo/citizen-app test",
+    "citizen:lint": "pnpm --filter @impilo/citizen-app lint"
+  },
   "workspaces": [
     "citizen-app",
     "provider-app",

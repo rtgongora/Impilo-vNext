@@ -1,253 +1,423 @@
-/**
- * WellnessSection — Activity tracking, vitals, mood, and challenges.
- */
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView } from "react-native";
-import { Card, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { View, Text, ScrollView, Pressable, StyleSheet, TextInput } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchActivities, logActivity, fetchVitals, logVital, fetchMoodLog, logMood, fetchChallenges, joinChallenge } from "../../services/wellnessService";
+import {
+  fetchActivities, logActivity,
+  fetchVitals, logVital,
+  fetchMoodLog, logMood,
+} from "../../services/wellnessService";
 import { useAppStore } from "../../stores/appStore";
+import {
+  USE_SEED_DATA,
+  SEED_WELLNESS_ACTIVITIES, SEED_WELLNESS_VITALS, SEED_MOOD_ENTRIES,
+} from "../../data/seedHealthRecords";
+import {
+  APP_GREEN, APP_GREEN_DARK, APP_GREEN_LIGHT, APP_GREEN_XLIGHT,
+  APP_RED, APP_RED_LIGHT, APP_GOLD, APP_GOLD_LIGHT,
+  APP_SURFACE, APP_BG, APP_TEXT, APP_TEXT_2, APP_TEXT_3, APP_BORDER,
+} from "../../lib/colors";
 
-type WellnessTab = "activity" | "vitals" | "mood" | "challenges";
+type Tab = "activity" | "vitals" | "mood";
+
+const VITAL_TYPE_CFG: Record<string, { label: string; icon: React.ComponentProps<typeof Ionicons>["name"]; color: string; bg: string }> = {
+  BLOOD_PRESSURE: { label: "Blood Pressure", icon: "heart",             color: APP_RED,        bg: APP_RED_LIGHT    },
+  BLOOD_GLUCOSE:  { label: "Blood Glucose",  icon: "flask",             color: APP_GOLD,       bg: APP_GOLD_LIGHT   },
+  HEART_RATE:     { label: "Heart Rate",     icon: "pulse",             color: APP_RED,        bg: APP_RED_LIGHT    },
+  WEIGHT:         { label: "Weight",         icon: "body-outline",      color: APP_GREEN,      bg: APP_GREEN_LIGHT  },
+  OXYGEN_SAT:     { label: "SpO₂",          icon: "water-outline",     color: APP_GREEN_DARK, bg: APP_GREEN_XLIGHT },
+  TEMPERATURE:    { label: "Temperature",    icon: "thermometer-outline",color: APP_GOLD,      bg: APP_GOLD_LIGHT   },
+};
 
 const MOOD_EMOJIS = ["😢", "😟", "😐", "🙂", "😁"];
-const VITAL_TYPES = ["HEART_RATE", "BLOOD_PRESSURE", "TEMPERATURE", "WEIGHT", "BLOOD_GLUCOSE", "OXYGEN_SAT"];
+const VITAL_TYPES = ["BLOOD_PRESSURE", "BLOOD_GLUCOSE", "HEART_RATE", "WEIGHT", "OXYGEN_SAT", "TEMPERATURE"];
 
-export function WellnessSection() {
-  const [tab, setTab] = useState<WellnessTab>("activity");
-  const profile = useAppStore((s) => s.profile);
-  const patientId = profile?.cpid ?? "";
-
+function StatRing({ value, target, label, color, unit }: { value: number; target: number; label: string; color: string; unit: string }) {
+  const pct = Math.min(100, (value / target) * 100);
   return (
-    <View style={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabBar}>
-        {(["activity", "vitals", "mood", "challenges"] as WellnessTab[]).map((t) => (
-          <TouchableOpacity key={t} onPress={() => setTab(t)} style={[styles.tab, tab === t && styles.activeTab]}>
-            <Text style={[styles.tabText, tab === t && styles.activeTabText]}>{t.charAt(0).toUpperCase() + t.slice(1)}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      {tab === "activity" && <ActivityTab patientId={patientId} />}
-      {tab === "vitals" && <VitalsTab patientId={patientId} />}
-      {tab === "mood" && <MoodTab patientId={patientId} />}
-      {tab === "challenges" && <ChallengesTab patientId={patientId} />}
+    <View style={ring.wrap}>
+      <View style={[ring.bar, { backgroundColor: color + "22" }]}>
+        <View style={[ring.fill, { width: `${pct}%` as never, backgroundColor: color }]} />
+      </View>
+      <View style={ring.text}>
+        <Text style={[ring.value, { color }]}>{value.toLocaleString()}</Text>
+        <Text style={ring.label}>{label}</Text>
+        <Text style={ring.unit}>{unit}</Text>
+      </View>
     </View>
   );
 }
+const ring = StyleSheet.create({
+  wrap: { flex: 1, alignItems: "center", gap: 6 },
+  bar: { width: "80%", height: 5, borderRadius: 3, overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 3 },
+  text: { alignItems: "center" },
+  value: { fontSize: 18, fontWeight: "800" },
+  label: { fontSize: 10, fontWeight: "600", color: APP_TEXT_2, textAlign: "center" },
+  unit:  { fontSize: 9, color: APP_TEXT_3 },
+});
 
+// ── Activity Tab ───────────────────────────────────────────────────────────────
 function ActivityTab({ patientId }: { patientId: string }) {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   const { data: activities = [], isLoading } = useQuery({
-    queryKey: ["wellness-activities", patientId],
-    queryFn: () => fetchActivities(patientId),
-    enabled: !!patientId,
+    queryKey: ["wellness-activities", patientId, USE_SEED_DATA],
+    queryFn: async () => USE_SEED_DATA
+      ? (await new Promise<void>((r) => setTimeout(r, 300)), SEED_WELLNESS_ACTIVITIES)
+      : fetchActivities(patientId),
+    enabled: USE_SEED_DATA || !!patientId,
   });
-  const [form, setForm] = useState({ steps: "", waterMl: "", sleepHours: "", activeMinutes: "" });
+  const [f, setF] = useState({ steps: "", waterMl: "", sleepHours: "", activeMinutes: "" });
+  const [showLog, setShowLog] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: () => logActivity({ patientId, steps: Number(form.steps) || 0, waterMl: Number(form.waterMl) || 0, sleepHours: Number(form.sleepHours) || undefined, activeMinutes: Number(form.activeMinutes) || 0 }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["wellness-activities"] }); setForm({ steps: "", waterMl: "", sleepHours: "", activeMinutes: "" }); },
+    mutationFn: () => logActivity({ patientId, steps: +f.steps || 0, waterMl: +f.waterMl || 0, sleepHours: +f.sleepHours || undefined, activeMinutes: +f.activeMinutes || 0 }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["wellness-activities"] }); setF({ steps: "", waterMl: "", sleepHours: "", activeMinutes: "" }); setShowLog(false); },
   });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
 
   const today = activities[0];
+  const week  = activities.slice(0, 7);
+  const avgSteps = Math.round(week.reduce((a, x) => a + x.steps, 0) / week.length);
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Today's Activity</Text>
-      <View style={styles.statsGrid}>
-        <StatCard label="Steps" value={today?.steps ?? 0} target={10000} unit="" />
-        <StatCard label="Active Min" value={today?.activeMinutes ?? 0} target={30} unit="min" />
-        <StatCard label="Water" value={today?.waterMl ?? 0} target={2000} unit="ml" />
-        <StatCard label="Sleep" value={today?.sleepHours ?? 0} target={8} unit="hrs" />
+    <ScrollView style={s.tabContent} contentContainerStyle={s.tabPadding}>
+      {/* Today's stats */}
+      <View style={s.statsCard}>
+        <Text style={s.statsTitle}>Today's Activity</Text>
+        <View style={s.statsRow}>
+          <StatRing value={today?.steps ?? 0}        target={10000} label="Steps"   color={APP_GREEN}      unit="goal 10k"  />
+          <StatRing value={today?.activeMinutes ?? 0} target={30}    label="Active"  color={APP_GOLD}       unit="goal 30min"/>
+          <StatRing value={today?.waterMl ?? 0}       target={2000}  label="Water"   color={APP_GREEN_DARK} unit="goal 2L"   />
+          <StatRing value={today?.sleepHours ?? 0}    target={8}     label="Sleep"   color="#7C3AED"        unit="goal 8h"   />
+        </View>
       </View>
-      <Text style={styles.sectionTitle}>Log Activity</Text>
-      <View style={styles.inputRow}>
-        <TextInput style={styles.smallInput} placeholder="Steps" value={form.steps} onChangeText={(v) => setForm({ ...form, steps: v })} keyboardType="numeric" />
-        <TextInput style={styles.smallInput} placeholder="Water (ml)" value={form.waterMl} onChangeText={(v) => setForm({ ...form, waterMl: v })} keyboardType="numeric" />
+
+      {/* 7-day summary */}
+      <View style={s.weekCard}>
+        <Text style={s.statsTitle}>7-Day Average</Text>
+        <View style={s.weekStats}>
+          <View style={s.weekStat}>
+            <Text style={[s.weekNum, { color: APP_GREEN }]}>{avgSteps.toLocaleString()}</Text>
+            <Text style={s.weekLbl}>avg steps</Text>
+          </View>
+          <View style={s.weekStat}>
+            <Text style={[s.weekNum, { color: APP_GOLD }]}>
+              {(week.reduce((a, x) => a + x.activeMinutes, 0) / week.length).toFixed(0)}
+            </Text>
+            <Text style={s.weekLbl}>avg min active</Text>
+          </View>
+          <View style={s.weekStat}>
+            <Text style={[s.weekNum, { color: APP_GREEN_DARK }]}>
+              {((week.reduce((a, x) => a + x.waterMl, 0) / week.length) / 1000).toFixed(1)}L
+            </Text>
+            <Text style={s.weekLbl}>avg water</Text>
+          </View>
+        </View>
+        {/* Mini step chart */}
+        <View style={s.chart}>
+          {week.slice().reverse().map((a, i) => {
+            const h = Math.max(6, (a.steps / 12000) * 60);
+            const isToday = i === week.length - 1;
+            return (
+              <View key={a.id} style={s.chartBar}>
+                <View style={[s.chartFill, { height: h, backgroundColor: isToday ? APP_GREEN : APP_GREEN_LIGHT }]} />
+                <Text style={s.chartDay}>{new Date(a.activityDate).toLocaleDateString([], { weekday: "narrow" })}</Text>
+              </View>
+            );
+          })}
+        </View>
       </View>
-      <View style={styles.inputRow}>
-        <TextInput style={styles.smallInput} placeholder="Sleep (hrs)" value={form.sleepHours} onChangeText={(v) => setForm({ ...form, sleepHours: v })} keyboardType="numeric" />
-        <TextInput style={styles.smallInput} placeholder="Active min" value={form.activeMinutes} onChangeText={(v) => setForm({ ...form, activeMinutes: v })} keyboardType="numeric" />
-      </View>
-      <Button title="Save" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
-    </View>
+
+      {/* Log button */}
+      <Pressable onPress={() => setShowLog(!showLog)} style={[s.logBtn, showLog && s.logBtnActive]}>
+        <Ionicons name={showLog ? "close" : "add-circle-outline"} size={16} color={showLog ? APP_TEXT_2 : "#FFFFFF"} />
+        <Text style={[s.logBtnText, showLog && { color: APP_TEXT_2 }]}>
+          {showLog ? "Cancel" : "Log Today's Activity"}
+        </Text>
+      </Pressable>
+
+      {showLog ? (
+        <View style={s.formCard}>
+          <View style={s.inputRow}>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Steps</Text>
+              <TextInput style={s.input} placeholder="0" value={f.steps} onChangeText={(v) => setF({ ...f, steps: v })} keyboardType="numeric" placeholderTextColor={APP_TEXT_3} />
+            </View>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Water (ml)</Text>
+              <TextInput style={s.input} placeholder="0" value={f.waterMl} onChangeText={(v) => setF({ ...f, waterMl: v })} keyboardType="numeric" placeholderTextColor={APP_TEXT_3} />
+            </View>
+          </View>
+          <View style={s.inputRow}>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Sleep (hrs)</Text>
+              <TextInput style={s.input} placeholder="0" value={f.sleepHours} onChangeText={(v) => setF({ ...f, sleepHours: v })} keyboardType="numeric" placeholderTextColor={APP_TEXT_3} />
+            </View>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Active (min)</Text>
+              <TextInput style={s.input} placeholder="0" value={f.activeMinutes} onChangeText={(v) => setF({ ...f, activeMinutes: v })} keyboardType="numeric" placeholderTextColor={APP_TEXT_3} />
+            </View>
+          </View>
+          <Button title={mutation.isPending ? "Saving…" : "Save"} onPress={() => mutation.mutate()} disabled={mutation.isPending || USE_SEED_DATA} />
+        </View>
+      ) : null}
+    </ScrollView>
   );
 }
 
+// ── Vitals Tab ─────────────────────────────────────────────────────────────────
 function VitalsTab({ patientId }: { patientId: string }) {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
   const { data: vitals = [], isLoading } = useQuery({
-    queryKey: ["wellness-vitals", patientId],
-    queryFn: () => fetchVitals(patientId),
-    enabled: !!patientId,
+    queryKey: ["wellness-vitals", patientId, USE_SEED_DATA],
+    queryFn: async () => USE_SEED_DATA
+      ? (await new Promise<void>((r) => setTimeout(r, 300)), SEED_WELLNESS_VITALS)
+      : fetchVitals(patientId),
+    enabled: USE_SEED_DATA || !!patientId,
   });
-  const [form, setForm] = useState({ vitalType: "HEART_RATE", value: "", unit: "bpm" });
+  const [showLog, setShowLog] = useState(false);
+  const [vType, setVType] = useState("BLOOD_PRESSURE");
+  const [value, setValue] = useState("");
+  const [unit, setUnit] = useState("");
 
   const mutation = useMutation({
-    mutationFn: () => logVital({ patientId, vitalType: form.vitalType, value: Number(form.value), unit: form.unit }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["wellness-vitals"] }); setForm({ ...form, value: "" }); },
+    mutationFn: () => logVital({ patientId, vitalType: vType, value: +value, unit, source: "Manual" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["wellness-vitals"] }); setValue(""); setShowLog(false); },
   });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
+
+  const latest: Record<string, typeof vitals[0]> = {};
+  for (const v of vitals) {
+    if (!latest[v.vitalType]) latest[v.vitalType] = v;
+  }
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Log Vital Sign</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
-        {VITAL_TYPES.map((vt) => (
-          <TouchableOpacity key={vt} onPress={() => setForm({ ...form, vitalType: vt, unit: getDefaultUnit(vt) })}
-            style={[styles.chip, form.vitalType === vt && styles.activeChip]}>
-            <Text style={[styles.chipText, form.vitalType === vt && styles.activeChipText]}>{vt.replace(/_/g, " ")}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-      <View style={styles.inputRow}>
-        <TextInput style={[styles.smallInput, { flex: 2 }]} placeholder="Value" value={form.value} onChangeText={(v) => setForm({ ...form, value: v })} keyboardType="numeric" />
-        <Text style={styles.unitLabel}>{form.unit}</Text>
+    <ScrollView style={s.tabContent} contentContainerStyle={s.tabPadding}>
+      <View style={s.vitalsGrid}>
+        {Object.entries(latest).map(([type, v]) => {
+          const cfg = VITAL_TYPE_CFG[type] ?? { label: type, icon: "pulse" as const, color: APP_GREEN, bg: APP_GREEN_XLIGHT };
+          return (
+            <View key={type} style={[s.vitalCard, { borderTopColor: cfg.color }]}>
+              <View style={[s.vitalIcon, { backgroundColor: cfg.bg }]}>
+                <Ionicons name={cfg.icon} size={18} color={cfg.color} />
+              </View>
+              <Text style={[s.vitalValue, { color: cfg.color }]}>{v.value}</Text>
+              <Text style={s.vitalUnit}>{v.unit}</Text>
+              <Text style={s.vitalType}>{cfg.label}</Text>
+              <Text style={s.vitalDate}>{new Date(v.measuredAt).toLocaleDateString([], { month: "short", day: "numeric" })}</Text>
+              {v.notes ? <Text style={s.vitalNotes} numberOfLines={1}>{v.notes}</Text> : null}
+            </View>
+          );
+        })}
       </View>
-      <Button title="Log Vital" onPress={() => mutation.mutate()} disabled={!form.value || mutation.isPending} />
-      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Recent Readings</Text>
-      {vitals.slice(0, 10).map((v) => (
-        <View key={v.id} style={styles.listItem}>
-          <Text style={styles.listTitle}>{v.vitalType.replace(/_/g, " ")}</Text>
-          <Text style={styles.listValue}>{v.value} {v.unit}</Text>
-          <Text style={styles.listDate}>{new Date(v.measuredAt).toLocaleString()}</Text>
+
+      <Pressable onPress={() => setShowLog(!showLog)} style={[s.logBtn, showLog && s.logBtnActive]}>
+        <Ionicons name={showLog ? "close" : "add-circle-outline"} size={16} color={showLog ? APP_TEXT_2 : "#FFFFFF"} />
+        <Text style={[s.logBtnText, showLog && { color: APP_TEXT_2 }]}>{showLog ? "Cancel" : "Log a Vital"}</Text>
+      </Pressable>
+
+      {showLog ? (
+        <View style={s.formCard}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.typeRow}>
+            {VITAL_TYPES.map((t) => (
+              <Pressable key={t} onPress={() => setVType(t)} style={[s.typeChip, vType === t && s.typeChipActive]}>
+                <Text style={[s.typeChipText, vType === t && s.typeChipTextActive]}>{(VITAL_TYPE_CFG[t]?.label ?? t).replace(/_/g, " ")}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <View style={s.inputRow}>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Value</Text>
+              <TextInput style={s.input} placeholder="e.g. 128" value={value} onChangeText={setValue} keyboardType="numeric" placeholderTextColor={APP_TEXT_3} />
+            </View>
+            <View style={s.inputWrap}>
+              <Text style={s.inputLabel}>Unit</Text>
+              <TextInput style={s.input} placeholder="e.g. mmHg" value={unit} onChangeText={setUnit} placeholderTextColor={APP_TEXT_3} />
+            </View>
+          </View>
+          <Button title={mutation.isPending ? "Saving…" : "Save Vital"} onPress={() => mutation.mutate()} disabled={!value || mutation.isPending || USE_SEED_DATA} />
         </View>
-      ))}
-    </View>
+      ) : null}
+    </ScrollView>
   );
 }
 
+// ── Mood Tab ───────────────────────────────────────────────────────────────────
 function MoodTab({ patientId }: { patientId: string }) {
-  const queryClient = useQueryClient();
-  const { data: moods = [], isLoading } = useQuery({
-    queryKey: ["wellness-mood", patientId],
-    queryFn: () => fetchMoodLog(patientId),
-    enabled: !!patientId,
+  const qc = useQueryClient();
+  const { data: entries = [], isLoading } = useQuery({
+    queryKey: ["wellness-mood", patientId, USE_SEED_DATA],
+    queryFn: async () => USE_SEED_DATA
+      ? (await new Promise<void>((r) => setTimeout(r, 300)), SEED_MOOD_ENTRIES)
+      : fetchMoodLog(patientId),
+    enabled: USE_SEED_DATA || !!patientId,
   });
   const [score, setScore] = useState(3);
   const [notes, setNotes] = useState("");
 
   const mutation = useMutation({
     mutationFn: () => logMood({ patientId, moodScore: score, notes }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["wellness-mood"] }); setNotes(""); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["wellness-mood"] }); setNotes(""); },
   });
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
+
+  const MOOD_COLORS = [APP_RED, "#E57C23", APP_GOLD, APP_GREEN_DARK, APP_GREEN];
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>How are you feeling?</Text>
-      <View style={styles.moodRow}>
-        {MOOD_EMOJIS.map((emoji, i) => (
-          <TouchableOpacity key={i} onPress={() => setScore(i + 1)} style={[styles.moodButton, score === i + 1 && styles.activeMood]}>
-            <Text style={styles.moodEmoji}>{emoji}</Text>
-          </TouchableOpacity>
+    <ScrollView style={s.tabContent} contentContainerStyle={s.tabPadding}>
+      {/* Log today's mood */}
+      <View style={s.moodLogCard}>
+        <Text style={s.statsTitle}>How are you feeling today?</Text>
+        <View style={s.moodRow}>
+          {MOOD_EMOJIS.map((e, i) => (
+            <Pressable key={i} onPress={() => setScore(i + 1)} style={[s.moodBtn, score === i + 1 && { borderColor: MOOD_COLORS[i], borderWidth: 2 }]}>
+              <Text style={s.moodEmoji}>{e}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <TextInput
+          style={s.moodInput} placeholder="Optional note…" value={notes}
+          onChangeText={setNotes} multiline placeholderTextColor={APP_TEXT_3}
+        />
+        <Button title={mutation.isPending ? "Saving…" : "Log Mood"} onPress={() => mutation.mutate()} disabled={mutation.isPending || USE_SEED_DATA} />
+      </View>
+
+      {/* History */}
+      <Text style={s.sectionLabel}>Recent Entries</Text>
+      {entries.map((e) => (
+        <View key={e.id} style={s.moodHistoryCard}>
+          <Text style={s.moodHistoryEmoji}>{MOOD_EMOJIS[e.moodScore - 1]}</Text>
+          <View style={s.moodHistoryInfo}>
+            <Text style={s.moodHistoryDate}>{new Date(e.loggedAt).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</Text>
+            {e.notes ? <Text style={s.moodHistoryNote}>{e.notes}</Text> : null}
+            <View style={s.moodMetaRow}>
+              {e.energyLevel ? <Text style={s.moodMeta}>⚡ Energy {e.energyLevel}/5</Text> : null}
+              {e.stressLevel ? <Text style={s.moodMeta}>😤 Stress {e.stressLevel}/5</Text> : null}
+            </View>
+          </View>
+          <View style={[s.moodScoreBadge, { backgroundColor: MOOD_COLORS[(e.moodScore - 1)] + "22" }]}>
+            <Text style={[s.moodScoreNum, { color: MOOD_COLORS[e.moodScore - 1] }]}>{e.moodScore}/5</Text>
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+export function WellnessSection() {
+  const [tab, setTab] = useState<Tab>("activity");
+  const profile   = useAppStore((s) => s.profile);
+  const patientId = profile?.cpid ?? "";
+
+  const TABS: { id: Tab; label: string; icon: React.ComponentProps<typeof Ionicons>["name"] }[] = [
+    { id: "activity", label: "Activity", icon: "walk-outline"         },
+    { id: "vitals",   label: "Vitals",   icon: "pulse-outline"         },
+    { id: "mood",     label: "Mood",     icon: "happy-outline"         },
+  ];
+
+  return (
+    <View style={s.root}>
+      {/* Tab bar */}
+      <View style={s.tabBar}>
+        {TABS.map((t) => (
+          <Pressable key={t.id} onPress={() => setTab(t.id)} style={[s.tab, tab === t.id && s.tabActive]}>
+            <Ionicons name={t.icon} size={15} color={tab === t.id ? APP_GREEN : APP_TEXT_2} />
+            <Text style={[s.tabText, tab === t.id && s.tabTextActive]}>{t.label}</Text>
+          </Pressable>
         ))}
       </View>
-      <TextInput style={styles.input} placeholder="Notes (optional)" value={notes} onChangeText={setNotes} multiline />
-      <Button title="Log Mood" onPress={() => mutation.mutate()} disabled={mutation.isPending} />
-      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Recent Entries</Text>
-      {moods.slice(0, 7).map((m) => (
-        <View key={m.id} style={styles.listItem}>
-          <Text style={styles.moodEmoji}>{MOOD_EMOJIS[(m.moodScore ?? 3) - 1]}</Text>
-          <View style={{ flex: 1 }}>
-            {m.notes ? <Text style={styles.listTitle}>{m.notes}</Text> : null}
-            <Text style={styles.listDate}>{new Date(m.loggedAt).toLocaleDateString()}</Text>
-          </View>
-        </View>
-      ))}
+      {tab === "activity" && <ActivityTab patientId={patientId} />}
+      {tab === "vitals"   && <VitalsTab   patientId={patientId} />}
+      {tab === "mood"     && <MoodTab     patientId={patientId} />}
     </View>
   );
 }
 
-function ChallengesTab({ patientId }: { patientId: string }) {
-  const queryClient = useQueryClient();
-  const { data: challenges = [], isLoading } = useQuery({
-    queryKey: ["wellness-challenges"],
-    queryFn: fetchChallenges,
-  });
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: APP_BG },
+  centred: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
 
-  const joinMutation = useMutation({
-    mutationFn: (id: string) => joinChallenge(id, patientId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wellness-challenges"] }),
-  });
+  tabBar: {
+    flexDirection: "row", backgroundColor: APP_SURFACE,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: APP_BORDER,
+  },
+  tab: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, paddingVertical: 11 },
+  tabActive: { borderBottomWidth: 2, borderBottomColor: APP_GREEN },
+  tabText: { fontSize: 13, fontWeight: "500", color: APP_TEXT_2 },
+  tabTextActive: { color: APP_GREEN, fontWeight: "700" },
 
-  if (isLoading) return <LoadingSpinner />;
+  tabContent: { flex: 1 },
+  tabPadding: { padding: 16, gap: 14, paddingBottom: 40 },
 
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Active Challenges</Text>
-      {challenges.map((c) => (
-        <View key={c.id} style={styles.challengeCard}>
-          <View style={styles.challengeHeader}>
-            <Text style={styles.challengeTitle}>{c.title}</Text>
-            <Badge label={c.challengeType} variant="info" />
-          </View>
-          {c.description ? <Text style={styles.challengeDesc}>{c.description}</Text> : null}
-          <Text style={styles.challengeMeta}>Goal: {c.targetValue.toLocaleString()} {c.targetUnit} · {c.participantCount} joined</Text>
-          <Text style={styles.challengeMeta}>{new Date(c.startDate).toLocaleDateString()} — {new Date(c.endDate).toLocaleDateString()}</Text>
-          <Button title="Join Challenge" onPress={() => joinMutation.mutate(c.id)} size="sm" />
-        </View>
-      ))}
-    </View>
-  );
-}
+  statsCard: { backgroundColor: APP_SURFACE, borderRadius: 18, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  statsTitle: { fontSize: 14, fontWeight: "700", color: APP_TEXT, marginBottom: 14 },
+  statsRow: { flexDirection: "row", gap: 8 },
 
-function StatCard({ label, value, target, unit }: { label: string; value: number; target: number; unit: string }) {
-  const pct = Math.min((value / target) * 100, 100);
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>{value.toLocaleString()}{unit ? ` ${unit}` : ""}</Text>
-      <View style={styles.progressBar}><View style={[styles.progressFill, { width: `${pct}%` }]} /></View>
-      <Text style={styles.statTarget}>{Math.round(pct)}% of {target.toLocaleString()}</Text>
-    </View>
-  );
-}
+  weekCard: { backgroundColor: APP_SURFACE, borderRadius: 18, padding: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  weekStats: { flexDirection: "row", gap: 8, marginBottom: 14 },
+  weekStat: { flex: 1, alignItems: "center" },
+  weekNum: { fontSize: 20, fontWeight: "800" },
+  weekLbl: { fontSize: 10, color: APP_TEXT_2, textAlign: "center" },
+  chart: { flexDirection: "row", alignItems: "flex-end", gap: 6, height: 70 },
+  chartBar: { flex: 1, alignItems: "center", gap: 4 },
+  chartFill: { width: "100%", borderRadius: 4 },
+  chartDay: { fontSize: 9, color: APP_TEXT_3 },
 
-function getDefaultUnit(type: string): string {
-  const units: Record<string, string> = { HEART_RATE: "bpm", BLOOD_PRESSURE: "mmHg", TEMPERATURE: "°C", WEIGHT: "kg", BLOOD_GLUCOSE: "mmol/L", OXYGEN_SAT: "%" };
-  return units[type] ?? "";
-}
+  vitalsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  vitalCard: {
+    width: "47%", backgroundColor: APP_SURFACE, borderRadius: 16, padding: 14,
+    borderTopWidth: 3, gap: 3,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  vitalIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", marginBottom: 6 },
+  vitalValue: { fontSize: 22, fontWeight: "800" },
+  vitalUnit: { fontSize: 11, color: APP_TEXT_2 },
+  vitalType: { fontSize: 12, fontWeight: "600", color: APP_TEXT, marginTop: 2 },
+  vitalDate: { fontSize: 10, color: APP_TEXT_3 },
+  vitalNotes: { fontSize: 10, color: APP_TEXT_3, marginTop: 2 },
 
-const styles = StyleSheet.create({
-  container: { gap: 12 },
-  tabBar: { marginBottom: 12 },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#F3F4F6", marginRight: 8 },
-  activeTab: { backgroundColor: "#2563EB" },
-  tabText: { fontSize: 13, color: "#6B7280", fontWeight: "500" },
-  activeTabText: { color: "#FFFFFF" },
-  section: { gap: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
-  statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  statCard: { flex: 1, minWidth: "45%", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, gap: 4 },
-  statLabel: { fontSize: 11, color: "#6B7280", fontWeight: "600" },
-  statValue: { fontSize: 20, fontWeight: "700", color: "#111827" },
-  progressBar: { height: 4, backgroundColor: "#E5E7EB", borderRadius: 2 },
-  progressFill: { height: 4, backgroundColor: "#2563EB", borderRadius: 2 },
-  statTarget: { fontSize: 10, color: "#9CA3AF" },
-  inputRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  smallInput: { flex: 1, borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 14 },
-  input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 14, minHeight: 60 },
-  unitLabel: { fontSize: 14, color: "#6B7280", minWidth: 40 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: "#F3F4F6", marginRight: 6 },
-  activeChip: { backgroundColor: "#2563EB" },
-  chipText: { fontSize: 11, color: "#6B7280" },
-  activeChipText: { color: "#FFFFFF" },
-  listItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#F3F4F6" },
-  listTitle: { fontSize: 13, fontWeight: "500", color: "#374151" },
-  listValue: { fontSize: 14, fontWeight: "700", color: "#111827" },
-  listDate: { fontSize: 11, color: "#9CA3AF" },
-  moodRow: { flexDirection: "row", justifyContent: "space-around", paddingVertical: 8 },
-  moodButton: { padding: 12, borderRadius: 16, backgroundColor: "#F3F4F6" },
-  activeMood: { backgroundColor: "#DBEAFE", borderWidth: 2, borderColor: "#2563EB" },
+  moodLogCard: { backgroundColor: APP_SURFACE, borderRadius: 18, padding: 16, gap: 14, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  moodRow: { flexDirection: "row", justifyContent: "space-around" },
+  moodBtn: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: "transparent", alignItems: "center", justifyContent: "center" },
   moodEmoji: { fontSize: 28 },
-  challengeCard: { backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16, gap: 8 },
-  challengeHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  challengeTitle: { fontSize: 15, fontWeight: "600", color: "#111827", flex: 1 },
-  challengeDesc: { fontSize: 13, color: "#6B7280" },
-  challengeMeta: { fontSize: 12, color: "#9CA3AF" },
+  moodInput: { borderWidth: 1, borderColor: APP_BORDER, borderRadius: 12, padding: 12, fontSize: 14, color: APP_TEXT, minHeight: 60 },
+
+  sectionLabel: { fontSize: 12, fontWeight: "700", color: APP_TEXT_2, textTransform: "uppercase", letterSpacing: 0.8, paddingHorizontal: 4 },
+  moodHistoryCard: {
+    flexDirection: "row", alignItems: "center", gap: 12,
+    backgroundColor: APP_SURFACE, borderRadius: 16, padding: 14,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 2,
+  },
+  moodHistoryEmoji: { fontSize: 28 },
+  moodHistoryInfo: { flex: 1 },
+  moodHistoryDate: { fontSize: 13, fontWeight: "600", color: APP_TEXT },
+  moodHistoryNote: { fontSize: 12, color: APP_TEXT_2, marginTop: 2 },
+  moodMetaRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  moodMeta: { fontSize: 11, color: APP_TEXT_3 },
+  moodScoreBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  moodScoreNum: { fontSize: 13, fontWeight: "800" },
+
+  logBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    backgroundColor: APP_GREEN, paddingVertical: 13, borderRadius: 16,
+  },
+  logBtnActive: { backgroundColor: "#EEF2F2" },
+  logBtnText: { fontSize: 14, fontWeight: "700", color: "#FFFFFF" },
+
+  formCard: { backgroundColor: APP_SURFACE, borderRadius: 18, padding: 16, gap: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  inputRow: { flexDirection: "row", gap: 10 },
+  inputWrap: { flex: 1, gap: 5 },
+  inputLabel: { fontSize: 12, fontWeight: "600", color: APP_TEXT_2 },
+  input: { borderWidth: 1, borderColor: APP_BORDER, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: APP_TEXT, backgroundColor: APP_BG },
+  typeRow: { gap: 8, paddingBottom: 4 },
+  typeChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: "#EEF2F2" },
+  typeChipActive: { backgroundColor: APP_GREEN_XLIGHT, borderWidth: 1, borderColor: APP_GREEN_LIGHT },
+  typeChipText: { fontSize: 12, color: APP_TEXT_2, fontWeight: "500" },
+  typeChipTextActive: { color: APP_GREEN, fontWeight: "700" },
 });

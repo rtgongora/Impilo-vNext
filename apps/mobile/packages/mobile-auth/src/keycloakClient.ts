@@ -12,6 +12,8 @@
  * No implicit grant. No client secret on mobile (public client).
  */
 
+import * as ExpoCrypto from "expo-crypto";
+
 export interface KeycloakConfig {
   realm: string;
   clientId: string;
@@ -46,7 +48,7 @@ export interface UserInfo {
  */
 export function generateCodeVerifier(): string {
   const bytes = new Uint8Array(32);
-  globalThis.crypto.getRandomValues(bytes);
+  ExpoCrypto.getRandomValues(bytes);
   return base64UrlEncode(bytes);
 }
 
@@ -54,10 +56,12 @@ export function generateCodeVerifier(): string {
  * Derives the code challenge from the verifier using SHA-256.
  */
 export async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await globalThis.crypto.subtle.digest("SHA-256", data);
-  return base64UrlEncode(new Uint8Array(digest));
+  const base64Hash = await ExpoCrypto.digestStringAsync(
+    ExpoCrypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: ExpoCrypto.CryptoEncoding.BASE64 }
+  );
+  return base64Hash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {

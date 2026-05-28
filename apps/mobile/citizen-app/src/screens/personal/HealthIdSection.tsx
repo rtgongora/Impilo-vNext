@@ -1,21 +1,41 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from "react-native";
+import {
+  View, Text, TextInput, ScrollView,
+  Pressable, StyleSheet, Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
+import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchHealthId, createHealthId } from "../../services/healthIdService";
 import { useAppStore } from "../../stores/appStore";
+import { USE_SEED_DATA, SEED_HEALTH_ID } from "../../data/seedHealthRecords";
+import {
+  APP_GREEN, APP_GREEN_DARK, APP_GREEN_DEEP, APP_GREEN_LIGHT, APP_GREEN_XLIGHT,
+  APP_RED, APP_RED_LIGHT, APP_GOLD, APP_GOLD_LIGHT,
+  APP_SURFACE, APP_BG, APP_TEXT, APP_TEXT_2, APP_TEXT_3, APP_BORDER,
+} from "../../lib/colors";
 
 export function HealthIdSection() {
-  const profile = useAppStore((s) => s.profile);
-  const queryClient = useQueryClient();
+  const profile      = useAppStore((s) => s.profile);
+  const queryClient  = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState({ bloodType: "", allergiesSummary: "", emergencyContactName: "", emergencyContactPhone: "" });
+  const [form, setForm] = useState({
+    bloodType:            "",
+    allergiesSummary:     "",
+    emergencyContactName: "",
+    emergencyContactPhone:"",
+  });
 
   const { data: healthId, isLoading, error } = useQuery({
     queryKey: ["health-id", profile?.cpid],
-    queryFn: () => fetchHealthId(profile?.cpid ?? ""),
-    enabled: !!profile?.cpid,
+    queryFn: async () => {
+      if (USE_SEED_DATA) {
+        await new Promise((r) => setTimeout(r, 400));
+        return SEED_HEALTH_ID;
+      }
+      return fetchHealthId(profile?.cpid ?? "");
+    },
+    enabled: USE_SEED_DATA || !!profile?.cpid,
   });
 
   const createMutation = useMutation({
@@ -27,332 +47,287 @@ export function HealthIdSection() {
     },
   });
 
-  if (isLoading) return <LoadingSpinner />;
-  if (error) return <ErrorState message="Failed to load Health ID" onRetry={() => queryClient.invalidateQueries({ queryKey: ["health-id"] })} />;
+  if (isLoading) return <View style={s.centred}><LoadingSpinner size="md" /></View>;
 
-  if (healthId) {
+  if (error && !USE_SEED_DATA) {
     return (
-      <View style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.cardTopStrip}>
-            <Text style={styles.chipLabel}>NATIONAL HEALTH ID</Text>
-            <View style={styles.statusPill}>
-              <View style={styles.statusDot} />
-              <Text style={styles.statusText}>{healthId.status}</Text>
-            </View>
-          </View>
-          <Text style={styles.idNumber}>{healthId.healthIdNumber}</Text>
-          <Text style={styles.cardName}>{profile?.givenName} {profile?.familyName}</Text>
-
-          {healthId.bloodType ? (
-            <View style={styles.bloodTypePill}>
-              <Ionicons name="water" size={13} color="#EF4444" />
-              <Text style={styles.bloodTypeText}>{healthId.bloodType}</Text>
-            </View>
-          ) : null}
-
-          {healthId.emergencyContactName ? (
-            <View style={styles.emergencyRow}>
-              <View style={styles.emergencyIconCircle}>
-                <Ionicons name="warning" size={14} color="#F59E0B" />
-              </View>
-              <View>
-                <Text style={styles.emergencyLabel}>Emergency Contact</Text>
-                <Text style={styles.emergencyValue}>{healthId.emergencyContactName} · {healthId.emergencyContactPhone}</Text>
-              </View>
-            </View>
-          ) : null}
-
-          {healthId.allergiesSummary ? (
-            <View style={styles.allergiesRow}>
-              <Ionicons name="medical-outline" size={13} color="#93C5FD" />
-              <Text style={styles.allergiesText}>{healthId.allergiesSummary}</Text>
-            </View>
-          ) : null}
-
-          <Text style={styles.expiryText}>
-            Issued: {new Date(healthId.issuedAt).toLocaleDateString()} · Expires: {healthId.expiresAt ? new Date(healthId.expiresAt).toLocaleDateString() : "N/A"}
-          </Text>
-
-          <View style={styles.qrBox}>
-            <Ionicons name="lock-closed" size={18} color="#9CA3AF" />
-            <Text style={styles.qrLabel}>QR Code</Text>
-            <Text style={styles.qrIdText}>{healthId.qrCodeData}</Text>
-          </View>
-        </View>
+      <View style={s.centred}>
+        <Ionicons name="alert-circle-outline" size={48} color={APP_RED} />
+        <Text style={s.errorTitle}>Could not load Health ID</Text>
+        <Pressable onPress={() => queryClient.invalidateQueries({ queryKey: ["health-id"] })} style={s.retryBtn}>
+          <Text style={s.retryText}>Retry</Text>
+        </Pressable>
       </View>
     );
   }
 
+  // ── Create form ────────────────────────────────────────────────────────────
   if (showCreate) {
     return (
-      <View style={styles.container}>
-        <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Create Your Health ID</Text>
-          <View style={styles.formFields}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Blood Type</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. O+"
-                placeholderTextColor="#9CA3AF"
-                value={form.bloodType}
-                onChangeText={(v) => setForm({ ...form, bloodType: v })}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Known Allergies</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="List known allergies"
-                placeholderTextColor="#9CA3AF"
-                value={form.allergiesSummary}
-                onChangeText={(v) => setForm({ ...form, allergiesSummary: v })}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Emergency Contact Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Full name"
-                placeholderTextColor="#9CA3AF"
-                value={form.emergencyContactName}
-                onChangeText={(v) => setForm({ ...form, emergencyContactName: v })}
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Emergency Contact Phone</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="+263..."
-                placeholderTextColor="#9CA3AF"
-                value={form.emergencyContactPhone}
-                onChangeText={(v) => setForm({ ...form, emergencyContactPhone: v })}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
+      <ScrollView style={s.root} contentContainerStyle={s.content}>
+        <View style={s.formCard}>
+          <Text style={s.formTitle}>Create Your Health ID</Text>
+          <Text style={s.formSub}>This creates your digital health card used across all Impilo services.</Text>
+
+          {(["bloodType", "allergiesSummary", "emergencyContactName", "emergencyContactPhone"] as const).map((field) => {
+            const labels: Record<string, string> = {
+              bloodType:             "Blood Type",
+              allergiesSummary:      "Known Allergies",
+              emergencyContactName:  "Emergency Contact Name",
+              emergencyContactPhone: "Emergency Contact Phone",
+            };
+            const placeholders: Record<string, string> = {
+              bloodType:             "e.g. O+",
+              allergiesSummary:      "e.g. Penicillin, Sulfonamides",
+              emergencyContactName:  "Full name",
+              emergencyContactPhone: "+263 7X XXX XXXX",
+            };
+            return (
+              <View key={field} style={s.inputGroup}>
+                <Text style={s.inputLabel}>{labels[field]}</Text>
+                <TextInput
+                  style={s.input}
+                  placeholder={placeholders[field]}
+                  placeholderTextColor={APP_TEXT_3}
+                  value={form[field]}
+                  onChangeText={(v) => setForm({ ...form, [field]: v })}
+                  keyboardType={field === "emergencyContactPhone" ? "phone-pad" : "default"}
+                />
+              </View>
+            );
+          })}
+
           <Button
             title={createMutation.isPending ? "Creating..." : "Create Health ID"}
             onPress={() => createMutation.mutate()}
             disabled={createMutation.isPending}
           />
-          <TouchableOpacity onPress={() => setShowCreate(false)} style={styles.cancelButton}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+          <Pressable onPress={() => setShowCreate(false)} style={s.cancelBtn}>
+            <Text style={s.cancelText}>Cancel</Text>
+          </Pressable>
         </View>
-      </View>
+      </ScrollView>
     );
   }
 
+  // ── Health ID card ─────────────────────────────────────────────────────────
+  if (healthId) {
+    return (
+      <ScrollView style={s.root} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
+        {/* Main card */}
+        <View style={s.card}>
+          {/* Decorative rings */}
+          <View style={s.cardRing1} />
+          <View style={s.cardRing2} />
+
+          {/* Header row */}
+          <View style={s.cardHeader}>
+            <View style={s.cardHeaderLeft}>
+              <Text style={s.cardChipLabel}>NATIONAL HEALTH ID</Text>
+              <View style={s.statusPill}>
+                <View style={[s.statusDot, { backgroundColor: healthId.status === "ACTIVE" ? "#34D399" : APP_GOLD }]} />
+                <Text style={s.statusText}>{healthId.status}</Text>
+              </View>
+            </View>
+            <View style={s.cardIconWrap}>
+              <Ionicons name="id-card" size={24} color="rgba(255,255,255,0.9)" />
+            </View>
+          </View>
+
+          {/* ID number */}
+          <Text style={s.idNumber}>{healthId.healthIdNumber}</Text>
+          <Text style={s.cardName}>{profile?.givenName} {profile?.familyName}</Text>
+
+          {/* Meta chips */}
+          <View style={s.cardChips}>
+            {healthId.bloodType ? (
+              <View style={s.bloodChip}>
+                <Ionicons name="water" size={12} color="#FCA5A5" />
+                <Text style={s.bloodChipText}>{healthId.bloodType}</Text>
+              </View>
+            ) : null}
+            <View style={s.issuedChip}>
+              <Text style={s.issuedChipText}>
+                Issued {new Date(healthId.issuedAt).toLocaleDateString([], { month: "short", year: "numeric" })}
+              </Text>
+            </View>
+          </View>
+
+          {/* Expiry */}
+          {healthId.expiresAt ? (
+            <Text style={s.expiryText}>
+              Expires {new Date(healthId.expiresAt).toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" })}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* QR Code panel */}
+        <View style={s.qrPanel}>
+          <View style={s.qrIconBox}>
+            <Ionicons name="qr-code-outline" size={56} color={APP_GREEN} />
+          </View>
+          <View style={s.qrInfo}>
+            <Text style={s.qrTitle}>QR Code</Text>
+            <Text style={s.qrSub} numberOfLines={2}>{healthId.qrCodeData}</Text>
+            <Text style={s.qrHint}>Show this at any Impilo-registered facility</Text>
+          </View>
+        </View>
+
+        {/* Allergies */}
+        {healthId.allergiesSummary ? (
+          <View style={s.infoCard}>
+            <View style={[s.infoIcon, { backgroundColor: APP_RED_LIGHT }]}>
+              <Ionicons name="medical" size={18} color={APP_RED} />
+            </View>
+            <View style={s.infoBody}>
+              <Text style={s.infoLabel}>Allergy Alert</Text>
+              <Text style={s.infoValue}>{healthId.allergiesSummary}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Emergency contact */}
+        {healthId.emergencyContactName ? (
+          <View style={s.infoCard}>
+            <View style={[s.infoIcon, { backgroundColor: APP_GOLD_LIGHT }]}>
+              <Ionicons name="warning" size={18} color={APP_GOLD} />
+            </View>
+            <View style={s.infoBody}>
+              <Text style={s.infoLabel}>Emergency Contact</Text>
+              <Text style={s.infoValue}>{healthId.emergencyContactName}</Text>
+              <Text style={s.infoSub}>{healthId.emergencyContactPhone}</Text>
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
+    );
+  }
+
+  // ── No Health ID ───────────────────────────────────────────────────────────
   return (
-    <View style={styles.container}>
-      <View style={styles.emptyState}>
-        <Ionicons name="id-card-outline" size={56} color="#D1D5DB" />
-        <Text style={styles.emptyTitle}>No Health ID Yet</Text>
-        <Text style={styles.emptyText}>Create your digital health card to access services faster.</Text>
-        <Button title="Create Health ID" onPress={() => setShowCreate(true)} />
-      </View>
+    <View style={[s.root, s.centred]}>
+      <Ionicons name="id-card-outline" size={64} color={APP_GREEN_LIGHT} />
+      <Text style={s.emptyTitle}>No Health ID yet</Text>
+      <Text style={s.emptySub}>Create your digital health card to access services faster across Zimbabwe.</Text>
+      <Pressable onPress={() => setShowCreate(true)} style={s.createBtn}>
+        <Ionicons name="add-circle-outline" size={18} color="#FFFFFF" />
+        <Text style={s.createBtnText}>Create Health ID</Text>
+      </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: 16 },
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: APP_BG },
+  content: { padding: 16, gap: 14, paddingBottom: 48 },
+  centred: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 14 },
+
+  /* Card */
   card: {
-    backgroundColor: "#1E40AF",
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: APP_GREEN,
+    borderRadius: 24,
+    padding: 22,
     gap: 10,
-    shadowColor: "#1E40AF",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    overflow: "hidden",
+    shadowColor: APP_GREEN_DEEP,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
   },
-  cardTopStrip: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(147,197,253,0.3)",
-    marginBottom: 4,
+  cardRing1: {
+    position: "absolute", width: 180, height: 180, borderRadius: 90,
+    borderWidth: 28, borderColor: "rgba(255,255,255,0.07)", top: -60, right: -50,
   },
-  chipLabel: {
-    color: "#93C5FD",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
+  cardRing2: {
+    position: "absolute", width: 100, height: 100, borderRadius: 50,
+    borderWidth: 18, borderColor: "rgba(255,255,255,0.05)", bottom: -20, left: -20,
   },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 },
+  cardHeaderLeft: { gap: 6 },
+  cardChipLabel: { fontSize: 9, fontWeight: "800", color: "rgba(255,255,255,0.6)", letterSpacing: 2 },
   statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    borderRadius: 10,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
+    flexDirection: "row", alignItems: "center", gap: 5,
+    backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10,
+    paddingVertical: 3, paddingHorizontal: 8, alignSelf: "flex-start",
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#34D399",
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { color: "#FFFFFF", fontSize: 11, fontWeight: "600" },
+  cardIconWrap: {
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center",
   },
-  statusText: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "600",
+  idNumber: { color: "#FFFFFF", fontSize: 20, fontWeight: "700", letterSpacing: 2, fontFamily: "monospace" },
+  cardName: { color: "rgba(255,255,255,0.9)", fontSize: 16, fontWeight: "600" },
+  cardChips: { flexDirection: "row", gap: 8, marginTop: 4 },
+  bloodChip: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 10,
+    paddingVertical: 4, paddingHorizontal: 10,
   },
-  idNumber: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "700",
-    letterSpacing: 1.5,
-    fontFamily: "monospace",
+  bloodChipText: { color: "#FCA5A5", fontSize: 12, fontWeight: "700" },
+  issuedChip: {
+    backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 10,
+    paddingVertical: 4, paddingHorizontal: 10,
   },
-  cardName: {
-    color: "#DBEAFE",
-    fontSize: 16,
-    fontWeight: "600",
+  issuedChipText: { color: "rgba(255,255,255,0.75)", fontSize: 11 },
+  expiryText: { fontSize: 11, color: "rgba(255,255,255,0.55)", marginTop: 2 },
+
+  /* QR panel */
+  qrPanel: {
+    flexDirection: "row", alignItems: "center", gap: 16,
+    backgroundColor: APP_SURFACE, borderRadius: 18, padding: 18,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  bloodTypePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "rgba(255,255,255,0.12)",
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    alignSelf: "flex-start",
+  qrIconBox: {
+    width: 80, height: 80, borderRadius: 16,
+    backgroundColor: APP_GREEN_XLIGHT, alignItems: "center", justifyContent: "center",
   },
-  bloodTypeText: {
-    color: "#FCA5A5",
-    fontSize: 13,
-    fontWeight: "700",
+  qrInfo: { flex: 1 },
+  qrTitle: { fontSize: 15, fontWeight: "700", color: APP_TEXT },
+  qrSub: { fontSize: 11, color: APP_TEXT_3, fontFamily: "monospace", marginTop: 3 },
+  qrHint: { fontSize: 12, color: APP_TEXT_2, marginTop: 6 },
+
+  /* Info cards */
+  infoCard: {
+    flexDirection: "row", alignItems: "flex-start", gap: 14,
+    backgroundColor: APP_SURFACE, borderRadius: 16, padding: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  emergencyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    borderRadius: 10,
-    padding: 10,
-  },
-  emergencyIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(245,158,11,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emergencyLabel: {
-    color: "#FCD34D",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  emergencyValue: {
-    color: "#FEF3C7",
-    fontSize: 12,
-    marginTop: 1,
-  },
-  allergiesRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  allergiesText: {
-    color: "#BFDBFE",
-    fontSize: 12,
-    flex: 1,
-  },
-  expiryText: {
-    color: "#93C5FD",
-    fontSize: 10,
-    marginTop: 4,
-  },
-  qrBox: {
-    marginTop: 4,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 14,
-    alignItems: "center",
-    gap: 6,
-  },
-  qrLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#6B7280",
-    letterSpacing: 0.5,
-  },
-  qrIdText: {
-    fontSize: 10,
-    color: "#9CA3AF",
-    fontFamily: "monospace",
-    textAlign: "center",
-  },
+  infoIcon: { width: 42, height: 42, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  infoBody: { flex: 1 },
+  infoLabel: { fontSize: 11, fontWeight: "700", color: APP_TEXT_3, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 },
+  infoValue: { fontSize: 14, fontWeight: "600", color: APP_TEXT },
+  infoSub: { fontSize: 13, color: APP_TEXT_2, marginTop: 2 },
+
+  /* Form */
   formCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
-    gap: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: APP_SURFACE, borderRadius: 18, padding: 20, gap: 16,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#111827",
-  },
-  formFields: {
-    gap: 12,
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
+  formTitle: { fontSize: 18, fontWeight: "800", color: APP_TEXT },
+  formSub: { fontSize: 13, color: APP_TEXT_2, marginTop: -6, lineHeight: 18 },
+  inputGroup: { gap: 6 },
+  inputLabel: { fontSize: 12, fontWeight: "600", color: APP_TEXT_2 },
   input: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 14,
-    fontSize: 14,
-    color: "#111827",
-    backgroundColor: "#F9FAFB",
+    borderWidth: 1, borderColor: APP_BORDER, borderRadius: 12,
+    padding: 14, fontSize: 14, color: APP_TEXT, backgroundColor: APP_BG,
   },
-  cancelButton: {
-    alignItems: "center",
-    paddingVertical: 10,
+  cancelBtn: { alignItems: "center", paddingVertical: 10 },
+  cancelText: { color: APP_TEXT_2, fontSize: 14, fontWeight: "500" },
+
+  /* Empty & error */
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: APP_TEXT, textAlign: "center" },
+  emptySub: { fontSize: 13, color: APP_TEXT_3, textAlign: "center", lineHeight: 19, paddingHorizontal: 16 },
+  createBtn: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: APP_GREEN, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16,
   },
-  cancelText: {
-    color: "#6B7280",
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 48,
-    gap: 12,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#374151",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    textAlign: "center",
-    paddingHorizontal: 24,
-  },
+  createBtnText: { fontSize: 15, fontWeight: "700", color: "#FFFFFF" },
+  errorTitle: { fontSize: 16, fontWeight: "600", color: APP_TEXT },
+  retryBtn: { backgroundColor: APP_GREEN_LIGHT, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12 },
+  retryText: { fontSize: 14, fontWeight: "700", color: APP_GREEN },
 });
