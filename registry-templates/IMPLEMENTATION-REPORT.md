@@ -10,8 +10,8 @@ Introduced canonical **`registry-templates/`** (client, provider, facility, term
 |---------|--------|
 | `node scripts/registry/bootstrap-registry-templates.mjs` | OK — generates JSON under `registry-templates/`. |
 | `curl` → `countries.iso3166-1.json` | OK — 249 ISO rows including ZW / ZWE / 716. |
-| `cd ui/experience && npm run type-check` | OK |
-| `cd ui/experience && npx vitest run src/lib/registry/iso3166.test.ts` | OK (2 tests) |
+| `cd ui/one-ui-shell && npm run type-check` | OK |
+| `cd ui/one-ui-shell && npx vitest run src/lib/registry/iso3166.test.ts` | OK (2 tests) |
 | `cd ui/ehr && npm run type-check` | OK |
 | `cd services && mvn -DskipTests compile -pl experience-bff -am` | OK |
 

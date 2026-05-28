@@ -14,7 +14,7 @@ Machine-readable **schema-driven templates** for the Registry Spine (Vito, Varap
 
 ## Wiring
 
-- **Experience UI** (`ui/experience`): shared pickers and registration wizards import JSON via `@registry-templates/*` (see `next.config.mjs` + `tsconfig.json`).
+- **Experience UI** (`ui/one-ui-shell`): shared pickers and registration wizards import JSON via `@registry-templates/*` (see `next.config.mjs` + `tsconfig.json`).
 - **EHR stub** (`ui/ehr`): uses the same JSON via path alias for country/value-set driven fields.
 - **BFF** (`experience-bff`): `PatientController` forwards extended registration metadata to Vito `registerIdentity` when present; local fallback responses are explicitly marked `registryDelegation: false` and `registrySyncState` for offline/provisional flows.
 

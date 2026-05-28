@@ -1,6 +1,6 @@
 # Experience BFF
 
-Backend-for-frontend for the **Impilo web experience** (`one-ui-shell`, `ui/experience`). Port **8160**. Proxies to sovereign services with v1.1/1.2 trust header forwarding.
+Backend-for-frontend for the **Impilo web experience** (`ui/one-ui-shell`). Port **8160**. Proxies to sovereign services with v1.1/1.2 trust header forwarding.
 
 ## Key environment (production-shaped)
 
@@ -28,6 +28,6 @@ mvn -pl experience-bff -am package -DskipTests
 
 ## UI dev
 
-`NEXT_PUBLIC_BFF_URL=http://localhost:8160` with Next rewrites in `ui/experience/next.config.mjs`.
+`NEXT_PUBLIC_BFF_URL=http://localhost:8160` with Next rewrites in `ui/one-ui-shell/next.config.mjs`.
 
 See [`docs/architecture/patient-care-consent-surface.md`](../../docs/architecture/patient-care-consent-surface.md).

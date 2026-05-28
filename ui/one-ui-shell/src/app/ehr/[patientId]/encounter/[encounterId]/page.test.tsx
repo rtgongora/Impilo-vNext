@@ -10,6 +10,15 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/components/ClinicalAlerts", () => ({ ClinicalAlerts: () => <div>Clinical alerts</div> }));
+vi.mock("@/components/clinical/PatientJourneyContextPanel", () => ({
+  PatientJourneyContextPanel: () => <div data-testid="patient-journey-context" />,
+}));
+vi.mock("@/components/clinical/ClinicalFinanceContextStrip", () => ({
+  ClinicalFinanceContextStrip: () => <div data-testid="clinical-finance-context" />,
+}));
+vi.mock("@/components/clinical/EncounterVitalsGuidance", () => ({
+  EncounterVitalsGuidance: () => <div data-testid="encounter-vitals-guidance" />,
+}));
 vi.mock("@/hooks/useClinicalAlerts", () => ({ useClinicalAlerts: () => [] }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/useAuthStore", () => ({ useAuthStore: () => ({ user: { id: "user-1", displayName: "Dr. Moyo" } }) }));
@@ -48,6 +57,7 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
     isLoading: false,
   }),
   useCloseEncounter: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useUpdateEncounterPathwayProtocol: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
 }));
 vi.mock("@tanstack/react-query", () => ({
   useQuery: ({ queryKey }: { queryKey: unknown[] }) => {
