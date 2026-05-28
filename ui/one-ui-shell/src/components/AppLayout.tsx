@@ -1,11 +1,17 @@
 "use client";
 
 /**
- * AppLayout — Standard application layout with off-canvas zone navigation (Experience sidebar).
+ * AppLayout - Standard application layout with off-canvas zone navigation.
  * Layout variant: "app" (used by most non-EHR routes)
  *
- * Structure:
- *   [Off-canvas zone nav] [Main Content Area] [Header Bar]
+ * Structure (union of one-ui-shell + ui/experience evolutions):
+ *   [Off-canvas zone nav]
+ *   [Header Bar (Menu, breadcrumbs, facility/workspace/shift chips, user)]
+ *   [NompiloGlobalCommandBar + RoleJourneyNavigation + AccessibilityToolbar]
+ *   [ClinicalSupportStrip - operational comms / help / system support, when authenticated]
+ *   [OperationalContextStrip]
+ *   [Main Content Area]
+ *   [ProactiveAssistant + FloatingClinicalAssist (when authenticated)]
  */
 
 import { type ReactNode } from "react";
@@ -19,6 +25,8 @@ import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { NompiloGlobalCommandBar } from "./intelligent/NompiloGlobalCommandBar";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
 import { AccessibilityToolbar } from "./accessibility/AccessibilityToolbar";
+import { ClinicalSupportStrip } from "@/components/clinical/ClinicalSupportStrip";
+import { FloatingClinicalAssist } from "@/components/clinical/FloatingClinicalAssist";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -39,7 +47,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => toggleNavDrawer()}
               className="impilo-btn-secondary shrink-0 gap-2 px-3 py-1.5 text-xs"
-              title="Work zones — clinical, professional, and personal navigation"
+              title="Work zones - clinical, professional, and personal navigation"
               aria-label="Open work zones menu"
             >
               <Menu className="h-4 w-4" />
@@ -111,10 +119,12 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <AccessibilityToolbar />
           </div>
         </div>
+        {isAuthenticated ? <ClinicalSupportStrip /> : null}
         <OperationalContextStrip />
         <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)] md:p-5">{children}</main>
       </div>
       <ProactiveAssistant />
+      {isAuthenticated ? <FloatingClinicalAssist /> : null}
     </div>
   );
 }
