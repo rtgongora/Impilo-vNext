@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, HeartHandshake, AlertCircle } from "lucide-react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
@@ -30,10 +31,14 @@ interface ConsentResource {
 
 type ConsentResponse = ApiResponse<ConsentResource[]>;
 
-function useConsent() {
+function useSubjectConsents(subjectId: string) {
   return useQuery<ConsentResponse>({
-    queryKey: ["admin-consent"],
-    queryFn: () => apiClient.get<ConsentResponse>("/internal/v1/admin/consent"),
+    queryKey: ["admin-consent", subjectId],
+    queryFn: () =>
+      apiClient.get<ConsentResponse>(
+        `/internal/v1/admin/trust/consents?subjectId=${encodeURIComponent(subjectId)}&size=20`,
+      ),
+    enabled: subjectId.trim().length > 0,
   });
 }
 
@@ -47,7 +52,9 @@ const STATUS_STYLES: Record<string, string> = {
 export default function ConsentPage() {
   const searchParams = useSearchParams();
   const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
-  const { data, isLoading, error } = useConsent();
+  const [subjectInput, setSubjectInput] = useState("");
+  const [subjectId, setSubjectId] = useState("");
+  const { data, isLoading, error } = useSubjectConsents(subjectId);
 
   const consents = data?.data ?? [];
 
@@ -68,7 +75,36 @@ export default function ConsentPage() {
           </Link>
         </div>
 
-        {error ? (
+        <div className="mb-5 rounded-2xl border border-pink-100 bg-white p-4">
+          <p className="mb-3 text-sm text-gray-600">
+            Consent governance is subject-scoped through <code>/internal/v1/admin/trust/consents</code>. Enter a CPID,
+            Health ID, or subject reference to load directives.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <input
+              value={subjectInput}
+              onChange={(event) => setSubjectInput(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && setSubjectId(subjectInput.trim())}
+              placeholder="Subject ID"
+              className="min-w-[260px] rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="button"
+              disabled={!subjectInput.trim()}
+              onClick={() => setSubjectId(subjectInput.trim())}
+              className="rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700 disabled:opacity-50"
+            >
+              Load consents
+            </button>
+          </div>
+        </div>
+
+        {!subjectId ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <HeartHandshake className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-400 text-sm">Enter a subject ID to load consent records</p>
+          </div>
+        ) : error ? (
           <div className="bg-white rounded-lg border border-red-200 p-12 text-center">
             <AlertCircle className="w-10 h-10 text-red-300 mx-auto mb-3" />
             <p className="text-red-600 text-sm">Failed to load consent records</p>

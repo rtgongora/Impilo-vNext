@@ -18,7 +18,7 @@ import {
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
-  MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle,
+  MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
   Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +41,8 @@ import {
   type FacilityResource,
 } from "@/hooks/queries/useFacilities";
 import { useProviderLicenses, hasActiveLicense } from "@/hooks/queries/useLicenses";
+import { useProviderCpd } from "@/hooks/queries/useCpd";
+import { summarizeFundoMyLearning, useFundoMyLearning } from "@/hooks/queries/useFundoLms";
 import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { useFacilityActiveShiftCount, useFacilityQueueStats } from "@/hooks/queries/useFacilityOperations";
@@ -346,6 +348,21 @@ function getWorkerLaunchActions(args: {
   if (args.isClinical || args.isDispenser) {
     actions.push(
       {
+        label: "Impilo Fundo Learning",
+        description: "Open learning, certifications, and CPD pathways first before entering other workflow surfaces.",
+        href: "/learning",
+        icon: GraduationCap,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+      {
+        label: "Composed Worklist",
+        description: "Start from prioritized clinical inbox, then open queue, telemedicine, labs, and tools from one surface.",
+        href: "/provider-workspace",
+        icon: Clipboard,
+        color: "bg-emerald-100 text-emerald-700",
+        requiresWorkContext: true,
+      },
+      {
         label: "Find Patient",
         description: "Search by CPID, national ID, or name and launch straight into chart flow.",
         href: "/queue/search",
@@ -398,6 +415,13 @@ function getWorkerLaunchActions(args: {
   if (args.isFinance) {
     actions.push(
       {
+        label: "Impilo Fundo Learning",
+        description: "Start with role-based finance learning pathways, policy updates, and certification progress.",
+        href: "/learning",
+        icon: GraduationCap,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+      {
         label: "Claims Review",
         description: "Open claims and payer actions from the finance workbench.",
         href: "/finance/claims",
@@ -424,6 +448,13 @@ function getWorkerLaunchActions(args: {
   if (args.isAdmin) {
     actions.push(
       {
+        label: "Impilo Fundo Learning",
+        description: "Prioritise governance/admin learning modules and required training before operational actions.",
+        href: "/learning",
+        icon: GraduationCap,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+      {
         label: "Control Tower",
         description: "Start from live operational oversight when you are driving throughput or escalation.",
         href: "/clinical/control-tower",
@@ -449,6 +480,10 @@ function getWorkerLaunchActions(args: {
 
   if (operatingModel?.workflowArchetype === "VIRTUAL_CARE_NETWORK") {
     return [...deduped].sort((a, b) => {
+      if (a.href === "/learning") return -1;
+      if (b.href === "/learning") return 1;
+      if (a.href === "/provider-workspace") return -1;
+      if (b.href === "/provider-workspace") return 1;
       if (a.href === "/telemedicine/new") return -1;
       if (b.href === "/telemedicine/new") return 1;
       return 0;
@@ -672,6 +707,28 @@ export default function HomePage() {
   const { data: licenseData } = useProviderLicenses(isClinical ? user?.id : undefined);
   const licenses = licenseData?.data ?? [];
   const licenseActive = licenses.length === 0 || hasActiveLicense(licenses);
+  const { data: cpdData } = useProviderCpd(isClinical ? user?.id : undefined);
+
+  const learningSubject = useMemo(
+    () => ({
+      subjectType: "PROVIDER",
+      subjectId: user?.providerId ?? user?.id ?? "",
+    }),
+    [user?.providerId, user?.id],
+  );
+  const {
+    data: fundoMyLearningData,
+    isLoading: fundoKpisLoading,
+    isError: fundoKpisError,
+  } = useFundoMyLearning(learningSubject, hasProfessionalRoles);
+  const fundoKpis = summarizeFundoMyLearning(
+    (fundoMyLearningData?.data ?? {}) as Record<string, unknown>,
+  );
+  const cpdCycle = cpdData?.data?.currentCycle;
+  const cpdEarned = cpdCycle?.earnedPoints ?? 0;
+  const cpdRequired = cpdCycle?.requiredPoints ?? 0;
+  const cpdProgressPct =
+    cpdRequired > 0 ? Math.min(100, Math.round((cpdEarned / cpdRequired) * 100)) : 0;
 
   // Community groups for Personal tab
   const { data: groupsData } = useCommunityGroups();
@@ -1259,7 +1316,7 @@ export default function HomePage() {
                 <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Finance Overview</h3>
                 <Link href="/finance" className="text-xs text-impilo-500 hover:text-impilo-700">Finance Dashboard →</Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Link href="/finance/billing" className="bg-white rounded-lg border border-gray-200 p-4 hover:border-impilo-200 transition-colors">
                   <div className="flex items-center gap-2 mb-2"><Receipt className="w-4 h-4 text-impilo-400" /><span className="text-sm font-medium text-gray-900">Billing</span></div>
                   <p className="text-xs text-gray-500">View and manage bills</p>
@@ -1337,17 +1394,63 @@ export default function HomePage() {
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-900">CPD Progress</span>
-                    <span className="text-xs text-impilo-500">18/25 pts</span>
+                    <span className="text-xs text-impilo-500">
+                      {cpdCycle ? `${cpdEarned}/${cpdRequired} pts` : "No active cycle"}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-impilo-500 rounded-full h-2" style={{ width: "72%" }} />
+                    <div
+                      className="bg-impilo-500 rounded-full h-2"
+                      style={{ width: `${cpdProgressPct}%` }}
+                    />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Current cycle</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {cpdCycle
+                      ? `${Math.max(0, cpdRequired - cpdEarned)} points remaining`
+                      : "CPD cycle data unavailable"}
+                  </p>
+                </div>
+                {/* Fundo learning KPI snapshot */}
+                <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-cyan-900">Fundo Snapshot</span>
+                    <Link href="/learning" className="text-xs font-medium text-cyan-700 hover:text-cyan-900">
+                      Open →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Link href="/learning?focus=required" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                      <p className="text-[10px] uppercase tracking-wide text-cyan-700">Required</p>
+                      <p className="text-base font-semibold text-cyan-900">
+                        {fundoKpisLoading ? "…" : fundoKpis.required}
+                      </p>
+                    </Link>
+                    <Link href="/learning?focus=overdue" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                      <p className="text-[10px] uppercase tracking-wide text-cyan-700">Overdue</p>
+                      <p className={`text-base font-semibold ${fundoKpis.overdue > 0 ? "text-rose-700" : "text-cyan-900"}`}>
+                        {fundoKpisLoading ? "…" : fundoKpis.overdue}
+                      </p>
+                    </Link>
+                    <Link href="/learning?focus=cpd" className="rounded-lg bg-white px-2 py-2 text-center border border-cyan-100 hover:border-cyan-300 transition">
+                      <p className="text-[10px] uppercase tracking-wide text-cyan-700">CPD</p>
+                      <p className="text-base font-semibold text-cyan-900">
+                        {fundoKpisLoading ? "…" : fundoKpis.cpdEligible}
+                      </p>
+                    </Link>
+                  </div>
+                  <p className="mt-2 text-xs text-cyan-800">
+                    {fundoKpisError
+                      ? "Learning KPI feed unavailable right now; open Impilo Fundo for full details."
+                      : "Required, overdue, and CPD-eligible counts are sourced from Fundo my-learning."}
+                  </p>
                 </div>
                 {/* Quick Actions */}
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
                   <span className="text-sm font-medium text-gray-900 mb-3 block">Quick Actions</span>
                   <div className="space-y-2">
+                    <Link href="/learning" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
+                      <GraduationCap className="w-3.5 h-3.5" /> Impilo Fundo
+                    </Link>
                     <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
                       <Award className="w-3.5 h-3.5" /> Certifications
                     </Link>

@@ -16,21 +16,42 @@ const TRIAGE_LEVELS = [
   { level: "5", label: "Non-urgent", color: "#3B82F6", description: "Minor complaint" },
 ];
 
-export function TriageScreen() {
+export function TriageScreen({ embedded = false }: { embedded?: boolean }) {
   const { activeEncounter } = useEncounterStore();
   const [selectedLevel, setSelectedLevel] = useState("3");
   const [chiefComplaint, setChiefComplaint] = useState("");
+  const [heartRate, setHeartRate] = useState("");
+  const [respRate, setRespRate] = useState("");
+  const [spo2, setSpo2] = useState("");
+  const [mentalStatus, setMentalStatus] = useState("ALERT");
+
+  const structuredAcuity = (() => {
+    let score = 0;
+    const hr = Number(heartRate || 0);
+    const rr = Number(respRate || 0);
+    const oxygen = Number(spo2 || 0);
+    if (hr > 120 || hr < 40) score += 2;
+    else if (hr > 100 || hr < 50) score += 1;
+    if (rr > 30 || rr < 8) score += 2;
+    else if (rr > 22) score += 1;
+    if (oxygen > 0 && oxygen < 90) score += 2;
+    else if (oxygen > 0 && oxygen < 94) score += 1;
+    if (mentalStatus !== "ALERT") score += 2;
+    return score;
+  })();
 
   const mutation = useMutation({
     mutationFn: () => recordTriage({
-      patientId: activeEncounter?.patientId ?? "", encounterId: activeEncounter?.id ?? "",
-      triageLevel: selectedLevel, chiefComplaint, acuityScore: parseInt(selectedLevel),
+      patientId: activeEncounter?.patientId ?? "", encounterId: activeEncounter?.journeyId || activeEncounter?.id || "",
+      triageLevel: selectedLevel,
+      chiefComplaint,
+      acuityScore: Math.max(parseInt(selectedLevel), structuredAcuity),
+      notes: `HR:${heartRate || "n/a"} RR:${respRate || "n/a"} SpO2:${spo2 || "n/a"} Mental:${mentalStatus}`,
     }),
     onSuccess: () => Alert.alert("Triage Saved", "Triage assessment recorded"),
   });
 
-  return (
-    <Screen><Header title="Patient Triage" />
+  const content = (
       <View testID="triage-screen" style={styles.container}>
         <Text style={styles.sectionTitle}>Triage Level</Text>
         {TRIAGE_LEVELS.map((t) => (
@@ -53,13 +74,59 @@ export function TriageScreen() {
           multiline
           numberOfLines={3}
         />
+        <Text style={styles.sectionTitle}>Structured triage scoring</Text>
+        <View style={styles.metricsGrid}>
+          <TextInput
+            testID="triage-hr"
+            style={styles.metricInput}
+            placeholder="Heart rate"
+            keyboardType="numeric"
+            value={heartRate}
+            onChangeText={setHeartRate}
+          />
+          <TextInput
+            testID="triage-rr"
+            style={styles.metricInput}
+            placeholder="Respiratory rate"
+            keyboardType="numeric"
+            value={respRate}
+            onChangeText={setRespRate}
+          />
+          <TextInput
+            testID="triage-spo2"
+            style={styles.metricInput}
+            placeholder="SpO2 %"
+            keyboardType="numeric"
+            value={spo2}
+            onChangeText={setSpo2}
+          />
+          <TextInput
+            testID="triage-mental"
+            style={styles.metricInput}
+            placeholder="Mental status (ALERT/VOICE/PAIN/UNRESPONSIVE)"
+            value={mentalStatus}
+            onChangeText={setMentalStatus}
+          />
+        </View>
+        <Text style={styles.helperText}>
+          {`Computed acuity score: ${structuredAcuity} (final score uses max of selected level and structured score).`}
+        </Text>
         <Button
           testID="triage-record"
           title={mutation.isPending ? "Saving..." : "Record Triage"}
           onPress={() => mutation.mutate()}
-          disabled={!chiefComplaint || mutation.isPending}
+          disabled={!activeEncounter || !chiefComplaint || mutation.isPending}
         />
       </View>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <Screen><Header title="Patient Triage" />
+      {content}
     </Screen>
   );
 }
@@ -72,4 +139,7 @@ const styles = StyleSheet.create({
   levelLabel: { fontSize: 14, fontWeight: "600", color: "#111827" },
   levelDesc: { fontSize: 12, color: "#6B7280" },
   input: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 12, fontSize: 14, minHeight: 80, textAlignVertical: "top" },
+  metricsGrid: { gap: 8 },
+  metricInput: { borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 8, padding: 10, fontSize: 13 },
+  helperText: { fontSize: 12, color: "#4B5563" },
 });

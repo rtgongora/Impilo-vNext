@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -28,15 +30,24 @@ public class MobileTelemedicineController {
 
     private final PctServiceClient pctClient;
     private final ObjectMapper objectMapper;
+    private final TelemedicineGovernanceService telemedicineGovernanceService;
 
     @Autowired
-    public MobileTelemedicineController(PctServiceClient pctClient) {
-        this(pctClient, new ObjectMapper());
+    public MobileTelemedicineController(PctServiceClient pctClient,
+                                        TelemedicineGovernanceService telemedicineGovernanceService) {
+        this(pctClient, new ObjectMapper(), telemedicineGovernanceService);
     }
 
-    public MobileTelemedicineController(PctServiceClient pctClient, ObjectMapper objectMapper) {
+    public MobileTelemedicineController(PctServiceClient pctClient) {
+        this(pctClient, new ObjectMapper(), null);
+    }
+
+    public MobileTelemedicineController(PctServiceClient pctClient,
+                                        ObjectMapper objectMapper,
+                                        TelemedicineGovernanceService telemedicineGovernanceService) {
         this.pctClient = pctClient;
         this.objectMapper = objectMapper;
+        this.telemedicineGovernanceService = telemedicineGovernanceService;
     }
 
     @GetMapping("/sessions")
@@ -51,6 +62,7 @@ public class MobileTelemedicineController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
+        assertGovernedRead();
         if (patientId != null && !patientId.isBlank()) {
             try {
                 JsonNode data = pctClient.getPatientTelehealthSessions(patientId, status, page, size);
@@ -94,8 +106,10 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody Map<String, Object> body) {
+        assertGovernedMutate();
         if (body == null || body.isEmpty()) {
             return badRequest("INVALID_PAYLOAD", "Request body is required", requestId, correlationId);
         }
@@ -109,9 +123,16 @@ public class MobileTelemedicineController {
         String referralId = body.get("referral_id") != null ? body.get("referral_id").toString() : null;
         String scheduledAt = body.get("scheduled_at") != null ? body.get("scheduled_at").toString() : null;
         String notes = body.get("notes") != null ? body.get("notes").toString() : null;
+        String consentReference = body.get("consentReference") != null
+                ? body.get("consentReference").toString()
+                : (body.get("consent_reference") != null ? body.get("consent_reference").toString() : null);
         String sessionProvider = body.get("session_provider") != null
                 ? body.get("session_provider").toString()
                 : (body.get("provider_type") != null ? body.get("provider_type").toString() : null);
+        if ((sessionProvider == null || sessionProvider.isBlank())
+                && ("VIDEO".equalsIgnoreCase(sessionType) || "AUDIO".equalsIgnoreCase(sessionType))) {
+            sessionProvider = "EXTERNAL_MANAGED";
+        }
 
         if (patientId == null || patientId.isBlank()) {
             return badRequest("MISSING_PATIENT_ID", "patient_id is required", requestId, correlationId);
@@ -128,6 +149,11 @@ public class MobileTelemedicineController {
         }
 
         try {
+            String normalizedPurpose = normalizePurposeOfUse(
+                    body.get("purposeOfUse") != null ? body.get("purposeOfUse").toString()
+                            : (body.get("purpose_of_use") != null ? body.get("purpose_of_use").toString() : purposeOfUse)
+            );
+            assertMediaConsentReference(sessionType, consentReference, normalizedPurpose);
             Map<String, Object> pctBody = new LinkedHashMap<>();
             pctBody.put("sessionType", sessionType);
             if (patientId != null) pctBody.put("patientId", patientId);
@@ -137,16 +163,25 @@ public class MobileTelemedicineController {
             if (referralId != null) pctBody.put("referralId", referralId);
             pctBody.put("scheduledAt", scheduled.toString());
             if (notes != null) pctBody.put("notes", notes);
+            if (consentReference != null && !consentReference.isBlank()) {
+                pctBody.put("consentReference", consentReference);
+            }
             if (sessionProvider != null && !sessionProvider.isBlank()) {
                 pctBody.put("sessionProvider", sessionProvider);
             }
+            pctBody.put("purposeOfUse", normalizedPurpose);
             JsonNode result = pctClient.requestTelehealthSession(pctBody);
             if (result != null) {
+                audit(tenantId, correlationId, "TELEMEDICINE_MOBILE_PROVIDER_SESSION_CREATED",
+                        "POST:mobile/provider/telemedicine/sessions", "SUCCESS",
+                        providerId, patientId, result.get("id") == null ? null : result.get("id").asText(), normalizedPurpose);
                 return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                         "data", result,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
             return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine create payload returned", requestId, correlationId);
+        } catch (ResponseStatusException e) {
+            return governanceFailure(e, requestId, correlationId);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
@@ -159,16 +194,24 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
         try {
+            assertGovernedMutate();
             JsonNode data = pctClient.joinTelehealthSession(id.toString());
             if (data != null) {
+                audit(tenantId, correlationId, "TELEMEDICINE_MOBILE_PROVIDER_JOINED",
+                        "POST:mobile/provider/telemedicine/sessions/join", "SUCCESS",
+                        first(data, "providerId", "provider_id"), first(data, "patientCpid", "patient_id"), id.toString(),
+                        normalizePurposeOfUse(purposeOfUse));
                 return ResponseEntity.ok(Map.of(
                         "data", data,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
             return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine join payload returned", requestId, correlationId);
+        } catch (ResponseStatusException e) {
+            return governanceFailure(e, requestId, correlationId);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
@@ -181,16 +224,24 @@ public class MobileTelemedicineController {
             @RequestHeader(CompanionHeaders.POD_ID) String podId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
             @RequestBody(required = false) Map<String, Object> body) {
         try {
+            assertGovernedMutate();
             JsonNode data = pctClient.endTelehealthSession(id.toString(), body);
             if (data != null) {
+                audit(tenantId, correlationId, "TELEMEDICINE_MOBILE_PROVIDER_ENDED",
+                        "POST:mobile/provider/telemedicine/sessions/end", "SUCCESS",
+                        first(data, "providerId", "provider_id"), first(data, "patientCpid", "patient_id"), id.toString(),
+                        normalizePurposeOfUse(purposeOfUse));
                 return ResponseEntity.ok(Map.of(
                         "data", data,
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
             return upstreamFailure("PCT_UNAVAILABLE", "No telemedicine end payload returned", requestId, correlationId);
+        } catch (ResponseStatusException e) {
+            return governanceFailure(e, requestId, correlationId);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
@@ -207,6 +258,16 @@ public class MobileTelemedicineController {
             String code, String message, String requestId, String correlationId) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", Map.of("code", code, "message", message != null ? message : "Telemedicine upstream unavailable"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private ResponseEntity<Map<String, Object>> governanceFailure(
+            ResponseStatusException e, String requestId, String correlationId) {
+        HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+        HttpStatus resolved = status == null ? HttpStatus.BAD_REQUEST : status;
+        String code = resolved == HttpStatus.FORBIDDEN ? "TELEMEDICINE_GOVERNANCE_DENIED" : "TELEMEDICINE_GOVERNANCE_INVALID";
+        return ResponseEntity.status(resolved).body(Map.of(
+                "error", Map.of("code", code, "message", e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason()),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
@@ -259,5 +320,48 @@ public class MobileTelemedicineController {
             }
         }
         return null;
+    }
+
+    private void assertGovernedRead() {
+        if (telemedicineGovernanceService != null) {
+            telemedicineGovernanceService.assertGovernedRead();
+        }
+    }
+
+    private void assertGovernedMutate() {
+        if (telemedicineGovernanceService != null) {
+            telemedicineGovernanceService.assertGovernedMutate();
+        }
+    }
+
+    private void audit(String tenantId,
+                       String correlationId,
+                       String eventType,
+                       String action,
+                       String outcome,
+                       String actorId,
+                       String patientId,
+                       String sessionId,
+                       String purposeOfUse) {
+        if (telemedicineGovernanceService == null) {
+            return;
+        }
+        telemedicineGovernanceService.audit(
+                tenantId, correlationId, purposeOfUse, null,
+                eventType, action, outcome,
+                actorId, "PROVIDER", patientId, "TelemedicineSession", sessionId, Map.of());
+    }
+
+    private String normalizePurposeOfUse(String purposeOfUse) {
+        if (telemedicineGovernanceService == null) {
+            return purposeOfUse == null || purposeOfUse.isBlank() ? "TREATMENT" : purposeOfUse.trim().toUpperCase(Locale.ROOT);
+        }
+        return telemedicineGovernanceService.normalizePurposeOfUse(purposeOfUse);
+    }
+
+    private void assertMediaConsentReference(String sessionType, String consentReference, String purposeOfUse) {
+        if (telemedicineGovernanceService != null) {
+            telemedicineGovernanceService.assertMediaConsentReference(sessionType, consentReference, purposeOfUse);
+        }
     }
 }

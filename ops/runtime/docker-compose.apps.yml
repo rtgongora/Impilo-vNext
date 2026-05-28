@@ -10,8 +10,8 @@ services:
 
   one-ui-shell:
     build:
-      context: ../../ui
-      dockerfile: one-ui-shell/Dockerfile
+      context: ../..
+      dockerfile: ui/one-ui-shell/Dockerfile
     container_name: impilo-one-ui-shell
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160

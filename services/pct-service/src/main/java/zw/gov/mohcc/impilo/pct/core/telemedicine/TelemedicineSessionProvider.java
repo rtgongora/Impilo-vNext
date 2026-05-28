@@ -12,6 +12,10 @@ public interface TelemedicineSessionProvider {
 
     SessionProvisioningResult provision(SessionProvisioningRequest request);
 
+    default void end(String sessionId) {
+        // Most non-media providers do not own an external room lifecycle.
+    }
+
     record SessionProvisioningRequest(
             UUID tenantId,
             String patientCpid,

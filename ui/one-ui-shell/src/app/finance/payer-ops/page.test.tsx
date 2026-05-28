@@ -53,6 +53,9 @@ describe("FinancePayerOpsPage", () => {
       if (url.includes("/payment-intents/pi-1/receipts")) {
         return Promise.resolve([]);
       }
+      if (url.includes("/internal/v1/finance/settlements")) {
+        return Promise.resolve({ data: [{ id: "set-1" }] });
+      }
       if (url.includes("/adapters")) return Promise.resolve([{ id: "a1" }]);
       if (url.includes("/fraud-flags")) return Promise.resolve({ content: [] });
       if (url.includes("/ops-reviews")) return Promise.resolve({ content: [] });
@@ -79,5 +82,21 @@ describe("FinancePayerOpsPage", () => {
     await waitFor(() => {
       expect(post).toHaveBeenCalledWith("/internal/v1/finance/payer-ops/payment-intents/pi-1/cancel");
     });
+  });
+
+  it("composes payer journey state and linked settlement lookup", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.type(screen.getByLabelText("Payment intent id"), "pi-1");
+    await user.click(screen.getByRole("button", { name: /Load intent/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Current payer state:/i)).toBeInTheDocument();
+      expect(screen.getAllByText("Remittance claim").length).toBeGreaterThan(0);
+    });
+    expect(get.mock.calls.some((call) => String(call[0]).includes("/internal/v1/finance/settlements?intentIds=pi-1"))).toBe(
+      true,
+    );
   });
 });

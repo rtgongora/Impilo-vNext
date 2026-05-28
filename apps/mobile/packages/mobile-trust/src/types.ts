@@ -53,9 +53,13 @@ export interface SessionContext {
   expiresAt: number;
   facilityId?: string;
   facilityName?: string;
+  departmentId?: string;
+  wardId?: string;
   workspaceId?: string;
   workspaceName?: string;
+  programmeId?: string;
   shiftId?: string;
+  accessMode?: "ONLINE" | "OFFLINE" | "BREAK_GLASS";
   purposeOfUse: PurposeOfUse;
   deviceFingerprint?: string;
   /** Identity assurance level for this session. */

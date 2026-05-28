@@ -33,10 +33,15 @@ import { TelemedicineScreen } from "./TelemedicineScreen";
 import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
 import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
+import { TriageScreen } from "./TriageScreen";
+import { BillingScreen } from "./BillingScreen";
+import { PACSViewerScreen } from "./PACSViewerScreen";
+import { DischargeScreen } from "./DischargeScreen";
 import { appStore, useAppStore } from "../../stores/appStore";
 
 type ToolTab =
   | "soap"
+  | "triage"
   | "drugs"
   | "orders"
   | "care"
@@ -59,17 +64,20 @@ type ToolTab =
   | "prof_settings"
   | "prof_channels"
   | "telemedicine"
+  | "billing"
+  | "pacs"
+  | "discharge"
   | "learning"
   | "core_transaction"
   | "workflow_dispatch"
   | "ph_field_tasks";
 
 const TABS: { id: ToolTab; label: string }[] = [
-  { id: "soap", label: "SOAP" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
+  { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
   { id: "care", label: "Care Plan" }, { id: "mar", label: "MAR" }, { id: "cds", label: "CDS" },
   { id: "paging", label: "Paging" }, { id: "barcode", label: "Barcode" }, { id: "workspaces", label: "Specialty" },
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "reports", label: "Reports" },
-  { id: "finance", label: "Finance" },
+  { id: "finance", label: "Finance" }, { id: "billing", label: "Billing" }, { id: "pacs", label: "PACS" },
   { id: "schedule", label: "Schedule" },
   { id: "pharmacy", label: "Pharmacy" },
   { id: "lab", label: "Lab" },
@@ -79,6 +87,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "developer_hub", label: "Dev" },
   { id: "prof_settings", label: "Prefs" },
   { id: "prof_channels", label: "CX+" },
+  { id: "discharge", label: "Discharge" },
   { id: "learning", label: "Learning" },
   { id: "core_transaction", label: "Core Tx" },
   { id: "workflow_dispatch", label: "Flow/Ops" },
@@ -112,6 +121,7 @@ export function ClinicalToolsScreen() {
       </ScrollView>
       <ScrollView style={styles.content} contentContainerStyle={styles.contentPad}>
         {tab === "soap" && <SOAPPanel />}
+        {tab === "triage" && <TriageScreen />}
         {tab === "telemedicine" && <TelemedicineScreen />}
         {tab === "drugs" && <DrugInteractionPanel />}
         {tab === "orders" && <OrderSetsPanel />}
@@ -125,6 +135,8 @@ export function ClinicalToolsScreen() {
         {tab === "facility" && <FacilityAdminScreen />}
         {tab === "reports" && <ReportsScreen />}
         {tab === "finance" && <FinanceOverviewScreen />}
+        {tab === "billing" && <BillingScreen />}
+        {tab === "pacs" && <PACSViewerScreen />}
         {tab === "schedule" && <ScheduleScreen />}
         {tab === "pharmacy" && <PharmacyHubScreen />}
         {tab === "lab" && <LabHubScreen />}
@@ -134,12 +146,39 @@ export function ClinicalToolsScreen() {
         {tab === "developer_hub" && <DeveloperHubScreen />}
         {tab === "prof_settings" && <ProfessionalSettingsHubScreen />}
         {tab === "prof_channels" && <ProfessionalChannelsHubScreen />}
+        {tab === "discharge" && (
+          <DischargePanel onBackToInpatient={() => setTab("inpatient")} />
+        )}
         {tab === "learning" && <FundoLearningShellScreen />}
         {tab === "core_transaction" && <CoreTransactionJourneyShellScreen />}
         {tab === "workflow_dispatch" && <WorkflowDispatchOpsScreen />}
         {tab === "ph_field_tasks" && <PublicHealthFieldTasksScreen />}
       </ScrollView>
     </Screen>
+  );
+}
+
+function DischargePanel({ onBackToInpatient }: { onBackToInpatient: () => void }) {
+  const { activeEncounter } = useEncounterStore();
+
+  if (!activeEncounter?.id) {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Discharge Workflow</Text>
+        <Text style={styles.hint}>
+          Select an active encounter first before submitting discharge details.
+        </Text>
+        <Button title="Open Inpatient" onPress={onBackToInpatient} />
+      </View>
+    );
+  }
+
+  return (
+    <DischargeScreen
+      encounterId={activeEncounter.id}
+      onGoBack={onBackToInpatient}
+      onDischargeComplete={onBackToInpatient}
+    />
   );
 }
 

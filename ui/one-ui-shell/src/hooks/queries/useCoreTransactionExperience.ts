@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import type { CoreTransactionBffView } from "../../../../../contracts/core-transaction";
 import type {
@@ -67,7 +67,7 @@ function toCoreTransactionView(input: CoreTransactionBffView): CoreTransactionVi
     toTimelineEntry(entry, index, input.timeline.length),
   );
   return {
-    fixture: true,
+    fixture: false,
     transaction: {
       id: input.transaction.id,
       type: input.transaction.type,
@@ -170,11 +170,26 @@ export function useCoreTransactionFeed(filters?: { state?: string; type?: string
   return { ...query, items };
 }
 
-export function useWorkflowOperatorFeed(status?: string) {
+export function useWorkflowOperatorFeed(
+  filtersOrStatus?: string | { status?: string; type?: string },
+) {
+  const filters =
+    typeof filtersOrStatus === "string"
+      ? { status: filtersOrStatus }
+      : filtersOrStatus;
   const query = useQuery({
-    queryKey: ["operations", "workflows", status ?? "ALL"],
+    queryKey: [
+      "operations",
+      "workflows",
+      filters?.status ?? "ALL",
+      filters?.type ?? "ALL",
+    ],
     queryFn: async () => {
-      const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+      const params = new URLSearchParams();
+      if (filters?.status) params.set("status", filters.status);
+      if (filters?.type) params.set("type", filters.type);
+      const query = params.toString();
+      const qs = query ? `?${query}` : "";
       return apiClient.get<ApiResponse<unknown>>(`/internal/v1/workflows${qs}`);
     },
   });
@@ -187,11 +202,26 @@ export function useWorkflowOperatorFeed(status?: string) {
   return { ...query, items };
 }
 
-export function useDispatchOperatorFeed(status?: string) {
+export function useDispatchOperatorFeed(
+  filtersOrStatus?: string | { status?: string; assignee?: string },
+) {
+  const filters =
+    typeof filtersOrStatus === "string"
+      ? { status: filtersOrStatus }
+      : filtersOrStatus;
   const query = useQuery({
-    queryKey: ["operations", "dispatch", status ?? "ALL"],
+    queryKey: [
+      "operations",
+      "dispatch",
+      filters?.status ?? "ALL",
+      filters?.assignee ?? "ALL",
+    ],
     queryFn: async () => {
-      const qs = status ? `?status=${encodeURIComponent(status)}` : "";
+      const params = new URLSearchParams();
+      if (filters?.status) params.set("status", filters.status);
+      if (filters?.assignee) params.set("assigneeId", filters.assignee);
+      const query = params.toString();
+      const qs = query ? `?${query}` : "";
       return apiClient.get<ApiResponse<unknown>>(`/internal/v1/dispatch/tasks${qs}`);
     },
   });
@@ -202,4 +232,63 @@ export function useDispatchOperatorFeed(status?: string) {
   );
 
   return { ...query, items };
+}
+
+export function useWorkflowDefinitions() {
+  const query = useQuery({
+    queryKey: ["operations", "workflows", "definitions"],
+    queryFn: async () => apiClient.get<ApiResponse<unknown>>("/internal/v1/workflows/definitions"),
+  });
+
+  const items = useMemo(
+    () => normalizeCollection(query.data?.data),
+    [query.data?.data],
+  );
+
+  return { ...query, items };
+}
+
+export function useWorkflowInstances(filters?: { status?: string }) {
+  const query = useQuery({
+    queryKey: ["operations", "workflows", "instances", filters?.status ?? "ALL"],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set("status", filters.status);
+      const query = params.toString();
+      const qs = query ? `?${query}` : "";
+      return apiClient.get<ApiResponse<unknown>>(`/internal/v1/workflows/instances${qs}`);
+    },
+  });
+
+  const items = useMemo(
+    () => normalizeCollection(query.data?.data),
+    [query.data?.data],
+  );
+
+  return { ...query, items };
+}
+
+export function useStartWorkflowInstance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AnyRecord) =>
+      apiClient.post<ApiResponse<unknown>>("/internal/v1/workflows/instances", payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["operations", "workflows"] });
+    },
+  });
+}
+
+export function useTransitionWorkflowInstance() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ instanceId, payload }: { instanceId: string; payload: AnyRecord }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/workflows/instances/${encodeURIComponent(instanceId)}/transition`,
+        payload,
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["operations", "workflows"] });
+    },
+  });
 }

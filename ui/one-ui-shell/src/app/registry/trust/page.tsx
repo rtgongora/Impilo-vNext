@@ -15,21 +15,21 @@ const TRUST_DESTINATIONS = [
   {
     id: "federation",
     title: "Federation & trust pods",
-    description: "Live federation pod registry from `/internal/v1/admin/federation`.",
+    description: "Currently unavailable: no typed Experience BFF contract exists for federation pod registry.",
     href: "/admin/federation",
     icon: Globe,
   },
   {
     id: "keys",
     title: "Cryptographic keys",
-    description: "Key inventory from `/internal/v1/admin/keys`.",
+    description: "Currently unavailable: no typed Experience BFF contract exists for key inventory.",
     href: "/admin/keys",
     icon: KeyRound,
   },
   {
     id: "consent",
     title: "Consent governance",
-    description: "Consent directives and policy alignment for trust-sensitive access.",
+    description: "Subject-scoped consent directives via `/internal/v1/admin/trust/consents`.",
     href: "/admin/consent",
     icon: HeartHandshake,
   },
@@ -54,8 +54,8 @@ export default function RegistryTrustHubPage() {
         </div>
 
         <p className="mb-4 text-sm text-gray-600">
-          Each destination below is an existing experience route with real data hooks. Use them for national or
-          enterprise trust operations; facility-only device posture remains under organization administration.
+          Only typed Experience BFF trust routes are treated as live. Federation and key inventory stay explicitly
+          unavailable until canonical contracts exist; consent governance uses subject-scoped TSHEPO trust routes.
         </p>
 
         <div className="grid gap-4 md:grid-cols-3">

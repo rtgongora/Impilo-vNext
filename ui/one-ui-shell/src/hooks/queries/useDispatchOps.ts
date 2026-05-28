@@ -54,3 +54,53 @@ export function useCreateDelivery() {
     },
   });
 }
+
+export function useCreateDispatchTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Json) => apiClient.post<Json>("/internal/v1/dispatch/tasks", payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dispatch"] });
+      void qc.invalidateQueries({ queryKey: ["operations", "dispatch"] });
+    },
+  });
+}
+
+export function useAssignDispatchTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, payload }: { taskId: string; payload: Json }) =>
+      apiClient.patch<Json>(`/internal/v1/dispatch/tasks/${encodeURIComponent(taskId)}/assign`, payload),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dispatch"] });
+      void qc.invalidateQueries({ queryKey: ["operations", "dispatch"] });
+    },
+  });
+}
+
+export function useCompleteDispatchTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, payload }: { taskId: string; payload?: Json }) =>
+      apiClient.patch<Json>(`/internal/v1/dispatch/tasks/${encodeURIComponent(taskId)}/complete`, payload ?? {}),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dispatch"] });
+      void qc.invalidateQueries({ queryKey: ["operations", "dispatch"] });
+    },
+  });
+}
+
+export function useDispatchDeliveryAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ deliveryId, action, payload }: { deliveryId: string; action: string; payload?: Json }) =>
+      apiClient.post<Json>(
+        `/internal/v1/dispatch/deliveries/${encodeURIComponent(deliveryId)}/${encodeURIComponent(action)}`,
+        payload ?? {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["dispatch"] });
+      void qc.invalidateQueries({ queryKey: ["operations", "dispatch"] });
+    },
+  });
+}

@@ -1,5 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { coverageListRows } from "../useCoverage";
+import type { ReactNode } from "react";
+import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { coverageListRows, useRunCoverageCommand } from "../useCoverage";
+
+const { post } = vi.hoisted(() => ({ post: vi.fn() }));
+
+vi.mock("@/lib/api-client", () => ({
+  apiClient: { post },
+}));
+
+function wrapper({ children }: { children: ReactNode }) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  return React.createElement(QueryClientProvider, { client }, children);
+}
 
 /**
  * Phase 6 / Slice 6A — envelope-tolerance unit test for the shared
@@ -46,5 +61,32 @@ describe("coverageListRows (Phase 6 / Slice 6A)", () => {
     expect(coverageListRows({ items: null })).toEqual([]);
     expect(coverageListRows({ content: 7 })).toEqual([]);
     expect(coverageListRows({ totalElements: 5 })).toEqual([]);
+  });
+});
+
+describe("useRunCoverageCommand", () => {
+  beforeEach(() => {
+    post.mockReset();
+    post.mockResolvedValue({ data: { accepted: true } });
+  });
+
+  it("routes appeal submissions to the canonical appeals endpoint", async () => {
+    const { result } = renderHook(() => useRunCoverageCommand(), { wrapper });
+
+    result.current.mutate({
+      command: "appeal-submission",
+      payload: { claimId: "claim-1", appellantId: "cpid-1", reason: "Denied in error" },
+    });
+
+    await waitFor(() => expect(post).toHaveBeenCalled());
+    expect(post).toHaveBeenCalledWith(
+      "/internal/v1/appeals",
+      {
+        claimId: "claim-1",
+        appellantId: "cpid-1",
+        reason: "Denied in error",
+      },
+      undefined,
+    );
   });
 });

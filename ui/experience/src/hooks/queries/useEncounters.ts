@@ -27,6 +27,16 @@ interface CreateEncounterPayload {
   patientId: string;
   facilityId: string;
   encounterType: string;
+  journeyId: string;
+  encounterContext?: string;
+  entryPoint?: string;
+  modality?: string;
+  careSetting?: string;
+  priority?: string;
+  triageCategory?: string;
+  pathwayRef?: string;
+  protocolRef?: string;
+  chiefComplaint?: string;
   [key: string]: unknown;
 }
 
@@ -57,7 +67,21 @@ export function useCreateEncounter() {
 
   return useMutation<EncounterResponse, unknown, CreateEncounterPayload>({
     mutationFn: (payload: CreateEncounterPayload) =>
-      apiClient.post<EncounterResponse>("/internal/v1/encounters", payload),
+      apiClient.post<EncounterResponse>("/internal/v1/encounters", {
+        patient_id: payload.patientId,
+        facility_id: payload.facilityId,
+        encounter_type: payload.encounterType,
+        journey_id: payload.journeyId,
+        encounter_context: payload.encounterContext,
+        entry_point: payload.entryPoint,
+        modality: payload.modality,
+        care_setting: payload.careSetting,
+        priority: payload.priority,
+        triage_category: payload.triageCategory,
+        pathway_ref: payload.pathwayRef,
+        protocol_ref: payload.protocolRef,
+        chief_complaint: payload.chiefComplaint,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["encounters"] });
     },

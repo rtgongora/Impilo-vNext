@@ -54,6 +54,13 @@ public class TelemedicineSessionProviderRouter {
         }
     }
 
+    public void end(String requestedProviderType, String sessionId) {
+        TelemedicineSessionProvider provider = providerByType.get(normalize(requestedProviderType));
+        if (provider != null) {
+            provider.end(sessionId);
+        }
+    }
+
     private static String normalize(String value) {
         if (value == null || value.isBlank()) {
             return DEFAULT_PROVIDER_TYPE;

@@ -8,7 +8,7 @@
  * ④ Attachments        ⑤ Routing           ⑥ Consent
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertTriangle, CheckCircle2, ClipboardList, FileText,
@@ -82,19 +82,50 @@ export default function NewTeleconsultPage() {
   const [attachmentRefs, setAttachmentRefs] = useState("");
   const [routingType, setRoutingType] = useState("");
   const [routingTarget, setRoutingTarget] = useState("");
+  const [purposeOfUse, setPurposeOfUse] = useState("TREATMENT");
   const [consentType, setConsentType] = useState("");
-  const [consentToken, setConsentToken] = useState<string | null>(null);
+  const [consentReference, setConsentReference] = useState<string | null>(null);
 
-  const canSubmit = referralLetter.trim() && routingType && consentToken;
+  const canSubmit = referralLetter.trim() && routingType && consentReference;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("exp:purpose_of_use", purposeOfUse);
+    }
+  }, [purposeOfUse]);
+
+  async function ensureSessionId(): Promise<string> {
+    if (sessionId) return sessionId;
+    const res = await apiClient.post<{ data: { id: string } }>("/internal/v1/teleconsult/sessions", {
+      patientId,
+      encounterId,
+      facilityId: facility?.id,
+      urgency,
+      specialty,
+      purposeOfUse,
+      sessionProvider: "EXTERNAL_MANAGED",
+    });
+    const sid = res.data.id;
+    setSessionId(sid);
+    return sid;
+  }
 
   async function handleRecordConsent() {
     if (!consentType) return;
     try {
-      const sid = sessionId || "temp";
-      const res = await apiClient.post<{ data: { consentToken: string } }>(`/internal/v1/teleconsult/sessions/${sid}/consent`, { type: consentType });
-      setConsentToken(res.data.consentToken);
-    } catch {
-      setConsentToken("consent-local-" + Date.now());
+      const sid = await ensureSessionId();
+      const res = await apiClient.post<{ data: { consentReference?: string; consentToken?: string } }>(
+        `/internal/v1/teleconsult/sessions/${sid}/consent`,
+        { type: consentType, purposeOfUse }
+      );
+      const reference = res.data.consentReference ?? res.data.consentToken;
+      if (!reference) {
+        throw new Error("Consent reference was not returned by governance services");
+      }
+      setConsentReference(reference);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to record telemedicine consent.");
     }
   }
 
@@ -104,14 +135,7 @@ export default function NewTeleconsultPage() {
     setError(null);
     try {
       // Stage 1: Create session
-      let sid = sessionId;
-      if (!sid) {
-        const res = await apiClient.post<{ data: { id: string } }>("/internal/v1/teleconsult/sessions", {
-          patientId, encounterId, facilityId: facility?.id, urgency, specialty,
-        });
-        sid = res.data.id;
-        setSessionId(sid);
-      }
+      const sid = await ensureSessionId();
 
       // Stage 2: Update referral package
       await apiClient.put(`/internal/v1/teleconsult/sessions/${sid}/referral`, {
@@ -123,6 +147,8 @@ export default function NewTeleconsultPage() {
         routingTarget,
         urgency,
         specialty,
+        purposeOfUse,
+        consentReference,
       });
 
       // Stage 2→3: Submit
@@ -162,7 +188,7 @@ export default function NewTeleconsultPage() {
               const isActive = activeStep === step.id;
               const isDone = step.id === "letter" ? !!referralLetter.trim()
                 : step.id === "routing" ? !!routingType
-                : step.id === "consent" ? !!consentToken
+                : step.id === "consent" ? !!consentReference
                 : false;
               return (
                 <button
@@ -203,6 +229,18 @@ export default function NewTeleconsultPage() {
                 className="w-full text-xs border border-gray-300 rounded-md px-2 py-1.5">
                 <option value="">Select...</option>
                 {SPECIALTIES.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            <div className="px-3 pt-2">
+              <p className="text-[10px] font-semibold text-gray-400 uppercase mb-1.5">Purpose of Use</p>
+              <select value={purposeOfUse} onChange={(e) => setPurposeOfUse(e.target.value)}
+                className="w-full text-xs border border-gray-300 rounded-md px-2 py-1.5">
+                <option value="TREATMENT">Treatment</option>
+                <option value="EMERGENCY">Emergency</option>
+                <option value="OPERATIONS">Operations</option>
+                <option value="PUBLIC_HEALTH">Public health</option>
+                <option value="PAYMENT">Payment</option>
               </select>
             </div>
           </nav>
@@ -333,18 +371,18 @@ export default function NewTeleconsultPage() {
                     </button>
                   ))}
                 </div>
-                {consentType && !consentToken && (
+                {consentType && !consentReference && (
                   <button onClick={handleRecordConsent}
                     className="flex items-center gap-2 px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 transition-colors">
                     <Shield className="w-4 h-4" /> Record Consent & Issue Token
                   </button>
                 )}
-                {consentToken && (
+                {consentReference && (
                   <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
                     <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-green-800">Consent recorded</p>
-                      <p className="text-xs text-green-600">Token: {consentToken}</p>
+                      <p className="text-xs text-green-600">Reference: {consentReference}</p>
                     </div>
                   </div>
                 )}
@@ -356,7 +394,7 @@ export default function NewTeleconsultPage() {
               <div className="text-xs text-gray-400">
                 {referralLetter.trim() ? "✓ Letter" : "○ Letter"} ·{" "}
                 {routingType ? "✓ Routing" : "○ Routing"} ·{" "}
-                {consentToken ? "✓ Consent" : "○ Consent"}
+                {consentReference ? "✓ Consent" : "○ Consent"}
               </div>
               <button
                 onClick={handleSubmit}

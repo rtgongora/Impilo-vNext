@@ -17,7 +17,12 @@ COPY ui/shared-ui/package.json ./ui/shared-ui/package.json
 COPY ui/one-ui-shell/package.json ./ui/one-ui-shell/package.json
 
 WORKDIR /workspace/ui
-RUN npm ci --legacy-peer-deps
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set fetch-timeout 300000 \
+    && npm config set strict-ssl false \
+    && npm ci --legacy-peer-deps
 
 WORKDIR /workspace
 COPY ui/shared-ui ./ui/shared-ui

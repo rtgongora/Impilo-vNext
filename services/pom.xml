@@ -180,6 +180,8 @@
         <module>wellness-service</module>
         <!-- Experience Platform BFF -->
         <module>experience-bff</module>
+        <!-- RTC Gateway — provider-neutral media adapter for governed telemedicine -->
+        <module>rtc-gateway-service</module>
         <!-- Workforce Governance — organisations, jurisdictions, assignments -->
         <module>workforce-governance-service</module>
         <!-- Clinical Knowledge & EDLIZ-aligned guidance platform -->

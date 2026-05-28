@@ -68,6 +68,8 @@ learning:
       batch-size: ${LEARNING_OUTBOX_BATCH_SIZE:100}
     topics:
       default: ${LEARNING_OUTBOX_DEFAULT_TOPIC:platform.learning.events}
+  events:
+    legacy-emission-enabled: ${LEARNING_EVENTS_LEGACY_EMISSION_ENABLED:true}
 
 impilo:
   companion:

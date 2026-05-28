@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import OrdersPage from "./page";
+
+const { invalidateQueries, post, mockUseProductRegistrySearch } = vi.hoisted(() => ({
+  invalidateQueries: vi.fn(),
+  post: vi.fn(),
+  mockUseProductRegistrySearch: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1" }),
@@ -18,6 +24,10 @@ vi.mock("@/components/PageShell", () => ({
       {children}
     </div>
   ),
+}));
+
+vi.mock("@/components/ehr/ClinicalReviewHeader", () => ({
+  ClinicalReviewHeader: () => <div data-testid="clinical-review-header" />,
 }));
 
 vi.mock("@/hooks/useAuthStore", () => ({
@@ -52,14 +62,14 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
   }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+vi.mock("@/hooks/queries/useClinicalWorklist", () => ({
+  useClinicalWorklist: () => ({
+    data: { data: { items: [], summary: { total: 0, urgent: 0, overdue: 0, by_source: {} } } },
+  }),
 }));
 
-vi.mock("@/lib/api-client", () => ({
-  apiClient: {
-    post: vi.fn(),
-  },
+vi.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries }),
 }));
 
 vi.mock("@/hooks/queries/useLabOrders", () => ({
@@ -106,34 +116,33 @@ vi.mock("@/hooks/queries/useLabOrders", () => ({
     },
     isLoading: false,
   }),
-  useCreateLabOrder: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
+  useCreateLabOrder: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+    isError: false,
+  }),
   useCollectLabOrder: () => ({ mutate: vi.fn(), isPending: false }),
   useCancelLabOrder: () => ({ mutate: vi.fn(), isPending: false }),
-}));
-
-const { mockUseProductRegistrySearch } = vi.hoisted(() => ({
-  mockUseProductRegistrySearch: vi.fn(),
 }));
 
 vi.mock("@/hooks/queries/useProductRegistry", () => ({
   useProductRegistrySearch: (params: unknown) => mockUseProductRegistrySearch(params),
 }));
 
+vi.mock("@/lib/clinical-guidance-events", () => ({
+  CLINICAL_ORDER_DRAFT_EVENT: "clinical-order-draft",
+}));
+
+vi.mock("@/lib/api-client", () => ({
+  apiClient: { post },
+}));
+
 describe("OrdersPage", () => {
-  it("surfaces diagnostic ordering orchestration with in-place workflow actions", () => {
-    mockUseProductRegistrySearch.mockReturnValue({ data: { items: [] }, isLoading: false, isError: false });
-    render(<OrdersPage />);
-
-    expect(screen.getByText("Order, collect, result, and review diagnostics from the same encounter-aware workspace")).toBeInTheDocument();
-    expect(screen.getByText("Pending collection")).toBeInTheDocument();
-    expect(screen.getByText("Ready for result entry")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add Order" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Collect" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enter Result" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Results" })).toHaveAttribute("href", "/ehr/patient-1/results");
-  });
-
-  it("allows product-registry search to fill test name/code (no fake catalog)", () => {
+  beforeEach(() => {
+    post.mockReset();
+    invalidateQueries.mockReset();
+    post.mockResolvedValue({});
     mockUseProductRegistrySearch.mockImplementation((params: { q?: string } | undefined) => {
       if (params?.q === "cbc") {
         return {
@@ -144,9 +153,19 @@ describe("OrdersPage", () => {
       }
       return { data: { items: [] }, isLoading: false, isError: false };
     });
+  });
 
+  it("surfaces diagnostic ordering orchestration with in-place workflow actions", () => {
     render(<OrdersPage />);
+    expect(screen.getByText(/Guided cross-domain order composer/i)).toBeInTheDocument();
+    expect(screen.getByText("Unified order orchestration")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add Order" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Collect" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enter Result" })).toBeInTheDocument();
+  });
 
+  it("allows product-registry search to fill test name/code (no fake catalog)", () => {
+    render(<OrdersPage />);
     fireEvent.click(screen.getByRole("button", { name: "Add Order" }));
     fireEvent.change(screen.getByLabelText("Search term"), { target: { value: "cbc" } });
 
@@ -159,5 +178,73 @@ describe("OrdersPage", () => {
 
     expect(screen.getByDisplayValue("Complete Blood Count")).toBeInTheDocument();
     expect(screen.getByDisplayValue("CBC")).toBeInTheDocument();
+  });
+
+  it("shows explicit non-submittable lane messaging for untyped lanes", () => {
+    render(<OrdersPage />);
+    fireEvent.click(screen.getByTestId("guided-lane-imaging"));
+    expect(
+      screen.getByText(/intentionally read-only until a typed Experience BFF write contract/i)
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("submits medication action through canonical pharmacy endpoint", async () => {
+    render(<OrdersPage />);
+    fireEvent.click(screen.getByTestId("guided-lane-medication"));
+    fireEvent.change(screen.getByTestId("guided-medication-name"), { target: { value: "Amoxicillin" } });
+    fireEvent.change(screen.getByTestId("guided-medication-dosage"), { target: { value: "500mg" } });
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/pharmacy/prescriptions",
+        expect.objectContaining({
+          patient_id: "patient-1",
+          medication_name: "Amoxicillin",
+          dosage: "500mg",
+        })
+      );
+    });
+  });
+
+  it("submits referral action through canonical referrals endpoint", async () => {
+    render(<OrdersPage />);
+    fireEvent.click(screen.getByTestId("guided-lane-referral"));
+    fireEvent.change(screen.getByTestId("guided-referral-specialty"), { target: { value: "Cardiology" } });
+    fireEvent.change(screen.getByTestId("guided-referral-reason"), { target: { value: "Chest pain with exertion" } });
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/referrals",
+        expect.objectContaining({
+          patient_id: "patient-1",
+          specialty: "Cardiology",
+          reason: "Chest pain with exertion",
+        })
+      );
+    });
+  });
+
+  it("submits teleconsult action through canonical teleconsult endpoint", async () => {
+    render(<OrdersPage />);
+    fireEvent.click(screen.getByTestId("guided-lane-telemedicine"));
+    fireEvent.change(screen.getByTestId("guided-tele-mode"), { target: { value: "VIDEO" } });
+    fireEvent.change(screen.getByTestId("guided-tele-notes"), { target: { value: "Follow-up video consult" } });
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/teleconsult/sessions",
+        expect.objectContaining({
+          patient_id: "patient-1",
+          facility_id: "facility-1",
+          session_type: "VIDEO",
+          notes: "Follow-up video consult",
+        })
+      );
+    });
   });
 });

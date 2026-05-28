@@ -182,6 +182,36 @@ public class RegistryIntakeService {
         });
     }
 
+    public List<RegistryIntakeDocuments.ImportJobDocument> listImportJobs(int limit) {
+        authorizationService.assertAuthenticated();
+        Set<String> keys = redis.keys(PREFIX_IMPORT + "*");
+        if (keys == null || keys.isEmpty()) {
+            return List.of();
+        }
+        int boundedLimit = Math.min(Math.max(limit, 1), 100);
+        return keys.stream()
+                .map(key -> readJson(key, new TypeReference<RegistryIntakeDocuments.ImportJobDocument>() {
+                }))
+                .flatMap(Optional::stream)
+                .sorted(Comparator.comparing(RegistryIntakeDocuments.ImportJobDocument::updatedAt).reversed())
+                .limit(boundedLimit)
+                .toList();
+    }
+
+    public Optional<RegistryIntakeDocuments.ImportJobDocument> cancelImportJob(String id) {
+        authorizationService.assertImportPreview();
+        return getImportJob(id).map(existing -> {
+            if ("EXECUTED".equals(existing.status()) || "DRY_RUN_COMPLETE".equals(existing.status())) {
+                throw new IllegalStateException("Executed import jobs cannot be cancelled.");
+            }
+            RegistryIntakeDocuments.ImportJobDocument cancelled = existing.withStatus("CANCELLED");
+            writeJson(PREFIX_IMPORT + id, cancelled);
+            redis.delete(PREFIX_IMPORT_PAYLOAD + id);
+            publish("import.job.cancelled", Map.of("jobId", id, "targetRegistry", existing.targetRegistry()));
+            return cancelled;
+        });
+    }
+
     /**
      * Executes import job for FACILITY (Tuso) or SITE (Indawo) registries.
      */

@@ -1,3 +1,66 @@
+-- Phase 6 native Fundo LMS runtime tables.
+
+CREATE TABLE IF NOT EXISTS lrn_lms_enrolment (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    subject_type VARCHAR(64) NOT NULL,
+    subject_id VARCHAR(255) NOT NULL,
+    course_id VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    started_at TIMESTAMP WITH TIME ZONE NULL,
+    completed_at TIMESTAMP WITH TIME ZONE NULL,
+    cancelled_at TIMESTAMP WITH TIME ZONE NULL,
+    metadata_json TEXT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_lrn_lms_enrolment_subject
+    ON lrn_lms_enrolment(tenant_id, subject_type, subject_id);
+
+CREATE TABLE IF NOT EXISTS lrn_lms_assessment (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    course_id VARCHAR(255) NOT NULL,
+    title VARCHAR(512) NOT NULL,
+    status VARCHAR(32) NOT NULL DEFAULT 'PUBLISHED',
+    questions_json TEXT NULL,
+    metadata_json TEXT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS lrn_lms_assessment_attempt (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    assessment_id UUID NOT NULL,
+    subject_type VARCHAR(64) NOT NULL,
+    subject_id VARCHAR(255) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    score INTEGER NULL,
+    feedback TEXT NULL,
+    submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    reviewed_at TIMESTAMP WITH TIME ZONE NULL,
+    answers_json TEXT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_lrn_lms_attempt_subject
+    ON lrn_lms_assessment_attempt(tenant_id, subject_type, subject_id);
+
+CREATE TABLE IF NOT EXISTS lrn_lms_certificate (
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    enrolment_id UUID NULL,
+    subject_type VARCHAR(64) NOT NULL,
+    subject_id VARCHAR(255) NOT NULL,
+    course_id VARCHAR(255) NOT NULL,
+    certificate_ref VARCHAR(255) NULL,
+    issued_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    metadata_json TEXT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_lrn_lms_certificate_subject
+    ON lrn_lms_certificate(tenant_id, subject_type, subject_id);
 -- Phase 5A — Native Impilo Fundo LMS foundation.
 --
 -- Adds eleven new tables under the existing `lrn_` prefix that together form

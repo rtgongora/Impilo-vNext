@@ -35,7 +35,7 @@ export default function ProductDetailPage() {
 
   const { data, isLoading, error } = useQuery<ApiResponse<ProductDetail>>({
     queryKey: ["registry-products", id],
-    queryFn: () => apiClient.get<ApiResponse<ProductDetail>>(`/internal/v1/registry/products/${id}`),
+    queryFn: () => apiClient.get<ApiResponse<ProductDetail>>(`/internal/v1/product-registry/items/${encodeURIComponent(id)}`),
     enabled: !!id,
   });
 

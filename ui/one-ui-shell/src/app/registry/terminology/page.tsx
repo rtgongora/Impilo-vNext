@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Terminology Browser — Search ICD, SNOMED, and drug codes.
+ * Terminology Browser — Resolve ZIBO canonical artifacts.
  * Route: /registry/terminology
  */
 
@@ -15,56 +15,38 @@ import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
-interface TermResource {
-  id: string;
-  type: "terminology";
-  attributes: {
-    code: string;
-    display: string;
-    system: string;
-    version: string;
-    [key: string]: unknown;
-  };
-}
-
-const SYSTEMS = [
-  { value: "", label: "All Systems" },
-  { value: "ICD-10", label: "ICD-10" },
-  { value: "SNOMED-CT", label: "SNOMED CT" },
-  { value: "LOINC", label: "LOINC" },
-  { value: "RxNorm", label: "RxNorm" },
-];
-
 export default function TerminologyBrowserPage() {
   const searchParams = useSearchParams();
   const fromRegistryAdmin = searchParams.get("from") === "registry-admin";
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [system, setSystem] = useState("");
+  const [canonicalUrl, setCanonicalUrl] = useState("http://impilo.health/CodeSystem/facility-type");
+  const [version, setVersion] = useState("");
+  const [submitted, setSubmitted] = useState<{ canonicalUrl: string; version?: string } | null>(null);
 
-  const { data, isLoading, error } = useQuery<ApiResponse<TermResource[]>>({
-    queryKey: ["terminology", { search: searchQuery, system }],
+  const { data, isLoading, error } = useQuery<ApiResponse<unknown>>({
+    queryKey: ["terminology", "zibo-resolve", submitted],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (searchQuery) params.set("search", searchQuery);
-      if (system) params.set("system", system);
-      const qs = params.toString();
-      return apiClient.get<ApiResponse<TermResource[]>>(
-        `/internal/v1/registry/terminology${qs ? `?${qs}` : ""}`,
+      params.set("canonicalUrl", submitted?.canonicalUrl ?? "");
+      if (submitted?.version) params.set("version", submitted.version);
+      return apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/registry/zibo/artifacts/resolve?${params.toString()}`,
       );
     },
-    enabled: !!searchQuery,
+    enabled: Boolean(submitted?.canonicalUrl),
   });
 
-  const terms = data?.data ?? [];
-
-  function handleSearch() {
-    setSearchQuery(searchTerm);
+  function handleResolve() {
+    const trimmed = canonicalUrl.trim();
+    if (!trimmed) return;
+    setSubmitted({ canonicalUrl: trimmed, version: version.trim() || undefined });
   }
 
   return (
     <AppLayout>
-      <PageShell title="Terminology Browser" subtitle="Search ICD codes, SNOMED concepts, and drug codes">
+      <PageShell
+        title="Terminology Browser"
+        subtitle="Resolve ZIBO terminology artifacts by canonical URL and optional version"
+      >
         <RegistryPlaneContextBar />
         <div className="mb-4">
           <Link
@@ -75,93 +57,76 @@ export default function TerminologyBrowserPage() {
             {fromRegistryAdmin ? "Back to registry administration" : "Back to registry hub"}
           </Link>
         </div>
-        {/* Search */}
-        <div className="mb-6 flex gap-3">
+        <div className="mb-6 rounded-2xl border border-purple-100 bg-white p-5">
+          <p className="mb-3 text-sm text-gray-600">
+            The canonical Experience BFF exposes ZIBO artifact resolve, not a free-text terminology search. Use a
+            canonical CodeSystem or ValueSet URL below.
+          </p>
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search codes or terms..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Canonical URL"
+              value={canonicalUrl}
+              onChange={(e) => setCanonicalUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleResolve()}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
             />
           </div>
-          <select
-            value={system}
-            onChange={(e) => setSystem(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
-          >
-            {SYSTEMS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={handleSearch}
-            className="px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600"
-          >
-            Search
-          </button>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <input
+              type="text"
+              placeholder="Version optional"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+              className="min-w-[220px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+            />
+            <button
+              type="button"
+              onClick={handleResolve}
+              disabled={!canonicalUrl.trim()}
+              className="px-4 py-2 bg-impilo-500 text-white rounded-lg text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
+            >
+              Resolve artifact
+            </button>
+            {submitted?.canonicalUrl ? (
+              <Link
+                href={`/registry/terminology/${encodeURIComponent(submitted.canonicalUrl)}${
+                  submitted.version ? `?version=${encodeURIComponent(submitted.version)}` : ""
+                }`}
+                className="rounded-lg border border-purple-200 px-4 py-2 text-sm font-medium text-purple-700 hover:bg-purple-50"
+              >
+                Open detail route
+              </Link>
+            ) : null}
+          </div>
         </div>
 
-        {!searchQuery ? (
+        {!submitted ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
             <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">Enter a search term to browse terminology</p>
+            <p className="text-gray-400 text-sm">Enter a canonical URL to resolve a ZIBO artifact</p>
           </div>
         ) : isLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-            <span className="ml-2 text-sm text-gray-500">Searching terminology...</span>
+            <span className="ml-2 text-sm text-gray-500">Resolving terminology artifact...</span>
           </div>
         ) : error ? (
           <div className="bg-red-50 rounded-lg border border-red-200 p-6 text-center">
             <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
-            <p className="text-red-600 text-sm">Failed to search terminology</p>
-          </div>
-        ) : terms.length === 0 ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No results found for &quot;{searchQuery}&quot;</p>
+            <p className="text-red-600 text-sm">Failed to resolve terminology artifact</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Code</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Display</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">System</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Version</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {terms.map((term) => (
-                  <tr key={term.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">
-                      {term.attributes.code}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{term.attributes.display}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 font-medium">
-                        {term.attributes.system}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{term.attributes.version}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/registry/terminology/${term.id}`}
-                        className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="rounded-2xl border border-gray-200 bg-white p-5">
+            <div className="mb-3">
+              <p className="text-xs uppercase tracking-[0.18em] text-gray-500">Resolved artifact</p>
+              <h2 className="mt-1 font-mono text-sm font-semibold text-gray-900">{submitted.canonicalUrl}</h2>
+              {submitted.version ? <p className="text-xs text-gray-500">Version {submitted.version}</p> : null}
+            </div>
+            <pre className="max-h-[520px] overflow-auto rounded-lg bg-slate-950 p-4 text-xs text-slate-100">
+              {JSON.stringify(data?.data ?? {}, null, 2)}
+            </pre>
           </div>
         )}
       </PageShell>

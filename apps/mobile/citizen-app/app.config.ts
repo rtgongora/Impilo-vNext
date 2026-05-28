@@ -70,6 +70,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-web-browser",
     "expo-secure-store",
     "expo-sqlite",
+    "@livekit/react-native-expo-plugin",
+    "@config-plugins/react-native-webrtc",
     [
       "expo-build-properties",
       {

@@ -6,6 +6,7 @@
 
 import { apiClient } from "@impilo/mobile-api-client";
 import type { Encounter, EncounterStatus } from "../types";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 interface EncounterResource {
   id: string;
@@ -35,6 +36,7 @@ interface EncounterListResponse {
 function mapEncounter(r: EncounterResource): Encounter {
   return {
     id: r.id,
+    journeyId: String((r.attributes as Record<string, unknown>).journey_id ?? (r.attributes as Record<string, unknown>).journeyId ?? ""),
     patientId: r.attributes.patient_id,
     facilityId: r.attributes.facility_id,
     shiftId: r.attributes.shift_id,
@@ -78,17 +80,24 @@ export interface CreateEncounterInput {
   patientId: string;
   facilityId: string;
   encounterType: string;
+  pctJourneyId: string;
   chiefComplaint?: string;
 }
 
 export async function createEncounter(input: CreateEncounterInput): Promise<Encounter> {
   const response = await apiClient.post<{ data: EncounterResource }>(
-    "/internal/v1/encounters",
+    "/internal/v1/mobile/provider/encounters",
     {
       patient_id: input.patientId,
       facility_id: input.facilityId,
       encounter_type: input.encounterType,
+      pct_journey_id: input.pctJourneyId,
       chief_complaint: input.chiefComplaint,
+      encounter_context: "MOBILE_PROVIDER",
+      entry_point: "PROVIDER_APP",
+      modality: "IN_PERSON",
+      care_setting: "OUTPATIENT",
+      priority: "ROUTINE",
     }
   );
   return mapEncounter(response.data.data);
@@ -109,9 +118,35 @@ export async function addEncounterNotes(
   encounterId: string,
   notes: string
 ): Promise<Encounter> {
-  const response = await apiClient.patch<{ data: EncounterResource }>(
-    `/internal/v1/encounters/${encounterId}`,
-    { notes }
-  );
-  return mapEncounter(response.data.data);
+  const payload = { notes };
+  try {
+    const response = await apiClient.patch<{ data: EncounterResource }>(
+      `/internal/v1/encounters/${encounterId}`,
+      payload
+    );
+    return mapEncounter(response.data.data);
+  } catch (error) {
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: "clinical_encounter_notes",
+      path: `/internal/v1/encounters/${encounterId}`,
+      payload,
+      method: "PATCH",
+      operationType: "UPDATE",
+      recordId: `encounter-${encounterId}`,
+    });
+    if (!offline) throw error;
+    return {
+      id: encounterId,
+      journeyId: "",
+      patientId: "",
+      facilityId: "",
+      encounterType: "GENERAL",
+      status: "IN_PROGRESS" as EncounterStatus,
+      notes,
+      vitals: [],
+      startedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+  }
 }

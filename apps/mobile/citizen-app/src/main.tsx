@@ -1,5 +1,6 @@
 import { registerRootComponent } from "expo";
 import * as Crypto from "expo-crypto";
+import { registerGlobals } from "@livekit/react-native";
 
 // 1. ABSOLUTE TOP POLYFILLS - Must run before any other imports
 (function polyfill() {
@@ -122,4 +123,5 @@ import * as Crypto from "expo-crypto";
 // 2. NOW import the App
 import { App } from "./App";
 
+registerGlobals();
 registerRootComponent(App);

@@ -116,4 +116,57 @@ public class WorkflowController {
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }
+
+    @GetMapping("/instances")
+    public ResponseEntity<Map<String, Object>> instances(
+            @RequestParam(required = false) String status,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.listInstances(status);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Workflow instances list failed: {}", e.getMessage());
+            return ResponseEntity.ok(Map.of(
+                    "data", new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/instances")
+    public ResponseEntity<Map<String, Object>> startInstance(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = client.startInstance(body);
+            return ResponseEntity.status(201).body(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Workflow instance start failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "START_INSTANCE_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @PostMapping("/instances/{id}/transition")
+    public ResponseEntity<Map<String, Object>> transitionInstance(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = client.transitionInstance(id, body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Workflow instance transition failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of(
+                    "error", Map.of("code", "TRANSITION_INSTANCE_FAILED", "message", e.getMessage())));
+        }
+    }
 }

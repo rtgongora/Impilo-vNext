@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
-import { useEncounters, useCreateEncounter } from "@/hooks/queries/useEncounters";
+import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useReferrals } from "@/hooks/queries/useReferrals";
 import { useClinicalNotes } from "@/hooks/queries/useClinicalNotes";
 import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
@@ -67,7 +67,6 @@ export default function PatientChartPage() {
   const { data: notesData } = useClinicalNotes(patientId);
   const { data: telemedicineData } = useTelemedicineSessions({ patientId, facilityId: facility?.id });
   const { data: admissionsData } = useAdmissions(patientId);
-  const createEncounter = useCreateEncounter();
 
   const patient = patientData?.data;
   const admissions = (admissionsData as { data?: { id: string; attributes: Record<string, unknown> }[] } | undefined)?.data ?? [];
@@ -301,32 +300,11 @@ export default function PatientChartPage() {
                   </Link>
                 ) : (
                   <button
-                    onClick={() => {
-                      if (!facility) return;
-                      createEncounter.mutate(
-                        {
-                          patientId,
-                          facilityId: facility.id,
-                          encounterType: "OUTPATIENT",
-                        },
-                        {
-                          onSuccess: (data) => {
-                            const newId = data?.data?.id;
-                            if (newId) {
-                              router.push(`/ehr/${patientId}/encounter/${newId}`);
-                            }
-                          },
-                        },
-                      );
-                    }}
-                    disabled={createEncounter.isPending || !facility}
+                    onClick={() => router.push(`/ehr/${patientId}/encounters`)}
+                    disabled={!facility}
                     className="px-4 py-2 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 transition-colors shrink-0 flex items-center gap-1.5"
                   >
-                    {createEncounter.isPending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Starting...</>
-                    ) : (
-                      <><Activity className="w-4 h-4" /> Start Encounter</>
-                    )}
+                    <><Activity className="w-4 h-4" /> Start Encounter</>
                   </button>
                 )}
               </div>

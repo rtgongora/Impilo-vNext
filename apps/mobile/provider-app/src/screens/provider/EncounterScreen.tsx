@@ -26,6 +26,7 @@ import { PrescriptionPanel } from "./PrescriptionPanel";
 import { LabOrderPanel } from "./LabOrderPanel";
 import { ReferralPanel } from "./ReferralPanel";
 import { NotesPanel } from "./NotesPanel";
+import { TriageScreen } from "./TriageScreen";
 
 const TABS = [
   { key: "vitals", label: "Vitals" },
@@ -74,7 +75,7 @@ export function EncounterScreen() {
   const renderPanel = () => {
     switch (activeTab) {
       case "vitals":
-        return <VitalsPanel encounterId={activeEncounter.id} />;
+        return <VitalsPanel encounterId={activeEncounter.id} patientId={activeEncounter.patientId} />;
       case "diagnosis":
         return <DiagnosisPanel encounterId={activeEncounter.id} />;
       case "rx":
@@ -101,7 +102,7 @@ export function EncounterScreen() {
       case "notes":
         return <NotesPanel encounterId={activeEncounter.id} />;
       case "triage":
-        return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: "#6B7280" }}>Triage assessment available from the Triage screen in Clinical Tools</Text></View>;
+        return <TriageScreen embedded />;
       case "billing":
         return <View style={{ padding: 16 }}><Text style={{ fontSize: 14, color: "#6B7280" }}>Charge capture available from the Billing screen in Clinical Tools</Text></View>;
       default:

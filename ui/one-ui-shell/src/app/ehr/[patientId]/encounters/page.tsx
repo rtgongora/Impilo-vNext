@@ -44,7 +44,13 @@ const STATUS_BADGE: Record<string, string> = {
 
 const EMPTY_FORM = {
   encounter_type: "OUTPATIENT",
-  chief_complaint: "" };
+  chief_complaint: "",
+  journey_id: "",
+  encounter_context: "CLINICAL_VISIT",
+  entry_point: "PROVIDER_WORKSPACE",
+  modality: "IN_PERSON",
+  care_setting: "OUTPATIENT",
+  priority: "ROUTINE" };
 
 /* ------------------------------------------------------------------ */
 /*  Page component                                                     */
@@ -101,7 +107,13 @@ export default function EncountersPage() {
         patientId,
         facilityId: facility?.id ?? "",
         encounterType: form.encounter_type,
-        chief_complaint: form.chief_complaint.trim() || undefined },
+        journeyId: form.journey_id.trim(),
+        encounterContext: form.encounter_context,
+        entryPoint: form.entry_point,
+        modality: form.modality,
+        careSetting: form.care_setting,
+        priority: form.priority,
+        chiefComplaint: form.chief_complaint.trim() || undefined },
       {
         onSuccess: (data) => {
           setForm({ ...EMPTY_FORM });
@@ -222,6 +234,22 @@ export default function EncountersPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">
+                        PCT Journey ID
+                      </label>
+                      <input
+                        type="text"
+                        value={form.journey_id}
+                        onChange={(e) => updateField("journey_id", e.target.value)}
+                        placeholder="Required canonical journey id"
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Encounters start through PCT journey orchestration; direct patient-only encounter creation is not supported.
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
                         Encounter Type
                       </label>
                       <select
@@ -248,6 +276,31 @@ export default function EncountersPage() {
                         required
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Context
+                      </label>
+                      <input
+                        type="text"
+                        value={form.encounter_context}
+                        onChange={(e) => updateField("encounter_context", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Priority
+                      </label>
+                      <select
+                        value={form.priority}
+                        onChange={(e) => updateField("priority", e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 focus:border-impilo-400"
+                      >
+                        <option value="ROUTINE">Routine</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="EMERGENCY">Emergency</option>
+                      </select>
                     </div>
                   </div>
 

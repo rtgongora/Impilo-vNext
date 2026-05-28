@@ -42,6 +42,10 @@ const requiredSnippets = [
   { label: "v1.1 authoring catalog path", pattern: /^\s*\/internal\/v1\/learning\/v11\/catalog:\s*$/m },
   { label: "v1.1 assessments path", pattern: /^\s*\/internal\/v1\/learning\/v11\/assessments:\s*$/m },
   { label: "v1.1 report path", pattern: /^\s*\/internal\/v1\/learning\/v11\/reports\/cohort-completions:\s*$/m },
+  { label: "v1.1 studio dashboard path", pattern: /^\s*\/internal\/v1\/learning\/v11\/studio\/dashboard:\s*$/m },
+  { label: "v1.1 AI generate path", pattern: /^\s*\/internal\/v1\/learning\/v11\/ai\/generate:\s*$/m },
+  { label: "v1.1 notifications path", pattern: /^\s*\/internal\/v1\/learning\/v11\/notifications:\s*$/m },
+  { label: "v1.1 interactive responses path", pattern: /^\s*\/internal\/v1\/learning\/v11\/interactive\/activities\/\{activityId\}\/responses:\s*$/m },
 ];
 
 for (const check of requiredSnippets) {

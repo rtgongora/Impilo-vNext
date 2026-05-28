@@ -4,14 +4,20 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const mockApiClient = {
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
-};
+}));
 
 vi.mock("@impilo/mobile-api-client", () => ({
   apiClient: mockApiClient,
 }));
+
+import {
+  endProviderTelemedicineSession,
+  joinProviderTelemedicineSession,
+  listProviderTelemedicineSessions,
+} from "../../services/telemedicineService";
 
 describe("Telemedicine Service", () => {
   beforeEach(() => {
@@ -24,21 +30,20 @@ describe("Telemedicine Service", () => {
         data: [
           {
             id: "session-1",
-            attributes: {
-              encounter_id: "enc-1",
-              patient_id: "pat-1",
-              provider_id: "prov-1",
-              status: "SCHEDULED",
-              scheduled_at: "2026-03-15T15:00:00Z",
-            },
+            status: "SCHEDULED",
+            patient_id: "pat-1",
+            provider_id: "prov-1",
+            encounter_id: "enc-1",
+            scheduled_at: "2026-03-15T15:00:00Z",
           },
         ],
       },
     });
 
-    const response = await mockApiClient.get("/internal/v1/mobile/provider/telemedicine/sessions");
-    expect(response.data.data).toHaveLength(1);
-    expect(response.data.data[0].attributes.status).toBe("SCHEDULED");
+    const response = await listProviderTelemedicineSessions({ facilityId: "fac-1", providerId: "prov-1" });
+    expect(response).toHaveLength(1);
+    expect(response[0].status).toBe("SCHEDULED");
+    expect(mockApiClient.get).toHaveBeenCalledWith("/internal/v1/mobile/provider/telemedicine/sessions?facility_id=fac-1&provider_id=prov-1&page=0&size=50");
   });
 
   it("joins a session and receives token", async () => {
@@ -46,30 +51,31 @@ describe("Telemedicine Service", () => {
       data: {
         data: {
           id: "session-1",
-          attributes: {
-            encounter_id: "enc-1",
-            patient_id: "pat-1",
-            provider_id: "prov-1",
-            status: "IN_PROGRESS",
-            scheduled_at: "2026-03-15T15:00:00Z",
-            started_at: "2026-03-15T15:02:00Z",
-            session_token: "jwt-session-token-xyz",
-            channel_id: "channel-abc",
-          },
+          status: "IN_PROGRESS",
+          encounter_id: "enc-1",
+          patient_id: "pat-1",
+          provider_id: "prov-1",
+          scheduled_at: "2026-03-15T15:00:00Z",
+          started_at: "2026-03-15T15:02:00Z",
+          accessToken: "jwt-session-token-xyz",
+          channel: "rtc:channel-abc",
+          roomUrl: "https://livekit.example/rooms/session-1",
         },
       },
     });
 
-    const response = await mockApiClient.post("/internal/v1/mobile/provider/telemedicine/sessions/session-1/join");
-    expect(response.data.data.attributes.status).toBe("IN_PROGRESS");
-    expect(response.data.data.attributes.session_token).toBe("jwt-session-token-xyz");
-    expect(response.data.data.attributes.channel_id).toBe("channel-abc");
+    const response = await joinProviderTelemedicineSession("session-1");
+    expect(response.status).toBe("IN_PROGRESS");
+    expect(response.sessionToken).toBe("jwt-session-token-xyz");
+    expect(response.channelId).toBe("rtc:channel-abc");
+    expect(response.roomUrl).toBe("https://livekit.example/rooms/session-1");
+    expect(mockApiClient.post).toHaveBeenCalledWith("/internal/v1/mobile/provider/telemedicine/sessions/session-1/join");
   });
 
   it("ends a session", async () => {
     mockApiClient.post.mockResolvedValue({ data: { data: { id: "session-1", attributes: { status: "COMPLETED" } } } });
 
-    const response = await mockApiClient.post("/internal/v1/mobile/provider/telemedicine/sessions/session-1/end");
-    expect(response.data.data.attributes.status).toBe("COMPLETED");
+    await endProviderTelemedicineSession("session-1");
+    expect(mockApiClient.post).toHaveBeenCalledWith("/internal/v1/mobile/provider/telemedicine/sessions/session-1/end", undefined);
   });
 });

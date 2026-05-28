@@ -28,6 +28,7 @@ import {
   type LauncherApp,
 } from "../../services/healthOsLauncherService";
 import { SystemStatusScreen } from "./SystemStatusScreen";
+import { useAppStore } from "../../stores/appStore";
 
 const BLUE = "#1E40AF";
 
@@ -44,6 +45,7 @@ const STATE_TONE: Record<LauncherApp["state"], { label: string; color: string }>
 };
 
 export function HealthOsAppsScreen() {
+  const { appsFocus, setAppsFocus, setClinicalToolsInitialTab, setProviderTab } = useAppStore();
   const [apps, setApps] = useState<LauncherApp[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,6 +118,38 @@ export function HealthOsAppsScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={load} colors={[BLUE]} />}
       >
+        {appsFocus ? (
+          <Card style={styles.focusCard}>
+            <CardBody>
+              <View style={styles.focusRow}>
+                <Text style={styles.focusTitle}>
+                  {appsFocus === "required"
+                    ? "Fundo required learning focus"
+                    : appsFocus === "overdue"
+                    ? "Fundo overdue learning focus"
+                    : "Fundo CPD focus"}
+                </Text>
+                <Pressable onPress={() => setAppsFocus(null)} accessibilityRole="button">
+                  <Text style={styles.focusDismiss}>Clear</Text>
+                </Pressable>
+              </View>
+              <Text style={styles.focusHint}>
+                Open Impilo Fundo in this Apps surface to continue from the KPI you selected on Launch Care.
+              </Text>
+              <View style={{ marginTop: 8 }}>
+                <Button
+                  title="Open Fundo learning journey"
+                  variant="outline"
+                  onPress={() => {
+                    setClinicalToolsInitialTab("learning");
+                    setProviderTab("tools");
+                  }}
+                />
+              </View>
+            </CardBody>
+          </Card>
+        ) : null}
+
         <Pressable
           onPress={() => setShowStatus(true)}
           style={styles.statusEntry}
@@ -237,6 +271,11 @@ const styles = StyleSheet.create({
   errorText: { color: "#b91c1c", fontSize: 13, marginBottom: 8 },
   toast: { borderColor: "#bfdbfe", borderWidth: 1, marginBottom: 12 },
   toastText: { color: "#1e3a8a", fontSize: 12 },
+  focusCard: { borderColor: "#bae6fd", borderWidth: 1, marginBottom: 12, backgroundColor: "#f0f9ff" },
+  focusRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 4 },
+  focusTitle: { color: "#0c4a6e", fontWeight: "700", fontSize: 13 },
+  focusDismiss: { color: "#0369a1", fontSize: 12, fontWeight: "600" },
+  focusHint: { color: "#075985", fontSize: 12 },
   statusEntry: {
     flexDirection: "row",
     alignItems: "center",

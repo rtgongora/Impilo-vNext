@@ -17,91 +17,79 @@ import {
   EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { apiClient } from "@impilo/mobile-api-client";
 import { useChannel } from "@impilo/mobile-messaging";
+import { useAuth } from "@impilo/mobile-auth";
+import { useAppStore } from "../../stores/appStore";
 import type { TelemedicineSession } from "../../types";
+import {
+  endProviderTelemedicineSession,
+  joinProviderTelemedicineSession,
+  listProviderTelemedicineSessions,
+  sendProviderTelemedicineSignal,
+} from "../../services/telemedicineService";
+import { LiveKitMobileConsultRoom } from "./LiveKitMobileConsultRoom";
+
+export function mapChannelHealth(status: string | undefined): {
+  label: string;
+  variant: "primary" | "warning" | "secondary" | "destructive";
+} {
+  const value = String(status ?? "").toLowerCase();
+  if (value === "connected" || value === "open" || value === "ready") {
+    return { label: "Realtime connected", variant: "primary" };
+  }
+  if (value === "connecting" || value === "reconnecting") {
+    return { label: "Realtime reconnecting", variant: "warning" };
+  }
+  if (value === "error" || value === "closed" || value === "offline") {
+    return { label: "Realtime unavailable", variant: "destructive" };
+  }
+  return { label: "Realtime unknown", variant: "secondary" };
+}
 
 export function TelemedicineScreen() {
+  const auth = useAuth();
+  const { facilityId } = useAppStore();
   const [sessions, setSessions] = useState<TelemedicineSession[]>([]);
   const [activeSession, setActiveSession] = useState<TelemedicineSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  const [micMuted, setMicMuted] = useState(false);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [sendingSignal, setSendingSignal] = useState<"delay" | "nudge" | "support" | null>(null);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get<{
-        data: {
-          id: string;
-          attributes: {
-            encounter_id: string;
-            patient_id: string;
-            provider_id: string;
-            status: TelemedicineSession["status"];
-            scheduled_at: string;
-            started_at?: string;
-            ended_at?: string;
-            session_token?: string;
-            channel_id?: string;
-          };
-        }[];
-      }>("/internal/v1/mobile/provider/telemedicine/sessions");
-      setSessions(
-        response.data.data.map((s) => ({
-          id: s.id,
-          encounterId: s.attributes.encounter_id,
-          patientId: s.attributes.patient_id,
-          providerId: s.attributes.provider_id,
-          status: s.attributes.status,
-          scheduledAt: s.attributes.scheduled_at,
-          startedAt: s.attributes.started_at,
-          endedAt: s.attributes.ended_at,
-          sessionToken: s.attributes.session_token,
-          channelId: s.attributes.channel_id,
-        }))
-      );
+      setSessions(await listProviderTelemedicineSessions({
+        facilityId,
+        providerId: auth.user?.sub,
+      }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sessions");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [auth.user?.sub, facilityId]);
 
   useEffect(() => {
     loadSessions();
   }, [loadSessions]);
 
   const handleJoin = useCallback(async (session: TelemedicineSession) => {
+    if (!session.id) {
+      setError("Cannot join session: missing identifier.");
+      return;
+    }
     try {
-      const response = await apiClient.post<{
-        data: {
-          id: string;
-          attributes: {
-            encounter_id: string;
-            patient_id: string;
-            provider_id: string;
-            status: TelemedicineSession["status"];
-            scheduled_at: string;
-            started_at: string;
-            session_token: string;
-            channel_id: string;
-          };
-        };
-      }>(`/internal/v1/mobile/provider/telemedicine/sessions/${session.id}/join`);
-      const s = response.data.data;
-      setActiveSession({
-        id: s.id,
-        encounterId: s.attributes.encounter_id,
-        patientId: s.attributes.patient_id,
-        providerId: s.attributes.provider_id,
-        status: s.attributes.status,
-        scheduledAt: s.attributes.scheduled_at,
-        startedAt: s.attributes.started_at,
-        sessionToken: s.attributes.session_token,
-        channelId: s.attributes.channel_id,
-      });
+      const next = await joinProviderTelemedicineSession(session.id);
+      setActiveSession(next);
+      if (!next.channelId) {
+        setSessionNotice("Session joined, but realtime channel is missing. Use async notes and retry reconnect.");
+      } else {
+        setSessionNotice(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to join session");
     }
@@ -110,13 +98,35 @@ export function TelemedicineScreen() {
   const handleEnd = useCallback(async () => {
     if (!activeSession) return;
     try {
-      await apiClient.post(`/internal/v1/mobile/provider/telemedicine/sessions/${activeSession.id}/end`);
+      await endProviderTelemedicineSession(activeSession.id);
       setActiveSession(null);
       loadSessions();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to end session");
     }
   }, [activeSession, loadSessions]);
+
+  const postSessionSignal = useCallback(
+    async (kind: "delay" | "nudge" | "support") => {
+      if (!activeSession?.id) return;
+      setSendingSignal(kind);
+      try {
+        await sendProviderTelemedicineSignal(activeSession.id, kind);
+        setSessionNotice(
+          kind === "delay"
+            ? "Delay notice sent to client."
+            : kind === "nudge"
+              ? "No-show nudge sent to client."
+              : "Support escalation sent."
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to send teleconsult signal");
+      } finally {
+        setSendingSignal(null);
+      }
+    },
+    [activeSession?.id]
+  );
 
   // Real-time signaling for active session
   const { status: channelStatus } = useChannel(
@@ -138,6 +148,7 @@ export function TelemedicineScreen() {
       },
     }
   );
+  const channelHealth = mapChannelHealth(channelStatus);
 
   if (activeSession) {
     return (
@@ -148,10 +159,33 @@ export function TelemedicineScreen() {
             <CardBody>
               <View style={styles.activeSessionCenter}>
                 <Badge variant="primary">IN PROGRESS</Badge>
+                <View style={styles.channelBadge}>
+                  <Badge variant={channelHealth.variant}>{channelHealth.label}</Badge>
+                </View>
                 <View testID="video-container" style={styles.videoContainer}>
-                  <Text style={styles.videoText}>Video Stream Active</Text>
+                  <LiveKitMobileConsultRoom
+                    serverUrl={activeSession.roomUrl}
+                    token={activeSession.sessionToken}
+                    videoEnabled={videoEnabled}
+                    micMuted={micMuted}
+                    onConnected={() => setSessionNotice("LiveKit media connected through Impilo RTC Gateway.")}
+                    onDisconnected={() => setSessionNotice("LiveKit media disconnected. Clinical notes remain available.")}
+                    onError={(message) => setSessionNotice(message)}
+                  />
                 </View>
                 <View style={styles.actionRow}>
+                  <Button
+                    title={videoEnabled ? "Disable Video" : "Enable Video"}
+                    variant="outline"
+                    onPress={() => setVideoEnabled((prev) => !prev)}
+                    testID="toggle-video-btn"
+                  />
+                  <Button
+                    title={micMuted ? "Unmute Mic" : "Mute Mic"}
+                    variant="outline"
+                    onPress={() => setMicMuted((prev) => !prev)}
+                    testID="toggle-mic-btn"
+                  />
                   <Button
                     title="End Session"
                     variant="destructive"
@@ -159,8 +193,36 @@ export function TelemedicineScreen() {
                     testID="end-session-btn"
                   />
                 </View>
+                <View style={styles.signalRow}>
+                  <Button
+                    title="Client Nudge"
+                    variant="outline"
+                    disabled={sendingSignal !== null}
+                    onPress={() => postSessionSignal("nudge")}
+                    testID="signal-nudge-btn"
+                  />
+                  <Button
+                    title="Delay Notice"
+                    variant="outline"
+                    disabled={sendingSignal !== null}
+                    onPress={() => postSessionSignal("delay")}
+                    testID="signal-delay-btn"
+                  />
+                  <Button
+                    title="Request Support"
+                    variant="outline"
+                    disabled={sendingSignal !== null}
+                    onPress={() => postSessionSignal("support")}
+                    testID="signal-support-btn"
+                  />
+                </View>
                 <Text style={styles.noticeText}>{`Realtime channel: ${channelStatus}`}</Text>
                 {sessionNotice ? <Text style={styles.noticeText}>{sessionNotice}</Text> : null}
+                {activeSession.sessionToken ? null : (
+                  <Text style={styles.noticeWarning}>
+                    Session token missing. Continue with async notes while support resolves media session setup.
+                  </Text>
+                )}
               </View>
             </CardBody>
           </Card>
@@ -229,15 +291,39 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 18,
   },
+  mediaText: {
+    color: "#D1D5DB",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: 8,
+    paddingHorizontal: 12,
+  },
   actionRow: {
     flexDirection: "row",
     gap: 12,
     justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  signalRow: {
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  channelBadge: {
+    marginTop: 8,
   },
   noticeText: {
     fontSize: 13,
     color: "#374151",
     marginTop: 12,
+    textAlign: "center",
+  },
+  noticeWarning: {
+    fontSize: 12,
+    color: "#92400E",
+    marginTop: 8,
     textAlign: "center",
   },
   sessionRow: {

@@ -1,5 +1,6 @@
 import { registerRootComponent } from "expo";
 import * as Crypto from "expo-crypto";
+import { registerGlobals } from "@livekit/react-native";
 import { App } from "./App";
 
 // Robust polyfills for mobile (React Native / Expo)
@@ -65,4 +66,5 @@ if (typeof btoa === "undefined") {
   };
 }
 
+registerGlobals();
 registerRootComponent(App);

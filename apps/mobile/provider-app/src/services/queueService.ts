@@ -5,23 +5,49 @@ import { apiClient } from "@impilo/mobile-api-client";
 
 const V1 = "/internal/v1/mobile/provider";
 
-export async function fetchQueue(): Promise<unknown[]> {
-  const r = await apiClient.get<{ data: unknown[] }>(`${V1}/queue`);
+export async function fetchQueue(facilityId?: string): Promise<unknown[]> {
+  const params = new URLSearchParams();
+  if (facilityId) params.set("facility_id", facilityId);
+  const qs = params.toString();
+  const r = await apiClient.get<{ data: unknown[] }>(`/internal/v1/queue/entries${qs ? `?${qs}` : ""}`);
   return r.data.data;
 }
-export async function callNext(queueId: string): Promise<unknown> {
-  const r = await apiClient.post<{ data: unknown }>(`${V1}/queue/call-next`, { queueId });
+export async function callNext(entryId: string): Promise<unknown> {
+  const r = await apiClient.post<{ data: unknown }>(`/internal/v1/queue/entries/${entryId}/call`);
   return r.data.data;
 }
 export async function completeEntry(id: string): Promise<void> {
-  await apiClient.post(`${V1}/queue/complete/${id}`);
+  await apiClient.post(`/internal/v1/queue/entries/${id}/complete`);
 }
-export async function fetchQueueStats(): Promise<{ waiting: number; inProgress: number; completedToday: number }> {
-  const r = await apiClient.get<{ data: { waiting: number; inProgress: number; completedToday: number } }>(`${V1}/queue/stats`);
-  return r.data.data;
+export async function fetchQueueStats(facilityId?: string): Promise<{ waiting: number; inProgress: number; completedToday: number }> {
+  const r = await apiClient.post<{ data: Record<string, number> }>("/internal/v1/queue/entries/stats", {
+    facilityId,
+  });
+  return {
+    waiting: Number(r.data.data.waiting ?? 0),
+    inProgress: Number(r.data.data.inProgress ?? r.data.data.inService ?? r.data.data.called ?? 0),
+    completedToday: Number(r.data.data.completedToday ?? r.data.data.completed ?? 0),
+  };
 }
-export async function recordTriage(body: { patientId: string; encounterId: string; triageLevel: string; chiefComplaint: string; acuityScore: number }): Promise<{ id: string }> {
-  const r = await apiClient.post<{ data: { id: string } }>(`${V1}/triage`, body);
+export async function recordTriage(body: {
+  patientId: string;
+  encounterId: string;
+  triageLevel: string;
+  chiefComplaint: string;
+  acuityScore: number;
+  notes?: string;
+  triagedBy?: string;
+  triagedByName?: string;
+}): Promise<{ id: string }> {
+  const r = await apiClient.post<{ data: { id: string } }>(`${V1}/triage`, {
+    patient_id: body.patientId,
+    encounter_id: body.encounterId,
+    acuity: body.acuityScore,
+    chief_complaint: body.chiefComplaint,
+    notes: body.notes ?? body.chiefComplaint,
+    triaged_by: body.triagedBy ?? "provider-app",
+    triaged_by_name: body.triagedByName ?? "Provider App",
+  });
   return r.data.data;
 }
 export async function fetchBeds(): Promise<{ wards: unknown[]; beds: unknown[] }> {

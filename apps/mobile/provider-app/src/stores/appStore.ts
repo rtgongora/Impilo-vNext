@@ -28,6 +28,11 @@ export interface AppState {
   clinicalToolsInitialTab: string | null;
   /** When switching to Supervisor mode, open this tab once then clear (e.g. escalations). */
   supervisorEntryTab: "dashboard" | "team" | "stock" | "inventory" | "escalations" | null;
+  /** Optional focus to carry into Apps surface (e.g. Fundo overdue). */
+  appsFocus: "required" | "overdue" | "cpd" | null;
+  /** Active learning subject identity for Fundo parity flows. */
+  learningSubjectType: string | null;
+  learningSubjectId: string | null;
 
   setMode: (mode: AppMode) => void;
   setOnlineStatus: (online: boolean) => void;
@@ -40,6 +45,8 @@ export interface AppState {
   setGlobalError: (error: { code: string; message: string } | null) => void;
   setClinicalToolsInitialTab: (tab: string | null) => void;
   setSupervisorEntryTab: (tab: AppState["supervisorEntryTab"]) => void;
+  setAppsFocus: (focus: AppState["appsFocus"]) => void;
+  setLearningSubject: (subjectType: string | null, subjectId: string | null) => void;
   clearContext: () => void;
 }
 
@@ -57,8 +64,16 @@ export const appStore = createStore<AppState>((set) => ({
   globalError: null,
   clinicalToolsInitialTab: null,
   supervisorEntryTab: null,
+  appsFocus: null,
+  learningSubjectType: null,
+  learningSubjectId: null,
 
-  setMode: (mode) => set({ mode }),
+  setMode: (mode) =>
+    set((state) => ({
+      mode,
+      // Enforce worklist-first entry whenever the clinician returns to Provider mode.
+      providerTab: mode === "provider" ? "dashboard" : state.providerTab,
+    })),
   setOnlineStatus: (isOnline) => set({ isOnline }),
   setFacilityContext: (id, name) => set({ facilityId: id, facilityName: name }),
   setWorkspaceContext: (id, name) => set({ workspaceId: id, workspaceName: name }),
@@ -69,6 +84,8 @@ export const appStore = createStore<AppState>((set) => ({
   setGlobalError: (error) => set({ globalError: error }),
   setClinicalToolsInitialTab: (clinicalToolsInitialTab) => set({ clinicalToolsInitialTab }),
   setSupervisorEntryTab: (supervisorEntryTab) => set({ supervisorEntryTab }),
+  setAppsFocus: (appsFocus) => set({ appsFocus }),
+  setLearningSubject: (learningSubjectType, learningSubjectId) => set({ learningSubjectType, learningSubjectId }),
   clearContext: () =>
     set({
       facilityId: null,

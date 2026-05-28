@@ -6,6 +6,7 @@
 
 import { apiClient } from "@impilo/mobile-api-client";
 import type { Diagnosis } from "../types";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 interface DiagnosisResource {
   id: string;
@@ -55,17 +56,36 @@ export interface RecordDiagnosisInput {
 }
 
 export async function recordDiagnosis(input: RecordDiagnosisInput): Promise<Diagnosis> {
-  const response = await apiClient.post<{ data: DiagnosisResource }>(
-    "/internal/v1/mobile/provider/diagnosis",
-    {
-      encounter_id: input.encounterId,
-      icd_code: input.icdCode,
-      icd_description: input.icdDescription,
-      is_primary: input.isPrimary,
+  const payload = {
+    encounter_id: input.encounterId,
+    icd_code: input.icdCode,
+    icd_description: input.icdDescription,
+    is_primary: input.isPrimary,
+    notes: input.notes,
+  };
+  try {
+    const response = await apiClient.post<{ data: DiagnosisResource }>(
+      "/internal/v1/mobile/provider/diagnosis",
+      payload
+    );
+    return mapDiagnosis(response.data.data);
+  } catch (error) {
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: "clinical_diagnoses",
+      path: "/internal/v1/mobile/provider/diagnosis",
+      payload,
+    });
+    if (!offline) throw error;
+    return {
+      id: offline.recordId,
+      encounterId: input.encounterId,
+      icdCode: input.icdCode,
+      icdDescription: input.icdDescription,
+      isPrimary: input.isPrimary,
       notes: input.notes,
-    }
-  );
-  return mapDiagnosis(response.data.data);
+      diagnosedAt: new Date().toISOString(),
+    };
+  }
 }
 
 export async function getDiagnosesForEncounter(encounterId: string): Promise<Diagnosis[]> {

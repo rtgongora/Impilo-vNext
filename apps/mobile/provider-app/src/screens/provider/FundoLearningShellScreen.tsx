@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { Button, Card, CardBody, Header, LoadingSpinner, Screen } from "@impilo/mobile-design-system";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useAuth } from "@impilo/mobile-auth";
 import { useAppStore } from "../../stores/appStore";
 import {
   createEnrolment,
@@ -17,13 +18,15 @@ type AnyRecord = Record<string, unknown>;
 type Stage = "home" | "catalog" | "course" | "lesson";
 
 export function FundoLearningShellScreen() {
-  const { isOnline } = useAppStore();
+  const auth = useAuth();
+  const { isOnline, appsFocus, learningSubjectType, learningSubjectId } = useAppStore();
   const [stage, setStage] = useState<Stage>("home");
   const [activeCourseId, setActiveCourseId] = useState<string>("");
   const [activeLessonId, setActiveLessonId] = useState<string>("");
   const [activeEnrolmentId, setActiveEnrolmentId] = useState<string>("");
-  const subjectType = "PROVIDER";
-  const subjectId = "mobile-provider";
+  const authUser = auth.user as { sub?: string; provider_id?: string; providerId?: string } | undefined;
+  const subjectType = learningSubjectType ?? "PROVIDER";
+  const subjectId = learningSubjectId ?? authUser?.provider_id ?? authUser?.providerId ?? authUser?.sub ?? "mobile-provider";
 
   const myLearning = useQuery({
     queryKey: ["mobile-fundo", "my-learning", subjectType, subjectId],
@@ -62,12 +65,29 @@ export function FundoLearningShellScreen() {
   }, [course.data]);
   const activeLesson = lessons.find((l) => String(l.id) === activeLessonId) ?? null;
 
+  useEffect(() => {
+    if (appsFocus && stage === "home") {
+      setStage("catalog");
+    }
+  }, [appsFocus, stage]);
+
   return (
     <Screen>
       <Header title="Fundo Learning (Provider)" />
       <View style={styles.modeBanner}>
         <Text style={styles.modeBannerText}>{isOnline ? "Online mode" : "Offline mode (cached learning data)"}</Text>
       </View>
+      {appsFocus ? (
+        <View style={styles.focusBanner}>
+          <Text style={styles.focusBannerText}>
+            {appsFocus === "required"
+              ? "Required learning focus"
+              : appsFocus === "overdue"
+                ? "Overdue learning focus"
+                : "CPD evidence focus"}
+          </Text>
+        </View>
+      ) : null}
       <View style={styles.navRow}>
         <Button title="Home" size="sm" variant={stage === "home" ? "primary" : "outline"} onPress={() => setStage("home")} />
         <Button title="Catalogue" size="sm" variant={stage === "catalog" ? "primary" : "outline"} onPress={() => setStage("catalog")} />
@@ -164,6 +184,8 @@ export function FundoLearningShellScreen() {
 const styles = StyleSheet.create({
   modeBanner: { backgroundColor: "#E0F2FE", paddingHorizontal: 12, paddingVertical: 6 },
   modeBannerText: { fontSize: 12, color: "#0C4A6E", fontWeight: "600" },
+  focusBanner: { backgroundColor: "#ECFEFF", paddingHorizontal: 12, paddingVertical: 6, borderBottomColor: "#A5F3FC", borderBottomWidth: 1 },
+  focusBannerText: { fontSize: 12, color: "#0F766E", fontWeight: "700" },
   navRow: { flexDirection: "row", gap: 8, padding: 12 },
   scroll: { flex: 1 },
   content: { padding: 12, gap: 10 },

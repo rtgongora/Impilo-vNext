@@ -26,6 +26,7 @@ type Props = {
   isRefetching: boolean;
   onRefresh: () => void | Promise<unknown>;
   getSectionTestId: (id: string) => string;
+  children?: React.ReactNode;
 };
 
 export function ProfessionalHubBody({
@@ -39,6 +40,7 @@ export function ProfessionalHubBody({
   isRefetching,
   onRefresh,
   getSectionTestId,
+  children,
 }: Props) {
   const timeLabel = formatHubTimestamp(refreshedAt ?? undefined);
 
@@ -62,6 +64,7 @@ export function ProfessionalHubBody({
           <RefreshControl refreshing={isRefetching} onRefresh={() => void onRefresh()} tintColor="#2563EB" />
         }
       >
+        {children}
         {sections.map((s) => (
           <Card key={s.id}>
             <CardBody>

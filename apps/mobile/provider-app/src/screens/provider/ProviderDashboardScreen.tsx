@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@impilo/mobile-auth";
 import {
   Screen,
   Header,
@@ -25,7 +26,17 @@ import { useEncounterStore } from "../../stores/encounterStore";
 import { getMyTasks } from "../../services/taskService";
 import { listEncounters } from "../../services/encounterService";
 import { getFacilityMetrics } from "../../services/supportService";
-import type { Task, Encounter, FacilityMetrics, ProviderTabKey } from "../../types";
+import { getClinicalWorklist } from "../../services/clinicalWorklistService";
+import { getProviderLearningSummary } from "../../services/learningService";
+import type {
+  Task,
+  Encounter,
+  FacilityMetrics,
+  ProviderTabKey,
+  ClinicalWorklistItem,
+  ClinicalWorklistSummary,
+  ProviderLearningSummary,
+} from "../../types";
 
 const BLUE = "#1E40AF";
 
@@ -84,6 +95,7 @@ const LAUNCH_ACTIONS: Array<{
   color: string;
   bg: string;
 }> = [
+  { key: "fundo-learning", title: "Fundo Learning", subtitle: "Prioritize training, CPD and required modules", target: "apps", icon: "school-outline", color: "#0E7490", bg: "#CFFAFE" },
   { key: "find-patient", title: "Find Patient", subtitle: "Search and start a new encounter", target: "patients", icon: "search-outline", color: "#059669", bg: "#D1FAE5" },
   { key: "queue",        title: "Open Queue",   subtitle: "Pick up the next waiting patient",  target: "queue",    icon: "people-outline", color: BLUE, bg: "#DBEAFE" },
   { key: "results",      title: "Lab Results",  subtitle: "Check new lab and imaging output",  target: "results",  icon: "flask-outline",  color: "#7C3AED", bg: "#EDE9FE" },
@@ -97,13 +109,27 @@ const PRIORITY_VARIANT: Record<string, string> = {
   LOW: "outline",
 };
 
+function badgeVariantForPriority(priority?: string): "destructive" | "secondary" | "outline" {
+  const key = String(priority ?? "MEDIUM").toUpperCase();
+  const mapped = PRIORITY_VARIANT[key];
+  if (mapped === "destructive" || mapped === "secondary" || mapped === "outline") {
+    return mapped;
+  }
+  return "secondary";
+}
+
 export function ProviderDashboardScreen() {
-  const { facilityId, facilityName, workspaceName, setProviderTab, setMode } = useAppStore();
+  const auth = useAuth();
+  const { facilityId, facilityName, workspaceName, setProviderTab, setMode, setLearningSubject } = useAppStore();
   const { activeEncounter } = useEncounterStore();
   const { dashboard: commsDashboard } = useCommunicationDashboard();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [openEncounters, setOpenEncounters] = useState<Encounter[]>([]);
   const [metrics, setMetrics] = useState<FacilityMetrics | null>(null);
+  const [clinicalWorklist, setClinicalWorklist] = useState<ClinicalWorklistItem[]>([]);
+  const [worklistSummary, setWorklistSummary] = useState<ClinicalWorklistSummary | null>(null);
+  const [learningSummary, setLearningSummary] = useState<ProviderLearningSummary | null>(null);
+  const [learningError, setLearningError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -113,29 +139,53 @@ export function ProviderDashboardScreen() {
       setTasks([]);
       setOpenEncounters([]);
       setMetrics(null);
+      setClinicalWorklist([]);
+      setWorklistSummary(null);
+      setLearningSummary(null);
+      setLearningError(false);
       setLoading(false);
       setError(null);
       return;
     }
     setLoading(true);
     setError(null);
+    const authUser = auth.user as
+      | {
+          sub?: string;
+          provider_id?: string;
+          providerId?: string;
+        }
+      | undefined;
+    const learningSubjectId =
+      authUser?.provider_id ?? authUser?.providerId ?? authUser?.sub ?? null;
+    if (learningSubjectId) {
+      setLearningSubject("PROVIDER", learningSubjectId);
+    }
     try {
-      const [taskResult, encounterResult, metricsResult] = await Promise.all([
+      const [taskResult, encounterResult, metricsResult, worklistResult, learningResult] = await Promise.all([
         getMyTasks(undefined, 0, 50),
         listEncounters(undefined, 0, 20),
         getFacilityMetrics(facilityId).catch(() => null),
+        getClinicalWorklist(facilityId).catch(() => ({ items: [], summary: null })),
+        learningSubjectId
+          ? getProviderLearningSummary({ subjectType: "PROVIDER", subjectId: learningSubjectId }).catch(() => null)
+          : Promise.resolve(null),
       ]);
       setTasks(taskResult.tasks);
       setOpenEncounters(
         encounterResult.encounters.filter((e) => e.status === "IN_PROGRESS")
       );
       setMetrics(metricsResult);
+      setClinicalWorklist(worklistResult.items ?? []);
+      setWorklistSummary(worklistResult.summary ?? null);
+      setLearningSummary(learningResult);
+      setLearningError(learningSubjectId !== null && learningResult === null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
       setLoading(false);
     }
-  }, [facilityId]);
+  }, [facilityId, auth.user, setLearningSubject]);
 
   useEffect(() => {
     loadDashboard();
@@ -318,6 +368,60 @@ export function ProviderDashboardScreen() {
           ) : null}
         </View>
 
+        <Text style={styles.sectionLabel}>Fundo Learning Snapshot</Text>
+        <View style={styles.metricsRow}>
+          {[
+            {
+              label: "Required",
+              value: learningSummary?.required ?? 0,
+              color: "#0E7490",
+              icon: "school-outline",
+              focus: "required" as const,
+            },
+            {
+              label: "Overdue",
+              value: learningSummary?.overdue ?? 0,
+              color: (learningSummary?.overdue ?? 0) > 0 ? "#DC2626" : "#111827",
+              icon: "time-outline",
+              focus: "overdue" as const,
+            },
+            {
+              label: "CPD Eligible",
+              value: learningSummary?.cpdEligible ?? 0,
+              color: "#7C3AED",
+              icon: "ribbon-outline",
+              focus: "cpd" as const,
+            },
+          ].map((m) => (
+            <Pressable
+              key={m.label}
+              onPress={() => {
+                appStore.getState().setAppsFocus(m.focus);
+                setProviderTab("apps");
+              }}
+              style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1, flex: 1 })}
+              testID={`learning-kpi-${m.label.toLowerCase().replace(" ", "-")}`}
+            >
+              <Card variant="elevated" padding="sm" style={styles.metricCard}>
+                <CardBody>
+                  <View style={styles.metricContent}>
+                    <Ionicons name={m.icon as never} size={18} color={m.color} />
+                    <Text style={[styles.metricValue, { color: m.color }]}>{String(m.value)}</Text>
+                    <Text style={styles.metricLabel}>{m.label}</Text>
+                  </View>
+                </CardBody>
+              </Card>
+            </Pressable>
+          ))}
+        </View>
+        {learningError ? (
+          <View style={styles.commsWarning}>
+            <Text style={styles.commsWarningText}>
+              Fundo KPIs are temporarily unavailable. Open Apps for full learning details.
+            </Text>
+          </View>
+        ) : null}
+
         <Text style={styles.sectionLabel}>Safety, support &amp; comms</Text>
         <View style={styles.supportRow}>
           <Pressable
@@ -386,6 +490,41 @@ export function ProviderDashboardScreen() {
           </Pressable>
         </View>
 
+        {/* Unified clinical inbox */}
+        <Text style={styles.sectionLabel}>Unified Clinical Inbox</Text>
+        {clinicalWorklist.length === 0 ? (
+          <EmptyState
+            title="No high-priority inbox items"
+            message="Queue, referrals, tasks, and orders are clear right now."
+          />
+        ) : (
+          <>
+            <View style={styles.worklistSummaryRow}>
+              <Badge variant="secondary" size="sm">{`${worklistSummary?.total ?? clinicalWorklist.length} total`}</Badge>
+              <Badge variant="warning" size="sm">{`${worklistSummary?.urgent ?? 0} urgent`}</Badge>
+              <Badge variant="outline" size="sm">{`${worklistSummary?.overdue ?? 0} overdue`}</Badge>
+            </View>
+            {clinicalWorklist.slice(0, 5).map((item) => (
+              <Card key={item.id} variant="elevated" padding="sm">
+                <CardBody>
+                  <View style={styles.worklistRow}>
+                    <View style={styles.taskLeft}>
+                      <Text style={styles.taskTitle}>{item.title}</Text>
+                      <Text style={styles.taskPatient}>
+                        {`${item.kind} · ${item.status ?? "PENDING"} · ${item.source}`}
+                      </Text>
+                      {item.description ? <Text style={styles.taskDue}>{item.description}</Text> : null}
+                    </View>
+                    <Badge variant={badgeVariantForPriority(item.priority)} size="sm">
+                      {String(item.priority ?? "MEDIUM").toUpperCase()}
+                    </Badge>
+                  </View>
+                </CardBody>
+              </Card>
+            ))}
+          </>
+        )}
+
         {/* Task list */}
         <Text style={styles.sectionLabel}>My Tasks</Text>
         {pendingTasks.length === 0 ? (
@@ -416,7 +555,7 @@ export function ProviderDashboardScreen() {
                         ) : null}
                       </View>
                     </View>
-                    <Badge variant={PRIORITY_VARIANT[task.priority] as "destructive" | "secondary" | "outline"} size="sm">
+                    <Badge variant={badgeVariantForPriority(task.priority)} size="sm">
                       {task.priority}
                     </Badge>
                   </View>
@@ -657,6 +796,17 @@ const styles = StyleSheet.create({
   taskDue: {
     fontSize: 11,
     color: "#9CA3AF",
+  },
+  worklistSummaryRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 4,
+  },
+  worklistRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
   },
   encounterRow: {
     flexDirection: "row",

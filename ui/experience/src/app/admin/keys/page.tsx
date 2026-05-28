@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import type { ApiResponse } from "@/lib/api-client";
 
 interface KeyResource {
   id: string;
@@ -33,7 +33,7 @@ type KeysResponse = ApiResponse<KeyResource[]>;
 function useKeys() {
   return useQuery<KeysResponse>({
     queryKey: ["admin-keys"],
-    queryFn: () => apiClient.get<KeysResponse>("/internal/v1/admin/keys"),
+    queryFn: () => Promise.reject(new Error("Typed key-management BFF unavailable")),
   });
 }
 

@@ -402,7 +402,7 @@ export interface CoreTransactionSummary {
 }
 
 export interface CoreTransactionView {
-  fixture: true;
+  fixture: boolean;
   transaction: CoreTransactionSummary;
   journeys: {
     person: CoreTransactionJourneyView;

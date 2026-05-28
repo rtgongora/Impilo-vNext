@@ -10,22 +10,51 @@ import Link from "next/link";
 import { Loader2, AlertTriangle, ArrowLeft, Package } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { useProductRegistryItem } from "@/hooks/queries/useProductRegistry";
+
+type AnyRecord = Record<string, unknown>;
 
 interface ProductDetail {
   id: string;
-  type: "product";
-  attributes: {
-    name: string;
-    code: string;
-    category: string;
-    manufacturer: string;
-    status: string;
-    description: string;
-    unitOfMeasure: string;
-    price: number;
-    [key: string]: unknown;
+  name: string;
+  code: string;
+  category: string;
+  manufacturer: string;
+  status: string;
+  description: string;
+  unitOfMeasure: string;
+}
+
+function unwrap(value: unknown): unknown {
+  if (value && typeof value === "object" && "data" in value) {
+    return unwrap((value as { data?: unknown }).data);
+  }
+  return value;
+}
+
+function text(record: AnyRecord, keys: string[], fallback = "") {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) return value;
+    if (typeof value === "number") return String(value);
+  }
+  return fallback;
+}
+
+function normalizeProduct(value: unknown, id: string): ProductDetail | null {
+  const unwrapped = unwrap(value);
+  if (!unwrapped || typeof unwrapped !== "object") return null;
+  const record = unwrapped as AnyRecord;
+  const attributes = record.attributes && typeof record.attributes === "object" ? (record.attributes as AnyRecord) : record;
+  return {
+    id: text(record, ["id", "itemId", "code", "sku"], id),
+    name: text(attributes, ["name", "displayName", "title", "label"], "Product"),
+    code: text(attributes, ["code", "sku", "itemCode", "productCode"], "n/a"),
+    category: text(attributes, ["category", "kind", "type", "classification"], "Unclassified"),
+    manufacturer: text(attributes, ["manufacturer", "supplier", "brand"], "Not stated"),
+    status: text(attributes, ["status", "lifecycleStatus"], "ACTIVE"),
+    description: text(attributes, ["description", "summary"], ""),
+    unitOfMeasure: text(attributes, ["unitOfMeasure", "uom", "unit"], ""),
   };
 }
 
@@ -33,13 +62,9 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const { data, isLoading, error } = useQuery<ApiResponse<ProductDetail>>({
-    queryKey: ["registry-products", id],
-    queryFn: () => apiClient.get<ApiResponse<ProductDetail>>(`/internal/v1/registry/products/${id}`),
-    enabled: !!id,
-  });
+  const { data, isLoading, error } = useProductRegistryItem(id);
 
-  const product = data?.data;
+  const product = normalizeProduct(data, id);
 
   return (
     <AppLayout>
@@ -71,48 +96,51 @@ export default function ProductDetailPage() {
                   <Package className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900">{product.attributes.name}</h3>
-                  <p className="text-sm text-gray-500">{product.attributes.code}</p>
+                  <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
+                  <p className="text-sm text-gray-500">{product.code}</p>
                 </div>
               </div>
               <dl className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <dt className="text-gray-500">Category</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">{product.attributes.category}</dd>
+                  <dd className="font-medium text-gray-900 mt-0.5">{product.category}</dd>
                 </div>
                 <div>
                   <dt className="text-gray-500">Manufacturer</dt>
-                  <dd className="font-medium text-gray-900 mt-0.5">{product.attributes.manufacturer}</dd>
+                  <dd className="font-medium text-gray-900 mt-0.5">{product.manufacturer}</dd>
                 </div>
                 <div>
                   <dt className="text-gray-500">Status</dt>
                   <dd className="mt-0.5">
                     <span
                       className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
-                        product.attributes.status === "ACTIVE"
+                        product.status === "ACTIVE"
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-700"
                       }`}
                     >
-                      {product.attributes.status}
+                      {product.status}
                     </span>
                   </dd>
                 </div>
                 <div>
                   <dt className="text-gray-500">Unit of Measure</dt>
                   <dd className="font-medium text-gray-900 mt-0.5">
-                    {product.attributes.unitOfMeasure || "\u2014"}
+                    {product.unitOfMeasure || "\u2014"}
                   </dd>
                 </div>
               </dl>
             </div>
 
-            {product.attributes.description && (
+            {product.description && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <h3 className="font-medium text-gray-900 mb-2">Description</h3>
-                <p className="text-sm text-gray-600">{product.attributes.description}</p>
+                <p className="text-sm text-gray-600">{product.description}</p>
               </div>
             )}
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+              Loaded via canonical <code>/internal/v1/product-registry/items/{id}</code>.
+            </div>
           </div>
         )}
       </PageShell>

@@ -324,3 +324,99 @@ export function useCreateCoveragePreauth() {
     },
   });
 }
+
+export type CoverageCommandKind =
+  | "eligibility-check"
+  | "member-enrollment"
+  | "claim-submission"
+  | "preauth-request"
+  | "appeal-submission";
+
+const COVERAGE_COMMAND_PATHS: Record<CoverageCommandKind, string> = {
+  "eligibility-check": "/internal/v1/coverage/eligibility/check",
+  "member-enrollment": "/internal/v1/coverage/members",
+  "claim-submission": "/internal/v1/coverage/claims",
+  "preauth-request": "/internal/v1/coverage/preauth",
+  "appeal-submission": "/internal/v1/appeals",
+};
+
+export function useRunCoverageCommand() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      command,
+      payload,
+      idempotencyKey,
+    }: {
+      command: CoverageCommandKind;
+      payload: UnknownRecord;
+      idempotencyKey?: string;
+    }) =>
+      apiClient.post(
+        COVERAGE_COMMAND_PATHS[command],
+        payload,
+        idempotencyKey ? { extraHeaders: { "Idempotency-Key": idempotencyKey } } : undefined,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-plans"] });
+      void queryClient.invalidateQueries({ queryKey: ["coverage-members"] });
+      void queryClient.invalidateQueries({ queryKey: ["coverage-claims"] });
+      void queryClient.invalidateQueries({ queryKey: ["coverage-preauths-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["coverage-appeals-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-eligibility"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-claims"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-preauths"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-appeals"] });
+    },
+  });
+}
+
+export function useSubmitCoverageAppeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: UnknownRecord) => apiClient.post("/internal/v1/appeals", body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-appeals-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-appeals"] });
+    },
+  });
+}
+
+export function useReviewCoverageAppeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ appealId, reviewerId }: { appealId: string; reviewerId: string }) =>
+      apiClient.put(`/internal/v1/appeals/${encodeURIComponent(appealId)}/review`, { reviewerId }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-appeals-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-appeals"] });
+    },
+  });
+}
+
+export function useDecideCoverageAppeal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      appealId,
+      decision,
+      decisionReason,
+      decidedBy,
+    }: {
+      appealId: string;
+      decision: "UPHELD" | "OVERTURNED" | "PARTIAL";
+      decisionReason: string;
+      decidedBy: string;
+    }) =>
+      apiClient.put(`/internal/v1/appeals/${encodeURIComponent(appealId)}/decide`, {
+        decision,
+        decisionReason,
+        decidedBy,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["coverage-appeals-list"] });
+      void queryClient.invalidateQueries({ queryKey: ["member-coverage-appeals"] });
+      void queryClient.invalidateQueries({ queryKey: ["coverage-claims"] });
+    },
+  });
+}

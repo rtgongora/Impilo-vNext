@@ -30,7 +30,9 @@
     "lucide-react": "^0.441.0",
     "framer-motion": "^11.5.4",
     "dicom-parser": "^1.8.21",
-    "shared-ui": "file:../shared-ui"
+    "shared-ui": "file:../shared-ui",
+    "@livekit/components-react": "^2.9.21",
+    "livekit-client": "^2.19.0"
   },
   "devDependencies": {
     "typescript": "~5.5.4",

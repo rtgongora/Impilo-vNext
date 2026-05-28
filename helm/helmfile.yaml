@@ -95,8 +95,15 @@ releases:
     chart: ../services/pct-service/helm/pct
     needs:
       - impilo-registry/vito
+      - impilo-clinical/rtc-gateway
     values:
       - ../services/pct-service/helm/pct/values.yaml
+
+  - name: rtc-gateway
+    namespace: impilo-clinical
+    chart: ../services/rtc-gateway-service/helm/rtc-gateway
+    values:
+      - ../services/rtc-gateway-service/helm/rtc-gateway/values.yaml
 
   - name: oros
     namespace: impilo-clinical

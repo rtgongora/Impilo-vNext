@@ -39,10 +39,10 @@ export default function ProductRegistryPage() {
     queryKey: ["registry-products", { search: searchTerm }],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (searchTerm) params.set("search", searchTerm);
+      if (searchTerm) params.set("q", searchTerm);
       const qs = params.toString();
       return apiClient.get<ApiResponse<ProductResource[]>>(
-        `/internal/v1/registry/products${qs ? `?${qs}` : ""}`,
+        `/internal/v1/product-registry/search${qs ? `?${qs}` : ""}`,
       );
     },
   });

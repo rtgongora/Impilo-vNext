@@ -6,6 +6,7 @@
 
 import { apiClient } from "@impilo/mobile-api-client";
 import type { LabOrder, LabOrderStatus, LabResult } from "../types";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 interface LabOrderResource {
   id: string;
@@ -71,17 +72,39 @@ export interface CreateLabOrderInput {
 }
 
 export async function createLabOrder(input: CreateLabOrderInput): Promise<LabOrder> {
-  const response = await apiClient.post<{ data: LabOrderResource }>(
-    "/internal/v1/mobile/provider/labs",
-    {
-      encounter_id: input.encounterId,
-      patient_id: input.patientId,
-      test_name: input.testName,
-      test_code: input.testCode,
+  const payload = {
+    encounter_id: input.encounterId,
+    patient_id: input.patientId,
+    test_name: input.testName,
+    test_code: input.testCode,
+    urgency: input.urgency,
+  };
+  try {
+    const response = await apiClient.post<{ data: LabOrderResource }>(
+      "/internal/v1/mobile/provider/labs",
+      payload
+    );
+    return mapLabOrder(response.data.data);
+  } catch (error) {
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: "clinical_lab_orders",
+      path: "/internal/v1/mobile/provider/labs",
+      payload,
+    });
+    if (!offline) throw error;
+    return {
+      id: offline.recordId,
+      encounterId: input.encounterId,
+      patientId: input.patientId,
+      testName: input.testName,
+      testCode: input.testCode,
       urgency: input.urgency,
-    }
-  );
-  return mapLabOrder(response.data.data);
+      status: "ORDERED" as LabOrderStatus,
+      orderedAt: new Date().toISOString(),
+      orderedBy: "provider-app",
+      results: [],
+    };
+  }
 }
 
 export async function getLabOrdersForEncounter(encounterId: string): Promise<LabOrder[]> {

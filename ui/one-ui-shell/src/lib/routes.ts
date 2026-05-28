@@ -465,6 +465,30 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/learning/reports/courses", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Course Report", navLabel: "Courses" },
   { path: "/learning/reports/overdue", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Overdue Learning", navLabel: "Overdue" },
   { path: "/learning/reports/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Assessment Report", navLabel: "Assessments" },
+  { path: "/learning/studio", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Fundo Studio", navLabel: "Studio", navZone: "professional" },
+  { path: "/learning/studio/courses", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Courses", navLabel: "Studio Courses" },
+  { path: "/learning/studio/courses/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio New Course", navLabel: "Studio New Course" },
+  { path: "/learning/studio/courses/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Course Detail", navLabel: "Studio Course Detail" },
+  { path: "/learning/studio/courses/[courseId]/builder", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Course Builder", navLabel: "Course Builder" },
+  { path: "/learning/studio/library", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Library", navLabel: "Studio Library" },
+  { path: "/learning/studio/media", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Media", navLabel: "Studio Media" },
+  { path: "/learning/studio/media/recordings", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Media Recordings", navLabel: "Recordings" },
+  { path: "/learning/studio/media/scripts", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Media Scripts", navLabel: "Scripts" },
+  { path: "/learning/studio/media/voiceovers", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Media Voiceovers", navLabel: "Voiceovers" },
+  { path: "/learning/studio/media/[mediaId]", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Media Asset", navLabel: "Media Asset" },
+  { path: "/learning/studio/assessments", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Assessments", navLabel: "Studio Assessments" },
+  { path: "/learning/studio/surveys", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Surveys", navLabel: "Studio Surveys" },
+  { path: "/learning/studio/ai", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio AI", navLabel: "Studio AI" },
+  { path: "/learning/studio/publish", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Publish", navLabel: "Publish" },
+  { path: "/learning/studio/analytics", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Studio Analytics", navLabel: "Studio Analytics" },
+  { path: "/learning/library", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Fundo Library", navLabel: "Library", navZone: "professional" },
+  { path: "/learning/library/resources", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Library Resources", navLabel: "Resources" },
+  { path: "/learning/library/uploads", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Library Uploads", navLabel: "Uploads" },
+  { path: "/learning/library/[resourceId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Library Resource Detail", navLabel: "Resource Detail" },
+  { path: "/learning/notifications", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Notifications", navLabel: "Notifications", navZone: "professional" },
+  { path: "/learning/surveys/[surveyId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Learning Survey", navLabel: "Survey" },
+  { path: "/learning/surveys/[surveyId]/respond", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Respond to Survey", navLabel: "Respond Survey" },
+  { path: "/learning/feedback/course/[courseId]", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Course Feedback", navLabel: "Course Feedback" },
   { path: "/learning/admin", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Fundo Admin", navLabel: "Fundo Admin", navZone: "professional" },
   { path: "/learning/admin/courses", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Admin Courses", navLabel: "Admin Courses" },
   { path: "/learning/admin/courses/new", zone: "professional", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "New Course", navLabel: "New Course" },
@@ -530,8 +554,8 @@ export const ROUTES: RouteDefinition[] = [
 // canonical total to 326.
 // Nhume (May 2026): 17 new routes under /nhume for the Dispatch, Delivery,
 // Fleet Tracking and Last-Mile Logistics service (services/nhume-service).
-// Combined with upstream additions on this branch the canonical total is 346.
-export const EXPECTED_ROUTE_COUNT = 346;
+// Combined with upstream additions on this branch the canonical total is 370.
+export const EXPECTED_ROUTE_COUNT = 370;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -277,6 +277,10 @@ static_resources:
                             envoy.filters.http.ext_authz:
                               "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
 
+                        # ── RTC Gateway — internal media adapter paths ──
+                        - match: { prefix: "/internal/v1/rtc/" }
+                          route: { cluster: rtc_gateway_service }
+
                         # ── Experience BFF — internal profile/visibility paths ──
                         - match: { prefix: "/internal/v1/" }
                           route: { cluster: experience_bff }
@@ -653,3 +657,14 @@ static_resources:
               - endpoint:
                   address:
                     socket_address: { address: host.docker.internal, port_value: 8160 }
+
+    # ── RTC Gateway ──
+    - name: rtc_gateway_service
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: rtc_gateway_service
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: host.docker.internal, port_value: 8195 }

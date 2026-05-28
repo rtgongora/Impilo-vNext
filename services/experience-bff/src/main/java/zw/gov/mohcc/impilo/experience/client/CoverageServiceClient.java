@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -116,8 +118,18 @@ public class CoverageServiceClient {
     }
 
     public JsonNode createAppeal(Map<String, Object> body) {
-        String url = baseUrl + "/internal/v1/coverage/appeals";
+        String url = baseUrl + "/internal/v1/appeals";
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode reviewAppeal(String appealId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/appeals/" + appealId + "/review";
+        return extractData(restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class));
+    }
+
+    public JsonNode decideAppeal(String appealId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/appeals/" + appealId + "/decide";
+        return extractData(restTemplate.exchange(url, HttpMethod.PUT, new HttpEntity<>(body), JsonNode.class));
     }
 
     public JsonNode createPreauth(Map<String, Object> body) {

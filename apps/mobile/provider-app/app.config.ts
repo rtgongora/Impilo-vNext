@@ -41,7 +41,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     buildNumber: "1",
     infoPlist: {
       NSCameraUsageDescription:
-        "Used for scanning patient IDs and capturing clinical images.",
+        "Used for telemedicine video consultations, scanning patient IDs, and capturing clinical images.",
+      NSMicrophoneUsageDescription:
+        "Used for telemedicine audio and video consultations.",
       NSLocationWhenInUseUsageDescription:
         "Used to record outreach visit locations.",
       NSFaceIDUsageDescription: "Used for biometric authentication.",
@@ -62,12 +64,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "USE_FINGERPRINT",
       "INTERNET",
       "ACCESS_NETWORK_STATE",
+      "RECORD_AUDIO",
     ],
   },
   plugins: [
     "expo-web-browser",
     "expo-secure-store",
     "expo-sqlite",
+    "@livekit/react-native-expo-plugin",
+    "@config-plugins/react-native-webrtc",
     [
       "expo-build-properties",
       {

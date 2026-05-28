@@ -183,6 +183,9 @@ export interface TelehealthSession {
   startedAt?: string;
   endedAt?: string;
   roomUrl?: string;
+  sessionToken?: string;
+  channel?: string;
+  mediaStatus?: "PROVISIONED" | "WAITING" | "IN_CALL" | "RECONNECTING" | "DEGRADED_AUDIO" | "ENDED";
   notes?: string;
 }
 

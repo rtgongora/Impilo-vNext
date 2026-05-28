@@ -30,6 +30,7 @@ export function PatientLookupScreen() {
   const [startingEncounter, setStartingEncounter] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
+  const [journeyIds, setJourneyIds] = useState<Record<string, string>>({});
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) return;
@@ -53,6 +54,7 @@ export function PatientLookupScreen() {
         patientId: patient.id,
         facilityId,
         encounterType: "OUTPATIENT",
+        pctJourneyId: journeyIds[patient.id]?.trim() ?? "",
       });
       encounterStore.getState().setActiveEncounter(encounter);
       setSelectedPatient(patient);
@@ -62,7 +64,7 @@ export function PatientLookupScreen() {
     } finally {
       setStartingEncounter(false);
     }
-  }, [facilityId, setProviderTab]);
+  }, [facilityId, journeyIds, setProviderTab]);
 
   return (
     <Screen>
@@ -164,11 +166,24 @@ export function PatientLookupScreen() {
                     <Text style={styles.metaText}>{patient.dateOfBirth}</Text>
                   </View>
                   <Text style={styles.cpidText}>{`CPID: ${patient.cpid}`}</Text>
+                  <TextField
+                    label="PCT Journey ID"
+                    value={journeyIds[patient.id] ?? ""}
+                    onChange={(value) => setJourneyIds((prev) => ({ ...prev, [patient.id]: value }))}
+                    placeholder="Required to start canonical visit"
+                    testID={`pct-journey-${patient.id}`}
+                  />
+                  <Text style={styles.journeyHint}>
+                    Visit start is anchored to a PCT journey; direct patient-only encounter creation is not used.
+                  </Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.startVisitButton, startingEncounter && styles.startVisitButtonDisabled]}
+                  style={[
+                    styles.startVisitButton,
+                    (startingEncounter || !journeyIds[patient.id]?.trim()) && styles.startVisitButtonDisabled,
+                  ]}
                   onPress={() => handleStartEncounter(patient)}
-                  disabled={startingEncounter}
+                  disabled={startingEncounter || !journeyIds[patient.id]?.trim()}
                   testID={`start-visit-${patient.id}`}
                 >
                   {startingEncounter ? (
@@ -329,6 +344,11 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontFamily: "monospace",
     marginTop: 2,
+  },
+  journeyHint: {
+    marginTop: 4,
+    color: "#6B7280",
+    fontSize: 11,
   },
   startVisitButton: {
     backgroundColor: "#1E40AF",

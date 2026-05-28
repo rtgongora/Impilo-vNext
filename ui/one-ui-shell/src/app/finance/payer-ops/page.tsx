@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FinancePayerOpsReconciliationNotice } from "@/components/FinanceAccessNotice";
+import { useFinanceSettlementsByIntentIds } from "@/hooks/queries/useFinanceSettlements";
 import {
   usePayerOpsAdapters,
   usePayerOpsAttempts,
@@ -24,11 +25,28 @@ import {
 
 const DEFAULT_CLAIM_JSON = "{\n  \"slipId\": \"\",\n  \"tenantId\": \"\"\n}\n";
 
+function collectionCount(value: unknown): number {
+  if (Array.isArray(value)) return value.length;
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    for (const key of ["data", "items", "content", "receipts", "attempts", "settlements"]) {
+      const nested = record[key];
+      if (Array.isArray(nested)) return nested.length;
+    }
+  }
+  return value == null ? 0 : 1;
+}
+
+function hasPayload(value: unknown): boolean {
+  return value != null && collectionCount(value) > 0;
+}
+
 export default function FinancePayerOpsPage() {
   const [intentInput, setIntentInput] = useState("");
   const [activeIntentId, setActiveIntentId] = useState<string | undefined>();
   const intentQ = usePayerOpsPaymentIntent(activeIntentId);
   const receiptsQ = usePayerOpsReceipts(activeIntentId);
+  const settlementsQ = useFinanceSettlementsByIntentIds(activeIntentId ? [activeIntentId] : [], Boolean(activeIntentId));
 
   const cancelM = usePayerOpsCancelIntent();
   const slipM = usePayerOpsIssueRemittanceSlip();
@@ -74,6 +92,15 @@ export default function FinancePayerOpsPage() {
 
   const [claimJson, setClaimJson] = useState(DEFAULT_CLAIM_JSON);
   const [claimErr, setClaimErr] = useState<string | null>(null);
+  const journeySteps = [
+    { key: "intent", label: "Intent", done: Boolean(intentQ.data), detail: activeIntentId ?? "not loaded" },
+    { key: "claim", label: "Remittance claim", done: Boolean(claimM.data), detail: claimM.isError ? "claim failed" : "awaiting claim" },
+    { key: "attempts", label: "Attempts", done: hasPayload(attemptsQ.data), detail: `${collectionCount(attemptsQ.data)} attempts` },
+    { key: "receipts", label: "Receipts", done: hasPayload(receiptsQ.data), detail: `${collectionCount(receiptsQ.data)} receipts` },
+    { key: "settlement", label: "Settlement", done: hasPayload(settlementsQ.data), detail: `${collectionCount(settlementsQ.data)} linked rows` },
+    { key: "refund", label: "Refund review", done: false, detail: "drill-down under refunds route" },
+  ];
+  const currentStage = journeySteps.find((step) => !step.done)?.label ?? "Reconciled";
 
   return (
     <AppLayout>
@@ -97,6 +124,75 @@ export default function FinancePayerOpsPage() {
             .
           </p>
         </div>
+
+        <section className="mb-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-700">
+                Coverage-to-cash workflow
+              </p>
+              <h2 className="mt-1 text-base font-semibold text-slate-900">Unified payer journey</h2>
+              <p className="mt-1 max-w-3xl text-sm text-slate-600">
+                Use this route as the orchestration surface for coverage claims, remittance, settlement payout, and refund
+                follow-up. The finance drill-down routes remain available for focused operator tasks.
+              </p>
+            </div>
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+              role-gated payer ops
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {[
+              { href: "/coverage", label: "Coverage claims", detail: "Eligibility, claims, preauth, remittance rows" },
+              { href: "/finance/payer-claims", label: "Payer claims", detail: "MusheX claim review and queue handoff" },
+              { href: "/finance/settlements", label: "Settlements", detail: "Run periods and release payouts" },
+              { href: "/finance/refunds", label: "Refunds", detail: "Refund from a loaded payment intent" },
+            ].map((step) => (
+              <Link
+                key={step.href}
+                href={step.href}
+                className="rounded-lg border border-slate-200 p-3 text-sm hover:border-indigo-300 hover:bg-indigo-50/50"
+              >
+                <span className="font-medium text-slate-900">{step.label}</span>
+                <span className="mt-1 block text-xs text-slate-500">{step.detail}</span>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+            <p>
+              Active intent: <span className="font-mono text-slate-800">{activeIntentId ?? "load a payment intent below"}</span>
+            </p>
+            <p className="mt-1">
+              Current payer state: <span className="font-semibold text-slate-900">{currentStage}</span>
+            </p>
+            <div className="mt-3 grid gap-2 md:grid-cols-6">
+              {journeySteps.map((step) => (
+                <div
+                  key={step.key}
+                  className={`rounded-lg border p-2 ${
+                    step.done ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-slate-200 bg-white text-slate-700"
+                  }`}
+                >
+                  <p className="font-medium">{step.label}</p>
+                  <p className="mt-1 text-[11px]">{step.detail}</p>
+                </div>
+              ))}
+            </div>
+            {activeIntentId ? (
+              settlementsQ.isLoading ? (
+                <p className="mt-1">Loading settlements linked to this intent...</p>
+              ) : settlementsQ.isError ? (
+                <p className="mt-1 text-red-700">Linked settlement lookup failed.</p>
+              ) : settlementsQ.data != null ? (
+                <pre className="mt-2 max-h-36 overflow-auto rounded border border-slate-200 bg-white p-2 text-[11px]">
+                  {JSON.stringify(settlementsQ.data, null, 2)}
+                </pre>
+              ) : (
+                <p className="mt-1">No linked settlement data returned yet.</p>
+              )
+            ) : null}
+          </div>
+        </section>
 
         <div className="max-w-4xl space-y-8">
           <FinancePayerOpsReconciliationNotice />

@@ -23,9 +23,10 @@ const VITAL_OPTIONS: { value: VitalType; label: string; unit: string }[] = [
 
 interface VitalsPanelProps {
   encounterId: string;
+  patientId: string;
 }
 
-export function VitalsPanel({ encounterId }: VitalsPanelProps) {
+export function VitalsPanel({ encounterId, patientId }: VitalsPanelProps) {
   const [selectedType, setSelectedType] = useState<VitalType>("BLOOD_PRESSURE");
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -49,6 +50,7 @@ export function VitalsPanel({ encounterId }: VitalsPanelProps) {
     try {
       const vital = await recordVital({
         encounterId,
+        patientId,
         type: selectedType,
         value: parseFloat(value),
         unit: vitalOption?.unit ?? "",

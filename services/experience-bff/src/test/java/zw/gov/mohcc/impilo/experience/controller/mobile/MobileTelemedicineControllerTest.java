@@ -40,6 +40,7 @@ class MobileTelemedicineControllerTest {
                 "pod-1",
                 "req-2",
                 "corr-2",
+                "TREATMENT",
                 "idem-1",
                 Map.of("patient_id", "CPID-1", "provider_id", "prov-1", "scheduled_at", "not-a-datetime"));
 
@@ -57,8 +58,9 @@ class MobileTelemedicineControllerTest {
                 "pod-1",
                 "req-3",
                 "corr-3",
+                "TREATMENT",
                 "idem-2",
-                Map.of("patient_id", "CPID-1", "provider_id", "prov-1"));
+                Map.of("patient_id", "CPID-1", "provider_id", "prov-1", "consent_reference", "consent-1"));
 
         assertEquals(201, response.getStatusCode().value());
         assertNotNull(response.getBody());
@@ -71,7 +73,7 @@ class MobileTelemedicineControllerTest {
         MobileTelemedicineController controller = new MobileTelemedicineController(new FailingPctClient());
 
         ResponseEntity<Map<String, Object>> response = controller.joinSession(
-                UUID.randomUUID(), "tenant-1", "pod-1", "req-4", "corr-4", null, Map.of());
+                UUID.randomUUID(), "tenant-1", "pod-1", "req-4", "corr-4", "TREATMENT", null, Map.of());
 
         assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());

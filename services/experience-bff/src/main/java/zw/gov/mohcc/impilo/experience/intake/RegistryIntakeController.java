@@ -156,6 +156,14 @@ public class RegistryIntakeController {
         }
     }
 
+    @GetMapping("/import-jobs")
+    public ResponseEntity<Map<String, Object>> listImportJobs(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(defaultValue = "25") int limit) {
+        return ok(requestId, correlationId, intakeService.listImportJobs(limit));
+    }
+
     @GetMapping("/import-jobs/{id}")
     public ResponseEntity<Map<String, Object>> getImportJob(
             @PathVariable String id,
@@ -166,6 +174,24 @@ public class RegistryIntakeController {
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                         "error", Map.of("code", "NOT_FOUND", "message", "Import job not found"),
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId))));
+    }
+
+    @PostMapping("/import-jobs/{id}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelImportJob(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return intakeService.cancelImportJob(id)
+                    .map(job -> ok(requestId, correlationId, job))
+                    .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                            "error", Map.of("code", "NOT_FOUND", "message", "Import job not found"),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId))));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "CANCEL_FAILED", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping("/import-jobs/{id}/execute")

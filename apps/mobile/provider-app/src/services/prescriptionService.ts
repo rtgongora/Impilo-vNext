@@ -6,6 +6,7 @@
 
 import { apiClient } from "@impilo/mobile-api-client";
 import type { Prescription, PrescriptionStatus } from "../types";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 interface PrescriptionResource {
   id: string;
@@ -54,20 +55,44 @@ export interface CreatePrescriptionInput {
 }
 
 export async function createPrescription(input: CreatePrescriptionInput): Promise<Prescription> {
-  const response = await apiClient.post<{ data: PrescriptionResource }>(
-    "/internal/v1/mobile/provider/prescriptions",
-    {
-      encounter_id: input.encounterId,
-      patient_id: input.patientId,
+  const payload = {
+    encounter_id: input.encounterId,
+    patient_id: input.patientId,
+    medication: input.medication,
+    dosage: input.dosage,
+    frequency: input.frequency,
+    duration: input.duration,
+    quantity: input.quantity,
+    instructions: input.instructions,
+  };
+  try {
+    const response = await apiClient.post<{ data: PrescriptionResource }>(
+      "/internal/v1/mobile/provider/prescriptions",
+      payload
+    );
+    return mapPrescription(response.data.data);
+  } catch (error) {
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: "clinical_prescriptions",
+      path: "/internal/v1/mobile/provider/prescriptions",
+      payload,
+    });
+    if (!offline) throw error;
+    return {
+      id: offline.recordId,
+      encounterId: input.encounterId,
+      patientId: input.patientId,
       medication: input.medication,
       dosage: input.dosage,
       frequency: input.frequency,
       duration: input.duration,
       quantity: input.quantity,
       instructions: input.instructions,
-    }
-  );
-  return mapPrescription(response.data.data);
+      status: "ACTIVE" as PrescriptionStatus,
+      prescribedAt: new Date().toISOString(),
+      prescribedBy: "provider-app",
+    };
+  }
 }
 
 export async function getPrescriptionsForEncounter(encounterId: string): Promise<Prescription[]> {

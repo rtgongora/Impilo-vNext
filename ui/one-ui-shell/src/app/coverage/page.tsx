@@ -25,7 +25,12 @@ import {
   useCoverageRemittances,
   useCoverageUtilizationList,
   useCreateCoverageClaim,
+  useDecideCoverageAppeal,
   useEnrollCoverageMember,
+  useReviewCoverageAppeal,
+  useRunCoverageCommand,
+  useSubmitCoverageAppeal,
+  type CoverageCommandKind,
   type CoverageClaim,
 } from "@/hooks/queries/useCoverage";
 import { apiClient } from "@/lib/api-client";
@@ -93,6 +98,121 @@ function statusClass(status: string) {
     return "bg-red-100 text-red-700";
   }
   return "bg-amber-100 text-amber-700";
+}
+
+const COVERAGE_COMMAND_LABELS: Record<CoverageCommandKind, string> = {
+  "eligibility-check": "Eligibility check",
+  "member-enrollment": "Member enrollment",
+  "claim-submission": "Claim submission",
+  "preauth-request": "Pre-auth request",
+  "appeal-submission": "Appeal submission",
+};
+
+const COVERAGE_COMMAND_DEFAULTS: Record<CoverageCommandKind, Record<string, string>> = {
+  "eligibility-check": {
+    memberCpid: "CPID-EXAMPLE",
+    serviceCode: "CONSULTATION",
+    coverageId: "COVERAGE-ID",
+    idempotencyKey: "eligibility-COVERAGE-ID",
+  },
+  "member-enrollment": {
+    clientId: "CPID-EXAMPLE",
+    planId: "PLAN-ID",
+    memberNumber: "MEMBER-001",
+    relationship: "SELF",
+    idempotencyKey: "enroll-MEMBER-001",
+  },
+  "claim-submission": {
+    coverageId: "COVERAGE-ID",
+    claimType: "OUTPATIENT",
+    facilityId: "FACILITY-ID",
+    totalAmount: "50.00",
+    idempotencyKey: "claim-COVERAGE-ID-001",
+  },
+  "preauth-request": {
+    coverageId: "COVERAGE-ID",
+    requestType: "SURGERY",
+    facilityId: "FACILITY-ID",
+    providerId: "PROVIDER-ID",
+    clinicalInfo: "Clinical justification",
+    idempotencyKey: "preauth-COVERAGE-ID-001",
+  },
+  "appeal-submission": {
+    claimId: "CLAIM-ID",
+    appellantId: "CPID-EXAMPLE",
+    reason: "Claim decision dispute",
+    evidenceSummary: "Supporting evidence summary",
+    idempotencyKey: "appeal-CLAIM-ID-001",
+  },
+};
+
+const COVERAGE_COMMAND_REQUIRED: Record<CoverageCommandKind, string[]> = {
+  "eligibility-check": ["memberCpid", "coverageId"],
+  "member-enrollment": ["clientId", "planId", "memberNumber"],
+  "claim-submission": ["coverageId", "claimType", "facilityId", "totalAmount"],
+  "preauth-request": ["coverageId", "requestType", "facilityId", "providerId"],
+  "appeal-submission": ["claimId", "appellantId", "reason"],
+};
+
+const COVERAGE_COMMAND_FIELDS: Record<CoverageCommandKind, Array<{ key: string; label: string; type?: string }>> = {
+  "eligibility-check": [
+    { key: "memberCpid", label: "Member CPID" },
+    { key: "coverageId", label: "Coverage ID" },
+    { key: "serviceCode", label: "Service code" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+  "member-enrollment": [
+    { key: "clientId", label: "Client ID / CPID" },
+    { key: "planId", label: "Plan ID" },
+    { key: "memberNumber", label: "Member number" },
+    { key: "relationship", label: "Relationship" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+  "claim-submission": [
+    { key: "coverageId", label: "Coverage ID" },
+    { key: "claimType", label: "Claim type" },
+    { key: "facilityId", label: "Facility ID" },
+    { key: "totalAmount", label: "Total amount", type: "number" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+  "preauth-request": [
+    { key: "coverageId", label: "Coverage ID" },
+    { key: "requestType", label: "Request type" },
+    { key: "facilityId", label: "Facility ID" },
+    { key: "providerId", label: "Provider ID" },
+    { key: "clinicalInfo", label: "Clinical info" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+  "appeal-submission": [
+    { key: "claimId", label: "Claim ID" },
+    { key: "appellantId", label: "Appellant ID" },
+    { key: "reason", label: "Reason" },
+    { key: "evidenceSummary", label: "Evidence summary" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+};
+
+function validateCoverageCommand(command: CoverageCommandKind, payload: Record<string, string>) {
+  const missing = COVERAGE_COMMAND_REQUIRED[command].filter((key) => !payload[key]?.trim());
+  if (missing.length > 0) return `Missing required field(s): ${missing.join(", ")}.`;
+  if (payload.idempotencyKey && payload.idempotencyKey.trim().length < 8) {
+    return "Idempotency key must be at least 8 characters for audit-safe retry.";
+  }
+  if (command === "claim-submission") {
+    const amount = Number(payload.totalAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return "Claim amount must be greater than zero.";
+    if (amount > 100_000) return "Claim amount exceeds the operator guardrail; escalate to payer supervisor.";
+  }
+  if (command === "member-enrollment" && !["SELF", "SPOUSE", "CHILD", "DEPENDENT"].includes(payload.relationship)) {
+    return "Relationship must be SELF, SPOUSE, CHILD, or DEPENDENT.";
+  }
+  if (command === "appeal-submission" && payload.reason.trim().length < 12) {
+    return "Appeal reason must include enough detail for review.";
+  }
+  if (command === "preauth-request" && payload.clinicalInfo.trim().length < 10) {
+    return "Pre-auth requires clinical justification before submission.";
+  }
+  return null;
 }
 
 const ELIGIBILITY_SUMMARY_KEYS = new Set(["result_code", "result_message"]);
@@ -167,6 +287,7 @@ export default function CoveragePage() {
             </div>
           </Link>
         </div>
+        <CoverageCommandConsole />
         <div className="flex gap-1 mb-6 border-b border-gray-200">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -194,6 +315,131 @@ export default function CoveragePage() {
         {activeTab === "intelligence" && <IntelligenceTab />}
       </PageShell>
     </AppLayout>
+  );
+}
+
+function CoverageCommandConsole() {
+  const [command, setCommand] = useState<CoverageCommandKind>("eligibility-check");
+  const [payloads, setPayloads] = useState(COVERAGE_COMMAND_DEFAULTS);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const mutation = useRunCoverageCommand();
+  const currentPayload = payloads[command];
+
+  function selectCommand(nextCommand: CoverageCommandKind) {
+    setCommand(nextCommand);
+    setFeedback(null);
+  }
+
+  function updatePayloadField(key: string, value: string) {
+    setPayloads((current) => ({
+      ...current,
+      [command]: {
+        ...current[command],
+        [key]: value,
+      },
+    }));
+  }
+
+  function submitCommand() {
+    setFeedback(null);
+    const validationMessage = validateCoverageCommand(command, currentPayload);
+    if (validationMessage) {
+      setFeedback(validationMessage);
+      return;
+    }
+
+    const { idempotencyKey, evidenceSummary, ...commandPayload } = currentPayload;
+    mutation.mutate(
+      {
+        command,
+        payload: {
+          ...commandPayload,
+          ...(command === "appeal-submission"
+            ? { evidence: { summary: evidenceSummary } }
+            : {}),
+        },
+        idempotencyKey: idempotencyKey?.trim() || undefined,
+      },
+      {
+        onSuccess: () => setFeedback(`${COVERAGE_COMMAND_LABELS[command]} accepted by Coverage BFF.`),
+        onError: () => setFeedback(`${COVERAGE_COMMAND_LABELS[command]} failed. Verify payload and trust context.`),
+      },
+    );
+  }
+
+  return (
+    <section className="mb-6 rounded-xl border border-violet-200 bg-violet-50/70 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">Coverage service commands</p>
+          <h2 className="mt-1 text-base font-semibold text-gray-900">Action console</h2>
+          <p className="mt-1 max-w-3xl text-sm text-gray-600">
+            Additive command surface for the real Coverage BFF paths. Existing tabs below remain intact for guided workflows.
+          </p>
+        </div>
+        <span className="rounded-full border border-violet-200 bg-white px-3 py-1 text-xs font-medium text-violet-700">
+          live commands
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-[260px_1fr]">
+        <div className="space-y-2">
+          {(Object.keys(COVERAGE_COMMAND_LABELS) as CoverageCommandKind[]).map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => selectCommand(option)}
+              className={`w-full rounded-lg border px-3 py-2 text-left text-sm font-medium ${
+                command === option
+                  ? "border-violet-500 bg-white text-violet-700"
+                  : "border-violet-100 bg-white/60 text-gray-700 hover:bg-white"
+              }`}
+            >
+              {COVERAGE_COMMAND_LABELS[option]}
+            </button>
+          ))}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+            Refunds and settlement payouts stay on the dedicated finance routes to preserve separation of duties.
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-violet-100 bg-white p-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            {COVERAGE_COMMAND_FIELDS[command].map((field) => (
+              <label key={field.key} className="block text-xs font-medium text-gray-600">
+                {field.label}
+                <input
+                  type={field.type ?? "text"}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800"
+                  value={currentPayload[field.key] ?? ""}
+                  onChange={(event) => updatePayloadField(field.key, event.target.value)}
+                />
+              </label>
+            ))}
+          </div>
+          <details className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+            <summary className="cursor-pointer font-medium text-slate-700">Payload preview</summary>
+            <pre className="mt-2 overflow-auto text-[11px]">{JSON.stringify(currentPayload, null, 2)}</pre>
+          </details>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={submitCommand}
+              disabled={mutation.isPending}
+              className="rounded-lg bg-violet-700 px-4 py-2 text-sm font-medium text-white hover:bg-violet-800 disabled:opacity-50"
+            >
+              {mutation.isPending ? "Submitting..." : `Run ${COVERAGE_COMMAND_LABELS[command]}`}
+            </button>
+            {feedback ? <span className="text-xs text-gray-700">{feedback}</span> : null}
+          </div>
+          {mutation.data ? (
+            <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
+              {JSON.stringify(mutation.data, null, 2)}
+            </pre>
+          ) : null}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -354,6 +600,12 @@ function ClaimsTab() {
   const [showForm, setShowForm] = useState(false);
   const [listCoverageId, setListCoverageId] = useState("");
   const [appliedCoverageId, setAppliedCoverageId] = useState<string | null>(null);
+  const [claimForm, setClaimForm] = useState({
+    coverageId: "",
+    claimType: "OUTPATIENT",
+    facilityId: "",
+    totalAmount: "",
+  });
   const submit = useCreateCoverageClaim();
   const claimsQ = useCoverageClaims(appliedCoverageId);
 
@@ -402,29 +654,50 @@ function ClaimsTab() {
         <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Claim Submission</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Coverage ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-coverage" />
-            <input type="text" placeholder="Claim Type (e.g., OUTPATIENT)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-type" />
-            <input type="text" placeholder="Facility ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-facility" />
-            <input type="number" placeholder="Total Amount" step="0.01" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="claim-amount" />
+            <input
+              type="text"
+              placeholder="Coverage ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={claimForm.coverageId}
+              onChange={(event) => setClaimForm((current) => ({ ...current, coverageId: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Claim Type (e.g., OUTPATIENT)"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={claimForm.claimType}
+              onChange={(event) => setClaimForm((current) => ({ ...current, claimType: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Facility ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={claimForm.facilityId}
+              onChange={(event) => setClaimForm((current) => ({ ...current, facilityId: event.target.value }))}
+            />
+            <input
+              type="number"
+              placeholder="Total Amount"
+              step="0.01"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={claimForm.totalAmount}
+              onChange={(event) => setClaimForm((current) => ({ ...current, totalAmount: event.target.value }))}
+            />
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
             <button type="button" onClick={() => {
-              const coverageId = (document.getElementById("claim-coverage") as HTMLInputElement)?.value;
-              const claimType = (document.getElementById("claim-type") as HTMLInputElement)?.value;
-              const facilityId = (document.getElementById("claim-facility") as HTMLInputElement)?.value;
-              const totalAmount = (document.getElementById("claim-amount") as HTMLInputElement)?.value;
               submit.mutate(
-                { coverageId, claimType, facilityId, totalAmount },
+                claimForm,
                 {
                   onSuccess: () => {
                     setShowForm(false);
-                    setListCoverageId(coverageId);
-                    setAppliedCoverageId(coverageId.trim() || null);
+                    setListCoverageId(claimForm.coverageId);
+                    setAppliedCoverageId(claimForm.coverageId.trim() || null);
                   },
                 }
               );
-            }} disabled={submit.isPending}
+            }} disabled={submit.isPending || !claimForm.coverageId.trim() || !claimForm.claimType.trim() || !claimForm.facilityId.trim() || !claimForm.totalAmount.trim()}
               className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {submit.isPending ? "Submitting..." : "Submit Claim"}
             </button>
@@ -528,6 +801,12 @@ function SettlementTab() {
 // ── MEMBERSHIP TAB ───────────────────────────────────────────────
 function MembershipTab() {
   const [showForm, setShowForm] = useState(false);
+  const [memberForm, setMemberForm] = useState({
+    clientId: "",
+    planId: "",
+    memberNumber: "",
+    relationship: "SELF",
+  });
   const enroll = useEnrollCoverageMember();
 
   return (
@@ -543,10 +822,32 @@ function MembershipTab() {
         <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Member Enrollment</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Client ID (CPID)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-client" />
-            <input type="text" placeholder="Plan ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-plan" />
-            <input type="text" placeholder="Member Number" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-number" />
-            <select className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="mem-rel">
+            <input
+              type="text"
+              placeholder="Client ID (CPID)"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={memberForm.clientId}
+              onChange={(event) => setMemberForm((current) => ({ ...current, clientId: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Plan ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={memberForm.planId}
+              onChange={(event) => setMemberForm((current) => ({ ...current, planId: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Member Number"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={memberForm.memberNumber}
+              onChange={(event) => setMemberForm((current) => ({ ...current, memberNumber: event.target.value }))}
+            />
+            <select
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={memberForm.relationship}
+              onChange={(event) => setMemberForm((current) => ({ ...current, relationship: event.target.value }))}
+            >
               <option value="SELF">Self</option><option value="SPOUSE">Spouse</option>
               <option value="CHILD">Child</option><option value="DEPENDENT">Dependent</option>
             </select>
@@ -554,15 +855,11 @@ function MembershipTab() {
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
             <button type="button" onClick={() => {
-              const clientId = (document.getElementById("mem-client") as HTMLInputElement)?.value;
-              const planId = (document.getElementById("mem-plan") as HTMLInputElement)?.value;
-              const memberNumber = (document.getElementById("mem-number") as HTMLInputElement)?.value;
-              const relationship = (document.getElementById("mem-rel") as HTMLSelectElement)?.value;
               enroll.mutate(
-                { clientId, planId, memberNumber, relationship },
+                memberForm,
                 { onSuccess: () => setShowForm(false) }
               );
-            }} disabled={enroll.isPending}
+            }} disabled={enroll.isPending || !memberForm.clientId.trim() || !memberForm.planId.trim() || !memberForm.memberNumber.trim()}
               className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {enroll.isPending ? "Enrolling..." : "Enroll"}
             </button>
@@ -582,6 +879,13 @@ function MembershipTab() {
 // ── PREAUTH TAB ──────────────────────────────────────────────────
 function PreauthTab() {
   const [showForm, setShowForm] = useState(false);
+  const [preauthForm, setPreauthForm] = useState({
+    coverageId: "",
+    requestType: "SURGERY",
+    facilityId: "",
+    providerId: "",
+    clinicalInfo: "",
+  });
   const preauthListQ = useCoveragePreauthsList();
   const preauthRows = (preauthListQ.data ?? []).map(asRecord);
   const create = useMutation({
@@ -661,23 +965,47 @@ function PreauthTab() {
         <div className="bg-white rounded-lg border border-blue-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">Pre-Authorization Request</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Coverage ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-coverage" />
-            <input type="text" placeholder="Request Type (e.g., SURGERY)" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-type" />
-            <input type="text" placeholder="Facility ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-facility" />
-            <input type="text" placeholder="Provider ID" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" id="pa-provider" />
+            <input
+              type="text"
+              placeholder="Coverage ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={preauthForm.coverageId}
+              onChange={(event) => setPreauthForm((current) => ({ ...current, coverageId: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Request Type (e.g., SURGERY)"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={preauthForm.requestType}
+              onChange={(event) => setPreauthForm((current) => ({ ...current, requestType: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Facility ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={preauthForm.facilityId}
+              onChange={(event) => setPreauthForm((current) => ({ ...current, facilityId: event.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Provider ID"
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+              value={preauthForm.providerId}
+              onChange={(event) => setPreauthForm((current) => ({ ...current, providerId: event.target.value }))}
+            />
           </div>
-          <textarea placeholder="Clinical information and justification..." rows={3} id="pa-clinical"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+          <textarea
+            placeholder="Clinical information and justification..."
+            rows={3}
+            value={preauthForm.clinicalInfo}
+            onChange={(event) => setPreauthForm((current) => ({ ...current, clinicalInfo: event.target.value }))}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+          />
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
             <button onClick={() => {
-              const coverageId = (document.getElementById("pa-coverage") as HTMLInputElement)?.value;
-              const requestType = (document.getElementById("pa-type") as HTMLInputElement)?.value;
-              const facilityId = (document.getElementById("pa-facility") as HTMLInputElement)?.value;
-              const providerId = (document.getElementById("pa-provider") as HTMLInputElement)?.value;
-              const clinicalInfo = (document.getElementById("pa-clinical") as HTMLTextAreaElement)?.value;
-              create.mutate({ coverageId, requestType, facilityId, providerId, clinicalInfo });
-            }} disabled={create.isPending}
+              create.mutate(preauthForm);
+            }} disabled={create.isPending || !preauthForm.coverageId.trim() || !preauthForm.requestType.trim() || !preauthForm.facilityId.trim() || !preauthForm.providerId.trim()}
               className="flex-1 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50">
               {create.isPending ? "Submitting..." : "Submit Pre-Auth"}
             </button>
@@ -764,6 +1092,21 @@ function ContributionsTab() {
 // ── APPEALS TAB ──────────────────────────────────────────────────
 function AppealsTab() {
   const [showForm, setShowForm] = useState(false);
+  const [selectedAppealId, setSelectedAppealId] = useState("");
+  const [reviewerId, setReviewerId] = useState("");
+  const [decision, setDecision] = useState<"UPHELD" | "OVERTURNED" | "PARTIAL">("UPHELD");
+  const [decisionReason, setDecisionReason] = useState("");
+  const [decidedBy, setDecidedBy] = useState("");
+  const [appealForm, setAppealForm] = useState({
+    claimId: "",
+    coverageId: "",
+    appellantId: "",
+    reason: "",
+    evidenceSummary: "",
+  });
+  const submitAppeal = useSubmitCoverageAppeal();
+  const reviewAppeal = useReviewCoverageAppeal();
+  const decideAppeal = useDecideCoverageAppeal();
   const appealsQ = useCoverageAppealsList();
   const appealRows = (appealsQ.data ?? []).map(asRecord);
   return (
@@ -776,7 +1119,9 @@ function AppealsTab() {
         </button>
       </div>
       <p className="text-sm text-gray-500">
-        Read rows from <code className="text-xs">GET /internal/v1/coverage/appeals</code>.
+        Read rows from <code className="text-xs">GET /internal/v1/coverage/appeals</code>. New appeals submit through{" "}
+        <code className="text-xs">POST /internal/v1/appeals</code>; operator review/decision uses{" "}
+        <code className="text-xs">PUT /internal/v1/appeals/&#123;id&#125;/review|decide</code>.
       </p>
       {appealsQ.isLoading ? (
         <div className="flex items-center justify-center py-8">
@@ -800,6 +1145,7 @@ function AppealsTab() {
                 <th className="px-3 py-2 font-medium text-gray-600">Coverage</th>
                 <th className="px-3 py-2 font-medium text-gray-600">Status</th>
                 <th className="px-3 py-2 font-medium text-gray-600">Filed</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -819,6 +1165,15 @@ function AppealsTab() {
                     <td className="px-3 py-2 text-xs text-gray-500">
                       {formatCoverageDate(readUnknownString(row, "filed_at", "filedAt", "created_at", "createdAt"))}
                     </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        className="rounded border border-amber-200 px-2 py-1 text-xs text-amber-800 hover:bg-amber-50"
+                        onClick={() => setSelectedAppealId(id)}
+                      >
+                        Use
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -830,29 +1185,140 @@ function AppealsTab() {
         <div className="bg-white rounded-lg border border-amber-200 p-5 space-y-3">
           <h4 className="text-sm font-semibold text-gray-900">New Appeal</h4>
           <div className="grid grid-cols-2 gap-3">
-            <input type="text" placeholder="Claim ID" id="appeal-claim" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
-            <input type="text" placeholder="Coverage ID (optional)" id="appeal-coverage" className="px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+            <input
+              type="text"
+              placeholder="Claim ID"
+              value={appealForm.claimId}
+              onChange={(event) => setAppealForm((current) => ({ ...current, claimId: event.target.value }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Coverage ID (optional)"
+              value={appealForm.coverageId}
+              onChange={(event) => setAppealForm((current) => ({ ...current, coverageId: event.target.value }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Appellant ID"
+              value={appealForm.appellantId}
+              onChange={(event) => setAppealForm((current) => ({ ...current, appellantId: event.target.value }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            />
+            <input
+              type="text"
+              placeholder="Evidence summary"
+              value={appealForm.evidenceSummary}
+              onChange={(event) => setAppealForm((current) => ({ ...current, evidenceSummary: event.target.value }))}
+              className="px-3 py-2 text-sm border border-gray-300 rounded-lg"
+            />
           </div>
-          <textarea placeholder="Appeal reason and supporting evidence..." rows={3} id="appeal-reason"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg" />
+          <textarea
+            placeholder="Appeal reason and supporting evidence..."
+            rows={3}
+            value={appealForm.reason}
+            onChange={(event) => setAppealForm((current) => ({ ...current, reason: event.target.value }))}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg"
+          />
           <div className="flex gap-2">
             <button onClick={() => setShowForm(false)} className="flex-1 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg">Cancel</button>
             <button onClick={() => {
-              const claimId = (document.getElementById("appeal-claim") as HTMLInputElement)?.value;
-              const coverageId = (document.getElementById("appeal-coverage") as HTMLInputElement)?.value;
-              const reason = (document.getElementById("appeal-reason") as HTMLTextAreaElement)?.value;
-              if (claimId && reason) apiClient.post("/internal/v1/coverage/claims", { coverageId, claimType: "APPEAL", totalAmount: "0", facilityId: claimId }).then(() => setShowForm(false));
-            }} className="flex-1 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700">Submit Appeal</button>
+              submitAppeal.mutate(
+                {
+                  claimId: appealForm.claimId,
+                  appellantId: appealForm.appellantId,
+                  reason: appealForm.reason,
+                  coverageId: appealForm.coverageId || undefined,
+                  evidence: { summary: appealForm.evidenceSummary },
+                },
+                { onSuccess: () => setShowForm(false) },
+              );
+            }} disabled={submitAppeal.isPending || !appealForm.claimId.trim() || !appealForm.appellantId.trim() || !appealForm.reason.trim()}
+              className="flex-1 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700 disabled:opacity-50">
+              {submitAppeal.isPending ? "Submitting..." : "Submit Appeal"}
+            </button>
           </div>
+          {submitAppeal.isSuccess ? <p className="text-xs text-green-600">Appeal submitted.</p> : null}
+          {submitAppeal.isError ? <p className="text-xs text-red-600">Appeal submission failed.</p> : null}
         </div>
       )}
+      <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-5">
+        <h4 className="text-sm font-semibold text-gray-900">Appeal operator actions</h4>
+        <p className="mt-1 text-xs text-amber-900">
+          Review moves an appeal from PENDING to UNDER_REVIEW. Decisions on OVERTURNED or PARTIAL trigger the backend
+          resubmission notification for the linked claim.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <input
+            type="text"
+            placeholder="Appeal ID"
+            value={selectedAppealId}
+            onChange={(event) => setSelectedAppealId(event.target.value)}
+            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+          />
+          <input
+            type="text"
+            placeholder="Reviewer ID"
+            value={reviewerId}
+            onChange={(event) => setReviewerId(event.target.value)}
+            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+          />
+          <select
+            value={decision}
+            onChange={(event) => setDecision(event.target.value as "UPHELD" | "OVERTURNED" | "PARTIAL")}
+            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+          >
+            <option value="UPHELD">UPHELD</option>
+            <option value="OVERTURNED">OVERTURNED</option>
+            <option value="PARTIAL">PARTIAL</option>
+          </select>
+          <input
+            type="text"
+            placeholder="Decided by"
+            value={decidedBy}
+            onChange={(event) => setDecidedBy(event.target.value)}
+            className="px-3 py-2 text-sm border border-amber-200 rounded-lg"
+          />
+        </div>
+        <textarea
+          placeholder="Decision reason"
+          rows={2}
+          value={decisionReason}
+          onChange={(event) => setDecisionReason(event.target.value)}
+          className="mt-3 w-full px-3 py-2 text-sm border border-amber-200 rounded-lg"
+        />
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={reviewAppeal.isPending || !selectedAppealId.trim() || !reviewerId.trim()}
+            onClick={() => reviewAppeal.mutate({ appealId: selectedAppealId, reviewerId })}
+            className="rounded-lg bg-amber-700 px-3 py-2 text-sm font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+          >
+            {reviewAppeal.isPending ? "Marking..." : "Mark under review"}
+          </button>
+          <button
+            type="button"
+            disabled={decideAppeal.isPending || !selectedAppealId.trim() || !decisionReason.trim() || !decidedBy.trim()}
+            onClick={() => decideAppeal.mutate({ appealId: selectedAppealId, decision, decisionReason, decidedBy })}
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {decideAppeal.isPending ? "Deciding..." : "Record decision"}
+          </button>
+        </div>
+        {reviewAppeal.isError ? <p className="mt-2 text-xs text-red-700">Review transition failed.</p> : null}
+        {decideAppeal.isError ? <p className="mt-2 text-xs text-red-700">Decision failed; check status is UNDER_REVIEW.</p> : null}
+        {reviewAppeal.isSuccess || decideAppeal.isSuccess ? (
+          <p className="mt-2 text-xs text-green-700">Appeal action accepted and rows will refresh.</p>
+        ) : null}
+      </div>
       <div className="bg-white rounded-lg border border-gray-200 p-5">
         <p className="text-sm text-gray-500">Appeal workflow: <span className="font-mono text-xs">PENDING → UNDER_REVIEW → UPHELD / OVERTURNED / PARTIAL</span></p>
       </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+      {appealRows.length === 0 ? <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
         <Scale className="w-10 h-10 text-gray-300 mx-auto mb-3" />
         <p className="text-gray-400 text-sm">No appeals filed</p>
-      </div>
+      </div> : null}
     </div>
   );
 }

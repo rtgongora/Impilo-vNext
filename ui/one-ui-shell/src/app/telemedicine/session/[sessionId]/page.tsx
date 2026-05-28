@@ -19,6 +19,7 @@ import {
   Video, VideoOff, Activity,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { LiveKitConsultRoom } from "@/components/telemedicine/LiveKitConsultRoom";
 import { apiClient } from "@/lib/api-client";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
@@ -47,6 +48,7 @@ export default function TeleconsultSessionPage() {
   const [callActive, setCallActive] = useState(false);
   const [videoActive, setVideoActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Response draft (Stage 6)
@@ -166,6 +168,10 @@ export default function TeleconsultSessionPage() {
   const status = (session?.status as string) || "ACTIVE";
   const isResponded = status === "RESPONDED" || status === "CLOSED";
   const isClosed = status === "CLOSED";
+  const attributes = ((session?.attributes as Record<string, unknown> | undefined) ?? session ?? {}) as Record<string, unknown>;
+  const mediaRoomUrl = String(attributes.room_url ?? attributes.roomUrl ?? "");
+  const mediaToken = String(attributes.token ?? attributes.accessToken ?? attributes.session_token ?? "");
+  const hasGovernedMedia = mediaRoomUrl.length > 0 && mediaToken.length > 0;
 
   if (loading) {
     return (
@@ -296,14 +302,16 @@ export default function TeleconsultSessionPage() {
         <div className="w-80 border-r bg-white flex flex-col shrink-0">
           {/* Call controls */}
           <div className="p-3 border-b flex items-center justify-center gap-2">
-            <button onClick={() => { setCallActive(!callActive); setVideoActive(false); }}
+            <button onClick={() => { if (hasGovernedMedia) { setCallActive(!callActive); setVideoActive(false); } }}
+              disabled={!hasGovernedMedia}
               className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
-              title={callActive ? "End call" : "Audio call"}>
+              title={hasGovernedMedia ? (callActive ? "End call" : "Audio call") : "Waiting for governed RTC media"}>
               {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
             </button>
-            <button onClick={() => { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }}
+            <button onClick={() => { if (hasGovernedMedia) { setVideoActive(!videoActive); if (!callActive) setCallActive(true); } }}
+              disabled={!hasGovernedMedia}
               className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
-              title={videoActive ? "Stop video" : "Video call"}>
+              title={hasGovernedMedia ? (videoActive ? "Stop video" : "Video call") : "Waiting for governed RTC media"}>
               {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
             </button>
             <button className="p-2.5 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" title="Voice note">
@@ -312,11 +320,36 @@ export default function TeleconsultSessionPage() {
           </div>
 
           {/* Video preview */}
-          {videoActive && (
-            <div className="h-40 bg-gray-900 flex items-center justify-center text-gray-500 text-xs">
-              <Video className="w-8 h-8 opacity-30" />
+          <div className="h-40 bg-gray-900 flex flex-col items-center justify-center text-gray-300 text-xs gap-2 px-3">
+            {hasGovernedMedia ? (
+              <LiveKitConsultRoom
+                serverUrl={mediaRoomUrl}
+                token={mediaToken}
+                videoEnabled={videoActive}
+                onConnected={() => {
+                  setCallActive(true);
+                  setMediaError(null);
+                }}
+                onDisconnected={() => {
+                  setCallActive(false);
+                  setVideoActive(false);
+                }}
+                onError={(message) => setMediaError(message)}
+              />
+            ) : (
+              <>
+                <Video className="w-8 h-8 opacity-60" />
+                <span className="text-center text-gray-400">
+                  Live media is blocked until the Telemedicine service returns a governed room and scoped token.
+                </span>
+              </>
+            )}
+          </div>
+          {mediaError ? (
+            <div className="mx-3 mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11px] text-amber-700">
+              {mediaError} Continue governed teleconsult workflow via notes/messages while support stabilizes media.
             </div>
-          )}
+          ) : null}
 
           {/* Chat messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">

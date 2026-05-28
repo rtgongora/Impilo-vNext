@@ -21,6 +21,8 @@ export interface QueueEntryResource {
 interface QueueEntriesParams {
   facilityId?: string;
   status?: string;
+  /** When set with facilityId, BFF resolves the queue for this PCT queue type (e.g. TRIAGE, LABORATORY). */
+  queueType?: string;
 }
 
 type QueueEntriesResponse = ApiResponse<QueueEntryResource[]>;
@@ -29,10 +31,13 @@ type QueueEntryResponse = ApiResponse<QueueEntryResource>;
 export function useQueueEntries(params?: QueueEntriesParams) {
   return useQuery<QueueEntriesResponse>({
     queryKey: ["queue-entries", params],
+    enabled:
+      !!params && (!!params.facilityId || (typeof params.status === "string" && params.status.length > 0)),
     queryFn: () => {
       const searchParams = new URLSearchParams();
       if (params?.facilityId) searchParams.set("facility_id", params.facilityId);
       if (params?.status) searchParams.set("status", params.status);
+      if (params?.queueType) searchParams.set("queue_type", params.queueType);
 
       const qs = searchParams.toString();
       const path = `/internal/v1/queue/entries${qs ? `?${qs}` : ""}`;
@@ -61,6 +66,31 @@ export function useCompleteQueueEntry() {
       apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/complete`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
+    },
+  });
+}
+
+export function useTransferQueueEntry() {
+  const queryClient = useQueryClient();
+  return useMutation<QueueEntryResponse, unknown, { id: string; targetQueueId: string }>({
+    mutationFn: ({ id, targetQueueId }) =>
+      apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/transfer`, {
+        target_queue_id: targetQueueId,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["queue-stats"] });
+    },
+  });
+}
+
+export function useAbandonQueueEntry() {
+  const queryClient = useQueryClient();
+  return useMutation<QueueEntryResponse, unknown, { id: string }>({
+    mutationFn: ({ id }) => apiClient.post<QueueEntryResponse>(`/internal/v1/queue/entries/${id}/abandon`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["queue-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["queue-stats"] });
     },
   });
 }

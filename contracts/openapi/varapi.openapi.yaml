@@ -58,6 +58,8 @@ tags:
     description: Deduplication case reconciliation
   - name: Snapshot
     description: Full-state snapshot emit for downstream sync
+  - name: Learning-Integration
+    description: Fundo learning completion ingest and CPD candidate projection
 
 paths:
 
@@ -1012,6 +1014,39 @@ paths:
       responses:
         "200":
           description: Decision recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponse"
+
+  /v1/webhooks/fundo/cpd-completion:
+    post:
+      operationId: ingestFundoCpdCompletionWebhook
+      tags: [Learning-Integration]
+      summary: Ingest Fundo completion webhook and project CPD candidate row
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - providerPublicId
+                - councilId
+                - courseId
+                - completionAt
+                - externalRef
+              properties:
+                providerPublicId: { type: string }
+                councilId: { type: string }
+                courseId: { type: string }
+                courseName: { type: string }
+                completionAt: { type: string, format: date-time }
+                externalRef: { type: string }
+                suggestedCredits: { type: number, format: double }
+      responses:
+        "200":
+          description: Candidate recorded or deduplicated
           content:
             application/json:
               schema:

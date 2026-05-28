@@ -53,13 +53,68 @@ services:
     container_name: impilo-pct
     environment:
       <<: *java-env
+      PCT_TELEMED_EXTERNAL_ENABLED: ${PCT_TELEMED_EXTERNAL_ENABLED:-true}
+      PCT_TELEMED_EXTERNAL_BASE_URL: ${PCT_TELEMED_EXTERNAL_BASE_URL:-http://rtc-gateway:8195}
+      PCT_TELEMED_EXTERNAL_SESSION_PATH: ${PCT_TELEMED_EXTERNAL_SESSION_PATH:-/internal/v1/rtc/sessions}
+      PCT_TELEMED_EXTERNAL_API_KEY: ${PCT_TELEMED_EXTERNAL_API_KEY:-}
+      PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY: ${PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY:-false}
+      PCT_TELEMED_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA: ${PCT_TELEMED_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:-true}
+      PCT_TELEMED_ALLOW_EMERGENCY_WITHOUT_CONSENT: ${PCT_TELEMED_ALLOW_EMERGENCY_WITHOUT_CONSENT:-true}
     ports:
       - "8088:8088"
     depends_on:
       <<: *java-depends
+      rtc-gateway:
+        condition: service_healthy
     healthcheck:
       <<: *java-healthcheck
       test: ["CMD-SHELL", "wget -qO- http://localhost:8088/actuator/health || exit 1"]
+
+  livekit:
+    <<: *service-defaults
+    image: livekit/livekit-server:latest
+    container_name: impilo-livekit
+    command: ["--dev", "--bind", "0.0.0.0"]
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    healthcheck:
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7880 || exit 1"]
+
+  rtc-gateway:
+    <<: *service-defaults
+    build:
+      context: ../../services/rtc-gateway-service
+      dockerfile: Dockerfile
+    container_name: impilo-rtc-gateway
+    environment:
+      <<: *java-env
+      RTC_PROVIDER: LIVEKIT
+      RTC_FAIL_CLOSED: ${RTC_FAIL_CLOSED:-true}
+      RTC_DEV_MODE_ENABLED: ${RTC_DEV_MODE_ENABLED:-false}
+      RTC_TOKEN_TTL_SECONDS: ${RTC_TOKEN_TTL_SECONDS:-3600}
+      RTC_RECORDING_ENABLED: ${RTC_RECORDING_ENABLED:-false}
+      RTC_EGRESS_ENABLED: ${RTC_EGRESS_ENABLED:-false}
+      RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA: ${RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:-true}
+      RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT: ${RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT:-true}
+      LIVEKIT_ENABLED: ${LIVEKIT_ENABLED:-true}
+      LIVEKIT_URL: ${LIVEKIT_URL:-http://livekit:7880}
+      LIVEKIT_CLIENT_URL: ${LIVEKIT_CLIENT_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-secret}
+    ports:
+      - "8195:8195"
+    depends_on:
+      livekit:
+        condition: service_healthy
+    healthcheck:
+      <<: *java-healthcheck
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8195/actuator/health || exit 1"]
 
   oros:
     <<: *service-defaults
@@ -350,6 +405,12 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       FHIR_BASE_URL: http://hapi-fhir:8080/fhir
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      IMPILO_TELEMEDICINE_REQUIRE_TSHEPO_AUTHORIZE: ${IMPILO_TELEMEDICINE_REQUIRE_TSHEPO_AUTHORIZE:-true}
+      IMPILO_TELEMEDICINE_TSHEPO_PDP_FALLBACK_ALLOW: ${IMPILO_TELEMEDICINE_TSHEPO_PDP_FALLBACK_ALLOW:-false}
+      IMPILO_TELEMEDICINE_AUDIT_INGEST_ENABLED: ${IMPILO_TELEMEDICINE_AUDIT_INGEST_ENABLED:-true}
+      IMPILO_TELEMEDICINE_REQUIRE_MEDIA_CONSENT_REFERENCE: ${IMPILO_TELEMEDICINE_REQUIRE_MEDIA_CONSENT_REFERENCE:-true}
+      IMPILO_TELEMEDICINE_ALLOW_EMERGENCY_WITHOUT_CONSENT: ${IMPILO_TELEMEDICINE_ALLOW_EMERGENCY_WITHOUT_CONSENT:-true}
+      IMPILO_TELEMEDICINE_ALLOWED_PURPOSE_OF_USE: ${IMPILO_TELEMEDICINE_ALLOWED_PURPOSE_OF_USE:-TREATMENT,EMERGENCY,PAYMENT,OPERATIONS,PUBLIC_HEALTH}
     ports:
       - "8160:8160"
     depends_on:

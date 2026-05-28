@@ -18,10 +18,12 @@ import { ContextualLearningPanel } from "@/components/learning/ContextualLearnin
 import { PageShell } from "@/components/PageShell";
 import {
   useBootstrapSnapshot,
+  useCancelImportJob,
   useCreateImportJob,
   useCreateIntakeSession,
   useCreateRecoveryRequest,
   useExecuteImportJob,
+  useRegistryImportJobs,
   useSearchIndawoSites,
 } from "@/hooks/queries/useRegistryIntake";
 import {
@@ -41,6 +43,8 @@ export default function RegistryIntakePage() {
   const createSession = useCreateIntakeSession();
   const createRecovery = useCreateRecoveryRequest();
   const createImport = useCreateImportJob();
+  const importJobs = useRegistryImportJobs();
+  const cancelImport = useCancelImportJob();
   const [importJobId, setImportJobId] = useState<string | null>(null);
   const executeImport = useExecuteImportJob();
   const searchIndawo = useSearchIndawoSites();
@@ -333,6 +337,19 @@ export default function RegistryIntakePage() {
               >
                 Live execute
               </button>
+              <button
+                type="button"
+                className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                disabled={!importJobId || cancelImport.isPending}
+                onClick={() =>
+                  importJobId &&
+                  cancelImport.mutate(importJobId, {
+                    onSuccess: () => void importJobs.refetch(),
+                  })
+                }
+              >
+                Cancel job
+              </button>
             </div>
             {createImport.isError && (
               <p className="mt-2 text-xs text-red-600">
@@ -350,6 +367,37 @@ export default function RegistryIntakePage() {
                 {JSON.stringify((executeImport.data as { data: unknown }).data, null, 2)}
               </pre>
             )}
+            <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-gray-800">Recent import jobs</p>
+                <button
+                  type="button"
+                  className="text-xs font-medium text-gray-600 hover:text-gray-900"
+                  onClick={() => void importJobs.refetch()}
+                >
+                  Refresh
+                </button>
+              </div>
+              {importJobs.isLoading ? <p className="mt-2 text-xs text-gray-500">Loading import jobs...</p> : null}
+              {importJobs.data?.data?.length ? (
+                <div className="mt-2 grid gap-2">
+                  {importJobs.data.data.slice(0, 5).map((job) => (
+                    <button
+                      key={String(job.id)}
+                      type="button"
+                      onClick={() => setImportJobId(String(job.id))}
+                      className="rounded-lg border border-gray-200 bg-white p-2 text-left text-xs hover:border-amber-300"
+                    >
+                      <span className="font-mono font-semibold text-gray-900">{String(job.id)}</span>
+                      <span className="ml-2 text-gray-600">{String(job.status ?? "UNKNOWN")}</span>
+                      <span className="ml-2 text-gray-500">{String(job.targetRegistry ?? "")}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : !importJobs.isLoading ? (
+                <p className="mt-2 text-xs text-gray-500">No recent import jobs.</p>
+              ) : null}
+            </div>
           </div>
 
           <div className="rounded-2xl border border-gray-200 bg-white p-5 md:col-span-2">

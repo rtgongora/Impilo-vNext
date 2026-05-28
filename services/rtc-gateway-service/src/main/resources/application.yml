@@ -1,0 +1,43 @@
+server:
+  port: 8195
+
+spring:
+  application:
+    name: rtc-gateway-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: rtc-gateway-service
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+rtc:
+  gateway:
+    provider: ${RTC_PROVIDER:LIVEKIT}
+    fail-closed: ${RTC_FAIL_CLOSED:true}
+    dev-mode-enabled: ${RTC_DEV_MODE_ENABLED:false}
+    token-ttl-seconds: ${RTC_TOKEN_TTL_SECONDS:3600}
+    room-prefix: ${RTC_ROOM_PREFIX:impilo-telemedicine}
+    recording-enabled: ${RTC_RECORDING_ENABLED:false}
+    egress-enabled: ${RTC_EGRESS_ENABLED:false}
+    require-consent-reference-for-media: ${RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:true}
+    allow-emergency-without-consent: ${RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT:true}
+  livekit:
+    enabled: ${LIVEKIT_ENABLED:false}
+    url: ${LIVEKIT_URL:}
+    client-url: ${LIVEKIT_CLIENT_URL:}
+    api-key: ${LIVEKIT_API_KEY:}
+    api-secret: ${LIVEKIT_API_SECRET:}
+    create-room-path: ${LIVEKIT_CREATE_ROOM_PATH:/twirp/livekit.RoomService/CreateRoom}
+    delete-room-path: ${LIVEKIT_DELETE_ROOM_PATH:/twirp/livekit.RoomService/DeleteRoom}
+    default-empty-timeout-seconds: ${LIVEKIT_EMPTY_TIMEOUT_SECONDS:900}
+    max-participants: ${LIVEKIT_MAX_PARTICIPANTS:8}

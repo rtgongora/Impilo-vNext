@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import type { ApiResponse } from "@/lib/api-client";
 
 interface FederationResource {
   id: string;
@@ -31,7 +31,7 @@ type FederationResponse = ApiResponse<FederationResource[]>;
 function useFederation() {
   return useQuery<FederationResponse>({
     queryKey: ["admin-federation"],
-    queryFn: () => apiClient.get<FederationResponse>("/internal/v1/admin/federation"),
+    queryFn: () => Promise.reject(new Error("Typed federation BFF unavailable")),
   });
 }
 

@@ -22,20 +22,21 @@ describe("queueService", () => {
       correlationId: "c1",
       headers: {},
     });
-    const rows = await fetchQueue();
+    const rows = await fetchQueue("fac-1");
     expect(rows).toEqual([{ id: "q1", patient_name: "Test" }]);
-    expect(apiClient.get).toHaveBeenCalledWith("/internal/v1/mobile/provider/queue");
+    expect(apiClient.get).toHaveBeenCalledWith("/internal/v1/queue/entries?facility_id=fac-1");
   });
 
   it("fetchQueueStats unwraps aggregate object", async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({
+    vi.mocked(apiClient.post).mockResolvedValue({
       data: { data: { waiting: 2, inProgress: 1, completedToday: 5 } },
       status: 200,
       correlationId: "c1",
       headers: {},
     });
-    const s = await fetchQueueStats();
+    const s = await fetchQueueStats("fac-1");
     expect(s).toEqual({ waiting: 2, inProgress: 1, completedToday: 5 });
+    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/queue/entries/stats", { facilityId: "fac-1" });
   });
 
   it("callNext posts queueId", async () => {
@@ -47,7 +48,7 @@ describe("queueService", () => {
     });
     const out = await callNext("desk-1");
     expect(out).toEqual({ id: "next" });
-    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/mobile/provider/queue/call-next", { queueId: "desk-1" });
+    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/queue/entries/desk-1/call");
   });
 
   it("completeEntry posts completion path", async () => {
@@ -58,6 +59,6 @@ describe("queueService", () => {
       headers: {},
     });
     await completeEntry("entry-9");
-    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/mobile/provider/queue/complete/entry-9");
+    expect(apiClient.post).toHaveBeenCalledWith("/internal/v1/queue/entries/entry-9/complete");
   });
 });

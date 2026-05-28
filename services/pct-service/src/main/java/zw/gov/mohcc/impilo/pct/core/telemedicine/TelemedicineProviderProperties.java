@@ -12,6 +12,7 @@ public class TelemedicineProviderProperties {
 
     private External external = new External();
     private Fallback fallback = new Fallback();
+    private Governance governance = new Governance();
 
     public External getExternal() {
         return external;
@@ -27,6 +28,14 @@ public class TelemedicineProviderProperties {
 
     public void setFallback(Fallback fallback) {
         this.fallback = fallback;
+    }
+
+    public Governance getGovernance() {
+        return governance;
+    }
+
+    public void setGovernance(Governance governance) {
+        this.governance = governance;
     }
 
     public static class External {
@@ -77,6 +86,27 @@ public class TelemedicineProviderProperties {
 
         public void setAllowManagedPrimaryFallback(boolean allowManagedPrimaryFallback) {
             this.allowManagedPrimaryFallback = allowManagedPrimaryFallback;
+        }
+    }
+
+    public static class Governance {
+        private boolean requireConsentReferenceForMedia = true;
+        private boolean allowEmergencyWithoutConsent = true;
+
+        public boolean isRequireConsentReferenceForMedia() {
+            return requireConsentReferenceForMedia;
+        }
+
+        public void setRequireConsentReferenceForMedia(boolean requireConsentReferenceForMedia) {
+            this.requireConsentReferenceForMedia = requireConsentReferenceForMedia;
+        }
+
+        public boolean isAllowEmergencyWithoutConsent() {
+            return allowEmergencyWithoutConsent;
+        }
+
+        public void setAllowEmergencyWithoutConsent(boolean allowEmergencyWithoutConsent) {
+            this.allowEmergencyWithoutConsent = allowEmergencyWithoutConsent;
         }
     }
 }

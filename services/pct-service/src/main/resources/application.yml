@@ -85,4 +85,7 @@ pct:
         session-path: ${PCT_TELEMED_EXTERNAL_SESSION_PATH:/v1/sessions}
         api-key: ${PCT_TELEMED_EXTERNAL_API_KEY:}
       fallback:
-        allow-managed-primary-fallback: ${PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY:true}
+        allow-managed-primary-fallback: ${PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY:false}
+      governance:
+        require-consent-reference-for-media: ${PCT_TELEMED_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA:true}
+        allow-emergency-without-consent: ${PCT_TELEMED_ALLOW_EMERGENCY_WITHOUT_CONSENT:true}

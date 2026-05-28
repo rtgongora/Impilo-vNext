@@ -19,6 +19,7 @@ import {
 import { joinSession, endSession, fetchSession } from "../../services/telehealthService";
 import { useChannel } from "@impilo/mobile-messaging";
 import type { TelehealthSession } from "../../types";
+import { LiveKitMobileConsultRoom } from "./LiveKitMobileConsultRoom";
 
 interface TelehealthSessionScreenProps {
   session: TelehealthSession;
@@ -36,6 +37,8 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
   const [showEndForm, setShowEndForm] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [supportNotice, setSupportNotice] = useState<string | null>(null);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [micMuted, setMicMuted] = useState(false);
 
   // Real-time channel for session events
   const channel = useChannel(sessionChannel ?? `telehealth-${session.id}`, {
@@ -163,16 +166,45 @@ export function TelehealthSessionScreen({ session: initialSession, onBack }: Tel
             <CardBody>
               <View testID="active-session-area" style={styles.activeSessionArea}>
                 <Text style={styles.activeSessionText}>
-                  {session.sessionType === "VIDEO"
-                    ? "Video session active"
-                    : session.sessionType === "AUDIO"
-                      ? "Audio session active"
-                      : "Chat session active"}
+                  {session.roomUrl && sessionToken
+                    ? session.sessionType === "VIDEO"
+                      ? "Governed RTC video room ready"
+                      : session.sessionType === "AUDIO"
+                        ? "Governed RTC audio room ready"
+                        : "Secure telehealth chat ready"
+                    : "Media room not available yet"}
                 </Text>
+                {session.roomUrl && sessionToken ? (
+                  <LiveKitMobileConsultRoom
+                    serverUrl={session.roomUrl}
+                    token={sessionToken}
+                    videoEnabled={videoEnabled}
+                    micMuted={micMuted}
+                    onConnected={() => setSupportNotice("LiveKit media connected through Impilo RTC Gateway.")}
+                    onDisconnected={() => setSupportNotice("LiveKit media disconnected. Your teleconsult remains open.")}
+                    onError={(message) => setSupportNotice(message)}
+                  />
+                ) : (
+                  <Text style={styles.mediaInfoText}>
+                    Live media is blocked until Impilo returns a governed room and scoped token.
+                  </Text>
+                )}
               </View>
 
               {/* Session controls */}
               <View style={styles.controlsRow}>
+                <Button
+                  title={videoEnabled ? "Disable Video" : "Enable Video"}
+                  variant="outline"
+                  onPress={() => setVideoEnabled((prev) => !prev)}
+                  testID="toggle-video-btn"
+                />
+                <Button
+                  title={micMuted ? "Unmute Mic" : "Mute Mic"}
+                  variant="outline"
+                  onPress={() => setMicMuted((prev) => !prev)}
+                  testID="toggle-mic-btn"
+                />
                 <Button
                   title="End Session"
                   variant="primary"
@@ -299,6 +331,14 @@ const styles = StyleSheet.create({
   activeSessionText: {
     color: "white",
     fontSize: 16,
+  },
+  mediaInfoText: {
+    color: "#D1D5DB",
+    fontSize: 12,
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: "center",
+    paddingHorizontal: 12,
   },
   controlsRow: {
     flexDirection: "row",

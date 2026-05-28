@@ -64,14 +64,26 @@ export function buildTrustHeaders(
   if (session.facilityId) {
     headers[TRUST_HEADERS.FACILITY_ID] = session.facilityId;
   }
+  if (session.departmentId) {
+    headers[TRUST_HEADERS.DEPARTMENT_ID] = session.departmentId;
+  }
+  if (session.wardId) {
+    headers[TRUST_HEADERS.WARD_ID] = session.wardId;
+  }
   if (session.providerId) {
     headers[TRUST_HEADERS.PROVIDER_ID] = session.providerId;
   }
   if (session.workspaceId) {
     headers[TRUST_HEADERS.WORKSPACE_ID] = session.workspaceId;
   }
+  if (session.programmeId) {
+    headers[TRUST_HEADERS.PROGRAMME_ID] = session.programmeId;
+  }
   if (session.shiftId) {
     headers[TRUST_HEADERS.SHIFT_ID] = session.shiftId;
+  }
+  if (session.accessMode) {
+    headers[TRUST_HEADERS.ACCESS_MODE] = session.accessMode;
   }
   if (session.deviceFingerprint) {
     headers[TRUST_HEADERS.DEVICE_FINGERPRINT] = session.deviceFingerprint;

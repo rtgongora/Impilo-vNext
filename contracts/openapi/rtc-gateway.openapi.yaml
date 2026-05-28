@@ -1,0 +1,282 @@
+openapi: 3.0.3
+info:
+  title: Impilo RTC Gateway API
+  version: 0.1.0
+  description: >
+    Provider-neutral real-time media gateway for governed telemedicine sessions.
+    The gateway provisions media rooms and participant tokens only when invoked by
+    clinical workflow services such as PCT. It does not own telemedicine workflow,
+    consent, clinical documentation, billing, or referral state.
+servers:
+  - url: http://localhost:8195
+    description: Local RTC Gateway
+tags:
+  - name: RtcSessions
+    description: Media room lifecycle operations
+paths:
+  /internal/v1/rtc/sessions:
+    post:
+      tags: [RtcSessions]
+      operationId: provisionRtcSession
+      summary: Provision a media room and initial participant token
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RtcSessionProvisionRequest'
+      responses:
+        '201':
+          description: RTC session provisioned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RtcSessionEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ProviderUnavailable'
+  /internal/v1/rtc/sessions/{sessionId}:
+    get:
+      tags: [RtcSessions]
+      operationId: getRtcSession
+      summary: Return media session status and capabilities
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: RTC session status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RtcSessionEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /internal/v1/rtc/sessions/{sessionId}/participants/token:
+    post:
+      tags: [RtcSessions]
+      operationId: issueRtcParticipantToken
+      summary: Issue a role-scoped participant token
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RtcParticipantTokenRequest'
+      responses:
+        '200':
+          description: Participant token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RtcParticipantTokenEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /internal/v1/rtc/sessions/{sessionId}/end:
+    post:
+      tags: [RtcSessions]
+      operationId: endRtcSession
+      summary: End or seal a media room
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                endedBy:
+                  type: string
+      responses:
+        '200':
+          description: RTC session ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RtcSessionEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    RequestId:
+      name: X-Request-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema:
+        type: string
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    RtcSessionProvisionRequest:
+      type: object
+      required: [tenantId, sessionId, patientId, participant]
+      properties:
+        tenantId:
+          type: string
+        sessionId:
+          type: string
+        referralId:
+          type: string
+        encounterId:
+          type: string
+        patientId:
+          type: string
+        providerId:
+          type: string
+        facilityId:
+          type: string
+        purposeOfUse:
+          type: string
+          default: TREATMENT
+        consentReference:
+          type: string
+        sessionType:
+          type: string
+          enum: [VIDEO, AUDIO, PHONE, ASYNC]
+        participant:
+          $ref: '#/components/schemas/RtcParticipant'
+        attributes:
+          type: object
+          additionalProperties: true
+    RtcParticipantTokenRequest:
+      type: object
+      required: [participant]
+      properties:
+        participant:
+          $ref: '#/components/schemas/RtcParticipant'
+    RtcParticipant:
+      type: object
+      required: [identity, role]
+      properties:
+        identity:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [PATIENT, PROVIDER, SUPPORT, OBSERVER]
+    RtcSession:
+      type: object
+      required: [id, provider, roomName, status, capabilities, mediaPolicy]
+      properties:
+        id:
+          type: string
+        provider:
+          type: string
+          example: LIVEKIT
+        roomName:
+          type: string
+        roomUrl:
+          type: string
+          description: Provider SDK connection URL returned to clients (for LiveKit this is a ws/wss server URL, not a browser join page).
+        accessToken:
+          type: string
+          description: Scoped participant token for the participant in the request.
+        tokenExpiresAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PROVISIONED, WAITING, IN_CALL, ENDED, FAILED]
+        channel:
+          type: string
+        capabilities:
+          type: object
+          properties:
+            audio:
+              type: boolean
+            video:
+              type: boolean
+            data:
+              type: boolean
+            recording:
+              type: boolean
+        mediaPolicy:
+          type: object
+          properties:
+            recordingAllowed:
+              type: boolean
+            egressAllowed:
+              type: boolean
+            tokenTtlSeconds:
+              type: integer
+            failClosed:
+              type: boolean
+    RtcSessionEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: '#/components/schemas/RtcSession'
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    RtcParticipantTokenEnvelope:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          required: [accessToken, tokenExpiresAt, roomName, provider]
+          properties:
+            accessToken:
+              type: string
+            tokenExpiresAt:
+              type: string
+              format: date-time
+            roomName:
+              type: string
+            roomUrl:
+              type: string
+              description: Provider SDK connection URL returned to clients.
+            provider:
+              type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+    ResponseMeta:
+      type: object
+      properties:
+        request_id:
+          type: string
+        correlation_id:
+          type: string
+  responses:
+    BadRequest:
+      description: Invalid RTC request
+    NotFound:
+      description: RTC session not found
+    ProviderUnavailable:
+      description: RTC provider unavailable or not configured

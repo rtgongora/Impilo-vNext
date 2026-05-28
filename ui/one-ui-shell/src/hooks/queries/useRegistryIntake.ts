@@ -39,6 +39,20 @@ export function useCreateImportJob() {
   });
 }
 
+export function useRegistryImportJobs(limit = 25) {
+  return useQuery({
+    queryKey: ["registry-intake", "import-jobs", limit],
+    queryFn: () => apiClient.get<ApiResponse<Record<string, unknown>[]>>(`/internal/v1/registry-intake/import-jobs?limit=${limit}`),
+  });
+}
+
+export function useCancelImportJob() {
+  return useMutation({
+    mutationFn: (jobId: string) =>
+      apiClient.post<ApiResponse<Record<string, unknown>>>(`/internal/v1/registry-intake/import-jobs/${jobId}/cancel`, {}),
+  });
+}
+
 export function useExecuteImportJob() {
   return useMutation({
     mutationFn: ({ jobId, dryRun }: { jobId: string; dryRun: boolean }) =>

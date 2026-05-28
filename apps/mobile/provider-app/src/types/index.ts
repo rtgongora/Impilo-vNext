@@ -48,6 +48,7 @@ export interface Patient {
 
 export interface Encounter {
   id: string;
+  journeyId?: string;
   patientId: string;
   facilityId: string;
   shiftId?: string;
@@ -153,6 +154,34 @@ export interface Task {
   completedAt?: string;
   escalatedTo?: string;
   createdAt: string;
+}
+
+export interface ClinicalWorklistItem {
+  id: string;
+  kind: string;
+  source: string;
+  title: string;
+  description?: string;
+  priority?: string;
+  status?: string;
+  dueAt?: string;
+  createdAt?: string;
+  patientId?: string;
+  href?: string;
+}
+
+export interface ClinicalWorklistSummary {
+  total: number;
+  urgent: number;
+  overdue: number;
+  bySource: Record<string, number>;
+}
+
+export interface ProviderLearningSummary {
+  inProgress: number;
+  required: number;
+  overdue: number;
+  cpdEligible: number;
 }
 
 export interface Household {
@@ -374,6 +403,8 @@ export interface TelemedicineSession {
   endedAt?: string;
   sessionToken?: string;
   channelId?: string;
+  roomUrl?: string;
+  mediaStatus?: "PROVISIONED" | "WAITING" | "IN_CALL" | "RECONNECTING" | "DEGRADED_AUDIO" | "ENDED";
 }
 
 export interface ProviderMessage {

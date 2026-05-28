@@ -21,7 +21,7 @@ const SESSION: SessionContext = {
 };
 
 describe("TRUST_HEADERS", () => {
-  it("defines all 14 trust header names as lowercase", () => {
+  it("defines trust header names as lowercase", () => {
     expect(TRUST_HEADERS.TENANT_ID).toBe("x-tenant-id");
     expect(TRUST_HEADERS.CORRELATION_ID).toBe("x-correlation-id");
     expect(TRUST_HEADERS.IDEMPOTENCY_KEY).toBe("idempotency-key");
@@ -104,18 +104,26 @@ describe("buildTrustHeaders", () => {
     expect(headers["idempotency-key"]).toBeUndefined();
   });
 
-  it("includes optional facility/workspace/shift when present", () => {
+  it("includes optional context headers when present", () => {
     const session: SessionContext = {
       ...SESSION,
       facilityId: "fac-1",
+      departmentId: "dep-1",
+      wardId: "ward-1",
       workspaceId: "ws-1",
+      programmeId: "prog-1",
       shiftId: "shift-1",
+      accessMode: "ONLINE",
       deviceFingerprint: "fp-abc",
     };
     const headers = buildTrustHeaders(session);
     expect(headers["x-facility-id"]).toBe("fac-1");
+    expect(headers["x-department-id"]).toBe("dep-1");
+    expect(headers["x-ward-id"]).toBe("ward-1");
     expect(headers["x-workspace-id"]).toBe("ws-1");
+    expect(headers["x-programme-id"]).toBe("prog-1");
     expect(headers["x-shift-id"]).toBe("shift-1");
+    expect(headers["x-access-mode"]).toBe("ONLINE");
     expect(headers["x-device-fingerprint"]).toBe("fp-abc");
   });
 

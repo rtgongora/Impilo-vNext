@@ -53,6 +53,20 @@ tags:
       enrolment, progress, assessment foundation, certificate metadata, and learning record.
       All endpoints live under `/internal/v1/learning/v11/**` and are governed by the platform
       v1.1 contract. This is the native LMS runtime — no Moodle, no external LMS dependency.
+  - name: FundoStudio
+    description: Native intelligent authoring studio and creator/admin operations.
+  - name: FundoAI
+    description: Provider-agnostic AI-assisted authoring endpoints (safe draft-only generation).
+  - name: FundoLibrary
+    description: Native learning resource library and usage linking.
+  - name: FundoMedia
+    description: Native media studio metadata and asset management.
+  - name: FundoInteractive
+    description: Interactive learning activities and response aggregation.
+  - name: FundoComms
+    description: Learning notification scheduling and learner messaging hooks.
+  - name: FundoSchedule
+    description: Cohorts, memberships, and scheduled learning sessions.
   - name: Integration
     description: Trusted ingress from Varapi after an external-LMS completion webhook (governed CPD candidate creation)
   - name: Orchestration
@@ -1381,6 +1395,331 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+
+  /internal/v1/learning/v11/studio/dashboard:
+    get:
+      tags: [FundoStudio]
+      summary: Studio overview KPIs
+      operationId: getStudioDashboard
+      responses:
+        '200':
+          description: Studio dashboard envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/studio/courses/{courseId}/readiness:
+    get:
+      tags: [FundoStudio]
+      summary: Publish-readiness checklist for a course
+      operationId: getStudioCourseReadiness
+      parameters:
+        - { name: courseId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Readiness envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/ai/generate:
+    post:
+      tags: [FundoAI]
+      summary: Generate draft authoring output through provider-agnostic AI adapter
+      operationId: generateAiAuthoringDraft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: AI generation draft envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/nompilo/assist:
+    post:
+      tags: [FundoAI]
+      summary: Nompilo learning assistant endpoint (native integration surface)
+      operationId: nompiloLearningAssist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Assistant response envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/library/resources:
+    get:
+      tags: [FundoLibrary]
+      summary: List learning library resources
+      operationId: listLibraryResources
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Resource list envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoLibrary]
+      summary: Create library resource metadata
+      operationId: createLibraryResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Resource created envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/library/resources/{resourceId}/links:
+    post:
+      tags: [FundoLibrary]
+      summary: Link resource to course/module/lesson/assessment
+      operationId: linkLibraryResource
+      parameters:
+        - { name: resourceId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Link created envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/library/uploads:
+    post:
+      tags: [FundoLibrary]
+      summary: Upload resource metadata placeholder (storage adapter integration point)
+      operationId: uploadLibraryResource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Upload metadata accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/media/assets:
+    get:
+      tags: [FundoMedia]
+      summary: List media assets
+      operationId: listMediaAssets
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Media list envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoMedia]
+      summary: Create media asset metadata
+      operationId: createMediaAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Media created envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/notifications:
+    get:
+      tags: [FundoComms]
+      summary: List learning notifications for a subject
+      operationId: listLearningNotifications
+      parameters:
+        - { name: subjectType, in: query, required: true, schema: { type: string } }
+        - { name: subjectId, in: query, required: true, schema: { type: string } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Notifications envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoComms]
+      summary: Schedule learning notification
+      operationId: scheduleLearningNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Notification scheduled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/interactive/activities:
+    get:
+      tags: [FundoInteractive]
+      summary: List interactive learning activities
+      operationId: listInteractiveActivities
+      parameters:
+        - { name: courseId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: lessonId, in: query, required: false, schema: { type: string, format: uuid } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Interactive activities envelope
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoInteractive]
+      summary: Create interactive activity
+      operationId: createInteractiveActivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Activity created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/interactive/activities/{activityId}/responses:
+    get:
+      tags: [FundoInteractive]
+      summary: List responses for an interactive activity
+      operationId: listInteractiveResponses
+      parameters:
+        - { name: activityId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Interactive response list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoInteractive]
+      summary: Submit an interactive response
+      operationId: submitInteractiveResponse
+      parameters:
+        - { name: activityId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Response accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/cohorts:
+    get:
+      tags: [FundoSchedule]
+      summary: List learning cohorts
+      operationId: listLearningCohorts
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Cohort list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoSchedule]
+      summary: Create a learning cohort
+      operationId: createLearningCohort
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Cohort created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/cohorts/{cohortId}/members:
+    post:
+      tags: [FundoSchedule]
+      summary: Add cohort membership
+      operationId: addLearningCohortMember
+      parameters:
+        - { name: cohortId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Membership assigned
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+
+  /internal/v1/learning/v11/sessions:
+    get:
+      tags: [FundoSchedule]
+      summary: List scheduled learning sessions
+      operationId: listScheduledLearningSessions
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        '200':
+          description: Scheduled sessions list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
+    post:
+      tags: [FundoSchedule]
+      summary: Create scheduled learning session
+      operationId: createScheduledLearningSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Map_StringObject' }
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiEnvelope_Map' }
 
 components:
   securitySchemes:

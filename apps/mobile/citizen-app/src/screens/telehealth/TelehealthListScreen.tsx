@@ -58,6 +58,8 @@ export function TelehealthListScreen() {
   const [preferredDate, setPreferredDate] = useState("");
   const [sessionType, setSessionType] = useState("VIDEO");
   const [providerId, setProviderId] = useState("");
+  const [purposeOfUse, setPurposeOfUse] = useState("TREATMENT");
+  const [consentReference, setConsentReference] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [activeSession, setActiveSession] = useState<TelehealthSession | null>(null);
 
@@ -79,6 +81,13 @@ export function TelehealthListScreen() {
   }, [load]);
 
   const handleRequest = useCallback(async () => {
+    setError(null);
+    const requiresConsentReference =
+      (sessionType === "VIDEO" || sessionType === "AUDIO") && purposeOfUse !== "EMERGENCY";
+    if (requiresConsentReference && !consentReference.trim()) {
+      setError(new Error("Consent reference is required for governed audio/video teleconsult sessions."));
+      return;
+    }
     setSubmitting(true);
     try {
       await requestTeleconsult({
@@ -86,18 +95,22 @@ export function TelehealthListScreen() {
         preferredDate: preferredDate || undefined,
         sessionType,
         providerId: providerId || undefined,
+        purposeOfUse: purposeOfUse as "TREATMENT" | "EMERGENCY" | "OPERATIONS" | "PUBLIC_HEALTH" | "PAYMENT",
+        consentReference: consentReference.trim() || undefined,
       });
       setShowRequest(false);
       setReason("");
       setPreferredDate("");
       setProviderId("");
+      setPurposeOfUse("TREATMENT");
+      setConsentReference("");
       load();
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setSubmitting(false);
     }
-  }, [reason, preferredDate, sessionType, providerId, load]);
+  }, [reason, preferredDate, sessionType, providerId, purposeOfUse, consentReference, load]);
 
   if (activeSession) {
     return (
@@ -110,6 +123,15 @@ export function TelehealthListScreen() {
       />
     );
   }
+
+  const submitDisabled =
+    submitting ||
+    !reason ||
+    (
+      (sessionType === "VIDEO" || sessionType === "AUDIO") &&
+      purposeOfUse !== "EMERGENCY" &&
+      !consentReference.trim()
+    );
 
   return (
     <Screen>
@@ -151,6 +173,28 @@ export function TelehealthListScreen() {
                 ]}
                 testID="telehealth-type"
               />
+              <Select
+                label="Purpose of Use"
+                value={purposeOfUse}
+                onChange={setPurposeOfUse}
+                options={[
+                  { label: "Treatment", value: "TREATMENT" },
+                  { label: "Emergency", value: "EMERGENCY" },
+                  { label: "Operations", value: "OPERATIONS" },
+                  { label: "Public Health", value: "PUBLIC_HEALTH" },
+                  { label: "Payment", value: "PAYMENT" },
+                ]}
+                testID="telehealth-purpose"
+              />
+              {(sessionType === "VIDEO" || sessionType === "AUDIO") ? (
+                <TextField
+                  label={purposeOfUse === "EMERGENCY" ? "Consent Reference (optional for emergency)" : "Consent Reference"}
+                  value={consentReference}
+                  onChange={setConsentReference}
+                  placeholder="mvumo-consent-id"
+                  testID="telehealth-consent-reference"
+                />
+              ) : null}
               <TextField
                 label="Preferred Date (optional)"
                 value={preferredDate}
@@ -167,8 +211,8 @@ export function TelehealthListScreen() {
               />
               <TouchableOpacity
                 onPress={handleRequest}
-                disabled={submitting || !reason}
-                style={[styles.submitBtn, (submitting || !reason) && styles.submitBtnDisabled]}
+                disabled={submitDisabled}
+                style={[styles.submitBtn, submitDisabled && styles.submitBtnDisabled]}
                 testID="submit-telehealth-request"
               >
                 <Text style={styles.submitBtnText}>{submitting ? "Submitting..." : "Submit Request"}</Text>

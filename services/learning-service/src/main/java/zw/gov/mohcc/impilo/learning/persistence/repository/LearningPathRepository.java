@@ -8,4 +8,6 @@ import zw.gov.mohcc.impilo.learning.persistence.entity.LearningPathEntity;
 public interface LearningPathRepository extends JpaRepository<LearningPathEntity, UUID> {
 
     Optional<LearningPathEntity> findByTenantIdAndId(UUID tenantId, UUID id);
+
+    java.util.List<LearningPathEntity> findByTenantIdAndActiveTrue(UUID tenantId);
 }

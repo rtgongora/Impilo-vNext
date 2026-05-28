@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
@@ -86,6 +87,7 @@ public class TeleconsultController {
             @RequestBody Map<String, Object> body) {
         try {
             telemedicineGovernanceService.assertGovernedMutate();
+            String normalizedPurpose = telemedicineGovernanceService.normalizePurposeOfUse(purposeOfUse);
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("encounter_id", val(body, "encounterId", "encounter_id"));
             payload.put("patient_id", val(body, "patientId", "patient_id"));
@@ -97,19 +99,27 @@ public class TeleconsultController {
             payload.put("virtual_mode", defaultString(val(body, "virtualMode", "virtual_mode"), "video"));
             payload.put("session_provider", defaultString(
                     val(body, "sessionProvider", "session_provider", "providerType", "provider_type"),
-                    "managed-primary"));
+                    "EXTERNAL_MANAGED"));
             payload.put("consent_required", true);
+            payload.put("purpose_of_use", normalizedPurpose);
             var created = pctClient.createReferral(payload);
             if (created == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
             }
             emitTelemedicineNotification("TELECONSULT_REQUESTED", created, actorId, "A teleconsult request is waiting for specialist review.");
             telemedicineGovernanceService.audit(
-                    tenantId, correlationId, purposeOfUse, facilityId,
+                    tenantId, correlationId, normalizedPurpose, facilityId,
                     "TELEMEDICINE_SESSION_CREATED", "POST:teleconsult/sessions", "SUCCESS",
                     actorId, "PROVIDER", val(body, "patientId", "patient_id"), "TeleconsultSession",
                     extractId(created), Map.of("mode", "virtual"));
             return ok(created, requestId, correlationId, HttpStatus.CREATED);
+        } catch (ResponseStatusException e) {
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            return error(status == null ? HttpStatus.BAD_REQUEST : status,
+                    "TELEMEDICINE_GOVERNANCE_INVALID",
+                    e.getReason() == null ? "Telemedicine governance rejected request" : e.getReason(),
+                    requestId,
+                    correlationId);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
@@ -252,23 +262,33 @@ public class TeleconsultController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String patientId,
             @RequestParam(required = false) String referrerId,
+            @RequestParam(required = false, name = "patient_id") String patientIdAlias,
+            @RequestParam(required = false, name = "referrer_id") String referrerIdAlias,
+            @RequestParam(required = false, name = "provider_id") String providerIdAlias,
+            @RequestParam(required = false, name = "facility_id") String facilityIdAlias,
+            @RequestParam(required = false, name = "referral_id") String referralIdAlias,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
         try {
             telemedicineGovernanceService.assertGovernedRead();
             JsonNode list;
             int safeSize = Math.min(Math.max(size, 1), 100);
-            if (patientId != null && !patientId.isBlank()) {
-                list = pctClient.listPatientReferrals(patientId, page, safeSize);
+            String resolvedPatientId = firstNonBlank(patientId, patientIdAlias);
+            String resolvedReferrerId = firstNonBlank(referrerId, referrerIdAlias, providerIdAlias, facilityIdAlias);
+            if (resolvedPatientId != null && !resolvedPatientId.isBlank()) {
+                list = pctClient.listPatientReferrals(resolvedPatientId, page, safeSize);
                 list = filterReferralsByStatus(list, status);
-            } else if (referrerId != null && !referrerId.isBlank()) {
-                list = pctClient.listIncomingReferrals(referrerId, status, page, safeSize);
+            } else if (resolvedReferrerId != null && !resolvedReferrerId.isBlank()) {
+                list = pctClient.listIncomingReferrals(resolvedReferrerId, status, page, safeSize);
             } else {
                 return error(HttpStatus.BAD_REQUEST, "MISSING_FILTER",
                         "patientId or referrerId is required", requestId, correlationId);
             }
             if (list == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult list payload returned", requestId, correlationId);
+            }
+            if (referralIdAlias != null && !referralIdAlias.isBlank()) {
+                list = filterReferralsById(list, referralIdAlias);
             }
             return ok(normalizeReferralPayload(list), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
@@ -316,6 +336,21 @@ public class TeleconsultController {
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    /**
+     * Compatibility alias for mobile join semantics. Canonical action remains /accept.
+     */
+    @PostMapping("/sessions/{id}/join")
+    public ResponseEntity<Map<String, Object>> join(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId) {
+        return accept(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId);
     }
 
     @PostMapping("/sessions/{id}/decline")
@@ -467,6 +502,26 @@ public class TeleconsultController {
         }
     }
 
+    /**
+     * Compatibility alias for legacy mobile "end" semantics. Canonical action remains /complete.
+     */
+    @PostMapping("/sessions/{id}/end")
+    public ResponseEntity<Map<String, Object>> end(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        Map<String, Object> payload = body == null ? new LinkedHashMap<>() : new LinkedHashMap<>(body);
+        if (!payload.containsKey("outcome")) {
+            payload.put("outcome", "COMPLETED");
+        }
+        return complete(id, requestId, correlationId, tenantId, purposeOfUse, facilityId, actorId, payload);
+    }
+
     @GetMapping("/routing/providers")
     public ResponseEntity<Map<String, Object>> searchProviders(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -540,6 +595,15 @@ public class TeleconsultController {
         for (String key : keys) {
             Object value = body.get(key);
             if (value != null) return value.toString();
+        }
+        return null;
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
         }
         return null;
     }
@@ -818,6 +882,39 @@ public class TeleconsultController {
                 items.forEach(node -> {
                     String nodeStatus = node.path("status").asText("");
                     if (expected.equals(nodeStatus.toUpperCase(Locale.ROOT))) {
+                        filtered.add(node);
+                    }
+                });
+                copy.set("items", filtered);
+                return copy;
+            }
+        }
+        return payload;
+    }
+
+    private JsonNode filterReferralsById(JsonNode payload, String referralId) {
+        if (referralId == null || referralId.isBlank() || payload == null || payload.isNull()) {
+            return payload;
+        }
+        String expected = referralId.trim();
+        if (payload.isArray()) {
+            ArrayNode filtered = objectMapper.createArrayNode();
+            payload.forEach(node -> {
+                String id = node.path("id").asText("");
+                if (expected.equals(id)) {
+                    filtered.add(node);
+                }
+            });
+            return filtered;
+        }
+        if (payload.isObject()) {
+            ObjectNode copy = payload.deepCopy();
+            JsonNode items = copy.path("items");
+            if (items.isArray()) {
+                ArrayNode filtered = objectMapper.createArrayNode();
+                items.forEach(node -> {
+                    String id = node.path("id").asText("");
+                    if (expected.equals(id)) {
                         filtered.add(node);
                     }
                 });

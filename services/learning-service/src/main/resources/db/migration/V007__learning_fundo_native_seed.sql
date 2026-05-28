@@ -1,3 +1,74 @@
+-- Phase 6 seed for native Fundo LMS catalogue/pathways.
+
+INSERT INTO lrn_learning_resource (
+    id,
+    tenant_id,
+    resource_code,
+    source_type,
+    title,
+    description,
+    resource_type,
+    external_ref,
+    app_code,
+    role_tags,
+    workflow_tags,
+    lifecycle_tags,
+    active,
+    metadata_json,
+    created_at,
+    updated_at
+)
+SELECT
+    '11111111-2222-4333-8444-555555555001'::uuid,
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    'FUNDO_NATIVE_CORE_TRANSACTION',
+    'FUNDO_NATIVE',
+    'Core Transaction Safety and Clinical Governance',
+    'Baseline LMS course for core transaction workflows, clinical governance, and CPD evidence readiness.',
+    'COURSE',
+    'fundo-core-transaction-001',
+    'experience',
+    'PROVIDER,ADMIN',
+    'clinical,telemedicine,governance',
+    'onboarding,required',
+    TRUE,
+    '{"status":"PUBLISHED","category":"CLINICAL_GOVERNANCE","level":"FOUNDATION","language":"en","mandatory":true,"cpdEligible":true,"estimatedMinutes":90}'::text,
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM lrn_learning_resource
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+      AND resource_code = 'FUNDO_NATIVE_CORE_TRANSACTION'
+);
+
+INSERT INTO lrn_learning_path (
+    id,
+    tenant_id,
+    path_code,
+    title,
+    description,
+    path_type,
+    active,
+    metadata_json,
+    created_at,
+    updated_at
+)
+SELECT
+    '11111111-2222-4333-8444-555555555101'::uuid,
+    '00000000-0000-4000-8000-000000000001'::uuid,
+    'FUNDO_PATH_PROVIDER_CORE',
+    'Provider Core Transaction Path',
+    'Role pathway for provider-focused LMS and CPD readiness.',
+    'ROLE',
+    TRUE,
+    '{"status":"PUBLISHED","targetRole":"PROVIDER"}'::text,
+    NOW(),
+    NOW()
+WHERE NOT EXISTS (
+    SELECT 1 FROM lrn_learning_path
+    WHERE tenant_id = '00000000-0000-4000-8000-000000000001'::uuid
+      AND path_code = 'FUNDO_PATH_PROVIDER_CORE'
+);
 -- Phase 5E — Native Impilo Fundo demo content (standalone, no Moodle).
 --
 -- Seeds four short demo courses plus one structured pathway against the

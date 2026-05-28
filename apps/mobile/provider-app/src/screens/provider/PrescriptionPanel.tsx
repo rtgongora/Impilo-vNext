@@ -3,15 +3,83 @@
  */
 
 import React, { useState, useCallback, useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { Card, CardBody, Button, TextField, RxCard, ErrorState } from "@impilo/mobile-design-system";
 import { createPrescription, getPrescriptionsForEncounter } from "../../services/prescriptionService";
+import { checkDrugInteractions } from "../../services/queueService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
 import type { Prescription } from "../../types";
 
 interface PrescriptionPanelProps {
   encounterId: string;
   patientId: string;
+}
+
+interface SafetyEval {
+  blockReason: string | null;
+  warnings: string[];
+}
+
+export function evaluatePrescriptionSafety(params: {
+  existingPrescriptions: Prescription[];
+  medication: string;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  quantity: number;
+  interactionRows: unknown[];
+}): SafetyEval {
+  const normalizedMedication = params.medication.trim().toLowerCase();
+  if (!normalizedMedication) {
+    return { blockReason: "Medication name is required.", warnings: [] };
+  }
+  if (!params.dosage.trim()) {
+    return { blockReason: "Dosage is required.", warnings: [] };
+  }
+  if (!params.frequency.trim()) {
+    return { blockReason: "Frequency is required.", warnings: [] };
+  }
+  if (!params.duration.trim()) {
+    return { blockReason: "Duration is required.", warnings: [] };
+  }
+  if (!Number.isFinite(params.quantity) || params.quantity <= 0) {
+    return { blockReason: "Quantity must be greater than zero.", warnings: [] };
+  }
+
+  const duplicate = params.existingPrescriptions.some((rx) => {
+    const active = rx.status === "ACTIVE";
+    return active && rx.medication.trim().toLowerCase() === normalizedMedication;
+  });
+  if (duplicate) {
+    return {
+      blockReason: "An active prescription for this medication already exists in the encounter.",
+      warnings: [],
+    };
+  }
+
+  let severe = false;
+  const warnings: string[] = [];
+  for (const row of params.interactionRows) {
+    const r = row as Record<string, unknown>;
+    const severity = String(r.severity ?? r.level ?? "").toUpperCase();
+    const note = String(r.message ?? r.description ?? "").trim();
+    if (severity === "HIGH" || severity === "SEVERE" || severity === "CRITICAL") {
+      severe = true;
+      continue;
+    }
+    if (severity === "MEDIUM" || severity === "MODERATE") {
+      warnings.push(note || "Moderate interaction flagged.");
+    }
+  }
+
+  if (severe) {
+    return {
+      blockReason:
+        "Drug interaction check flagged a severe/contraindicated combination. Review in Clinical Tools before prescribing.",
+      warnings,
+    };
+  }
+  return { blockReason: null, warnings };
 }
 
 export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelProps) {
@@ -24,6 +92,8 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
   const [instructions, setInstructions] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [interactionNote, setInteractionNote] = useState<string | null>(null);
+  const [interactionWarnings, setInteractionWarnings] = useState<string[]>([]);
 
   useEffect(() => {
     getPrescriptionsForEncounter(encounterId)
@@ -35,7 +105,38 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
     if (!medication.trim() || !dosage.trim()) return;
     setSaving(true);
     setError(null);
+    setInteractionNote(null);
+    setInteractionWarnings([]);
     try {
+      const meds = [
+        ...prescriptions.map((p) => p.medication).filter(Boolean),
+        medication.trim(),
+      ];
+      const interactionRows = await checkDrugInteractions(meds);
+
+      const safety = evaluatePrescriptionSafety({
+        existingPrescriptions: prescriptions,
+        medication,
+        dosage,
+        frequency,
+        duration,
+        quantity: parseInt(quantity, 10) || 0,
+        interactionRows,
+      });
+      if (safety.blockReason) {
+        setError(safety.blockReason);
+        setSaving(false);
+        return;
+      }
+      if (safety.warnings.length > 0) {
+        setInteractionWarnings(safety.warnings.slice(0, 3));
+      }
+      if (interactionRows.length > 0) {
+        setInteractionNote(`Interaction check completed: ${interactionRows.length} potential interaction(s), no severe blocks.`);
+      } else {
+        setInteractionNote("Interaction check completed: no significant interactions found.");
+      }
+
       const rx = await createPrescription({
         encounterId,
         patientId,
@@ -80,6 +181,14 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
               testID="add-rx-btn"
             />
           </View>
+          {interactionNote ? <Text style={styles.interactionInfo}>{interactionNote}</Text> : null}
+          {interactionWarnings.length > 0 ? (
+            <View style={styles.warningBox}>
+              {interactionWarnings.map((warning, idx) => (
+                <Text key={`warning-${idx}`} style={styles.warningText}>{`- ${warning}`}</Text>
+              ))}
+            </View>
+          ) : null}
           {error ? <ErrorState title="Error" message={error} /> : null}
         </CardBody>
       </Card>
@@ -112,5 +221,23 @@ const styles = StyleSheet.create({
   },
   prescriptionsList: {
     marginTop: 12,
+  },
+  interactionInfo: {
+    fontSize: 12,
+    color: "#065F46",
+    marginTop: 8,
+  },
+  warningBox: {
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#F59E0B",
+    backgroundColor: "#FFFBEB",
+    borderRadius: 8,
+    padding: 8,
+    gap: 4,
+  },
+  warningText: {
+    fontSize: 12,
+    color: "#92400E",
   },
 });

@@ -38,6 +38,7 @@ import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen
 import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
+import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
 
 type PersonalTab =
   | "profile"
@@ -46,6 +47,7 @@ type PersonalTab =
   | "conditions"
   | "immunizations"
   | "referrals"
+  | "discover-providers"
   | "care-plans"
   | "appointments"
   | "prescriptions"
@@ -86,6 +88,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "conditions", label: "Conditions", icon: "medical-outline" },
   { id: "immunizations", label: "Immunizations", icon: "shield-checkmark" },
   { id: "referrals", label: "Referrals", icon: "people" },
+  { id: "discover-providers", label: "Find Provider", icon: "search" },
   { id: "care-plans", label: "Care Plans", icon: "clipboard" },
   { id: "appointments", label: "Appointments", icon: "calendar" },
   { id: "prescriptions", label: "Prescriptions", icon: "receipt" },
@@ -125,6 +128,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   conditions: ConditionsSection,
   immunizations: ImmunizationsSection,
   referrals: ReferralsSection,
+  "discover-providers": ProviderDiscoveryScreen,
   "care-plans": CarePlansSection,
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,

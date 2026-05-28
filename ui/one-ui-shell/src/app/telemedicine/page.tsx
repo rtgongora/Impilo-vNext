@@ -45,6 +45,8 @@ interface ComposerState {
   patientId: string;
   referralId: string;
   sessionType: string;
+  purposeOfUse: string;
+  consentReference: string;
   scheduledAt: string;
   notes: string;
 }
@@ -60,6 +62,8 @@ function createDefaultComposer(): ComposerState {
     patientId: "",
     referralId: "",
     sessionType: "VIDEO",
+    purposeOfUse: "TREATMENT",
+    consentReference: "",
     scheduledAt: toLocalDateTimeValue(new Date(Date.now() + 60 * 60 * 1000)),
     notes: "",
   };
@@ -122,7 +126,16 @@ export default function TelemedicinePage() {
     }));
   }, [modeFilter, patientIdFilter, referralIdFilter]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("exp:purpose_of_use", composer.purposeOfUse);
+    }
+  }, [composer.purposeOfUse]);
+
   function updateComposer(field: keyof ComposerState, value: string) {
+    if (field === "purposeOfUse" && typeof window !== "undefined") {
+      sessionStorage.setItem("exp:purpose_of_use", value);
+    }
     setComposer((current) => ({ ...current, [field]: value }));
   }
 
@@ -144,6 +157,12 @@ export default function TelemedicinePage() {
 
   function handleCreateSession() {
     if (!facility || !composer.patientId.trim()) return;
+    const requiresConsentReference =
+      (composer.sessionType === "VIDEO" || composer.sessionType === "AUDIO") &&
+      composer.purposeOfUse !== "EMERGENCY";
+    if (requiresConsentReference && !composer.consentReference.trim()) {
+      return;
+    }
 
     createSession.mutate(
       {
@@ -152,6 +171,10 @@ export default function TelemedicinePage() {
         facility_id: facility.id,
         referral_id: composer.referralId.trim() || undefined,
         session_type: composer.sessionType,
+        session_provider:
+          composer.sessionType === "VIDEO" || composer.sessionType === "AUDIO" ? "EXTERNAL_MANAGED" : undefined,
+        purpose_of_use: composer.purposeOfUse,
+        consent_reference: composer.consentReference.trim() || undefined,
         scheduled_at: composer.scheduledAt ? new Date(composer.scheduledAt).toISOString() : undefined,
         notes: composer.notes.trim() || undefined,
       },
@@ -315,6 +338,23 @@ export default function TelemedicinePage() {
                     </label>
 
                     <label className="block">
+                      <span className="mb-1 block text-xs font-medium text-gray-600">Purpose of Use</span>
+                      <select
+                        value={composer.purposeOfUse}
+                        onChange={(event) => updateComposer("purposeOfUse", event.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                      >
+                        <option value="TREATMENT">Treatment</option>
+                        <option value="EMERGENCY">Emergency</option>
+                        <option value="OPERATIONS">Operations</option>
+                        <option value="PUBLIC_HEALTH">Public Health</option>
+                        <option value="PAYMENT">Payment</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
                       <span className="mb-1 block text-xs font-medium text-gray-600">Scheduled For</span>
                       <input
                         type="datetime-local"
@@ -323,6 +363,20 @@ export default function TelemedicinePage() {
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                       />
                     </label>
+                    {(composer.sessionType === "VIDEO" || composer.sessionType === "AUDIO") ? (
+                      <label className="block">
+                        <span className="mb-1 block text-xs font-medium text-gray-600">
+                          Consent Reference {composer.purposeOfUse === "EMERGENCY" ? "(optional for emergency)" : "*"}
+                        </span>
+                        <input
+                          type="text"
+                          value={composer.consentReference}
+                          onChange={(event) => updateComposer("consentReference", event.target.value)}
+                          placeholder="mvumo-consent-id"
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
+                        />
+                      </label>
+                    ) : <div />}
                   </div>
 
                   <label className="block">
@@ -373,7 +427,15 @@ export default function TelemedicinePage() {
                     <button
                       type="button"
                       onClick={handleCreateSession}
-                      disabled={createSession.isPending || !composer.patientId.trim()}
+                      disabled={
+                        createSession.isPending ||
+                        !composer.patientId.trim() ||
+                        (
+                          (composer.sessionType === "VIDEO" || composer.sessionType === "AUDIO") &&
+                          composer.purposeOfUse !== "EMERGENCY" &&
+                          !composer.consentReference.trim()
+                        )
+                      }
                       className="flex-1 rounded-lg bg-impilo-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-impilo-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {createSession.isPending ? "Scheduling..." : "Create Session"}

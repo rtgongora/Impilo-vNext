@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CoveragePage from "./page";
 
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+const { get, post, put } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn() }));
 
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -21,7 +21,7 @@ vi.mock("@/components/PageShell", () => ({
 }));
 
 vi.mock("@/lib/api-client", () => ({
-  apiClient: { get, post: vi.fn() },
+  apiClient: { get, post, put },
 }));
 
 function renderPage() {
@@ -36,6 +36,10 @@ function renderPage() {
 describe("CoveragePage", () => {
   beforeEach(() => {
     get.mockReset();
+    post.mockReset();
+    put.mockReset();
+    post.mockResolvedValue({ data: { ok: true } });
+    put.mockResolvedValue({ data: { ok: true } });
     get.mockImplementation((url: string) => {
       if (url.includes("/internal/v1/coverage/plans")) {
         return Promise.resolve({
@@ -156,7 +160,7 @@ describe("CoveragePage", () => {
     });
 
     renderPage();
-    await user.click(screen.getByRole("button", { name: /Pre-Auth/i }));
+    await user.click(screen.getByRole("button", { name: /^Pre-Auth$/i }));
     await waitFor(() => expect(screen.getByText("pa-1")).toBeInTheDocument());
     expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/preauths"))).toBe(true);
   });
@@ -203,6 +207,73 @@ describe("CoveragePage", () => {
     await user.click(screen.getByRole("button", { name: /Appeals/i }));
     await waitFor(() => expect(screen.getByText("appeal-1")).toBeInTheDocument());
     expect(get.mock.calls.some((c) => String(c[0]).includes("/internal/v1/coverage/appeals"))).toBe(true);
+  });
+
+  it("coverage command console posts guided eligibility payload through the command hook", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: /Run Eligibility check/i }));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith(
+        "/internal/v1/coverage/eligibility/check",
+        {
+          memberCpid: "CPID-EXAMPLE",
+          serviceCode: "CONSULTATION",
+          coverageId: "COVERAGE-ID",
+        },
+        { extraHeaders: { "Idempotency-Key": "eligibility-COVERAGE-ID" } },
+      );
+    });
+  });
+
+  it("appeal form posts to the canonical appeals endpoint", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: /Appeals/i }));
+    await user.click(screen.getByRole("button", { name: /File Appeal/i }));
+    await user.type(screen.getByPlaceholderText("Claim ID"), "claim-42");
+    await user.type(screen.getByPlaceholderText("Appellant ID"), "cpid-42");
+    await user.type(screen.getByPlaceholderText("Appeal reason and supporting evidence..."), "Decision evidence mismatch");
+    await user.click(screen.getByRole("button", { name: /Submit Appeal/i }));
+
+    await waitFor(() => {
+      expect(post).toHaveBeenCalledWith("/internal/v1/appeals", {
+        claimId: "claim-42",
+        appellantId: "cpid-42",
+        reason: "Decision evidence mismatch",
+        coverageId: undefined,
+        evidence: { summary: "" },
+      });
+    });
+  });
+
+  it("appeal operator actions call review and decide endpoints", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: /Appeals/i }));
+    await user.type(screen.getByPlaceholderText("Appeal ID"), "appeal-99");
+    await user.type(screen.getByPlaceholderText("Reviewer ID"), "reviewer-1");
+    await user.click(screen.getByRole("button", { name: /Mark under review/i }));
+
+    await waitFor(() => {
+      expect(put).toHaveBeenCalledWith("/internal/v1/appeals/appeal-99/review", { reviewerId: "reviewer-1" });
+    });
+
+    await user.type(screen.getByPlaceholderText("Decided by"), "decider-1");
+    await user.type(screen.getByPlaceholderText("Decision reason"), "All evidence confirms partial overturn.");
+    await user.click(screen.getByRole("button", { name: /Record decision/i }));
+
+    await waitFor(() => {
+      expect(put).toHaveBeenCalledWith("/internal/v1/appeals/appeal-99/decide", {
+        decision: "UPHELD",
+        decisionReason: "All evidence confirms partial overturn.",
+        decidedBy: "decider-1",
+      });
+    });
   });
 
   it("intelligence tab reads utilization list endpoint", async () => {

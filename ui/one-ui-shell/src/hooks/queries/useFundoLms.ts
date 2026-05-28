@@ -10,6 +10,56 @@ export interface FundoSubjectRef {
   subjectId: string;
 }
 
+export interface FundoMyLearningKpis {
+  inProgress: number;
+  required: number;
+  overdue: number;
+  cpdEligible: number;
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function asNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function getObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+/**
+ * Derives stable KPI counters from the v11 my-learning payload.
+ * Supports either array-based payloads or explicit numeric aggregates.
+ */
+export function summarizeFundoMyLearning(payload: unknown): FundoMyLearningKpis {
+  const root = getObject(payload);
+
+  const inProgressArr = asArray(root.inProgress);
+  const requiredArr = asArray(root.required);
+  const overdueArr = asArray(root.overdue);
+  const cpdArr = asArray(root.cpdEligibleCompletions);
+
+  const inProgress =
+    inProgressArr.length > 0 ? inProgressArr.length : (asNumber(root.inProgressCount) ?? 0);
+  const required =
+    requiredArr.length > 0 ? requiredArr.length : (asNumber(root.requiredCount) ?? overdueArr.length);
+  const overdue =
+    overdueArr.length > 0 ? overdueArr.length : (asNumber(root.overdueCount) ?? 0);
+  const cpdEligible =
+    cpdArr.length > 0 ? cpdArr.length : (asNumber(root.cpdEligibleCount) ?? 0);
+
+  return { inProgress, required, overdue, cpdEligible };
+}
+
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -20,12 +70,12 @@ function buildQuery(params: Record<string, string | number | boolean | undefined
   return s ? `?${s}` : "";
 }
 
-export function useFundoMyLearning(subject?: FundoSubjectRef) {
+export function useFundoMyLearning(subject?: FundoSubjectRef, enabled = true) {
   return useQuery<GenericData<Record<string, unknown>>>({
     queryKey: ["fundo", "my-learning", subject],
-    enabled: Boolean(subject?.subjectType && subject?.subjectId),
+    enabled: enabled && Boolean(subject?.subjectType && subject?.subjectId),
     queryFn: () =>
-      apiClient.get(
+      apiClient.get<GenericData<Record<string, unknown>>>(
         `/internal/v1/learning/v11/my-learning?subjectType=${encodeURIComponent(subject!.subjectType)}&subjectId=${encodeURIComponent(subject!.subjectId)}`,
       ),
   });

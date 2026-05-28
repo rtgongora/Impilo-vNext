@@ -22,7 +22,10 @@ export interface ClientIdentity {
 export function useClientIdentity(healthId: string | undefined) {
   return useQuery({
     queryKey: ["identity", "client", healthId],
-    queryFn: () => apiClient.get<ApiResponse<ClientIdentity>>(`/internal/v1/identity/client/${healthId}`),
+    queryFn: () =>
+      apiClient.post<ApiResponse<ClientIdentity>>("/internal/v1/identity/patient/resolve", {
+        healthId,
+      }),
     enabled: !!healthId,
   });
 }
@@ -30,7 +33,7 @@ export function useClientIdentity(healthId: string | undefined) {
 export function useClientSearch(query: string) {
   return useQuery({
     queryKey: ["identity", "search", query],
-    queryFn: () => apiClient.get<ApiResponse<ClientIdentity[]>>(`/internal/v1/identity/search?q=${encodeURIComponent(query)}`),
+    queryFn: () => apiClient.get<ApiResponse<ClientIdentity[]>>(`/internal/v1/identity/search?query=${encodeURIComponent(query)}`),
     enabled: query.length >= 3,
   });
 }
@@ -39,7 +42,7 @@ export function useRegisterClient() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: { givenName: string; familyName: string; dateOfBirth: string; sex: string }) =>
-      apiClient.post<ApiResponse<ClientIdentity>>("/internal/v1/identity/register", body),
+      apiClient.post<ApiResponse<ClientIdentity>>("/internal/v1/identity/patient/register", body),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["identity"] });
     },

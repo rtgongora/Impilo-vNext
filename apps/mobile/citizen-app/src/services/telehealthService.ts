@@ -46,8 +46,22 @@ export async function requestTeleconsult(params: {
   preferredDate?: string;
   sessionType?: string;
   providerId?: string;
+  purposeOfUse?: "TREATMENT" | "EMERGENCY" | "OPERATIONS" | "PUBLIC_HEALTH" | "PAYMENT";
+  consentReference?: string;
 }): Promise<TelehealthSession> {
-  const response = await apiClient.post<{ data: TelehealthSession }>(`${V1}/sessions`, params);
+  const purposeOfUse = params.purposeOfUse ?? "TREATMENT";
+  const payload = {
+    ...params,
+    sessionProvider:
+      params.sessionType === "VIDEO" || params.sessionType === "AUDIO"
+        ? "EXTERNAL_MANAGED"
+        : undefined,
+  };
+  const response = await apiClient.post<{ data: TelehealthSession }>(
+    `${V1}/sessions`,
+    payload,
+    { purposeOfUse }
+  );
   return response.data.data;
 }
 
@@ -55,13 +69,21 @@ export async function joinSession(
   id: string
 ): Promise<{ session: TelehealthSession; token: string; channel: string }> {
   const response = await apiClient.post<{
-    data: { attributes: TelehealthSession & { token: string; channel: string } };
+    data: (TelehealthSession & { token?: string; accessToken?: string; channel?: string; attributes?: TelehealthSession & { token?: string; accessToken?: string; channel?: string } });
   }>(`${V1}/sessions/${encodeURIComponent(id)}/join`);
-  const attrs = response.data.data.attributes;
+  const row = response.data.data;
+  const attrs = row.attributes ?? row;
+  const token = attrs.token ?? attrs.accessToken ?? attrs.sessionToken ?? "";
+  const channel = attrs.channel ?? "";
   return {
-    session: attrs,
-    token: attrs.token,
-    channel: attrs.channel,
+    session: {
+      ...attrs,
+      sessionToken: token,
+      channel,
+      roomUrl: attrs.roomUrl ?? row.roomUrl,
+    },
+    token,
+    channel,
   };
 }
 

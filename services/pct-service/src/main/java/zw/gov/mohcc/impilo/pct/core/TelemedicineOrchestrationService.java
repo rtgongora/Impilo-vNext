@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.SessionProvisioningResult;
+import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineProviderProperties;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProvider;
 import zw.gov.mohcc.impilo.pct.core.telemedicine.TelemedicineSessionProviderRouter;
 import zw.gov.mohcc.impilo.pct.persistence.entity.EventOutboxEntity;
@@ -40,6 +41,7 @@ public class TelemedicineOrchestrationService {
     private final EventOutboxRepository outboxRepository;
     private final TelemetryService telemetryService;
     private final TelemedicineSessionProviderRouter sessionProviderRouter;
+    private final TelemedicineProviderProperties providerProperties;
     private final ObjectMapper objectMapper;
 
     public TelemedicineOrchestrationService(
@@ -48,12 +50,14 @@ public class TelemedicineOrchestrationService {
             EventOutboxRepository outboxRepository,
             TelemetryService telemetryService,
             TelemedicineSessionProviderRouter sessionProviderRouter,
+            TelemedicineProviderProperties providerProperties,
             ObjectMapper objectMapper) {
         this.referralRepository = referralRepository;
         this.telehealthSessionRepository = telehealthSessionRepository;
         this.outboxRepository = outboxRepository;
         this.telemetryService = telemetryService;
         this.sessionProviderRouter = sessionProviderRouter;
+        this.providerProperties = providerProperties;
         this.objectMapper = objectMapper;
     }
 
@@ -259,6 +263,7 @@ public class TelemedicineOrchestrationService {
     public Map<String, Object> createTelehealthSession(Map<String, Object> request) {
         TrustContext ctx = TrustContextHolder.require();
         TelehealthSessionEntity entity = new TelehealthSessionEntity();
+        entity.setSessionId(UUID.randomUUID());
         entity.setTenantId(ctx.tenantId());
         entity.setPatientCpid(required(request, "patientId", "patient_id", "patientCpid"));
         entity.setProviderId(optional(request, "providerId", "provider_id"));
@@ -272,6 +277,13 @@ public class TelemedicineOrchestrationService {
         entity.setStatus("SCHEDULED");
         entity.setScheduledAt(parseDate(optional(request, "scheduledAt", "scheduled_at"), OffsetDateTime.now().plusMinutes(30)));
         String requestedProvider = optional(request, "sessionProvider", "session_provider", "providerType", "provider_type");
+        String normalizedPurpose = defaulted(optional(request, "purposeOfUse", "purpose_of_use"), "TREATMENT").toUpperCase(Locale.ROOT);
+        String consentReference = optional(request, "consentReference", "consent_reference");
+        assertMediaConsentReference(entity.getSessionType(), consentReference, normalizedPurpose);
+        Map<String, Object> provisioningAttributes = new LinkedHashMap<>(request == null ? Map.of() : request);
+        provisioningAttributes.put("sessionId", entity.getSessionId().toString());
+        provisioningAttributes.put("purposeOfUse", normalizedPurpose);
+        provisioningAttributes.put("consentReference", consentReference);
         SessionProvisioningResult provisioning = sessionProviderRouter.provision(
                 requestedProvider,
                 new TelemedicineSessionProvider.SessionProvisioningRequest(
@@ -282,7 +294,7 @@ public class TelemedicineOrchestrationService {
                         entity.getSessionType(),
                         referralId,
                         entity.getEncounterId(),
-                        request == null ? Map.of() : request));
+                        provisioningAttributes));
         entity.setRoomUrl(defaulted(optional(request, "roomUrl", "room_url"), provisioning.roomUrl()));
         entity.setChannel(defaulted(optional(request, "channel"), provisioning.channel()));
         entity.setAccessToken(defaulted(optional(request, "accessToken", "access_token"), provisioning.accessToken()));
@@ -292,6 +304,7 @@ public class TelemedicineOrchestrationService {
         emitOutbox("telemedicine.session.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
         emitOutbox("telemedicine.session.scheduled", saved.getSessionId().toString(), toTelehealthPayload(saved));
         emitOutbox("telemedicine.session.join_link.created", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.room_provisioned", saved.getSessionId().toString(), toTelehealthPayload(saved));
         telemetryService.record("telemedicine.session.created", null, Map.of(
                 "sessionId", saved.getSessionId().toString(),
                 "sessionType", saved.getSessionType(),
@@ -316,6 +329,7 @@ public class TelemedicineOrchestrationService {
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
         emitOutbox("telemedicine.session.waiting_room.entered", saved.getSessionId().toString(), toTelehealthPayload(saved));
         emitOutbox("telemedicine.session.started", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.media_started", saved.getSessionId().toString(), toTelehealthPayload(saved));
         return toTelehealthPayload(saved);
     }
 
@@ -333,7 +347,9 @@ public class TelemedicineOrchestrationService {
             entity.setNotes(defaulted(optional(request, "notes"), entity.getNotes()));
         }
         TelehealthSessionEntity saved = telehealthSessionRepository.save(entity);
+        sessionProviderRouter.end(resolveSessionProvider(saved.getChannel()), saved.getSessionId().toString());
         emitOutbox("telemedicine.session.completed", saved.getSessionId().toString(), toTelehealthPayload(saved));
+        emitOutbox("telemedicine.session.media_ended", saved.getSessionId().toString(), toTelehealthPayload(saved));
         telemetryService.record("telemedicine.session.completed", null, Map.of(
                 "sessionId", saved.getSessionId().toString(),
                 "durationSeconds", saved.getDurationSeconds() == null ? 0L : saved.getDurationSeconds(),
@@ -499,6 +515,23 @@ public class TelemedicineOrchestrationService {
         return value == null || value.isBlank() ? fallback : value;
     }
 
+    private void assertMediaConsentReference(String sessionType, String consentReference, String purposeOfUse) {
+        if (!providerProperties.getGovernance().isRequireConsentReferenceForMedia()) {
+            return;
+        }
+        if (!"VIDEO".equalsIgnoreCase(sessionType) && !"AUDIO".equalsIgnoreCase(sessionType)) {
+            return;
+        }
+        if (providerProperties.getGovernance().isAllowEmergencyWithoutConsent()
+                && "EMERGENCY".equalsIgnoreCase(defaulted(purposeOfUse, "TREATMENT"))) {
+            return;
+        }
+        if (consentReference == null || consentReference.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "consentReference is required for governed telemedicine media sessions");
+        }
+    }
+
     private int asInt(Object raw, int fallback) {
         if (raw == null) return fallback;
         if (raw instanceof Number n) return n.intValue();
@@ -572,6 +605,9 @@ public class TelemedicineOrchestrationService {
     private String resolveSessionProvider(String channel) {
         if (channel == null || channel.isBlank()) {
             return TelemedicineSessionProviderRouter.DEFAULT_PROVIDER_TYPE;
+        }
+        if (channel.trim().toLowerCase(Locale.ROOT).startsWith("rtc:")) {
+            return "EXTERNAL_MANAGED";
         }
         return switch (channel.trim().toLowerCase(Locale.ROOT)) {
             case "manual-phone" -> "MANUAL_PHONE";

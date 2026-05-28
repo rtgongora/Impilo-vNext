@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useClinicalWorklist } from "@/hooks/queries/useClinicalWorklist";
 import {
   buildOperationalAlerts,
   buildQueuePerformanceByType,
@@ -46,6 +47,16 @@ const ALERT_STYLES: Record<string, string> = {
   info: "border-l-blue-500 bg-impilo-50",
 };
 
+const WORKLIST_PRIORITY: Record<string, string> = {
+  URGENT: "bg-red-100 text-red-700",
+  EMERGENCY: "bg-red-100 text-red-700",
+  STAT: "bg-red-100 text-red-700",
+  HIGH: "bg-amber-100 text-amber-700",
+  MEDIUM: "bg-impilo-100 text-impilo-600",
+  ROUTINE: "bg-impilo-100 text-impilo-600",
+  LOW: "bg-gray-100 text-gray-600",
+};
+
 export default function ControlTowerPage() {
   const facility = useFacilityStore((s) => s.facility);
   const fid = facility?.id;
@@ -56,6 +67,7 @@ export default function ControlTowerPage() {
   const queueQ = useFacilityQueueWaiting(fid);
   const statsQ = useFacilityQueueStats(fid);
   const shiftsQ = useFacilityActiveShiftCount(fid);
+  const worklistQ = useClinicalWorklist({ facilityId: fid, size: 24 });
 
   const wards = wardsQ.data?.data ?? [];
   const beds = bedsQ.data?.data ?? [];
@@ -65,6 +77,8 @@ export default function ControlTowerPage() {
   const queueRows = useMemo(() => buildQueueRows(queueEntries), [queueEntries]);
   const bedUtil = useMemo(() => buildWardUtilization(wards, beds), [wards, beds]);
   const queueByType = useMemo(() => buildQueuePerformanceByType(queueEntries), [queueEntries]);
+  const worklistItems = useMemo(() => worklistQ.data?.data?.items ?? [], [worklistQ.data?.data?.items]);
+  const worklistSummary = worklistQ.data?.data?.summary;
 
   const alerts = useMemo(
     () =>
@@ -124,7 +138,12 @@ export default function ControlTowerPage() {
 
   const loading =
     !!fid &&
-    (wardsQ.isLoading || bedsQ.isLoading || queueQ.isLoading || statsQ.isLoading || shiftsQ.isLoading);
+    (wardsQ.isLoading ||
+      bedsQ.isLoading ||
+      queueQ.isLoading ||
+      statsQ.isLoading ||
+      shiftsQ.isLoading ||
+      worklistQ.isLoading);
 
   const onRefresh = () => {
     if (!fid) return;
@@ -189,6 +208,57 @@ export default function ControlTowerPage() {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-gray-900">Clinician worklist inbox</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Composed queue, referral, task, order, pharmacy, and telemedicine actions.
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-900">{worklistSummary?.total ?? 0} items</p>
+                  <p className="text-xs text-gray-500">
+                    {worklistSummary?.urgent ?? 0} urgent · {worklistSummary?.overdue ?? 0} overdue
+                  </p>
+                </div>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {worklistItems.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-sm text-gray-500">
+                    No composed worklist items for this facility snapshot.
+                  </div>
+                ) : (
+                  worklistItems.slice(0, 8).map((item) => {
+                    const priority = String(item.priority ?? "MEDIUM").toUpperCase();
+                    const priorityClass = WORKLIST_PRIORITY[priority] ?? "bg-gray-100 text-gray-600";
+                    const href = typeof item.href === "string" && item.href.length > 0 ? item.href : "/clinical";
+                    return (
+                      <div key={String(item.id)} className="px-5 py-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{String(item.title ?? "Clinical action")}</p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {String(item.kind ?? "ITEM")} · {String(item.status ?? "PENDING")} · {String(item.source ?? "unknown")}
+                          </p>
+                          {item.description ? (
+                            <p className="text-xs text-gray-400 mt-1 truncate">{String(item.description)}</p>
+                          ) : null}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityClass}`}>
+                            {priority}
+                          </span>
+                          <Link href={href} className="text-xs text-impilo-600 hover:text-impilo-700">
+                            Open
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

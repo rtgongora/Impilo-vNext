@@ -137,6 +137,32 @@ components:
     profiles: [dev-lite, dev-full, integration, pilot]
     notes: "Console on port 9001. Data persisted in minio_data volume."
 
+  - name: livekit
+    type: infra
+    layer: 0
+    description: "LiveKit — RTC media server used through rtc-gateway-service only"
+    module_path: null
+    image: livekit/livekit-server:latest
+    build_target: null
+    ports: [7880, 7881, 7882]
+    dependencies: []
+    env_files: [".env"]
+    env_vars:
+      - LIVEKIT_API_KEY
+      - LIVEKIT_API_SECRET
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:7880"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    readiness_timeout: 30s
+    bootstrap_steps:
+      - "Local docker-compose uses LiveKit dev mode; production must use managed secrets and TLS."
+    shutdown_priority: 95
+    profiles: [dev-full, integration, pilot]
+    notes: "Clients do not call LiveKit for clinical authorization; tokens are issued through rtc-gateway-service after PCT/BFF governance."
+
   # ===========================================================================
   # LAYER 1 — Shared Platform Services
   # ===========================================================================
@@ -526,7 +552,16 @@ components:
     module_path: services/pct-service
     build_target: "services/pct-service (Maven + Dockerfile)"
     port: 8088
-    dependencies: [postgres, redis, kafka, keycloak, vito, tuso]
+    dependencies: [postgres, redis, kafka, keycloak, vito, tuso, rtc-gateway]
+    env_files: [".env"]
+    env_vars:
+      - PCT_TELEMED_EXTERNAL_ENABLED
+      - PCT_TELEMED_EXTERNAL_BASE_URL
+      - PCT_TELEMED_EXTERNAL_SESSION_PATH
+      - PCT_TELEMED_EXTERNAL_API_KEY
+      - PCT_TELEMED_FALLBACK_TO_MANAGED_PRIMARY
+      - PCT_TELEMED_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA
+      - PCT_TELEMED_ALLOW_EMERGENCY_WITHOUT_CONSENT
     healthcheck:
       type: http
       endpoint: "http://localhost:8088/actuator/health"
@@ -534,6 +569,33 @@ components:
     shutdown_priority: 30
     profiles: [dev-lite, dev-full, integration, pilot]
     database: pct
+
+  - name: rtc-gateway
+    type: ring2
+    layer: 5
+    description: "RTC Gateway — provider-neutral media adapter for governed telemedicine"
+    module_path: services/rtc-gateway-service
+    build_target: "services/rtc-gateway-service (Maven + Dockerfile)"
+    port: 8195
+    dependencies: [livekit]
+    env_files: [".env"]
+    env_vars:
+      - RTC_PROVIDER
+      - RTC_FAIL_CLOSED
+      - RTC_TOKEN_TTL_SECONDS
+      - RTC_REQUIRE_CONSENT_REFERENCE_FOR_MEDIA
+      - RTC_ALLOW_EMERGENCY_WITHOUT_CONSENT
+      - LIVEKIT_ENABLED
+      - LIVEKIT_URL
+      - LIVEKIT_CLIENT_URL
+      - LIVEKIT_API_KEY
+      - LIVEKIT_API_SECRET
+    healthcheck:
+      type: http
+      endpoint: "http://localhost:8195/actuator/health"
+    readiness_timeout: 60s
+    shutdown_priority: 29
+    profiles: [dev-full, integration, pilot]
 
   - name: oros
     type: ring2
@@ -1098,6 +1160,14 @@ components:
     build_target: "services/experience-bff (Maven + Dockerfile)"
     port: 8160
     dependencies: [postgres, tshepo, vito, tuso, varapi, pct, mvumo, learning]
+    env_files: [".env"]
+    env_vars:
+      - IMPILO_TELEMEDICINE_REQUIRE_TSHEPO_AUTHORIZE
+      - IMPILO_TELEMEDICINE_TSHEPO_PDP_FALLBACK_ALLOW
+      - IMPILO_TELEMEDICINE_AUDIT_INGEST_ENABLED
+      - IMPILO_TELEMEDICINE_REQUIRE_MEDIA_CONSENT_REFERENCE
+      - IMPILO_TELEMEDICINE_ALLOW_EMERGENCY_WITHOUT_CONSENT
+      - IMPILO_TELEMEDICINE_ALLOWED_PURPOSE_OF_USE
     healthcheck:
       type: http
       endpoint: "http://localhost:8160/actuator/health"

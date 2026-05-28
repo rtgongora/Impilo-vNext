@@ -1,0 +1,73 @@
+# Frontend / Backend Parity Audit
+
+## Method
+
+This audit consolidates:
+
+- web route registry (`ui/one-ui-shell`)
+- mobile route/screen surfaces (`apps/mobile/citizen-app`, `apps/mobile/provider-app`)
+- existing parity and wiring evidence from `docs/audits/*`, `docs/registry/*`, `docs/mobile/*`
+
+Classification labels:
+
+- `Complete`, `Partial`, `Backend Only`, `Frontend Only`, `Mock Only`, `Broken`, `Missing`, `Needs Refactor`
+
+## Capability parity matrix (current wave)
+
+| Capability | Web | Citizen | Provider | Status summary |
+|---|---|---|---|---|
+| Trust/context propagation | Partial | Partial | Partial | Header pipelines exist; mobile needed parity expansion toward v1.2 context set |
+| Registry-powered discovery and administration | Partial | Partial | Partial | Legacy route drift has been removed for product registry, terminology, identity aliases, and unavailable federation/key admin pages; Registry Hub identity operations are guided and live-only; provider mobile Admin & Registry now surfaces facility lifecycle, locality review, intake/import, MSIKA product search, ZIBO terminology resolve, and trust/consent reads through real BFF routes; citizen mobile ID Recovery exposes live identity search/resolve/recovery |
+| Queue/clinical encounter workflows | Partial | N/A | Partial | Accounted existing PCT-backed web/mobile surfaces before patching: queue, encounters, triage, vitals, labs, referrals, prescriptions, notes, discharge, and telemedicine are already surfaced. Current wave fixes canonical encounter start payloads around required PCT journey IDs, aligns mobile vitals/triage payloads with typed mobile BFF controllers, and brings live triage into the mobile encounter tab instead of a pointer-only panel. |
+| Telemedicine | Partial | Partial | Partial | Real routes and clients exist; operational depth and failover handling remain |
+| Marketplace / Health OS apps launcher | Partial | Partial | Partial | Launcher surfaces exist on web/mobile with mixed maturity |
+| Coverage, claims, and payer operations | Partial | Partial | Partial | Coverage page now has guided command fields, React-state tabs, canonical appeal submit/review/decision, and live eligibility/member/claim/preauth/appeal commands; `/finance/payer-ops` composes claims/remittance with an intent-linked state machine for attempts/receipts/settlements/refunds; citizen/provider mobile expose payer-ops workspaces with reconciliation and durable provisional retry queues |
+| Social / communities / pages | Partial | Partial | Partial | Wired service layer exists with growing parity |
+| Public health / field operations | Partial | Partial | Partial | Present in both apps with partial workflow depth |
+| Core transaction journey | Partial | Partial | Partial | Doctrine routes now run BFF-only (no fixture injection) with explicit loading/error/empty states; deeper action coverage pending |
+| Workflow + dispatch operations | Partial | Partial | Partial | Web ops and provider mobile Flow/Ops now surface workflow/dispatch reads plus live workflow start/transition and dispatch task/delivery commands; citizen mobile remains limited to journey-specific views |
+| Nompilo global companion | Partial | Partial | Partial | Embedded presence exists; command/action parity and policy depth ongoing |
+| Offline/provisional flows | Partial | Partial | Partial | Coverage mobile commands now persist to the shared offline queue, expose retry history, and reconcile via sync engine; other domains still need equivalent UX |
+
+## Doctrine-alignment findings
+
+- **Health OS coherence:** shell and service launcher patterns exist, but not all route families are equally mature.
+- **BFF composition:** dominant pattern is BFF composition, with remaining legacy drift documented in audits.
+- **Contract-first:** strong movement, but legacy local model drift still appears in selected fronts.
+- **No fake capability:** maturity badges and explicit placeholders are in use; remaining fixture-backed doctrine routes are documented.
+- **Person-first and trust layer:** structure exists in identity and header layers; consistency across all surfaces remains partial.
+
+## High-priority gaps (remediation queue)
+
+1. Complete wiring for fixture-backed doctrine pages to real BFF orchestration where available.
+2. Finish trust/context parity so mobile and web carry equivalent context headers.
+3. Close remaining reachability and route-integration gaps for implemented screens (initial pass completed for citizen provider discovery, provider clinical orphan surfaces, and mobile encounter triage/vitals contract alignment).
+4. Expand workflow/event/audit timeline visibility on major operational surfaces.
+5. Align remaining frontend DTO drift to canonical contracts.
+
+Update in this remediation wave:
+
+- Doctrine web journey routes now query live core-transaction feeds without fixture data injection and render explicit empty/error states when no live data is available.
+- Platform journey now includes live workflow and dispatch timeline visibility from `/internal/v1/workflows` and `/internal/v1/dispatch/tasks`.
+- Operator telemetry rendering is now standardized across platform and operations routes via a shared component, and platform telemetry filters are URL-synced for reproducible operator views.
+- Provider workspace now includes live provider-facing workflow/dispatch telemetry overlays with URL-synced drill-down filters for reproducible provider operations views.
+- Telemetry rows now support actionable drill-down links into operations routes with focused-row context for investigation continuity.
+- Core transaction shells now expose a real Nompilo handoff command using the BFF endpoint with explicit success/failure operator feedback.
+- Operations dispatch now surfaces additional backend datasets from dispatch-service controllers and exposes live delivery-create command submission from the UI.
+- Operations workflows now surface workflow definitions and workflow instances in addition to telemetry feed cards.
+- Core transaction shells now also expose governed Nompilo command execution from live BFF contracts with explicit accepted/error feedback.
+- Workflow BFF now exposes sovereign instance start/transition endpoints and the operations workflow page provides live command consoles for those actions.
+- Dispatch operations now expose task create/assign/complete and delivery action commands alongside delivery creation, with explicit success/failure feedback.
+- Provider mobile `Flow/Ops` now uses a shared mobile service for workflow/dispatch reads and command actions, beginning mobile parity for this high-value backend family.
+- Registry Hub now surfaces VITO/VARAPI identity operations through guided validated forms; product pages use `/internal/v1/product-registry/*`; terminology pages use ZIBO resolve at `/internal/v1/registry/zibo/artifacts/resolve`; federation/key admin pages are explicitly unavailable until typed BFF contracts exist; Mvumo has a typed admin BFF surface at `/internal/v1/mvumo-admin/*`; provider mobile Admin & Registry uses mobile services for identity, facility lifecycle, locality review, registry intake/import, MSIKA product search, ZIBO terminology resolve, and trust/consent reads. Facility direct create/update remains explicitly unsupported; facility lifecycle uses canonical `/internal/v1/facility-registry/*` application/inspection workflows instead.
+- Coverage Operations now uses guided command payloads for eligibility, member enrollment, claim submission, preauth, and appeals; review/decision appeal actions are BFF-proxied to the sovereign appeal contract; dedicated finance refund/settlement routes remain intact but are now composed from `/finance/payer-ops`; citizen/provider mobile have payer-ops workspaces plus durable queued command reconciliation.
+
+## Evidence references
+
+- `DOCTRINE_COMPLIANCE_MATRIX.md`
+- `SERVICE_WIRING_MATRIX.md`
+- `WEB_MOBILE_PARITY_MATRIX.md`
+- `docs/audits/FRONTEND_ROUTE_INVENTORY.md`
+- `docs/audits/WEB_MOBILE_PARITY_AUDIT.md`
+- `docs/audits/BFF_API_WIRING_AUDIT.md`
+- `docs/registry/backend-to-frontend-wiring-map.md`

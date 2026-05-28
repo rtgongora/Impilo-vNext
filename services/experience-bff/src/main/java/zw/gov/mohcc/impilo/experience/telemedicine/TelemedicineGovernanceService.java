@@ -11,8 +11,11 @@ import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
 
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -34,6 +37,15 @@ public class TelemedicineGovernanceService {
     @Value("${impilo.telemedicine.audit-ingest-enabled:true}")
     private boolean auditIngestEnabled;
 
+    @Value("${impilo.telemedicine.require-media-consent-reference:true}")
+    private boolean requireMediaConsentReference;
+
+    @Value("${impilo.telemedicine.allow-emergency-without-consent:true}")
+    private boolean allowEmergencyWithoutConsent;
+
+    @Value("${impilo.telemedicine.allowed-purpose-of-use:TREATMENT,EMERGENCY,PAYMENT,OPERATIONS,PUBLIC_HEALTH}")
+    private String allowedPurposeOfUse;
+
     public TelemedicineGovernanceService(
             TshepoAuthzServiceClient tshepoAuthzServiceClient,
             TshepoAuditServiceClient tshepoAuditServiceClient) {
@@ -51,6 +63,35 @@ public class TelemedicineGovernanceService {
 
     public void assertBreakGlassOverrideAllowed() {
         enforce(tshepoAuthzServiceClient.telemedicineBreakGlassAllowed(), "Tshepo PDP denied telemedicine break-glass override");
+    }
+
+    public String normalizePurposeOfUse(String rawPurposeOfUse) {
+        String candidate = rawPurposeOfUse == null || rawPurposeOfUse.isBlank()
+                ? "TREATMENT"
+                : rawPurposeOfUse.trim().replace('-', '_').toUpperCase();
+        Set<String> allowed = parseAllowedPurposeOfUse();
+        if (!allowed.contains(candidate)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Unsupported purpose-of-use '" + candidate + "' for telemedicine workflow");
+        }
+        return candidate;
+    }
+
+    public void assertMediaConsentReference(String sessionType, String consentReference, String normalizedPurposeOfUse) {
+        if (!requireMediaConsentReference) {
+            return;
+        }
+        String mode = sessionType == null ? "VIDEO" : sessionType.trim().toUpperCase();
+        if (!"VIDEO".equals(mode) && !"AUDIO".equals(mode)) {
+            return;
+        }
+        if (allowEmergencyWithoutConsent && "EMERGENCY".equals(normalizedPurposeOfUse)) {
+            return;
+        }
+        if (consentReference == null || consentReference.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "consentReference is required for governed telemedicine media sessions");
+        }
     }
 
     private void enforce(boolean allowed, String message) {
@@ -112,5 +153,18 @@ public class TelemedicineGovernanceService {
         } catch (IllegalArgumentException ex) {
             return UUID.nameUUIDFromBytes(raw.trim().getBytes(StandardCharsets.UTF_8));
         }
+    }
+
+    private Set<String> parseAllowedPurposeOfUse() {
+        LinkedHashSet<String> out = new LinkedHashSet<>();
+        Arrays.stream(String.valueOf(allowedPurposeOfUse).split(","))
+                .map(String::trim)
+                .filter(v -> !v.isBlank())
+                .map(v -> v.replace('-', '_').toUpperCase())
+                .forEach(out::add);
+        if (out.isEmpty()) {
+            out.add("TREATMENT");
+        }
+        return out;
     }
 }

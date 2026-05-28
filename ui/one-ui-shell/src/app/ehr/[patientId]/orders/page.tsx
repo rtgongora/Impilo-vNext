@@ -1,18 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Activity,
+  Camera,
   AlertTriangle,
   CheckCircle2,
   ClipboardList,
   FileText,
+  Layers,
   Loader2,
+  Microscope,
   Pill,
   Plus,
+  Radio,
+  Stethoscope,
   Save,
   TestTube2,
+  type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
@@ -25,6 +32,7 @@ import {
   useLabOrders,
   type LabOrderResource,
 } from "@/hooks/queries/useLabOrders";
+import { useClinicalWorklist } from "@/hooks/queries/useClinicalWorklist";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -61,12 +69,60 @@ const EMPTY_FORM = {
   facility_id: "",
 };
 
+type GuidedLane =
+  | "LAB"
+  | "MEDICATION"
+  | "REFERRAL"
+  | "TELEMEDICINE"
+  | "IMAGING"
+  | "PROCEDURE"
+  | "ORDER_SET";
+
+const GUIDED_LANES: Array<{ key: GuidedLane; label: string; icon: LucideIcon }> = [
+  { key: "LAB", label: "Lab", icon: Microscope },
+  { key: "MEDICATION", label: "Medication", icon: Pill },
+  { key: "REFERRAL", label: "Referral", icon: Radio },
+  { key: "TELEMEDICINE", label: "Teleconsult", icon: Camera },
+  { key: "IMAGING", label: "Imaging", icon: TestTube2 },
+  { key: "PROCEDURE", label: "Procedure", icon: Stethoscope },
+  { key: "ORDER_SET", label: "Order Set", icon: Layers },
+];
+
 type ProductRegistryCandidate = {
   id: string;
   name: string;
   code: string;
   kind?: string;
 };
+
+function validateGuidedForm(
+  lane: GuidedLane,
+  form: {
+    lab_name: string;
+    lab_code: string;
+    medication_name: string;
+    dosage: string;
+    referral_specialty: string;
+    referral_reason: string;
+  }
+): string | null {
+  if (lane === "LAB") {
+    if (!form.lab_name.trim() || !form.lab_code.trim()) {
+      return "Lab lane requires test name and code.";
+    }
+  }
+  if (lane === "MEDICATION") {
+    if (!form.medication_name.trim() || !form.dosage.trim()) {
+      return "Medication lane requires medication name and dosage.";
+    }
+  }
+  if (lane === "REFERRAL") {
+    if (!form.referral_specialty.trim() || !form.referral_reason.trim()) {
+      return "Referral lane requires specialty and reason.";
+    }
+  }
+  return null;
+}
 
 function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] {
   const root = payload as Record<string, unknown> | undefined;
@@ -129,6 +185,25 @@ export default function OrdersPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(buildFormState);
+  const [guidedLane, setGuidedLane] = useState<GuidedLane>("LAB");
+  const [guidedSubmitting, setGuidedSubmitting] = useState(false);
+  const [guidedError, setGuidedError] = useState<string | null>(null);
+  const [guidedSuccess, setGuidedSuccess] = useState<string | null>(null);
+  const [guidedForm, setGuidedForm] = useState({
+    lab_name: "",
+    lab_code: "",
+    lab_priority: "ROUTINE",
+    medication_name: "",
+    dosage: "",
+    frequency: "Twice daily (BD)",
+    duration: "",
+    referral_specialty: "",
+    referral_reason: "",
+    referral_urgency: "ROUTINE",
+    tele_mode: "VIDEO",
+    tele_notes: "",
+    tele_when: "",
+  });
   const [catalogQuery, setCatalogQuery] = useState("");
   const [guidanceDraft, setGuidanceDraft] = useState<ClinicalOrderDraftDetail | null>(null);
 
@@ -150,9 +225,124 @@ export default function OrdersPage() {
     kind: form.category === "LABORATORY" ? "service" : undefined,
   });
   const productCandidates = extractProductCandidates(productSearch.data);
+  const worklistQ = useClinicalWorklist({
+    facilityId: facility?.id,
+    size: 80,
+  });
+  const orchestrationItems = (worklistQ.data?.data?.items ?? []).filter((item) => {
+    const itemPatient = String((item.patient_id as string | undefined) ?? "");
+    return !itemPatient || itemPatient === patientId;
+  });
+  const laneCounts = orchestrationItems.reduce(
+    (acc, item) => {
+      const kind = String(item.kind ?? "").toUpperCase();
+      if (kind === "ORDER") acc.orders += 1;
+      if (kind === "PHARMACY") acc.pharmacy += 1;
+      if (kind === "REFERRAL") acc.referrals += 1;
+      if (kind === "TELEMEDICINE") acc.telemedicine += 1;
+      return acc;
+    },
+    { orders: 0, pharmacy: 0, referrals: 0, telemedicine: 0 }
+  );
+  const unsupportedLane =
+    guidedLane === "IMAGING" || guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET";
+  const guidedValidationError = validateGuidedForm(guidedLane, guidedForm);
+  const guidedSubmitDisabled = guidedSubmitting || unsupportedLane || !!guidedValidationError;
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateGuidedField(field: keyof typeof guidedForm, value: string) {
+    setGuidedForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleGuidedSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setGuidedError(null);
+    setGuidedSuccess(null);
+
+    if (!facility?.id) {
+      setGuidedError("Select a facility context before submitting guided orders.");
+      return;
+    }
+    if (!activeEncounter?.id && guidedLane !== "TELEMEDICINE") {
+      setGuidedError("Start an encounter first so order orchestration stays episode-scoped.");
+      return;
+    }
+
+    if (unsupportedLane) {
+      setGuidedError(
+        "This lane is visible but not yet writable through a typed BFF command contract. No fake submit is executed."
+      );
+      return;
+    }
+    if (guidedValidationError) {
+      setGuidedError(guidedValidationError);
+      return;
+    }
+
+    setGuidedSubmitting(true);
+    try {
+      if (guidedLane === "LAB") {
+        await createOrder.mutateAsync({
+          patientId,
+          encounterId: activeEncounter?.id ?? "",
+          testName: guidedForm.lab_name,
+          testCode: guidedForm.lab_code,
+          category: "LABORATORY",
+          priority: guidedForm.lab_priority,
+          clinicalNotes: null,
+          facilityId: facility.id,
+          orderedBy: user?.id ?? "",
+          orderedByName: user?.displayName ?? user?.email ?? "",
+        });
+      } else if (guidedLane === "MEDICATION") {
+        await apiClient.post("/internal/v1/pharmacy/prescriptions", {
+          patient_id: patientId,
+          facility_id: facility.id,
+          encounter_id: activeEncounter?.id ?? null,
+          medication_name: guidedForm.medication_name,
+          dosage: guidedForm.dosage,
+          frequency: guidedForm.frequency,
+          duration: guidedForm.duration || null,
+          prescribed_by: user?.id ?? "system",
+        });
+        await queryClient.invalidateQueries({ queryKey: ["prescriptions"] });
+      } else if (guidedLane === "REFERRAL") {
+        await apiClient.post("/internal/v1/referrals", {
+          patient_id: patientId,
+          encounter_id: activeEncounter?.id ?? null,
+          referral_type: "SPECIALIST_CONSULT",
+          specialty: guidedForm.referral_specialty,
+          referred_to: "",
+          referred_to_facility: "",
+          reason: guidedForm.referral_reason,
+          urgency: guidedForm.referral_urgency,
+          clinical_summary: null,
+          referred_by: user?.id ?? "system",
+          referred_by_name: user?.displayName ?? user?.email ?? "Provider",
+        });
+        await queryClient.invalidateQueries({ queryKey: ["referrals"] });
+      } else if (guidedLane === "TELEMEDICINE") {
+        await apiClient.post("/internal/v1/teleconsult/sessions", {
+          patient_id: patientId,
+          provider_id: user?.id,
+          facility_id: facility.id,
+          session_type: guidedForm.tele_mode,
+          scheduled_at: guidedForm.tele_when ? new Date(guidedForm.tele_when).toISOString() : undefined,
+          notes: guidedForm.tele_notes || undefined,
+        });
+        await queryClient.invalidateQueries({ queryKey: ["telemedicine-sessions"] });
+      }
+      await queryClient.invalidateQueries({ queryKey: ["clinical-worklist"] });
+      await queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
+      setGuidedSuccess(`Submitted ${guidedLane.toLowerCase()} workflow action.`);
+    } catch {
+      setGuidedError(`Failed to submit ${guidedLane.toLowerCase()} workflow action.`);
+    } finally {
+      setGuidedSubmitting(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -276,16 +466,286 @@ export default function OrdersPage() {
               </p>
               <p className="mt-2 text-sm text-slate-800">
                 {collectedCount > 0
-                  ? `${collectedCount} collected order${collectedCount === 1 ? "" : "s"} are ready for result entry in this workspace.`
+                  ? `${collectedCount} collected order${collectedCount === 1 ? " is" : "s are"} ready for result entry in this workspace.`
                   : orderedCount > 0
-                    ? `${orderedCount} order${orderedCount === 1 ? "" : "s"} are still waiting for collection before the loop can move forward.`
+                    ? `${orderedCount} order${orderedCount === 1 ? " is" : "s are"} still waiting for collection before the loop can move forward.`
                     : awaitingReviewCount > 0
-                      ? `${awaitingReviewCount} result${awaitingReviewCount === 1 ? "" : "s"} are ready for clinical acknowledgement.`
+                      ? `${awaitingReviewCount} result${awaitingReviewCount === 1 ? " is" : "s are"} ready for clinical acknowledgement.`
                       : "The diagnostic loop is clear right now. New orders can be placed here when the encounter needs additional workup."}
               </p>
               <p className="mt-1 text-xs text-slate-500">
                 Use the actions below to keep ordering, collection, result entry, and review on one surface instead of switching across multiple pages.
               </p>
+            </div>
+
+            <div className="rounded-3xl border border-indigo-200 bg-indigo-50/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-indigo-600">
+                Unified order orchestration
+              </p>
+              <p className="mt-2 text-sm text-indigo-900">
+                This workspace now composes cross-domain actions (lab, pharmacy, referrals, telemedicine) from the clinical worklist rail instead of treating lab as the only active lane.
+              </p>
+              <div className="mt-3 grid gap-3 md:grid-cols-4">
+                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                  <p className="text-xs text-indigo-500">Orders</p>
+                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.orders}</p>
+                </div>
+                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                  <p className="text-xs text-indigo-500">Pharmacy</p>
+                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.pharmacy}</p>
+                </div>
+                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                  <p className="text-xs text-indigo-500">Referrals</p>
+                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.referrals}</p>
+                </div>
+                <div className="rounded-xl border border-indigo-100 bg-white p-3">
+                  <p className="text-xs text-indigo-500">Telemedicine</p>
+                  <p className="text-xl font-semibold text-indigo-900">{laneCounts.telemedicine}</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <Link href={`/ehr/${patientId}/medications`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                  Medication lane
+                </Link>
+                <Link href={`/home/referrals`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                  Referral lane
+                </Link>
+                <Link href={`/ehr/${patientId}/imaging`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                  Imaging lane
+                </Link>
+                <Link href={`/ehr/${patientId}/procedures`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
+                  Procedure lane
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-cyan-700">
+                Guided cross-domain order composer
+              </p>
+              <p className="mt-2 text-sm text-cyan-900">
+                Compose lab, medication, referral, and teleconsult actions in one place. Lanes without typed BFF write contracts stay visible but explicitly non-submittable.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {GUIDED_LANES.map((lane) => {
+                  const Icon = lane.icon;
+                  const active = guidedLane === lane.key;
+                  return (
+                    <button
+                      key={lane.key}
+                      type="button"
+                      onClick={() => {
+                        setGuidedLane(lane.key);
+                        setGuidedError(null);
+                        setGuidedSuccess(null);
+                      }}
+                      data-testid={`guided-lane-${lane.key.toLowerCase()}`}
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        active
+                          ? "border-cyan-400 bg-cyan-100 text-cyan-900"
+                          : "border-cyan-200 bg-white text-cyan-700 hover:bg-cyan-100/60"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {lane.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <form onSubmit={handleGuidedSubmit} className="mt-4 space-y-3 rounded-xl border border-cyan-100 bg-white p-4">
+                {guidedLane === "LAB" && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <label className="text-xs font-medium text-gray-700">
+                      Test Name
+                      <input
+                        type="text"
+                        value={guidedForm.lab_name}
+                        onChange={(e) => updateGuidedField("lab_name", e.target.value)}
+                        required
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. FBC"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Test Code
+                      <input
+                        type="text"
+                        value={guidedForm.lab_code}
+                        onChange={(e) => updateGuidedField("lab_code", e.target.value)}
+                        required
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. CBC"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Priority
+                      <select
+                        value={guidedForm.lab_priority}
+                        onChange={(e) => updateGuidedField("lab_priority", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="ROUTINE">Routine</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="STAT">STAT</option>
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                {guidedLane === "MEDICATION" && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+                    <label className="text-xs font-medium text-gray-700">
+                      Medication
+                      <input
+                        type="text"
+                        value={guidedForm.medication_name}
+                        onChange={(e) => updateGuidedField("medication_name", e.target.value)}
+                        required
+                        data-testid="guided-medication-name"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. Amoxicillin"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Dosage
+                      <input
+                        type="text"
+                        value={guidedForm.dosage}
+                        onChange={(e) => updateGuidedField("dosage", e.target.value)}
+                        required
+                        data-testid="guided-medication-dosage"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. 500mg"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Frequency
+                      <input
+                        type="text"
+                        value={guidedForm.frequency}
+                        onChange={(e) => updateGuidedField("frequency", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Duration
+                      <input
+                        type="text"
+                        value={guidedForm.duration}
+                        onChange={(e) => updateGuidedField("duration", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. 5 days"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {guidedLane === "REFERRAL" && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <label className="text-xs font-medium text-gray-700">
+                      Specialty
+                      <input
+                        type="text"
+                        value={guidedForm.referral_specialty}
+                        onChange={(e) => updateGuidedField("referral_specialty", e.target.value)}
+                        required
+                        data-testid="guided-referral-specialty"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. Cardiology"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Reason
+                      <input
+                        type="text"
+                        value={guidedForm.referral_reason}
+                        onChange={(e) => updateGuidedField("referral_reason", e.target.value)}
+                        required
+                        data-testid="guided-referral-reason"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Urgency
+                      <select
+                        value={guidedForm.referral_urgency}
+                        onChange={(e) => updateGuidedField("referral_urgency", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="ROUTINE">Routine</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="EMERGENCY">Emergency</option>
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                {guidedLane === "TELEMEDICINE" && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <label className="text-xs font-medium text-gray-700">
+                      Session type
+                      <select
+                        value={guidedForm.tele_mode}
+                        onChange={(e) => updateGuidedField("tele_mode", e.target.value)}
+                        data-testid="guided-tele-mode"
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="VIDEO">Video</option>
+                        <option value="AUDIO">Audio</option>
+                        <option value="CHAT">Chat</option>
+                        <option value="CASE_REVIEW">Case Review</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Scheduled for
+                      <input
+                        type="datetime-local"
+                        value={guidedForm.tele_when}
+                        onChange={(e) => updateGuidedField("tele_when", e.target.value)}
+                        data-testid="guided-tele-when"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700 md:col-span-1">
+                      Notes
+                      <input
+                        type="text"
+                        value={guidedForm.tele_notes}
+                        onChange={(e) => updateGuidedField("tele_notes", e.target.value)}
+                        data-testid="guided-tele-notes"
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="Reason for teleconsult"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {(guidedLane === "IMAGING" || guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET") && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    This lane is intentionally read-only until a typed Experience BFF write contract is available.
+                  </div>
+                )}
+                {guidedValidationError && !unsupportedLane ? (
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                    {guidedValidationError}
+                  </div>
+                ) : null}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={guidedSubmitDisabled}
+                    data-testid="guided-submit-action"
+                    className="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {guidedSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Submit guided action
+                  </button>
+                  {guidedSuccess ? <span className="text-xs text-green-700">{guidedSuccess}</span> : null}
+                  {guidedError ? <span className="text-xs text-red-700">{guidedError}</span> : null}
+                </div>
+              </form>
             </div>
 
             <div className="flex items-center justify-between">

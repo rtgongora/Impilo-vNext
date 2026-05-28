@@ -28,6 +28,7 @@ import {
   requestCapabilityActivation,
   type LauncherApp,
 } from "../../services/healthOsLauncherService";
+import { FundoLearningScreen } from "./FundoLearningScreen";
 
 const GREEN = "#059669";
 
@@ -44,6 +45,7 @@ const STATE_TONE: Record<LauncherApp["state"], { label: string; color: string }>
 };
 
 export function HealthOsAppsScreen() {
+  const [showFundoLearning, setShowFundoLearning] = useState(false);
   const [apps, setApps] = useState<LauncherApp[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +90,17 @@ export function HealthOsAppsScreen() {
     }
   }, [load]);
 
+  if (showFundoLearning) {
+    return (
+      <View style={{ flex: 1 }}>
+        <Button title="Back to apps" variant="outline" onPress={() => setShowFundoLearning(false)} />
+        <View style={{ flex: 1, marginTop: 8 }}>
+          <FundoLearningScreen />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <Screen>
       <Header title="Health OS Apps" subtitle="Approved citizen apps available through the sovereign marketplace" />
@@ -112,6 +125,15 @@ export function HealthOsAppsScreen() {
             </CardBody>
           </Card>
         ) : null}
+
+        <Card style={styles.toast}>
+          <CardBody>
+            <Text style={styles.toastText}>Fundo learning is available in-app for citizen LMS and wellness education.</Text>
+            <View style={{ marginTop: 8 }}>
+              <Button title="Open Fundo learning" onPress={() => setShowFundoLearning(true)} />
+            </View>
+          </CardBody>
+        </Card>
 
         {isLoading && apps.length === 0 ? (
           <View style={styles.loading}>

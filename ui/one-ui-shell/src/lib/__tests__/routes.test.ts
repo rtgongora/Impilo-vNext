@@ -312,6 +312,49 @@ describe("Route Registry", () => {
     expect(route?.navZone).toBe("work");
     expect(route?.pageTitle).toBe("COSTA encounter timeline");
   });
+
+  it("registers all Fundo Studio and Library routes with expected guards", () => {
+    const roleProtectedStudioRoutes = [
+      "/learning/studio",
+      "/learning/studio/courses",
+      "/learning/studio/courses/new",
+      "/learning/studio/courses/[courseId]",
+      "/learning/studio/courses/[courseId]/builder",
+      "/learning/studio/library",
+      "/learning/studio/media",
+      "/learning/studio/media/recordings",
+      "/learning/studio/media/scripts",
+      "/learning/studio/media/voiceovers",
+      "/learning/studio/media/[mediaId]",
+      "/learning/studio/assessments",
+      "/learning/studio/surveys",
+      "/learning/studio/ai",
+      "/learning/studio/publish",
+      "/learning/studio/analytics",
+    ];
+    for (const path of roleProtectedStudioRoutes) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route, `missing route ${path}`).toBeTruthy();
+      expect(route?.guard).toBe("role");
+      expect(route?.requiredRole).toBe("ADMIN_OR_HIE");
+    }
+
+    const learnerAccessibleRoutes = [
+      "/learning/library",
+      "/learning/library/resources",
+      "/learning/library/uploads",
+      "/learning/library/[resourceId]",
+      "/learning/notifications",
+      "/learning/surveys/[surveyId]",
+      "/learning/surveys/[surveyId]/respond",
+      "/learning/feedback/course/[courseId]",
+    ];
+    for (const path of learnerAccessibleRoutes) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route, `missing route ${path}`).toBeTruthy();
+      expect(route?.guard).toBe("auth");
+    }
+  });
 });
 
 describe("buildBreadcrumbTrail", () => {

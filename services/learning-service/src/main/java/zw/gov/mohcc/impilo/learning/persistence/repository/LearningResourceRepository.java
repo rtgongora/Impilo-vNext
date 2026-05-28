@@ -33,4 +33,6 @@ public interface LearningResourceRepository extends JpaRepository<LearningResour
             @Param("tenantId") UUID tenantId, @Param("q") String q, Pageable pageable);
 
     List<LearningResourceEntity> findByTenantIdAndIdIn(UUID tenantId, List<UUID> ids);
+
+    List<LearningResourceEntity> findByTenantIdAndActiveTrue(UUID tenantId);
 }

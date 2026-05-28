@@ -2,9 +2,11 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,15 +18,26 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.LearningServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 
 @RestController
 @RequestMapping("/internal/v1/learning")
 public class LearningController {
 
     private final LearningServiceClient learningClient;
+    private final NotificationServiceClient notificationClient;
+    private final RestTemplate restTemplate;
+    private final String llmBaseUrl;
 
-    public LearningController(LearningServiceClient learningClient) {
+    public LearningController(
+            LearningServiceClient learningClient,
+            NotificationServiceClient notificationClient,
+            RestTemplate serviceRestTemplate,
+            @org.springframework.beans.factory.annotation.Value("${impilo.services.llm-orchestration-base-url:http://localhost:8265}") String llmBaseUrl) {
         this.learningClient = learningClient;
+        this.notificationClient = notificationClient;
+        this.restTemplate = serviceRestTemplate;
+        this.llmBaseUrl = llmBaseUrl;
     }
 
     @GetMapping("/workflow-context")
@@ -529,6 +542,195 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
     }
 
+    @GetMapping("/v11/studio/dashboard")
+    public ResponseEntity<Map<String, Object>> studioDashboard(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("studio/dashboard", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/studio/courses/{courseId}/readiness")
+    public ResponseEntity<Map<String, Object>> studioReadiness(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String courseId) {
+        JsonNode n = learningClient.getV11("studio/courses/" + courseId + "/readiness", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/ai/generate")
+    public ResponseEntity<Map<String, Object>> aiGenerate(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("ai/generate", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/nompilo/assist")
+    public ResponseEntity<Map<String, Object>> nompiloAssist(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = tryStructuredNompiloAdapter(tenantId, actorId, body);
+        if (n == null) {
+            n = learningClient.postV11("nompilo/assist", body);
+        }
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().put("mode", "stub")));
+    }
+
+    @GetMapping("/v11/library/resources")
+    public ResponseEntity<Map<String, Object>> listLibraryResources(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("library/resources", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/library/resources")
+    public ResponseEntity<Map<String, Object>> createLibraryResource(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("library/resources", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/library/resources/{resourceId}/links")
+    public ResponseEntity<Map<String, Object>> linkLibraryResource(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String resourceId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("library/resources/" + resourceId + "/links", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/library/uploads")
+    public ResponseEntity<Map<String, Object>> uploadLibraryResource(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("library/uploads", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/media/assets")
+    public ResponseEntity<Map<String, Object>> listMediaAssets(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("media/assets", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/media/assets")
+    public ResponseEntity<Map<String, Object>> createMediaAsset(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("media/assets", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/notifications")
+    public ResponseEntity<Map<String, Object>> listLearningNotifications(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam String subjectType,
+            @RequestParam String subjectId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("notifications", Map.of(
+                "subjectType", subjectType,
+                "subjectId", subjectId,
+                "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/notifications")
+    public ResponseEntity<Map<String, Object>> scheduleLearningNotification(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("notifications", body);
+        JsonNode commsDispatch = dispatchToCommsHub(body);
+        ObjectNode out = JsonNodeFactory.instance.objectNode();
+        out.set("learning", n != null ? n : JsonNodeFactory.instance.objectNode());
+        out.set("commsHubDispatch", commsDispatch != null ? commsDispatch : JsonNodeFactory.instance.objectNode().put("status", "not-dispatched"));
+        return ResponseEntity.ok(Map.of("data", out));
+    }
+
+    @GetMapping("/v11/interactive/activities")
+    public ResponseEntity<Map<String, Object>> listInteractiveActivities(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(required = false) String courseId,
+            @RequestParam(required = false) String lessonId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("interactive/activities", qp(
+                "courseId", courseId,
+                "lessonId", lessonId,
+                "limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/interactive/activities")
+    public ResponseEntity<Map<String, Object>> createInteractiveActivity(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("interactive/activities", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/interactive/activities/{activityId}/responses")
+    public ResponseEntity<Map<String, Object>> listInteractiveResponses(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String activityId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("interactive/activities/" + activityId + "/responses", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/interactive/activities/{activityId}/responses")
+    public ResponseEntity<Map<String, Object>> submitInteractiveResponse(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String activityId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("interactive/activities/" + activityId + "/responses", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/cohorts")
+    public ResponseEntity<Map<String, Object>> listCohorts(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("cohorts", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/cohorts")
+    public ResponseEntity<Map<String, Object>> createCohort(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("cohorts", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @PostMapping("/v11/cohorts/{cohortId}/members")
+    public ResponseEntity<Map<String, Object>> addCohortMember(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @PathVariable String cohortId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("cohorts/" + cohortId + "/members", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
+    @GetMapping("/v11/sessions")
+    public ResponseEntity<Map<String, Object>> listSessions(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestParam(defaultValue = "50") int limit) {
+        JsonNode n = learningClient.getV11("sessions", Map.of("limit", limit));
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
+    }
+
+    @PostMapping("/v11/sessions")
+    public ResponseEntity<Map<String, Object>> createSession(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        JsonNode n = learningClient.postV11("sessions", body);
+        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+    }
+
     private static Map<String, Object> qp(Object... keyVals) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyVals.length; i += 2) {
@@ -539,5 +741,54 @@ public class LearningController {
             }
         }
         return out;
+    }
+
+    private JsonNode dispatchToCommsHub(Map<String, Object> body) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("channel", body.getOrDefault("channelPreference", "IN_APP"));
+            payload.put("title", body.getOrDefault("title", "Learning notification"));
+            payload.put("message", body.getOrDefault("message", ""));
+            payload.put("recipientId", body.getOrDefault("subjectId", ""));
+            payload.put("metadata", body.getOrDefault("metadata", Map.of()));
+            return notificationClient.sendNotification(payload);
+        } catch (Exception ex) {
+            return JsonNodeFactory.instance.objectNode()
+                    .put("status", "dispatch-failed")
+                    .put("reason", ex.getMessage() == null ? "unknown" : ex.getMessage());
+        }
+    }
+
+    private JsonNode tryStructuredNompiloAdapter(String tenantId, String actorId, Map<String, Object> body) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("useCase", "NOMPILO_FUNDO_ASSIST");
+            payload.put("actorContext", Map.of(
+                    "tenantId", tenantId == null ? "" : tenantId,
+                    "actorId", actorId == null ? "" : actorId,
+                    "purposeOfUse", "LEARNING_EXPERIENCE"));
+            payload.put("messages", body.getOrDefault(
+                    "messages",
+                    java.util.List.of(Map.of(
+                            "role", "user",
+                            "content", String.valueOf(body.getOrDefault("message", body.getOrDefault("prompt", "")))))));
+            payload.put("requiredCapabilities", java.util.List.of("CHAT", "STRUCTURED_OUTPUT"));
+            payload.put("riskLevel", String.valueOf(body.getOrDefault("riskLevel", "MODERATE")));
+            payload.put("requiresAudit", true);
+            payload.put("requiresHumanApprovalForActions", false);
+            payload.put("temperature", 0.2);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
+                    llmBaseUrl + "/internal/v1/llm/structured",
+                    payload,
+                    (Class<Map<String, Object>>) (Class<?>) Map.class);
+            Object responseBody = response.getBody() == null ? null : response.getBody().get("data");
+            if (responseBody == null) {
+                return null;
+            }
+            return JsonNodeFactory.instance.pojoNode(responseBody);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

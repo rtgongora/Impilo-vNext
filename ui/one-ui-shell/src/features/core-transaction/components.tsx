@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { apiClient } from "@/lib/api-client";
 import type { CoreTransactionView } from "./types";
 
 function panel(title: string, body: ReactNode) {
@@ -245,6 +246,164 @@ export function NompiloHandoffPanel({ transaction }: { transaction: CoreTransact
   );
 }
 
+export function NompiloHandoffActionPanel({ transaction }: { transaction: CoreTransactionView }) {
+  const handoffOptionSignature = transaction.nompilo.handoffOptions.map((option) => option.id).join("|");
+  const [selectedOptionId, setSelectedOptionId] = useState<string>(
+    transaction.nompilo.handoffOptions[0]?.id ?? "",
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    setSelectedOptionId(transaction.nompilo.handoffOptions[0]?.id ?? "");
+    setFeedback(null);
+    setIsSubmitting(false);
+  }, [transaction.transaction.id, handoffOptionSignature]);
+
+  const hasOptions = transaction.nompilo.handoffOptions.length > 0;
+
+  async function requestHandoff() {
+    if (!selectedOptionId || !hasOptions) return;
+    setIsSubmitting(true);
+    setFeedback(null);
+    try {
+      await apiClient.post(
+        `/internal/v1/core-transactions/${encodeURIComponent(transaction.transaction.id)}/nompilo/handoff`,
+        {
+          handoffOptionId: selectedOptionId,
+          source: "core-transaction-shell",
+        },
+      );
+      const selected = transaction.nompilo.handoffOptions.find((option) => option.id === selectedOptionId);
+      setFeedback({
+        tone: "success",
+        text: selected
+          ? `Handoff request accepted for ${selected.label}.`
+          : "Handoff request accepted.",
+      });
+    } catch {
+      setFeedback({
+        tone: "error",
+        text: "Handoff request failed. Verify trust context and retry.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return panel(
+    "Nompilo Handoff Action",
+    <div className="space-y-2">
+      {hasOptions ? (
+        <>
+          <label className="block text-xs text-slate-600">
+            Handoff destination
+            <select
+              className="mt-1 w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+              value={selectedOptionId}
+              onChange={(event) => setSelectedOptionId(event.target.value)}
+            >
+              {transaction.nompilo.handoffOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            onClick={() => {
+              void requestHandoff();
+            }}
+            disabled={isSubmitting || !selectedOptionId}
+          >
+            {isSubmitting ? "Requesting handoff..." : "Request human handoff"}
+          </button>
+        </>
+      ) : (
+        <p className="text-xs text-slate-600">
+          No governed handoff options are currently available for this transaction context.
+        </p>
+      )}
+      {feedback ? (
+        <p className={feedback.tone === "success" ? "text-xs text-emerald-700" : "text-xs text-rose-700"}>
+          {feedback.text}
+        </p>
+      ) : null}
+    </div>,
+  );
+}
+
+export function NompiloCommandActionPanel({ transaction }: { transaction: CoreTransactionView }) {
+  const [query, setQuery] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ tone: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    setQuery("");
+    setFeedback(null);
+    setIsSubmitting(false);
+  }, [transaction.transaction.id]);
+
+  async function submitCommand() {
+    if (!query.trim()) return;
+    setIsSubmitting(true);
+    setFeedback(null);
+    try {
+      await apiClient.post(
+        `/internal/v1/core-transactions/${encodeURIComponent(transaction.transaction.id)}/nompilo/command`,
+        {
+          query: query.trim(),
+          surface: "CORE_TRANSACTION_SHELL",
+          actorRole: transaction.providerContext.roleCode ?? "OPERATOR",
+        },
+      );
+      setFeedback({
+        tone: "success",
+        text: "Nompilo command accepted for processing.",
+      });
+    } catch {
+      setFeedback({
+        tone: "error",
+        text: "Nompilo command failed. Verify trust context and retry.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return panel(
+    "Nompilo Command Action",
+    <div className="space-y-2">
+      <label className="block text-xs text-slate-600">
+        Command query
+        <textarea
+          className="mt-1 h-20 w-full rounded-md border border-slate-300 bg-white p-2 text-sm"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Summarize blockers and suggest next trusted actions."
+        />
+      </label>
+      <button
+        type="button"
+        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        onClick={() => {
+          void submitCommand();
+        }}
+        disabled={isSubmitting || !query.trim()}
+      >
+        {isSubmitting ? "Submitting command..." : "Run Nompilo command"}
+      </button>
+      {feedback ? (
+        <p className={feedback.tone === "success" ? "text-xs text-emerald-700" : "text-xs text-rose-700"}>
+          {feedback.text}
+        </p>
+      ) : null}
+    </div>,
+  );
+}
+
 export function NompiloProviderAssistPanel({ transaction }: { transaction: CoreTransactionView }) {
   return panel(
     "Nompilo Provider Assist",
@@ -455,6 +614,8 @@ export function CoreTransactionShell({
       <NompiloCommodityFinderResults />
       <NompiloWellnessEventResults />
       <NompiloSupportEscalationPanel transaction={transaction} />
+      <NompiloHandoffActionPanel transaction={transaction} />
+      <NompiloCommandActionPanel transaction={transaction} />
       <NompiloFundoLearningAssistant transaction={transaction} />
       <NompiloDashboardAssistant transaction={transaction} />
       <NompiloReportBuilderPanel />

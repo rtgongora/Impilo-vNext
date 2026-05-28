@@ -79,6 +79,32 @@ pnpm --filter @impilo/citizen-app start
 pnpm --filter @impilo/provider-app start
 ```
 
+### Mobile native development builds (required for LiveKit/WebRTC)
+
+Expo Go cannot load the LiveKit native WebRTC module. Use development clients:
+
+```bash
+# build native development clients (device-capable profiles)
+pnpm --filter @impilo/citizen-app build:dev-device:android
+pnpm --filter @impilo/citizen-app build:dev-device:ios
+pnpm --filter @impilo/provider-app build:dev-device:android
+pnpm --filter @impilo/provider-app build:dev-device:ios
+```
+
+Then run Metro for dev clients:
+
+```bash
+pnpm --filter @impilo/citizen-app start:dev-client
+pnpm --filter @impilo/provider-app start:dev-client
+```
+
+If native plugin wiring changes (e.g. LiveKit/WebRTC config), regenerate native projects before rebuilding:
+
+```bash
+pnpm --filter @impilo/citizen-app prebuild:clean
+pnpm --filter @impilo/provider-app prebuild:clean
+```
+
 ## Environment and Infra Notes
 
 - Backend defaults many service base URLs to localhost in `experience-bff` config.

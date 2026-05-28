@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TextInput } from "react-native";
 import {
   Screen,
   Header,
@@ -26,6 +26,15 @@ import {
   fetchPendingClaims,
   fetchRecentPayments,
 } from "../../services/financeService";
+import {
+  fetchCoveragePayerJourney,
+  flushCoverageCommandQueue,
+  runCoverageCommand,
+  subscribeCoverageCommandQueue,
+  type CoverageCommandKind,
+  type CoverageCommandQueueEntry,
+  type CoveragePayerJourney,
+} from "../../services/coverageCommandService";
 import type { RevenueSummary, Claim, Payment } from "../../types";
 
 const PAYMENT_BADGE_VARIANT: Record<string, "primary" | "secondary" | "destructive"> = {
@@ -33,6 +42,37 @@ const PAYMENT_BADGE_VARIANT: Record<string, "primary" | "secondary" | "destructi
   PENDING: "secondary",
   REJECTED: "destructive",
 };
+
+const COVERAGE_COMMAND_LABELS: Record<CoverageCommandKind, string> = {
+  "eligibility-check": "Eligibility",
+  "claim-submission": "Claim",
+  "preauth-request": "Pre-auth",
+  "appeal-submission": "Appeal",
+};
+
+function providerCoveragePayload(command: CoverageCommandKind, form: Record<string, string>) {
+  if (command === "eligibility-check") {
+    return { memberCpid: form.memberCpid, coverageId: form.coverageId, serviceCode: form.serviceCode };
+  }
+  if (command === "claim-submission") {
+    return { coverageId: form.coverageId, claimType: form.claimType, facilityId: form.facilityId, totalAmount: form.totalAmount };
+  }
+  if (command === "preauth-request") {
+    return {
+      coverageId: form.coverageId,
+      requestType: form.requestType,
+      facilityId: form.facilityId,
+      providerId: form.providerId,
+      clinicalInfo: form.clinicalInfo,
+    };
+  }
+  return {
+    claimId: form.claimId,
+    appellantId: form.memberCpid,
+    reason: form.reason,
+    evidence: { summary: form.evidenceSummary },
+  };
+}
 
 function formatCurrency(amount: number, currency: string): string {
   return `${currency} ${amount.toLocaleString(undefined, {
@@ -47,6 +87,27 @@ export function FinanceOverviewScreen() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [coverageCommand, setCoverageCommand] = useState<CoverageCommandKind>("eligibility-check");
+  const [coverageForm, setCoverageForm] = useState({
+    memberCpid: "",
+    coverageId: "",
+    serviceCode: "CONSULTATION",
+    claimType: "OUTPATIENT",
+    facilityId: "",
+    totalAmount: "",
+    requestType: "SPECIALIST",
+    providerId: "",
+    clinicalInfo: "",
+    claimId: "",
+    reason: "",
+    evidenceSummary: "",
+  });
+  const [coverageQueue, setCoverageQueue] = useState<CoverageCommandQueueEntry[]>([]);
+  const [coverageStatus, setCoverageStatus] = useState<string | null>(null);
+  const [coverageSubmitting, setCoverageSubmitting] = useState(false);
+  const [payerIntentId, setPayerIntentId] = useState("");
+  const [payerJourney, setPayerJourney] = useState<CoveragePayerJourney | null>(null);
+  const [payerJourneyLoading, setPayerJourneyLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,7 +134,49 @@ export function FinanceOverviewScreen() {
     load();
   }, [load]);
 
+  useEffect(() => subscribeCoverageCommandQueue(setCoverageQueue), []);
+
   const pendingTotal = claims.reduce((sum, c) => sum + c.amount, 0);
+
+  async function submitCoverageCommand() {
+    setCoverageSubmitting(true);
+    setCoverageStatus(null);
+    try {
+      const result = await runCoverageCommand(
+        coverageCommand,
+        providerCoveragePayload(coverageCommand, coverageForm)
+      );
+      setCoverageStatus(
+        result.syncStatus === "SYNCED"
+          ? `${COVERAGE_COMMAND_LABELS[coverageCommand]} synced.`
+          : `${COVERAGE_COMMAND_LABELS[coverageCommand]} queued provisionally.`
+      );
+    } finally {
+      setCoverageSubmitting(false);
+    }
+  }
+
+  async function syncCoverageQueue() {
+    const result = await flushCoverageCommandQueue();
+    setCoverageStatus(
+      `Coverage sync: ${result.synced} synced, ${result.remaining} remaining.`
+    );
+  }
+
+  async function loadPayerOpsJourney() {
+    setPayerJourneyLoading(true);
+    try {
+      const result = await fetchCoveragePayerJourney({
+        coverageId: coverageForm.coverageId,
+        memberCpid: coverageForm.memberCpid,
+        appellantId: coverageForm.memberCpid,
+        intentId: payerIntentId,
+      });
+      setPayerJourney(result);
+    } finally {
+      setPayerJourneyLoading(false);
+    }
+  }
 
   return (
     <Screen>
@@ -136,6 +239,165 @@ export function FinanceOverviewScreen() {
                     <Text style={styles.claimsLabel}>Total Value</Text>
                   </View>
                 </View>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardHeader title="Coverage Commands" />
+              <CardBody>
+                <Text style={styles.commandHelp}>
+                  Eligibility, claim, pre-auth, and appeal commands use live BFF paths. Failed mobile submissions are queued provisionally.
+                </Text>
+                <View style={styles.commandTabs}>
+                  {(Object.keys(COVERAGE_COMMAND_LABELS) as CoverageCommandKind[]).map((item) => (
+                    <Text
+                      key={item}
+                      style={[
+                        styles.commandTab,
+                        coverageCommand === item ? styles.commandTabActive : undefined,
+                      ]}
+                      onPress={() => setCoverageCommand(item)}
+                    >
+                      {COVERAGE_COMMAND_LABELS[item]}
+                    </Text>
+                  ))}
+                </View>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Member CPID / appellant id"
+                  value={coverageForm.memberCpid}
+                  onChangeText={(value) => setCoverageForm({ ...coverageForm, memberCpid: value })}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Coverage ID"
+                  value={coverageForm.coverageId}
+                  onChangeText={(value) => setCoverageForm({ ...coverageForm, coverageId: value })}
+                />
+                {coverageCommand === "eligibility-check" ? (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Service code"
+                    value={coverageForm.serviceCode}
+                    onChangeText={(value) => setCoverageForm({ ...coverageForm, serviceCode: value })}
+                  />
+                ) : null}
+                {coverageCommand === "claim-submission" ? (
+                  <>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Facility ID"
+                      value={coverageForm.facilityId}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, facilityId: value })}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Total amount"
+                      keyboardType="numeric"
+                      value={coverageForm.totalAmount}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, totalAmount: value })}
+                    />
+                  </>
+                ) : null}
+                {coverageCommand === "preauth-request" ? (
+                  <>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Facility ID"
+                      value={coverageForm.facilityId}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, facilityId: value })}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Provider ID"
+                      value={coverageForm.providerId}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, providerId: value })}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Clinical info"
+                      value={coverageForm.clinicalInfo}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, clinicalInfo: value })}
+                    />
+                  </>
+                ) : null}
+                {coverageCommand === "appeal-submission" ? (
+                  <>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Claim ID"
+                      value={coverageForm.claimId}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, claimId: value })}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Appeal reason"
+                      value={coverageForm.reason}
+                      onChangeText={(value) => setCoverageForm({ ...coverageForm, reason: value })}
+                    />
+                  </>
+                ) : null}
+                <Button
+                  title={coverageSubmitting ? "Submitting..." : `Run ${COVERAGE_COMMAND_LABELS[coverageCommand]}`}
+                  onPress={submitCoverageCommand}
+                  disabled={
+                    coverageSubmitting ||
+                    (coverageCommand !== "appeal-submission" && !coverageForm.coverageId) ||
+                    (coverageCommand === "appeal-submission" &&
+                      (!coverageForm.claimId || !coverageForm.memberCpid || !coverageForm.reason))
+                  }
+                />
+                <Button
+                  title={`Sync queued (${coverageQueue.length})`}
+                  variant="outline"
+                  onPress={syncCoverageQueue}
+                  disabled={coverageQueue.length === 0}
+                />
+                {coverageStatus ? <Text style={styles.commandStatus}>{coverageStatus}</Text> : null}
+                {coverageQueue.length > 0 ? (
+                  <View style={styles.queuePanel}>
+                    <Text style={styles.queueTitle}>Failed/provisional command review</Text>
+                    {coverageQueue.slice(0, 5).map((entry) => (
+                      <View key={entry.localId} style={styles.queueItem}>
+                        <Text style={styles.queueText}>
+                          {`${COVERAGE_COMMAND_LABELS[entry.command]} · ${entry.status} · retry ${entry.retryCount}`}
+                        </Text>
+                        <Text style={styles.queueMeta}>{entry.lastError ?? entry.history[0]?.message ?? "Queued"}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardHeader title="Payer Ops Workspace" />
+              <CardBody>
+                <Text style={styles.commandHelp}>
+                  Unified mobile journey for claims, remittance, appeals, settlement lookup, and reconciliation status.
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Payment intent ID (optional)"
+                  value={payerIntentId}
+                  onChangeText={setPayerIntentId}
+                />
+                <Button
+                  title={payerJourneyLoading ? "Loading payer journey..." : "Load payer ops journey"}
+                  onPress={loadPayerOpsJourney}
+                  disabled={payerJourneyLoading}
+                />
+                {payerJourney ? (
+                  <View style={styles.journeyGrid}>
+                    {payerJourney.reconciliation.map((item) => (
+                      <View key={item.stage} style={styles.journeyItem}>
+                        <Text style={styles.journeyStage}>{item.stage}</Text>
+                        <Text style={styles.journeyStatus}>{item.status}</Text>
+                        <Text style={styles.queueMeta}>{item.detail}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
               </CardBody>
             </Card>
 
@@ -256,6 +518,94 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     marginTop: 4,
+  },
+  commandHelp: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  commandTabs: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 8,
+  },
+  commandTab: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 12,
+    color: "#374151",
+  },
+  commandTabActive: {
+    borderColor: "#4F46E5",
+    color: "#3730A3",
+    backgroundColor: "#EEF2FF",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  commandStatus: {
+    marginTop: 8,
+    fontSize: 12,
+    color: "#047857",
+  },
+  queuePanel: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#FCD34D",
+    borderRadius: 8,
+    padding: 8,
+    backgroundColor: "#FFFBEB",
+  },
+  queueTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#92400E",
+    marginBottom: 4,
+  },
+  queueItem: {
+    paddingVertical: 4,
+    borderTopWidth: 1,
+    borderTopColor: "#FDE68A",
+  },
+  queueText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#78350F",
+  },
+  queueMeta: {
+    fontSize: 11,
+    color: "#6B7280",
+  },
+  journeyGrid: {
+    marginTop: 10,
+    gap: 8,
+  },
+  journeyItem: {
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    borderRadius: 8,
+    padding: 10,
+  },
+  journeyStage: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  journeyStatus: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#3730A3",
   },
   sectionTitle: {
     fontSize: 16,

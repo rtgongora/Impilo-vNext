@@ -63,6 +63,28 @@ public class WorkflowServiceClient {
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 
+    public JsonNode listInstances(String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/workflows/instances");
+        if (status != null && !status.isBlank()) {
+            b.queryParam("status", status);
+        }
+        String url = b.toUriString();
+        log.debug("Workflow: listInstances [status={}]", status);
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode startInstance(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/workflows/instances";
+        log.info("Workflow: startInstance [definition={}]", body.get("definitionId"));
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode transitionInstance(String id, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/workflows/instances/" + id + "/transition";
+        log.info("Workflow: transitionInstance id={} action={}", id, body.get("action"));
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

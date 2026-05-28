@@ -120,12 +120,22 @@ describe("Telehealth Service", () => {
       reason: "Follow-up on lab results",
       preferredDate: "2026-03-18",
       sessionType: "VIDEO",
+      purposeOfUse: "TREATMENT",
+      consentReference: "consent-123",
     });
     expect(session.status).toBe("REQUESTED");
     expect(session.sessionType).toBe("VIDEO");
     expect(mockApiClient.post).toHaveBeenCalledWith(
       "/internal/v1/mobile/citizen/telehealth/sessions",
-      { reason: "Follow-up on lab results", preferredDate: "2026-03-18", sessionType: "VIDEO" }
+      {
+        reason: "Follow-up on lab results",
+        preferredDate: "2026-03-18",
+        sessionType: "VIDEO",
+        purposeOfUse: "TREATMENT",
+        consentReference: "consent-123",
+        sessionProvider: "EXTERNAL_MANAGED",
+      },
+      { purposeOfUse: "TREATMENT" }
     );
   });
 

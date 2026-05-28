@@ -6,6 +6,7 @@
 
 import { apiClient } from "@impilo/mobile-api-client";
 import type { Referral, ReferralStatus } from "../types";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 interface ReferralResource {
   id: string;
@@ -47,6 +48,7 @@ export interface CreateReferralInput {
   patientId: string;
   fromFacilityId: string;
   toFacilityId: string;
+  toFacilityName?: string;
   specialty: string;
   reason: string;
   urgency: "ROUTINE" | "URGENT" | "EMERGENCY";
@@ -54,20 +56,45 @@ export interface CreateReferralInput {
 }
 
 export async function createReferral(input: CreateReferralInput): Promise<Referral> {
-  const response = await apiClient.post<{ data: ReferralResource }>(
-    "/internal/v1/mobile/provider/referrals",
-    {
-      encounter_id: input.encounterId,
-      patient_id: input.patientId,
-      from_facility_id: input.fromFacilityId,
-      to_facility_id: input.toFacilityId,
+  const payload = {
+    encounter_id: input.encounterId,
+    patient_id: input.patientId,
+    from_facility_id: input.fromFacilityId,
+    to_facility_id: input.toFacilityId,
+    to_facility_name: input.toFacilityName,
+    specialty: input.specialty,
+    reason: input.reason,
+    urgency: input.urgency,
+    notes: input.notes,
+  };
+  try {
+    const response = await apiClient.post<{ data: ReferralResource }>(
+      "/internal/v1/mobile/provider/referrals",
+      payload
+    );
+    return mapReferral(response.data.data);
+  } catch (error) {
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: "clinical_referrals",
+      path: "/internal/v1/mobile/provider/referrals",
+      payload,
+    });
+    if (!offline) throw error;
+    return {
+      id: offline.recordId,
+      encounterId: input.encounterId,
+      patientId: input.patientId,
+      fromFacilityId: input.fromFacilityId,
+      toFacilityId: input.toFacilityId,
+      toFacilityName: "",
       specialty: input.specialty,
       reason: input.reason,
       urgency: input.urgency,
+      status: "PENDING" as ReferralStatus,
       notes: input.notes,
-    }
-  );
-  return mapReferral(response.data.data);
+      createdAt: new Date().toISOString(),
+    };
+  }
 }
 
 export async function getReferralsForEncounter(encounterId: string): Promise<Referral[]> {
@@ -82,4 +109,25 @@ export async function getReferralsForPatient(patientId: string): Promise<Referra
     `/internal/v1/mobile/provider/referrals?patient_id=${patientId}`
   );
   return response.data.data.map(mapReferral);
+}
+
+export interface ReferralFacilityCandidate {
+  id: string;
+  name: string;
+}
+
+export async function searchReferralFacilities(query: string): Promise<ReferralFacilityCandidate[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const response = await apiClient.get<{ data: unknown }>(
+    `/internal/v1/teleconsult/routing/facilities?q=${encodeURIComponent(q)}&page=0&size=10`
+  );
+  const root = response.data.data as Record<string, unknown>;
+  const rows = Array.isArray(root) ? root : Array.isArray(root.items) ? root.items : Array.isArray(root.data) ? root.data : [];
+  return (rows as Array<Record<string, unknown>>)
+    .map((row) => ({
+      id: String(row.id ?? row.facilityId ?? row.uuid ?? ""),
+      name: String(row.name ?? row.facilityName ?? row.displayName ?? ""),
+    }))
+    .filter((row) => row.id.length > 0 && row.name.length > 0);
 }

@@ -167,6 +167,42 @@ Seed data (`V002__learning_seed.sql`) targets tenant `00000000-0000-0000-0000-00
 - **Varapi / council** can invoke Tshepo’s relay or learning orchestration directly after policy permit; route choice is deployment-specific.
 - Separate **Varapi SPA** stacks can call the same learning APIs or BFF routes where network policy allows.
 
+## Intelligent Fundo Studio (Phase 8)
+
+Phase 8 extends native Fundo from baseline LMS parity into an intelligent authoring and engagement platform while preserving all boundaries:
+
+- No Moodle expansion, no Open edX/Canvas/Chamilo/SCORM/xAPI dependency.
+- No public `learning-service` exposure.
+- No duplication of Varapi CPD authority.
+- No use of credential-verification service for ordinary Fundo certificates.
+
+### New native capabilities
+
+- **Studio routes**: `/learning/studio/**` now provides creator/admin workspace for courses, builder, library, media, assessments, surveys, AI, publish and analytics surfaces.
+- **Provider-agnostic AI authoring**: `LearningAiProvider` abstraction and safe stub (`LearningAiStubProvider`) support draft generation for outlines, lesson content, quizzes, surveys, summaries, facilitator guides and voiceover scripts.
+- **AI governance metadata**: generation drafts persist `createdByAi`, `modelProvider`, `prompt`, `sourceDocuments`, `reviewStatus`, `humanReviewer`, `createdAt`, `updatedAt`.
+- **Nompilo integration surface**: `/internal/v1/learning/v11/nompilo/assist` supports learner/creator assistant workflows through a native Fundo integration interface (stub-ready for real provider wiring).
+- **Learning Resource Library**: native library resources, versions and usage links (`lrn_library_resource*`, `lrn_library_usage_link`) with tags, ownership, review state and attribution metadata.
+- **Media Studio foundation**: native media metadata (`lrn_media_asset`) for recordings, transcript/caption references, voiceover scripts, linking and lifecycle states.
+- **Expanded assessments**: assessment type constraint updated to include `PRE_TEST`, `POST_TEST`, `QUIZ`, `FINAL_ASSESSMENT`, `SURVEY`, `FEEDBACK`, `PRACTICAL_CHECKLIST`, `CASE_REVIEW`.
+- **Interactive learning**: activity/response models (`lrn_interactive_activity`, `lrn_interactive_response`) plus outbox events for async aggregation (`impilo.learning.interactive.response.submitted.v1`).
+- **Notifications and scheduling**: learning notification, cohort, membership, course availability and scheduled session foundations (`lrn_learning_notification`, `lrn_learning_cohort`, `lrn_cohort_membership`, `lrn_scheduled_learning_session`, `lrn_course_availability`).
+
+### API surface additions
+
+Native v1.1 endpoints now include:
+
+- Studio dashboard/readiness
+- AI generation + Nompilo assist
+- Library resources/uploads/usage links
+- Media asset metadata
+- Interactive activities + responses
+- Notifications scheduling/listing
+- Cohorts + memberships
+- Scheduled sessions
+
+All are internal-only under `/internal/v1/learning/v11/**`, and are passed through only where needed by Experience BFF.
+
 ## Phase 1 — One Experience Impilo Fundo workspace
 
 Impilo Fundo is now surfaced as the learning workspace within the vNext One Experience Shell. The existing `/learning` hub has been registered in the canonical shell route registry, branded as “Impilo Fundo”, and placed under the Professional experience zone. This phase does not introduce new backend, BFF, database, mobile, OpenAPI, Helm or gateway changes. The existing `learning-service` remains the technical home for future Impilo Fundo capability hardening.

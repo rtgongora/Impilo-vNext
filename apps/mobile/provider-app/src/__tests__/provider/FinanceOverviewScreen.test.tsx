@@ -29,6 +29,19 @@ vi.mock("../../services/financeService", () => ({
   fetchRecentPayments: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("../../services/coverageCommandService", () => ({
+  fetchCoveragePayerJourney: vi.fn().mockResolvedValue({
+    claims: [],
+    remittances: [],
+    appeals: [],
+    settlements: [],
+    reconciliation: [],
+  }),
+  flushCoverageCommandQueue: vi.fn().mockResolvedValue({ synced: 0, remaining: 0, failed: 0 }),
+  runCoverageCommand: vi.fn().mockResolvedValue({ syncStatus: "SYNCED" }),
+  subscribeCoverageCommandQueue: vi.fn(() => () => undefined),
+}));
+
 describe("FinanceOverviewScreen", () => {
   it("exports a function component", async () => {
     const mod = await import("../../screens/provider/FinanceOverviewScreen");

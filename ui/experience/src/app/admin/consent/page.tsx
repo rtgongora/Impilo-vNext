@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import type { ApiResponse } from "@/lib/api-client";
 
 interface ConsentResource {
   id: string;
@@ -33,7 +33,7 @@ type ConsentResponse = ApiResponse<ConsentResource[]>;
 function useConsent() {
   return useQuery<ConsentResponse>({
     queryKey: ["admin-consent"],
-    queryFn: () => apiClient.get<ConsentResponse>("/internal/v1/admin/consent"),
+    queryFn: () => Promise.reject(new Error("Subject-scoped trust consent BFF required")),
   });
 }
 

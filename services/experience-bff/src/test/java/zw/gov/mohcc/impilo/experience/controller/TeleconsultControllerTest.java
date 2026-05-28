@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
@@ -25,6 +27,7 @@ import static org.mockito.ArgumentMatchers.eq;
 class TeleconsultControllerTest {
 
     private PctServiceClient pctClient;
+    private TelemedicineGovernanceService governanceService;
     private TeleconsultController controller;
     private ObjectMapper objectMapper;
 
@@ -39,7 +42,7 @@ class TeleconsultControllerTest {
         NotificationServiceClient notificationClient = Mockito.mock(NotificationServiceClient.class);
         FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
         CostaServiceClient costaClient = Mockito.mock(CostaServiceClient.class);
-        TelemedicineGovernanceService governanceService = Mockito.mock(TelemedicineGovernanceService.class);
+        governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         controller = new TeleconsultController(
                 pctClient, mvumoClient, documentClient, varapiClient, tusoClient,
                 notificationClient, fhirGatewayClient, costaClient, governanceService, objectMapper
@@ -92,5 +95,27 @@ class TeleconsultControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         Mockito.verify(pctClient).updateReferralStage(eq("ref-123"), any());
+    }
+
+    @Test
+    void createSessionRejectsUnsupportedPurposeOfUse() {
+        Mockito.when(governanceService.normalizePurposeOfUse("UNSUPPORTED"))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unsupported purpose-of-use"));
+
+        var response = controller.createSession(
+                "req-3",
+                "corr-3",
+                "tenant-a",
+                "UNSUPPORTED",
+                "fac-1",
+                "provider-1",
+                Map.of("patientId", "patient-1", "reason", "Need consult")
+        );
+
+        assertEquals(400, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
+        assertEquals("TELEMEDICINE_GOVERNANCE_INVALID", error.get("code"));
+        Mockito.verifyNoInteractions(pctClient);
     }
 }

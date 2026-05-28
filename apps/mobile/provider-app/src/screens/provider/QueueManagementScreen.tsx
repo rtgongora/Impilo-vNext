@@ -4,13 +4,30 @@ import { Ionicons } from "@expo/vector-icons";
 import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchQueue, callNext, completeEntry, fetchQueueStats } from "../../services/queueService";
+import { useAppStore } from "../../stores/appStore";
 
 export function QueueManagementScreen() {
   const queryClient = useQueryClient();
-  const { data: queue = [], isLoading } = useQuery({ queryKey: ["provider-queue"], queryFn: fetchQueue, refetchInterval: 10000 });
-  const { data: stats } = useQuery({ queryKey: ["queue-stats"], queryFn: fetchQueueStats, refetchInterval: 10000 });
+  const { facilityId } = useAppStore();
+  const facilityIdParam = facilityId ?? undefined;
+  const { data: queue = [], isLoading } = useQuery({
+    queryKey: ["provider-queue", facilityIdParam],
+    queryFn: () => fetchQueue(facilityIdParam),
+    enabled: !!facilityIdParam,
+    refetchInterval: 10000,
+  });
+  const { data: stats } = useQuery({
+    queryKey: ["queue-stats", facilityIdParam],
+    queryFn: () => fetchQueueStats(facilityIdParam),
+    enabled: !!facilityIdParam,
+    refetchInterval: 10000,
+  });
+  const rows = queue as Array<Record<string, unknown>>;
+  const nextWaiting =
+    rows.find((item) => String(item.status ?? (item.attributes as Record<string, unknown> | undefined)?.status ?? "").toUpperCase() === "WAITING") ??
+    rows[0];
 
-  const callMutation = useMutation({ mutationFn: () => callNext("default"), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["provider-queue"] }) });
+  const callMutation = useMutation({ mutationFn: () => callNext(String(nextWaiting?.id ?? "")), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["provider-queue"] }) });
   const completeMutation = useMutation({ mutationFn: (id: string) => completeEntry(id), onSuccess: () => queryClient.invalidateQueries({ queryKey: ["provider-queue"] }) });
 
   const priorityColors: Record<string, string> = { URGENT: "#DC2626", HIGH: "#F59E0B", NORMAL: "#3B82F6", LOW: "#6B7280" };
@@ -49,7 +66,7 @@ export function QueueManagementScreen() {
           testID="queue-call-next"
           style={[styles.callNextButton, callMutation.isPending && styles.callNextButtonDisabled]}
           onPress={() => callMutation.mutate()}
-          disabled={callMutation.isPending}
+          disabled={callMutation.isPending || !nextWaiting?.id}
         >
           {callMutation.isPending ? (
             <LoadingSpinner size="sm" />
@@ -67,7 +84,7 @@ export function QueueManagementScreen() {
           </View>
         ) : (
           <FlatList
-            data={queue as Array<Record<string, unknown>>}
+            data={rows}
             keyExtractor={(item) => String(item.id)}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => (

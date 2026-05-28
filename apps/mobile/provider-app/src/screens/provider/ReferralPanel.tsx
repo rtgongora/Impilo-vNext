@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Card, CardBody, Button, TextField, Select, Badge, ErrorState } from "@impilo/mobile-design-system";
-import { createReferral, getReferralsForEncounter } from "../../services/referralService";
+import { createReferral, getReferralsForEncounter, searchReferralFacilities } from "../../services/referralService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
 import { useAppStore } from "../../stores/appStore";
 
@@ -18,6 +18,10 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
   const { referrals } = useEncounterStore();
   const { facilityId } = useAppStore();
   const [toFacilityId, setToFacilityId] = useState("");
+  const [toFacilityName, setToFacilityName] = useState("");
+  const [facilityQuery, setFacilityQuery] = useState("");
+  const [facilityCandidates, setFacilityCandidates] = useState<Array<{ id: string; name: string }>>([]);
+  const [facilitySearching, setFacilitySearching] = useState(false);
   const [specialty, setSpecialty] = useState("");
   const [reason, setReason] = useState("");
   const [urgency, setUrgency] = useState<"ROUTINE" | "URGENT" | "EMERGENCY">("ROUTINE");
@@ -31,6 +35,28 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
       .catch(() => {});
   }, [encounterId]);
 
+  useEffect(() => {
+    let active = true;
+    if (facilityQuery.trim().length < 2) {
+      setFacilityCandidates([]);
+      return;
+    }
+    setFacilitySearching(true);
+    searchReferralFacilities(facilityQuery)
+      .then((rows) => {
+        if (active) setFacilityCandidates(rows);
+      })
+      .catch(() => {
+        if (active) setFacilityCandidates([]);
+      })
+      .finally(() => {
+        if (active) setFacilitySearching(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [facilityQuery]);
+
   const handleCreate = useCallback(async () => {
     if (!toFacilityId.trim() || !specialty.trim() || !reason.trim() || !facilityId) return;
     setSaving(true);
@@ -41,6 +67,7 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
         patientId,
         fromFacilityId: facilityId,
         toFacilityId,
+        toFacilityName: toFacilityName || undefined,
         specialty,
         reason,
         urgency,
@@ -48,6 +75,9 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
       });
       encounterStore.getState().addReferral(ref);
       setToFacilityId("");
+      setToFacilityName("");
+      setFacilityQuery("");
+      setFacilityCandidates([]);
       setSpecialty("");
       setReason("");
       setNotes("");
@@ -63,6 +93,8 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
       <Card>
         <CardBody>
           <View style={styles.formGrid}>
+            <TextField label="Find facility" value={facilityQuery} onChange={setFacilityQuery} testID="ref-facility-query" />
+            <TextField label="To Facility Name" value={toFacilityName} onChange={setToFacilityName} testID="ref-facility-name" />
             <TextField label="To Facility ID" value={toFacilityId} onChange={setToFacilityId} testID="ref-facility" />
             <TextField label="Specialty" value={specialty} onChange={setSpecialty} testID="ref-specialty" />
             <TextField label="Reason" value={reason} onChange={setReason} testID="ref-reason" />
@@ -78,6 +110,23 @@ export function ReferralPanel({ encounterId, patientId }: ReferralPanelProps) {
               testID="ref-urgency"
             />
           </View>
+          {facilitySearching ? <Text style={styles.helper}>Searching facilities…</Text> : null}
+          {facilityCandidates.length > 0 ? (
+            <View style={styles.candidateList}>
+              {facilityCandidates.map((candidate) => (
+                <Button
+                  key={candidate.id}
+                  title={`${candidate.name} (${candidate.id.slice(0, 8)})`}
+                  size="sm"
+                  variant="outline"
+                  onPress={() => {
+                    setToFacilityId(candidate.id);
+                    setToFacilityName(candidate.name);
+                  }}
+                />
+              ))}
+            </View>
+          ) : null}
           <TextField label="Notes" value={notes} onChange={setNotes} testID="ref-notes" />
           <View style={styles.buttonContainer}>
             <Button title="Create Referral" onPress={handleCreate} loading={saving} testID="create-ref-btn" />
@@ -116,6 +165,15 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 12,
+  },
+  helper: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 8,
+  },
+  candidateList: {
+    marginTop: 8,
+    gap: 6,
   },
   referralsList: {
     marginTop: 12,
