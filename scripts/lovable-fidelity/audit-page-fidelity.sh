@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# audit-page-fidelity.sh — Checks all route pages for stub vs real implementation
+# audit-page-fidelity.sh â€” Checks all route pages for stub vs real implementation
 set -euo pipefail
 
 echo "=== Page Fidelity Audit ==="
 echo ""
 
-PAGE_DIR="ui/experience/src/app"
+PAGE_DIR="ui/one-ui-shell/src/app"
 TOTAL=0
 IMPLEMENTED=0
 STUBS=0
@@ -33,7 +33,7 @@ while IFS= read -r page; do
     IMPLEMENTED=$((IMPLEMENTED + 1))
     echo "  [IMPL] $page"
   else
-    # Check line count — very short files may be stubs
+    # Check line count â€” very short files may be stubs
     lines=$(wc -l < "$page" 2>/dev/null || echo "0")
     if [ "$lines" -lt 20 ]; then
       STUBS=$((STUBS + 1))
@@ -54,9 +54,9 @@ echo "  Implementation: $(( IMPLEMENTED * 100 / TOTAL ))%"
 echo ""
 
 if [ "$STUBS" -gt 0 ]; then
-  echo "  STATUS: INCOMPLETE — $STUBS stub pages remain"
+  echo "  STATUS: INCOMPLETE â€” $STUBS stub pages remain"
   exit 1
 else
-  echo "  STATUS: COMPLETE — all pages implemented"
+  echo "  STATUS: COMPLETE â€” all pages implemented"
   exit 0
 fi

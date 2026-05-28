@@ -37,8 +37,8 @@ export default function CommerceIntegrationsPage() {
               <div>
                 <h2 className="text-base font-semibold text-slate-900">Acceptance rule</h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  Critical operator workflows for marketplace procurement, coverage, costing, and reporting must be reachable in{" "}
-                  <code className="text-xs">ui/experience</code> via{" "}
+                  Critical operator workflows for marketplace procurement, coverage, costing, and reporting must be reachable in the canonical{" "}
+                  <code className="text-xs">ui/one-ui-shell</code> via{" "}
                   <code className="text-xs">NEXT_PUBLIC_BFF_URL</code> (Experience BFF{" "}
                   <code className="text-xs">/internal/v1/…</code>). Legacy Next apps under{" "}
                   <code className="text-xs">ui/msika-*</code> and <code className="text-xs">ui/mushex-*</code> are not an

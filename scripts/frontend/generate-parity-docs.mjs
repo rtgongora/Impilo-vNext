@@ -438,7 +438,7 @@ function writeImplementationStatus() {
 | Surface | Registry | Count |
 |---------|----------|-------|
 | Web canonical | \`ui/one-ui-shell/src/lib/routes.ts\` | 370 |
-| Web continuity | \`ui/experience/src/lib/routes.ts\` | 258 |
+| Web continuity | \`ui/one-ui-shell/src/lib/routes.ts\` | 258 |
 | Citizen mobile | Tab + Personal section router | 7 tabs, 30+ sections |
 | Provider mobile | Mode router + ClinicalTools | 5 modes, 30+ tools |
 
@@ -447,7 +447,7 @@ function writeImplementationStatus() {
 - Queue/triage/worklist (web + mobile)
 - EHR summary/timeline (web BFF)
 - Social timeline/communities (web + mobile)
-- Core transaction feed (web BFF — no fixture injection)
+- Core transaction feed (web BFF â€” no fixture injection)
 - Marketplace launcher (web + mobile BFF)
 - Public health reads + fail-close writes (web)
 - Teleconsult lifecycle (web; RTC blocked)

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Impilo vNext — UI Route Parity Check
+# Impilo vNext â€” UI Route Parity Check
 # =============================================================================
-# Compares the route registry (ui/experience/src/lib/routes.ts) against the
+# Compares the route registry (ui/one-ui-shell/src/lib/routes.ts) against the
 # actual page.tsx files in the experience UI app directory to detect drift.
 #
 # Also cross-references against prototype spec (docs/prototype/final/01_site_map.md)
@@ -15,8 +15,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-ROUTE_REGISTRY="$REPO_ROOT/ui/experience/src/lib/routes.ts"
-UI_APP_DIR="$REPO_ROOT/ui/experience/src/app"
+ROUTE_REGISTRY="$REPO_ROOT/ui/one-ui-shell/src/lib/routes.ts"
+UI_APP_DIR="$REPO_ROOT/ui/one-ui-shell/src/app"
 SPEC_FILE="$REPO_ROOT/docs/prototype/final/01_site_map.md"
 
 echo "  UI Route Parity Check"
@@ -26,20 +26,20 @@ PASS=0
 FAIL=0
 WARNINGS=0
 
-pass() { echo "    ✅ $1"; PASS=$((PASS + 1)); }
-fail() { echo "    ❌ $1"; FAIL=$((FAIL + 1)); }
-warn() { echo "    ⚠️  $1"; WARNINGS=$((WARNINGS + 1)); }
+pass() { echo "    âœ… $1"; PASS=$((PASS + 1)); }
+fail() { echo "    âŒ $1"; FAIL=$((FAIL + 1)); }
+warn() { echo "    âš ï¸  $1"; WARNINGS=$((WARNINGS + 1)); }
 
-# ── 1. Route registry exists ──
+# â”€â”€ 1. Route registry exists â”€â”€
 echo "  1. Route registry file"
 if [ -f "$ROUTE_REGISTRY" ]; then
-  pass "Route registry exists: ui/experience/src/lib/routes.ts"
+  pass "Route registry exists: ui/one-ui-shell/src/lib/routes.ts"
 else
-  fail "Route registry not found: ui/experience/src/lib/routes.ts"
+  fail "Route registry not found: ui/one-ui-shell/src/lib/routes.ts"
   exit 1
 fi
 
-# ── 2. Count routes in registry ──
+# â”€â”€ 2. Count routes in registry â”€â”€
 echo "  2. Registry route count"
 REGISTRY_COUNT=$(grep -c '"path":' "$ROUTE_REGISTRY" 2>/dev/null) || REGISTRY_COUNT=0
 EXPECTED_COUNT=$(grep 'EXPECTED_ROUTE_COUNT' "$ROUTE_REGISTRY" | grep -oP '\d+' | head -1) || EXPECTED_COUNT=0
@@ -54,13 +54,13 @@ else
   fail "Registry has 0 routes"
 fi
 
-# ── 3. Count page.tsx files ──
+# â”€â”€ 3. Count page.tsx files â”€â”€
 echo "  3. Page file count"
 PAGE_COUNT=$(find "$UI_APP_DIR" -name "page.tsx" 2>/dev/null | wc -l) || PAGE_COUNT=0
-echo "    Found $PAGE_COUNT page.tsx files in ui/experience/src/app/"
+echo "    Found $PAGE_COUNT page.tsx files in ui/one-ui-shell/src/app/"
 
 # Some routes share page files (e.g., "/" and "/home" may use the same layout page,
-# dynamic routes [id] collapse). Allow a tolerance of ±5.
+# dynamic routes [id] collapse). Allow a tolerance of Â±5.
 DIFF=$((REGISTRY_COUNT - PAGE_COUNT))
 ABS_DIFF=${DIFF#-}
 
@@ -70,7 +70,7 @@ else
   fail "Page file count ($PAGE_COUNT) diverges from registry ($REGISTRY_COUNT) by $ABS_DIFF"
 fi
 
-# ── 4. Verify key zones have page files ──
+# â”€â”€ 4. Verify key zones have page files â”€â”€
 echo "  4. Zone coverage check"
 ZONES_OK=0
 ZONES_MISSING=0
@@ -79,10 +79,10 @@ for zone_dir in auth home facility workspace shift queue ehr admin registry mark
   if [ -d "$UI_APP_DIR/$zone_dir" ] || [ -d "$UI_APP_DIR/($zone_dir)" ]; then
     ZONES_OK=$((ZONES_OK + 1))
   else
-    # Some zones may be nested differently — check registry
+    # Some zones may be nested differently â€” check registry
     ZONE_IN_REGISTRY=$(grep "\"zone\": *\"$zone_dir\"" "$ROUTE_REGISTRY" 2>/dev/null | head -1) || ZONE_IN_REGISTRY=""
     if [ -n "$ZONE_IN_REGISTRY" ]; then
-      # Zone exists in registry but directory not found as simple name — check if paths exist
+      # Zone exists in registry but directory not found as simple name â€” check if paths exist
       ZONE_PATH_PREFIX="/$zone_dir"
       if find "$UI_APP_DIR" -path "*/$zone_dir/*" -name "page.tsx" 2>/dev/null | grep -q .; then
         ZONES_OK=$((ZONES_OK + 1))
@@ -100,7 +100,7 @@ else
   warn "$ZONES_MISSING zones may be missing page files"
 fi
 
-# ── 5. Prototype spec cross-reference ──
+# â”€â”€ 5. Prototype spec cross-reference â”€â”€
 echo "  5. Prototype spec cross-reference"
 if [ -f "$SPEC_FILE" ]; then
   SPEC_ROUTE_MENTION=$(grep -i "route" "$SPEC_FILE" | head -1) || SPEC_ROUTE_MENTION=""
@@ -117,14 +117,14 @@ if [ -f "$SPEC_FILE" ]; then
   else
     echo "    Spec file exists but contains no explicit route count."
     echo "    Spec file describes: $(head -5 "$SPEC_FILE" | tail -1)"
-    warn "Spec file has no explicit route count table — falling back to registry self-check"
+    warn "Spec file has no explicit route count table â€” falling back to registry self-check"
   fi
 else
   echo "    No prototype spec file found at docs/prototype/final/01_site_map.md"
   warn "Spec cross-reference skipped (file not found)"
 fi
 
-# ── Summary ──
+# â”€â”€ Summary â”€â”€
 echo ""
 TOTAL=$((PASS + FAIL))
 if [ "$FAIL" -eq 0 ]; then

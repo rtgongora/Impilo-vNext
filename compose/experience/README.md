@@ -89,7 +89,7 @@ MAVEN_SETTINGS_FILE=/path/to/settings.xml ./tools/dev/build-all.sh
 cd services && mvn -pl experience-bff test
 
 # Route parity check (no Docker needed)
-cd ui/experience && npm run test:routes
+cd ui/one-ui-shell && npm run test:routes
 ```
 
 ### Verification Scripts

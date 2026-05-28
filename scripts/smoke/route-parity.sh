@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# Impilo vNext — Route Parity Check (Wave 18)
+# Impilo vNext â€” Route Parity Check (Wave 18)
 # =============================================================================
 #
 # Verifies that the Experience UI route registry count matches the
 # spec-derived route count (as implemented in the filesystem).
 #
 # This is a wrapper around the existing Node.js route parity script:
-#   ui/experience/scripts/route-parity-check.mjs
+#   ui/one-ui-shell/scripts/route-parity-check.mjs
 #
 # It can run:
 #   1. Via Node.js directly (if node is available)
@@ -24,7 +24,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-EXPERIENCE_DIR="$PROJECT_ROOT/ui/experience"
+EXPERIENCE_DIR="$PROJECT_ROOT/ui/one-ui-shell"
 ROUTE_CHECK="$EXPERIENCE_DIR/scripts/route-parity-check.mjs"
 
 # Colors
@@ -45,7 +45,7 @@ info() { echo -e "${CYAN}[ROUTES]${NC} $*"; }
 
 echo ""
 echo "============================================================"
-echo "  Impilo vNext — Route Parity Check"
+echo "  Impilo vNext â€” Route Parity Check"
 echo "============================================================"
 echo ""
 
@@ -55,7 +55,7 @@ echo ""
 info "Check 1: Route registry file"
 
 if [ -f "$ROUTE_CHECK" ]; then
-    pass "Route parity script exists at ui/experience/scripts/route-parity-check.mjs"
+    pass "Route parity script exists at ui/one-ui-shell/scripts/route-parity-check.mjs"
 else
     fail "Route parity script NOT found"
     exit 1
@@ -107,11 +107,11 @@ if command -v node &>/dev/null; then
         pass "Node.js route parity check passed"
     else
         NODE_EXIT=$?
-        warn "Node.js route parity check failed (exit code $NODE_EXIT) — some routes may not be implemented yet"
+        warn "Node.js route parity check failed (exit code $NODE_EXIT) â€” some routes may not be implemented yet"
     fi
 else
-    warn "Node.js not available — skipping interactive parity check"
-    info "  Run manually: cd ui/experience && node scripts/route-parity-check.mjs"
+    warn "Node.js not available â€” skipping interactive parity check"
+    info "  Run manually: cd ui/one-ui-shell && node scripts/route-parity-check.mjs"
 fi
 
 # =============================================================================
@@ -126,9 +126,9 @@ if [ "$EXPECTED_COUNT" -gt 0 ] && [ "$IMPLEMENTED_COUNT" -gt 0 ]; then
     if [ "$PARITY_PCT" -ge 100 ]; then
         pass "Full route parity achieved ($PARITY_PCT%)"
     elif [ "$PARITY_PCT" -ge 50 ]; then
-        warn "Partial route parity ($PARITY_PCT%) — $((EXPECTED_COUNT - IMPLEMENTED_COUNT)) routes pending"
+        warn "Partial route parity ($PARITY_PCT%) â€” $((EXPECTED_COUNT - IMPLEMENTED_COUNT)) routes pending"
     else
-        warn "Low route parity ($PARITY_PCT%) — $((EXPECTED_COUNT - IMPLEMENTED_COUNT)) routes pending"
+        warn "Low route parity ($PARITY_PCT%) â€” $((EXPECTED_COUNT - IMPLEMENTED_COUNT)) routes pending"
     fi
 fi
 

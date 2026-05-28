@@ -26,7 +26,7 @@ const BFF_EXPERIENCE_JAVA_ROOT = path.join(
   REPO_ROOT,
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience'
 );
-const UI_ROOT = path.join(REPO_ROOT, 'ui/experience/src');
+const UI_ROOT = path.join(REPO_ROOT, 'ui/one-ui-shell/src');
 const SERVICE_CLIENT_CONFIG_PATH = path.join(
   REPO_ROOT,
   'services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/config/ServiceClientConfig.java'
@@ -62,13 +62,13 @@ const BFF_CLIENT_BY_MODULE = {
   'credential-verification-service': 'CredentialServiceClient',
 };
 
-/** BFF proxy path (no dedicated Feign client) — dimension partial credit. */
+/** BFF proxy path (no dedicated Feign client) â€” dimension partial credit. */
 const BFF_PROXY_BY_MODULE = {
   'surveillance-service': 'PublicHealthController',
   'campaigns-service': 'PublicHealthController',
   'indawo-service': 'PublicHealthController',
   'wellness-service': 'WellnessServiceProxyController',
-  /** RestTemplate / shared Feign — substring must appear in Experience BFF Java sources. */
+  /** RestTemplate / shared Feign â€” substring must appear in Experience BFF Java sources. */
   'notification-service': 'notificationBaseUrl',
   'data-governance-service': 'dataGovernanceBaseUrl',
   'landela-adapter-service': 'landelaBaseUrl',
@@ -153,7 +153,7 @@ function findApplicationClass(javaMain) {
   const files = walkFiles(javaMain, (p) => p.endsWith('.java'));
   for (const f of files) {
     const t = readText(f);
-    // Note: avoid leading \b before @ — @ is not a word char, so \b@Spring… never matches at line start.
+    // Note: avoid leading \b before @ â€” @ is not a word char, so \b@Springâ€¦ never matches at line start.
     if (/@SpringBootApplication\b/.test(t) || /@SpringCloudApplication\b/.test(t)) {
       return path.basename(f, '.java');
     }
@@ -481,7 +481,7 @@ function main() {
       `| ${r.maven_module} | ${r.composite_score} | ${d.backend.level} | ${d.bff.level} | ${d.contract.level} | ${d.api_docs.level} | ${d.integration_kafka.level} | ${d.experience_hooks.level} | ${d.experience_pages.level} |`
     );
   }
-  mdLines.push('', '## Aggregate (0–3 per dimension)', '');
+  mdLines.push('', '## Aggregate (0â€“3 per dimension)', '');
   mdLines.push(`- backend: ${report.aggregate.backend_avg}`);
   mdLines.push(`- bff: ${report.aggregate.bff_avg}`);
   mdLines.push(`- contract: ${report.aggregate.contract_avg}`);

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ============================================================================
-# run-ehr-steel-threads.sh — Verify EHR steel thread paths exist end-to-end
+# run-ehr-steel-threads.sh â€” Verify EHR steel thread paths exist end-to-end
 #
-# Each steel thread traces: UI Route → Hook → BFF Controller → Domain → DB → Outbox
+# Each steel thread traces: UI Route â†’ Hook â†’ BFF Controller â†’ Domain â†’ DB â†’ Outbox
 # ============================================================================
 set -euo pipefail
 
@@ -71,86 +71,86 @@ echo " EHR Steel Thread Verification"
 echo "============================================"
 echo ""
 
-thread "Patient Search → Queue" \
-  "ui/experience/src/app/queue/search/page.tsx" \
-  "ui/experience/src/hooks/queries/usePatients.ts" \
+thread "Patient Search â†’ Queue" \
+  "ui/one-ui-shell/src/app/queue/search/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/usePatients.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Patient.java" \
   "CREATE TABLE patients"
 
 thread "Encounter Lifecycle" \
-  "ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx" \
-  "ui/experience/src/hooks/queries/useEncounters.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useEncounters.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Encounter.java" \
   "CREATE TABLE encounters"
 
 thread "Vitals Capture" \
-  "ui/experience/src/app/ehr/[patientId]/vitals/page.tsx" \
-  "ui/experience/src/hooks/queries/useVitals.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/vitals/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useVitals.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitalsController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/VitalsRecord.java" \
   "CREATE TABLE vitals_records"
 
 thread "Clinical Notes" \
-  "ui/experience/src/app/ehr/[patientId]/notes/page.tsx" \
-  "ui/experience/src/hooks/queries/useClinicalNotes.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/notes/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useClinicalNotes.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalNotesController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/ClinicalNote.java" \
   "CREATE TABLE clinical_notes"
 
 thread "Lab Orders" \
-  "ui/experience/src/app/ehr/[patientId]/orders/page.tsx" \
-  "ui/experience/src/hooks/queries/useLabOrders.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useLabOrders.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/LabOrder.java" \
   "CREATE TABLE lab_orders"
 
 thread "Referrals" \
-  "ui/experience/src/app/ehr/[patientId]/referrals/page.tsx" \
-  "ui/experience/src/hooks/queries/useReferrals.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/referrals/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useReferrals.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReferralsController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Referral.java" \
   "CREATE TABLE referrals"
 
 thread "Allergies" \
-  "ui/experience/src/app/ehr/[patientId]/allergies/page.tsx" \
-  "ui/experience/src/hooks/queries/useAllergies.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/allergies/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useAllergies.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AllergiesController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Allergy.java" \
   "CREATE TABLE allergies"
 
 thread "Conditions" \
-  "ui/experience/src/app/ehr/[patientId]/conditions/page.tsx" \
-  "ui/experience/src/hooks/queries/useConditions.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/conditions/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useConditions.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ConditionsController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Condition.java" \
   "CREATE TABLE conditions"
 
 thread "Immunizations" \
-  "ui/experience/src/app/ehr/[patientId]/immunizations/page.tsx" \
-  "ui/experience/src/hooks/queries/useImmunizations.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/immunizations/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useImmunizations.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ImmunizationsController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Immunization.java" \
   "CREATE TABLE immunizations"
 
 thread "Pharmacy / Prescriptions" \
-  "ui/experience/src/app/ehr/[patientId]/medications/page.tsx" \
-  "ui/experience/src/hooks/queries/usePharmacy.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/medications/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/usePharmacy.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PharmacyController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/Prescription.java" \
   "CREATE TABLE prescriptions"
 
 thread "Clinical Timeline" \
-  "ui/experience/src/app/ehr/[patientId]/timeline/page.tsx" \
-  "ui/experience/src/hooks/queries/useTimeline.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/timeline/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useTimeline.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalTimelineController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/ClinicalTimelineEntry.java" \
   "CREATE TABLE clinical_timeline"
 
 thread "Clinical Documents" \
-  "ui/experience/src/app/ehr/[patientId]/documents/page.tsx" \
-  "ui/experience/src/hooks/queries/useClinicalDocuments.ts" \
+  "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.tsx" \
+  "ui/one-ui-shell/src/hooks/queries/useClinicalDocuments.ts" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalDocumentsController.java" \
   "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/domain/ClinicalDocument.java" \
   "CREATE TABLE clinical_documents"

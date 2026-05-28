@@ -11,8 +11,9 @@ Impilo vNext is a **Health Operating System (HOS)** — a sovereign-grade, secur
 There is **one** actor-facing web orchestration layer: zones, routes, trust-header-aware
 API usage, and BFF-backed flows that operators and citizens see as a single Impilo
 experience. The workspace and Docker artifact **`one-ui-shell`** is how that layer is built
-and shipped; it is **not** a second product alongside “Experience.” Deprecated paths (for
-example `ui/experience/`) and multiple Keycloak **client** names are continuity and wiring
+and shipped; it is **not** a second product alongside "Experience." The previous
+`ui/experience/` fork has been merged into `ui/one-ui-shell` via the GAP-010 convergence
+(2026-05-28) and removed. Multiple Keycloak **client** names remain continuity and wiring
 only — they MUST NOT imply a second default web entry or a parallel UX stack. See doctrine
 [§2.0](docs/doctrine/health-os-doctrine.md).
 
@@ -193,7 +194,7 @@ bash compose/experience/smoke-test.sh         # Smoke test after compose up
 - Framework: **Vitest** with jsdom environment
 - Test files: `src/**/*.test.{ts,tsx}`
 - Setup: `src/test/setup.ts`
-- E2E: **Playwright** (`playwright.config.ts` at `ui/experience/`)
+- E2E: **Playwright** (`playwright.config.ts` at `ui/one-ui-shell/`)
 - Run unit: `npm test` | Run E2E: `npm run e2e`
 
 ### Backend

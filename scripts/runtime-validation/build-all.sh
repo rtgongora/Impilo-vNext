@@ -52,7 +52,7 @@ fi
 echo ""
 echo -e "${BOLD}=== Step 2: Build Experience UI ===${NC}"
 RC=0
-(cd "$ROOT_DIR/ui/experience" && npm install --legacy-peer-deps && npm run build) || RC=$?
+(cd "$ROOT_DIR/ui/one-ui-shell" && npm install --legacy-peer-deps && npm run build) || RC=$?
 report "Experience UI build" "$RC"
 if [[ "$RC" -ne 0 ]]; then
   CRITICAL_FAIL=1

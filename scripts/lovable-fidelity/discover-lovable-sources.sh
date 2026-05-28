@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# discover-lovable-sources.sh — Identifies and classifies Lovable reference materials
+# discover-lovable-sources.sh â€” Identifies and classifies Lovable reference materials
 set -euo pipefail
 
 echo "=== Lovable Source Discovery ==="
@@ -66,9 +66,9 @@ fi
 
 echo ""
 echo "--- Route Registry ---"
-if [ -f "ui/experience/src/lib/routes.ts" ]; then
-  route_count=$(grep -c "path:" ui/experience/src/lib/routes.ts 2>/dev/null || echo "0")
-  echo "  [CANONICAL] ui/experience/src/lib/routes.ts ($route_count routes defined)"
+if [ -f "ui/one-ui-shell/src/lib/routes.ts" ]; then
+  route_count=$(grep -c "path:" ui/one-ui-shell/src/lib/routes.ts 2>/dev/null || echo "0")
+  echo "  [CANONICAL] ui/one-ui-shell/src/lib/routes.ts ($route_count routes defined)"
 fi
 
 echo ""

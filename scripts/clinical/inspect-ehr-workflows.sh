@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# inspect-ehr-workflows.sh — Inventory all EHR workflow surfaces
+# inspect-ehr-workflows.sh â€” Inventory all EHR workflow surfaces
 #
 # Checks for the presence and completeness of:
 #   1. Patient search/identity resolution
@@ -49,34 +49,34 @@ echo ""
 
 # 1. Patient Search / Identity Resolution
 echo "1. Patient Search / Identity Resolution"
-check "UI: queue/search page exists" test -f "$REPO_ROOT/ui/experience/src/app/queue/search/page.tsx"
-check "UI: queue/walk-in page exists" test -f "$REPO_ROOT/ui/experience/src/app/queue/walk-in/page.tsx"
-check "Hook: usePatients exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/usePatients.ts"
+check "UI: queue/search page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/queue/search/page.tsx"
+check "UI: queue/walk-in page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/queue/walk-in/page.tsx"
+check "Hook: usePatients exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/usePatients.ts"
 check "BFF: PatientController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientController.java"
 check "Mobile: PatientLookupScreen exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/PatientLookupScreen.tsx"
 echo ""
 
 # 2. Registration / Demographic Update
 echo "2. Registration / Demographic Update"
-check "UI: walk-in registration with new patient form" grep -q "Register New Patient" "$REPO_ROOT/ui/experience/src/app/queue/walk-in/page.tsx"
+check "UI: walk-in registration with new patient form" grep -q "Register New Patient" "$REPO_ROOT/ui/one-ui-shell/src/app/queue/walk-in/page.tsx"
 check "BFF: Patient creation endpoint" grep -q "POST" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PatientController.java"
 check "DB: patients table" grep -q "CREATE TABLE patients" "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V3__golden_path_tables.sql"
 echo ""
 
 # 3. Encounter Start
 echo "3. Encounter Start"
-check "UI: encounter page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
-check "UI: encounters list exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounters/page.tsx"
-check "Hook: useCreateEncounter exists" grep -q "useCreateEncounter" "$REPO_ROOT/ui/experience/src/hooks/queries/useEncounters.ts"
+check "UI: encounter page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
+check "UI: encounters list exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx"
+check "Hook: useCreateEncounter exists" grep -q "useCreateEncounter" "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useEncounters.ts"
 check "BFF: EncounterController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
 check "BFF: encounter.created event" grep -q "encounter.created" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
 echo ""
 
 # 4. Vitals Capture
 echo "4. Vitals Capture"
-check "UI: vitals page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/vitals/page.tsx"
-check "UI: vitals save in encounter page" grep -q "handleSaveVitals" "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
-check "Hook: useVitals exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useVitals.ts"
+check "UI: vitals page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/vitals/page.tsx"
+check "UI: vitals save in encounter page" grep -q "handleSaveVitals" "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
+check "Hook: useVitals exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useVitals.ts"
 check "BFF: VitalsController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitalsController.java"
 check "DB: vitals_records table" grep -q "vitals_records" "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V6__clinical_domain_tables.sql"
 check "Mobile: VitalsPanel exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/VitalsPanel.tsx"
@@ -84,9 +84,9 @@ echo ""
 
 # 5. Clinical Notes / Assessment
 echo "5. Clinical Notes / Assessment"
-check "UI: notes page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/notes/page.tsx"
-check "UI: notes save in encounter page" grep -q "handleSaveNote" "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
-check "Hook: useClinicalNotes exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useClinicalNotes.ts"
+check "UI: notes page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/notes/page.tsx"
+check "UI: notes save in encounter page" grep -q "handleSaveNote" "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
+check "Hook: useClinicalNotes exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useClinicalNotes.ts"
 check "BFF: ClinicalNotesController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalNotesController.java"
 check "DB: clinical_notes table" grep -q "clinical_notes" "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V6__clinical_domain_tables.sql"
 check "Mobile: NotesPanel exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/NotesPanel.tsx"
@@ -94,8 +94,8 @@ echo ""
 
 # 6. Orders Placement
 echo "6. Orders Placement"
-check "UI: orders page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/orders/page.tsx"
-check "Hook: useLabOrders exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useLabOrders.ts"
+check "UI: orders page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx"
+check "Hook: useLabOrders exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useLabOrders.ts"
 check "BFF: LabOrdersController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersController.java"
 check "DB: lab_orders table" grep -q "lab_orders" "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V6__clinical_domain_tables.sql"
 check "Mobile: LabOrderPanel exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx"
@@ -103,7 +103,7 @@ echo ""
 
 # 7. Results Viewing / Reconciliation
 echo "7. Results Viewing / Reconciliation"
-check "UI: results page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/results/page.tsx"
+check "UI: results page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx"
 check "Mobile: ResultsViewScreen exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/ResultsViewScreen.tsx"
 check "BFF: MobileResultsController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileResultsController.java"
 check "Citizen: ResultsSection exists" test -f "$REPO_ROOT/apps/mobile/citizen-app/src/screens/personal/ResultsSection.tsx"
@@ -111,7 +111,7 @@ echo ""
 
 # 8. Medication / Dispense Flow
 echo "8. Medication / Dispense Flow"
-check "UI: medications page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/medications/page.tsx"
+check "UI: medications page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/medications/page.tsx"
 check "BFF: PharmacyController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PharmacyController.java"
 check "BFF: prescription creation" grep -q "createPrescription\|CreatePrescriptionRequest" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PharmacyController.java"
 check "BFF: dispense endpoint" grep -q "dispense" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PharmacyController.java"
@@ -121,22 +121,22 @@ echo ""
 
 # 9. Referrals / Follow-up
 echo "9. Referrals / Follow-up"
-check "UI: referrals page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/referrals/page.tsx"
-check "Hook: useReferrals exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useReferrals.ts"
+check "UI: referrals page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/referrals/page.tsx"
+check "Hook: useReferrals exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useReferrals.ts"
 check "BFF: ReferralsController exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ReferralsController.java"
 check "Mobile: ReferralPanel exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/ReferralPanel.tsx"
 echo ""
 
 # 10. Discharge / Encounter Close
 echo "10. Discharge / Encounter Close"
-check "UI: discharge page exists" test -f "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/discharge/page.tsx"
-check "Hook: useDischarge exists" test -f "$REPO_ROOT/ui/experience/src/hooks/queries/useDischarge.ts"
+check "UI: discharge page exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx"
+check "Hook: useDischarge exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/hooks/queries/useDischarge.ts"
 check "BFF: discharge endpoint" grep -q "discharge" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
 check "BFF: encounter.discharged event" grep -q "encounter.discharged" "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EncounterController.java"
 check "DB: discharge columns" test -f "$REPO_ROOT/services/experience-bff/src/main/resources/db/migration/V8__encounter_discharge_columns.sql"
 check "Mobile: DischargeScreen exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/screens/provider/DischargeScreen.tsx"
 check "Mobile BFF: MobileDischargeController" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileDischargeController.java"
-check "UI: discharge link in encounter page" grep -q "Discharge" "$REPO_ROOT/ui/experience/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
+check "UI: discharge link in encounter page" grep -q "Discharge" "$REPO_ROOT/ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx"
 echo ""
 
 # 11. Role / Capability Restrictions
@@ -144,7 +144,7 @@ echo "11. Role / Capability Restrictions"
 check "BFF: SecurityConfig exists" test -f "$REPO_ROOT/services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/config/SecurityConfig.java"
 check "Trust: TSHEPO ext_authz" test -d "$REPO_ROOT/services/tshepo-service"
 check "Mobile: AuthGuard exists" test -f "$REPO_ROOT/apps/mobile/provider-app/src/navigation/AuthGuard.tsx"
-check "UI: AuthGuardProvider exists" test -f "$REPO_ROOT/ui/experience/src/providers/AuthGuardProvider.tsx"
+check "UI: AuthGuardProvider exists" test -f "$REPO_ROOT/ui/one-ui-shell/src/providers/AuthGuardProvider.tsx"
 echo ""
 
 # 12. Eventing / Outbox Side-Effects

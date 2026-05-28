@@ -7311,55 +7311,6 @@ services:
   deduplication_group: ''
   backlog_priority: None
   last_validated_on: '2026-05-15'
-- canonical_name: experience
-  display_name: Experience
-  module_path: ui/experience
-  type: frontend_app
-  implementation_status: live
-  ring: ui
-  ring_display: User Interface
-  primary_plane: experience
-  primary_plane_display: Experience
-  category: user_interface
-  category_display: User Interface
-  secondary_planes: []
-  secondary_plane_displays: []
-  system_of_record_for: []
-  consumes:
-  - experience-bff
-  consumed_by: []
-  frontend_surface: /experience
-  api_surface: ''
-  events_published: []
-  events_consumed: []
-  database_schema: null
-  port: null
-  deployment_unit: ui/experience
-  readiness_status: baseline-assessed
-  boundary_notes: Frontend composition only; system-of-record ownership remains in
-    backend services.
-  forbidden_responsibilities: []
-  confidence: high
-  evidence_files:
-  - ui/experience
-  - ui/experience/package.json
-  documentation_gap: ''
-  implementation_gap: ''
-  frontend_gap: ''
-  possible_duplicate: ''
-  unresolved_questions: []
-  activation_state: Activated
-  contract_alignment_status: Not Applicable
-  contract_evidence: []
-  surfacing_quality: Complete
-  integration_status: Integrated
-  remediation_status: Fixed
-  remediation_notes: ''
-  owner_decision_required: false
-  canonical_service: ''
-  deduplication_group: ''
-  backlog_priority: None
-  last_validated_on: '2026-05-15'
 - canonical_name: inventory-web
   display_name: Inventory Web
   module_path: ui/inventory-web

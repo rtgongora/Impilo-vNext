@@ -107,7 +107,7 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - One coherent experience shell, not fragmented portals
 - Role-based: adapts visibility/enablement by active role and context
 - "Unified" ≠ identical — workspaces may differ but share governed trust model
-- Experience orchestration shell is canonicalized in `ui/one-ui-shell`; deprecated paths such as `ui/experience/` are continuity surfaces, not parallel ownership.
+- Experience orchestration shell is canonicalized in `ui/one-ui-shell`. The previous `ui/experience/` fork has been merged in via the GAP-010 convergence (2026-05-28) and removed; there is no parallel ownership.
 - **Intelligent**: searchable, conversational, context-aware, proactive guidance
 - **Consumer-grade wellness**: diet, sleep, fitness, clubs, coaching — genuine product pillars
 - **Graduated friction**: MINIMAL (wellness/search) → MAXIMUM (prescribing/claims)
@@ -142,7 +142,7 @@ Trust headers defined in `CompanionHeaders.java` ↔ `api-client.ts` ↔ `envoy.
 - Enforce `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` during feature delivery.
 
 ## Golden Thread (UI → DB proof path)
-1. `ui/experience/src/lib/api-client.ts` — injects trust headers
+1. `ui/one-ui-shell/src/lib/api-client.ts` — injects trust headers
 2. `services/tshepo-service/.../api/AuthorizeController.java` — ext_authz endpoint
 3. `services/tshepo-service/.../core/PolicyEngine.java` — RBAC/ABAC + serialized audit chain
 

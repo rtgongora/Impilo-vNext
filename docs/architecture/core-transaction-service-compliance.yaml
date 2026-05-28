@@ -2559,34 +2559,6 @@ services:
   q20_health_system_impact: improves trusted transaction execution and observability
   coverage: complete
   notes: Generated baseline; refine per service owner where needed.
-- service: experience
-  applies: true
-  q01_transaction_types: *id009
-  q02_lifecycle_stages: *id010
-  q03_actor_served: provider
-  q04_source_of_truth_plane: experience
-  q05_source_of_truth_service: experience
-  q06_states_create_read_update_close: stateful transitions handled per service boundary;
-    see contracts/core-transaction.ts
-  q07_emitted_events:
-  - none
-  q08_permission_or_consent: tshepo-authz and/or service policy checks
-  q09_audit_event: auditable through outbox/trust context/correlation headers
-  q10_ui_surface: /experience
-  q11_bff_or_contract: none
-  q12_tests:
-  - ui/experience
-  - ui/experience/package.json
-  q13_analytics_reporting_output: service-metrics
-  q14_offline_federated_behavior: federated-compatible; offline behavior service-specific
-  q15_failure_mode_behavior: fail-safe with retries/timeouts/error envelopes
-  q16_improves_access_delivery_continuity_accountability_intelligence: 'yes'
-  q17_duplicate_domain_truth_check: no-duplicate-truth-required
-  q18_person_centered_continuity: supported
-  q19_provider_burden_impact: reduced when integrated with experience workflows
-  q20_health_system_impact: improves trusted transaction execution and observability
-  coverage: complete
-  notes: Generated baseline; refine per service owner where needed.
 - service: inventory-web
   applies: true
   q01_transaction_types: *id009

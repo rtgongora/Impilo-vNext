@@ -4,7 +4,9 @@
  * COSTA — Costing & Tariffs hub.
  * Route: /finance/costa | pageTitle: "COSTA — Costing & Tariffs"
  *
- * Canonical replacement for the deprecated {@code ui/experience/src/app/finance/costa/page.tsx}.
+ * Canonical COSTA hub for the unified Experience shell. Originally produced as the
+ * canonical replacement for the deprecated {@code ui/experience/src/app/finance/costa/page.tsx},
+ * which has been retired via the GAP-010 convergence (2026-05-28).
  * Closes audit gap G-1 in {@code docs/audits/costa-mushex-experience-layer-wiring-audit.md}.
  *
  * This is a READ-ONLY hub: it orients the user and surfaces small live signals

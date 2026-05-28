@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Writes ui/experience/src/lib/registry-service-module-refs.ts from services-registry.yaml.
+ * Writes ui/one-ui-shell/src/lib/registry-service-module-refs.ts from services-registry.yaml.
  * Optional catalog for UI / tooling (not used by completeness scoring).
  */
 import fs from 'node:fs';
@@ -13,7 +13,7 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 const REGISTRY_PATH = path.join(REPO_ROOT, 'docs/registry/services-registry.yaml');
 const OUT = path.join(
   REPO_ROOT,
-  'ui/experience/src/lib/registry-service-module-refs.ts'
+  'ui/one-ui-shell/src/lib/registry-service-module-refs.ts'
 );
 
 function main() {
