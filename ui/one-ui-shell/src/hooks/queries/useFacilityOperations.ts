@@ -299,6 +299,32 @@ export interface QueueTypePerfView {
   inService: number;
 }
 
+/** Row from POST /internal/v1/operations/facility-queue-snapshots */
+export type FacilityQueueSnapshotRow = {
+  facility_id: string;
+  waiting: number;
+  called: number;
+  inService: number;
+  completed: number;
+  noShow: number;
+  avgWaitSeconds: number;
+  total?: number;
+  source?: string;
+  error?: string;
+};
+
+export function useFacilityQueueSnapshots(facilityIds: string[] | undefined) {
+  return useQuery({
+    queryKey: ["facility-queue-snapshots", facilityIds?.join(",") ?? ""],
+    enabled: !!facilityIds && facilityIds.length > 0 && facilityIds.length <= 40,
+    queryFn: () =>
+      apiClient.post<{ data: FacilityQueueSnapshotRow[] }>(
+        "/internal/v1/operations/facility-queue-snapshots",
+        { facility_ids: facilityIds },
+      ),
+  });
+}
+
 export function buildQueuePerformanceByType(entries: QueueEntryResource[]): QueueTypePerfView[] {
   const map = new Map<string, { waiting: number; sumMin: number; n: number }>();
   for (const e of entries) {
