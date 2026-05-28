@@ -1,11 +1,11 @@
 "use client";
 
 /**
- * Encounter — Active encounter page with vitals capture, notes, orders, referrals, and close.
+ * Encounter â€” Active encounter page with vitals capture, notes, orders, referrals, and close.
  * Route: /ehr/[patientId]/encounter/[encounterId] | pageTitle: "Encounter"
  */
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -31,8 +31,18 @@ import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
+import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
+import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
+import {
+  ActiveDataEntryLayout,
+  ANTENATAL_CONTACT_1_FORM,
+  clinicalFormPatientContextFromPatient,
+  DakFormRenderer,
+  type ClinicalFormRuntimeContext,
+} from "@/lib/clinical-forms";
+import { usePatient } from "@/hooks/queries/usePatients";
 import { useClinicalAlerts } from "@/hooks/useClinicalAlerts";
-import { useEncounter, useCloseEncounter } from "@/hooks/queries/useEncounters";
+import { useEncounter, useCloseEncounter, useUpdateEncounterPathwayProtocol } from "@/hooks/queries/useEncounters";
 import { useReferrals, type ReferralResource } from "@/hooks/queries/useReferrals";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useQuery } from "@tanstack/react-query";
@@ -46,8 +56,8 @@ export default function EncounterPage() {
   const { isClinical, isPrescriber, isDispenser } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
 
-  // Determine role-specific form variant — check most specific role first
-  const roles = user?.roles ?? [];
+  // Determine role-specific form variant â€” check most specific role first
+  const roles = useMemo(() => user?.roles ?? [], [user?.roles]);
   const activeRole =
     roles.includes("PHYSIOTHERAPIST") ? "PHYSIOTHERAPIST"
     : roles.includes("OCCUPATIONAL_THERAPIST") ? "OCCUPATIONAL_THERAPIST"
@@ -72,8 +82,10 @@ export default function EncounterPage() {
     : "CLINICIAN";
 
   const { data: encounterData, isLoading: isLoadingEncounter } = useEncounter(encounterId);
+  const { data: patientData } = usePatient(patientId);
   const { data: referralsData } = useReferrals(patientId);
   const closeEncounter = useCloseEncounter();
+  const updatePathwayProtocol = useUpdateEncounterPathwayProtocol();
 
   // Fetch existing triage for this encounter
   const { data: triageData } = useQuery<ApiResponse<Array<{ id: string; attributes: Record<string, unknown> }>>>({
@@ -123,6 +135,12 @@ export default function EncounterPage() {
 
   const encounter = encounterData?.data;
 
+  useEffect(() => {
+    const attrs = encounter?.attributes;
+    setPathwayRef(String(attrs?.pathwayRef ?? ""));
+    setProtocolRef(String(attrs?.protocolRef ?? ""));
+  }, [encounter?.attributes]);
+
   // Vitals form state
   const [systolic, setSystolic] = useState("");
   const [diastolic, setDiastolic] = useState("");
@@ -149,6 +167,33 @@ export default function EncounterPage() {
   const [noteError, setNoteError] = useState<string | null>(null);
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [pathwayRef, setPathwayRef] = useState("");
+  const [protocolRef, setProtocolRef] = useState("");
+  const [pathwaySaved, setPathwaySaved] = useState(false);
+  const [pathwayError, setPathwayError] = useState<string | null>(null);
+  /** WHO DAKâ€“aligned structured ANC form takes primary column; journey moves to side rail. */
+  const [structuredFormFocus, setStructuredFormFocus] = useState(false);
+
+  const dakRuntime: ClinicalFormRuntimeContext | null = useMemo(() => {
+    if (!encounter || !patientData?.data) return null;
+    const et = String(encounter.attributes.encounterType ?? "").toUpperCase();
+    const anc =
+      et.includes("ANC") ||
+      et.includes("ANTENATAL") ||
+      et.includes("MATERNITY") ||
+      et.includes("OBSTETRIC");
+    const g = (patientData.data.attributes.gender ?? "").toUpperCase();
+    const pregnant = anc && (g === "FEMALE" || g === "F") ? true : null;
+    const patientCtx = clinicalFormPatientContextFromPatient(patientData.data, {
+      programmes: anc ? ["ANC"] : [],
+      pregnant,
+    });
+    return {
+      patient: patientCtx,
+      encounterType: String(encounter.attributes.encounterType ?? "UNKNOWN"),
+      providerRoles: roles,
+    };
+  }, [encounter, patientData, roles]);
 
   // Examination findings state (Lovable-aligned system-by-system capture)
   const [examGeneral, setExamGeneral] = useState("");
@@ -167,7 +212,7 @@ export default function EncounterPage() {
   const DANGER_SIGNS = [
     "Airway compromise", "Breathing difficulty", "Circulation failure",
     "Altered consciousness", "Severe pain", "Active bleeding",
-    "Convulsions", "Dehydration (severe)", "High fever (>39°C)", "Shock",
+    "Convulsions", "Dehydration (severe)", "High fever (>39Â°C)", "Shock",
   ];
   const [dangerSigns, setDangerSigns] = useState<Record<string, boolean>>({});
   // Quick triage vitals
@@ -323,9 +368,24 @@ export default function EncounterPage() {
     );
   }
 
+  async function handleUpdatePathwayProtocol() {
+    setPathwaySaved(false);
+    setPathwayError(null);
+    try {
+      await updatePathwayProtocol.mutateAsync({
+        id: encounterId,
+        pathway_ref: pathwayRef.trim() || null,
+        protocol_ref: protocolRef.trim() || null,
+      });
+      setPathwaySaved(true);
+    } catch {
+      setPathwayError("Unable to update pathway/protocol linkage. Guidance services may be unavailable.");
+    }
+  }
+
   return (
     <EHRLayout>
-      <PageShell title="Encounter">
+    <PageShell title="Encounter">
         <div className="mb-4">
           <Link
             href={`/ehr/${patientId}`}
@@ -349,7 +409,9 @@ export default function EncounterPage() {
         ) : (
           <div className="space-y-6">
             {/* Clinical Decision Support Alerts */}
-            <ClinicalAlerts alerts={clinicalAlerts} />
+            {!structuredFormFocus && <ClinicalAlerts alerts={clinicalAlerts} />}
+
+            {!structuredFormFocus && <PatientJourneyContextPanel patientId={patientId} variant="compact" />}
 
             <ClinicalReviewHeader
               badge="Encounter closure"
@@ -390,6 +452,56 @@ export default function EncounterPage() {
                 },
               ]}
             />
+
+            {isClinical && isActive && dakRuntime && (
+              <div className="rounded-lg border border-impilo-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-900">Structured clinical forms (WHO DAK pattern)</p>
+                    <p className="text-[11px] text-gray-500">
+                      Antenatal first-contact exemplar â€” coded fields, decision-support hooks, indicator & FHIR mapping utilities.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setStructuredFormFocus((v) => !v)}
+                    className="shrink-0 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700"
+                  >
+                    {structuredFormFocus ? "Exit focused entry" : "Focus ANC structured form"}
+                  </button>
+                </div>
+                <div className="mt-3">
+                  {structuredFormFocus ? (
+                    <ActiveDataEntryLayout
+                      active
+                      onRequestExit={() => setStructuredFormFocus(false)}
+                      contextRail={
+                        <div className="space-y-2">
+                          <p className="text-[10px] font-semibold uppercase text-gray-500">Patient context</p>
+                          <PatientJourneyContextPanel patientId={patientId} variant="compact" />
+                        </div>
+                      }
+                      alerts={<ClinicalAlerts alerts={clinicalAlerts} />}
+                      primary={
+                        <DakFormRenderer
+                          form={ANTENATAL_CONTACT_1_FORM}
+                          runtime={dakRuntime}
+                          patientId={patientId}
+                          encounterId={encounterId}
+                        />
+                      }
+                    />
+                  ) : (
+                    <DakFormRenderer
+                      form={ANTENATAL_CONTACT_1_FORM}
+                      runtime={dakRuntime}
+                      patientId={patientId}
+                      encounterId={encounterId}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">
@@ -443,7 +555,7 @@ export default function EncounterPage() {
                     </Link>
                   )}
                 </div>
-                {/* Quick action links — visible only to clinical staff */}
+                {/* Quick action links â€” visible only to clinical staff */}
                 {isActive && isClinical && (
                   <div className="flex gap-2">
                     <Link
@@ -477,7 +589,56 @@ export default function EncounterPage() {
               </div>
             </div>
 
-            {/* Existing Triage Display — show when triage already recorded */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">Care pathway and protocol</h3>
+                  <p className="text-xs text-gray-500">
+                    Link this encounter to a clinical pathway/protocol reference. Decision-support execution remains owned by guidance/rules/clinical-knowledge services.
+                  </p>
+                </div>
+                {pathwaySaved && (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Updated
+                  </span>
+                )}
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Pathway reference</label>
+                  <input
+                    value={pathwayRef}
+                    onChange={(e) => setPathwayRef(e.target.value)}
+                    disabled={!isActive}
+                    placeholder="e.g. PATH-SEPSIS-01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Protocol reference</label>
+                  <input
+                    value={protocolRef}
+                    onChange={(e) => setProtocolRef(e.target.value)}
+                    disabled={!isActive}
+                    placeholder="e.g. PROTO-CRIT-01"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400"
+                  />
+                </div>
+              </div>
+              {pathwayError && <p className="mt-2 text-xs text-red-600">{pathwayError}</p>}
+              {isActive && (
+                <button
+                  onClick={handleUpdatePathwayProtocol}
+                  disabled={updatePathwayProtocol.isPending}
+                  className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-impilo-600 text-white text-xs font-medium rounded-lg hover:bg-impilo-700 disabled:opacity-50"
+                >
+                  {updatePathwayProtocol.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                  Update pathway/protocol
+                </button>
+              )}
+            </div>
+
+            {/* Existing Triage Display â€” show when triage already recorded */}
             {existingTriage && (
               <div className={`rounded-lg border-2 p-4 ${
                 existingTriage.attributes.acuity === 1 ? "border-red-400 bg-red-50" :
@@ -491,7 +652,7 @@ export default function EncounterPage() {
                     <AlertTriangle className="w-5 h-5" />
                     <div>
                       <span className="text-sm font-semibold">
-                        Triage: P{String(existingTriage.attributes.acuity)} — {
+                        Triage: P{String(existingTriage.attributes.acuity)} â€” {
                           existingTriage.attributes.acuity === 1 ? "Resuscitation" :
                           existingTriage.attributes.acuity === 2 ? "Emergency" :
                           existingTriage.attributes.acuity === 3 ? "Urgent" :
@@ -515,10 +676,10 @@ export default function EncounterPage() {
                         <span>HR: {String((existingTriage.attributes.vitals as Record<string, unknown>).heart_rate)}</span>
                       )}
                       {(existingTriage.attributes.vitals as Record<string, unknown>).oxygen_saturation != null && (
-                        <span>SpO₂: {String((existingTriage.attributes.vitals as Record<string, unknown>).oxygen_saturation)}%</span>
+                        <span>SpOâ‚‚: {String((existingTriage.attributes.vitals as Record<string, unknown>).oxygen_saturation)}%</span>
                       )}
                       {(existingTriage.attributes.vitals as Record<string, unknown>).temperature != null && (
-                        <span>T: {String((existingTriage.attributes.vitals as Record<string, unknown>).temperature)}°C</span>
+                        <span>T: {String((existingTriage.attributes.vitals as Record<string, unknown>).temperature)}Â°C</span>
                       )}
                     </div>
                   )}
@@ -539,7 +700,7 @@ export default function EncounterPage() {
               </div>
             )}
 
-            {/* Triage / Acuity — Lovable TriagePanel alignment */}
+            {/* Triage / Acuity â€” Lovable TriagePanel alignment */}
             {isActive && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -629,11 +790,11 @@ export default function EncounterPage() {
                     </div>
                     <div>
                       <label className="block text-[10px] text-gray-500 mb-0.5">Temperature</label>
-                      <input type="number" step="0.1" value={tvTemp} onChange={(e) => setTvTemp(e.target.value)} placeholder="°C"
+                      <input type="number" step="0.1" value={tvTemp} onChange={(e) => setTvTemp(e.target.value)} placeholder="Â°C"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 mb-0.5">SpO₂</label>
+                      <label className="block text-[10px] text-gray-500 mb-0.5">SpOâ‚‚</label>
                       <input type="number" value={tvSpO2} onChange={(e) => setTvSpO2(e.target.value)} placeholder="%"
                         className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" />
                     </div>
@@ -702,7 +863,7 @@ export default function EncounterPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Temperature (°C)</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Temperature (Â°C)</label>
                     <input type="number" step="0.1" value={temperature} onChange={(e) => setTemperature(e.target.value)} placeholder="36.5" disabled={!isActive}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400 disabled:bg-gray-50 disabled:text-gray-400" />
                   </div>
@@ -733,6 +894,18 @@ export default function EncounterPage() {
                   </div>
                 </div>
                 {vitalsError && <p className="mt-2 text-xs text-red-600">{vitalsError}</p>}
+                {patientData?.data && (
+                  <EncounterVitalsGuidance
+                    ageBand={clinicalFormPatientContextFromPatient(patientData.data).ageBand}
+                    systolic={systolic}
+                    diastolic={diastolic}
+                    heartRate={heartRate}
+                    temperature={temperature}
+                    respiratoryRate={respiratoryRate}
+                    oxygenSat={oxygenSat}
+                    painScore={painScore}
+                  />
+                )}
                 {isActive && (
                   <button onClick={handleSaveVitals} disabled={vitalsSaving}
                     className="mt-4 w-full py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors">
@@ -784,7 +957,7 @@ export default function EncounterPage() {
               </div>
             </div>
 
-            {/* Examination Findings — Lovable-aligned system-by-system capture */}
+            {/* Examination Findings â€” Lovable-aligned system-by-system capture */}
             {isActive && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 <div className="flex items-center justify-between mb-4">
@@ -911,7 +1084,7 @@ export default function EncounterPage() {
               </div>
             )}
 
-            {/* Close Encounter — clinical staff only */}
+            {/* Close Encounter â€” clinical staff only */}
             {isActive && isClinical && (
               <div className="bg-white rounded-lg border border-gray-200 p-5">
                 {!showCloseConfirm ? (
