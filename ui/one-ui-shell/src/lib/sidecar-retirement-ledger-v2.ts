@@ -195,12 +195,12 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     notes: "Queue and control-tower workflows are already inside Experience.",
   },
   {
-    sidecarApp: "ui/one-ui-shell",
-    capability: "Legacy shell scaffolding",
-    oldUiPath: "ui/one-ui-shell:/",
-    newExperiencePath: "/home",
+    sidecarApp: "ui/experience",
+    capability: "Divergent web-shell fork (deprecated)",
+    oldUiPath: "ui/experience:/",
+    newExperiencePath: "/home (and the full ui/one-ui-shell route surface)",
     status: "retired sidecar path",
-    notes: "The canonical shell is ui/experience; one-ui-shell remains only as legacy scaffolding.",
+    notes: "ui/experience was a divergent evolution of the web shell. Per the GAP-010 convergence (2026-05-28), all unique capabilities have been lifted into the canonical ui/one-ui-shell and the fork is being deleted. The canonical shell is ui/one-ui-shell.",
   },
 ];
 
