@@ -51,6 +51,15 @@ test.describe("Citizen life (compose stack, no mocks)", () => {
           actorType: "CITIZEN",
         }),
       );
+      localStorage.setItem(
+        "exp:consent_accepted",
+        JSON.stringify({
+          userId: "compose-e2e-cpid-001",
+          version: "2026-04-11",
+          acceptedAt: new Date().toISOString(),
+        }),
+      );
+      localStorage.setItem("exp:consent_version", "2026-04-11");
     });
   });
 

@@ -25,37 +25,45 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/components/intelligent/NompiloContextPanel", () => ({
+  NompiloContextPanel: () => null,
+}));
+
 describe("ClinicalHubPage", () => {
   it("renders the clinical care hub with all module tiles", () => {
     render(<ClinicalHubPage />);
 
     expect(screen.getByRole("heading", { level: 1, name: "Clinical Care" })).toBeInTheDocument();
-    expect(screen.getByText("Patient encounters, assessments, and care delivery")).toBeInTheDocument();
+    expect(
+      screen.getByText("Outpatient, inpatient, emergency, orders, Rx, and clinical operations"),
+    ).toBeInTheDocument();
   });
 
-  it("shows all 11 clinical module tiles with correct links", () => {
+  it("shows Wave 20 clinical module tiles with correct links", () => {
     render(<ClinicalHubPage />);
 
     expect(screen.getByText("My Dashboard")).toBeInTheDocument();
     expect(screen.getByText("ED / Casualty")).toBeInTheDocument();
-    expect(screen.getByText("Patient Queue")).toBeInTheDocument();
-    expect(screen.getByText("Patient Encounters")).toBeInTheDocument();
-    expect(screen.getByText("Bed Management")).toBeInTheDocument();
-    expect(screen.getByText("Appointments")).toBeInTheDocument();
-    expect(screen.getByText("Shift Handoff")).toBeInTheDocument();
-    expect(screen.getByText("Control Tower")).toBeInTheDocument();
+    expect(screen.getByText("Inpatient workspace")).toBeInTheDocument();
+    expect(screen.getByText("Nursing workbench")).toBeInTheDocument();
+    expect(screen.getByText("Rx / pharmacy")).toBeInTheDocument();
+    expect(screen.getByText("Control tower")).toBeInTheDocument();
 
     expect(screen.getByRole("link", { name: /ED \/ Casualty/i })).toHaveAttribute(
       "href",
       "/clinical/emergency",
     );
-    expect(screen.getByRole("link", { name: /Appointments/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Inpatient workspace/i })).toHaveAttribute(
       "href",
-      "/scheduling",
+      "/clinical/inpatient",
     );
-    expect(screen.getByRole("link", { name: /Bed Management/i })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Nursing workbench/i })).toHaveAttribute(
       "href",
-      "/beds",
+      "/clinical/inpatient/nursing",
+    );
+    expect(screen.getByRole("link", { name: /Rx \/ pharmacy/i })).toHaveAttribute(
+      "href",
+      "/pharmacy",
     );
   });
 });

@@ -21,6 +21,18 @@ export const SHELL_APPS: AppDefinition[] = [
     weight: 0,
   },
   {
+    id: "app-command-centre",
+    appCode: "command_centre",
+    name: "Production Command Centre",
+    description: "Discover and navigate the full Health OS with status and demo paths",
+    icon: "LayoutGrid",
+    category: "system",
+    href: "/production-command-centre",
+    activeFlag: true,
+    systemAppFlag: true,
+    weight: 1,
+  },
+  {
     id: "app-learning",
     appCode: "learning",
     name: "Impilo Fundo",

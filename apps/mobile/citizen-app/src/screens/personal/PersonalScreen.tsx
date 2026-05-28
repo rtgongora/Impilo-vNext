@@ -38,7 +38,7 @@ import { CommunicationPreferencesScreen } from "./CommunicationPreferencesScreen
 import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
-import { ProviderDiscoveryScreen } from "../discover/ProviderDiscoveryScreen";
+import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 
 type PersonalTab =
   | "profile"
@@ -77,7 +77,8 @@ type PersonalTab =
   | "privacy"
   | "terms"
   | "consent"
-  | "support";
+  | "support"
+  | "prod-ready";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -97,6 +98,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "reminders", label: "Reminders", icon: "alarm" },
   { id: "timeline", label: "Timeline", icon: "time" },
   { id: "wellness", label: "Wellness", icon: "fitness" },
+  { id: "prod-ready", label: "Prod Ready", icon: "rocket" },
   { id: "finance", label: "Finance", icon: "cash" },
   { id: "challenges", label: "Challenges", icon: "trophy" },
   { id: "programs", label: "Programs", icon: "ribbon" },
@@ -163,7 +165,21 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
 
 export function PersonalScreen() {
   const [activeSection, setActiveSection] = useState<PersonalTab>("profile");
-  const SectionComponent = SECTIONS[activeSection];
+  const SectionComponent = activeSection === "prod-ready" ? null : SECTIONS[activeSection];
+
+  const sectionNavMap: Record<string, PersonalTab> = {
+    wellness: "wellness",
+    social: "timeline",
+    discover: "discover-providers",
+    care: "appointments",
+    medications: "prescriptions",
+    prescriptions: "prescriptions",
+    appointments: "appointments",
+    "discover-providers": "discover-providers",
+    "nhume-track": "nhume-track",
+    monitoring: "monitoring",
+    records: "records",
+  };
 
   return (
     <Screen>
@@ -208,7 +224,16 @@ export function PersonalScreen() {
           </ScrollView>
         </View>
         <ScrollView style={styles.sectionContainer} contentContainerStyle={styles.sectionContent}>
-          <SectionComponent />
+          {activeSection === "prod-ready" ? (
+            <ProductionReadinessJourneyScreen
+              onNavigateSection={(section) => {
+                const target = sectionNavMap[section];
+                if (target) setActiveSection(target);
+              }}
+            />
+          ) : SectionComponent ? (
+            <SectionComponent />
+          ) : null}
         </ScrollView>
       </View>
     </Screen>

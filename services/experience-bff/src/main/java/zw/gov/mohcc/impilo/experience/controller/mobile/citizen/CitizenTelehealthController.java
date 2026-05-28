@@ -34,10 +34,6 @@ public class CitizenTelehealthController {
         this.telemedicineGovernanceService = telemedicineGovernanceService;
     }
 
-    public CitizenTelehealthController(PctServiceClient pctClient) {
-        this(pctClient, null);
-    }
-
     public record RequestTeleconsultBody(
             @NotBlank String reason,
             String preferredDate,

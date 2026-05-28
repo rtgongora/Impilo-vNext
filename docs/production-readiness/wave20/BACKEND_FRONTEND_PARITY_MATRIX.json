@@ -1,0 +1,197 @@
+{
+  "wave": "20",
+  "slice": 13,
+  "generated_at": "2026-05-28T18:21:48.256Z",
+  "golden_patient": "CPID-ZW-00001",
+  "demo_journeys": [
+    {
+      "id": "clinical-rx",
+      "number": 1,
+      "title": "Core clinical / Rx",
+      "description": "Queue → encounter → Rx → MusheX → core transaction audit",
+      "web_route": "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+      "mobile_tab": "core_transaction",
+      "bff_probe": "/internal/v1/queue/entries?facility_id=f1000000-0000-0000-0000-000000000001",
+      "maturity": "partial"
+    },
+    {
+      "id": "inpatient",
+      "number": 2,
+      "title": "Inpatient",
+      "description": "Admissions, ward list, nursing workbench, discharge handoff",
+      "web_route": "/clinical/inpatient/admissions",
+      "mobile_tab": "inpatient",
+      "bff_probe": "/internal/v1/inpatient/admissions",
+      "maturity": "partial"
+    },
+    {
+      "id": "wellness",
+      "number": 3,
+      "title": "Wellness (citizen parity)",
+      "description": "Wellness profile, challenges, and community clubs",
+      "web_route": "/wellness",
+      "mobile_tab": "learning",
+      "bff_probe": "/internal/v1/wellness/challenges",
+      "maturity": "partial"
+    },
+    {
+      "id": "enterprise",
+      "number": 4,
+      "title": "Enterprise resources",
+      "description": "Inventory requisitions, marketplace, and facility ops",
+      "web_route": "/enterprise",
+      "mobile_tab": "facility",
+      "bff_probe": "/internal/v1/inventory/requisitions?facility_id=a1b2c3d4-0001-4000-8000-000000000001",
+      "maturity": "partial"
+    },
+    {
+      "id": "tele-dispatch",
+      "number": 5,
+      "title": "Telemedicine → dispatch",
+      "description": "Telehealth session → Rx journey → Nhume / Ndila ops",
+      "web_route": "/telemedicine",
+      "mobile_tab": "telemedicine",
+      "bff_probe": "/internal/v1/mobile/provider/telemedicine/sessions",
+      "maturity": "partial"
+    },
+    {
+      "id": "public-health",
+      "number": 6,
+      "title": "Public health + geo",
+      "description": "Field tasks, surveillance, and Ndila tile config",
+      "web_route": "/public-health",
+      "mobile_tab": "ph_field_tasks",
+      "bff_probe": "/internal/v1/ndila/tiles/config",
+      "maturity": "partial"
+    },
+    {
+      "id": "data-intel",
+      "number": 7,
+      "title": "Data & intelligence",
+      "description": "Integration hub routes, pipelines, audit intelligence",
+      "web_route": "/data-intelligence/pipelines",
+      "mobile_tab": "ops_reports",
+      "bff_probe": "/internal/v1/integration-hub/routes",
+      "maturity": "partial"
+    }
+  ],
+  "sovereign_domains": [
+    {
+      "domain_id": "pharmacy",
+      "plane": "Clinical / Rx",
+      "backend": "pharmacy-service",
+      "bff_probe": "/internal/v1/pharmacy/prescriptions?patient_id=CPID-ZW-00001",
+      "web_route": "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+      "mobile_surface": "provider:pharmacy / core_transaction",
+      "compose": "docker-compose.sovereign.yml",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "costa",
+      "plane": "Finance",
+      "backend": "costing-engine-service",
+      "bff_probe": "/internal/v1/finance/billing?page=0&size=1",
+      "web_route": "/finance/billing",
+      "mobile_surface": "provider:finance / billing",
+      "compose": "docker-compose.sovereign.yml",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "mushex",
+      "plane": "Finance",
+      "backend": "mushex-service",
+      "bff_probe": "/internal/v1/finance/payer-ops/payment-intents?sourceType=ADHOC&sourceId=CPID-ZW-00001",
+      "web_route": "/finance/payer-ops",
+      "mobile_surface": "provider:finance / billing",
+      "compose": "docker-compose.sovereign.yml",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "dispatch",
+      "plane": "Logistics",
+      "backend": "dispatch-service",
+      "bff_probe": "/internal/v1/dispatch/deliveries",
+      "web_route": "/pharmacy/transaction-journey",
+      "mobile_surface": "provider:workflow_dispatch",
+      "compose": "docker-compose.sovereign.yml",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "nhume",
+      "plane": "Logistics",
+      "backend": "nhume-service (host)",
+      "bff_probe": "/internal/v1/nhume/deliveries",
+      "web_route": "/nhume",
+      "mobile_surface": "citizen:nhume-track",
+      "compose": "host :8210",
+      "maturity": "not_wired"
+    },
+    {
+      "domain_id": "ndila",
+      "plane": "Public health + geo",
+      "backend": "ndila-service (host)",
+      "bff_probe": "/internal/v1/ndila/tiles/config",
+      "web_route": "/ndila",
+      "mobile_surface": "provider:ph_field_tasks",
+      "compose": "host :8155",
+      "maturity": "not_wired"
+    },
+    {
+      "domain_id": "inventory",
+      "plane": "Enterprise",
+      "backend": "inventory-service (host)",
+      "bff_probe": "/internal/v1/inventory/requisitions?facility_id=a1b2c3d4-0001-4000-8000-000000000001",
+      "web_route": "/enterprise",
+      "mobile_surface": "provider:facility",
+      "compose": "host",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "pct",
+      "plane": "Clinical",
+      "backend": "pct-service",
+      "bff_probe": "/internal/v1/queue/entries?facility_id=f1000000-0000-0000-0000-000000000001",
+      "web_route": "/queue",
+      "mobile_surface": "provider:queue",
+      "compose": "docker-compose.yml",
+      "maturity": "live"
+    },
+    {
+      "domain_id": "integration-hub",
+      "plane": "Data & intelligence",
+      "backend": "integration-hub",
+      "bff_probe": "/internal/v1/integration-hub/routes",
+      "web_route": "/data-intelligence/pipelines",
+      "mobile_surface": "provider:ops_reports",
+      "compose": "docker-compose.yml",
+      "maturity": "live"
+    },
+    {
+      "domain_id": "inpatient",
+      "plane": "Inpatient",
+      "backend": "inpatient-service",
+      "bff_probe": "/internal/v1/inpatient/admissions",
+      "web_route": "/clinical/inpatient/admissions",
+      "mobile_surface": "provider:inpatient",
+      "compose": "docker-compose.yml",
+      "maturity": "partial"
+    },
+    {
+      "domain_id": "wellness",
+      "plane": "Wellness",
+      "backend": "wellness-service",
+      "bff_probe": "/internal/v1/wellness/challenges",
+      "web_route": "/wellness",
+      "mobile_surface": "citizen:wellness",
+      "compose": "docker-compose.yml",
+      "maturity": "partial"
+    }
+  ],
+  "parity_summary": {
+    "journey_count": 7,
+    "sovereign_domain_count": 11,
+    "compose_live": 4,
+    "sovereign_overlay": 4,
+    "host_only": 3
+  }
+}

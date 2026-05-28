@@ -2,28 +2,36 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
+  fullyParallel: !process.env.PLAYWRIGHT_SKIP_WEBSERVER,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: [["html", { open: "never" }], ["list"]],
+  retries: process.env.CI ? 1 : 0,
+  timeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? 30_000 : 15_000,
+  workers: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.CI ? 1 : undefined,
+  reporter: "list",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
-    screenshot: "only-on-failure",
+    actionTimeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? 15_000 : 5_000,
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "mobile-chrome", use: { ...devices["Pixel 5"] } },
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(process.env.PLAYWRIGHT_USE_SYSTEM_CHROME
+          ? { channel: "chrome" as const }
+          : process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+            ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+            : {}),
+      },
+    },
   ],
-  // When PLAYWRIGHT_COMPOSE_E2E=1, assume Experience UI is already up (e.g. compose/experience/docker-compose.yml).
-  webServer: process.env.PLAYWRIGHT_COMPOSE_E2E
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
     ? undefined
     : {
         command: "npm run dev",
         url: "http://localhost:3000",
         reuseExistingServer: !process.env.CI,
-        timeout: 120000,
+        timeout: 120_000,
       },
 });

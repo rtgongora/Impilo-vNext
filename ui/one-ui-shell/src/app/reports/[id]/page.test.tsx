@@ -76,8 +76,8 @@ describe("ReportDetailPage", () => {
     expect(screen.getByText(/ADMIN DATA EXPORT/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /all data export jobs/i })).toHaveAttribute("href", "/admin/data-export");
     expect(screen.getByText(/^Queued parameters$/)).toBeInTheDocument();
-    expect(screen.getByText(/"export_name"/)).toBeInTheDocument();
-    expect(screen.getByText(/"Q1"/)).toBeInTheDocument();
+    expect(screen.getByText("Export Name")).toBeInTheDocument();
+    expect(screen.getByText("Q1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /copy report job id/i })).toBeInTheDocument();
   });
 

@@ -3,7 +3,7 @@
 ##
 ## Self-contained local slice that mirrors repo-root infra (see ../../docker-compose.yml):
 ##   Postgres (this file uses 5433 so it can run beside root postgres:5432),
-##   Redis :6379, Kafka :9092, wellness-service, experience-bff, one-ui-shell.
+##   Redis :6379, Kafka :9092, wellness-service, inpatient-service, experience-bff, one-ui-shell.
 ##
 ## Do not run root compose redis+kafka on the same host ports at the same time.
 ##
@@ -43,10 +43,10 @@ services:
           "CMD-SHELL",
           "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 || exit 1",
         ]
-      interval: 10s
-      timeout: 10s
-      retries: 12
-      start_period: 40s
+      interval: 15s
+      timeout: 30s
+      retries: 15
+      start_period: 120s
 
   # ── PostgreSQL ───────────────────────────────────────────────────
   experience-db:
@@ -94,6 +94,125 @@ services:
       retries: 10
       start_period: 45s
 
+  # ── Sovereign DB bootstrap (idempotent CREATE DATABASE) ──────────
+  sovereign-db-init:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: impilo
+    depends_on:
+      experience-db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
+        for db in inpatient pct impilo_integration_hub; do
+          psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
+            || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
+        done
+    restart: "no"
+
+  # ── Patient Care Tracker (queue / journey) ───────────────────────
+  pct-service:
+    build:
+      context: ../../services/pct-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+    ports:
+      - "8088:8088"
+    depends_on:
+      sovereign-db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8088/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
+  # ── Integration hub (routes, dispatch, dead letters) ─────────────
+  integration-hub:
+    build:
+      context: ../../services/integration-hub
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8110"
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+    ports:
+      - "8110:8110"
+    depends_on:
+      sovereign-db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8110/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
+  # ── Inpatient DB bootstrap (legacy alias — use sovereign-db-init) ─
+  inpatient-db-init:
+    image: postgres:16-alpine
+    profiles: ["legacy-db-init"]
+    environment:
+      PGPASSWORD: impilo
+    depends_on:
+      experience-db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
+        psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'inpatient'" | grep -q 1 \
+          || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE inpatient OWNER impilo;"
+    restart: "no"
+
+  # ── Inpatient domain (admissions, transfers, discharges) ─────────
+  inpatient-service:
+    build:
+      context: ../../services/inpatient-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8121"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      INPATIENT_SECURITY_OAUTH2_ENABLED: "false"
+    ports:
+      - "8121:8121"
+    depends_on:
+      sovereign-db-init:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8121/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
   # ── Experience BFF ───────────────────────────────────────────────
   # Build context must be the module directory: Dockerfile copies target/experience-bff-*.jar
   # (run tools/dev/up.ps1 or: cd services && mvn … package — see compose/experience/README.md)
@@ -109,8 +228,9 @@ services:
       DB_PASSWORD: impilo
       SPRING_PROFILES_ACTIVE: default
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-      # Sovereign service URLs (docker-compose networking)
-      PCT_BASE_URL: http://host.docker.internal:8088
+      # Sovereign service URLs (in-compose where available; host ports for optional services)
+      PCT_BASE_URL: http://pct-service:8088
+      INTEGRATION_HUB_BASE_URL: http://integration-hub:8110
       OROS_BASE_URL: http://host.docker.internal:8089
       PHARMACY_BASE_URL: http://host.docker.internal:8096
       VITO_BASE_URL: http://host.docker.internal:8082
@@ -118,6 +238,10 @@ services:
       VARAPI_BASE_URL: http://host.docker.internal:8083
       DOCUMENT_STORE_BASE_URL: http://host.docker.internal:8093
       COSTA_BASE_URL: http://host.docker.internal:8101
+      MUSHEX_BASE_URL: http://host.docker.internal:8102
+      DISPATCH_BASE_URL: http://host.docker.internal:8320
+      NDILA_BASE_URL: http://host.docker.internal:8155
+      NHUME_BASE_URL: http://host.docker.internal:8210
       COVERAGE_BASE_URL: http://host.docker.internal:8140
       SURVEILLANCE_BASE_URL: http://host.docker.internal:8180
       CAMPAIGNS_BASE_URL: http://host.docker.internal:8190
@@ -126,6 +250,7 @@ services:
       ORTHANC_DICOMWEB_URL: http://host.docker.internal:8042/dicom-web
       FHIR_BASE_URL: http://host.docker.internal:8090/fhir
       WELLNESS_SERVICE_BASE_URL: http://wellness-service:8161
+      INPATIENT_BASE_URL: http://inpatient-service:8121
       # Dev compose: no Keycloak JWT — required when OAuth2 RS autoconfig is excluded.
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
       # Same defaults as local application.yml, but pointed at compose service names.
@@ -138,6 +263,12 @@ services:
       experience-db:
         condition: service_healthy
       wellness-service:
+        condition: service_healthy
+      inpatient-service:
+        condition: service_healthy
+      pct-service:
+        condition: service_healthy
+      integration-hub:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -153,8 +284,8 @@ services:
   # ── One UI Shell (unified Experience surface, port 3000) ─────────
   one-ui-shell:
     build:
-      context: ../../ui
-      dockerfile: one-ui-shell/Dockerfile
+      context: ../..
+      dockerfile: ui/one-ui-shell/Dockerfile
     environment:
       NEXT_PUBLIC_BFF_URL: http://localhost:8160
       NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000

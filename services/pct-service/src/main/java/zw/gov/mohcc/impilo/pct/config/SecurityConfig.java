@@ -39,26 +39,24 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, TrustContextFilter trustContextFilter,
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri) throws Exception {
+            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri,
+            @Value("${impilo.security.oauth2-enabled:true}") boolean oauth2Enabled) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(auth -> auth
-                // Actuator — health probes and metrics
+            .addFilterBefore(trustContextFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (oauth2Enabled && issuerUri != null && !issuerUri.isBlank()) {
+            http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
-                // API documentation
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
-                // All PCT business endpoints require authentication
                 .requestMatchers("/v1/**").authenticated()
-                // Everything else requires authentication
-                .anyRequest().authenticated()
-            );
-
-        if (issuerUri != null && !issuerUri.isBlank()) {
-            http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+                .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {}));
+        } else {
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         }
 
         return http.build();

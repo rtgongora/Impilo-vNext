@@ -46,6 +46,7 @@ export const ROUTE_GROUPS: JourneyRouteGroup[] = [
       "/provider-workspace",
       "/provider/activate",
       "/clinical",
+      "/clinical/inpatient",
       "/clinical-tools",
       "/ehr",
       "/queue",
@@ -67,6 +68,8 @@ export const ROUTE_GROUPS: JourneyRouteGroup[] = [
       "/monitoring",
       "/reports",
       "/intelligence",
+      "/data-intelligence",
+      "/production-command-centre",
       "/finance",
       "/enterprise",
       "/erp",
@@ -84,7 +87,7 @@ export const ROUTE_GROUPS: JourneyRouteGroup[] = [
     key: "cross-cutting",
     journey: "CROSS_CUTTING",
     label: "Cross-cutting",
-    routes: ["/ask", "/search", "/support", "/core-transaction", "/settings", "/auth", "/home", "/shell"],
+    routes: ["/ask", "/search", "/support", "/core-transaction", "/settings", "/auth", "/home", "/shell", "/ndila", "/nhume"],
   },
 ];
 
@@ -115,7 +118,7 @@ export const PROVIDER_NAVIGATION: RoleNavigationItem[] = [
 ];
 
 export const MANAGER_NAVIGATION: RoleNavigationItem[] = [
-  { label: "Command Centre", route: "/operations", aliases: ["/platform-journey"] },
+  { label: "Command Centre", route: "/production-command-centre", aliases: ["/health-os/command-centre", "/operations", "/platform-journey"] },
   { label: "Transactions", route: "/core-transaction" },
   { label: "Facilities", route: "/registry/facilities" },
   { label: "Services", route: "/registry/products" },

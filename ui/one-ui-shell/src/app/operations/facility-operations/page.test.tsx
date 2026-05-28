@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import FacilityOperationsHubPage from "./page";
 
 vi.mock("@/components/AppLayout", () => ({
@@ -25,6 +26,12 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+const { get } = vi.hoisted(() => ({ get: vi.fn() }));
+
+vi.mock("@/lib/api-client", () => ({
+  apiClient: { get },
+}));
+
 const roleState = vi.hoisted(() => ({
   isClinical: false,
   isAdmin: false,
@@ -46,12 +53,25 @@ vi.mock("@/hooks/useFacilityStore", () => ({
   useFacilityStore: (selector: (state: typeof facilityState) => unknown) => selector(facilityState),
 }));
 
+function renderPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <FacilityOperationsHubPage />
+    </QueryClientProvider>,
+  );
+}
+
 describe("FacilityOperationsHubPage", () => {
+  beforeEach(() => {
+    get.mockResolvedValue({ data: [] });
+  });
+
   it("prompts for facility when none is selected", () => {
     facilityState.facility = null;
     roleState.isQueueManager = true;
     roleState.isAdmin = false;
-    render(<FacilityOperationsHubPage />);
+    renderPage();
 
     expect(screen.getByRole("heading", { name: "Facility operations" })).toBeInTheDocument();
     expect(screen.getByText(/Select a facility from the header context/)).toBeInTheDocument();
@@ -62,7 +82,7 @@ describe("FacilityOperationsHubPage", () => {
     facilityState.facility = { id: "f1", name: "Test Facility" };
     roleState.isQueueManager = true;
     roleState.isAdmin = false;
-    render(<FacilityOperationsHubPage />);
+    renderPage();
 
     expect(screen.getByText("Test Facility")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Facility Control Tower/ })).toHaveAttribute(
@@ -79,7 +99,7 @@ describe("FacilityOperationsHubPage", () => {
     facilityState.facility = { id: "f1", name: "Test Facility" };
     roleState.isQueueManager = false;
     roleState.isAdmin = true;
-    render(<FacilityOperationsHubPage />);
+    renderPage();
 
     expect(screen.getByRole("link", { name: /Open platform operations/ })).toHaveAttribute("href", "/operations");
   });

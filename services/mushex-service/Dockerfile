@@ -1,17 +1,18 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
-WORKDIR /build
-COPY pom.xml .
-COPY src ./src
-# In real build, maven would be used; for container, copy pre-built jar
-FROM eclipse-temurin:21-jre-alpine AS runtime
-RUN addgroup -S impilo && adduser -S impilo -G impilo
+## Runtime image — build the JAR on the host first:
+##   cd services && mvn -B -pl mushex-service -am -DskipTests package
+FROM eclipse-temurin:21-jre-jammy
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r impilo && useradd -r -g impilo impilo
+
 WORKDIR /app
-COPY --from=build /build/target/mushex-service-*.jar app.jar
+COPY target/mushex-service-*.jar app.jar
+
 RUN chown -R impilo:impilo /app
 USER impilo
-EXPOSE 8087
-ENTRYPOINT ["java", \
-  "-XX:+UseZGC", \
-  "-XX:MaxRAMPercentage=75.0", \
-  "-Djava.security.egd=file:/dev/./urandom", \
-  "-jar", "app.jar"]
+
+EXPOSE 8102
+ENTRYPOINT ["java", "-XX:+UseZGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

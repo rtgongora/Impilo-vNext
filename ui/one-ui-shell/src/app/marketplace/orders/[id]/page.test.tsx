@@ -32,10 +32,34 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
-const { get, post } = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
+const { post } = vi.hoisted(() => ({ post: vi.fn() }));
 
-vi.mock("@/lib/api-client", () => ({
-  apiClient: { get, post },
+vi.mock("@/hooks/queries/useCommerceFlow", () => ({
+  useCommerceOrder: () => ({
+    data: { orderId: ORDER_ID, status: "PENDING" },
+    isLoading: false,
+    isError: false,
+  }),
+  useCommerceOrderTracking: () => ({
+    data: { status: "PENDING" },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  }),
+  useCommerceOrderAction: () => ({
+    isPending: false,
+    mutate: (_args: { orderId: string; action: string }, opts?: { onSuccess?: (res: unknown) => void }) => {
+      void post(`/internal/v1/commerce/orders/${ORDER_ID}/validate`).then((res: unknown) => opts?.onSuccess?.(res));
+    },
+  }),
+}));
+
+vi.mock("@/hooks/queries/useMarketplace", () => ({
+  useMarketplaceOrder: () => ({
+    data: undefined,
+    isLoading: false,
+    isError: true,
+  }),
 }));
 
 function renderPage() {
@@ -49,14 +73,7 @@ function renderPage() {
 
 describe("OrderDetailPage (commerce)", () => {
   beforeEach(() => {
-    get.mockReset();
     post.mockReset();
-    get.mockImplementation((url: string) => {
-      if (url === `/internal/v1/commerce/orders/${ORDER_ID}`) return Promise.resolve({ orderId: ORDER_ID, status: "PENDING" });
-      if (url === `/internal/v1/commerce/orders/${ORDER_ID}/tracking`) return Promise.resolve({ status: "PENDING" });
-      if (url === `/internal/v1/marketplace/orders/${ORDER_ID}`) return Promise.reject({ status: 404 });
-      return Promise.resolve({});
-    });
     post.mockResolvedValue({ ok: true });
   });
 
@@ -64,7 +81,9 @@ describe("OrderDetailPage (commerce)", () => {
     const user = userEvent.setup();
     renderPage();
 
-    expect(await screen.findByText(/Commerce order/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText("Commerce order").length).toBeGreaterThan(0);
+    });
     await user.click(screen.getByRole("button", { name: "VALIDATE" }));
 
     await waitFor(() => {
@@ -72,4 +91,3 @@ describe("OrderDetailPage (commerce)", () => {
     });
   });
 });
-

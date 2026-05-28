@@ -31,7 +31,7 @@ import { ProfessionalChannelsHubScreen } from "./ProfessionalChannelsHubScreen";
 import { PublicHealthFieldTasksScreen } from "./PublicHealthFieldTasksScreen";
 import { TelemedicineScreen } from "./TelemedicineScreen";
 import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
-import { CoreTransactionJourneyShellScreen } from "./CoreTransactionJourneyShellScreen";
+import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
 import { TriageScreen } from "./TriageScreen";
 import { BillingScreen } from "./BillingScreen";
@@ -70,7 +70,8 @@ type ToolTab =
   | "learning"
   | "core_transaction"
   | "workflow_dispatch"
-  | "ph_field_tasks";
+  | "ph_field_tasks"
+  | "prod_ready";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -92,6 +93,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "core_transaction", label: "Core Tx" },
   { id: "workflow_dispatch", label: "Flow/Ops" },
   { id: "ph_field_tasks", label: "PH Field" },
+  { id: "prod_ready", label: "Prod Ready" },
 ];
 
 export function ClinicalToolsScreen() {
@@ -153,6 +155,9 @@ export function ClinicalToolsScreen() {
         {tab === "core_transaction" && <CoreTransactionJourneyShellScreen />}
         {tab === "workflow_dispatch" && <WorkflowDispatchOpsScreen />}
         {tab === "ph_field_tasks" && <PublicHealthFieldTasksScreen />}
+        {tab === "prod_ready" && (
+          <ProductionReadinessJourneyScreen onNavigateTab={(nextTab) => setTab(nextTab as ToolTab)} />
+        )}
       </ScrollView>
     </Screen>
   );

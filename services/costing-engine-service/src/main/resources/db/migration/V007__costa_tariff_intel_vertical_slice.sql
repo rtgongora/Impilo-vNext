@@ -133,19 +133,24 @@ SELECT NULL, id, 'ZW-PLACEHOLDER-POC-V0.1',
 FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 INSERT INTO costa_tariff_lists (tenant_id, library_id, external_code, name, description, tariff_family, tariff_type, price_basis, official_status, validation_status, reference_only, approved_for_billing, currency, effective_from, metadata)
-SELECT NULL, id, 'WHO-CHOICE-REF', 'WHO-CHOICE Unit Cost Reference', 'Economic costing reference — not an official patient billing tariff.', 'who_reference', 'economic_cost_reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('url', 'https://www.who.int/activities/choosing-interventions-that-are-cost-effective');
+SELECT NULL, id, 'WHO-CHOICE-REF', 'WHO-CHOICE Unit Cost Reference', 'Economic costing reference — not an official patient billing tariff.', 'who_reference', 'economic_cost_reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('url', 'https://www.who.int/activities/choosing-interventions-that-are-cost-effective')
+FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 INSERT INTO costa_tariff_lists (tenant_id, library_id, external_code, name, description, tariff_family, tariff_type, price_basis, official_status, validation_status, reference_only, approved_for_billing, currency, effective_from, metadata)
-SELECT NULL, id, 'WHO-ICHI-REF', 'WHO ICHI Intervention Reference', 'Intervention classification reference — not a price list.', 'who_reference', 'classification_reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('note', 'ICHI is a classification system, not a billing schedule.');
+SELECT NULL, id, 'WHO-ICHI-REF', 'WHO ICHI Intervention Reference', 'Intervention classification reference — not a price list.', 'who_reference', 'classification_reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('note', 'ICHI is a classification system, not a billing schedule.')
+FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 INSERT INTO costa_tariff_lists (tenant_id, library_id, external_code, name, description, tariff_family, tariff_type, price_basis, official_status, validation_status, reference_only, approved_for_billing, currency, effective_from, metadata)
-SELECT NULL, id, 'NHS-ENGLAND-REF', 'NHS England Payment Scheme Reference', 'International reference example — reference-only unless imported and approved.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'England');
+SELECT NULL, id, 'NHS-ENGLAND-REF', 'NHS England Payment Scheme Reference', 'International reference example — reference-only unless imported and approved.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'England')
+FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 INSERT INTO costa_tariff_lists (tenant_id, library_id, external_code, name, description, tariff_family, tariff_type, price_basis, official_status, validation_status, reference_only, approved_for_billing, currency, effective_from, metadata)
-SELECT NULL, id, 'AU-MBS-REF', 'Australia Medicare Benefits Schedule Reference', 'International reference example — reference-only unless imported and approved.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'Australia');
+SELECT NULL, id, 'AU-MBS-REF', 'Australia Medicare Benefits Schedule Reference', 'International reference example — reference-only unless imported and approved.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'Australia')
+FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 INSERT INTO costa_tariff_lists (tenant_id, library_id, external_code, name, description, tariff_family, tariff_type, price_basis, official_status, validation_status, reference_only, approved_for_billing, currency, effective_from, metadata)
-SELECT NULL, id, 'US-CMS-PHYSICIAN-REF', 'US CMS Medicare Physician Fee Schedule Reference', 'International reference example — reference-only unless imported and approved. Avoid embedding proprietary CPT descriptions.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'United States', 'licensing_note', 'Use official CMS licensing for operational imports.');
+SELECT NULL, id, 'US-CMS-PHYSICIAN-REF', 'US CMS Medicare Physician Fee Schedule Reference', 'International reference example — reference-only unless imported and approved. Avoid embedding proprietary CPT descriptions.', 'international_reference', 'reference', 'reference_rate', 'reference_only', 'reference_only', true, false, 'USD', DATE '2020-01-01', jsonb_build_object('region', 'United States', 'licensing_note', 'Use official CMS licensing for operational imports.')
+FROM costa_tariff_libraries WHERE code = 'IMPILO_GLOBAL';
 
 -- Zimbabwe placeholder items (>=80). Prices are synthetic USD placeholders.
 INSERT INTO costa_tariff_list_items (tariff_list_id, item_code, item_name, service_domain, service_category, base_price, currency, metadata)

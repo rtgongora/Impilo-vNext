@@ -77,6 +77,30 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/clinical/dictation", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Voice Dictation", navLabel: "Dictation", navZone: "work" },
   { path: "/clinical/emergency", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "ED / Casualty", navLabel: "ED / Casualty", navZone: "work" },
 
+  // Inpatient workspace (Wave 20 production readiness)
+  { path: "/clinical/inpatient", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Care", navLabel: "Inpatient", navZone: "work" },
+  { path: "/clinical/inpatient/admissions", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Admissions", navLabel: "Admissions", navZone: "work" },
+  { path: "/clinical/inpatient/admissions/[admissionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Episode", navLabel: "Episode", navZone: "work" },
+  { path: "/clinical/inpatient/ward-board", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Ward Board", navLabel: "Ward Board", navZone: "work" },
+  { path: "/clinical/inpatient/nursing", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Nursing Workbench", navLabel: "Nursing", navZone: "work" },
+  { path: "/clinical/inpatient/rounds", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Medical Rounds", navLabel: "Rounds", navZone: "work" },
+  { path: "/clinical/inpatient/discharge/[admissionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inpatient Discharge", navLabel: "Discharge", navZone: "work" },
+
+  // Production Command Centre (Health OS discoverability)
+  { path: "/production-command-centre", zone: "admin", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Production Command Centre", navLabel: "Command Centre", navZone: "professional" },
+  { path: "/health-os/command-centre", zone: "admin", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health OS Command Centre", navLabel: "Command Centre", navZone: "professional" },
+
+  // Data & Intelligence Plane hub (Wave 20)
+  { path: "/data-intelligence", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Data & Intelligence", navLabel: "Data & Intelligence", navZone: "professional" },
+  { path: "/data-intelligence/quality", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Data Quality", navLabel: "Data Quality", navZone: "professional" },
+  { path: "/data-intelligence/pipelines", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Data Pipelines", navLabel: "Pipelines", navZone: "professional" },
+  { path: "/data-intelligence/integration", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Integration Monitor", navLabel: "Integration", navZone: "professional" },
+  { path: "/data-intelligence/reports", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Reporting Hub", navLabel: "Reports Hub", navZone: "professional" },
+  { path: "/data-intelligence/audit", zone: "reports", layout: "app", sidebar: "admin", guard: "auth", pageTitle: "Audit Intelligence", navLabel: "Audit Intel", navZone: "professional" },
+
+  // Ndila geospatial workspace
+  { path: "/ndila", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Ndila Maps", navLabel: "Ndila", navZone: "work" },
+
   // â”€â”€ Zone: Public Health â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/public-health", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Public Health", navLabel: "Public Health", navZone: "professional" },
   { path: "/public-health/surveillance", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Surveillance", navLabel: "Surveillance", navZone: "professional" },
@@ -300,6 +324,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/pharmacy/dispense", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Dispensing", navLabel: "Dispense", navZone: "work" },
   { path: "/pharmacy/stock", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Stock Management", navLabel: "Stock", navZone: "work" },
   { path: "/pharmacy/prescriptions", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Prescriptions", navLabel: "Prescriptions", navZone: "work" },
+  { path: "/pharmacy/transaction-journey", zone: "pharmacy", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Rx Transaction Journey", navLabel: "Rx Journey", navZone: "work" },
 
   // â”€â”€ Zone: Inventory â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/inventory", zone: "inventory", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Inventory Dashboard", navLabel: "Inventory", navZone: "work" },
@@ -587,7 +612,7 @@ export const ROUTES: RouteDefinition[] = [
 // Combined with upstream additions on this branch the canonical total is 370.
 // GAP-010 post-merge (2026-05-28): registered 21 shadow routes (social, wallet, communication hub,
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
-export const EXPECTED_ROUTE_COUNT = 400;
+export const EXPECTED_ROUTE_COUNT = 417;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

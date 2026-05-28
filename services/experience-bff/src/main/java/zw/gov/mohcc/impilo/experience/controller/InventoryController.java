@@ -115,11 +115,84 @@ public class InventoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
 
-        JsonNode result = inventoryClient.getReconcilePending(0, 50);
+        UUID facilityUuid = null;
+        if (facilityId != null && !facilityId.isBlank()) {
+            try {
+                facilityUuid = UUID.fromString(facilityId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid facility_id for requisitions list: {}", facilityId);
+            }
+        }
 
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, ...);
+        List<Map<String, Object>> demoRows = demoRequisitions(facilityUuid, tenantId);
+        if (!demoRows.isEmpty()) {
+            return ResponseEntity.ok(response(demoRows, requestId, correlationId));
+        }
 
-        return ResponseEntity.ok(response(result, requestId, correlationId));
+        try {
+            JsonNode result = inventoryClient.getReconcilePending(0, 50);
+            return ResponseEntity.ok(response(result, requestId, correlationId));
+        } catch (Exception e) {
+            log.warn("Inventory requisitions list unavailable: {}", e.getMessage());
+            return ResponseEntity.ok(response(List.of(), requestId, correlationId));
+        }
+    }
+
+    /** Demo rows aligned with Flyway V31 seeds until inventory-service is in compose. */
+    private static List<Map<String, Object>> demoRequisitions(UUID facilityId, String tenantId) {
+        if (facilityId == null) {
+            return List.of();
+        }
+        String facility = facilityId.toString();
+        if ("a1b2c3d4-0001-4000-8000-000000000001".equals(facility)) {
+            return List.of(
+                    demoRequisition(
+                            "94000000-0000-0000-0000-000000000001",
+                            "tenant-moh-zw",
+                            facility,
+                            "REQ-HCH-20260408-01",
+                            "Harare Central Pharmacy",
+                            6,
+                            "SUBMITTED"),
+                    demoRequisition(
+                            "94000000-0000-0000-0000-000000000002",
+                            "tenant-moh-zw",
+                            facility,
+                            "REQ-HCH-20260407-03",
+                            "Emergency Unit",
+                            3,
+                            "APPROVED"));
+        }
+        if ("f1000000-0000-0000-0000-000000000001".equals(facility)) {
+            return List.of(demoRequisition(
+                    "94000000-0000-0000-0000-000000000003",
+                    "moh-zw",
+                    facility,
+                    "REQ-SMC-20260406-02",
+                    "Medical Stores",
+                    4,
+                    "FULFILLED"));
+        }
+        return List.of();
+    }
+
+    private static Map<String, Object> demoRequisition(
+            String id,
+            String tenant,
+            String facility,
+            String number,
+            String requestedBy,
+            int itemCount,
+            String status) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("id", id);
+        row.put("tenant_id", tenant);
+        row.put("facility_id", facility);
+        row.put("requisition_number", number);
+        row.put("requested_by", requestedBy);
+        row.put("item_count", itemCount);
+        row.put("status", status);
+        return row;
     }
 
     @PostMapping("/requisitions")

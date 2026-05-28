@@ -19,7 +19,7 @@ import {
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
-  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play,
+  Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -315,6 +315,7 @@ function getModuleCategories(roles: {
       icon: Shield,
       color: "bg-slate-600",
       modules: [
+        { label: "Production Command Centre", description: "Discover services, demo paths, and live integration health", href: "/production-command-centre", icon: LayoutGrid, color: "bg-impilo-100 text-impilo-600" },
         { label: "User Management", description: "Users, roles & policies", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
         { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
         { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
@@ -330,6 +331,67 @@ function getModuleCategories(roles: {
         { label: "Governance Datasets", description: "Register and classify datasets", href: "/ai-governance?tab=datasets", icon: Database, color: "bg-indigo-100 text-indigo-700" },
         { label: "Decision Rules", description: "Policy rules for AI access", href: "/ai-governance?tab=rules", icon: Shield, color: "bg-violet-100 text-violet-700" },
         { label: "Policy Publishing", description: "Publish AI governance policy versions", href: "/ai-governance?tab=policy", icon: FileText, color: "bg-emerald-100 text-emerald-700" },
+      ],
+    });
+  }
+
+  if (roles.isClinical || roles.isAdmin || roles.isFinance || roles.isDispenser) {
+    cats.push({
+      id: "production-readiness",
+      title: "Production readiness",
+      icon: LayoutGrid,
+      color: "bg-impilo-500",
+      modules: [
+        ...(roles.isAdmin ? [
+          {
+            label: "Production Command Centre",
+            description: "Service discovery, maturity labels, and integration probes",
+            href: "/production-command-centre",
+            icon: LayoutGrid,
+            color: "bg-impilo-100 text-impilo-600",
+          },
+        ] : []),
+        ...(roles.isClinical || roles.isAdmin ? [
+          {
+            label: "Data & intelligence",
+            description: "Quality, pipelines, integration, and audit intelligence",
+            href: "/data-intelligence",
+            icon: Database,
+            color: "bg-indigo-100 text-indigo-700",
+          },
+          {
+            label: "Inpatient workspace",
+            description: "Admissions, nursing workbench, and ward operations",
+            href: "/clinical/inpatient",
+            icon: BedDouble,
+            color: "bg-purple-100 text-purple-700",
+          },
+          {
+            label: "Core transactions",
+            description: "Transaction audit feed and state history",
+            href: "/core-transaction",
+            icon: Layers,
+            color: "bg-slate-100 text-slate-700",
+          },
+        ] : []),
+        ...(roles.isClinical || roles.isDispenser || roles.isFinance ? [
+          {
+            label: "Rx transaction journey",
+            description: "Golden-path Rx · pay · dispatch demonstration",
+            href: "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+            icon: Pill,
+            color: "bg-cyan-100 text-cyan-700",
+          },
+        ] : []),
+        ...(roles.isFinance && !roles.isClinical ? [
+          {
+            label: "Core transactions",
+            description: "Billing and payment transaction audit trail",
+            href: "/core-transaction",
+            icon: Layers,
+            color: "bg-slate-100 text-slate-700",
+          },
+        ] : []),
       ],
     });
   }
@@ -409,6 +471,35 @@ function getWorkerLaunchActions(args: {
         color: "bg-emerald-100 text-emerald-700",
         requiresWorkContext: true,
       },
+      {
+        label: "Inpatient workspace",
+        description: "Open admissions, nursing workbench, and ward operations.",
+        href: "/clinical/inpatient",
+        icon: BedDouble,
+        color: "bg-purple-100 text-purple-700",
+        requiresWorkContext: true,
+      },
+      {
+        label: "Rx transaction journey",
+        description: "Walk the golden-path Rx · pay · dispatch demonstration.",
+        href: "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+        icon: ClipboardList,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+      {
+        label: "Core transactions",
+        description: "Review transaction state, audit correlation, and next actions.",
+        href: "/core-transaction",
+        icon: Layers,
+        color: "bg-slate-100 text-slate-700",
+      },
+      {
+        label: "Data & intelligence",
+        description: "Open quality, pipeline, and audit intelligence surfaces.",
+        href: "/data-intelligence",
+        icon: Database,
+        color: "bg-indigo-100 text-indigo-700",
+      },
     );
   }
 
@@ -442,6 +533,20 @@ function getWorkerLaunchActions(args: {
         icon: BarChart3,
         color: "bg-cyan-100 text-cyan-700",
       },
+      {
+        label: "Rx transaction journey",
+        description: "Follow payment and dispatch steps on the golden-patient Rx path.",
+        href: "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+        icon: Pill,
+        color: "bg-cyan-100 text-cyan-700",
+      },
+      {
+        label: "Core transactions",
+        description: "Audit billing and payment transaction state.",
+        href: "/core-transaction",
+        icon: Layers,
+        color: "bg-slate-100 text-slate-700",
+      },
     );
   }
 
@@ -455,6 +560,13 @@ function getWorkerLaunchActions(args: {
         color: "bg-cyan-100 text-cyan-700",
       },
       {
+        label: "Production Command Centre",
+        description: "Browse Health OS services, maturity labels, and integration hub probes before operational actions.",
+        href: "/production-command-centre",
+        icon: LayoutGrid,
+        color: "bg-impilo-100 text-impilo-600",
+      },
+      {
         label: "Control Tower",
         description: "Start from live operational oversight when you are driving throughput or escalation.",
         href: "/clinical/control-tower",
@@ -466,6 +578,20 @@ function getWorkerLaunchActions(args: {
         description: "Jump into admin action on users, roles, and governance surfaces.",
         href: "/admin/users",
         icon: UserCog,
+        color: "bg-slate-100 text-slate-700",
+      },
+      {
+        label: "Data & intelligence",
+        description: "Open data quality, pipelines, and audit intelligence.",
+        href: "/data-intelligence",
+        icon: Database,
+        color: "bg-indigo-100 text-indigo-700",
+      },
+      {
+        label: "Core transactions",
+        description: "Transaction audit feed across production journeys.",
+        href: "/core-transaction",
+        icon: Layers,
         color: "bg-slate-100 text-slate-700",
       },
     );
@@ -963,6 +1089,12 @@ export default function HomePage() {
               modeActions={[
                 ...(isAdmin
                   ? [{
+                      label: "Production Command Centre",
+                      description: "Browse Health OS services and demo paths without binding to a facility first.",
+                      icon: LayoutGrid,
+                      onClick: () => enterFacilityFreeMode("admin", "/production-command-centre"),
+                    },
+                    {
                       label: "Administration",
                       description: "Enter the operational oversight surface without binding to a facility first.",
                       icon: Shield,
@@ -991,7 +1123,7 @@ export default function HomePage() {
           {(isClinical || isDispenser || isFinance || isAdmin) && (
             <div className="space-y-4">
               <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
-                <div className="rounded-2xl bg-gradient-to-r from-impilo-700 via-impilo-600 to-cyan-600 p-6 text-white shadow-sm">
+                <div className="impilo-subtle-african-accent rounded-3xl bg-gradient-to-r from-impilo-700 via-impilo-600 to-cyan-600 p-6 text-white shadow-impilo-floating">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-impilo-100">

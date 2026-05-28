@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.pct.api.controller;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.pct.core.PctDomainException;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1")
+@Profile("legacy-telehealth")
 public class TelehealthController {
     private final TelehealthSessionService telehealthService;
 

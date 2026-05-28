@@ -1,0 +1,29 @@
+appId: zw.gov.impilo.provider
+---
+- launchApp
+
+- extendedWaitUntil:
+    visible: "Initializing Impilo Provider..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "provider-tabs"
+    timeout: 120000
+
+- tapOn: "Tools"
+- extendedWaitUntil:
+    id: "tools-tab-prod_ready"
+    timeout: 30000
+- tapOn:
+    id: "tools-tab-prod_ready"
+
+- extendedWaitUntil:
+    id: "prod-ready-journey-screen"
+    timeout: 30000
+- assertVisible:
+    id: "prod-ready-journey-count"
+- assertVisible:
+    id: "prod-ready-journey-item-clinical-rx"
+- assertVisible:
+    id: "prod-ready-journey-item-inpatient"
+- assertVisible:
+    id: "prod-ready-journey-item-data-intel"

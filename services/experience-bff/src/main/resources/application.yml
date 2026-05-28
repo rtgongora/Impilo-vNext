@@ -101,6 +101,9 @@ impilo:
     msika-base-url: ${MSIKA_BASE_URL:http://localhost:8086}
     msika-flow-base-url: ${MSIKA_FLOW_BASE_URL:http://localhost:8100}
     mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
+    dispatch-base-url: ${DISPATCH_BASE_URL:http://localhost:8320}
+    ndila-base-url: ${NDILA_BASE_URL:http://localhost:8155}
+    nhume-base-url: ${NHUME_BASE_URL:${NHUME_SERVICE_BASE_URL:http://localhost:8210}}
     vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
     tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}

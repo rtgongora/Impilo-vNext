@@ -10,10 +10,27 @@ import { useSearchParams } from "next/navigation";
 import { Pill, FileText, Package, ClipboardList, User } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
+import { NompiloContextPanel } from "@/components/intelligent/NompiloContextPanel";
+import { RelatedServicesPanel } from "@/components/workspace/RelatedServicesPanel";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
+const PHARMACY_RELATED_LINKS = [
+  { label: "Rx transaction journey", href: "/pharmacy/transaction-journey", description: "Step-through Rx · pay · dispatch" },
+  { label: "Core transactions", href: "/core-transaction", description: "Audit and transaction history" },
+  { label: "Clinical hub", href: "/clinical", description: "Encounter and inpatient context" },
+  { label: "Finance billing", href: "/finance/billing", description: "Payment and billing follow-through" },
+];
+
 const PHARMACY_SECTIONS = [
+  {
+    title: "Rx transaction journey",
+    description: "Step-through: registry → Rx → payment → dispatch → audit",
+    href: "/pharmacy/transaction-journey",
+    icon: ClipboardList,
+    color: "bg-cyan-100 text-cyan-700",
+  },
   {
     title: "Prescriptions",
     description: "View and manage patient prescriptions",
@@ -70,6 +87,7 @@ export default function PharmacyHubPage() {
     <AppLayout>
       <PageShell title="Pharmacy" subtitle="Manage prescriptions, dispensing, and stock">
         <div className="space-y-6">
+          <TrustContextBanner purposeOfUse="PRESCRIBING" />
           <WorkflowHeader
             badge="Medication handoff"
             badgeIcon={Pill}
@@ -115,24 +133,33 @@ export default function PharmacyHubPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {PHARMACY_SECTIONS.map((section) => (
-              <Link
-                key={section.href}
-                href={withHandoff(section.href)}
-                className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
-              >
-                <div className="flex flex-col items-center text-center gap-3">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${section.color}`}>
-                    <section.icon className="w-6 h-6" />
+          <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {PHARMACY_SECTIONS.map((section) => (
+                <Link
+                  key={section.href}
+                  href={withHandoff(section.href)}
+                  className="bg-white rounded-lg border border-gray-200 p-5 hover:border-impilo-200 hover:shadow-md transition-all group"
+                >
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${section.color}`}>
+                      <section.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900 group-hover:text-impilo-600">{section.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1">{section.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900 group-hover:text-impilo-600">{section.title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{section.description}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
+            <div className="space-y-4">
+              <RelatedServicesPanel links={PHARMACY_RELATED_LINKS} />
+              <NompiloContextPanel
+                plane="Pharmacy Plane"
+                hint="Ask Nompilo for dispensing steps, stock checks, or the next Rx-to-delivery action."
+              />
+            </div>
           </div>
         </div>
       </PageShell>

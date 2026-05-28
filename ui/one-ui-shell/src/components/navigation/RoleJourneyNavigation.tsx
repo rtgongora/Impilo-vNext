@@ -2,46 +2,77 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthStore } from "@/hooks/useAuthStore";
 import {
+  classifyRouteJourney,
   CLIENT_NAVIGATION,
   MANAGER_NAVIGATION,
   PROVIDER_NAVIGATION,
   type RoleNavigationItem,
 } from "@/lib/ui-route-journey-map";
+import { useAuthStore } from "@/hooks/useAuthStore";
 
 function isActive(pathname: string, item: RoleNavigationItem): boolean {
-  if (pathname === item.route || pathname.startsWith(`${item.route}/`)) {
-    return true;
-  }
-  return (item.aliases ?? []).some((alias) => pathname === alias || pathname.startsWith(`${alias}/`));
-}
-
-export function RoleJourneyNavigation() {
-  const pathname = usePathname();
-  const user = useAuthStore((s) => s.user);
-  const roles = user?.roles ?? [];
-  const isProvider = roles.some((role) => ["CLINICIAN", "NURSE", "PHARMACIST"].includes(role));
-  const isManager = roles.some((role) => ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE", "PUBLIC_HEALTH_OFFICER"].includes(role));
-  const nav = isManager ? MANAGER_NAVIGATION : isProvider ? PROVIDER_NAVIGATION : CLIENT_NAVIGATION;
-
-  return (
-    <nav aria-label="Role and journey navigation" className="flex gap-2 overflow-x-auto py-1">
-      {nav.map((item) => (
-        <Link
-          key={item.label}
-          href={item.route}
-          className={[
-            "whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition",
-            isActive(pathname, item)
-              ? "border-[color:var(--primary-muted)] bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
-              : "border-[color:var(--border-soft)] bg-white text-[color:var(--text-secondary)] hover:border-[color:var(--border-strong)] hover:text-[color:var(--text-primary)]",
-          ].join(" ")}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </nav>
+  if (pathname === item.route || pathname.startsWith(`${item.route}/`)) return true;
+  return (item.aliases ?? []).some(
+    (alias) => pathname === alias || pathname.startsWith(`${alias}/`),
   );
 }
 
+function navForJourney(
+  journey: ReturnType<typeof classifyRouteJourney>,
+  roles: string[],
+): RoleNavigationItem[] {
+  if (journey === "PERSON" || roles.includes("CITIZEN")) {
+    return CLIENT_NAVIGATION.slice(0, 6);
+  }
+  if (journey === "PLATFORM" || roles.some((r) => r.includes("ADMIN"))) {
+    return MANAGER_NAVIGATION.slice(0, 6);
+  }
+  return PROVIDER_NAVIGATION.slice(0, 6);
+}
+
+export function RoleJourneyNavigation() {
+  const pathname = usePathname() ?? "/home";
+  const roles = useAuthStore((s) => s.user?.roles ?? []);
+  const journey = classifyRouteJourney(pathname);
+  const items = navForJourney(journey, roles);
+
+  if (journey === "DOMAIN_SPECIFIC" && pathname.startsWith("/auth")) {
+    return null;
+  }
+
+  return (
+    <nav
+      className="flex flex-wrap items-center gap-1 border-b border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-3 py-1.5"
+      aria-label="Journey shortcuts"
+    >
+      {items.map((item) => {
+        const active = isActive(pathname, item);
+        return (
+          <Link
+            key={item.route}
+            href={item.route}
+            className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+              active
+                ? "bg-[color:var(--primary-soft)] text-[color:var(--primary-hover)]"
+                : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--text-primary)]"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+      <Link
+        href="/production-command-centre"
+        className={`ml-auto rounded-full px-2.5 py-1 text-xs font-medium ${
+          pathname.startsWith("/production-command-centre") ||
+          pathname.startsWith("/health-os/command-centre")
+            ? "bg-impilo-100 text-impilo-700"
+            : "text-impilo-600 hover:bg-impilo-50"
+        }`}
+      >
+        Command Centre
+      </Link>
+    </nav>
+  );
+}

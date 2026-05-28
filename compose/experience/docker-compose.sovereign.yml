@@ -1,0 +1,270 @@
+##
+## Optional Rx-path sovereign overlay (Wave 20 slice 13).
+## Use with base compose:
+##   docker compose -f compose/experience/docker-compose.yml \
+##     -f compose/experience/docker-compose.sovereign.yml up -d --build
+##
+## Or: .\tools\dev\up.ps1 -SovereignHost [-Build]
+##
+
+services:
+  sovereign-rx-db-init:
+    image: postgres:16-alpine
+    environment:
+      PGPASSWORD: impilo
+    depends_on:
+      experience-db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
+        for db in pharmacy mushex_db impilo_dispatch costa_db surv impilo_ndila impilo_nhume; do
+          psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
+            || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
+        done
+    restart: "no"
+
+  pharmacy-service:
+    build:
+      context: ../../services/pharmacy-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+      IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8096:8096"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8096/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  mushex-service:
+    build:
+      context: ../../services/mushex-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8102"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+      IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8102:8102"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8102/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  dispatch-service:
+    build:
+      context: ../../services/dispatch-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8320"
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8320:8320"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8320/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  costing-engine-service:
+    build:
+      context: ../../services/costing-engine-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8101"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      MUSHEX_BASE_URL: http://mushex-service:8102
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8101:8101"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      mushex-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8101/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  surveillance-service:
+    build:
+      context: ../../services/surveillance-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8180"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KAFKA_BOOTSTRAP: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_OAUTH2_ENABLED: "false"
+      IMPILO_SECURITY_DISABLE_OAUTH_FOR_TESTS: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8180:8180"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8180/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  ndila-service:
+    build:
+      context: ../../services/ndila-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8155"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+      IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+      NDILA_ALLOW_ANONYMOUS: "true"
+      NDILA_POSTGIS_ENABLED: "false"
+    ports:
+      - "8155:8155"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8155/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  nhume-service:
+    build:
+      context: ../../services/nhume-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: experience-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: impilo
+      POSTGRES_PASSWORD: impilo
+      SERVER_PORT: "8210"
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      NHUME_NDILA_BASE_URL: http://ndila-service:8155
+      NHUME_COMMS_HUB_ENABLED: "false"
+      NHUME_TRUST_ENFORCE: "false"
+      NHUME_SEED_DEMO_DATA: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+    ports:
+      - "8210:8210"
+    depends_on:
+      sovereign-rx-db-init:
+        condition: service_completed_successfully
+      ndila-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8210/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  experience-bff:
+    environment:
+      PHARMACY_BASE_URL: http://pharmacy-service:8096
+      MUSHEX_BASE_URL: http://mushex-service:8102
+      DISPATCH_BASE_URL: http://dispatch-service:8320
+      COSTA_BASE_URL: http://costing-engine-service:8101
+      SURVEILLANCE_BASE_URL: http://surveillance-service:8180
+      NDILA_BASE_URL: http://ndila-service:8155
+      NHUME_BASE_URL: http://nhume-service:8210
+    depends_on:
+      pharmacy-service:
+        condition: service_healthy
+      mushex-service:
+        condition: service_healthy
+      dispatch-service:
+        condition: service_healthy
+      costing-engine-service:
+        condition: service_healthy
+      surveillance-service:
+        condition: service_healthy
+      ndila-service:
+        condition: service_healthy
+      nhume-service:
+        condition: service_healthy

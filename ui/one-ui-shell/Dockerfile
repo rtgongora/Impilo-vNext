@@ -1,12 +1,17 @@
 # Build from repo root:
 #   docker build -f ui/one-ui-shell/Dockerfile -t impilo-one-ui-shell .
-FROM node:20-alpine AS base
+#
+# Dev compose only: NODE_TLS_REJECT_UNAUTHORIZED=0 mirrors npm strict-ssl false for
+# corp networks that block SWC binary downloads during next build.
+FROM node:20-bookworm-slim AS base
 WORKDIR /workspace
 
 ARG NEXT_PUBLIC_BFF_URL=http://localhost:8160
 ARG NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:10000
 ENV NEXT_PUBLIC_BFF_URL=$NEXT_PUBLIC_BFF_URL
 ENV NEXT_PUBLIC_API_GATEWAY_URL=$NEXT_PUBLIC_API_GATEWAY_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_TLS_REJECT_UNAUTHORIZED=0
 
 # Use the UI workspace root so dependencies hoist to /workspace/ui/node_modules.
 COPY ui/package.json ./ui/package.json
@@ -22,19 +27,22 @@ RUN npm config set fetch-retries 5 \
     && npm config set fetch-retry-maxtimeout 120000 \
     && npm config set fetch-timeout 300000 \
     && npm config set strict-ssl false \
-    && npm ci --legacy-peer-deps
+    && npm install --legacy-peer-deps \
+    && npm install @next/swc-linux-x64-gnu@14.2.18 --legacy-peer-deps --no-save
 
 WORKDIR /workspace
 COPY ui/shared-ui ./ui/shared-ui
 COPY ui/one-ui-shell ./ui/one-ui-shell
 COPY contracts ./contracts
+COPY registry-templates ./registry-templates
 
 WORKDIR /workspace/ui
 RUN npm -w one-ui-shell run build
 
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/standalone /app
 COPY --from=base /workspace/ui/one-ui-shell/.next-build/static /app/one-ui-shell/.next-build/static
 COPY --from=base /workspace/ui/one-ui-shell/public /app/one-ui-shell/public

@@ -115,16 +115,6 @@ public class SocialController {
         return proxy(() -> client.reportPost(id, body), requestId, correlationId);
     }
 
-    @PostMapping("/composer/assist")
-    public ResponseEntity<Map<String, Object>> composerAssist(
-            @RequestBody Map<String, Object> body,
-            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return ResponseEntity.ok(Map.of(
-                "data", Map.of("text", body.getOrDefault("content", "")),
-                "meta", meta(requestId, correlationId)));
-    }
-
     @GetMapping("/suggestions")
     public ResponseEntity<Map<String, Object>> suggestions(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

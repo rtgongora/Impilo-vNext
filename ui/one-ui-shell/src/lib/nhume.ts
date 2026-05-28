@@ -260,7 +260,7 @@ export interface ChainOfCustodyPayload {
 // Client surface
 // ============================================================================
 
-const BASE = "/api/v1/nhume";
+const BASE = "/internal/v1/nhume";
 
 function headersForIdempotency(key?: string) {
   return key ? { extraHeaders: { "Idempotency-Key": key } } : undefined;

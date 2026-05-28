@@ -1,6 +1,12 @@
-FROM eclipse-temurin:21-jre-alpine AS runtime
+## Runtime image — build the JAR on the host first:
+##   cd services && mvn -B -pl pharmacy-service -am -DskipTests package
+FROM eclipse-temurin:21-jre-jammy
 
-RUN addgroup -S impilo && adduser -S impilo -G impilo
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -r impilo && useradd -r -g impilo impilo
 
 WORKDIR /app
 COPY target/pharmacy-service-*.jar app.jar
@@ -9,9 +15,4 @@ RUN chown -R impilo:impilo /app
 USER impilo
 
 EXPOSE 8096
-
-ENTRYPOINT ["java", \
-  "-XX:+UseZGC", \
-  "-XX:MaxRAMPercentage=75.0", \
-  "-Djava.security.egd=file:/dev/./urandom", \
-  "-jar", "app.jar"]
+ENTRYPOINT ["java", "-XX:+UseZGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

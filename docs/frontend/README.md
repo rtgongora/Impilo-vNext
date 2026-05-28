@@ -17,12 +17,14 @@ Root-level copies (`ROUTE_MAP.md`, `FRONTEND_ARCHITECTURE.md`, `WEB_MOBILE_PARIT
 | [GAP_CLOSURE_RULES.md](./GAP_CLOSURE_RULES.md) | **Mandatory:** no stubs/mocks; full functionality only |
 | [NEXT_FRONTEND_WAVE_RECOMMENDATIONS.md](./NEXT_FRONTEND_WAVE_RECOMMENDATIONS.md) | Follow-on wave recommendations |
 | [MATURITY_TAXONOMY.md](./MATURITY_TAXONOMY.md) | Canonical maturity labels |
+| [WORKSPACE_LAYOUT_GUIDE.md](./WORKSPACE_LAYOUT_GUIDE.md) | Wave 20 plane workspace UX patterns |
+| [../production-readiness/wave20/](../production-readiness/wave20/) | **Wave 20** production readiness pack |
 
 ## Canonical surfaces
 
 | Surface | Path | Route count (2026-05-28) |
 |---------|------|--------------------------|
-| Web shell (canonical) | `ui/one-ui-shell` | 374 (`EXPECTED_ROUTE_COUNT`) |
+| Web shell (canonical) | `ui/one-ui-shell` | 416 (`EXPECTED_ROUTE_COUNT`, Wave 20) |
 | Citizen mobile | `apps/mobile/citizen-app` | Tab + section router |
 | Provider mobile | `apps/mobile/provider-app` | Mode + clinical tools router |
 | Satellite UIs | `ui/*-web`, `ui/*-console`, `ui/portal` | Per-app |

@@ -512,7 +512,30 @@ jobs:
 
       - name: Start compose stack
         run: |
-          docker compose -f compose/experience/docker-compose.yml up -d
+          docker compose -f compose/experience/docker-compose.yml up -d --build
+
+      - name: Wait for BFF health
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8160/actuator/health >/dev/null; then exit 0; fi
+            sleep 5
+          done
+          echo "BFF did not become healthy in time"
+          exit 1
+
+      - name: Verify demo journey probes
+        run: node scripts/production-readiness/verify-demo-journeys.mjs | tee verify-demo-journeys.log
+
+      - name: Generate Wave 20 parity matrix
+        run: node scripts/production-readiness/generate-wave20-parity-matrix.mjs
+
+      - name: Upload verify probe log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-demo-journeys-log
+          path: verify-demo-journeys.log
+          retention-days: 7
 
       - name: Install UI deps
         working-directory: ui/one-ui-shell
@@ -522,11 +545,13 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npx playwright install --with-deps chromium
 
-      - name: Run compose smoke spec
+      - name: Run compose smoke specs
         working-directory: ui/one-ui-shell
         env:
           PLAYWRIGHT_COMPOSE_E2E: "1"
-        run: npx playwright test --project=chromium --reporter=list e2e/citizen-life-compose.spec.ts
+          PLAYWRIGHT_SKIP_WEBSERVER: "1"
+          PLAYWRIGHT_BASE_URL: "http://localhost:3000"
+        run: npx playwright test --project=chromium --reporter=list e2e/citizen-life-compose.spec.ts e2e/production-readiness.spec.ts --workers=1
 
       - name: Compose logs on failure
         if: failure()
@@ -537,6 +562,64 @@ jobs:
       - name: Shutdown compose
         if: always()
         run: docker compose -f compose/experience/docker-compose.yml down -v
+
+  e2e-sovereign-smoke:
+    name: E2E Sovereign Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build sovereign JARs
+        working-directory: services
+        run: >
+          mvn -B -pl wellness-service,inpatient-service,pct-service,integration-hub,experience-bff,
+          pharmacy-service,mushex-service,dispatch-service,costing-engine-service,surveillance-service,ndila-service,nhume-service
+          -am -DskipTests package
+
+      - name: Start compose stack (sovereign overlay)
+        run: |
+          docker compose -f compose/experience/docker-compose.yml \
+            -f compose/experience/docker-compose.sovereign.yml up -d --build
+
+      - name: Wait for sovereign health
+        run: node scripts/production-readiness/wait-sovereign-health.mjs
+
+      - name: Verify demo journey probes (sovereign)
+        run: node scripts/production-readiness/verify-demo-journeys.mjs --sovereign | tee verify-demo-journeys-sovereign.log
+
+      - name: Generate Wave 20 parity matrix
+        run: node scripts/production-readiness/generate-wave20-parity-matrix.mjs
+
+      - name: Upload verify probe log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-demo-journeys-sovereign-log
+          path: verify-demo-journeys-sovereign.log
+          retention-days: 7
+
+      - name: Compose logs on failure
+        if: failure()
+        run: |
+          docker compose -f compose/experience/docker-compose.yml \
+            -f compose/experience/docker-compose.sovereign.yml ps
+          docker compose -f compose/experience/docker-compose.yml \
+            -f compose/experience/docker-compose.sovereign.yml logs --no-color | tail -n 400
+
+      - name: Shutdown compose
+        if: always()
+        run: |
+          docker compose -f compose/experience/docker-compose.yml \
+            -f compose/experience/docker-compose.sovereign.yml down -v
 
   mobile-e2e-maestro:
     name: Mobile E2E smoke (Maestro, Android emulator)

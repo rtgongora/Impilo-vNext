@@ -1,0 +1,30 @@
+appId: zw.gov.impilo.citizen
+---
+- launchApp
+
+- extendedWaitUntil:
+    visible: "Initializing Impilo Health..."
+    timeout: 60000
+- extendedWaitUntil:
+    id: "citizen-tabs"
+    timeout: 120000
+
+- tapOn: "Health"
+- extendedWaitUntil:
+    id: "personal-screen"
+    timeout: 30000
+
+- tapOn:
+    id: "personal-tab-prod-ready"
+- extendedWaitUntil:
+    id: "citizen-prod-ready-journey-screen"
+    timeout: 30000
+
+- assertVisible:
+    id: "citizen-prod-ready-journey-count"
+- assertVisible:
+    id: "citizen-prod-ready-journey-item-clinical-rx"
+- assertVisible:
+    id: "citizen-prod-ready-journey-item-wellness"
+- assertVisible:
+    id: "citizen-prod-ready-journey-item-data-intel"

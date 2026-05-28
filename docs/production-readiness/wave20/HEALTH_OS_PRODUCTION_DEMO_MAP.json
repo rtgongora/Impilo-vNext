@@ -1,0 +1,78 @@
+{
+  "wave": "20g",
+  "golden_patient": "CPID-ZW-00001",
+  "golden_facility_queue": "f1000000-0000-0000-0000-000000000001",
+  "registry_endpoint": "/internal/v1/demo-journeys",
+  "journeys": [
+    {
+      "id": "clinical-rx",
+      "number": 1,
+      "title": "Core clinical / Rx",
+      "description": "Queue → encounter → Rx → MusheX → core transaction audit",
+      "web_route": "/pharmacy/transaction-journey?patientId=CPID-ZW-00001",
+      "mobile_tab": "core_transaction",
+      "bff_probe": "/internal/v1/queue/entries?facility_id=f1000000-0000-0000-0000-000000000001",
+      "maturity": "partial"
+    },
+    {
+      "id": "inpatient",
+      "number": 2,
+      "title": "Inpatient",
+      "description": "Admissions, ward list, nursing workbench, discharge handoff",
+      "web_route": "/clinical/inpatient/admissions",
+      "mobile_tab": "inpatient",
+      "bff_probe": "/internal/v1/inpatient/admissions",
+      "maturity": "partial"
+    },
+    {
+      "id": "wellness",
+      "number": 3,
+      "title": "Wellness (citizen parity)",
+      "description": "Wellness profile, challenges, and community clubs",
+      "web_route": "/wellness",
+      "mobile_tab": "learning",
+      "bff_probe": "/internal/v1/wellness/challenges",
+      "maturity": "partial"
+    },
+    {
+      "id": "enterprise",
+      "number": 4,
+      "title": "Enterprise resources",
+      "description": "Inventory requisitions, marketplace, and facility ops",
+      "web_route": "/enterprise",
+      "mobile_tab": "facility",
+      "bff_probe": "/internal/v1/inventory/requisitions?facility_id=a1b2c3d4-0001-4000-8000-000000000001",
+      "maturity": "partial"
+    },
+    {
+      "id": "tele-dispatch",
+      "number": 5,
+      "title": "Telemedicine → dispatch",
+      "description": "Telehealth session → Rx journey → Nhume / Ndila ops",
+      "web_route": "/telemedicine",
+      "mobile_tab": "telemedicine",
+      "bff_probe": "/internal/v1/mobile/provider/telemedicine/sessions",
+      "maturity": "partial"
+    },
+    {
+      "id": "public-health",
+      "number": 6,
+      "title": "Public health + geo",
+      "description": "Field tasks, surveillance, and Ndila tile config",
+      "web_route": "/public-health",
+      "mobile_tab": "ph_field_tasks",
+      "bff_probe": "/internal/v1/ndila/tiles/config",
+      "maturity": "partial"
+    },
+    {
+      "id": "data-intel",
+      "number": 7,
+      "title": "Data & intelligence",
+      "description": "Integration hub routes, pipelines, audit intelligence",
+      "web_route": "/data-intelligence/pipelines",
+      "mobile_tab": "ops_reports",
+      "bff_probe": "/internal/v1/integration-hub/routes",
+      "maturity": "partial"
+    }
+  ]
+}

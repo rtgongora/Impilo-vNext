@@ -33,6 +33,7 @@ export interface DispenseResult {
 }
 
 interface PrescriptionsParams {
+  patientId?: string;
   status?: string;
 }
 
@@ -47,8 +48,10 @@ type DispenseResponse = ApiResponse<DispenseResult>;
 export function usePrescriptions(params?: PrescriptionsParams) {
   return useQuery<PrescriptionsResponse>({
     queryKey: ["prescriptions", params],
+    enabled: Boolean(params?.patientId),
     queryFn: () => {
       const searchParams = new URLSearchParams();
+      if (params?.patientId) searchParams.set("patient_id", params.patientId);
       if (params?.status) searchParams.set("status", params.status);
 
       const qs = searchParams.toString();
