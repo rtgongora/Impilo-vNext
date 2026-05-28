@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, BookHeart, CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
@@ -189,9 +189,7 @@ export default function ClinicalCurationPage() {
                           <BookHeart className="h-4 w-4" />
                           Proposed payload
                         </div>
-                        <pre className="max-h-64 overflow-auto whitespace-pre-wrap text-[11px] text-slate-700">
-                          {JSON.stringify(payload ?? {}, null, 2)}
-                        </pre>
+                        <QueryResultPanel title="Proposed payload" data={payload ?? {}} />
                       </div>
                     </li>
                   );

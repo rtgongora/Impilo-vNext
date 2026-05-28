@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Provider Detail — View provider profile, specialties, and schedule.
  * Route: /registry/providers/[id]
@@ -197,9 +197,7 @@ export default function ProviderDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <h3 className="font-medium text-gray-900 mb-3">Work context (Varapi + Tuso)</h3>
               {workContext ? (
-                <pre className="text-xs bg-slate-900 text-slate-100 p-3 rounded-lg max-h-64 overflow-auto">
-                  {JSON.stringify(workContext, null, 2)}
-                </pre>
+                <QueryResultPanel title="Work context" data={workContext} />
               ) : (
                 <p className="text-sm text-gray-400">Loading or unavailable…</p>
               )}

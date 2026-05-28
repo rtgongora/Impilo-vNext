@@ -18,12 +18,15 @@ import {
   useOmnichannelIvrFlows,
   useOmnichannelSmsJourneys,
   useOmnichannelUssdMenus,
+  useOmnichannelCampaigns,
+  useCreateOmnichannelCampaign,
 } from "@/hooks/queries/useOmnichannel";
 
-type ActiveTab = "overview" | "sms" | "ussd" | "ivr" | "callbacks" | "disclosure" | "ai-agent";
+type ActiveTab = "overview" | "campaigns" | "sms" | "ussd" | "ivr" | "callbacks" | "disclosure" | "ai-agent";
 
 const TABS: { key: ActiveTab; label: string; icon: typeof Radio }[] = [
   { key: "overview", label: "Overview", icon: Radio },
+  { key: "campaigns", label: "Campaigns", icon: Plus },
   { key: "sms", label: "SMS Journeys", icon: MessageSquare },
   { key: "ussd", label: "USSD Menus", icon: Phone },
   { key: "ivr", label: "IVR / Voice", icon: PhoneCall },
@@ -92,6 +95,7 @@ export default function OmnichannelPage() {
         </div>
 
         {activeTab === "overview" && <OverviewTab />}
+        {activeTab === "campaigns" && <CampaignsTab />}
         {activeTab === "sms" && <SmsTab />}
         {activeTab === "ussd" && <UssdTab />}
         {activeTab === "ivr" && <IvrTab />}
@@ -170,6 +174,81 @@ function OverviewTab() {
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+function CampaignsTab() {
+  const { data: campaigns, isLoading } = useOmnichannelCampaigns();
+  const createCampaign = useCreateOmnichannelCampaign();
+  const [form, setForm] = useState({ name: "", channel: "SMS", messageTemplate: "" });
+
+  return (
+    <div className="space-y-4">
+      <form
+        className="grid gap-3 rounded-lg border border-gray-200 bg-white p-4 md:grid-cols-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          createCampaign.mutate({
+            name: form.name,
+            channel: form.channel,
+            messageTemplate: form.messageTemplate,
+            campaignType: "OMNICHANNEL_CAMPAIGN",
+          });
+        }}
+      >
+        <input
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          placeholder="Campaign name"
+          value={form.name}
+          onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+          required
+        />
+        <select
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          value={form.channel}
+          onChange={(e) => setForm((p) => ({ ...p, channel: e.target.value }))}
+        >
+          <option value="SMS">SMS</option>
+          <option value="EMAIL">Email</option>
+          <option value="IVR">IVR</option>
+        </select>
+        <textarea
+          className="md:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          rows={3}
+          placeholder="Message template"
+          value={form.messageTemplate}
+          onChange={(e) => setForm((p) => ({ ...p, messageTemplate: e.target.value }))}
+        />
+        <button
+          type="submit"
+          disabled={createCampaign.isPending}
+          className="md:col-span-2 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+        >
+          {createCampaign.isPending ? "Creating…" : "Create campaign"}
+        </button>
+      </form>
+      {isLoading ? (
+        <div className="flex items-center gap-2 py-6">
+          <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+          <span className="text-sm text-gray-500">Loading campaigns…</span>
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+          {(campaigns ?? []).length === 0 ? (
+            <li className="p-4 text-sm text-gray-500">No campaigns from campaigns-service.</li>
+          ) : (
+            campaigns?.map((row, index) => (
+              <li key={String(row.id ?? index)} className="p-4">
+                <p className="text-sm font-medium text-gray-900">{String(row.name ?? row.id)}</p>
+                <p className="text-xs text-gray-500">
+                  {String(row.channel ?? "—")} · {String(row.status ?? "DRAFT")}
+                </p>
+              </li>
+            ))
+          )}
+        </ul>
       )}
     </div>
   );

@@ -13,6 +13,7 @@ import { useSearchParams } from "next/navigation";
 import { MessageSquare, FileText, Monitor, Loader2, Search, Send, ExternalLink } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { isLikelyLandelaDocumentUuid, registryIntakeLandelaPrefillHref } from "@/lib/landela-routes";
@@ -192,9 +193,12 @@ function LandelaTab({ focusedDocumentId }: { focusedDocumentId: string }) {
               Could not load metadata (confirm Landela is up and trust headers are accepted).
             </p>
           ) : (
-            <pre className="mt-3 max-h-56 overflow-auto rounded-md bg-white/90 p-3 text-[11px] text-slate-800">
-              {JSON.stringify(unwrapLandelaMetadata(docMeta as { data?: unknown }), null, 2)}
-            </pre>
+            <QueryResultPanel
+              title="Landela metadata"
+              isLoading={false}
+              isError={false}
+              data={unwrapLandelaMetadata(docMeta as { data?: unknown })}
+            />
           )}
           <div className="mt-3 flex flex-wrap gap-3 text-xs">
             <Link

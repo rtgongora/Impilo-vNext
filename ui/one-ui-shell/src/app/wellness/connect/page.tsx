@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Health Connect–equivalent ingest demo — posts typed changesets to the Experience BFF.
  */
@@ -78,7 +78,14 @@ export default function WellnessHealthConnectPage() {
       }
       parsed.patientId = patientId;
       const r = await postHealthConnectChangeSet(parsed);
-      setResult(`applied=${r.applied} skipped=${r.skipped} errors=${JSON.stringify(r.errors)}`);
+      const errText = Array.isArray(r.errors)
+        ? r.errors.join("; ")
+        : r.errors && typeof r.errors === "object"
+          ? Object.entries(r.errors as Record<string, unknown>)
+              .map(([k, v]) => `${k}: ${String(v)}`)
+              .join("; ")
+          : String(r.errors ?? "none");
+      setResult(`applied=${r.applied} skipped=${r.skipped} errors=${errText}`);
     } catch (e) {
       setResult(e instanceof Error ? e.message : "Request failed");
     } finally {
@@ -236,9 +243,7 @@ export default function WellnessHealthConnectPage() {
         {summary && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-800 mb-2">Wellness summary</h3>
-            <pre className="text-xs bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto max-h-48">
-              {JSON.stringify(summary, null, 2)}
-            </pre>
+            <QueryResultPanel title="Wellness summary" data={summary} />
           </div>
         )}
 

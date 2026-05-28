@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
@@ -243,9 +243,7 @@ function OpenCrPanel() {
         )}
       </form>
       {result != null && (
-        <pre className="overflow-x-auto rounded-xl bg-gray-50 p-3 text-xs text-gray-700">
-          {JSON.stringify(result, null, 2)}
-        </pre>
+        <QueryResultPanel title="Result" data={result} />
       )}
     </div>
   );

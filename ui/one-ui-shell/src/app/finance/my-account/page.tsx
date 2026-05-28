@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Patient financial dashboard — balances, transactions, payment plans, documents.
  * Route: /finance/my-account
@@ -509,9 +509,7 @@ export default function MyHealthcareAccountPage() {
                     </div>
                     {docDetailQ.isLoading && <span>Loading…</span>}
                     {!docDetailQ.isLoading && (
-                      <pre className="whitespace-pre-wrap break-all">
-                        {JSON.stringify(docDetailQ.data, null, 2)}
-                      </pre>
+                      <QueryResultPanel title="Doc Detail Q" isPending={docDetailQ.isPending} isLoading={docDetailQ.isPending} isError={docDetailQ.isError} error={docDetailQ.error} data={docDetailQ.data} />
                     )}
                   </div>
                 )}

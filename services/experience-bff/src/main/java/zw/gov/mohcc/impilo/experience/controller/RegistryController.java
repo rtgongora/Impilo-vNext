@@ -39,12 +39,13 @@ public class RegistryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status) {
         try {
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("query", search != null ? search : "");
             body.put("profession", null);
-            body.put("status", null);
+            body.put("status", status);
             body.put("page", page);
             body.put("size", size);
             JsonNode paged = varapiClient.searchProviders(body);
@@ -81,6 +82,29 @@ public class RegistryController {
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of(
                     "data", Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/providers/{id}/status")
+    public ResponseEntity<Map<String, Object>> changeProviderStatus(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            if (!body.containsKey("newStatus") && body.containsKey("status")) {
+                body.put("newStatus", body.get("status"));
+            }
+            JsonNode data = varapiClient.changeProviderStatus(id, body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("VARAPI provider status change failed: {}", e.getMessage());
+            return ResponseEntity.status(502).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

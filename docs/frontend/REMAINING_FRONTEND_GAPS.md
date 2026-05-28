@@ -1,36 +1,45 @@
 # Remaining Frontend Gaps
 
-> Prioritized backlog after parity sweep 2026-05-28.
+> Prioritized backlog after parity sweep 2026-05-28. Updated after gap-fix wave and follow-up completion.
+
+**Mandatory policy:** [`GAP_CLOSURE_RULES.md`](./GAP_CLOSURE_RULES.md) — **no stubs, no mocks**; ship full functionality only or do not close the gap.
 
 ## P0 — High
 
-| ID | Gap | Domain | Action |
-|----|-----|--------|--------|
-| GAP-001 | UBOMI BFF bridge missing | UBOMI | Add Experience BFF controller + birth/death workflows |
-| GAP-002 | Core transaction mobile journey shallow | Core transaction | Shared shell + handoff commands |
-| GAP-003 | Dispatch vs Nhume dual paths | Nhume | Single operator mental model + docs |
-| GAP-004 | Citizen conditions/allergies not BFF-backed | BUTANO | Wire personal sections to summary APIs |
-| GAP-005 | VARAPI verification queue UI thin | VARAPI | Pending/suspended/revoked workflows |
+| ID | Gap | Status | Notes |
+|----|-----|--------|-------|
+| GAP-001 | UBOMI BFF bridge | **Closed (UI)** | `UbomiController` + `/ubomi` tabs (birth/death/verify) + `useUbomi` hooks |
+| GAP-002 | Core transaction mobile journey | **Partial** | `CoreTransactionCompositionService` + doctrine web shell; dispatch deliveries merged in composition; mobile handoff in Tools → Core Tx |
+| GAP-003 | Dispatch vs Nhume dual paths | **Partial** | Nhume uses `useNhume` + nhume-service (restored); dispatch BFF for ops only — not interchangeable |
+| GAP-004 | Citizen conditions/allergies BFF | **Closed** | `CitizenHealthSummaryService` + web `/internal/v1/citizen/health-summary` + `/home/conditions` & `/home/allergies` |
+| GAP-005 | VARAPI verification queue | **Closed (UI)** | `/registry/providers/verification` + status filter/transitions |
 
 ## P1 — Medium
 
-| ID | Gap | Domain | Action |
-|----|-----|--------|--------|
-| GAP-006 | TUSO control-tower / digital readiness | TUSO | Facility operating model pages |
-| GAP-007 | Ndila ops map dashboards | Ndila | Reusable map on PH + facility |
-| GAP-008 | Comms template/campaign admin | Comms | Omnichannel depth |
-| GAP-009 | ZIBO in main shell | ZIBO | Link + embed or SSO to zibo-web |
-| ~~GAP-010~~ | ~~`ui/experience` fork drift~~ | ~~Web~~ | **CLOSED 2026-05-28** — fork merged into `ui/one-ui-shell` and removed; see [`CONVERGENCE_INVENTORY.md`](./CONVERGENCE_INVENTORY.md). |
+| ID | Gap | Status | Notes |
+|----|-----|--------|-------|
+| GAP-006 | TUSO control-tower / digital readiness | **Partial** | Facility ops hub shows TUSO registry readiness strip + control tower link |
+| GAP-007 | Ndila ops map dashboards | **Partial** | `NdilaController` + `useNdila` + `OpsMapPanel`; tiles require live Ndila (no mock fallback) |
+| GAP-008 | Comms template/campaign admin | **Partial** | Omnichannel **Campaigns** tab + BFF `GET/POST /omnichannel/campaigns` |
+| GAP-009 | ZIBO in main shell | **Closed (link)** | Registry hub **ZIBO Studio** external card (`NEXT_PUBLIC_ZIBO_URL`) |
+| ~~GAP-010~~ | ~~`ui/experience` fork drift~~ | **CLOSED** | Merged into `one-ui-shell` |
 
 ## P2 — Lower
 
-| ID | Gap | Domain | Action |
-|----|-----|--------|--------|
-| GAP-011 | Social moderation admin | Social | Moderation workflow routes |
-| GAP-012 | Notification template admin | Notifications | Template CRUD surfaces |
-| GAP-013 | Integration adapter templates | Integration | Registry UI for mappings |
+| ID | Gap | Status | Notes |
+|----|-----|--------|-------|
+| GAP-011 | Social moderation admin | **Closed (prior)** | `/social/moderation` + `SocialController` + `useSocial` |
+| GAP-012 | Notification template admin | **Closed (UI)** | `/admin/notifications/templates` + `NotificationTemplateController` |
+| GAP-013 | Integration adapter templates | **Closed (UI)** | `/admin/integration-templates` + mapping-templates BFF |
 
-## Registers (source)
+## Route registry
 
-- `docs/audits/BACKEND_NOT_SURFACED_REGISTER.md` (BNS-001–006)
-- `docs/audits/MOCKS_STUBS_PLACEHOLDERS_REGISTER.md` (MSP-001–005)
+- **400** routes in `src/lib/routes.ts` (`EXPECTED_ROUTE_COUNT = 400`)
+- Recent: `/home/conditions`, `/home/allergies`, `/registry/providers/verification`, admin template routes
+
+## Residual (non-blocking)
+
+- Full Leaflet/MapLibre Ndila client (current: CSS tile preview + marker list)
+- TUSO deep control-tower screens beyond readiness strip
+- Omnichannel campaign authoring UX polish
+- Citizen `/home/results` quick-action route (linked from home hub, page may still be stub)

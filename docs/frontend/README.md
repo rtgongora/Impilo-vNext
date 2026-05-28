@@ -14,6 +14,7 @@ Root-level copies (`ROUTE_MAP.md`, `FRONTEND_ARCHITECTURE.md`, `WEB_MOBILE_PARIT
 | [FRONTEND_IMPLEMENTATION_STATUS.md](./FRONTEND_IMPLEMENTATION_STATUS.md) | Live/partial/fixture/not-wired/blocked status |
 | [DOCTRINE_ALIGNMENT_CHECKLIST.md](./DOCTRINE_ALIGNMENT_CHECKLIST.md) | Per-surface doctrine alignment |
 | [REMAINING_FRONTEND_GAPS.md](./REMAINING_FRONTEND_GAPS.md) | Open gaps with priority |
+| [GAP_CLOSURE_RULES.md](./GAP_CLOSURE_RULES.md) | **Mandatory:** no stubs/mocks; full functionality only |
 | [NEXT_FRONTEND_WAVE_RECOMMENDATIONS.md](./NEXT_FRONTEND_WAVE_RECOMMENDATIONS.md) | Follow-on wave recommendations |
 | [MATURITY_TAXONOMY.md](./MATURITY_TAXONOMY.md) | Canonical maturity labels |
 

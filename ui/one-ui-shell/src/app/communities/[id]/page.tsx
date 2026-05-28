@@ -40,7 +40,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
             </div>
             {isMember ? (
               <button
-                onClick={() => leave.mutate({ id })}
+                onClick={() => leave.mutate(id)}
                 disabled={leave.isPending}
                 className="rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-3 py-1.5 text-xs font-medium text-[color:var(--text-secondary)] hover:text-red-600 disabled:opacity-50"
               >
@@ -48,7 +48,7 @@ export default function CommunityDetailPage({ params }: { params: Promise<{ id: 
               </button>
             ) : (
               <button
-                onClick={() => join.mutate({ id })}
+                onClick={() => join.mutate(id)}
                 disabled={join.isPending}
                 className="rounded-full bg-[color:var(--primary)] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[color:var(--primary-hover)] disabled:opacity-50"
               >

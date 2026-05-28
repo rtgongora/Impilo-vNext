@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * COSTA — Costing & Tariffs hub.
  * Route: /finance/costa | pageTitle: "COSTA — Costing & Tariffs"
@@ -569,9 +569,7 @@ export default function FinanceCostaPage() {
                   {registerDecisionM.isPending ? "Posting..." : "Submit decision"}
                 </button>
                 {registerDecisionM.data ? (
-                  <pre className="mt-2 max-h-36 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-2 text-[11px]">
-                    {JSON.stringify(registerDecisionM.data, null, 2)}
-                  </pre>
+                  <QueryResultPanel title="Register Decision M" isPending={registerDecisionM.isPending} isLoading={registerDecisionM.isPending} isError={registerDecisionM.isError} error={registerDecisionM.error} data={registerDecisionM.data} />
                 ) : null}
               </div>
 
@@ -622,9 +620,7 @@ export default function FinanceCostaPage() {
                   {issueInvoiceM.isPending ? "Posting..." : "Issue invoice"}
                 </button>
                 {issueInvoiceM.data ? (
-                  <pre className="mt-2 max-h-36 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-2 text-[11px]">
-                    {JSON.stringify(issueInvoiceM.data, null, 2)}
-                  </pre>
+                  <QueryResultPanel title="Issue Invoice M" isPending={issueInvoiceM.isPending} isLoading={issueInvoiceM.isPending} isError={issueInvoiceM.isError} error={issueInvoiceM.error} data={issueInvoiceM.data} />
                 ) : null}
               </div>
             </div>

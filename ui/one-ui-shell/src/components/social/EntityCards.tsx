@@ -73,7 +73,7 @@ export function GroupCard({ group }: { group: SocialGroup }) {
           {group.name}
         </Link>
         <p className="text-[11px] text-[color:var(--text-muted)]">
-          {group.category || "Group"} · {group.memberCount.toLocaleString()} members
+          {group.category || "Group"} · {(group.memberCount ?? 0).toLocaleString()} members
         </p>
         <p className="mt-1 line-clamp-2 text-xs text-[color:var(--text-secondary)]">
           {group.description || "Coordinate, plan, and chat with your group."}

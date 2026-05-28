@@ -115,7 +115,9 @@ public class ServiceClientConfig {
             /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
             String schedulingServiceBaseUrl,
             /** msika-apps-service — Health OS Capability Marketplace (Msika Apps). */
-            String msikaAppsBaseUrl
+            String msikaAppsBaseUrl,
+            /** Ndila — geospatial intelligence, routing, tiles (port 8155). */
+            String ndilaBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -181,6 +183,7 @@ public class ServiceClientConfig {
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
             if (msikaAppsBaseUrl == null) msikaAppsBaseUrl = "http://localhost:8181";
+            if (ndilaBaseUrl == null) ndilaBaseUrl = "http://localhost:8155";
         }
     }
 
@@ -196,7 +199,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null
+                null, null, null
         );
     }
 
@@ -216,7 +219,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null
+                null, null, null, null
         );
     }
 

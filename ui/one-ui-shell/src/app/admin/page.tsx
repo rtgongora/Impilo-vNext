@@ -18,6 +18,7 @@ import {
   Building,
   AlertTriangle,
   BookHeart,
+  Plug,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -134,6 +135,20 @@ const ADMIN_SECTIONS = [
     href: "/admin/integration-status",
     icon: Globe,
     color: "bg-teal-100 text-teal-700",
+  },
+  {
+    title: "Notification Templates",
+    description: "Create, publish, and retire omnichannel notification templates",
+    href: "/admin/notifications/templates",
+    icon: ScrollText,
+    color: "bg-cyan-100 text-cyan-700",
+  },
+  {
+    title: "Integration Templates",
+    description: "Register adapter mapping templates for integration-hub",
+    href: "/admin/integration-templates",
+    icon: Plug,
+    color: "bg-violet-100 text-violet-700",
   },
   {
     title: "System Monitor",

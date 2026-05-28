@@ -8,6 +8,8 @@
 import { Globe, Info, Loader2, Plug } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { RecordSummary } from "@/components/common/QueryResultPanel";
 import { useIntegrationHubDeadLetters, useIntegrationHubRoutes } from "@/hooks/queries/useIntegrationHub";
 
 function summarizeRoutes(payload: unknown): { rows: Array<Record<string, unknown>>; raw: string } {
@@ -19,7 +21,7 @@ function summarizeRoutes(payload: unknown): { rows: Array<Record<string, unknown
     };
   }
   if (typeof payload === "object") {
-    return { rows: [], raw: JSON.stringify(payload, null, 2) };
+    return { rows: [], raw: typeof payload === "object" ? "" : String(payload) };
   }
   return { rows: [], raw: String(payload) };
 }
@@ -111,8 +113,8 @@ export default function IntegrationStatusPage() {
                     {routeRows.slice(0, 50).map((row, i) => (
                       <tr key={i} className="border-b border-gray-100">
                         <td className="px-3 py-2 text-gray-500">{i + 1}</td>
-                        <td className="px-3 py-2 font-mono text-gray-800 whitespace-pre-wrap break-all">
-                          {JSON.stringify(row)}
+                        <td className="px-3 py-2 text-gray-800">
+                          <RecordSummary record={row} />
                         </td>
                       </tr>
                     ))}
@@ -141,9 +143,13 @@ export default function IntegrationStatusPage() {
               <div className="px-4 py-6 text-sm text-amber-800">Dead letter list unavailable (hub down or forbidden).</div>
             )}
             {!deadQ.isError && (
-              <pre className="p-4 text-xs overflow-x-auto bg-gray-50 text-gray-800 max-h-64">
-                {JSON.stringify(deadPayload ?? {}, null, 2)}
-              </pre>
+              <QueryResultPanel
+                title="Dead letters"
+                isPending={deadQ.isPending} isLoading={deadQ.isPending}
+                isError={deadQ.isError}
+                error={deadQ.error}
+                data={deadQ.data}
+              />
             )}
           </div>
         </div>

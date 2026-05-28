@@ -112,7 +112,7 @@ export function SocialRightRail({ recentPosts = [] }: Props) {
         </h3>
         <p className="text-xs text-[color:var(--text-muted)]">
           Live alerts will surface here from Public Health Operations and the Surveillance plane.
-          <Link href="/wellness/public-health" className="ml-1 text-[color:var(--primary)]">
+          <Link href="/public-health" className="ml-1 text-[color:var(--primary)]">
             Open Public Health
           </Link>
           .

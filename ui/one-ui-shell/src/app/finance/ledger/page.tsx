@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2, ReceiptText } from "lucide-react";
@@ -53,9 +53,7 @@ export default function FinanceLedgerPage() {
           ) : ledgerQ.isError ? (
             <p className="mt-3 text-sm text-red-700">Could not load ledger for that intent.</p>
           ) : ledgerQ.data != null ? (
-            <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-              {JSON.stringify(ledgerQ.data, null, 2)}
-            </pre>
+            <QueryResultPanel title="Ledger Q" isPending={ledgerQ.isPending} isLoading={ledgerQ.isPending} isError={ledgerQ.isError} error={ledgerQ.error} data={ledgerQ.data} />
           ) : (
             <p className="mt-3 text-xs text-slate-500">Enter an intent id to inspect the ledger response.</p>
           )}

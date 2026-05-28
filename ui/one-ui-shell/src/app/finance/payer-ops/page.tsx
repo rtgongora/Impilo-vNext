@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -184,9 +184,7 @@ export default function FinancePayerOpsPage() {
               ) : settlementsQ.isError ? (
                 <p className="mt-1 text-red-700">Linked settlement lookup failed.</p>
               ) : settlementsQ.data != null ? (
-                <pre className="mt-2 max-h-36 overflow-auto rounded border border-slate-200 bg-white p-2 text-[11px]">
-                  {JSON.stringify(settlementsQ.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Settlements Q" isPending={settlementsQ.isPending} isLoading={settlementsQ.isPending} isError={settlementsQ.isError} error={settlementsQ.error} data={settlementsQ.data} />
               ) : (
                 <p className="mt-1">No linked settlement data returned yet.</p>
               )
@@ -247,9 +245,7 @@ export default function FinancePayerOpsPage() {
             ) : intentQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Intent request failed.</p>
             ) : intentQ.data ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(intentQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Intent Q" isPending={intentQ.isPending} isLoading={intentQ.isPending} isError={intentQ.isError} error={intentQ.error} data={intentQ.data} />
             ) : (
               <p className="mt-3 text-xs text-slate-500">Load an intent to continue.</p>
             )}
@@ -266,9 +262,7 @@ export default function FinancePayerOpsPage() {
             ) : receiptsQ.isError ? (
               <p className="mt-2 text-sm text-red-700">Receipts request failed.</p>
             ) : receiptsQ.data ? (
-              <pre className="mt-2 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(receiptsQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Receipts Q" isPending={receiptsQ.isPending} isLoading={receiptsQ.isPending} isError={receiptsQ.isError} error={receiptsQ.error} data={receiptsQ.data} />
             ) : (
               <p className="mt-2 text-xs text-slate-500">Uses the same intent id after load.</p>
             )}
@@ -367,9 +361,7 @@ export default function FinancePayerOpsPage() {
               <p className="mt-2 text-xs text-red-700">Initiate attempt request failed.</p>
             ) : null}
             {initiateM.data != null ? (
-              <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(initiateM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Initiate M" isPending={initiateM.isPending} isLoading={initiateM.isPending} isError={initiateM.isError} error={initiateM.error} data={initiateM.data} />
             ) : null}
 
             <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -414,9 +406,7 @@ export default function FinancePayerOpsPage() {
               <p className="mt-2 text-xs text-red-700">Reselect request failed.</p>
             ) : null}
             {reselectM.data != null ? (
-              <pre className="mt-2 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(reselectM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Reselect M" isPending={reselectM.isPending} isLoading={reselectM.isPending} isError={reselectM.isError} error={reselectM.error} data={reselectM.data} />
             ) : null}
 
             <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -433,9 +423,7 @@ export default function FinancePayerOpsPage() {
             ) : attemptsQ.isError ? (
               <p className="mt-2 text-sm text-red-700">Attempts request failed.</p>
             ) : attemptsQ.data ? (
-              <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(attemptsQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Attempts Q" isPending={attemptsQ.isPending} isLoading={attemptsQ.isPending} isError={attemptsQ.isError} error={attemptsQ.error} data={attemptsQ.data} />
             ) : (
               <p className="mt-2 text-xs text-slate-500">Load an intent to see its attempts.</p>
             )}
@@ -473,9 +461,7 @@ export default function FinancePayerOpsPage() {
               {claimM.isPending ? "Posting…" : "Post claim"}
             </button>
             {claimM.data != null ? (
-              <pre className="mt-3 max-h-40 overflow-auto rounded-lg border bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(claimM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Claim M" isPending={claimM.isPending} isLoading={claimM.isPending} isError={claimM.isError} error={claimM.error} data={claimM.data} />
             ) : null}
           </section>
 
@@ -496,9 +482,7 @@ export default function FinancePayerOpsPage() {
             ) : adaptersQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Failed to load adapters.</p>
             ) : adaptersQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(adaptersQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Adapters Q" isPending={adaptersQ.isPending} isLoading={adaptersQ.isPending} isError={adaptersQ.isError} error={adaptersQ.error} data={adaptersQ.data} />
             ) : null}
           </section>
 
@@ -538,9 +522,7 @@ export default function FinancePayerOpsPage() {
             ) : fraudQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Request failed.</p>
             ) : fraudQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(fraudQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Fraud Q" isPending={fraudQ.isPending} isLoading={fraudQ.isPending} isError={fraudQ.isError} error={fraudQ.error} data={fraudQ.data} />
             ) : fraudArmed ? null : (
               <p className="mt-3 text-xs text-slate-500">Click fetch to query.</p>
             )}
@@ -582,9 +564,7 @@ export default function FinancePayerOpsPage() {
             ) : reviewsQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Request failed.</p>
             ) : reviewsQ.data != null ? (
-              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(reviewsQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Reviews Q" isPending={reviewsQ.isPending} isLoading={reviewsQ.isPending} isError={reviewsQ.isError} error={reviewsQ.error} data={reviewsQ.data} />
             ) : reviewsArmed ? null : (
               <p className="mt-3 text-xs text-slate-500">Click fetch to query.</p>
             )}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import {
   useGlAccounts,
   useGlBalanceSheet,
@@ -71,42 +72,12 @@ export default function ErpGlPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Accounts</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(accounts.data ?? accounts.error ?? accounts.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Journals</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(journals.data ?? journals.error ?? journals.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Trial balance</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(trial.data ?? trial.error ?? trial.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Income statement</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(income.data ?? income.error ?? income.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Balance sheet</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(balance.data ?? balance.error ?? balance.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Budgets ({fy})</h3>
-            <pre className="mt-2 max-h-48 overflow-auto text-xs">
-              {JSON.stringify(budgets.data ?? budgets.error ?? budgets.isLoading, null, 2)}
-            </pre>
-          </section>
+          <QueryResultPanel title="Accounts" isPending={accounts.isPending} isLoading={accounts.isPending} isError={accounts.isError} error={accounts.error} data={accounts.data} />
+          <QueryResultPanel title="Journals" isPending={journals.isPending} isLoading={journals.isPending} isError={journals.isError} error={journals.error} data={journals.data} />
+          <QueryResultPanel title="Trial balance" isPending={trial.isPending} isLoading={trial.isPending} isError={trial.isError} error={trial.error} data={trial.data} />
+          <QueryResultPanel title="Income statement" isPending={income.isPending} isLoading={income.isPending} isError={income.isError} error={income.error} data={income.data} />
+          <QueryResultPanel title="Balance sheet" isPending={balance.isPending} isLoading={balance.isPending} isError={balance.isError} error={balance.error} data={balance.data} />
+          <QueryResultPanel title={`Budgets (${fy})`} isPending={budgets.isPending} isLoading={budgets.isPending} isError={budgets.isError} error={budgets.error} data={budgets.data} />
         </div>
       </PageShell>
     </AppLayout>

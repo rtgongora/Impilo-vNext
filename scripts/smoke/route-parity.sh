@@ -66,13 +66,14 @@ fi
 # =============================================================================
 info "Check 2: Expected route count"
 
-EXPECTED_COUNT=$(grep -c '^\s*"/' "$ROUTE_CHECK" 2>/dev/null || echo "0")
-info "  Expected routes (from registry): $EXPECTED_COUNT"
+ROUTES_TS="$EXPERIENCE_DIR/src/lib/routes.ts"
+EXPECTED_COUNT=$(grep -E 'export const EXPECTED_ROUTE_COUNT = [0-9]+' "$ROUTES_TS" 2>/dev/null | grep -oE '[0-9]+' | head -1 || echo "0")
+info "  Expected routes (from routes.ts): $EXPECTED_COUNT"
 
 if [ "$EXPECTED_COUNT" -gt 0 ]; then
     pass "Route registry defines $EXPECTED_COUNT routes"
 else
-    fail "Route registry is empty"
+    fail "EXPECTED_ROUTE_COUNT not found in routes.ts"
 fi
 
 # =============================================================================

@@ -88,6 +88,47 @@ export interface OmnichannelDashboard {
   last_refreshed_at?: string | null;
 }
 
+export interface OmnichannelCampaign {
+  id?: string | number;
+  name?: string;
+  status?: string;
+  channel?: string;
+  campaignType?: string;
+  [key: string]: unknown;
+}
+
+function asCampaignRows(raw: unknown): OmnichannelCampaign[] {
+  if (Array.isArray(raw)) return raw as OmnichannelCampaign[];
+  if (raw && typeof raw === "object") {
+    const r = raw as Record<string, unknown>;
+    if (Array.isArray(r.content)) return r.content as OmnichannelCampaign[];
+    if (Array.isArray(r.items)) return r.items as OmnichannelCampaign[];
+  }
+  return [];
+}
+
+export function useOmnichannelCampaigns() {
+  return useQuery({
+    queryKey: ["omni-campaigns"],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: unknown }>("/internal/v1/omnichannel/campaigns");
+      return asCampaignRows(res.data);
+    },
+  });
+}
+
+export function useCreateOmnichannelCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post<{ data: unknown }>("/internal/v1/omnichannel/campaigns", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["omni-campaigns"] });
+      void qc.invalidateQueries({ queryKey: ["omni-dashboard"] });
+    },
+  });
+}
+
 export function useOmnichannelDashboard() {
   return useQuery<{ data: OmnichannelDashboard }>({
     queryKey: ["omni-dashboard"],

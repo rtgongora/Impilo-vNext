@@ -33,7 +33,7 @@ export default function PageDetailPage({ params }: { params: Promise<{ id: strin
               </p>
             </div>
             <button
-              onClick={() => follow.mutate({ id })}
+              onClick={() => follow.mutate(id)}
               disabled={follow.isPending}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
                 p.viewerFollows

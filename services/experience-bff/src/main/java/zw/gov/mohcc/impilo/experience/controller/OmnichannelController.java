@@ -302,6 +302,37 @@ public class OmnichannelController {
         }
     }
 
+    // ── Campaigns (admin) ────────────────────────────────────────
+
+    @GetMapping("/campaigns")
+    public ResponseEntity<Map<String, Object>> listCampaigns(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        try {
+            JsonNode campaigns = campaignsClient.listCampaigns(page, size);
+            return ResponseEntity.ok(Map.of("data", campaigns != null ? campaigns : List.of(), "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("OMNICHANNEL_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
+    @PostMapping("/campaigns")
+    public ResponseEntity<Map<String, Object>> createCampaign(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode campaign = campaignsClient.createCampaign(body);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", campaign != null ? campaign : Map.of(),
+                    "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("OMNICHANNEL_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
     // ── SMS Journeys ─────────────────────────────────────────────
 
     @GetMapping("/sms-journeys")

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -90,9 +90,7 @@ export default function OrderDetailPage() {
             {trackingQ.data ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900">Tracking</h3>
-                <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                  {JSON.stringify(trackingQ.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Tracking Q" isPending={trackingQ.isPending} isLoading={trackingQ.isPending} isError={trackingQ.isError} error={trackingQ.error} data={trackingQ.data} />
               </div>
             ) : trackingQ.isError ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -103,17 +101,13 @@ export default function OrderDetailPage() {
             {lastActionResponse ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900">Last action response</h3>
-                <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                  {JSON.stringify(lastActionResponse, null, 2)}
-                </pre>
+                <QueryResultPanel title="Last action" data={lastActionResponse} />
               </div>
             ) : null}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-lg font-semibold text-slate-900">Raw order payload</h3>
-              <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                {JSON.stringify(commerceOrder, null, 2)}
-              </pre>
+              <QueryResultPanel title="Commerce order" data={commerceOrder} />
             </div>
           </div>
         ) : shouldShowMarketplace && marketplaceQ.isLoading ? (

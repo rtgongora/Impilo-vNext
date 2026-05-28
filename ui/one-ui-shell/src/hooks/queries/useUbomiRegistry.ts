@@ -28,8 +28,7 @@ export function useUbomiRegistry() {
       }
       return {
         available: false,
-        message:
-          "UBOMI civil registry workflows are not yet exposed through the Experience BFF. Birth and death notification flows remain API-only.",
+        message: "UBOMI service is not reachable through the Experience BFF.",
         module: "ubomi-service",
       };
     },

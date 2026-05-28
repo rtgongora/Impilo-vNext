@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Coverage Operations — Schemes, eligibility, claims, settlement, preauth.
  * Route: /coverage
@@ -419,7 +419,7 @@ function CoverageCommandConsole() {
           </div>
           <details className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
             <summary className="cursor-pointer font-medium text-slate-700">Payload preview</summary>
-            <pre className="mt-2 overflow-auto text-[11px]">{JSON.stringify(currentPayload, null, 2)}</pre>
+            <QueryResultPanel title="Coverage payload" data={currentPayload} />
           </details>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
@@ -433,9 +433,7 @@ function CoverageCommandConsole() {
             {feedback ? <span className="text-xs text-gray-700">{feedback}</span> : null}
           </div>
           {mutation.data ? (
-            <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-              {JSON.stringify(mutation.data, null, 2)}
-            </pre>
+            <QueryResultPanel title="Mutation" isPending={mutation.isPending} isLoading={mutation.isPending} isError={mutation.isError} error={mutation.error} data={mutation.data} />
           ) : null}
         </div>
       </div>

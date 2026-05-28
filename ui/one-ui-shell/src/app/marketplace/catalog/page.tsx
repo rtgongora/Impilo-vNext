@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -353,9 +353,7 @@ export default function CatalogPage() {
                 </div>
 
                 {validateCart.data ? (
-                  <pre className="mt-2 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-800">
-                    {JSON.stringify(validateCart.data, null, 2)}
-                  </pre>
+                  <QueryResultPanel title="Validate Cart" isPending={validateCart.isPending} isLoading={validateCart.isPending} isError={validateCart.isError} error={validateCart.error} data={validateCart.data} />
                 ) : null}
               </div>
             </div>

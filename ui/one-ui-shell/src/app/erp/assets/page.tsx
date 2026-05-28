@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { PageShell } from "@/components/PageShell";
 import { useFixedAssetDepreciationSchedule, useFixedAssetDetails } from "@/hooks/queries/useAssets";
 
@@ -38,18 +39,8 @@ export default function ErpFixedAssetsPage() {
         </div>
 
         <div className="space-y-6">
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Fixed asset details</h3>
-            <pre className="mt-2 max-h-64 overflow-auto text-xs">
-              {JSON.stringify(details.data ?? details.error ?? details.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Depreciation schedule</h3>
-            <pre className="mt-2 max-h-64 overflow-auto text-xs">
-              {JSON.stringify(schedule.data ?? schedule.error ?? schedule.isLoading, null, 2)}
-            </pre>
-          </section>
+          <QueryResultPanel title="Fixed asset details" isPending={details.isPending} isLoading={details.isPending} isError={details.isError} error={details.error} data={details.data} />
+          <QueryResultPanel title="Depreciation schedule" isPending={schedule.isPending} isLoading={schedule.isPending} isError={schedule.isError} error={schedule.error} data={schedule.data} />
         </div>
       </PageShell>
     </AppLayout>

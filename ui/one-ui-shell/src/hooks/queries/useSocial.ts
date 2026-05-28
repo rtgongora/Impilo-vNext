@@ -1,32 +1,21 @@
-/**
- * Social Timeline — React Query hooks.
- *
- * Backed by the Experience BFF SocialController at /internal/v1/social/**.
- * Shared between the Impilo One UI Shell (Next.js) web experience and any
- * other web surfaces that want to render the same timeline.
- *
- * Each hook accepts the actor context implicitly through api-client header
- * injection (X-Tenant-ID, X-Actor-ID, X-Purpose-Of-Use, etc.).
- */
+"use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
-
-const BASE = "/internal/v1/social";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 export type FeedScope =
   | "home"
   | "following"
+  | "wellness"
+  | "learning"
+  | "public_health"
+  | "facility"
   | "community"
   | "group"
   | "page"
-  | "facility"
-  | "public_health"
-  | "learning"
-  | "wellness"
   | "saved"
-  | "my_posts"
   | "drafts"
+  | "my_posts"
   | "moderation"
   | "announcements";
 
@@ -37,410 +26,465 @@ export type SocialPostKind =
   | "event"
   | "poll"
   | "learning"
-  | "health_promotion"
-  | "campaign"
-  | "facility_update"
-  | "resource";
+  | "health_promotion";
 
 export type SocialVisibility =
   | "public"
-  | "tenant"
-  | "organisation"
-  | "facility"
+  | "followers"
   | "community"
+  | "private"
+  | "tenant"
+  | "facility"
   | "group"
   | "page_followers"
-  | "role_only"
-  | "private";
+  | "role_only";
 
-export type ReactionType = "LIKE" | "CELEBRATE" | "SUPPORT" | "INSIGHTFUL" | "CARE";
+export type ReactionType = "LIKE" | "LOVE" | "SUPPORT" | "INSIGHT";
 
-export interface SocialIdentity {
-  kind: "user" | "community" | "group" | "page" | "system";
+export type ComposerOp =
+  | "improve"
+  | "simplify"
+  | "translate"
+  | "draft_announcement"
+  | "summarise_thread"
+  | "suggest_tags"
+  | "safety_check";
+
+export interface SocialAuthor {
+  kind: string;
   id: string;
   displayName: string;
-  avatarUrl?: string;
   roleBadge?: string;
-  verified?: boolean;
   facilityName?: string;
-}
-
-export interface SocialAttachment {
-  id?: string;
-  kind?: "image" | "document" | "link" | "video" | "audio" | "event_card" | "poll_card" | "resource_card";
-  mediaType?: string;
-  url?: string;
-  previewText?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface SocialReactionSummary {
-  total: number;
-  byType: Partial<Record<ReactionType, number>>;
-  viewerReaction?: ReactionType | null;
-}
-
-export interface SocialScope {
-  communityId?: string | null;
-  groupId?: string | null;
-  pageId?: string | null;
-  facilityId?: string | null;
+  verified?: boolean;
 }
 
 export interface SocialPost {
   id: string;
-  tenantId: string;
-  kind: SocialPostKind;
-  status: "draft" | "scheduled" | "published" | "archived" | "rejected" | "removed";
-  visibility: SocialVisibility;
-  title?: string | null;
-  body: string;
-  topics?: string[];
-  author: SocialIdentity;
-  scope?: SocialScope;
-  attachments?: SocialAttachment[];
-  reactionSummary?: SocialReactionSummary;
+  tenantId?: string;
+  kind?: SocialPostKind;
+  status?: string;
+  visibility?: SocialVisibility;
+  body?: string;
+  content?: string;
+  author?: SocialAuthor;
+  authorActorId?: string;
+  reactionSummary?: {
+    total: number;
+    byType: Record<string, number>;
+    viewerReaction: ReactionType | null;
+  };
   commentCount?: number;
+  likeCount?: number;
   bookmarked?: boolean;
+  topics?: string[];
   pinned?: boolean;
-  source?: string;
   createdAt?: string;
   publishedAt?: string;
-  scheduledFor?: string;
-  nompiloFlags?: Record<string, unknown>;
+  postType?: string;
+  title?: string;
+  source?: string;
+  attachments?: Array<{
+    id?: string;
+    url?: string;
+    kind?: string;
+    label?: string;
+    previewText?: string;
+  }>;
 }
 
 export interface SocialCommunity {
   id: string;
-  tenantId: string;
-  slug: string;
   name: string;
-  description?: string;
   category: string;
-  kind: "public" | "private" | "restricted" | "verified";
-  coverColor?: string;
-  iconUrl?: string;
-  coverImageUrl?: string;
   memberCount: number;
-  rules?: string[];
-  moderatorIds?: string[];
-  viewerMembership: "none" | "requested" | "member" | "moderator" | "admin";
-  createdAt?: string;
-  nompiloAssistantEnabled?: boolean;
+  coverColor?: string;
+  kind?: string;
+  description?: string;
+  viewerMembership?: string;
 }
 
 export interface SocialGroup {
   id: string;
-  communityId?: string | null;
   name: string;
-  description?: string;
+  communityId?: string;
   category?: string;
-  facilityId?: string | null;
-  organisationId?: string | null;
-  memberCount: number;
-  viewerMembership: "none" | "requested" | "member" | "moderator" | "admin";
-  createdAt?: string;
-}
-
-export interface SocialActionLink {
-  label: string;
-  href: string;
-  kind?: string;
+  memberCount?: number;
+  description?: string;
+  viewerMembership?: string;
 }
 
 export interface SocialPage {
   id: string;
-  tenantId: string;
-  kind: "facility" | "organisation" | "programme" | "campaign" | "service" | "provider" | "department" | "district" | "province";
   name: string;
-  slug: string;
-  bio?: string;
-  iconUrl?: string;
-  coverImageUrl?: string;
-  verified?: boolean;
+  kind: string;
   followerCount: number;
-  actionLinks?: SocialActionLink[];
-  adminIds?: string[];
+  verified?: boolean;
+  bio?: string;
   viewerFollows?: boolean;
-  createdAt?: string;
+  adminIds?: string[];
 }
 
-export interface SocialFeedPage {
-  scope: FeedScope;
-  items: SocialPost[];
-  nextCursor?: string | null;
-}
-
-export interface SocialSuggestionsBundle {
+export interface SocialSuggestions {
   communities: SocialCommunity[];
-  groups: SocialGroup[];
   pages: SocialPage[];
+  groups?: SocialGroup[];
 }
 
-export interface SocialModerationCase {
+export interface CreatePostInput {
+  kind: SocialPostKind;
+  body: string;
+  visibility: SocialVisibility;
+  title?: string;
+  topics?: string[];
+  communityId?: string;
+  groupId?: string;
+  pageId?: string;
+  scope?: {
+    communityId?: string;
+    groupId?: string;
+    pageId?: string;
+  };
+  saveAsDraft?: boolean;
+  source?: string;
+  status?: "published" | "draft";
+  scheduledAt?: string | null;
+}
+
+export interface ModerationCase {
   id: string;
   postId: string;
   reporterActorId: string;
   reason: string;
   details?: string;
-  status: "OPEN" | "ACK" | "RESOLVED" | "DISMISSED";
-  decision?: "NO_ACTION" | "REMOVE" | "RESTRICT" | "ARCHIVE" | "ESCALATE" | null;
-  createdAt: string;
-  resolvedAt?: string | null;
+  status: string;
 }
 
-// ── Feed ────────────────────────────────────────────────────────────────
-export function useSocialFeed(scope: FeedScope = "home", scopeId?: string, limit = 20, offset = 0) {
-  return useQuery<SocialFeedPage>({
-    queryKey: ["social-feed", scope, scopeId ?? null, limit, offset],
+function asArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (raw && typeof raw === "object") {
+    const record = raw as Record<string, unknown>;
+    if (Array.isArray(record.items)) return record.items as T[];
+    if (Array.isArray(record.data)) return record.data as T[];
+    if (Array.isArray(record.content)) return record.content as T[];
+  }
+  return [];
+}
+
+function mapCommunity(row: Record<string, unknown>): SocialCommunity {
+  return {
+    id: String(row.id ?? ""),
+    name: String(row.name ?? "Community"),
+    category: String(row.category ?? "general"),
+    memberCount: Number(row.memberCount ?? row.member_count ?? 0),
+    coverColor: row.coverColor ? String(row.coverColor) : undefined,
+  };
+}
+
+function mapPage(row: Record<string, unknown>): SocialPage {
+  return {
+    id: String(row.id ?? ""),
+    name: String(row.name ?? "Page"),
+    kind: String(row.kind ?? "official"),
+    followerCount: Number(row.followerCount ?? row.follower_count ?? 0),
+  };
+}
+
+function parseSuggestions(raw: unknown): SocialSuggestions {
+  if (!raw || typeof raw !== "object") {
+    return { communities: [], pages: [] };
+  }
+  const record = raw as Record<string, unknown>;
+  return {
+    communities: asArray<Record<string, unknown>>(record.communities).map(mapCommunity),
+    pages: asArray<Record<string, unknown>>(record.pages).map(mapPage),
+    groups: asArray<Record<string, unknown>>(record.groups).map((g) => ({
+      id: String(g.id ?? ""),
+      name: String(g.name ?? "Group"),
+      communityId: g.communityId ? String(g.communityId) : undefined,
+    })),
+  };
+}
+
+export function useSocialFeed(scope: FeedScope, scopeId?: string) {
+  return useQuery({
+    queryKey: ["social", "feed", scope, scopeId ?? ""],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      params.set("scope", scope);
+      const params = new URLSearchParams({ scope, limit: "30", offset: "0" });
       if (scopeId) params.set("scopeId", scopeId);
-      params.set("limit", String(limit));
-      params.set("offset", String(offset));
-      return apiClient.get<SocialFeedPage>(`${BASE}/feed?${params.toString()}`);
+      const res = await apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/social/feed?${params.toString()}`,
+      );
+      return { items: asArray<SocialPost>(res.data) };
     },
   });
 }
 
-// ── Post mutations ─────────────────────────────────────────────────────
-export interface CreatePostInput {
-  kind: SocialPostKind;
-  body: string;
-  title?: string;
-  visibility?: SocialVisibility;
-  topics?: string[];
-  scope?: SocialScope;
-  attachments?: SocialAttachment[];
-  scheduledFor?: string;
-  saveAsDraft?: boolean;
-  source?: string;
-  nompiloAssist?: Record<string, unknown>;
+export function useSocialSuggestions() {
+  return useQuery({
+    queryKey: ["social", "suggestions"],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<unknown>>("/internal/v1/social/suggestions");
+      return parseSuggestions(res.data);
+    },
+  });
+}
+
+export function useSocialCommunities(category?: string, q?: string) {
+  return useQuery({
+    queryKey: ["social", "communities", category ?? "", q ?? ""],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (category) params.set("category", category);
+      if (q) params.set("q", q);
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      const res = await apiClient.get<ApiResponse<unknown>>(`/internal/v1/social/communities${qs}`);
+      return asArray<Record<string, unknown>>(res.data).map(mapCommunity);
+    },
+  });
+}
+
+export function useSocialCommunity(id: string) {
+  return useQuery({
+    queryKey: ["social", "community", id],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/social/communities/${encodeURIComponent(id)}`,
+      );
+      return mapCommunity(res.data ?? {});
+    },
+    enabled: id.length > 0,
+  });
+}
+
+function resolveId(input: string | { id: string }): string {
+  return typeof input === "string" ? input : input.id;
+}
+
+export function useJoinCommunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: string | { id: string }) =>
+      apiClient.post(`/internal/v1/social/communities/${resolveId(input)}/join`, {}),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "communities"] }),
+  });
+}
+
+export function useLeaveCommunity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: string | { id: string }) =>
+      apiClient.post(`/internal/v1/social/communities/${resolveId(input)}/leave`, {}),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "communities"] }),
+  });
+}
+
+export function useSocialGroups(communityId?: string) {
+  return useQuery({
+    queryKey: ["social", "groups", communityId ?? ""],
+    queryFn: async () => {
+      const qs = communityId ? `?communityId=${encodeURIComponent(communityId)}` : "";
+      const res = await apiClient.get<ApiResponse<unknown>>(`/internal/v1/social/groups${qs}`);
+      return asArray<Record<string, unknown>>(res.data).map((row) => ({
+        id: String(row.id ?? ""),
+        name: String(row.name ?? "Group"),
+        communityId: row.communityId ? String(row.communityId) : undefined,
+        category: row.category ? String(row.category) : undefined,
+        memberCount: Number(row.memberCount ?? 0),
+        description: row.description ? String(row.description) : undefined,
+      })) as SocialGroup[];
+    },
+  });
+}
+
+export function useSocialGroup(id: string) {
+  return useQuery({
+    queryKey: ["social", "group", id],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/social/groups/${encodeURIComponent(id)}`,
+      );
+      const row = res.data ?? {};
+      return {
+        id: String(row.id ?? id),
+        name: String(row.name ?? "Group"),
+        communityId: row.communityId ? String(row.communityId) : undefined,
+        category: row.category ? String(row.category) : undefined,
+        memberCount: Number(row.memberCount ?? 0),
+        description: row.description ? String(row.description) : undefined,
+      } as SocialGroup;
+    },
+    enabled: id.length > 0,
+  });
+}
+
+export function useSocialPages(kind?: string) {
+  return useQuery({
+    queryKey: ["social", "pages", kind ?? ""],
+    queryFn: async () => {
+      const qs = kind ? `?kind=${encodeURIComponent(kind)}` : "";
+      const res = await apiClient.get<ApiResponse<unknown>>(`/internal/v1/social/pages${qs}`);
+      return asArray<Record<string, unknown>>(res.data).map(mapPage);
+    },
+  });
+}
+
+export function useSocialPage(id: string) {
+  return useQuery({
+    queryKey: ["social", "page", id],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<Record<string, unknown>>>(
+        `/internal/v1/social/pages/${encodeURIComponent(id)}`,
+      );
+      return mapPage(res.data ?? {});
+    },
+    enabled: id.length > 0,
+  });
+}
+
+export function useFollowPage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: string | { id: string }) =>
+      apiClient.post(`/internal/v1/social/pages/${resolveId(input)}/follow`, {}),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "pages"] }),
+  });
 }
 
 export function useCreatePost() {
   const qc = useQueryClient();
-  return useMutation<SocialPost, unknown, CreatePostInput>({
-    mutationFn: (body) => apiClient.post<SocialPost>(`${BASE}/posts`, body),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
-      void qc.invalidateQueries({ queryKey: ["social-suggestions"] });
+  return useMutation({
+    mutationFn: (input: CreatePostInput) =>
+      apiClient.post<ApiResponse<SocialPost>>("/internal/v1/social/posts", {
+        kind: input.kind,
+        body: input.body,
+        title: input.title,
+        visibility: input.visibility,
+        topics: input.topics ?? [],
+        communityId: input.communityId ?? input.scope?.communityId,
+        groupId: input.groupId ?? input.scope?.groupId,
+        pageId: input.pageId ?? input.scope?.pageId,
+        status: input.saveAsDraft ? "draft" : (input.status ?? "published"),
+        source: input.source,
+        scheduledAt: input.scheduledAt,
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "feed"] }),
+  });
+}
+
+export function useNompiloComposer() {
+  return useMutation({
+    mutationFn: async (input: {
+      op: ComposerOp;
+      content: string;
+      language?: string;
+      audience?: SocialVisibility;
+    }): Promise<{ result: unknown; fallbackUsed?: boolean }> => {
+      try {
+        const res = await apiClient.post<ApiResponse<unknown>>("/internal/v1/social/composer/assist", input);
+        return { result: res.data, fallbackUsed: false };
+      } catch {
+        if (input.op === "suggest_tags") {
+          const words = input.content
+            .toLowerCase()
+            .split(/\W+/)
+            .filter((w) => w.length > 4)
+            .slice(0, 3);
+          return { result: words, fallbackUsed: true };
+        }
+        if (input.op === "safety_check") {
+          return { result: { flagged: false }, fallbackUsed: true };
+        }
+        return { result: input.content, fallbackUsed: true };
+      }
     },
   });
 }
 
 export function useReactToPost() {
   const qc = useQueryClient();
-  return useMutation<SocialReactionSummary, unknown, { postId: string; type: ReactionType }>({
-    mutationFn: ({ postId, type }) =>
-      apiClient.post<SocialReactionSummary>(`${BASE}/posts/${postId}/reactions`, { type }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
-    },
+  return useMutation({
+    mutationFn: ({ postId, type }: { postId: string; type: ReactionType }) =>
+      apiClient.post(`/internal/v1/social/posts/${postId}/reactions`, { type }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "feed"] }),
   });
 }
 
 export function useUnreactPost() {
   const qc = useQueryClient();
-  return useMutation<SocialReactionSummary, unknown, { postId: string }>({
-    mutationFn: ({ postId }) =>
-      apiClient.delete<SocialReactionSummary>(`${BASE}/posts/${postId}/reactions`),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
+  return useMutation({
+    mutationFn: (input: string | { postId: string }) => {
+      const postId = typeof input === "string" ? input : input.postId;
+      return apiClient.delete(`/internal/v1/social/posts/${postId}/reactions`);
     },
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "feed"] }),
   });
 }
 
-export function usePostComments(postId: string | null | undefined) {
+export function usePostComments(postId: string | null) {
   return useQuery({
-    queryKey: ["social-comments", postId],
-    queryFn: () => apiClient.get(`${BASE}/posts/${postId}/comments`),
+    queryKey: ["social", "comments", postId],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/social/posts/${postId}/comments`,
+      );
+      return asArray<Record<string, unknown>>(res.data);
+    },
     enabled: !!postId,
   });
 }
 
 export function useAddComment() {
   const qc = useQueryClient();
-  return useMutation<unknown, unknown, { postId: string; body: string; parentCommentId?: string }>({
-    mutationFn: ({ postId, body, parentCommentId }) =>
-      apiClient.post(`${BASE}/posts/${postId}/comments`, { body, parentCommentId }),
-    onSuccess: (_d, vars) => {
-      void qc.invalidateQueries({ queryKey: ["social-comments", vars.postId] });
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
+  return useMutation({
+    mutationFn: ({ postId, body }: { postId: string; body: string }) =>
+      apiClient.post(`/internal/v1/social/posts/${postId}/comments`, { body }),
+    onSuccess: (_data, vars) => {
+      void qc.invalidateQueries({ queryKey: ["social", "comments", vars.postId] });
+      void qc.invalidateQueries({ queryKey: ["social", "feed"] });
     },
   });
 }
 
 export function useToggleBookmark() {
   const qc = useQueryClient();
-  return useMutation<{ bookmarked: boolean }, unknown, { postId: string; on: boolean }>({
-    mutationFn: ({ postId, on }) => {
-      if (on) return apiClient.post<{ bookmarked: boolean }>(`${BASE}/posts/${postId}/bookmark`, {});
-      return apiClient.delete<{ bookmarked: boolean }>(`${BASE}/posts/${postId}/bookmark`);
-    },
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
-    },
+  return useMutation({
+    mutationFn: ({ postId, on }: { postId: string; on: boolean }) =>
+      on
+        ? apiClient.post(`/internal/v1/social/posts/${postId}/bookmark`, {})
+        : apiClient.delete(`/internal/v1/social/posts/${postId}/bookmark`),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["social", "feed"] }),
   });
 }
 
 export function useReportPost() {
-  return useMutation<unknown, unknown, { postId: string; reason: string; details?: string }>({
-    mutationFn: ({ postId, reason, details }) =>
-      apiClient.post(`${BASE}/posts/${postId}/report`, { reason, details }),
-  });
-}
-
-// ── Communities ────────────────────────────────────────────────────────
-export function useSocialCommunities(category?: string, q?: string) {
-  return useQuery<SocialCommunity[]>({
-    queryKey: ["social-communities", category ?? null, q ?? null],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (category) params.set("category", category);
-      if (q) params.set("q", q);
-      const qs = params.toString();
-      return apiClient.get<SocialCommunity[]>(`${BASE}/communities${qs ? `?${qs}` : ""}`);
-    },
-  });
-}
-
-export function useSocialCommunity(id: string | null | undefined) {
-  return useQuery<SocialCommunity>({
-    queryKey: ["social-community", id],
-    queryFn: () => apiClient.get<SocialCommunity>(`${BASE}/communities/${id}`),
-    enabled: !!id,
-  });
-}
-
-export function useJoinCommunity() {
-  const qc = useQueryClient();
-  return useMutation<unknown, unknown, { id: string }>({
-    mutationFn: ({ id }) => apiClient.post(`${BASE}/communities/${id}/join`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-communities"] });
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
-      void qc.invalidateQueries({ queryKey: ["social-suggestions"] });
-    },
-  });
-}
-
-export function useLeaveCommunity() {
-  const qc = useQueryClient();
-  return useMutation<unknown, unknown, { id: string }>({
-    mutationFn: ({ id }) => apiClient.post(`${BASE}/communities/${id}/leave`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-communities"] });
-    },
-  });
-}
-
-// ── Groups ─────────────────────────────────────────────────────────────
-export function useSocialGroups(communityId?: string) {
-  return useQuery<SocialGroup[]>({
-    queryKey: ["social-groups", communityId ?? null],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (communityId) params.set("communityId", communityId);
-      const qs = params.toString();
-      return apiClient.get<SocialGroup[]>(`${BASE}/groups${qs ? `?${qs}` : ""}`);
-    },
-  });
-}
-
-export function useSocialGroup(id: string | null | undefined) {
-  return useQuery<SocialGroup>({
-    queryKey: ["social-group", id],
-    queryFn: () => apiClient.get<SocialGroup>(`${BASE}/groups/${id}`),
-    enabled: !!id,
-  });
-}
-
-// ── Pages ──────────────────────────────────────────────────────────────
-export function useSocialPages(kind?: string) {
-  return useQuery<SocialPage[]>({
-    queryKey: ["social-pages", kind ?? null],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (kind) params.set("kind", kind);
-      const qs = params.toString();
-      return apiClient.get<SocialPage[]>(`${BASE}/pages${qs ? `?${qs}` : ""}`);
-    },
-  });
-}
-
-export function useSocialPage(id: string | null | undefined) {
-  return useQuery<SocialPage>({
-    queryKey: ["social-page", id],
-    queryFn: () => apiClient.get<SocialPage>(`${BASE}/pages/${id}`),
-    enabled: !!id,
-  });
-}
-
-export function useFollowPage() {
-  const qc = useQueryClient();
-  return useMutation<{ following: boolean }, unknown, { id: string }>({
-    mutationFn: ({ id }) => apiClient.post<{ following: boolean }>(`${BASE}/pages/${id}/follow`, {}),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-pages"] });
-      void qc.invalidateQueries({ queryKey: ["social-page"] });
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
-    },
-  });
-}
-
-// ── Suggestions, moderation ────────────────────────────────────────────
-export function useSocialSuggestions() {
-  return useQuery<SocialSuggestionsBundle>({
-    queryKey: ["social-suggestions"],
-    queryFn: () => apiClient.get<SocialSuggestionsBundle>(`${BASE}/suggestions`),
+  return useMutation({
+    mutationFn: ({ postId, reason }: { postId: string; reason: string }) =>
+      apiClient.post(`/internal/v1/social/posts/${postId}/report`, { reason }),
   });
 }
 
 export function useModerationQueue() {
-  return useQuery<SocialModerationCase[]>({
-    queryKey: ["social-moderation-queue"],
-    queryFn: () => apiClient.get<SocialModerationCase[]>(`${BASE}/moderation/queue`),
+  return useQuery({
+    queryKey: ["social", "moderation", "queue"],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<unknown>>("/internal/v1/social/moderation/queue");
+      return asArray<ModerationCase>(res.data);
+    },
   });
 }
 
 export function useResolveModeration() {
   const qc = useQueryClient();
-  return useMutation<unknown, unknown, { caseId: string; decision: string; rationale?: string }>({
-    mutationFn: ({ caseId, decision, rationale }) =>
-      apiClient.post(`${BASE}/moderation/${caseId}/resolve`, { decision, rationale }),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ["social-moderation-queue"] });
-      void qc.invalidateQueries({ queryKey: ["social-feed"] });
+  return useMutation({
+    mutationFn: async (input: { caseId: string; decision: string; rationale?: string }) => {
+      await apiClient.post(`/internal/v1/social/moderation/${input.caseId}/resolve`, {
+        decision: input.decision,
+        rationale: input.rationale ?? "",
+      });
     },
-  });
-}
-
-// ── Nompilo composer assist ───────────────────────────────────────────
-export type ComposerOp =
-  | "improve"
-  | "simplify"
-  | "translate"
-  | "suggest_tags"
-  | "suggest_audience"
-  | "safety_check"
-  | "draft_announcement"
-  | "summarise_thread";
-
-export interface ComposerAssistResult {
-  op: ComposerOp;
-  language?: string;
-  audience?: string;
-  provider?: string;
-  model?: string;
-  fallbackUsed?: boolean;
-  result: unknown;
-  note?: string;
-}
-
-export function useNompiloComposer() {
-  return useMutation<ComposerAssistResult, unknown, { op: ComposerOp; content: string; language?: string; audience?: string }>({
-    mutationFn: (body) => apiClient.post<ComposerAssistResult>(`${BASE}/composer/assist`, body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["social", "moderation"] });
+    },
   });
 }

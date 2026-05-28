@@ -71,6 +71,15 @@ tests/          Integration tests
 - Preserve existing services and avoid deleting or breaking unrelated work.
 - Use `docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md` before calling a feature done.
 
+### Gap closure — no stubs, no mocks (mandatory)
+
+**Full functionality only.** Do not close gaps with shells, `JSON.stringify` debug pages, generic hooks substituting for domain clients, or BFF static fallbacks pretending to be live data.
+
+- Read and follow [`docs/frontend/GAP_CLOSURE_RULES.md`](docs/frontend/GAP_CLOSURE_RULES.md) before any gap/parity work.
+- **Prefer extend; replace only when strictly better** — no downgrade replacements (stubs, fewer mutations, wrong domain client). Comprehensive rewrites need a PR rationale proving nothing was lost.
+- CI enforces: `npm run test:no-stubs` and `npm run test:routes` in `ui/one-ui-shell`.
+- A gap is not closed because a route file exists or type-check passes.
+
 ### Implementation integrity checklist (required)
 
 - For every user-facing feature, prove the chain: **web route/mobile screen -> hook/client -> BFF endpoint -> service -> contract -> tests**.

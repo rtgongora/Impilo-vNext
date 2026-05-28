@@ -3,8 +3,26 @@
  * Used by admin integration surfaces (routes registry, dispatch health).
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+
+export interface IntegrationMappingTemplateRow {
+  id?: string;
+  name?: string;
+  sourceSystem?: string;
+  targetSystem?: string;
+  [key: string]: unknown;
+}
+
+function asTemplateRows(raw: unknown): IntegrationMappingTemplateRow[] {
+  if (Array.isArray(raw)) return raw as IntegrationMappingTemplateRow[];
+  if (raw && typeof raw === "object") {
+    const r = raw as Record<string, unknown>;
+    if (Array.isArray(r.content)) return r.content as IntegrationMappingTemplateRow[];
+    if (Array.isArray(r.items)) return r.items as IntegrationMappingTemplateRow[];
+  }
+  return [];
+}
 
 export function useIntegrationHubRoutes() {
   return useQuery({
@@ -22,5 +40,25 @@ export function useIntegrationHubDeadLetters(page = 0, size = 20) {
         `/internal/v1/integration-hub/deadletters?page=${page}&size=${size}`,
       ),
     staleTime: 15_000,
+  });
+}
+
+export function useIntegrationMappingTemplates() {
+  return useQuery({
+    queryKey: ["integration-hub", "mapping-templates"],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: unknown }>("/internal/v1/integration-hub/mapping-templates");
+      return asTemplateRows(res.data);
+    },
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateIntegrationMappingTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post<{ data: unknown }>("/internal/v1/integration-hub/mapping-templates", body),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["integration-hub", "mapping-templates"] }),
   });
 }

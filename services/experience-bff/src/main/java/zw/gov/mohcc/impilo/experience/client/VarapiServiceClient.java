@@ -215,4 +215,15 @@ public class VarapiServiceClient {
                 url, HttpMethod.PUT, new HttpEntity<>(body, headers), JsonNode.class);
         return response.getBody();
     }
+
+    /**
+     * Change provider lifecycle status (ACTIVE, SUSPENDED, REVOKED, PENDING, etc.).
+     */
+    public JsonNode changeProviderStatus(String providerPublicId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/providers/" + providerPublicId + "/status";
+        log.info("VARAPI: changeProviderStatus provider={}", providerPublicId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
 }

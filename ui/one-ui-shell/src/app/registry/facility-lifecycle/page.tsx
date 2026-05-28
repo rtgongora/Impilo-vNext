@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Facility regulatory dashboard + deep links (Tuso via BFF facility-registry paths).
  */
@@ -28,9 +28,7 @@ export default function FacilityLifecyclePage() {
         </div>
         {isLoading ? <p className="text-sm text-gray-500">Loading dashboard…</p> : null}
         {dashRes?.data ? (
-          <pre className="text-xs bg-slate-900 text-slate-100 p-3 rounded-lg max-h-[480px] overflow-auto">
-            {JSON.stringify(dashRes.data, null, 2)}
-          </pre>
+          <QueryResultPanel title="Dashboard summary" data={dashRes.data} />
         ) : (
           !isLoading && <p className="text-sm text-gray-600">No dashboard payload (Tuso may be offline).</p>
         )}

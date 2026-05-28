@@ -164,7 +164,7 @@ export default function InventoryPage() {
                   <ArrowRight className="h-4 w-4 text-slate-400" aria-hidden />
                 </Link>
                 <Link
-                  href="/inventory/stock"
+                  href="/inventory/stock-management"
                   className="inline-flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 shadow-sm hover:bg-slate-50"
                 >
                   <span className="inline-flex items-center gap-2">
@@ -223,7 +223,7 @@ export default function InventoryPage() {
                     <h3 className="text-lg font-semibold text-slate-900">Recent stock movements</h3>
                     <p className="text-sm text-slate-600">Receipts, issues, and transfers (newest first). FEFO picks align with movement history.</p>
                   </div>
-                  <Link href="/inventory/stock" className="text-sm font-medium text-teal-800 hover:text-teal-950">
+                  <Link href="/inventory/stock-management" className="text-sm font-medium text-teal-800 hover:text-teal-950">
                     Open stock workspace
                   </Link>
                 </div>

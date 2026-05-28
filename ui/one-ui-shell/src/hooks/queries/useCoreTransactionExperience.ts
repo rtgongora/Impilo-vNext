@@ -292,3 +292,55 @@ export function useTransitionWorkflowInstance() {
     },
   });
 }
+
+export function useCoreTransactionDetail(transactionId: string) {
+  return useQuery({
+    queryKey: ["core-transaction", transactionId],
+    queryFn: async () => {
+      const res = await apiClient.get<ApiResponse<CoreTransactionBffView>>(
+        `/internal/v1/core-transactions/${encodeURIComponent(transactionId)}`,
+      );
+      const raw = res.data;
+      return raw ? toCoreTransactionView(raw as CoreTransactionBffView) : null;
+    },
+    enabled: transactionId.length > 0,
+  });
+}
+
+export function useApplyCoreTransactionAction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      transactionId,
+      actionCode,
+      payload,
+    }: {
+      transactionId: string;
+      actionCode: string;
+      payload?: AnyRecord;
+    }) =>
+      apiClient.post<ApiResponse<CoreTransactionBffView>>(
+        `/internal/v1/core-transactions/${encodeURIComponent(transactionId)}/actions/${encodeURIComponent(actionCode)}`,
+        payload ?? {},
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["core-transaction"] }),
+  });
+}
+
+export function useRequestNompiloHandoff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      transactionId,
+      payload,
+    }: {
+      transactionId: string;
+      payload?: AnyRecord;
+    }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/core-transactions/${encodeURIComponent(transactionId)}/nompilo/handoff`,
+        payload ?? {},
+      ),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["core-transaction"] }),
+  });
+}

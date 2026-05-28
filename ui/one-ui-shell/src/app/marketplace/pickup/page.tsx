@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2, Ticket } from "lucide-react";
@@ -60,9 +60,7 @@ export default function MarketplacePickupPage() {
               )}
             </button>
             {issueM.data != null ? (
-              <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                {JSON.stringify(issueM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Issue M" isPending={issueM.isPending} isLoading={issueM.isPending} isError={issueM.isError} error={issueM.error} data={issueM.data} />
             ) : null}
           </section>
 
@@ -96,9 +94,7 @@ export default function MarketplacePickupPage() {
               {claimM.isPending ? "Posting..." : "Claim pickup"}
             </button>
             {claimM.data != null ? (
-              <pre className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                {JSON.stringify(claimM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Claim M" isPending={claimM.isPending} isLoading={claimM.isPending} isError={claimM.isError} error={claimM.error} data={claimM.data} />
             ) : null}
           </section>
         </div>

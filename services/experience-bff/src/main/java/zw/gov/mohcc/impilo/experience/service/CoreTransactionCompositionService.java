@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.DispatchServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkflowServiceClient;
 
@@ -22,15 +23,18 @@ public class CoreTransactionCompositionService {
     private final WorkflowServiceClient workflowServiceClient;
     private final PctServiceClient pctServiceClient;
     private final CostaServiceClient costaServiceClient;
+    private final DispatchServiceClient dispatchServiceClient;
     private final ObjectMapper objectMapper;
 
     public CoreTransactionCompositionService(WorkflowServiceClient workflowServiceClient,
                                             PctServiceClient pctServiceClient,
                                             CostaServiceClient costaServiceClient,
+                                            DispatchServiceClient dispatchServiceClient,
                                             ObjectMapper objectMapper) {
         this.workflowServiceClient = workflowServiceClient;
         this.pctServiceClient = pctServiceClient;
         this.costaServiceClient = costaServiceClient;
+        this.dispatchServiceClient = dispatchServiceClient;
         this.objectMapper = objectMapper;
     }
 
@@ -55,12 +59,27 @@ public class CoreTransactionCompositionService {
             failures.add("WORKFLOW_UNAVAILABLE");
         }
 
+        appendDeliveryTransactions(items, failures, state, type);
+
         envelope.set("items", items);
         envelope.set("failureModes", failures);
         return envelope;
     }
 
     public ObjectNode getCoreTransaction(String transactionId) {
+        if (transactionId != null && transactionId.startsWith("delivery-")) {
+            String deliveryId = transactionId.substring("delivery-".length());
+            try {
+                JsonNode delivery = dispatchServiceClient.getDelivery(deliveryId);
+                if (delivery == null || delivery.isNull()) {
+                    return null;
+                }
+                return toDeliveryCoreTransactionView(delivery);
+            } catch (Exception ex) {
+                log.warn("Delivery core transaction get failed: {}", ex.getMessage());
+                return null;
+            }
+        }
         JsonNode workflow = workflowServiceClient.getWorkflow(transactionId);
         if (workflow == null || workflow.isMissingNode() || workflow.isNull()) {
             return null;
@@ -694,6 +713,64 @@ public class CoreTransactionCompositionService {
             case "PENDING_SYNC", "FAILED_SYNC", "PENDING_RECONCILIATION" -> "HANDLE_FAILURE_OFFLINE_AND_RECONCILIATION";
             default -> "MANAGE_STATE_MACHINE";
         };
+    }
+
+    private void appendDeliveryTransactions(ArrayNode items, ArrayNode failures, String state, String type) {
+        if (type != null && !type.isBlank() && !"DELIVERY".equalsIgnoreCase(type)) {
+            return;
+        }
+        try {
+            JsonNode raw = dispatchServiceClient.listDeliveries();
+            for (JsonNode delivery : asNodeArray(raw)) {
+                String status = stringOr(delivery, "status", stringOr(delivery, "state", "UNKNOWN"));
+                if (state != null && !state.isBlank() && !state.equalsIgnoreCase(status)) {
+                    continue;
+                }
+                items.add(toDeliveryCoreTransactionView(delivery));
+            }
+        } catch (Exception ex) {
+            log.warn("Dispatch delivery bridge skipped: {}", ex.getMessage());
+            failures.add("DISPATCH_UNAVAILABLE");
+        }
+    }
+
+    private ObjectNode toDeliveryCoreTransactionView(JsonNode delivery) {
+        String rawId = stringOr(delivery, "id", stringOr(delivery, "deliveryId", "unknown"));
+        String status = stringOr(delivery, "status", stringOr(delivery, "state", "UNKNOWN"));
+        ObjectNode pseudo = objectMapper.createObjectNode();
+        pseudo.put("id", "delivery-" + rawId);
+        pseudo.put("state", status);
+        pseudo.put("transactionType", "DELIVERY");
+        pseudo.put("serviceCode", "svc.dispatch.delivery");
+        pseudo.put("facilityId", stringOr(delivery, "facilityId", "tuso:unknown"));
+        ObjectNode view = toCoreTransactionView(pseudo, "DELIVERY");
+        ObjectNode audit = (ObjectNode) view.get("auditSummary");
+        if (audit != null) {
+            audit.put("sourceSystem", "dispatch-service");
+        }
+        return view;
+    }
+
+    private static Iterable<JsonNode> asNodeArray(JsonNode raw) {
+        if (raw == null || raw.isNull()) {
+            return List.of();
+        }
+        if (raw.isArray()) {
+            return raw;
+        }
+        if (raw.has("items") && raw.get("items").isArray()) {
+            return raw.get("items");
+        }
+        if (raw.has("content") && raw.get("content").isArray()) {
+            return raw.get("content");
+        }
+        if (raw.has("data") && raw.get("data").isArray()) {
+            return raw.get("data");
+        }
+        if (raw.has("data") && raw.get("data").has("items") && raw.get("data").get("items").isArray()) {
+            return raw.get("data").get("items");
+        }
+        return List.of(raw);
     }
 
     private static String stringOr(JsonNode node, String field, String defaultValue) {

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -103,9 +103,7 @@ export default function FinanceSettlementsPage() {
               </button>
             </div>
             {lastRunResponse ? (
-              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(lastRunResponse, null, 2)}
-              </pre>
+              <QueryResultPanel title="Last run" data={lastRunResponse} />
             ) : null}
             {derivedIdFromRun ? (
               <p className="mt-2 text-xs text-emerald-800">Detected settlement id: {derivedIdFromRun}</p>
@@ -141,9 +139,7 @@ export default function FinanceSettlementsPage() {
             ) : settlementQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load that settlement.</p>
             ) : settlementQ.data ? (
-              <pre className="mt-3 max-h-64 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(settlementQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Settlement Q" isPending={settlementQ.isPending} isLoading={settlementQ.isPending} isError={settlementQ.isError} error={settlementQ.error} data={settlementQ.data} />
             ) : (
               <p className="mt-3 text-xs text-slate-500">Enter an id and choose Load.</p>
             )}

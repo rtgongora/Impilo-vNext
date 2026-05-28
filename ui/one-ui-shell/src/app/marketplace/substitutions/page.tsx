@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Substitutions — absorbs msika-flow-portal sidecar
  * Manage product substitution requests and approvals.
@@ -164,9 +164,7 @@ export default function SubstitutionsPage() {
             {substitutionsQ.data ? (
               <details className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <summary className="cursor-pointer text-xs font-medium text-slate-700">Raw substitution payload</summary>
-                <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-white p-3 text-[11px] text-slate-800">
-                  {JSON.stringify(substitutionsQ.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Substitutions Q" isPending={substitutionsQ.isPending} isLoading={substitutionsQ.isPending} isError={substitutionsQ.isError} error={substitutionsQ.error} data={substitutionsQ.data} />
               </details>
             ) : null}
           </div>

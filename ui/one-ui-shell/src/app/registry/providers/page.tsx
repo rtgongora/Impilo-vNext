@@ -46,7 +46,13 @@ export default function ProvidersPage() {
           </Link>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center justify-end">
+        <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+          <Link
+            href="/registry/providers/verification"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-amber-200 text-amber-900 rounded-lg hover:bg-amber-50 transition-colors"
+          >
+            Verification queue
+          </Link>
           <Link
             href="/registry/providers/new"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

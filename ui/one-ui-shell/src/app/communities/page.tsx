@@ -68,8 +68,8 @@ export default function CommunitiesPage() {
             <CommunityCard
               key={c.id}
               community={c}
-              onJoin={() => join.mutate({ id: c.id })}
-              joining={join.isPending && join.variables?.id === c.id}
+              onJoin={() => join.mutate(c.id)}
+              joining={join.isPending && join.variables === c.id}
             />
           ))}
         </div>

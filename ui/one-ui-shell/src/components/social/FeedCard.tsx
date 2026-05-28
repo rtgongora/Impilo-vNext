@@ -36,6 +36,7 @@ interface Props {
 }
 
 export function FeedCard({ post }: Props) {
+  const author = post.author ?? { kind: "user", id: "unknown", displayName: "Unknown author" };
   const [showComments, setShowComments] = useState(false);
   const [showReportPanel, setShowReportPanel] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
@@ -82,28 +83,28 @@ export function FeedCard({ post }: Props) {
       <header className="flex items-start gap-3 px-4 pt-4">
         <span
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-          style={{ background: avatarColor(post.author.displayName) }}
+          style={{ background: avatarColor(author.displayName) }}
           aria-hidden
         >
-          {(post.author.displayName || "?").charAt(0).toUpperCase()}
+          {(author.displayName || "?").charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate text-sm font-semibold text-[color:var(--text-primary)]">
-              {post.author.displayName}
+              {author.displayName}
             </span>
-            {post.author.verified && (
+            {author.verified && (
               <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--primary)]" aria-label="Verified" />
             )}
-            {post.author.roleBadge && (
+            {author.roleBadge && (
               <span className="rounded-full border border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[color:var(--text-secondary)]">
-                {post.author.roleBadge}
+                {author.roleBadge}
               </span>
             )}
             {post.pinned && <Pin className="h-3 w-3 text-amber-500" aria-label="Pinned" />}
           </div>
           <p className="truncate text-xs text-[color:var(--text-muted)]">
-            {post.author.facilityName ? `${post.author.facilityName} · ` : ""}
+            {author.facilityName ? `${author.facilityName} · ` : ""}
             {formatTimestamp(post.publishedAt ?? post.createdAt)}
             {" · "}
             <VisibilityBadge visibility={post.visibility} />
@@ -303,7 +304,7 @@ export function VisibilityBadge({ visibility }: { visibility: SocialPost["visibi
   return (
     <span className="inline-flex items-center gap-1 align-middle">
       {isPublic ? <Globe className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
-      <span className="text-[10px] capitalize">{visibility.replace(/_/g, " ")}</span>
+      <span className="text-[10px] capitalize">{(visibility ?? "public").replace(/_/g, " ")}</span>
     </span>
   );
 }

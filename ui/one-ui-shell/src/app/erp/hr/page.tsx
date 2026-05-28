@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import {
   useHrAttendance,
   useHrContracts,
@@ -82,55 +83,15 @@ export default function ErpHrPage() {
           </label>
         </div>
 
-        <div className="space-y-6">
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Employees</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(employees.data ?? employees.error ?? employees.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Contracts</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(contracts.data ?? contracts.error ?? contracts.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Leave types</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(leaveTypes.data ?? leaveTypes.error ?? leaveTypes.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Leave requests</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(leaveReq.data ?? leaveReq.error ?? leaveReq.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Attendance</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(attendance.data ?? attendance.error ?? attendance.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Payroll runs</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(runs.data ?? runs.error ?? runs.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Payslips</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(payslips.data ?? payslips.error ?? payslips.isLoading, null, 2)}
-            </pre>
-          </section>
-          <section className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-800">Deduction types</h3>
-            <pre className="mt-2 max-h-40 overflow-auto text-xs">
-              {JSON.stringify(deductions.data ?? deductions.error ?? deductions.isLoading, null, 2)}
-            </pre>
-          </section>
+        <div className="grid gap-4 md:grid-cols-2">
+          <QueryResultPanel title="Employees" {...employees} data={employees.data} />
+          <QueryResultPanel title="Payroll runs" {...runs} data={runs.data} />
+          <QueryResultPanel title="Contracts" {...contracts} data={contracts.data} />
+          <QueryResultPanel title="Payslips" {...payslips} data={payslips.data} />
+          <QueryResultPanel title="Leave types" {...leaveTypes} data={leaveTypes.data} />
+          <QueryResultPanel title="Deduction types" {...deductions} data={deductions.data} />
+          <QueryResultPanel title="Leave requests" {...leaveReq} data={leaveReq.data} />
+          <QueryResultPanel title="Attendance" {...attendance} data={attendance.data} />
         </div>
       </PageShell>
     </AppLayout>

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
@@ -152,9 +152,7 @@ export default function IpsPage() {
                   <FileJson className="h-4 w-4 text-slate-500" />
                   <h2 className="text-base font-semibold text-slate-900">Raw FHIR preview</h2>
                 </div>
-                <pre className="mt-4 max-h-[32rem] overflow-auto rounded-2xl bg-slate-950 p-4 text-xs text-slate-100">
-                  {JSON.stringify(bundleQuery.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Bundle Query" isPending={bundleQuery.isPending} isLoading={bundleQuery.isPending} isError={bundleQuery.isError} error={bundleQuery.error} data={bundleQuery.data} />
               </div>
             </>
           )}

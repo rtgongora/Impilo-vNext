@@ -1955,6 +1955,7 @@ function CitizenHome({
               {[
                 { href: "/home/medications", label: "Medications", icon: Pill, color: "text-amber-500" },
                 { href: "/home/conditions", label: "Conditions", icon: FlaskConical, color: "text-purple-500" },
+                { href: "/home/allergies", label: "Allergies", icon: AlertTriangle, color: "text-red-500" },
                 { href: "/home/documents", label: "Documents", icon: FileCheck, color: "text-blue-500" },
                 { href: "/home/results", label: "Lab Results", icon: Clipboard, color: "text-green-500" },
               ].map((a) => {

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -208,9 +208,7 @@ export default function MarketplaceVendorOrdersPage() {
               </div>
             )}
 
-            <pre className="max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-              {JSON.stringify(ordersQ.data, null, 2)}
-            </pre>
+            <QueryResultPanel title="Orders Q" isPending={ordersQ.isPending} isLoading={ordersQ.isPending} isError={ordersQ.isError} error={ordersQ.error} data={ordersQ.data} />
           </div>
         )}
 

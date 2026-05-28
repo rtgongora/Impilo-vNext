@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { RecordSummary } from "@/components/common/QueryResultPanel";
 import { EnterpriseWorkspaceShell } from "@/components/enterprise/EnterpriseWorkspaceShell";
 import {
   useDispatchConsole,
@@ -59,7 +60,7 @@ export default function EnterpriseFleetPage() {
             ) : (
               recentTracking.map((row, idx) => (
                 <div key={idx} className="rounded-md border border-slate-100 bg-slate-50 p-2 text-xs text-slate-700">
-                  {JSON.stringify(row)}
+                  <RecordSummary record={row} />
                 </div>
               ))
             )}
@@ -80,7 +81,7 @@ function ListCard({ title, rows }: { title: string; rows: Array<Record<string, u
         ) : (
           rows.slice(0, 10).map((row, idx) => (
             <div key={idx} className="rounded-md border border-slate-100 bg-slate-50 p-2 text-xs text-slate-700">
-              {JSON.stringify(row)}
+              <RecordSummary record={row} />
             </div>
           ))
         )}

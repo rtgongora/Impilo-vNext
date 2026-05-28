@@ -39,7 +39,7 @@ class CoreTransactionCompositionServiceTest {
 
     @Test
     void feedbackAndHandoffMethods_returnAcceptedResponses() {
-        CoreTransactionCompositionService service = new CoreTransactionCompositionService(null, null, null, MAPPER);
+        CoreTransactionCompositionService service = new CoreTransactionCompositionService(null, null, null, null, MAPPER);
         ObjectNode feedback = service.submitFeedback("tx-1", Map.of("channel", "IN_APP"));
         ObjectNode handoff = service.requestNompiloHandoff("tx-1", Map.of("handoffOptionId", "helpdesk"));
         ObjectNode command = service.executeNompiloCommand("tx-1", Map.of("query", "find service"));

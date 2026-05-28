@@ -12,6 +12,7 @@ import { ArrowLeft, Globe2, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
+import { OpsMapPanel } from "@/components/operations/OpsMapPanel";
 import { useFacilityQueueSnapshots, type FacilityQueueSnapshotRow } from "@/hooks/queries/useFacilityOperations";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
@@ -167,6 +168,18 @@ export default function DistrictOperationsPage() {
             </table>
           </div>
         )}
+
+        <div className="mt-6">
+          <OpsMapPanel
+            title="District facility map"
+            subtitle="Ndila-ready geo layer — markers from facility registry when coordinates exist"
+            markers={merged.map((row) => ({
+              id: row.id,
+              label: row.name,
+              status: `${row.waiting} waiting`,
+            }))}
+          />
+        </div>
       </PageShell>
     </AppLayout>
   );

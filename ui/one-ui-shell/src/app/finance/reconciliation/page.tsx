@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -98,9 +98,7 @@ export default function FinanceReconciliationPage() {
               )}
             </button>
             {importM.data != null ? (
-              <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(importM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Import M" isPending={importM.isPending} isLoading={importM.isPending} isError={importM.isError} error={importM.error} data={importM.data} />
             ) : null}
           </div>
 
@@ -156,9 +154,7 @@ export default function FinanceReconciliationPage() {
                 {typeof unmatchedSummary.totalElements === "number" ? (
                   <p>Total elements: {String(unmatchedSummary.totalElements)}</p>
                 ) : null}
-                <pre className="max-h-72 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px] text-slate-800">
-                  {JSON.stringify(unmatchedQ.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Unmatched Q" isPending={unmatchedQ.isPending} isLoading={unmatchedQ.isPending} isError={unmatchedQ.isError} error={unmatchedQ.error} data={unmatchedQ.data} />
               </div>
             ) : unmatchedArmed ? (
               <p className="mt-3 text-xs text-slate-500">No data.</p>
@@ -202,9 +198,7 @@ export default function FinanceReconciliationPage() {
               </button>
             </div>
             {matchM.data != null ? (
-              <pre className="mt-3 max-h-40 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(matchM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Match M" isPending={matchM.isPending} isLoading={matchM.isPending} isError={matchM.isError} error={matchM.error} data={matchM.data} />
             ) : null}
           </div>
 
@@ -240,9 +234,7 @@ export default function FinanceReconciliationPage() {
             ) : tripleQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Triple-source request failed.</p>
             ) : tripleQ.data && typeof tripleQ.data === "object" ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px] text-slate-800">
-                {JSON.stringify(tripleQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Triple Q" isPending={tripleQ.isPending} isLoading={tripleQ.isPending} isError={tripleQ.isError} error={tripleQ.error} data={tripleQ.data} />
             ) : tripleArmed ? (
               <p className="mt-3 text-xs text-slate-500">No triple-source rows returned.</p>
             ) : null}

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -158,9 +158,7 @@ export default function RegistryIntakePage() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </div>
             ) : (
-              <pre className="mt-3 max-h-48 overflow-auto rounded-lg bg-slate-50 p-3 text-[11px] leading-relaxed text-slate-700">
-                {JSON.stringify(bootstrap.data?.data ?? {}, null, 2)}
-              </pre>
+              <QueryResultPanel title="Bootstrap" isPending={bootstrap.isPending} isLoading={bootstrap.isPending} isError={bootstrap.isError} error={bootstrap.error} data={bootstrap.data?.data ?? {}} />
             )}
           </div>
 
@@ -363,9 +361,13 @@ export default function RegistryIntakePage() {
               </p>
             )}
             {executeImport.data?.data && (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg bg-slate-50 p-3 text-[11px] text-slate-700">
-                {JSON.stringify((executeImport.data as { data: unknown }).data, null, 2)}
-              </pre>
+              <QueryResultPanel
+                title="Execute import result"
+                isPending={executeImport.isPending} isLoading={executeImport.isPending}
+                isError={executeImport.isError}
+                error={executeImport.error}
+                data={(executeImport.data as { data?: unknown } | undefined)?.data}
+              />
             )}
             <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-3">
               <div className="flex items-center justify-between gap-2">
@@ -456,9 +458,7 @@ export default function RegistryIntakePage() {
               </p>
             )}
             {searchIndawo.data?.data != null && (
-              <pre className="mt-3 max-h-64 overflow-auto rounded-lg bg-slate-50 p-3 text-[11px] text-slate-700">
-                {JSON.stringify(searchIndawo.data.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Search Indawo" isPending={searchIndawo.isPending} isLoading={searchIndawo.isPending} isError={searchIndawo.isError} error={searchIndawo.error} data={searchIndawo.data.data} />
             )}
           </div>
         </div>

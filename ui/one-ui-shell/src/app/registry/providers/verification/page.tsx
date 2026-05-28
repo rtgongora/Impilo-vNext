@@ -1,0 +1,137 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { ArrowLeft, CheckCircle2, Loader2, ShieldAlert, XCircle } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { PageShell } from "@/components/PageShell";
+import { useChangeProviderStatus, useProviders } from "@/hooks/queries/useRegistry";
+
+const STATUS_OPTIONS = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "INACTIVE"] as const;
+
+export default function ProviderVerificationQueuePage() {
+  const [statusFilter, setStatusFilter] = useState<string>("PENDING");
+  const { data, isLoading, refetch } = useProviders({ status: statusFilter });
+  const changeStatus = useChangeProviderStatus();
+
+  const providers = data?.data ?? [];
+
+  return (
+    <AppLayout>
+      <PageShell
+        title="Provider verification queue"
+        subtitle="Review VARAPI registrations and transition provider status"
+      >
+        <Link
+          href="/registry/providers"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to provider registry
+        </Link>
+
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {STATUS_OPTIONS.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(status)}
+              className={`rounded-full px-3 py-1 text-xs font-medium ${
+                statusFilter === status
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+          </div>
+        ) : providers.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
+            No providers in <strong>{statusFilter}</strong> status.
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
+            {providers.map((provider) => {
+              const attrs = provider.attributes ?? {};
+              const name = String(attrs.displayName ?? provider.id);
+              const currentStatus = String(attrs.status ?? "—");
+              return (
+                <li key={provider.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{name}</p>
+                    <p className="text-xs text-gray-500">
+                      {String(attrs.registrationNumber ?? "—")} · {String(attrs.speciality ?? "—")} ·{" "}
+                      <span className="font-medium">{currentStatus}</span>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {statusFilter === "PENDING" ? (
+                      <>
+                        <button
+                          type="button"
+                          disabled={changeStatus.isPending}
+                          onClick={() =>
+                            changeStatus.mutate(
+                              { id: provider.id, newStatus: "ACTIVE", reason: "Verification approved" },
+                              { onSuccess: () => void refetch() },
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          disabled={changeStatus.isPending}
+                          onClick={() =>
+                            changeStatus.mutate(
+                              { id: provider.id, newStatus: "SUSPENDED", reason: "Verification rejected" },
+                              { onSuccess: () => void refetch() },
+                            )
+                          }
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          <XCircle className="h-3.5 w-3.5" />
+                          Suspend
+                        </button>
+                      </>
+                    ) : null}
+                    {currentStatus === "ACTIVE" ? (
+                      <button
+                        type="button"
+                        disabled={changeStatus.isPending}
+                        onClick={() =>
+                          changeStatus.mutate(
+                            { id: provider.id, newStatus: "REVOKED", reason: "Registry revocation" },
+                            { onSuccess: () => void refetch() },
+                          )
+                        }
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-50"
+                      >
+                        <ShieldAlert className="h-3.5 w-3.5" />
+                        Revoke
+                      </button>
+                    ) : null}
+                    <Link
+                      href={`/registry/providers/${encodeURIComponent(provider.id)}`}
+                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Profile
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </PageShell>
+    </AppLayout>
+  );
+}

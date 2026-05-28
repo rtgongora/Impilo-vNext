@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Terminology Browser — Resolve ZIBO canonical artifacts.
  * Route: /registry/terminology
@@ -124,9 +124,7 @@ export default function TerminologyBrowserPage() {
               <h2 className="mt-1 font-mono text-sm font-semibold text-gray-900">{submitted.canonicalUrl}</h2>
               {submitted.version ? <p className="text-xs text-gray-500">Version {submitted.version}</p> : null}
             </div>
-            <pre className="max-h-[520px] overflow-auto rounded-lg bg-slate-950 p-4 text-xs text-slate-100">
-              {JSON.stringify(data?.data ?? {}, null, 2)}
-            </pre>
+            <QueryResultPanel title="Resolved artifact" data={data?.data ?? {}} />
           </div>
         )}
       </PageShell>

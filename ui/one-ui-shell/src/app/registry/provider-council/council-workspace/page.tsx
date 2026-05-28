@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Council staff workspace — application queues by council and workflow state.
  * Route: /registry/provider-council/council-workspace
@@ -62,9 +62,7 @@ export default function CouncilWorkspacePage() {
               <Loader2 className="w-4 h-4 animate-spin" /> Loading…
             </div>
           ) : (
-            <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-[28rem]">
-              {JSON.stringify(data ?? [], null, 2)}
-            </pre>
+            <QueryResultPanel title="Open applications" data={data ?? []} />
           )}
         </section>
       </PageShell>

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Communication preferences (Mvumo) — EHR view of the versioned preference bundle.
  * Citizen portal / mobile may offer richer self-service; this route proves BFF access to the internal API.
@@ -92,9 +92,7 @@ export default function CommunicationPreferencesPage() {
                 </li>
                 <li className="pt-2">
                   <span className="text-slate-500">Payload (structured JSON):</span>
-                  <pre className="mt-1 max-h-80 overflow-auto rounded border border-slate-100 bg-slate-50 p-2 text-xs">
-                    {JSON.stringify(data.payload ?? {}, null, 2)}
-                  </pre>
+                  <QueryResultPanel title="Payload" data={data.payload ?? {}} />
                 </li>
               </ul>
             )}

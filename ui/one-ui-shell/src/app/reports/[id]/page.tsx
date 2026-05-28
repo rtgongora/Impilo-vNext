@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Report job detail — `GET /internal/v1/reports/{id}` (ReportJob resource).
  * Route: /reports/[id]
@@ -214,9 +214,7 @@ export default function ReportDetailPage() {
                 }
                 if (pv.kind === "object") {
                   return (
-                    <pre className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-3 overflow-x-auto text-slate-800 font-mono">
-                      {JSON.stringify(pv.value, null, 2)}
-                    </pre>
+                    <QueryResultPanel title="Job parameters" data={pv.value} />
                   );
                 }
                 if (pv.kind === "jsonNonObject") {

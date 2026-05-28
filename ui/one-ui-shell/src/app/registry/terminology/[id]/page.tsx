@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Term Detail — Resolve a ZIBO terminology artifact by canonical URL.
  * Route: /registry/terminology/[id]
@@ -72,9 +72,7 @@ export default function TermDetailPage() {
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-slate-950 p-5">
-              <pre className="max-h-[520px] overflow-auto text-xs text-slate-100">
-                {JSON.stringify(data?.data ?? {}, null, 2)}
-              </pre>
+              <QueryResultPanel title="Resolved artifact" data={data?.data ?? {}} />
             </div>
           </div>
         )}

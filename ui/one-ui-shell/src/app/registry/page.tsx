@@ -57,6 +57,14 @@ const REGISTRY_SECTIONS = [
     color: "bg-purple-100 text-purple-600",
   },
   {
+    title: "ZIBO Studio",
+    description: "Open national terminology curation (external ZIBO workspace)",
+    href: process.env.NEXT_PUBLIC_ZIBO_URL ?? "https://zibo.impilo.health",
+    icon: BookOpen,
+    color: "bg-fuchsia-100 text-fuchsia-700",
+    external: true,
+  },
+  {
     title: "Products",
     description: "View registered pharmaceutical and medical products",
     href: "/registry/products",
@@ -105,10 +113,13 @@ export default function RegistryHubPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {REGISTRY_SECTIONS.map((section) => {
             const Icon = section.icon;
+            const external = "external" in section && section.external === true;
             return (
               <Link
                 key={section.href}
                 href={section.href}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noopener noreferrer" : undefined}
                 className="bg-white rounded-lg border border-gray-200 p-6 hover:border-impilo-200 hover:shadow-md transition-all group"
               >
                 <div className="flex items-start gap-4">

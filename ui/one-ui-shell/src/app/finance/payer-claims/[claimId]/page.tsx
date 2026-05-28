@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -50,9 +50,7 @@ export default function FinancePayerClaimDetailPage() {
             ) : claimQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load payer claim.</p>
             ) : (
-              <pre className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">
-                {JSON.stringify(claimQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Claim Q" isPending={claimQ.isPending} isLoading={claimQ.isPending} isError={claimQ.isError} error={claimQ.error} data={claimQ.data} />
             )}
           </section>
 

@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -61,9 +61,7 @@ export default function FinanceRefundsPage() {
             ) : intentQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load intent (check id and roles).</p>
             ) : intentQ.data ? (
-              <pre className="mt-3 max-h-64 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(intentQ.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Intent Q" isPending={intentQ.isPending} isLoading={intentQ.isPending} isError={intentQ.isError} error={intentQ.error} data={intentQ.data} />
             ) : (
               <p className="mt-3 text-xs text-slate-500">Enter an id and choose Load intent.</p>
             )}
@@ -121,9 +119,7 @@ export default function FinanceRefundsPage() {
               )}
             </button>
             {refundM.data != null ? (
-              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-slate-100 bg-slate-50 p-3 text-[11px]">
-                {JSON.stringify(refundM.data, null, 2)}
-              </pre>
+              <QueryResultPanel title="Refund M" isPending={refundM.isPending} isLoading={refundM.isPending} isError={refundM.isError} error={refundM.error} data={refundM.data} />
             ) : null}
           </div>
 

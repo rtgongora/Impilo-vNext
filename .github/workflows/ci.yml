@@ -322,6 +322,20 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npx tsc --noEmit --skipLibCheck
 
+      - name: Route parity
+        working-directory: ui/one-ui-shell
+        run: npm run test:routes
+
+      - name: No-stub guard (GAP_CLOSURE_RULES)
+        working-directory: ui/one-ui-shell
+        env:
+          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
+        run: npm run test:no-stubs
+
+      - name: Build
+        working-directory: ui/one-ui-shell
+        run: npm run build
+
   completeness-report:
     name: Completeness report (informational)
     runs-on: ubuntu-latest
@@ -451,10 +465,14 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npx vitest run --reporter=verbose
 
+      - name: Route parity check
+        working-directory: ui/one-ui-shell
+        run: npm run test:routes
+
   e2e-test:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: [frontend-lint]
+    needs: [frontend-lint, frontend-test]
     steps:
       - uses: actions/checkout@v4
 

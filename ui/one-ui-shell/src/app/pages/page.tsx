@@ -53,8 +53,8 @@ export default function PagesPage() {
             <PageCard
               key={p.id}
               page={p}
-              onFollow={() => follow.mutate({ id: p.id })}
-              following={follow.isPending && follow.variables?.id === p.id}
+              onFollow={() => follow.mutate(p.id)}
+              following={follow.isPending && follow.variables === p.id}
             />
           ))}
         </div>

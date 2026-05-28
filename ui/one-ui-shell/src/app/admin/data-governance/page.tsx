@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Data governance admin — export/access requests, rules, lineage.
  * Route: /admin/data-governance
@@ -137,9 +137,7 @@ export default function DataGovernanceAdminPage() {
               </div>
               {createEvalM.isError && errorBanner(createEvalM.error)}
               {createEvalM.isSuccess && (
-                <pre className="text-xs bg-slate-50 border border-slate-200 rounded-md p-3 overflow-x-auto max-h-48">
-                  {JSON.stringify(createEvalM.data, null, 2)}
-                </pre>
+                <QueryResultPanel title="Create Eval M" isPending={createEvalM.isPending} isLoading={createEvalM.isPending} isError={createEvalM.isError} error={createEvalM.error} data={createEvalM.data} />
               )}
             </div>
 

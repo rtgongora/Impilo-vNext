@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -118,7 +118,7 @@ export default function MarketplaceOpsPage() {
             {reviewsQ.isLoading ? <p className="mt-3 flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading reviews...</p> : null}
             {reviewsQ.isError ? <p className="mt-3 text-sm text-red-700">Could not load reviews.</p> : null}
             {reviewsQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(reviewsQ.data, null, 2)}</pre>
+              <QueryResultPanel title="Reviews Q" isPending={reviewsQ.isPending} isLoading={reviewsQ.isPending} isError={reviewsQ.isError} error={reviewsQ.error} data={reviewsQ.data} />
             ) : null}
             <div className="mt-4 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
               <label className="text-xs text-slate-600">
@@ -149,7 +149,7 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {stuckQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(stuckQ.data, null, 2)}</pre>
+              <QueryResultPanel title="Stuck Q" isPending={stuckQ.isPending} isLoading={stuckQ.isPending} isError={stuckQ.isError} error={stuckQ.error} data={stuckQ.data} />
             ) : null}
           </section>
 
@@ -170,7 +170,7 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {auditQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(auditQ.data, null, 2)}</pre>
+              <QueryResultPanel title="Audit Q" isPending={auditQ.isPending} isLoading={auditQ.isPending} isError={auditQ.isError} error={auditQ.error} data={auditQ.data} />
             ) : null}
           </section>
 
@@ -193,7 +193,7 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {vendorsQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(vendorsQ.data, null, 2)}</pre>
+              <QueryResultPanel title="Vendors Q" isPending={vendorsQ.isPending} isLoading={vendorsQ.isPending} isError={vendorsQ.isError} error={vendorsQ.error} data={vendorsQ.data} />
             ) : null}
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
@@ -213,7 +213,7 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {vendorQ.data != null ? (
-              <pre className="mt-3 max-h-56 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(vendorQ.data, null, 2)}</pre>
+              <QueryResultPanel title="Vendor Q" isPending={vendorQ.isPending} isLoading={vendorQ.isPending} isError={vendorQ.isError} error={vendorQ.error} data={vendorQ.data} />
             ) : null}
           </section>
 
@@ -232,7 +232,7 @@ export default function MarketplaceOpsPage() {
                 Fetch plans
               </button>
               {plansQ.data != null ? (
-                <pre className="max-h-40 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(plansQ.data, null, 2)}</pre>
+                <QueryResultPanel title="Plans Q" isPending={plansQ.isPending} isLoading={plansQ.isPending} isError={plansQ.isError} error={plansQ.error} data={plansQ.data} />
               ) : <div />}
             </div>
 
@@ -249,10 +249,10 @@ export default function MarketplaceOpsPage() {
               </button>
               <div className="grid gap-2">
                 {exceptionsQ.data != null ? (
-                  <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(exceptionsQ.data, null, 2)}</pre>
+                  <QueryResultPanel title="Exceptions Q" isPending={exceptionsQ.isPending} isLoading={exceptionsQ.isPending} isError={exceptionsQ.isError} error={exceptionsQ.error} data={exceptionsQ.data} />
                 ) : null}
                 {proofsQ.data != null ? (
-                  <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(proofsQ.data, null, 2)}</pre>
+                  <QueryResultPanel title="Proofs Q" isPending={proofsQ.isPending} isLoading={proofsQ.isPending} isError={proofsQ.isError} error={proofsQ.error} data={proofsQ.data} />
                 ) : null}
               </div>
             </div>
@@ -266,7 +266,7 @@ export default function MarketplaceOpsPage() {
                 Fetch providers
               </button>
               {providersQ.data != null ? (
-                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(providersQ.data, null, 2)}</pre>
+                <QueryResultPanel title="Providers Q" isPending={providersQ.isPending} isLoading={providersQ.isPending} isError={providersQ.isError} error={providersQ.error} data={providersQ.data} />
               ) : <div />}
             </div>
 
@@ -280,7 +280,7 @@ export default function MarketplaceOpsPage() {
                 Fetch handoffs (fulfillment)
               </button>
               {handoffsQ.data != null ? (
-                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(handoffsQ.data, null, 2)}</pre>
+                <QueryResultPanel title="Handoffs Q" isPending={handoffsQ.isPending} isLoading={handoffsQ.isPending} isError={handoffsQ.isError} error={handoffsQ.error} data={handoffsQ.data} />
               ) : <div />}
             </div>
 
@@ -294,7 +294,7 @@ export default function MarketplaceOpsPage() {
                 Fetch custody (fulfillment)
               </button>
               {custodyQ.data != null ? (
-                <pre className="max-h-32 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-[11px] text-slate-800">{JSON.stringify(custodyQ.data, null, 2)}</pre>
+                <QueryResultPanel title="Custody Q" isPending={custodyQ.isPending} isLoading={custodyQ.isPending} isError={custodyQ.isError} error={custodyQ.error} data={custodyQ.data} />
               ) : <div />}
             </div>
           </section>

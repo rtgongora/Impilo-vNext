@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Create provider — admin form.
  * Route: /registry/providers/new
@@ -189,9 +189,7 @@ export default function NewProviderPage() {
             {anchoredResult != null && Object.keys(anchoredResult).length > 0 && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-xs font-medium text-emerald-900 mb-2">Varapi response</p>
-                <pre className="max-h-48 overflow-auto text-[11px] text-emerald-950">
-                  {JSON.stringify(anchoredResult, null, 2)}
-                </pre>
+                <QueryResultPanel title="Anchored result" data={anchoredResult} />
                 <button
                   type="button"
                   className="mt-3 text-xs font-medium text-emerald-800 underline hover:text-emerald-950"

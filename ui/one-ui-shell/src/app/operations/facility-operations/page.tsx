@@ -12,10 +12,21 @@ import { PageShell } from "@/components/PageShell";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { filterFacilityOpsNavCards } from "@/lib/operations/facilityOperationsNav";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 export default function FacilityOperationsHubPage() {
   const facility = useFacilityStore((s) => s.facility);
   const { isClinical, isAdmin, isFinance, isDispenser, isQueueManager, isOperationsOversight } = useRoleGroup();
+  const readinessQ = useQuery({
+    queryKey: ["facility-digital-readiness", facility?.id],
+    queryFn: () =>
+      apiClient.get<ApiResponse<{ id: string; attributes?: Record<string, unknown> }[]>>(
+        "/internal/v1/registry/facilities?size=5&page=0",
+      ),
+    enabled: !!facility,
+  });
+
   const cards = filterFacilityOpsNavCards({
     isClinical,
     isAdmin,
@@ -47,6 +58,26 @@ export default function FacilityOperationsHubPage() {
             Active facility: <span className="font-semibold text-slate-800">{facility.name}</span>
           </p>
         )}
+
+        {facility ? (
+          <section className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+            <h3 className="text-sm font-semibold text-emerald-950">TUSO digital readiness</h3>
+            <p className="mt-1 text-xs text-emerald-900/80">
+              Facility operating model from registry/TUSO — connectivity, workforce, and queue maturity for{" "}
+              {facility.name}.
+            </p>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2 text-xs text-emerald-950">
+              {(readinessQ.data?.data ?? []).slice(0, 4).map((row) => (
+                <li key={row.id} className="rounded-lg bg-white/80 px-3 py-2 border border-emerald-100">
+                  {String(row.attributes?.name ?? row.id)} · {String(row.attributes?.status ?? "unknown")}
+                </li>
+              ))}
+            </ul>
+            <Link href="/clinical/control-tower" className="mt-3 inline-block text-xs font-semibold text-emerald-800 underline">
+              Open control tower
+            </Link>
+          </section>
+        ) : null}
 
         {facility ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -6,7 +6,7 @@
  * Asserts that the Next.js App Router file tree contains page files
  * for all routes defined in the route registry (src/lib/routes.ts).
  *
- * This is a static file-system check — it does not require the app to be running.
+ * Paths are extracted from routes.ts at runtime — do not maintain a duplicate list.
  */
 
 import fs from "fs";
@@ -15,143 +15,25 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_DIR = path.resolve(__dirname, "../src/app");
+const ROUTES_TS = path.resolve(__dirname, "../src/lib/routes.ts");
 
-// Route definitions (extracted from routes.ts — keep in sync)
-const EXPECTED_ROUTES = [
-  "/auth/login",
-  "/auth/login/email",
-  "/auth/login/provider-id",
-  "/auth/login/biometric",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/mfa",
-  "/auth/logout",
-  "/",
-  "/home",
-  "/home/notifications",
-  "/home/profile",
-  "/home/preferences",
-  "/facility",
-  "/facility/[id]",
-  "/workspace",
-  "/workspace/[id]",
-  "/shift",
-  "/shift/active",
-  "/shift/handover",
-  "/scheduling/roster",
-  "/scheduling/on-call",
-  "/scheduling/noticeboard",
-  "/queue",
-  "/queue/triage",
-  "/queue/waiting",
-  "/queue/search",
-  "/queue/walk-in",
-  "/queue/scheduled",
-  "/ehr/[patientId]",
-  "/ehr/[patientId]/summary",
-  "/ehr/[patientId]/vitals",
-  "/ehr/[patientId]/history",
-  "/ehr/[patientId]/conditions",
-  "/ehr/[patientId]/medications",
-  "/ehr/[patientId]/allergies",
-  "/ehr/[patientId]/orders",
-  "/ehr/[patientId]/results",
-  "/ehr/[patientId]/notes",
-  "/ehr/[patientId]/documents",
-  "/ehr/[patientId]/encounters",
-  "/ehr/[patientId]/encounter/[encounterId]",
-  "/ehr/[patientId]/immunizations",
-  "/ehr/[patientId]/referrals",
-  "/ehr/[patientId]/timeline",
-  "/admin",
-  "/admin/users",
-  "/admin/users/[id]",
-  "/admin/roles",
-  "/admin/policies",
-  "/admin/audit",
-  "/admin/audit/[id]",
-  "/admin/consent",
-  "/admin/devices",
-  "/admin/keys",
-  "/admin/federation",
-  "/admin/tenants",
-  "/admin/break-glass",
-  "/registry",
-  "/registry/clients",
-  "/registry/trust",
-  "/registry/providers",
-  "/registry/providers/[id]",
-  "/registry/provider-council/self-service",
-  "/registry/provider-council/council-workspace",
-  "/registry/facilities",
-  "/registry/facilities/[id]",
-  "/registry/terminology",
-  "/registry/terminology/[id]",
-  "/registry/products",
-  "/registry/products/[id]",
-  "/registry-admin",
-  "/organization-admin",
-  "/organization-admin/facility",
-  "/organization-admin/staffing",
-  "/organization-admin/governance",
-  "/organization-admin/governance/[id]",
-  "/marketplace",
-  "/marketplace/catalog",
-  "/marketplace/orders",
-  "/marketplace/orders/[id]",
-  "/marketplace/vendors",
-  "/marketplace/bookings",
-  "/finance",
-  "/finance/claims",
-  "/finance/claims/[id]",
-  "/finance/billing",
-  "/finance/payments",
-  "/finance/remittances",
-  "/finance/tariffs",
-  "/finance/costa",
-  "/finance/costa/encounter/[encounterId]",
-  "/finance/mushex-platform",
-  "/finance/mushex-platform/wallets/[walletId]",
-  "/finance/mushex-platform/remittance/[transferId]",
-  "/finance/mushex-platform/cards/[cardId]",
-  "/finance/mushex-platform/reversals/[reversalId]",
-  "/pharmacy",
-  "/pharmacy/dispense",
-  "/pharmacy/stock",
-  "/pharmacy/prescriptions",
-  "/inventory",
-  "/inventory/movements",
-  "/inventory/counts",
-  "/inventory/requisitions",
-  "/enterprise",
-  "/enterprise/warehousing",
-  "/enterprise/fleet",
-  "/enterprise/charge-sheet",
-  "/erp",
-  "/erp/gl",
-  "/erp/hr",
-  "/erp/procurement",
-  "/erp/assets",
-  "/finance/reports",
-  "/reports",
-  "/reports/facility",
-  "/reports/clinical",
-  "/reports/operational",
-  "/reports/custom",
-  "/reports/[id]",
-  "/settings",
-  "/settings/account",
-  "/settings/security",
-  "/settings/notifications",
-  "/settings/display",
-  "/settings/integrations",
-  "/learning",
-  "/learning/catalog",
-];
+const routesSource = fs.readFileSync(ROUTES_TS, "utf8");
+const EXPECTED_ROUTES = [...routesSource.matchAll(/path:\s*"([^"]+)"/g)].map((m) => m[1]);
+
+const countMatch = routesSource.match(/export const EXPECTED_ROUTE_COUNT = (\d+)/);
+const expectedCount = countMatch ? Number(countMatch[1]) : null;
+
+if (expectedCount !== null && EXPECTED_ROUTES.length !== expectedCount) {
+  console.error(
+    `\nRoute count mismatch: extracted ${EXPECTED_ROUTES.length} paths from routes.ts ` +
+      `but EXPECTED_ROUTE_COUNT is ${expectedCount}.`,
+  );
+  process.exit(1);
+}
 
 function routeToPagePath(route) {
   if (route === "/") return path.join(APP_DIR, "page.tsx");
-  return path.join(APP_DIR, route, "page.tsx");
+  return path.join(APP_DIR, ...route.split("/").filter(Boolean), "page.tsx");
 }
 
 let passed = 0;

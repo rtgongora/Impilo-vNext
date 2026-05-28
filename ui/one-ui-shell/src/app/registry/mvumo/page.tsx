@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -128,9 +128,7 @@ export default function MvumoRegistryPage() {
               {templates.isError ? (
                 <p className="mt-3 text-sm text-red-600">Mvumo templates unavailable.</p>
               ) : (
-                <pre className="mt-3 max-h-80 overflow-auto rounded-lg bg-slate-950 p-3 text-xs text-slate-100">
-                  {JSON.stringify(templates.data?.data ?? [], null, 2)}
-                </pre>
+                <QueryResultPanel title="Templates" isPending={templates.isPending} isLoading={templates.isPending} isError={templates.isError} error={templates.error} data={templates.data?.data ?? []} />
               )}
             </div>
           </div>

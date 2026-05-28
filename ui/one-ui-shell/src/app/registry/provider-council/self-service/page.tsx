@@ -1,5 +1,5 @@
 "use client";
-
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Provider council self-service — obligations, Fundo CPD candidates, renewal context.
  * Route: /registry/provider-council/self-service
@@ -117,9 +117,7 @@ export default function ProviderCouncilSelfServicePage() {
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading…
               </div>
             ) : (
-              <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-80">
-                {JSON.stringify(obligations ?? [], null, 2)}
-              </pre>
+              <QueryResultPanel title="Payment obligations" data={obligations ?? []} />
             )}
           </section>
           <section className="rounded-lg border border-gray-200 bg-white p-4">
@@ -129,9 +127,7 @@ export default function ProviderCouncilSelfServicePage() {
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading…
               </div>
             ) : (
-              <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-80">
-                {JSON.stringify(fundo ?? [], null, 2)}
-              </pre>
+              <QueryResultPanel title="Fundo CPD candidates" data={fundo ?? []} />
             )}
           </section>
         </div>
