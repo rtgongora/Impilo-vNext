@@ -53,13 +53,17 @@ export function NompiloGlobalCommandBar() {
         />
         <DictationButton value={draft} onValueChange={setDraft} className="h-10 rounded-full border border-[color:var(--nompilo)]/20 bg-white px-3 text-[color:var(--nompilo)]" />
         <Link
-          href="/ask"
+          href={pathname ? `/ask?from=${encodeURIComponent(pathname)}` : "/ask"}
           className="inline-flex items-center gap-1 rounded-full bg-[color:var(--nompilo)] px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:opacity-95"
         >
           <Mic className="h-3.5 w-3.5" />
           Ask
         </Link>
       </div>
+      <p className="mt-1 text-[10px] text-slate-500">
+        Context: {journey.replace("_", " ")} journey
+        {pathname ? ` · ${pathname}` : ""}
+      </p>
       <div className="mt-2 flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (
           <button

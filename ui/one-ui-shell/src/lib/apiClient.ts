@@ -1,6 +1,9 @@
 /**
  * Impilo vNext — API Client with Trust Header Injection
  *
+ * @deprecated Prefer `@/lib/api-client` (BFF `/internal/v1/*`) for feature screens.
+ * This gateway client (`NEXT_PUBLIC_API_GATEWAY_URL`) remains for legacy/policy paths only.
+ *
  * Every outbound API request automatically carries the mandatory trust headers
  * from the session and work context stores (Zustand). This ensures that Envoy's
  * ext_authz filter (→ TSHEPO) can evaluate every request.

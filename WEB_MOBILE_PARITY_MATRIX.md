@@ -1,5 +1,7 @@
 # Web / Mobile Parity Matrix
 
+> **Authoritative detail:** [docs/frontend/WEB_MOBILE_SURFACING_PARITY.md](docs/frontend/WEB_MOBILE_SURFACING_PARITY.md) (parity sweep 2026-05-28).
+
 Legend: `Complete`, `Partial`, `Missing`, `N/A`
 
 | Capability | Web | Citizen app | Provider app | Notes |

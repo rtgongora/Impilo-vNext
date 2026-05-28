@@ -30,6 +30,14 @@ export interface AppDefinition {
   systemAppFlag: boolean;
   /** Optional sort weight within category */
   weight?: number;
+  /** Canonical parity sweep maturity (see docs/frontend/MATURITY_TAXONOMY.md) */
+  maturity?: "live" | "partial" | "fixture" | "not_wired" | "blocked";
+  /** Primary journey for launcher labelling */
+  journey?: "person" | "provider" | "platform" | "cross_cutting";
+  /** Seven-plane label for launcher */
+  plane?: string;
+  /** Disabled reason when activeFlag is false or maturity is blocked/not_wired */
+  disabledReason?: string;
   metadata?: Record<string, unknown>;
 }
 

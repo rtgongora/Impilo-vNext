@@ -12,6 +12,7 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck, BookMarked } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -27,6 +28,8 @@ interface Message {
 }
 
 export default function AskPage() {
+  const searchParams = useSearchParams();
+  const routeContext = searchParams.get("from");
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -159,6 +162,11 @@ export default function AskPage() {
     <AppLayout>
       <PageShell title="Ask" subtitle="General guidance or governed Ask EDLIZ (national clinical knowledge)" icon={<MessageSquare className="h-6 w-6" />}>
         <div className="flex flex-col h-[calc(100vh-220px)] max-w-2xl mx-auto">
+          {routeContext ? (
+            <p className="mb-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
+              Nompilo context from <code className="font-mono">{routeContext}</code> — suggestions are scoped to this page where permitted.
+            </p>
+          ) : null}
           <div className="flex gap-2 mb-3">
             <button
               type="button"

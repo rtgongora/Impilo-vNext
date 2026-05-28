@@ -8,7 +8,8 @@ export type FeatureMaturityStatus =
   | "fixture"
   | "prototype"
   | "not_wired"
-  | "requires_backend";
+  | "requires_backend"
+  | "blocked";
 
 interface FeatureMaturityBadgeProps {
   status: FeatureMaturityStatus;
@@ -23,6 +24,7 @@ const LABELS: Record<FeatureMaturityStatus, string> = {
   prototype: "Prototype",
   not_wired: "Not wired",
   requires_backend: "Requires backend",
+  blocked: "Blocked",
 };
 
 const COLORS: Record<FeatureMaturityStatus, { bg: string; fg: string; border: string }> = {
@@ -33,6 +35,7 @@ const COLORS: Record<FeatureMaturityStatus, { bg: string; fg: string; border: st
   prototype: { bg: "#F5F3FF", fg: "#6D28D9", border: "#DDD6FE" },
   not_wired: { bg: "#FFF1F2", fg: "#BE123C", border: "#FECDD3" },
   requires_backend: { bg: "#F8FAFC", fg: "#334155", border: "#CBD5E1" },
+  blocked: { bg: "#F1F5F9", fg: "#0F172A", border: "#94A3B8" },
 };
 
 export function FeatureMaturityBadge({ status, detail }: FeatureMaturityBadgeProps) {

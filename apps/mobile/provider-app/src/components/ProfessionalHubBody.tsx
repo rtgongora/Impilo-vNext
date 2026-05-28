@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Pressable, Linking } from "react-native";
 import { Card, CardBody, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
 import { formatHubTimestamp } from "../lib/hubUi";
 
@@ -26,8 +26,17 @@ type Props = {
   isRefetching: boolean;
   onRefresh: () => void | Promise<unknown>;
   getSectionTestId: (id: string) => string;
+  /** Base URL for web shell deep links (e.g. https://health.example.gov) */
+  webShellBaseUrl?: string;
   children?: React.ReactNode;
 };
+
+function resolveWebUrl(base: string | undefined, webPath: string): string | null {
+  if (!webPath.startsWith("/")) return null;
+  const root = (base ?? process.env.EXPO_PUBLIC_WEB_SHELL_URL ?? "").replace(/\/$/, "");
+  if (!root) return null;
+  return `${root}${webPath}`;
+}
 
 export function ProfessionalHubBody({
   rootTestID,
@@ -40,6 +49,7 @@ export function ProfessionalHubBody({
   isRefetching,
   onRefresh,
   getSectionTestId,
+  webShellBaseUrl,
   children,
 }: Props) {
   const timeLabel = formatHubTimestamp(refreshedAt ?? undefined);
@@ -65,30 +75,49 @@ export function ProfessionalHubBody({
         }
       >
         {children}
-        {sections.map((s) => (
-          <Card key={s.id}>
-            <CardBody>
-              <View testID={getSectionTestId(s.id)}>
-                <Text style={styles.cardTitle}>{s.title}</Text>
-                <Text style={styles.path}>{s.web_path}</Text>
-                {s.hint ? <Text style={styles.hint}>{s.hint}</Text> : null}
-              </View>
-            </CardBody>
-          </Card>
-        ))}
+        {sections.map((s) => {
+          const url = resolveWebUrl(webShellBaseUrl, s.web_path);
+          return (
+            <Card key={s.id}>
+              <CardBody>
+                <Pressable
+                  testID={getSectionTestId(s.id)}
+                  disabled={!url}
+                  onPress={() => {
+                    if (url) void Linking.openURL(url);
+                  }}
+                  accessibilityRole="link"
+                  accessibilityHint={
+                    url ? "Opens this workflow in the web Health OS shell" : "Web deep link not configured"
+                  }
+                >
+                  <Text style={styles.cardTitle}>{s.title}</Text>
+                  <Text style={styles.path}>{s.web_path}</Text>
+                  {url ? (
+                    <Text style={styles.openLink}>Open in web shell</Text>
+                  ) : (
+                    <Text style={styles.hint}>Set EXPO_PUBLIC_WEB_SHELL_URL to enable deep links</Text>
+                  )}
+                  {s.hint ? <Text style={styles.hint}>{s.hint}</Text> : null}
+                </Pressable>
+              </CardBody>
+            </Card>
+          );
+        })}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, gap: 10, paddingHorizontal: 4 },
-  heading: { fontSize: 18, fontWeight: "800", color: "#111827" },
-  sub: { fontSize: 13, color: "#6B7280", lineHeight: 18 },
-  syncedAt: { fontSize: 11, color: "#6B7280", marginTop: -4 },
+  root: { flex: 1, padding: 16 },
+  heading: { fontSize: 22, fontWeight: "700", color: "#0F172A" },
+  sub: { fontSize: 14, color: "#64748B", marginTop: 4, marginBottom: 12 },
+  syncedAt: { fontSize: 12, color: "#64748B", marginBottom: 8 },
   list: { flex: 1 },
-  listPad: { gap: 10, paddingBottom: 24 },
-  cardTitle: { fontSize: 15, fontWeight: "700", color: "#111827" },
-  path: { fontSize: 12, color: "#6B7280", marginTop: 4 },
-  hint: { fontSize: 12, color: "#4B5563", marginTop: 6, lineHeight: 17 },
+  listPad: { paddingBottom: 24, gap: 12 },
+  cardTitle: { fontSize: 16, fontWeight: "600", color: "#0F172A" },
+  path: { fontSize: 12, color: "#64748B", marginTop: 4, fontFamily: "monospace" },
+  openLink: { fontSize: 12, color: "#2563EB", marginTop: 6, fontWeight: "600" },
+  hint: { fontSize: 12, color: "#94A3B8", marginTop: 4 },
 });

@@ -68,6 +68,11 @@ export function CitizenTabs() {
       badge: unreadMessages > 0 ? unreadMessages : undefined,
     },
     {
+      id: "telehealth",
+      label: "Care",
+      icon: tabIcon(activeTab === "telehealth" ? "videocam" : "videocam-outline", activeTab === "telehealth"),
+    },
+    {
       id: "public_health",
       label: "Public",
       icon: tabIcon(activeTab === "public_health" ? "pulse" : "pulse-outline", activeTab === "public_health"),

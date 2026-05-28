@@ -7,7 +7,8 @@ type FeatureMaturity =
   | "fixture"
   | "prototype"
   | "not_wired"
-  | "requires_backend";
+  | "requires_backend"
+  | "blocked";
 
 const STYLE_MAP: Record<FeatureMaturity, string> = {
   live: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -17,6 +18,7 @@ const STYLE_MAP: Record<FeatureMaturity, string> = {
   prototype: "border-purple-200 bg-purple-50 text-purple-700",
   not_wired: "border-rose-200 bg-rose-50 text-rose-700",
   requires_backend: "border-slate-200 bg-slate-50 text-slate-700",
+  blocked: "border-slate-300 bg-slate-100 text-slate-800",
 };
 
 const LABEL_MAP: Record<FeatureMaturity, string> = {
@@ -27,6 +29,7 @@ const LABEL_MAP: Record<FeatureMaturity, string> = {
   prototype: "Prototype",
   not_wired: "Not wired",
   requires_backend: "Requires backend",
+  blocked: "Blocked",
 };
 
 interface FeatureMaturityBadgeProps {

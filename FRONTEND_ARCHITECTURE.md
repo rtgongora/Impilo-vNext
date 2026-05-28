@@ -51,7 +51,8 @@ Trust and context propagation requirements:
 
 ## Runtime composition points
 
-- **Web route registry:** `ui/one-ui-shell/src/lib/routes.ts` (`EXPECTED_ROUTE_COUNT = 346`)
+- **Web route registry:** `ui/one-ui-shell/src/lib/routes.ts` (`EXPECTED_ROUTE_COUNT = 370`)
+- **Parity docs (authoritative):** `docs/frontend/` — see `docs/frontend/README.md`
 - **Journey grouping:** `ui/one-ui-shell/src/lib/ui-route-journey-map.ts`
 - **Web trust injection:** `ui/one-ui-shell/src/lib/api-client.ts`
 - **Mobile trust injection:** `apps/mobile/packages/mobile-trust`

@@ -3,7 +3,8 @@
 ## Canonical route registries
 
 - **Web:** `ui/one-ui-shell/src/lib/routes.ts`
-- **Web route count invariant:** `EXPECTED_ROUTE_COUNT = 346`
+- **Web route count invariant:** `EXPECTED_ROUTE_COUNT = 370`
+- **Detailed surfacing cleanup:** `docs/frontend/ROUTE_SURFACING_CLEANUP.md`
 - **Journey group definitions:** `ui/one-ui-shell/src/lib/ui-route-journey-map.ts`
 - **Mobile navigation:** custom tab/mode state in app stores and tab components (not React Navigation stacks)
 
