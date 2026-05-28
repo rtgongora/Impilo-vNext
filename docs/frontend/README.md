@@ -21,11 +21,15 @@ Root-level copies (`ROUTE_MAP.md`, `FRONTEND_ARCHITECTURE.md`, `WEB_MOBILE_PARIT
 
 | Surface | Path | Route count (2026-05-28) |
 |---------|------|--------------------------|
-| Web shell (canonical) | `ui/one-ui-shell` | 370 (`EXPECTED_ROUTE_COUNT`) |
-| Web continuity | `ui/experience` | 258 |
+| Web shell (canonical) | `ui/one-ui-shell` | 374 (`EXPECTED_ROUTE_COUNT`) |
 | Citizen mobile | `apps/mobile/citizen-app` | Tab + section router |
 | Provider mobile | `apps/mobile/provider-app` | Mode + clinical tools router |
 | Satellite UIs | `ui/*-web`, `ui/*-console`, `ui/portal` | Per-app |
+
+> The previous `ui/experience` web continuity fork (258 routes) was merged
+> into `ui/one-ui-shell` and removed via the GAP-010 convergence on
+> 2026-05-28. See [`CONVERGENCE_INVENTORY.md`](./CONVERGENCE_INVENTORY.md)
+> for the full merge contract and per-file disposition.
 
 ## Maturity labels (required on every major surface)
 

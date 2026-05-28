@@ -2,6 +2,11 @@
 
 > Generated: 2026-05-28. Source of truth for the GAP-010 web-shell merge.
 >
+> **Status: CLOSED (2026-05-28).** All eight phases (0, 1a–1f, 2, 3, 4, 5, 6, 7, 8) have landed.
+> `ui/experience/` has been removed. The canonical web shell is `ui/one-ui-shell` with
+> `EXPECTED_ROUTE_COUNT = 374`. The Phase-8 CI guard (`.github/workflows/deprecated-surface-guard.yml`)
+> blocks any new files from being added under the retired path.
+>
 > Inventory regeneration: `pwsh scripts/frontend/merge-inventory.ps1` (planned; current data captured below).
 
 ## Purpose

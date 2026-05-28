@@ -6,9 +6,15 @@
 
 | Surface | Registry | Count |
 |---------|----------|-------|
-| Web (canonical) | `ui/one-ui-shell/src/lib/routes.ts` | **370** |
-| Web (continuity) | `ui/experience/src/lib/routes.ts` | 258 |
+| Web (canonical) | `ui/one-ui-shell/src/lib/routes.ts` | **374** |
 | Journey groups | `ui/one-ui-shell/src/lib/ui-route-journey-map.ts` | — |
+
+> The `ui/experience` continuity fork (258 routes) was merged into
+> `ui/one-ui-shell` and removed via the GAP-010 convergence on
+> 2026-05-28. The four additional routes captured in the canonical
+> count (`/ehr/[patientId]/preferences/communications` and three
+> `/operations/facility-operations/*` sub-routes) were lifted as
+> part of Phase 1f.
 
 ## Launcher cleanup
 

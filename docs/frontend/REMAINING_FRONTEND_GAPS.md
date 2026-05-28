@@ -20,7 +20,7 @@
 | GAP-007 | Ndila ops map dashboards | Ndila | Reusable map on PH + facility |
 | GAP-008 | Comms template/campaign admin | Comms | Omnichannel depth |
 | GAP-009 | ZIBO in main shell | ZIBO | Link + embed or SSO to zibo-web |
-| GAP-010 | `ui/experience` fork drift | Web | Consolidate or document deprecation path |
+| ~~GAP-010~~ | ~~`ui/experience` fork drift~~ | ~~Web~~ | **CLOSED 2026-05-28** — fork merged into `ui/one-ui-shell` and removed; see [`CONVERGENCE_INVENTORY.md`](./CONVERGENCE_INVENTORY.md). |
 
 ## P2 — Lower
 

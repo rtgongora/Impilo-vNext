@@ -6,10 +6,13 @@
 
 | Surface | Registry | Count |
 |---------|----------|-------|
-| Web canonical | `ui/one-ui-shell/src/lib/routes.ts` | 370 |
-| Web continuity | `ui/experience/src/lib/routes.ts` | 258 |
+| Web canonical | `ui/one-ui-shell/src/lib/routes.ts` | 374 |
 | Citizen mobile | Tab + Personal section router | 7 tabs, 30+ sections |
 | Provider mobile | Mode router + ClinicalTools | 5 modes, 30+ tools |
+
+> The previous `ui/experience` continuity registry (258 routes) was merged
+> into `ui/one-ui-shell` and removed via the GAP-010 convergence on
+> 2026-05-28. See [`CONVERGENCE_INVENTORY.md`](./CONVERGENCE_INVENTORY.md).
 
 ## Live functionality (representative)
 
