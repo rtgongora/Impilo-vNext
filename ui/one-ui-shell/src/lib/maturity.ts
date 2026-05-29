@@ -1,64 +1,49 @@
-/**
- * Canonical frontend maturity taxonomy for parity sweep.
- * Maps legacy badge enums to the five sweep labels required by doctrine.
- */
+import registryMaturity from "@/generated/registry-maturity.json";
 
-export type CanonicalMaturity = "live" | "partial" | "fixture" | "not_wired" | "blocked";
+export type RegistryWiringStatus = "wired" | "partial" | "unknown-or-partial" | "not-wired" | string;
+export type UiMaturityLabel = "live" | "partial" | "not_wired" | "blocked";
 
-/** Legacy UI badge values (web + mobile design system). */
-export type LegacyMaturity =
-  | "live"
-  | "connected"
-  | "partial"
-  | "fixture"
-  | "prototype"
-  | "not_wired"
-  | "requires_backend"
-  | "blocked";
-
-export const CANONICAL_MATURITY_LABELS: Record<CanonicalMaturity, string> = {
-  live: "Live",
-  partial: "Partial",
-  fixture: "Fixture",
-  not_wired: "Not wired",
-  blocked: "Blocked",
-};
-
-/** Map legacy badge status to canonical sweep label. */
-export function toCanonicalMaturity(status: LegacyMaturity): CanonicalMaturity {
+export function mapRegistryWiringToUiMaturity(status: RegistryWiringStatus | undefined): UiMaturityLabel {
   switch (status) {
-    case "live":
-    case "connected":
+    case "wired":
       return "live";
     case "partial":
-    case "prototype":
       return "partial";
-    case "fixture":
-      return "fixture";
-    case "not_wired":
-    case "requires_backend":
+    case "not-wired":
       return "not_wired";
-    case "blocked":
-      return "blocked";
+    case "unknown-or-partial":
     default:
       return "partial";
   }
 }
 
-/** Map canonical label back to preferred legacy badge for components. */
-export function toLegacyBadge(status: CanonicalMaturity): LegacyMaturity {
-  switch (status) {
-    case "live":
-      return "live";
-    case "partial":
-      return "partial";
-    case "fixture":
-      return "fixture";
-    case "not_wired":
-      return "not_wired";
-    case "blocked":
-      return "blocked";
-    default:
-      return "partial";
+export function registryMaturityForService(serviceId: string): RegistryWiringStatus | undefined {
+  const services = registryMaturity.services as Record<string, RegistryWiringStatus>;
+  return services[serviceId];
+}
+
+export function uiMaturityForService(serviceId: string): UiMaturityLabel {
+  return mapRegistryWiringToUiMaturity(registryMaturityForService(serviceId));
+}
+
+/** Keyword → registry service id hints for command-centre tile overlays. */
+export const TILE_SERVICE_HINTS: Record<string, string> = {
+  varapi: "varapi-service",
+  tuso: "tuso-service",
+  ndila: "ndila-service",
+  nhume: "nhume-service",
+  dispatch: "dispatch-service",
+  pharmacy: "pharmacy-service",
+  inpatient: "inpatient-service",
+  wellness: "wellness-service",
+  learning: "learning-service",
+  fundo: "learning-service",
+};
+
+export function serviceHintForTile(tileId: string, keywords: string[] = []): string | undefined {
+  const haystack = `${tileId} ${keywords.join(" ")}`.toLowerCase();
+  for (const [keyword, serviceId] of Object.entries(TILE_SERVICE_HINTS)) {
+    if (haystack.includes(keyword)) return serviceId;
   }
+  return undefined;
 }

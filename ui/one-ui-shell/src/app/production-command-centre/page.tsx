@@ -22,6 +22,7 @@ import {
 } from "@/features/production-command-centre/tile-registry";
 import { useCommandCentreHealth } from "@/features/production-command-centre/useCommandCentreHealth";
 import { CommandCentreHealthChip } from "@/features/production-command-centre/CommandCentreHealthChip";
+import { serviceHintForTile, uiMaturityForService } from "@/lib/maturity";
 
 export default function ProductionCommandCentrePage() {
   const [query, setQuery] = useState("");
@@ -89,7 +90,10 @@ export default function ProductionCommandCentrePage() {
                     <p className="text-sm text-[var(--text-secondary)]">{section.description}</p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {section.tiles.map((tile) => (
+                    {section.tiles.map((tile) => {
+                      const serviceHint = serviceHintForTile(tile.id, tile.integrationKeywords);
+                      const registryMaturity = serviceHint ? uiMaturityForService(serviceHint) : undefined;
+                      return (
                       <Link
                         key={tile.id}
                         href={tile.href}
@@ -100,6 +104,12 @@ export default function ProductionCommandCentrePage() {
                             {tile.plane}
                           </span>
                           <FeatureMaturityBadge status={tile.maturity} detail={`Data: ${tile.dataMode}`} />
+                          {registryMaturity ? (
+                            <FeatureMaturityBadge
+                              status={registryMaturity}
+                              detail={serviceHint ? `Registry: ${serviceHint}` : "Registry maturity"}
+                            />
+                          ) : null}
                           <CommandCentreHealthChip state={health.getTileHealth(tile.integrationKeywords)} />
                           <span className="impilo-chip bg-[var(--surface-soft)] text-[var(--text-secondary)]">
                             {tile.priority}
@@ -116,7 +126,8 @@ export default function ProductionCommandCentrePage() {
                           <p className="mt-1 text-[11px] text-amber-700">Gap: {tile.knownGaps}</p>
                         ) : null}
                       </Link>
-                    ))}
+                    );
+                    })}
                   </div>
                 </section>
               ))}

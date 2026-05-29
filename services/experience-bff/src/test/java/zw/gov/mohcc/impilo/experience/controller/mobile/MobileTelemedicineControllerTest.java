@@ -85,11 +85,27 @@ class MobileTelemedicineControllerTest {
         MobileTelemedicineController controller = new MobileTelemedicineController(new FailingPctClient());
 
         ResponseEntity<Map<String, Object>> response = controller.listSessions(
-                "tenant-1", "req-5", "corr-5", null, "cpid-1", null, null, null, 0, 20);
+                "tenant-1", "req-5", "corr-5", null, "cpid-non-demo", null, null, null, 0, 20);
 
         assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("PCT_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void listSessionsReturnsDemoFallbackForGoldenPatientWhenPctUnavailable() {
+        MobileTelemedicineController controller = new MobileTelemedicineController(new FailingPctClient());
+
+        ResponseEntity<Map<String, Object>> response = controller.listSessions(
+                "tenant-1", "req-6", "corr-6", null, "CPID-ZW-00001", null, null, null, 0, 20);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals("demo-fallback", ((Map<?, ?>) response.getBody().get("meta")).get("source"));
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertNotNull(data);
+        assertEquals(1, data.size());
+        assertEquals("CPID-ZW-00001", data.get(0).get("patient_id").asText());
     }
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {

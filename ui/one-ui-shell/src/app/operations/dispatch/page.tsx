@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { OperatorTelemetryPanel } from "@/components/operations/OperatorTelemetryPanel";
+import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
 import { PageShell } from "@/components/PageShell";
 import { useDispatchOperatorFeed } from "@/hooks/queries/useCoreTransactionExperience";
 import {
@@ -263,6 +264,13 @@ export default function DispatchOperationsPage() {
               </section>
             ))}
           </div>
+
+          <UnifiedLogisticsMapPanel
+            title="Dispatch + Nhume map"
+            subtitle="Task ops and last-mile deliveries on shared Ndila tiles"
+            includeDispatch
+            includeNhume
+          />
 
           <div className="grid gap-3 md:grid-cols-2">
             <section className="impilo-surface-card p-4">

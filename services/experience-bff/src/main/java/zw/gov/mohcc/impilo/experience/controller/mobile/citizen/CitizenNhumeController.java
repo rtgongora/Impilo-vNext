@@ -45,7 +45,7 @@ public class CitizenNhumeController {
 
     public CitizenNhumeController(
             RestTemplate serviceRestTemplate,
-            @Value("${impilo.services.nhume-base-url:http://localhost:8340}") String nhumeBaseUrl) {
+            @Value("${impilo.services.nhume-base-url:http://localhost:8210}") String nhumeBaseUrl) {
         this.restTemplate = serviceRestTemplate;
         this.nhumeBaseUrl = nhumeBaseUrl;
     }

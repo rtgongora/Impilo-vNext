@@ -326,6 +326,16 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npm run test:routes
 
+      - name: Sync registry maturity snapshot
+        run: node scripts/frontend/sync-registry-maturity.mjs
+
+      - name: Registry maturity drift check
+        run: git diff --exit-code -- ui/one-ui-shell/src/generated/registry-maturity.json
+
+      - name: Launcher dead-end guard
+        working-directory: ui/one-ui-shell
+        run: npm run test:launchers
+
       - name: No-stub guard (GAP_CLOSURE_RULES)
         working-directory: ui/one-ui-shell
         env:
@@ -446,6 +456,24 @@ jobs:
         run: |
           git diff -- docs/mobile/*parity* || true
           git diff --exit-code -- docs/mobile/*parity*
+
+  parity-docs-check:
+    name: Frontend parity docs up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Regenerate parity sweep docs
+        run: node scripts/frontend/generate-parity-docs.mjs
+
+      - name: Fail if parity docs drifted
+        run: |
+          git diff -- docs/frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md || true
+          git diff --exit-code -- docs/frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md
 
   frontend-test:
     name: Frontend Unit Tests

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip } from "@/components/nhume/NhumeStatusChip";
+import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
 import { useNhumeFleet, useNhumeDeliveries, useNhumeMapToken, useNhumeZones } from "@/hooks/useNhume";
 
 export default function NhumeMapPage() {
@@ -68,18 +69,26 @@ export default function NhumeMapPage() {
         )}
 
         {!(fleet.isPending || deliveries.isPending) && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <>
+            <UnifiedLogisticsMapPanel
+              title="Nhume + dispatch logistics map"
+              subtitle="Shared Ndila tile layer with dispatch fleet overlay"
+              includeNhume
+              includeDispatch
+              nhumeDeliveryStatus={showDeliveries ? "IN_TRANSIT" : undefined}
+            />
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
             {showVehicles && <Card title={`Vehicles (${assets.length})`} rows={assets} kind="asset" />}
             {showDeliveries && <Card title={`In transit (${inTransit.length})`} rows={inTransit as unknown as Array<Record<string, unknown>>} kind="delivery" />}
             {showZones && <Card title={`Dispatch zones (${zoneRows.length})`} rows={zoneRows} kind="zone" />}
-          </div>
+            </div>
+          </>
         )}
 
-        <div className="mt-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-600">
-          A high-fidelity WebGL fleet map renders here in production once <code>NEXT_PUBLIC_NDILA_MAP_TOKEN</code>
-          and the Ndila provider component are present. The lists above stream the same data so
-          dispatchers retain full operational awareness in low-connectivity environments.
-        </div>
+        <p className="mt-4 text-xs text-gray-500">
+          Full WebGL Ndila client can replace the tile preview when <code>NEXT_PUBLIC_NDILA_MAP_TOKEN</code> is set.
+          Lists below remain available for low-connectivity dispatch.
+        </p>
       </PageShell>
     </AppLayout>
   );

@@ -5,7 +5,9 @@ import { useState } from "react";
 import { ArrowLeft, CheckCircle2, Loader2, ShieldAlert, XCircle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { useChangeProviderStatus, useProviders } from "@/hooks/queries/useRegistry";
+import { useProviderCouncilQueue } from "@/hooks/queries/useProviderCouncil";
 
 const STATUS_OPTIONS = ["PENDING", "ACTIVE", "SUSPENDED", "REVOKED", "INACTIVE"] as const;
 
@@ -13,8 +15,10 @@ export default function ProviderVerificationQueuePage() {
   const [statusFilter, setStatusFilter] = useState<string>("PENDING");
   const { data, isLoading, refetch } = useProviders({ status: statusFilter });
   const changeStatus = useChangeProviderStatus();
+  const councilQueue = useProviderCouncilQueue("MOHPCZ", "SUBMITTED,UNDER_REVIEW");
 
   const providers = data?.data ?? [];
+  const councilApps = councilQueue.data ?? [];
 
   return (
     <AppLayout>
@@ -22,6 +26,14 @@ export default function ProviderVerificationQueuePage() {
         title="Provider verification queue"
         subtitle="Review VARAPI registrations and transition provider status"
       >
+        <FeatureMaturityBadge status="partial" detail="VARAPI list + council queue via Experience BFF" />
+
+        {councilApps.length > 0 ? (
+          <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-900">
+            Council applications awaiting review: <strong>{councilApps.length}</strong>
+          </div>
+        ) : null}
+
         <Link
           href="/registry/providers"
           className="mb-4 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"

@@ -4,7 +4,7 @@ import { PlaneWorkspaceShell } from "@/components/workspace/PlaneWorkspaceShell"
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { NdilaIntelligencePanel } from "@/components/ndila";
-import { OpsMapPanel } from "@/components/operations/OpsMapPanel";
+import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
 
 export default function NdilaWorkspacePage() {
   return (
@@ -34,11 +34,9 @@ export default function NdilaWorkspacePage() {
           areaScope={{ level: "NATIONAL" }}
           purposeOfUse="GEOSPATIAL_INTELLIGENCE"
         />
-        <OpsMapPanel
-          title="Ndila operations map"
-          subtitle="Facility and asset markers via Ndila tile config"
-          markers={[]}
-          emptyHint="Load facility registry or enable Ndila tile service for map markers."
+        <UnifiedLogisticsMapPanel
+          title="Ndila logistics overlay"
+          subtitle="Nhume last-mile + dispatch task ops on Ndila tiles"
         />
       </div>
     </PlaneWorkspaceShell>

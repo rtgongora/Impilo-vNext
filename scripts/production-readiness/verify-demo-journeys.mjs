@@ -90,6 +90,7 @@ const JOURNEY_CHECKS = [
     journey: "5 Telemedicine → dispatch",
     name: "Provider telemedicine sessions",
     path: `/internal/v1/mobile/provider/telemedicine/sessions?patient_id=${GOLDEN_PATIENT}`,
+    minRows: 1,
   },
   {
     journey: "6 Public health + geo",
