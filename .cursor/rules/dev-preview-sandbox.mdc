@@ -1,12 +1,54 @@
 ---
-description: Dev Preview Sandbox on k3s — not formal staging
+description: Dev Preview Sandbox on k3s — deploy, smoke test, report (not formal staging)
 alwaysApply: false
 ---
 
 # Dev Preview Sandbox
 
-- Single-node k3s, namespace `impilo-preview`, Helm chart `deploy/helm/impilo-vnext`.
-- Deploy: `scripts/deploy/preview-build-images.sh` then `preview-deploy.sh`.
-- Smoke test after deploy: `scripts/deploy/preview-smoke-test.sh`.
-- Not production or formal staging. Test data only. No real secrets in repo.
-- Report preview URL, branch, commit SHA, and test results after deployment.
+The Dev Preview Sandbox runs on the VM and is the target for browser validation. It is **not
+production and not formal staging** — test data only, no real secrets, no real patient data.
+
+## Topology
+
+- Single-node **k3s**, namespace `impilo-preview`, Helm chart `deploy/helm/impilo-vnext`.
+- Components: `experience-bff`, `one-ui-shell`, `postgres`, `redis`, Traefik ingress.
+- Public preview URL: `http://41.57.127.235`.
+- UI is built **same-origin** (empty `NEXT_PUBLIC_BFF_URL`); the browser calls the BFF via
+  relative paths routed by Traefik, so the build is independent of the public IP.
+
+## Deploy → verify loop (run on the VM)
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+
+# 1. Build before deploy
+bash scripts/dev/build-all.sh
+
+# 2. Build images and import into k3s
+bash scripts/deploy/preview-build-images.sh
+
+# 3. Deploy via Helm
+bash scripts/deploy/preview-deploy.sh
+
+# 4. Confirm pods are healthy
+bash scripts/deploy/preview-status.sh
+kubectl get pods -n impilo-preview
+
+# 5. Smoke test
+bash scripts/deploy/preview-smoke-test.sh
+
+# 6. Logs if needed
+bash scripts/deploy/preview-logs.sh experience-bff
+bash scripts/deploy/preview-logs.sh one-ui-shell
+```
+
+## After every deployment, report
+
+- Preview URL (`http://41.57.127.235`)
+- Branch and commit SHA (`git rev-parse --short HEAD`, `curl -s http://41.57.127.235/health/version`)
+- Tests run / passed / failed
+- Pod health (`kubectl get pods -n impilo-preview`)
+- Any blockers
+
+Formal Test/Staging is a separate, future environment — see
+`docs/environment/FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md`.

@@ -1,13 +1,42 @@
 ---
-description: Safety rules for Impilo changes
+description: Safety and quality rules for all Impilo vNext changes
 alwaysApply: true
 ---
 
 # Change Safety
 
-1. Inspect existing code before modifying; do not duplicate functionality.
-2. Do not delete functionality unless explicitly instructed.
-3. Never commit secrets, passwords, or tokens.
-4. Run relevant tests after changes.
-5. Deploy to preview only after basic checks pass.
-6. Update `docs/environment/OWNER_PREVIEW_TEST_CHECKLIST.md` when user-facing workflows change.
+Apply these rules to every change made in the Impilo vNext repository.
+
+## Before changing anything
+
+1. **Inspect the existing implementation first.** Read relevant docs, contracts, APIs, tests,
+   services, frontend routes, backend endpoints, and deployment scripts before editing.
+2. **Do not duplicate existing functionality.** Reuse and extend what already exists.
+3. **Do not delete or replace existing functionality unless explicitly instructed.**
+
+## While changing
+
+4. Keep **frontend and backend functionality aligned**. If backend functionality exists but
+   is not visible in the frontend, **surface it in the UI** rather than duplicating backend
+   logic in the frontend.
+5. Work on feature/fix branches where appropriate; do not commit directly to shared branches
+   without reason.
+
+## Security
+
+6. **Never commit secrets**, passwords, tokens, or credentials. Scripts read secrets (e.g.
+   `SSH_PASS`) from the environment, never from committed files.
+7. **Never expose internal services publicly.** Only the documented preview ingress is public.
+8. **Do not use real patient data.** The Dev Preview Sandbox is test-data only.
+
+## After changing
+
+9. **Run the relevant tests** after substantive changes (`scripts/dev/run-tests.sh` or the
+   targeted service/UI test command).
+10. **Build before deployment.**
+11. **Deploy to the Dev Preview Sandbox** only after checks pass, then **run smoke tests** and
+    **confirm pods are healthy**.
+12. **Report**: preview URL, branch, commit SHA, tests run, tests passed, tests failed, and
+    any blockers.
+13. **Update `docs/environment/OWNER_PREVIEW_TEST_CHECKLIST.md`** whenever user-facing
+    workflows change.

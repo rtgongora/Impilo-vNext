@@ -1,14 +1,75 @@
 # AI Agent Workflow
 
-1. **Source of truth:** GitHub repository — not the VM disk alone.
-2. **Primary environment:** VM Remote SSH workspace (`/opt/impilo/repos/Impilo-vNext`).
-3. **Do not** use local laptop repo for normal development.
-4. Work on branches; pull before starting; push when done.
-5. Read contracts, docs, and tests before changes.
-6. Run `scripts/dev/run-tests.sh` after substantive changes.
-7. Build before preview deploy.
-8. Deploy preview: build images → Helm deploy → smoke tests.
-9. Report: preview URL, branch, commit SHA, tests passed/failed, limitations.
-10. Surface backend functionality in frontend — do not duplicate backend in UI.
-11. Never commit secrets.
-12. Formal Test/Staging is separate — see `docs/environment/FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md`.
+This document defines how Cursor and AI agents work on Impilo vNext. It is the authoritative
+workflow; the always-on rules in `.cursor/rules/` enforce it.
+
+## Workspace (default for all work)
+
+| Item | Value |
+|------|-------|
+| Remote SSH target | `robert@41.57.127.235:2276` |
+| Repo path | `/opt/impilo/repos/Impilo-vNext` |
+| Active working branch | `claude/staging-ux-orchestration-remediation-Yypyl` (unless explicitly changed) |
+| Preview URL | `http://41.57.127.235` |
+| Source of truth | **GitHub** `rtgongora/Impilo-vNext` |
+
+1. **GitHub is the source of truth** — not the VM disk alone.
+2. **The VM is the primary remote development workspace.** Connect Cursor via Remote SSH to
+   `robert@41.57.127.235:2276` and open `/opt/impilo/repos/Impilo-vNext`.
+3. **Do not use the local laptop clone for normal development.** The laptop is only the Cursor
+   client and the browser-testing machine. All heavy work — dependency installation, builds,
+   tests, Docker/image builds, k3s deployment, smoke tests, and logs — happens on the VM.
+
+## 1. Start of every session
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+git status
+git branch --show-current
+git rev-parse --short HEAD
+git remote -v
+```
+
+- Confirm the branch is `claude/staging-ux-orchestration-remediation-Yypyl` unless the user has
+  explicitly instructed otherwise.
+- **Pull latest** before starting new work.
+- Create a feature/fix branch where appropriate.
+
+## 2. Before making changes
+
+- Inspect the existing implementation first.
+- Read relevant docs, contracts, APIs, tests, services, frontend routes, backend endpoints,
+  and deployment scripts.
+- Do **not** duplicate existing functionality.
+- Do **not** delete or replace existing functionality unless explicitly instructed.
+
+## 3. While making changes
+
+- Keep frontend and backend functionality aligned.
+- If backend functionality exists but is not visible in the frontend, **surface it in the UI**
+  rather than duplicating backend code.
+- Never commit secrets. Never expose internal services publicly. Never use real patient data.
+
+## 4. After making changes
+
+- Run relevant tests (`scripts/dev/run-tests.sh` or the targeted service/UI test command).
+- **Build before deployment.**
+- Deploy to the Dev Preview Sandbox after checks pass.
+- Run smoke tests after deployment.
+- Confirm pods are healthy (`kubectl get pods -n impilo-preview`).
+- Update `docs/environment/OWNER_PREVIEW_TEST_CHECKLIST.md` when user-facing workflows change.
+
+## 5. Report at the end of the task
+
+- Preview URL (`http://41.57.127.235`)
+- Branch and commit SHA
+- Tests run, tests passed, tests failed
+- Blockers
+- Commit and push to GitHub from the VM.
+
+## Notes
+
+- The Dev Preview Sandbox is not production or formal staging — see
+  `docs/environment/FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md`.
+- Day-to-day commands and the Cursor startup checklist live in
+  `docs/environment/REMOTE_DEV_WORKSPACE_USAGE.md`.

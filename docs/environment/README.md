@@ -2,6 +2,33 @@
 
 Master entry point for the **Remote Development Workspace** and **Dev Preview Sandbox** on VM `41.57.127.235`.
 
+> ## ⭐ Default Development Workflow: Cursor Remote SSH on VM
+>
+> **Do not use the local laptop clone for normal Impilo vNext development.** Use the VM Remote
+> SSH workspace. The laptop is only the Cursor client and the browser-testing machine; all
+> dependency installation, builds, tests, Docker/image builds, k3s deployment, smoke tests, and
+> logs happen on the VM.
+>
+> | Item | Value |
+> |------|-------|
+> | Remote SSH target | `robert@41.57.127.235:2276` |
+> | Repo path (open this folder) | `/opt/impilo/repos/Impilo-vNext` |
+> | Active working branch | `claude/staging-ux-orchestration-remediation-Yypyl` (unless explicitly changed) |
+> | Preview URL | `http://41.57.127.235` |
+> | Source of truth | **GitHub** `rtgongora/Impilo-vNext` |
+>
+> Start every session with:
+>
+> ```bash
+> cd /opt/impilo/repos/Impilo-vNext
+> git status && git branch --show-current && git rev-parse --short HEAD && git remote -v
+> git pull origin claude/staging-ux-orchestration-remediation-Yypyl
+> bash scripts/dev/verify-remote-cursor-workspace.sh
+> ```
+>
+> Full steps: [REMOTE_DEV_WORKSPACE_USAGE.md](./REMOTE_DEV_WORKSPACE_USAGE.md) ·
+> Agent rules: [../AI_AGENT_WORKFLOW.md](../AI_AGENT_WORKFLOW.md)
+
 ## What This VM Is
 
 | Environment | Purpose |
@@ -24,7 +51,7 @@ Master entry point for the **Remote Development Workspace** and **Dev Preview Sa
 2. **Remote SSH** → `robert@41.57.127.235` port `2276`.
 3. Open folder: `/opt/impilo/repos/Impilo-vNext`.
 4. Confirm branch: `claude/staging-ux-orchestration-remediation-Yypyl`.
-5. Do **not** use the local 16GB laptop repo for normal development.
+5. Do **not** use the local laptop repo for normal development.
 
 ### 2. Verify workspace
 
@@ -62,14 +89,13 @@ bash scripts/deploy/preview-smoke-test.sh
 | [ENVIRONMENT_STRATEGY.md](./ENVIRONMENT_STRATEGY.md) | Environment model |
 | [K3S_PREVIEW_SETUP.md](./K3S_PREVIEW_SETUP.md) | k3s/Helm setup |
 | [IMAGE_BUILD_STRATEGY.md](./IMAGE_BUILD_STRATEGY.md) | Container image workflow |
-| [REMOTE_DEV_WORKSPACE_USAGE.md](./REMOTE_DEV_WORKSPACE_USAGE.md) | Cursor + daily workflow |
+| [REMOTE_DEV_WORKSPACE_USAGE.md](./REMOTE_DEV_WORKSPACE_USAGE.md) | Cursor startup checklist + daily workflow |
 | [PREVIEW_ENVIRONMENT_VARIABLES.md](./PREVIEW_ENVIRONMENT_VARIABLES.md) | Preview env vars |
 | [OWNER_PREVIEW_TEST_CHECKLIST.md](./OWNER_PREVIEW_TEST_CHECKLIST.md) | Expert user testing |
 | [DEV_PREVIEW_SECURITY_NOTES.md](./DEV_PREVIEW_SECURITY_NOTES.md) | Firewall / exposure |
 | [DEV_PREVIEW_OPERATIONS.md](./DEV_PREVIEW_OPERATIONS.md) | Ops runbook |
 | [GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md](./GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md) | CI/CD preview |
 | [FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md](./FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md) | Future formal staging |
-| [DEV_WORKSPACE_AND_PREVIEW_SETUP_REPORT.md](./DEV_WORKSPACE_AND_PREVIEW_SETUP_REPORT.md) | Final setup report |
 | [../AI_AGENT_WORKFLOW.md](../AI_AGENT_WORKFLOW.md) | AI agent rules |
 
 ## Repo Location

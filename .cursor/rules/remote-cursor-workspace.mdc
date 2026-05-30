@@ -1,14 +1,52 @@
 ---
-description: Cursor Remote SSH connection and verification
+description: Default Cursor/AI agent workspace — Remote SSH on the VM (not the laptop)
 alwaysApply: true
 ---
 
-# Remote Cursor Workspace
+# Remote Cursor Workspace (Default for All Work)
 
-Connect: Remote SSH → `robert@41.57.127.235:2276` → open `/opt/impilo/repos/Impilo-vNext`.
+All Cursor and AI agent development for Impilo vNext happens on the **VM Remote SSH
+workspace**, never on the local laptop clone.
 
-Verify: `bash scripts/dev/verify-remote-cursor-workspace.sh`
+## Canonical workspace
 
-Pull before work: `git pull origin <branch>`
+| Item | Value |
+|------|-------|
+| Remote SSH target | `robert@41.57.127.235:2276` |
+| Repo path (open this folder) | `/opt/impilo/repos/Impilo-vNext` |
+| Active working branch | `claude/staging-ux-orchestration-remediation-Yypyl` (unless explicitly changed) |
+| Preview URL | `http://41.57.127.235` |
+| Source of truth | **GitHub** `rtgongora/Impilo-vNext` |
 
-Laptop is client only — browser opens `http://41.57.127.235/` for preview testing.
+## Rules
+
+1. **GitHub is the source of truth.** The VM disk is the working copy; always push to GitHub.
+2. **The VM is the primary development workspace.** Connect Cursor via Remote SSH to
+   `robert@41.57.127.235:2276` and open `/opt/impilo/repos/Impilo-vNext`.
+3. **The local laptop clone must not be used for normal development.** The laptop is only
+   the Cursor client and the browser-testing machine. All dependency installation, builds,
+   tests, Docker/image builds, k3s deployment, smoke tests, and logs run on the VM.
+4. The active branch is `claude/staging-ux-orchestration-remediation-Yypyl` unless the user
+   explicitly instructs otherwise. Confirm the branch before starting work.
+5. **Pull latest before starting new work**; work on feature/fix branches where appropriate.
+
+## Always run before starting work
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+git status
+git branch --show-current
+git rev-parse --short HEAD
+git remote -v
+```
+
+Confirm the branch is `claude/staging-ux-orchestration-remediation-Yypyl` unless the user has
+explicitly instructed otherwise, then `git pull` before making changes.
+
+## Verify the workspace
+
+```bash
+bash scripts/dev/verify-remote-cursor-workspace.sh
+```
+
+Browser testing happens on the laptop against `http://41.57.127.235`.
