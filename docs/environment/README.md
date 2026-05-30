@@ -1,0 +1,81 @@
+# Impilo vNext — Environment Documentation
+
+Master entry point for the **Remote Development Workspace** and **Dev Preview Sandbox** on VM `41.57.127.235`.
+
+## What This VM Is
+
+| Environment | Purpose |
+|-------------|---------|
+| **Remote Development Workspace** | Primary Cursor Remote SSH workspace — builds, tests, image builds |
+| **Dev Preview Sandbox** | Single-node k3s + Helm — browser preview for expert validation |
+
+## What This VM Is Not
+
+- Production deployment
+- Formal production-grade Test/Staging
+- HA / multi-node resilience testing
+- Real patient data or production secrets
+
+## Quick Start
+
+### 1. Connect Cursor (primary workflow)
+
+1. Open Cursor on your laptop.
+2. **Remote SSH** → `robert@41.57.127.235` port `2276`.
+3. Open folder: `/opt/impilo/repos/Impilo-vNext`.
+4. Confirm branch: `claude/staging-ux-orchestration-remediation-Yypyl`.
+5. Do **not** use the local 16GB laptop repo for normal development.
+
+### 2. Verify workspace
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+bash scripts/dev/verify-remote-cursor-workspace.sh
+```
+
+### 3. Install / refresh dependencies
+
+```bash
+bash scripts/dev/install-dependencies.sh
+```
+
+### 4. Build and deploy preview
+
+```bash
+bash scripts/dev/build-all.sh
+bash scripts/deploy/preview-build-images.sh
+bash scripts/deploy/preview-deploy.sh
+bash scripts/deploy/preview-smoke-test.sh
+```
+
+### 5. Open preview in laptop browser
+
+`http://41.57.127.235/` (HTTP via k3s Traefik ingress)
+
+## Document Index
+
+| Document | Description |
+|----------|-------------|
+| [VM_BASELINE_AUDIT.md](./VM_BASELINE_AUDIT.md) | Pre-setup server snapshot |
+| [REPO_ENVIRONMENT_AUDIT.md](./REPO_ENVIRONMENT_AUDIT.md) | Repo structure, services, tooling |
+| [DEPENDENCY_INSTALLATION_REPORT.md](./DEPENDENCY_INSTALLATION_REPORT.md) | Install results |
+| [ENVIRONMENT_STRATEGY.md](./ENVIRONMENT_STRATEGY.md) | Environment model |
+| [K3S_PREVIEW_SETUP.md](./K3S_PREVIEW_SETUP.md) | k3s/Helm setup |
+| [IMAGE_BUILD_STRATEGY.md](./IMAGE_BUILD_STRATEGY.md) | Container image workflow |
+| [REMOTE_DEV_WORKSPACE_USAGE.md](./REMOTE_DEV_WORKSPACE_USAGE.md) | Cursor + daily workflow |
+| [PREVIEW_ENVIRONMENT_VARIABLES.md](./PREVIEW_ENVIRONMENT_VARIABLES.md) | Preview env vars |
+| [OWNER_PREVIEW_TEST_CHECKLIST.md](./OWNER_PREVIEW_TEST_CHECKLIST.md) | Expert user testing |
+| [DEV_PREVIEW_SECURITY_NOTES.md](./DEV_PREVIEW_SECURITY_NOTES.md) | Firewall / exposure |
+| [DEV_PREVIEW_OPERATIONS.md](./DEV_PREVIEW_OPERATIONS.md) | Ops runbook |
+| [GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md](./GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md) | CI/CD preview |
+| [FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md](./FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md) | Future formal staging |
+| [DEV_WORKSPACE_AND_PREVIEW_SETUP_REPORT.md](./DEV_WORKSPACE_AND_PREVIEW_SETUP_REPORT.md) | Final setup report |
+| [../AI_AGENT_WORKFLOW.md](../AI_AGENT_WORKFLOW.md) | AI agent rules |
+
+## Repo Location
+
+```
+/opt/impilo/repos/Impilo-vNext
+```
+
+GitHub remains the source of truth. Commit and push from the VM workspace.

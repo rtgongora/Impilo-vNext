@@ -1,0 +1,46 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: impilo-preview
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - http:
+        paths:
+          - path: /internal
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          - path: /actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          # NOTE: do NOT route /auth to the BFF. The BFF auth endpoints live under
+          # /internal/v1/auth/* (AuthSessionController @RequestMapping("/internal/v1")),
+          # while /auth/* are one-ui-shell pages (login, register, mfa, ...). Routing
+          # /auth to the BFF would shadow the UI login page.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: one-ui-shell
+                port:
+                  number: 3000
+{{- end }}

@@ -1,0 +1,14 @@
+---
+description: Cursor Remote SSH connection and verification
+alwaysApply: true
+---
+
+# Remote Cursor Workspace
+
+Connect: Remote SSH → `robert@41.57.127.235:2276` → open `/opt/impilo/repos/Impilo-vNext`.
+
+Verify: `bash scripts/dev/verify-remote-cursor-workspace.sh`
+
+Pull before work: `git pull origin <branch>`
+
+Laptop is client only — browser opens `http://41.57.127.235/` for preview testing.

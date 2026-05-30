@@ -1,0 +1,6 @@
+apiVersion: v2
+name: impilo-vnext
+description: Impilo vNext dev preview sandbox (single-node k3s MVP slice)
+type: application
+version: 0.1.0
+appVersion: "preview"

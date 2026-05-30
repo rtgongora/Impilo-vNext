@@ -126,7 +126,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // ── Public endpoints ──────────────────────────────────
                     .requestMatchers("/internal/v1/auth/**").permitAll()
-                    .requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
+                    .requestMatchers("/health/version").permitAll()
                     .requestMatchers(HttpMethod.GET, "/internal/v1/profile/visibility").authenticated()
 
                     // ── Admin zone ────────────────────────────────────────

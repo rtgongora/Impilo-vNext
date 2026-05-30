@@ -1,0 +1,39 @@
+global:
+  environment: preview
+  publicHost: "41.57.127.235"
+
+images:
+  experienceBff:
+    repository: impilo/experience-bff
+    tag: preview
+    pullPolicy: IfNotPresent
+  oneUiShell:
+    repository: impilo/one-ui-shell
+    tag: preview
+    pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: traefik
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  username: impilo
+  database: impilo
+  password: preview-change-me
+
+keycloak:
+  enabled: false
+
+experienceBff:
+  enabled: true
+  replicaCount: 1
+
+oneUiShell:
+  enabled: true
+  replicaCount: 1

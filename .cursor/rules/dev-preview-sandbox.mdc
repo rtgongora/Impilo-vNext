@@ -1,0 +1,12 @@
+---
+description: Dev Preview Sandbox on k3s — not formal staging
+alwaysApply: false
+---
+
+# Dev Preview Sandbox
+
+- Single-node k3s, namespace `impilo-preview`, Helm chart `deploy/helm/impilo-vnext`.
+- Deploy: `scripts/deploy/preview-build-images.sh` then `preview-deploy.sh`.
+- Smoke test after deploy: `scripts/deploy/preview-smoke-test.sh`.
+- Not production or formal staging. Test data only. No real secrets in repo.
+- Report preview URL, branch, commit SHA, and test results after deployment.

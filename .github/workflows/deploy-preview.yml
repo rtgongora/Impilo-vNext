@@ -1,0 +1,51 @@
+name: Deploy Preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to deploy
+        required: true
+        default: claude/staging-ux-orchestration-remediation-Yypyl
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout selected branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PREVIEW_HOST }}
+          port: ${{ secrets.PREVIEW_PORT }}
+          username: ${{ secrets.PREVIEW_USER }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            REPO=/opt/impilo/repos/Impilo-vNext
+            cd "$REPO"
+            git fetch origin "${{ inputs.branch }}"
+            git checkout "${{ inputs.branch }}"
+            git pull --ff-only origin "${{ inputs.branch }}" || true
+            bash scripts/dev/install-dependencies.sh
+            bash scripts/dev/build-all.sh
+            bash scripts/deploy/preview-build-images.sh
+            bash scripts/deploy/preview-deploy.sh
+            bash scripts/deploy/preview-smoke-test.sh
+
+      - name: Report deployed commit
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PREVIEW_HOST }}
+          port: ${{ secrets.PREVIEW_PORT }}
+          username: ${{ secrets.PREVIEW_USER }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          script: |
+            cd /opt/impilo/repos/Impilo-vNext
+            echo "branch=$(git branch --show-current)"
+            echo "commit=$(git rev-parse HEAD)"
+            curl -s http://127.0.0.1/health/version || true

@@ -1,0 +1,54 @@
+{{- if .Values.oneUiShell.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: one-ui-shell
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.oneUiShell.replicaCount }}
+  selector:
+    matchLabels:
+      app: one-ui-shell
+  template:
+    metadata:
+      labels:
+        app: one-ui-shell
+    spec:
+      containers:
+        - name: one-ui-shell
+          image: "{{ .Values.images.oneUiShell.repository }}:{{ .Values.images.oneUiShell.tag }}"
+          imagePullPolicy: {{ .Values.images.oneUiShell.pullPolicy }}
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_IMPILO_ENV
+              value: {{ .Values.global.environment | quote }}
+            - name: NEXT_PUBLIC_GIT_BRANCH
+              value: {{ .Values.global.gitBranch | default "" | quote }}
+            - name: NEXT_PUBLIC_GIT_COMMIT
+              value: {{ .Values.global.gitCommit | default "" | quote }}
+            - name: NEXT_PUBLIC_BUILD_DATE
+              value: {{ .Values.global.buildDate | default "" | quote }}
+            {{- range $k, $v := .Values.oneUiShell.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: one-ui-shell
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: one-ui-shell
+  ports:
+    - port: 3000
+      targetPort: 3000
+{{- end }}

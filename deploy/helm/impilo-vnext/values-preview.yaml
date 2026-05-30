@@ -1,0 +1,51 @@
+global:
+  environment: preview
+  publicHost: "41.57.127.235"
+
+images:
+  experienceBff:
+    repository: impilo/experience-bff
+    tag: preview
+    pullPolicy: Never
+  oneUiShell:
+    repository: impilo/one-ui-shell
+    tag: preview
+    pullPolicy: Never
+
+ingress:
+  enabled: true
+  className: traefik
+
+redis:
+  enabled: true
+
+postgres:
+  enabled: true
+  password: preview-change-me
+
+keycloak:
+  enabled: false
+
+experienceBff:
+  enabled: true
+  replicaCount: 1
+  env:
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    KEYCLOAK_URL: "http://127.0.0.1:1"
+    KEYCLOAK_REALM: impilo
+    AUTH_FALLBACK_ENABLED: "true"
+    IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: "127.0.0.1:9092"
+    SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+    MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
+    SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
+
+oneUiShell:
+  enabled: true
+  replicaCount: 1
+  env:
+    # Same-origin: the browser bundle (built with empty NEXT_PUBLIC_BFF_URL) calls the
+    # BFF via relative paths, which Traefik routes to experience-bff. This is the
+    # documented production pattern (see api-client.ts) and is independent of the public IP.
+    NEXT_PUBLIC_BFF_URL: ""

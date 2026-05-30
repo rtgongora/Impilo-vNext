@@ -1,0 +1,13 @@
+---
+description: Safety rules for Impilo changes
+alwaysApply: true
+---
+
+# Change Safety
+
+1. Inspect existing code before modifying; do not duplicate functionality.
+2. Do not delete functionality unless explicitly instructed.
+3. Never commit secrets, passwords, or tokens.
+4. Run relevant tests after changes.
+5. Deploy to preview only after basic checks pass.
+6. Update `docs/environment/OWNER_PREVIEW_TEST_CHECKLIST.md` when user-facing workflows change.

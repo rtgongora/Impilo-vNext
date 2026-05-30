@@ -1,0 +1,63 @@
+{{- if .Values.experienceBff.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: experience-bff
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.experienceBff.replicaCount }}
+  selector:
+    matchLabels:
+      app: experience-bff
+  template:
+    metadata:
+      labels:
+        app: experience-bff
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: experience-bff
+          image: "{{ .Values.images.experienceBff.repository }}:{{ .Values.images.experienceBff.tag }}"
+          imagePullPolicy: {{ .Values.images.experienceBff.pullPolicy }}
+          ports:
+            - containerPort: 8160
+          env:
+            - name: IMPILO_ENV
+              value: {{ .Values.global.environment | quote }}
+            - name: IMPILO_GIT_BRANCH
+              value: {{ .Values.global.gitBranch | default "" | quote }}
+            - name: IMPILO_GIT_COMMIT
+              value: {{ .Values.global.gitCommit | default "" | quote }}
+            - name: IMPILO_BUILD_DATE
+              value: {{ .Values.global.buildDate | default "" | quote }}
+            {{- range $k, $v := .Values.experienceBff.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8160
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8160
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: experience-bff
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: experience-bff
+  ports:
+    - port: 8160
+      targetPort: 8160
+{{- end }}
