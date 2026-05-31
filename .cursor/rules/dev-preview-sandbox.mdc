@@ -19,8 +19,10 @@ production and not formal staging** — test data only, no real secrets, no real
 ## Authorization
 
 Preview deploy is **manual and user-authorized only**. CI does not deploy after push.
-Use `bash scripts/deploy/manual-authorized-preview-deploy.sh` or Actions **Deploy Preview**
-after `bash scripts/ci/collect-ci-feedback.sh` shows deploy is appropriate.
+Run `bash scripts/pipeline/run-local-quality-gates.sh` on the VM first, then
+`bash scripts/pipeline/cursor-local-feedback.sh` and `bash scripts/ci/collect-ci-feedback.sh`.
+Deploy only via `bash scripts/deploy/manual-authorized-preview-deploy.sh` or Actions **Deploy Preview**
+after explicit user authorization.
 
 ## Deploy → verify loop (run on the VM)
 

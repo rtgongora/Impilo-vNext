@@ -29,6 +29,18 @@ Master entry point for the **Remote Development Workspace** and **Dev Preview Sa
 > Full steps: [REMOTE_DEV_WORKSPACE_USAGE.md](./REMOTE_DEV_WORKSPACE_USAGE.md) ·
 > Agent rules: [../AI_AGENT_WORKFLOW.md](../AI_AGENT_WORKFLOW.md)
 
+### Quality gates (VM + GitHub — same scripts)
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+bash scripts/pipeline/run-local-quality-gates.sh      # full VM pipeline
+bash scripts/pipeline/cursor-local-feedback.sh        # Cursor summary
+bash scripts/ci/collect-ci-feedback.sh                # GitHub Actions status
+bash scripts/deploy/manual-authorized-preview-deploy.sh  # after user approval only
+```
+
+See [DUAL_MODE_TEST_PIPELINE.md](./DUAL_MODE_TEST_PIPELINE.md).
+
 ## What This VM Is
 
 | Environment | Purpose |

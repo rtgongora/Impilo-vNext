@@ -1,5 +1,9 @@
 name: CI
 
+# Canonical test logic lives in repo scripts (VM + Actions share the same gates):
+#   bash scripts/pipeline/run-local-quality-gates.sh
+# Sub-scripts under scripts/test/ and scripts/guard/ must stay in sync with YAML orchestration only.
+
 on:
   push:
     branches: [main, develop, 'claude/**']
@@ -322,34 +326,16 @@ jobs:
         working-directory: ui
         run: npm ci --ignore-scripts -w one-ui-shell
 
-      - name: Lint
-        working-directory: ui/one-ui-shell
-        run: npm run lint
-
-      - name: Type check
-        working-directory: ui/one-ui-shell
-        run: npm run type-check
-
-      - name: Route parity
-        working-directory: ui/one-ui-shell
-        run: npm run test:routes
-
-      - name: Registry maturity drift check (ignore generatedAt-only)
-        run: bash scripts/test/verify-registry-maturity-sync.sh
-
-      - name: Launcher dead-end guard
-        working-directory: ui/one-ui-shell
-        run: npm run test:launchers
-
-      - name: No-stub guard (GAP_CLOSURE_RULES)
-        working-directory: ui/one-ui-shell
+      - name: Canonical frontend + static + parity gates (VM scripts)
         env:
-          GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha || '' }}
-        run: npm run test:no-stubs
-
-      - name: Build
-        working-directory: ui/one-ui-shell
-        run: npm run build
+          PIPELINE_CI_MODE: "1"
+          PIPELINE_SKIP_TOOLCHECK: "1"
+          PIPELINE_SKIP_BACKEND: "1"
+          PIPELINE_SKIP_INTEGRATION: "1"
+          PIPELINE_SKIP_REGRESSION: "1"
+          PIPELINE_SKIP_E2E: "1"
+          PIPELINE_ONLY: "security,static,frontend,parity"
+        run: bash scripts/pipeline/run-local-quality-gates.sh
 
   completeness-report:
     name: Completeness report (informational)
@@ -797,8 +783,13 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Run blocking preview gates (no deploy)
+      - name: Canonical VM parity gates (no deploy)
         env:
-          PREVIEW_GATES_SKIP_BACKEND: "0"
+          PIPELINE_CI_MODE: "1"
+          PIPELINE_SKIP_TOOLCHECK: "1"
+          PIPELINE_SKIP_FRONTEND: "1"
+          PIPELINE_SKIP_STATIC: "1"
+          PIPELINE_SKIP_BACKEND: "0"
           PREVIEW_GATES_SKIP_E2E: "1"
-        run: bash scripts/test/run-preview-gates.sh
+          PIPELINE_SKIP_E2E: "1"
+        run: bash scripts/pipeline/run-local-quality-gates.sh

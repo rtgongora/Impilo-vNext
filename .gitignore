@@ -63,3 +63,8 @@ services/.mvn/
 
 # Expo local state (machine-specific, should not be committed)
 .expo/
+
+# Pipeline run reports (generated on VM; not committed)
+reports/pipeline/*.md
+reports/pipeline/*.json
+!reports/pipeline/.gitkeep

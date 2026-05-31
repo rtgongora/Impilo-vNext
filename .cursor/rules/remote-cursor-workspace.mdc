@@ -30,6 +30,17 @@ workspace**, never on the local laptop clone.
    explicitly instructs otherwise. Confirm the branch before starting work.
 5. **Pull latest before starting new work**; work on feature/fix branches where appropriate.
 
+## Quality gates (VM-first)
+
+Before preview deploy authorization, run on the VM:
+
+```bash
+bash scripts/pipeline/run-local-quality-gates.sh
+bash scripts/pipeline/cursor-local-feedback.sh
+```
+
+GitHub Actions calls the same scripts when runners are available. See `docs/environment/DUAL_MODE_TEST_PIPELINE.md`.
+
 ## Always run before starting work
 
 ```bash

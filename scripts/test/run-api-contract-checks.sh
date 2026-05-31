@@ -16,7 +16,7 @@ gate_run "service-registry-validation-advisory" bash -c '
 ' || gate_warn "service-registry validation advisory failed"
 
 gate_run "bff-health-version-route-exists" bash -c '
-  rg -q "/health/version" services/experience-bff/src/main/java
+  grep -rq "/health/version" services/experience-bff/src/main/java
 ' || FAIL=1
 
 gate_run "openapi-social-contract" bash -c 'test -f contracts/openapi/social.openapi.yaml' || FAIL=1

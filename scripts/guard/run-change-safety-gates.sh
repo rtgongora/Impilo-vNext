@@ -13,6 +13,7 @@ CHECKS=(
   check-route-inventory.sh
   check-api-contracts.sh
 )
+# Parity + no-stub guards run in pipeline phase "Backend-to-frontend parity" (check-backend-frontend-parity.sh)
 
 FAIL=0
 echo "=== Change-safety gates ==="

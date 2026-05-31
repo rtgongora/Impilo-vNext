@@ -37,7 +37,10 @@ commit → push → GitHub Actions CI (automatic) → regression/change-safety g
 ## Commands (VM)
 
 ```bash
-bash scripts/test/run-preview-gates.sh
+bash scripts/pipeline/run-local-quality-gates.sh   # canonical full pipeline
+bash scripts/pipeline/cursor-local-feedback.sh
 bash scripts/ci/collect-ci-feedback.sh
 bash scripts/deploy/manual-authorized-preview-deploy.sh
 ```
+
+Dual-mode design: [DUAL_MODE_TEST_PIPELINE.md](./DUAL_MODE_TEST_PIPELINE.md)

@@ -52,8 +52,9 @@ git remote -v
 
 ## 4. After making changes
 
-- Run relevant tests (`scripts/dev/run-tests.sh` or `bash scripts/test/run-preview-gates.sh`).
+- Run **`bash scripts/pipeline/run-local-quality-gates.sh`** (canonical VM pipeline; same scripts as GitHub Actions).
 - **Push triggers CI only** — preview does **not** auto-deploy.
+- If GitHub CI is infra-blocked (billing/0-step jobs), use VM local reports — do not treat as code pass/fail.
 - After push: `bash scripts/ci/collect-ci-feedback.sh` and summarize per
   `docs/environment/CURSOR_CI_FEEDBACK_TEMPLATE.md`.
 - **Deploy only after explicit user approval** via

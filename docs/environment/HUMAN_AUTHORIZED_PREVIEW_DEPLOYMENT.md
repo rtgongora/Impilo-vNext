@@ -12,15 +12,26 @@
 8. **Post-deploy:** `preview-smoke-test.sh`, `/health/version` commit match.
 9. **User** opens `http://41.57.127.235` for manual UX verification.
 
+## Pre-deploy evidence
+
+| Source | Command |
+|--------|---------|
+| VM local pipeline | `bash scripts/pipeline/run-local-quality-gates.sh` |
+| Cursor summary | `bash scripts/pipeline/cursor-local-feedback.sh` |
+| GitHub CI | `bash scripts/ci/collect-ci-feedback.sh` |
+
+If GitHub CI is infra-blocked (billing) but VM local gates passed for the commit, use **`AUTHORIZE DEPLOY WITH VM GATES`**.
+
 ## Deploy methods
 
 ### VM (interactive)
 
 ```bash
 cd /opt/impilo/repos/Impilo-vNext
-bash scripts/ci/collect-ci-feedback.sh
+bash scripts/pipeline/run-local-quality-gates.sh
+bash scripts/pipeline/cursor-local-feedback.sh
 bash scripts/deploy/manual-authorized-preview-deploy.sh
-# Type: AUTHORIZE DEPLOY
+# Type: AUTHORIZE DEPLOY  or  AUTHORIZE DEPLOY WITH VM GATES
 ```
 
 ### GitHub Actions
