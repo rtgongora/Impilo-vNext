@@ -493,7 +493,16 @@ cd apps/mobile && pnpm test
   writeFileSync(join(OUT, "FRONTEND_IMPLEMENTATION_STATUS.md"), content);
 }
 
-mkdirSync(OUT, { recursive: true });
-writeMatrix();
-writeImplementationStatus();
-console.log("Wrote docs/frontend matrix and implementation status");
+export { CAPABILITIES };
+
+function isMain() {
+  const entry = process.argv[1] ?? "";
+  return entry.includes("generate-parity-docs.mjs");
+}
+
+if (isMain()) {
+  mkdirSync(OUT, { recursive: true });
+  writeMatrix();
+  writeImplementationStatus();
+  console.log("Wrote docs/frontend matrix and implementation status");
+}

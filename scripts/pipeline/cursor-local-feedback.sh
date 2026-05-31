@@ -27,6 +27,16 @@ else
   echo ""
 fi
 
+echo "── Parity gates (latest run) ──"
+for f in /tmp/impilo-parity-summary.txt; do
+  [[ -f "$f" ]] && cat "$f" 2>/dev/null || echo "(run parity guards to populate)"
+done
+if [[ -f config/parity-allowlist.yml ]]; then
+  echo "Allowlist: config/parity-allowlist.yml ($(grep -c '^  - path:' config/parity-allowlist.yml 2>/dev/null || echo 0) exceptions)"
+fi
+echo "Matrices: docs/architecture/FRONTEND_BACKEND_PARITY_MATRIX.md, MOBILE_PARITY_MATRIX.md"
+echo ""
+
 echo "── GitHub Actions CI ──"
 FB="$(mktemp)"
 bash scripts/ci/collect-ci-feedback.sh 2>&1 | tee "$FB"

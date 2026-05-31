@@ -1,0 +1,39 @@
+# Parity exceptions (web + mobile). New production mocks/stubs require an entry here.
+# Fields: path, capability, reason, review_date, owner, class, remediation, issue
+version: 1
+
+exceptions:
+  - path: ui/one-ui-shell/src/app/ubomi/page.tsx
+    capability: UBOMI CRVS
+    reason: Honest not-wired placeholder until BFF bridge ships
+    review_date: 2026-08-01
+    owner: registry-plane
+    class: intentionally_deferred
+    remediation: Wire useUbomiRegistry + sovereign ubomi-service
+    issue: parity-ubomi
+
+  - path: apps/mobile/provider-app/src/services/demoJourneyService.ts
+    capability: Demo journey scaffolding
+    reason: Dev/demo journey only; not default production navigation
+    review_date: 2026-07-01
+    owner: mobile-provider
+    class: demo_only
+    remediation: Gate behind __DEV__ or remove from production nav
+    issue: mobile-demo-journey
+
+  - path: apps/mobile/citizen-app/src/screens/personal/PersonalHealthPlaceholder.tsx
+    capability: Citizen personal health sections
+    reason: Partial mobile SHR sections documented as partial in matrix
+    review_date: 2026-08-01
+    owner: mobile-citizen
+    class: temporarily_partial
+    remediation: Wire to BFF summary endpoints per BUTANO row
+    issue: mobile-butano-partial
+
+legacy_advisory_gaps:
+  - capability: ZIBO terminology admin
+    note: Separate zibo-web app; web shell link only — mobile n/a
+  - capability: Telemedicine RTC
+    note: RTC media intentionally blocked; scheduling/records partial
+  - capability: iOS TestFlight
+    note: iOS build advisory until macOS runner and signing available

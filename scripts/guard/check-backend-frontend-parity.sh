@@ -1,72 +1,67 @@
 #!/usr/bin/env bash
-# Backend-to-frontend parity: docs in sync + no new OPEN gaps without matrix update.
+# Backend-to-frontend parity gate — orchestrates inventory, mocks, API surfacing.
 set -euo pipefail
 source "$(dirname "$0")/_guard-common.sh"
+source "$(dirname "$0")/_parity-common.sh"
 cd "$REPO_PATH"
 BASE="$(resolve_base_ref)"
 FAIL=0
+PARITY_BLOCKING=0
+PARITY_ADVISORY=0
+: >"$PARITY_SUMMARY_FILE"
+
+echo "=== Backend-to-frontend parity gate ==="
+echo "BASE: $BASE"
 
 MATRIX="docs/frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md"
-STATUS="docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md"
-INVENTORY="docs/architecture/BACKEND_CAPABILITY_INVENTORY.md"
-PARITY_DOC="docs/architecture/FRONTEND_BACKEND_PARITY_MATRIX.md"
-
-for f in "$MATRIX" "$STATUS"; do
-  if [[ ! -f "$f" ]]; then
-    guard_fail "missing parity doc: $f"
-    FAIL=1
-  fi
+for f in "$MATRIX" docs/architecture/BACKEND_CAPABILITY_INVENTORY.md docs/architecture/FRONTEND_BACKEND_PARITY_MATRIX.md; do
+  [[ -f "$f" ]] || node scripts/architecture/generate-parity-inventories.mjs 2>/dev/null || true
 done
 
-# Regenerate and allow date-line-only drift
 node scripts/frontend/generate-parity-docs.mjs >/dev/null 2>&1 || {
   guard_fail "generate-parity-docs.mjs failed"
   exit 1
 }
 
-CONTENT_DRIFT=$(git diff -U0 -- "$MATRIX" "$STATUS" 2>/dev/null \
+CONTENT_DRIFT=$(git diff -U0 -- "$MATRIX" docs/frontend/FRONTEND_IMPLEMENTATION_STATUS.md 2>/dev/null \
   | grep -E '^[+-]' | grep -v '^[+-][+-][+-]' | grep -v 'Generated:' | grep -v 'Updated:' || true)
-
 if [[ -n "$CONTENT_DRIFT" ]]; then
   guard_fail "parity docs out of sync — run: node scripts/frontend/generate-parity-docs.mjs"
-  echo "$CONTENT_DRIFT" | head -30
+  echo "$CONTENT_DRIFT" | head -20
   FAIL=1
+  PARITY_BLOCKING=1
 else
-  guard_pass "frontend parity docs in sync with capability registry"
+  guard_pass "frontend parity docs in sync"
 fi
 
-# New BFF controllers without parity doc touch
-NEW_BFF=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
-  'services/experience-bff/src/main/java' 2>/dev/null | guard_filter 'Controller\.java$' || true)
-if [[ -n "$NEW_BFF" ]]; then
-  if git diff --name-only "$BASE"...HEAD | guard_filter -q 'docs/frontend/BACKEND_CAPABILITY|docs/architecture/FRONTEND_BACKEND_PARITY|docs/architecture/BACKEND_CAPABILITY'; then
-    guard_pass "BFF changes include parity documentation update"
-  else
-    guard_fail "new BFF controllers without BACKEND_CAPABILITY / parity matrix update"
-    echo "$NEW_BFF"
-    FAIL=1
-  fi
-fi
+bash scripts/guard/check-frontend-mocks-and-stubs.sh || { FAIL=1; PARITY_BLOCKING=1; }
+bash scripts/guard/check-api-client-surfacing.sh || { FAIL=1; PARITY_BLOCKING=1; }
 
-# Block obvious placeholder pages in new routes
-NEW_PAGES=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null \
-  | guard_filter 'page\.tsx$' || true)
-while IFS= read -r page; do
-  [[ -z "$page" || ! -f "$page" ]] && continue
-  if grep -qiE 'coming soon|under construction|lorem ipsum|TODO: implement' "$page" 2>/dev/null; then
-    guard_fail "placeholder copy in new page: $page"
-    FAIL=1
+# Weakened page replacement detection
+for page in $(git diff --diff-filter=M --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null | guard_filter 'page\.tsx$' || true); do
+  [[ -f "$page" ]] || continue
+  before=$(git show "$BASE:$page" 2>/dev/null | wc -l || echo 0)
+  after=$(wc -l <"$page" || echo 0)
+  if [[ "$before" -gt 80 && "$after" -lt 30 ]]; then
+    guard_warn "page drastically simplified: $page ($before -> $after lines)"
+    PARITY_ADVISORY=1
   fi
-  if grep -q 'JSON.stringify' "$page" 2>/dev/null && ! grep -qE 'test|spec|story' <<<"$page"; then
-    guard_warn "JSON.stringify dump suspected in $page — verify not a debug stub"
-  fi
-done <<< "$NEW_PAGES"
+done
 
-bash scripts/guard/check-frontend-mocks-and-stubs.sh || FAIL=1
-bash scripts/guard/check-api-client-surfacing.sh || true
+echo ""
+echo "=== Parity classification (from matrix) ==="
+python3 <<'PY' 2>/dev/null || true
+import re, pathlib
+p = pathlib.Path("docs/frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md")
+if not p.exists():
+    exit()
+text = p.read_text()
+for label in ["Live", "Partial", "Not Wired", "Fixture", "Blocked"]:
+    n = len(re.findall(rf"\| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| [^|]* \| {label} \|", text))
+    if n:
+        print(f"  {label}: {n}")
+PY
 
-if [[ "$FAIL" -ne 0 ]]; then
-  exit 1
-fi
-guard_pass "backend-frontend parity gate"
-exit 0
+parity_print_verdict "Backend-frontend parity" || FAIL=1
+[[ "$FAIL" -eq 0 ]] && guard_pass "backend-frontend parity gate"
+exit "$FAIL"

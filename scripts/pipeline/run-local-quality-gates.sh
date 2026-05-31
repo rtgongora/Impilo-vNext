@@ -46,35 +46,41 @@ if [[ "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
 fi
 
 # 7. Backend-frontend parity
-pipeline_run_phase parity "Backend-to-frontend parity" 1 \
+pipeline_run_phase parity-web "Backend-to-frontend parity" 1 \
   bash scripts/guard/check-backend-frontend-parity.sh
 
-# 8. API contracts
+# 8. Mobile parity (blocking for new gaps)
+pipeline_run_phase parity-mobile "Mobile parity" 1 \
+  bash scripts/guard/check-mobile-parity.sh
+
+# 9. API contracts
 pipeline_run_phase api-contracts "API contract checks" 1 \
   bash scripts/test/run-api-contract-checks.sh
 
-# 9. Integration
+# 10. Integration
 if [[ "${PIPELINE_SKIP_INTEGRATION:-0}" != "1" ]]; then
   pipeline_run_phase integration "Integration baseline" 1 \
     bash scripts/test/run-integration-checks.sh
 fi
 
-# 10. Regression
+# 11. Regression
 if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
   export PREVIEW_BASE_URL="${PREVIEW_BASE_URL:-http://127.0.0.1}"
   pipeline_run_phase regression "Regression checks" 1 \
     bash tests/regression/preview-http-regression.sh
+  pipeline_run_phase regression-parity "Frontend parity route smoke" 1 \
+    bash tests/regression/frontend-backend-parity-smoke.sh
 fi
 
-# 11. Change-safety
+# 12. Change-safety
 pipeline_run_phase change-safety "Change-safety gates" 1 \
   bash scripts/guard/run-change-safety-gates.sh
 
-# 12. Mobile (advisory)
-pipeline_run_phase mobile "Mobile checks" 0 \
+# 13. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
+pipeline_run_phase mobile "Mobile build checks" 0 \
   bash scripts/test/run-mobile-checks.sh || true
 
-# 13. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
+# 14. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
 if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
   e2e_blocking=0
   [[ "${PIPELINE_E2E_BLOCKING:-0}" == "1" ]] && e2e_blocking=1

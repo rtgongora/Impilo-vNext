@@ -35,7 +35,7 @@ Apply these rules to every change made in the Impilo vNext repository.
    `bash scripts/test/run-preview-gates.sh` before preview deploy).
 9b. **Do not auto-deploy preview after push.** Run `scripts/pipeline/run-local-quality-gates.sh` on the VM;
    collect CI via `scripts/ci/collect-ci-feedback.sh`; deploy only after user authorization.
-9d. **Backend–frontend parity:** run `scripts/guard/check-backend-frontend-parity.sh`; no production mocks/stubs.
+9d. **Backend–frontend parity:** `scripts/guard/check-backend-frontend-parity.sh`; **mobile parity:** `scripts/guard/check-mobile-parity.sh`; no production mocks/stubs; update matrices when adding user-facing capabilities.
 9c. Check `docs/architecture/SERVICE_INVENTORY.md` and `FEATURE_INVENTORY.md` before new services/features.
 10. **Build before deployment.**
 11. **Deploy to the Dev Preview Sandbox** only after checks pass, then **run smoke tests** and

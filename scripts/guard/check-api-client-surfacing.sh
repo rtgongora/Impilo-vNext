@@ -1,35 +1,52 @@
 #!/usr/bin/env bash
-# Detect API client modules with no imports from app/features (orphan clients on changed files).
 set -euo pipefail
 source "$(dirname "$0")/_guard-common.sh"
+source "$(dirname "$0")/_parity-common.sh"
 cd "$REPO_PATH"
 BASE="$(resolve_base_ref)"
-FAIL=0
+BLOCKING=0
+ADVISORY=0
 
-NEW_CLIENTS=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
-  'ui/one-ui-shell/src/lib/' 'ui/one-ui-shell/src/hooks/' 2>/dev/null \
-  | guard_filter '\.(ts|tsx)$' || true)
+NEW_PAGES=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'ui/one-ui-shell/src/app/' 2>/dev/null \
+  | guard_filter 'page\.tsx$' || true)
 
-if [[ -z "$NEW_CLIENTS" ]]; then
-  guard_pass "no new API client/hook files to verify"
-  exit 0
-fi
+while IFS= read -r page; do
+  [[ -z "$page" || ! -f "$page" ]] && continue
+  parity_is_allowlisted "$page" && continue
+  if ! grep -qE 'use[A-Z]|api-client|/lib/|fetch|useQuery' "$page" 2>/dev/null; then
+    guard_fail "new page without API client/hook: $page"
+    BLOCKING=1
+  fi
+done <<< "$NEW_PAGES"
+
+NEW_HOOKS=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
+  'ui/one-ui-shell/src/hooks/' 'ui/one-ui-shell/src/lib/' 2>/dev/null \
+  | guard_filter '^ui/one-ui-shell/src/(hooks|lib)/.*\.ts$' || true)
 
 while IFS= read -r f; do
   [[ -z "$f" ]] && continue
   base="$(basename "$f" .ts)"
   base="${base%.tsx}"
-  if [[ "$base" == use* ]]; then
-    hook="$base"
-  else
-    continue
-  fi
-  if git grep -l "$hook" -- 'ui/one-ui-shell/src/app' 'ui/one-ui-shell/src/features' 'ui/one-ui-shell/src/components' \
+  [[ "$base" == use* ]] || continue
+  if ! git grep -l "$base" -- 'ui/one-ui-shell/src/app' 'ui/one-ui-shell/src/features' 'ui/one-ui-shell/src/components' \
     >/dev/null 2>&1; then
-    continue
+    guard_warn "advisory: new hook $f not referenced in app/features yet"
+    ADVISORY=1
   fi
-  guard_warn "new hook $f has no app/features import yet (wire route or document internal-only)"
-done <<< "$NEW_CLIENTS"
+done <<< "$NEW_HOOKS"
 
-guard_pass "API client surfacing scan complete"
-exit "$FAIL"
+NEW_BFF=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- \
+  'services/experience-bff/src/main/java' 2>/dev/null | guard_filter 'Controller\.java$' || true)
+if [[ -n "$NEW_BFF" ]]; then
+  if ! git diff --name-only "$BASE"...HEAD | guard_filter -q 'ui/one-ui-shell/src/|docs/frontend/BACKEND_CAPABILITY|docs/architecture/FRONTEND_BACKEND'; then
+    guard_fail "new BFF controller without frontend surface/docs update"
+    echo "$NEW_BFF"
+    BLOCKING=1
+  fi
+fi
+
+if [[ "$BLOCKING" -ne 0 ]]; then
+  exit 1
+fi
+guard_pass "frontend API client surfacing check"
+exit 0

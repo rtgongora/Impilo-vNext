@@ -1,30 +1,34 @@
 # Backend–frontend parity gate
 
-## Purpose
-
-Ensure backend capabilities are not marked complete without corresponding real frontend surfaces (or documented internal-only status).
-
-## Commands
+## Command
 
 ```bash
 bash scripts/guard/check-backend-frontend-parity.sh
-bash scripts/guard/check-frontend-mocks-and-stubs.sh
-bash scripts/guard/check-api-client-surfacing.sh
 ```
 
-## Blocking in
+Sub-checks: `check-frontend-mocks-and-stubs.sh`, `check-api-client-surfacing.sh`, parity doc sync.
 
-- `scripts/pipeline/run-local-quality-gates.sh` (phase: Backend-to-frontend parity)
-- GitHub Actions via same script (frontend-lint / preview-pipeline jobs)
+## Blocking
 
-## Detects
+1. New BFF controller without frontend parity documentation update.
+2. New production page with placeholder / mock / no API client.
+3. `npm run test:no-stubs` failure.
+4. Parity docs out of sync with `generate-parity-docs.mjs`.
 
-- Parity documentation drift vs embedded capability registry
-- New BFF controllers without matrix/doc update
-- Placeholder pages (“coming soon”, `JSON.stringify` dumps)
-- Production mocks/stubs (`npm run test:no-stubs`)
-- New hooks with no route/feature import (warn)
+## Advisory
 
-## Allowlisted gaps
+- Existing partial/Live gaps in matrix.
+- Legacy “coming soon” routes documented in allowlist.
+- Page simplification warnings (large line-count drop).
 
-Pre-existing gaps documented in the matrix with **Partial** / **Fixture** maturity remain until closed; **new** gaps without matrix updates fail the gate.
+## Integration
+
+| Runner | How |
+|--------|-----|
+| VM local pipeline | Phase `Backend-to-frontend parity` |
+| Change-safety | `check-backend-frontend-parity.sh` |
+| GitHub Actions | Job `Backend-to-Frontend Parity Gate` |
+
+## Rule
+
+No backend capability is **complete** unless frontend is API-connected and tested, or marked **internal/backend-only** in the matrix.

@@ -41,6 +41,12 @@ After each local run:
 
 (gitignored except `.gitkeep`)
 
+## Parity gates (blocking in VM pipeline)
+
+- `bash scripts/guard/check-backend-frontend-parity.sh`
+- `bash scripts/guard/check-mobile-parity.sh`
+- Allowlist: `config/parity-allowlist.yml`
+
 ## Commands
 
 ```bash

@@ -9,7 +9,8 @@
 | API contract checks | Partial | `run-api-contract-checks.sh` | Silent API breaks | Add response-shape diffs | next |
 | Integration checks | Partial | trust compose in CI; light integration script | Wiring failures | Expand BFF wire tests | later |
 | Regression tests | Partial | HTTP baseline + Playwright | Broken routes undetected | Grow HTTP + E2E list | immediate |
-| Mobile tests | Partial | advisory `run-mobile-checks.sh` | Mobile drift | Stabilize then promote to blocking | later |
+| Mobile tests | Partial | `check-mobile-parity.sh` + advisory build | Mobile drift | Stabilize APK/iOS; keep new-gap blocking | next |
+| Backend–frontend parity | Implemented | `check-backend-frontend-parity.sh` | Silent UX gaps | Keep blocking for new gaps | immediate |
 | Secrets/security | Partial | `run-security-checks.sh` | Credential leak | Add gitleaks/trufflehog optional | next |
 | Dangerous deletion guard | Implemented | `check-dangerous-deletions.sh` | Lost functionality | Keep blocking | immediate |
 | Duplicate service guard | Implemented | `check-duplicate-services.sh` | Architecture drift | Keep blocking | immediate |

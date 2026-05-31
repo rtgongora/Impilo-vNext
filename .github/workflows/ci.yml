@@ -334,8 +334,52 @@ jobs:
           PIPELINE_SKIP_INTEGRATION: "1"
           PIPELINE_SKIP_REGRESSION: "1"
           PIPELINE_SKIP_E2E: "1"
-          PIPELINE_ONLY: "security,static,frontend,parity"
+          PIPELINE_ONLY: "security,static,frontend,parity-web"
         run: bash scripts/pipeline/run-local-quality-gates.sh
+
+  backend-frontend-parity-gate:
+    name: Backend-to-Frontend Parity Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install UI deps for no-stub guard
+        working-directory: ui
+        run: npm ci --ignore-scripts -w one-ui-shell
+
+      - name: Run backend-frontend parity gate
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || '' }}
+          GUARD_BASE_REF: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: bash scripts/guard/check-backend-frontend-parity.sh
+
+  mobile-parity-gate:
+    name: Mobile Parity Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run mobile parity gate
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || '' }}
+          GUARD_BASE_REF: ${{ github.event_name == 'push' && github.event.before || '' }}
+        run: bash scripts/guard/check-mobile-parity.sh
 
   completeness-report:
     name: Completeness report (informational)
@@ -764,6 +808,8 @@ jobs:
       - backend-test
       - frontend-lint
       - frontend-test
+      - backend-frontend-parity-gate
+      - mobile-parity-gate
       - change-safety-gates
     if: github.event_name == 'push' && github.ref == 'refs/heads/claude/staging-ux-orchestration-remediation-Yypyl'
     steps:
@@ -790,6 +836,7 @@ jobs:
           PIPELINE_SKIP_FRONTEND: "1"
           PIPELINE_SKIP_STATIC: "1"
           PIPELINE_SKIP_BACKEND: "0"
+          PIPELINE_SKIP: "parity-web,parity-mobile"
           PREVIEW_GATES_SKIP_E2E: "1"
           PIPELINE_SKIP_E2E: "1"
         run: bash scripts/pipeline/run-local-quality-gates.sh

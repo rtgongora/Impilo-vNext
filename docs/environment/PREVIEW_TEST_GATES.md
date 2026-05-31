@@ -8,7 +8,9 @@ Blocking gates **fail CI / local preview-gates** and **block manual deploy by de
 |------|---------|------------------|------|-----|
 | Secret scan | No committed keys/tokens/env | `scripts/test/run-security-checks.sh` | `$GATE_LOG_DIR/security.log` | Remove secrets; use env/secrets store |
 | Static checks | Lint, typecheck, deprecated guard | `scripts/test/run-static-checks.sh` | `static.log` | Fix lint/type errors |
-| Change-safety | Deletions, duplicates, inventories | `scripts/guard/run-change-safety-gates.sh` | guard stdout | Update inventories; justify deletions |
+| Change-safety | Deletions, duplicates, inventories, parity | `scripts/guard/run-change-safety-gates.sh` | guard stdout | Update inventories; justify deletions |
+| Backend–frontend parity | Web surfacing, no-stubs, API clients | `scripts/guard/check-backend-frontend-parity.sh` | parity summary | Matrix + allowlist |
+| Mobile parity | Mobile surfacing, mocks, classification | `scripts/guard/check-mobile-parity.sh` | parity summary | MOBILE_PARITY_MATRIX |
 | Frontend build/test | one-ui-shell production path | `scripts/test/run-frontend-checks.sh` | `frontend.log` | Fix UI tests/build |
 | Backend build/test | Core/changed services | `scripts/test/run-backend-checks.sh` | `backend.log` | Fix Maven tests |
 | API contract baseline | OpenAPI + endpoint presence | `scripts/test/run-api-contract-checks.sh` | `api-contracts.log` | Restore contracts or update clients |
@@ -18,7 +20,7 @@ Blocking gates **fail CI / local preview-gates** and **block manual deploy by de
 | Post-deploy smoke | Preview live | `scripts/deploy/preview-smoke-test.sh` | deploy stdout | Fix k3s/helm/images |
 | Deployed commit verify | `/health/version` SHA | `manual-authorized-preview-deploy.sh` | curl output | Redeploy correct commit |
 
-**Master runner:** `scripts/test/run-preview-gates.sh`
+**Master runner:** `scripts/pipeline/run-local-quality-gates.sh` (also `scripts/test/run-preview-gates.sh` delegates)
 
 **CI:** Job `preview-pipeline-gates` in `ci.yml` (push to active branch only, no deploy).
 
