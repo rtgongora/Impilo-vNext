@@ -3,7 +3,7 @@
 **Generated**: 1970-01-01T00:00:00.000Z
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier1
-**Status**: done=48 missing=0 total=48
+**Status**: done=49 missing=0 total=49
 
 ## Citizen app
 
@@ -11,6 +11,7 @@
 |---|---|---|---|---|
 | `/` | Home | `auth` | `apps/mobile/citizen-app/src/screens/HomeScreen.tsx` | DONE |
 | `/citizen/health-id/qr` | My Health ID QR | `auth` | `apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx` | DONE |
+| `/communication` | Communication Hub | `auth` | `apps/mobile/citizen-app/src/screens/messaging/MessagingInboxScreen.tsx`<br/>`apps/mobile/citizen-app/src/screens/messaging/ThreadViewScreen.tsx` | DONE |
 | `/communication/secure-messaging` | Secure Messaging | `auth` | `apps/mobile/citizen-app/src/screens/messaging/MessagingInboxScreen.tsx`<br/>`apps/mobile/citizen-app/src/screens/messaging/ThreadViewScreen.tsx` | DONE |
 | `/home` | Home | `auth` | `apps/mobile/citizen-app/src/screens/HomeScreen.tsx` | DONE |
 | `/home/profile` | My Profile | `auth` | `apps/mobile/citizen-app/src/screens/personal/ProfileSection.tsx` | DONE |

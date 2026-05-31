@@ -1,6 +1,18 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/** Node 20 CI runners lack Object.groupBy (added in Node 21). */
+function groupBy(items, keyFn) {
+  if (typeof Object.groupBy === "function") {
+    return Object.groupBy(items, keyFn);
+  }
+  return items.reduce((acc, item) => {
+    const key = keyFn(item);
+    (acc[key] ??= []).push(item);
+    return acc;
+  }, {});
+}
+
 /**
  * Generates:
  * - Tier-1 mobile parity matrix (journey-based)
@@ -894,7 +906,7 @@ function tier1ToMd() {
   lines.push(`**Tier**: ${tier1Summary.tier}`);
   lines.push(`**Status**: done=${tier1Summary.done} missing=${tier1Summary.missing} total=${tier1Summary.total}\n`);
 
-  const byApp = Object.groupBy(tier1Rows, (r) => r.mobileApp);
+  const byApp = groupBy(tier1Rows, (r) => r.mobileApp);
   for (const app of Object.keys(byApp).sort()) {
     lines.push(`## ${app === "citizen" ? "Citizen app" : "Provider app"}\n`);
     lines.push("| Web route | Title | Guard | Mobile files | Status |");
@@ -937,7 +949,7 @@ function tier2ToMd() {
   lines.push(`**Zones**: ${tier2Summary.zones.join(", ")}`);
   lines.push(`**UI status**: done_ui=${tier2Summary.done_ui} missing_ui=${tier2Summary.missing_ui} total=${tier2Summary.total}\n`);
 
-  const byZone = Object.groupBy(tier2Rows, (r) => r.routeZone);
+  const byZone = groupBy(tier2Rows, (r) => r.routeZone);
   for (const zone of Object.keys(byZone).sort()) {
     lines.push(`## Zone: ${zone}\n`);
     lines.push("| Web route | Title | Guard | Provider screens | UI | Contract |");
@@ -991,7 +1003,7 @@ function tier3ToMd() {
     `**Contract**: contract_ok=${tier3Summary.contract_ok} contract_partial=${tier3Summary.contract_partial} contract_missing=${tier3Summary.contract_missing}\n`
   );
 
-  const byApp = Object.groupBy(tier3Rows, (r) => r.mobileApp);
+  const byApp = groupBy(tier3Rows, (r) => r.mobileApp);
   for (const app of Object.keys(byApp).sort()) {
     lines.push(`## ${app === "citizen" ? "Citizen app" : "Provider app"}\n`);
     lines.push("| Web route | Title | Zone | Guard | Mobile files | UI | Contract |");

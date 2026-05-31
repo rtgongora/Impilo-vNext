@@ -3,8 +3,8 @@
     "generatedAt": "1970-01-01T00:00:00.000Z",
     "source": "ui/one-ui-shell/src/lib/routes.ts",
     "tier": "tier1",
-    "total": 48,
-    "done": 48,
+    "total": 49,
+    "done": 49,
     "missing": 0
   },
   "rows": [
@@ -34,6 +34,22 @@
       "mobileApp": "citizen",
       "mobileFiles": [
         "apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx"
+      ],
+      "status": "done",
+      "missingFiles": []
+    },
+    {
+      "tier": "tier1",
+      "routePath": "/communication",
+      "routeTitle": "Communication Hub",
+      "routeZone": "queue",
+      "routeGuard": "auth",
+      "routeNavZone": "work",
+      "mappingId": "citizen_messaging",
+      "mobileApp": "citizen",
+      "mobileFiles": [
+        "apps/mobile/citizen-app/src/screens/messaging/MessagingInboxScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/messaging/ThreadViewScreen.tsx"
       ],
       "status": "done",
       "missingFiles": []

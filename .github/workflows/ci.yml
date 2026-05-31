@@ -45,10 +45,12 @@ jobs:
       - name: Test experience-bff
         working-directory: services/experience-bff
         env:
-          SPRING_PROFILES_ACTIVE: test
+          SPRING_PROFILES_ACTIVE: test,test-ci
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/test_db
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
           KEYCLOAK_URL: http://127.0.0.1:1
-          SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
-        run: mvn test -Dspring.profiles.active=test
+        run: mvn test -Dspring.profiles.active=test,test-ci
 
       - name: Test Tshepo authz + shared visibility
         working-directory: services
@@ -745,3 +747,31 @@ jobs:
           echo "Scanning for hardcoded secrets..."
           ! grep -rn "password.*=.*['\"]" services/experience-bff/src/main/resources/application.yml | grep -v '${' | grep -v 'test' || true
           echo "Secret scan passed"
+
+  deploy-preview-sandbox:
+    name: Deploy Dev Preview Sandbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/claude/staging-ux-orchestration-remediation-Yypyl'
+    needs:
+      - backend-test
+      - frontend-lint
+      - frontend-test
+      - e2e-test
+    concurrency:
+      group: preview-deploy-claude-staging-ux
+      cancel-in-progress: true
+    steps:
+      - name: Deploy preview on VM after core CI gates
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PREVIEW_HOST }}
+          port: ${{ secrets.PREVIEW_PORT }}
+          username: ${{ secrets.PREVIEW_USER }}
+          key: ${{ secrets.PREVIEW_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            export DEPLOY_BRANCH="claude/staging-ux-orchestration-remediation-Yypyl"
+            bash /opt/impilo/repos/Impilo-vNext/scripts/deploy/github-actions-remote-preview-deploy.sh

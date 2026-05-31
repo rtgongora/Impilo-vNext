@@ -116,8 +116,10 @@ class StepUpServiceTest {
         verify(challengeRepository).save(captor.capture());
         StepUpChallengeEntity saved = captor.getValue();
 
-        Instant expectedExpiry = saved.getIssuedAt().plusSeconds(300);
-        assertEquals(expectedExpiry, saved.getExpiresAt(),
+        long windowSeconds = java.time.Duration.between(saved.getIssuedAt(), saved.getExpiresAt()).getSeconds();
+        org.junit.jupiter.api.Assertions.assertEquals(
+                300L,
+                windowSeconds,
                 "expiresAt must be issuedAt + stepUpWindowSeconds (300)");
     }
 

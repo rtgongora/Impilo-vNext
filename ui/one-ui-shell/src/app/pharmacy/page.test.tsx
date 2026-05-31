@@ -12,6 +12,15 @@ vi.mock("next/navigation", () => ({
         source: "discharge",
       })[key] ?? null,
   }),
+  usePathname: () => "/pharmacy",
+}));
+
+vi.mock("@/components/experience/TrustContextBanner", () => ({
+  TrustContextBanner: () => null,
+}));
+
+vi.mock("@/components/intelligent/NompiloContextPanel", () => ({
+  NompiloContextPanel: () => null,
 }));
 
 vi.mock("@/components/AppLayout", () => ({

@@ -5,8 +5,8 @@
     "tier": "tier3-wave2",
     "scope": "citizen-longtail",
     "total": 10,
-    "done_ui": 10,
-    "missing_ui": 0,
+    "done_ui": 9,
+    "missing_ui": 1,
     "contract_ok": 10,
     "contract_partial": 0,
     "contract_missing": 0
@@ -98,8 +98,10 @@
       "mobileFiles": [
         "apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx"
       ],
-      "uiStatus": "done_ui",
-      "missingFiles": [],
+      "uiStatus": "missing_ui",
+      "missingFiles": [
+        "apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx"
+      ],
       "contractStatus": "contract_ok"
     },
     {

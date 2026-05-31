@@ -29,6 +29,10 @@ vi.mock("@/components/intelligent/NompiloContextPanel", () => ({
   NompiloContextPanel: () => null,
 }));
 
+vi.mock("@/components/experience/TrustContextBanner", () => ({
+  TrustContextBanner: () => null,
+}));
+
 describe("ClinicalHubPage", () => {
   it("renders the clinical care hub with all module tiles", () => {
     render(<ClinicalHubPage />);

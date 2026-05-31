@@ -128,9 +128,10 @@ class BreakGlassServiceTest {
         verify(breakGlassRepository).save(captor.capture());
         BreakGlassRequestEntity saved = captor.getValue();
 
-        // expiresAt should be grantedAt + 60 minutes
-        Instant expectedExpiry = saved.getGrantedAt().plusSeconds(60 * 60);
-        assertEquals(expectedExpiry, saved.getExpiresAt(),
+        long ttlSeconds = java.time.Duration.between(saved.getGrantedAt(), saved.getExpiresAt()).getSeconds();
+        org.junit.jupiter.api.Assertions.assertEquals(
+                60L * 60L,
+                ttlSeconds,
                 "expiresAt must be grantedAt + breakGlassTtlMinutes");
     }
 

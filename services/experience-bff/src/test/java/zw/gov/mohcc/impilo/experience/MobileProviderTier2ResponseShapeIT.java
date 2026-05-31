@@ -38,6 +38,7 @@ class MobileProviderTier2ResponseShapeIT {
     static void configureProperties(DynamicPropertyRegistry registry) {
         REDIS.configure(registry);
         ExperienceBffReportingWireMockSupport.register(registry);
+        ExperienceBffSovereignWireMockSupport.register(registry);
     }
 
     @AfterAll

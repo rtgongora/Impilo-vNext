@@ -94,7 +94,7 @@ bash scripts/deploy/preview-smoke-test.sh
 | [OWNER_PREVIEW_TEST_CHECKLIST.md](./OWNER_PREVIEW_TEST_CHECKLIST.md) | Expert user testing |
 | [DEV_PREVIEW_SECURITY_NOTES.md](./DEV_PREVIEW_SECURITY_NOTES.md) | Firewall / exposure |
 | [DEV_PREVIEW_OPERATIONS.md](./DEV_PREVIEW_OPERATIONS.md) | Ops runbook |
-| [GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md](./GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md) | CI/CD preview |
+| [GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md](./GITHUB_ACTIONS_PREVIEW_DEPLOYMENT.md) | CI/CD preview (push → CI → auto deploy on active branch when secrets set) |
 | [FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md](./FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md) | Future formal staging |
 | [../AI_AGENT_WORKFLOW.md](../AI_AGENT_WORKFLOW.md) | AI agent rules |
 

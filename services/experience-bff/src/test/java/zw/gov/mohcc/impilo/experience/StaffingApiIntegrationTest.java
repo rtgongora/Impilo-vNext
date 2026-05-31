@@ -47,6 +47,7 @@ class StaffingApiIntegrationTest {
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
         REDIS.configure(registry);
+        ExperienceBffSovereignWireMockSupport.register(registry);
     }
 
     @Autowired

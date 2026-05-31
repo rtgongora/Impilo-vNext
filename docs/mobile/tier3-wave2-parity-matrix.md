@@ -4,7 +4,7 @@
 **Source**: `ui/one-ui-shell/src/lib/routes.ts`
 **Tier**: tier3-wave2
 **Scope**: citizen-longtail
-**UI status**: done_ui=10 missing_ui=0 total=10
+**UI status**: done_ui=9 missing_ui=1 total=10
 **Contract**: contract_ok=10 contract_partial=0 contract_missing=0
 
 | Web route | Title | Guard | Mobile files | UI | Contract |
@@ -14,7 +14,7 @@
 | `/citizen/health-id/request` | Request Health ID | `auth` | `apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx` | DONE | contract_ok |
 | `/citizen/id-recovery` | ID Recovery | `auth` | `apps/mobile/citizen-app/src/screens/personal/IdRecoverySection.tsx` | DONE | contract_ok |
 | `/citizen/record-sharing` | Share My Record | `auth` | `apps/mobile/citizen-app/src/screens/personal/RecordSharingScreen.tsx` | DONE | contract_ok |
-| `/consent` | Review Policies | `none` | `apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx` | DONE | contract_ok |
+| `/consent` | Review Policies | `none` | `apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx` | MISSING: `apps/mobile/citizen-app/src/screens/personal/ConsentScreen.tsx` | contract_ok |
 | `/privacy` | Privacy Policy | `none` | `apps/mobile/citizen-app/src/screens/personal/PrivacyPolicyScreen.tsx` | DONE | contract_ok |
 | `/share/claim` | Claim Shared Documents | `none` | `apps/mobile/citizen-app/src/screens/personal/ClaimSharedDocumentsScreen.tsx` | DONE | contract_ok |
 | `/terms` | Terms of Use | `none` | `apps/mobile/citizen-app/src/screens/personal/TermsOfUseScreen.tsx` | DONE | contract_ok |

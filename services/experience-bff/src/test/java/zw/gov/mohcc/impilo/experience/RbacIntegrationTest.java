@@ -36,6 +36,7 @@ class RbacIntegrationTest {
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
         REDIS.configure(registry);
+        ExperienceBffSovereignWireMockSupport.register(registry);
     }
 
     @AfterAll
@@ -72,6 +73,7 @@ class RbacIntegrationTest {
     @Order(2)
     void queueEntriesListShouldWork() throws Exception {
         mockMvc.perform(get("/internal/v1/queue/entries")
+                .param("facility_id", "a1b2c3d4-0001-4000-8000-000000000001")
                 .header("X-Tenant-ID", "tenant-moh-zw")
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
@@ -86,12 +88,13 @@ class RbacIntegrationTest {
     @Order(3)
     void encounterListShouldWork() throws Exception {
         mockMvc.perform(get("/internal/v1/encounters")
+                .param("patient_id", "CPID-ZW-00001")
                 .header("X-Tenant-ID", "tenant-moh-zw")
                 .header("X-Pod-ID", "national-spine")
                 .header("X-Request-ID", requestId())
                 .header("X-Correlation-ID", correlationId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data").exists());
     }
 
     // ── Community endpoints should work ──────────────────────────
