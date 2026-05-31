@@ -4,11 +4,15 @@ set -euo pipefail
 
 BRANCH="${DEPLOY_BRANCH:?DEPLOY_BRANCH is required}"
 REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+TARGET_SHA="${DEPLOY_COMMIT_SHA:-}"
 
 cd "$REPO"
 git fetch origin "$BRANCH"
 git checkout "$BRANCH"
 git pull --ff-only origin "$BRANCH" || true
+if [[ -n "$TARGET_SHA" ]]; then
+  git checkout "$TARGET_SHA"
+fi
 
 bash scripts/dev/install-dependencies.sh
 bash scripts/dev/build-all.sh

@@ -16,6 +16,12 @@ production and not formal staging** — test data only, no real secrets, no real
 - UI is built **same-origin** (empty `NEXT_PUBLIC_BFF_URL`); the browser calls the BFF via
   relative paths routed by Traefik, so the build is independent of the public IP.
 
+## Authorization
+
+Preview deploy is **manual and user-authorized only**. CI does not deploy after push.
+Use `bash scripts/deploy/manual-authorized-preview-deploy.sh` or Actions **Deploy Preview**
+after `bash scripts/ci/collect-ci-feedback.sh` shows deploy is appropriate.
+
 ## Deploy → verify loop (run on the VM)
 
 ```bash

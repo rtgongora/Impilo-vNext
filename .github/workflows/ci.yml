@@ -758,30 +758,48 @@ jobs:
           ! grep -rn "password.*=.*['\"]" services/experience-bff/src/main/resources/application.yml | grep -v '${' | grep -v 'test' || true
           echo "Secret scan passed"
 
-  deploy-preview-sandbox:
-    name: Deploy Dev Preview Sandbox
+  change-safety-gates:
+    name: Change Safety Gates
     runs-on: ubuntu-latest
-    timeout-minutes: 180
-    if: >-
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/claude/staging-ux-orchestration-remediation-Yypyl'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run change-safety guards
+        env:
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.before }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: bash scripts/guard/run-change-safety-gates.sh
+
+  preview-pipeline-gates:
+    name: Preview Pipeline Gates (VM parity)
+    runs-on: ubuntu-latest
     needs:
       - backend-test
       - frontend-lint
       - frontend-test
-      - e2e-test
-    concurrency:
-      group: preview-deploy-claude-staging-ux
-      cancel-in-progress: true
+      - change-safety-gates
+    if: github.event_name == 'push' && github.ref == 'refs/heads/claude/staging-ux-orchestration-remediation-Yypyl'
     steps:
-      - name: Deploy preview on VM after core CI gates
-        uses: appleboy/ssh-action@v1.2.0
+      - uses: actions/checkout@v4
         with:
-          host: ${{ secrets.PREVIEW_HOST }}
-          port: ${{ secrets.PREVIEW_PORT }}
-          username: ${{ secrets.PREVIEW_USER }}
-          key: ${{ secrets.PREVIEW_SSH_KEY }}
-          script: |
-            set -euo pipefail
-            export DEPLOY_BRANCH="claude/staging-ux-orchestration-remediation-Yypyl"
-            bash /opt/impilo/repos/Impilo-vNext/scripts/deploy/github-actions-remote-preview-deploy.sh
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Run blocking preview gates (no deploy)
+        env:
+          PREVIEW_GATES_SKIP_BACKEND: "0"
+          PREVIEW_GATES_SKIP_E2E: "1"
+        run: bash scripts/test/run-preview-gates.sh

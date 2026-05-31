@@ -52,12 +52,21 @@ git remote -v
 
 ## 4. After making changes
 
-- Run relevant tests (`scripts/dev/run-tests.sh` or the targeted service/UI test command).
-- **Build before deployment.**
-- Deploy to the Dev Preview Sandbox after checks pass.
-- Run smoke tests after deployment.
-- Confirm pods are healthy (`kubectl get pods -n impilo-preview`).
+- Run relevant tests (`scripts/dev/run-tests.sh` or `bash scripts/test/run-preview-gates.sh`).
+- **Push triggers CI only** — preview does **not** auto-deploy.
+- After push: `bash scripts/ci/collect-ci-feedback.sh` and summarize per
+  `docs/environment/CURSOR_CI_FEEDBACK_TEMPLATE.md`.
+- **Deploy only after explicit user approval** via
+  `bash scripts/deploy/manual-authorized-preview-deploy.sh` (or Actions Deploy Preview).
+- Post-deploy: smoke tests, `/health/version` commit match, healthy pods.
 - Update `docs/environment/OWNER_PREVIEW_TEST_CHECKLIST.md` when user-facing workflows change.
+
+### Change-safety and inventories
+
+- Before new services/features: read `docs/architecture/SERVICE_INVENTORY.md` and
+  `FEATURE_INVENTORY.md`; extend existing code; do not duplicate.
+- Run `bash scripts/guard/run-change-safety-gates.sh` before preview deploy when practical.
+- Do not replace richer working code with thinner stubs without tests.
 
 ## 5. Report at the end of the task
 

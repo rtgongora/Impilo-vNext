@@ -1,0 +1,39 @@
+---
+description: CI feedback collection and manual preview deploy — never auto-deploy after push
+globs:
+alwaysApply: true
+---
+
+# CI Feedback and Manual Preview Deploy
+
+## Pipeline (mandatory)
+
+1. Work on VM Remote SSH: `/opt/impilo/repos/Impilo-vNext`.
+2. GitHub is source of truth; use branches.
+3. **Do not auto-deploy preview after push** unless the user explicitly instructs otherwise.
+4. After push, run `bash scripts/ci/collect-ci-feedback.sh` and summarize using `docs/environment/CURSOR_CI_FEEDBACK_TEMPLATE.md`.
+5. Present: commit SHA, gates passed/failed, advisory warnings, deletions, duplicate-service warnings, regression risk, deploy recommendation.
+6. Deploy preview **only** after explicit user approval (APPROVE DEPLOY or APPROVE WITH KNOWN RISKS).
+7. Use `bash scripts/deploy/manual-authorized-preview-deploy.sh` (or Actions Deploy Preview workflow).
+8. After deploy: smoke tests + confirm `/health/version` commit matches expected SHA.
+9. Report preview URL and deployed commit.
+
+## Before adding services/features
+
+- Search repo; read `docs/architecture/SERVICE_INVENTORY.md` and `FEATURE_INVENTORY.md`.
+- Prefer extend over duplicate; do not delete working code without explicit instruction.
+- Run `bash scripts/guard/run-change-safety-gates.sh` before deploy when practical.
+
+## Refusal
+
+- Do not deploy if required blocking gates failed unless user sets `BYPASS_CI=1` with documented reason.
+- Do not claim preview success without smoke + version check.
+- Never commit secrets; never expose internal services publicly; no real patient data.
+
+## Commands
+
+```bash
+bash scripts/test/run-preview-gates.sh
+bash scripts/ci/collect-ci-feedback.sh
+bash scripts/deploy/manual-authorized-preview-deploy.sh
+```

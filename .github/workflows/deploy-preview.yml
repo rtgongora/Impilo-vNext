@@ -1,7 +1,6 @@
 name: Deploy Preview
 
-# Manual redeploy anytime. Automatic deploy after CI runs from ci.yml
-# (deploy-preview-sandbox job) on the active preview branch.
+# Manual user-authorized preview deploy only. CI runs separately and does NOT deploy.
 on:
   workflow_dispatch:
     inputs:
@@ -9,6 +8,19 @@ on:
         description: Branch to deploy
         required: true
         default: claude/staging-ux-orchestration-remediation-Yypyl
+      commit_sha:
+        description: Optional full commit SHA to deploy (defaults to branch HEAD on VM)
+        required: false
+        default: ""
+      deploy_reason:
+        description: Why this deploy is authorized
+        required: true
+        default: "Manual user-authorized preview deploy"
+      bypass_ci_check:
+        description: Allow deploy when CI failed/unknown (risk override)
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: preview-deploy-${{ inputs.branch }}
@@ -19,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
-      - name: Deploy over SSH
+      - name: Deploy over SSH (authorized)
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.PREVIEW_HOST }}
@@ -29,4 +41,9 @@ jobs:
           script: |
             set -euo pipefail
             export DEPLOY_BRANCH="${{ inputs.branch }}"
-            bash /opt/impilo/repos/Impilo-vNext/scripts/deploy/github-actions-remote-preview-deploy.sh
+            export DEPLOY_COMMIT_SHA="${{ inputs.commit_sha }}"
+            export BYPASS_CI="${{ inputs.bypass_ci_check && '1' || '0' }}"
+            export BYPASS_REASON="${{ inputs.deploy_reason }}"
+            export NON_INTERACTIVE=1
+            cd /opt/impilo/repos/Impilo-vNext
+            bash scripts/deploy/manual-authorized-preview-deploy.sh
