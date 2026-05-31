@@ -21,13 +21,13 @@ echo "commit: $HEAD_SHA ($(git rev-parse --short HEAD))"
 
 analyze_jobs_json() {
   local jobs_json="$1"
-  python3 <<'PY' "$jobs_json"
+  python3 -c '
 import json, sys
 d = json.load(open(sys.argv[1]))
 jobs = d.get("jobs", [])
 if not jobs:
     print("ci_jobs_total: 0")
-    sys.exit(0)
+    raise SystemExit(0)
 zero = [j for j in jobs if not j.get("steps")]
 failed = [j for j in jobs if j.get("conclusion") == "failure"]
 print(f"ci_jobs_total: {len(jobs)}")
@@ -41,8 +41,9 @@ elif failed:
     for j in sorted(failed, key=lambda x: x["name"])[:15]:
         steps = j.get("steps") or []
         failed_steps = [s["name"] for s in steps if s.get("conclusion") == "failure"]
-        print(f"ci_failed_job: {j['name']} | failed_steps={failed_steps or ['(no steps — infra)']}")
-PY
+        fs = failed_steps or ["(no steps — infra)"]
+        print("ci_failed_job:", j.get("name"), "| failed_steps=", fs)
+' "$jobs_json"
 }
 
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
@@ -60,8 +61,9 @@ if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
     gh run view "$RUN_ID" --repo "$REPO_SLUG" 2>/dev/null || true
     JOBS_JSON="$(mktemp)"
     gh api "repos/${REPO_SLUG}/actions/runs/${RUN_ID}/jobs?per_page=100" > "$JOBS_JSON" 2>/dev/null || echo '{}' > "$JOBS_JSON"
-    analyze_jobs_json "$JOBS_JSON"
-    if grep -q 'ci_failure_mode: infrastructure_no_steps' <(analyze_jobs_json "$JOBS_JSON" 2>/dev/null); then
+    JOB_ANALYSIS="$(analyze_jobs_json "$JOBS_JSON" 2>/dev/null || true)"
+    echo "$JOB_ANALYSIS"
+    if echo "$JOB_ANALYSIS" | grep -q 'ci_failure_mode: infrastructure_no_steps'; then
       CI_INFRA_FAILURE="yes"
       BLOCK_REASON="GitHub Actions did not start jobs (billing/runner lock suspected)"
     fi
@@ -100,12 +102,13 @@ for j in sorted(d.get("jobs",[]), key=lambda x: x["name"]):
   steps=len(j.get("steps") or [])
   print((j.get("conclusion") or j.get("status")), j["name"], f"(steps={steps})")
 ' "$JOBS_JSON"
-    analyze_jobs_json "$JOBS_JSON" | tee /tmp/ci-job-analysis.txt
-    if grep -q 'ci_failure_mode: infrastructure_no_steps' /tmp/ci-job-analysis.txt 2>/dev/null; then
+    JOB_ANALYSIS="$(analyze_jobs_json "$JOBS_JSON" 2>/dev/null || true)"
+    echo "$JOB_ANALYSIS"
+    if echo "$JOB_ANALYSIS" | grep -q 'ci_failure_mode: infrastructure_no_steps'; then
       CI_INFRA_FAILURE="yes"
       BLOCK_REASON="GitHub Actions did not start jobs (billing/runner lock suspected)"
     fi
-    rm -f "$JOBS_JSON" /tmp/ci-job-analysis.txt
+    rm -f "$JOBS_JSON"
   fi
   if [[ "$CONCLUSION" == "success" && "$RUN_SHA" == "$HEAD_SHA" ]]; then
     DEPLOY_RECOMMENDED="yes"
