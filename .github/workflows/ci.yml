@@ -34,12 +34,16 @@ jobs:
           cache: maven
 
       - name: Build shared libraries
-        working-directory: services
         run: |
-          mvn install -pl shared-core,shared-kernel-java -am -DskipTests -q
+          cd services && mvn install -pl shared-core -am -DskipTests -q
+          cd ../libs/shared-kernel-java && mvn install -DskipTests -q
 
       - name: Build tech-companion
         working-directory: libs/tech-companion
+        run: mvn install -DskipTests -q
+
+      - name: Build tech-companion-harness
+        working-directory: libs/tech-companion-harness
         run: mvn install -DskipTests -q
 
       - name: Test experience-bff
@@ -311,18 +315,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
 
       - name: Install dependencies
-        working-directory: ui/one-ui-shell
-        run: npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+        working-directory: ui
+        run: npm ci --ignore-scripts -w one-ui-shell
 
       - name: Lint
         working-directory: ui/one-ui-shell
-        run: npx next lint
+        run: npm run lint
 
       - name: Type check
         working-directory: ui/one-ui-shell
-        run: npx tsc --noEmit --skipLibCheck
+        run: npm run type-check
 
       - name: Route parity
         working-directory: ui/one-ui-shell
@@ -486,14 +492,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
 
       - name: Install dependencies
-        working-directory: ui/one-ui-shell
-        run: npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+        working-directory: ui
+        run: npm ci --ignore-scripts -w one-ui-shell
 
       - name: Run unit tests
         working-directory: ui/one-ui-shell
-        run: npx vitest run --reporter=verbose
+        run: npm test
 
       - name: Route parity check
         working-directory: ui/one-ui-shell
@@ -509,10 +517,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
 
       - name: Install dependencies
-        working-directory: ui/one-ui-shell
-        run: npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+        working-directory: ui
+        run: npm ci --ignore-scripts -w one-ui-shell
 
       - name: Install Playwright browsers
         working-directory: ui/one-ui-shell
@@ -520,7 +530,7 @@ jobs:
 
       - name: Run E2E tests
         working-directory: ui/one-ui-shell
-        run: npx playwright test --project=chromium --reporter=list
+        run: npm run e2e -- --project=chromium --reporter=list
 
       - name: Upload test report
         if: always()
@@ -568,8 +578,8 @@ jobs:
           retention-days: 7
 
       - name: Install UI deps
-        working-directory: ui/one-ui-shell
-        run: npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+        working-directory: ui
+        run: npm ci --ignore-scripts -w one-ui-shell
 
       - name: Install Playwright browsers
         working-directory: ui/one-ui-shell
