@@ -1,0 +1,9 @@
+{
+  "tag_sha": "preview-2bed7ab6",
+  "pass": 0,
+  "fail": 0,
+  "missing_dockerfile": 0,
+  "required_fail": 0,
+  "note": "Partial run — full image matrix build in progress or use build-full-vnext-images.sh for required_full_boot only",
+  "images_built_estimate": "see docker images impilo/*"
+}

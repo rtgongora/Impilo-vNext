@@ -77,6 +77,16 @@ git remote -v
 - Blockers
 - Commit and push to GitHub from the VM.
 
+## 6. Full vNext build and boot readiness
+
+- **Source of truth:** `docs/registry/services-registry.yaml` + `config/full-boot-service-classification.yml`
+- **Regenerate catalog:** `node scripts/full-boot/generate-full-boot-artifacts.mjs`
+- **Full build:** `bash scripts/build/build-full-vnext.sh`
+- **Images:** `bash scripts/build/build-full-vnext-images.sh`
+- **Completeness gate:** `bash scripts/guard/check-full-boot-runtime-completeness.sh`
+- **Slice preview (`impilo-preview`)** is not full vNext — preserve it; use **`impilo-full-preview`** only with `AUTHORIZE FULL BOOT PREVIEW DEPLOY`
+- Blockers: `docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md`
+
 ## Notes
 
 - The Dev Preview Sandbox is not production or formal staging — see

@@ -24,3 +24,6 @@
 | Formal staging separation | Documented | `FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md` | Confusion with preview | Keep preview as sandbox only | later |
 | GitHub Actions reliability | Partial | historical fast failures | False blocked deploy | Fix org runners/billing | immediate |
 | Auto-deploy after push | **Removed** | no `deploy-preview-sandbox` in ci.yml | Unwanted prod-like churn | Do not re-enable without approval | — |
+| Full vNext build/boot | **Implemented (prep)** | `build-full-vnext.sh`, `generate-full-boot-artifacts.mjs`, classification YAML | False “full platform” claims | Run build + completeness gate; full deploy only with authorization | immediate |
+| Full boot runtime gate | **Implemented** | `check-full-boot-runtime-completeness.sh` | Slice mistaken for full OS | Block “full vNext” language until FULL_BOOT_PASS | immediate |
+| Doctrine compliance gate | **Partial** | `check-doctrine-compliance.sh` (automatable subset) | Doctrine drift | Expand blocking checks over time | next |

@@ -1,0 +1,32 @@
+NAME                                  READY   STATUS    RESTARTS   AGE   IP           NODE            NOMINATED NODE   READINESS GATES
+pod/experience-bff-86bdddbc7c-fsqfj   1/1     Running   0          25m   10.42.0.54   user-hvm-domu   <none>           <none>
+pod/one-ui-shell-6dbf69558f-2wq8g     1/1     Running   0          25m   10.42.0.53   user-hvm-domu   <none>           <none>
+pod/postgres-74ff9dd76f-j4vfj         1/1     Running   0          20h   10.42.0.42   user-hvm-domu   <none>           <none>
+pod/redis-c46d5dffc-n8bfm             1/1     Running   0          20h   10.42.0.45   user-hvm-domu   <none>           <none>
+
+NAME                     TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/experience-bff   ClusterIP   10.43.87.124    <none>        8160/TCP   29h   app=experience-bff
+service/one-ui-shell     ClusterIP   10.43.60.179    <none>        3000/TCP   29h   app=one-ui-shell
+service/postgres         ClusterIP   10.43.110.139   <none>        5432/TCP   29h   app=postgres
+service/redis            ClusterIP   10.43.118.37    <none>        6379/TCP   29h   app=redis
+
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS       IMAGES                          SELECTOR
+deployment.apps/experience-bff   1/1     1            1           29h   experience-bff   impilo/experience-bff:preview   app=experience-bff
+deployment.apps/one-ui-shell     1/1     1            1           29h   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell
+deployment.apps/postgres         1/1     1            1           29h   postgres         postgres:16-alpine              app=postgres
+deployment.apps/redis            1/1     1            1           29h   redis            redis:7-alpine                  app=redis
+
+NAME                                        DESIRED   CURRENT   READY   AGE   CONTAINERS       IMAGES                          SELECTOR
+replicaset.apps/experience-bff-5ddcbf568c   0         0         0       73m   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=5ddcbf568c
+replicaset.apps/experience-bff-674d687cb9   0         0         0       66m   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=674d687cb9
+replicaset.apps/experience-bff-86bdddbc7c   1         1         1       25m   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=86bdddbc7c
+replicaset.apps/experience-bff-86d9bc74fb   0         0         0       29h   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=86d9bc74fb
+replicaset.apps/experience-bff-95cff974c    0         0         0       25m   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=95cff974c
+replicaset.apps/experience-bff-b4ddc69bf    0         0         0       73m   experience-bff   impilo/experience-bff:preview   app=experience-bff,pod-template-hash=b4ddc69bf
+replicaset.apps/one-ui-shell-5cc8cd9c       0         0         0       73m   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell,pod-template-hash=5cc8cd9c
+replicaset.apps/one-ui-shell-6dbf69558f     1         1         1       25m   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell,pod-template-hash=6dbf69558f
+replicaset.apps/one-ui-shell-74ff6c8765     0         0         0       73m   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell,pod-template-hash=74ff6c8765
+replicaset.apps/one-ui-shell-775bd4ddfb     0         0         0       29h   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell,pod-template-hash=775bd4ddfb
+replicaset.apps/one-ui-shell-84844dcbf9     0         0         0       66m   one-ui-shell     impilo/one-ui-shell:preview     app=one-ui-shell,pod-template-hash=84844dcbf9
+replicaset.apps/postgres-74ff9dd76f         1         1         1       29h   postgres         postgres:16-alpine              app=postgres,pod-template-hash=74ff9dd76f
+replicaset.apps/redis-c46d5dffc             1         1         1       29h   redis            redis:7-alpine                  app=redis,pod-template-hash=c46d5dffc

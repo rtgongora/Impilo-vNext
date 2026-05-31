@@ -1,0 +1,19 @@
+{
+  "total": 140,
+  "by_plane": {
+    "trust": 11,
+    "registry": 7,
+    "clinical": 18,
+    "data": 12,
+    "integration": 45,
+    "experience": 29,
+    "enterprise": 15
+  },
+  "by_classification": {
+    "optional_full_boot": 97,
+    "external_dependency": 9,
+    "required_full_boot": 21,
+    "internal_package": 12,
+    "deprecated_retired": 1
+  }
+}

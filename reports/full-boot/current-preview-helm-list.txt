@@ -1,0 +1,2 @@
+NAME          	NAMESPACE     	REVISION	UPDATED                                	STATUS  	CHART             	APP VERSION
+impilo-preview	impilo-preview	4       	2026-05-31 18:40:43.311358701 +0200 CAT	deployed	impilo-vnext-0.1.0	preview    

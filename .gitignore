@@ -44,6 +44,8 @@ Thumbs.db
 # ===== Build =====
 **/dist/
 **/build/
+!scripts/build/
+!scripts/build/**
 
 # ===== Helm =====
 **/charts/*.tgz
@@ -68,3 +70,10 @@ services/.mvn/
 reports/pipeline/*.md
 reports/pipeline/*.json
 !reports/pipeline/.gitkeep
+# Full-boot generated reports (summaries committed; logs stay local)
+reports/full-boot/build-logs/
+reports/full-boot/image-logs/
+!reports/full-boot/*.md
+!reports/full-boot/*.json
+!reports/full-boot/*.txt
+!reports/full-boot/*.yaml

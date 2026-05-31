@@ -72,15 +72,25 @@ if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
     bash tests/regression/frontend-backend-parity-smoke.sh
 fi
 
-# 12. Change-safety
+# 12. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
+full_boot_blocking=0
+[[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
+pipeline_run_phase full-boot-discover "Full-boot artifact generation" 0 \
+  node scripts/full-boot/generate-full-boot-artifacts.mjs || true
+pipeline_run_phase full-boot-doctrine "Doctrine compliance" "$full_boot_blocking" \
+  bash scripts/guard/check-doctrine-compliance.sh || true
+pipeline_run_phase full-boot-runtime "Full-boot runtime completeness" 0 \
+  bash scripts/guard/check-full-boot-runtime-completeness.sh || true
+
+# 13. Change-safety
 pipeline_run_phase change-safety "Change-safety gates" 1 \
   bash scripts/guard/run-change-safety-gates.sh
 
-# 13. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
+# 14. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
 pipeline_run_phase mobile "Mobile build checks" 0 \
   bash scripts/test/run-mobile-checks.sh || true
 
-# 14. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
+# 15. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
 if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
   e2e_blocking=0
   [[ "${PIPELINE_E2E_BLOCKING:-0}" == "1" ]] && e2e_blocking=1

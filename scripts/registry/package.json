@@ -7,7 +7,8 @@
     "seed": "node seed-registry.mjs",
     "generate": "node generate-service-index.mjs",
     "generate:architecture": "node generate-architecture-registers.mjs",
-    "generate:all": "node seed-registry.mjs && node generate-service-index.mjs && node generate-architecture-registers.mjs"
+    "generate:all": "node seed-registry.mjs && node generate-service-index.mjs && node generate-architecture-registers.mjs",
+    "generate:full-boot": "node ../full-boot/generate-full-boot-artifacts.mjs"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

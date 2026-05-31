@@ -1,0 +1,105 @@
+# vNext API Contract Catalog
+
+> OpenAPI under `contracts/openapi/`. Extend with BFF route map and controller scan.
+
+**OpenAPI files:** 95
+
+| Contract | Plane | Path | Provider | Web consumer | Mobile consumer | Tests | Deployed |
+|---|---|---|---|---|---|---|---|
+| `ai-model-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `analytics-pipeline.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `asset-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `audit-ledger.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `butano-fhir.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `butano.custom.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `campaigns.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `card-print.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `channels.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `clinical-knowledge-platform.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `community.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `connector-fhir.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `core-transaction-openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `costa-billing-extensions.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `costa.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `coverage.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `credential-verification.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `data-access-governance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `data-governance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `data-ingestion.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `data-pipeline.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `data-warehouse.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `developer-portal.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `dispatch.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `document-store.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `experience-bff.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `fhir-gateway.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `forms.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `general-ledger.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `guidance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `health-os-launcher.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `hr-payroll.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `identity-assurance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `imaging-viewer-launch.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `indawo.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `inpatient.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `integration-hub.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `integration-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `inventory-elmis.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `inventory.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `iot-ingestion.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `jobs.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `landela-adapter.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `learning.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mobile-citizen.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mobile-provider.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `monitoring.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `msika-apps.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `msika-core.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `msika-flow.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mushe-wallet.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mushex.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `mvumo.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `national-data-repository.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `ndila.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `ndr.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `notification.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `observability.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `offline-edge.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `offline-sync.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `oros.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `pacs-adapter.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `pct.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `pharmacy-elmis.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `pharmacy.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `procurement.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `product-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `referral.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `reporting.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `rtc-gateway.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `rules.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `scheduling.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `schema-registry.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `search.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `security-hardening.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `share-slip.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `simba.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `social.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `support.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `surveillance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-audit.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-authz.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-consent.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-identity.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-keys.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo-offline.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tshepo.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `tuso.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `ubomi.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `varapi.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `vito.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `wellness.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `workflow.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `workforce-governance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `zibo.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+
+See also: `docs/architecture/experience-bff-internal-routes.md`, `docs/architecture/kafka-event-catalog.md`.

@@ -4,6 +4,7 @@ set -euo pipefail
 source "$(dirname "$0")/_guard-common.sh"
 source "$(dirname "$0")/_parity-common.sh"
 cd "$REPO_PATH"
+parity_ensure_full_catalog
 BASE="$(resolve_base_ref)"
 FAIL=0
 PARITY_BLOCKING=0

@@ -1,0 +1,276 @@
+---
+# Source: impilo-vnext/templates/postgres.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-credentials
+  namespace: impilo-preview
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: "preview-change-me"
+  POSTGRES_USER: "impilo"
+  POSTGRES_DB: "impilo"
+---
+# Source: impilo-vnext/templates/experience-bff.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: experience-bff
+  namespace: impilo-preview
+spec:
+  selector:
+    app: experience-bff
+  ports:
+    - port: 8160
+      targetPort: 8160
+---
+# Source: impilo-vnext/templates/one-ui-shell.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: one-ui-shell
+  namespace: impilo-preview
+spec:
+  selector:
+    app: one-ui-shell
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+# Source: impilo-vnext/templates/postgres.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: impilo-preview
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# Source: impilo-vnext/templates/redis.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: impilo-preview
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+# Source: impilo-vnext/templates/experience-bff.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: experience-bff
+  namespace: impilo-preview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: experience-bff
+  template:
+    metadata:
+      labels:
+        app: experience-bff
+    spec:
+      enableServiceLinks: false
+      containers:
+        - name: experience-bff
+          image: "impilo/experience-bff:preview"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8160
+          env:
+            - name: IMPILO_ENV
+              value: "preview"
+            - name: IMPILO_GIT_BRANCH
+              value: "claude/staging-ux-orchestration-remediation-Yypyl"
+            - name: IMPILO_GIT_COMMIT
+              value: "5a58424d8c2621abbc589ca70e8f5f61c87527f2"
+            - name: IMPILO_BUILD_DATE
+              value: "2026-05-31T16:00:02Z"
+            - name: AUTH_FALLBACK_ENABLED
+              value: "true"
+            - name: IMPILO_SECURITY_ALLOW_ANONYMOUS
+              value: "true"
+            - name: KEYCLOAK_REALM
+              value: "impilo"
+            - name: KEYCLOAK_URL
+              value: "http://127.0.0.1:1"
+            - name: MANAGEMENT_HEALTH_KAFKA_ENABLED
+              value: "false"
+            - name: REDIS_HOST
+              value: "redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: SPRING_AUTOCONFIGURE_EXCLUDE
+              value: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "127.0.0.1:9092"
+            - name: SPRING_KAFKA_LISTENER_AUTO_STARTUP
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8160
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8160
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 6
+---
+# Source: impilo-vnext/templates/one-ui-shell.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: one-ui-shell
+  namespace: impilo-preview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: one-ui-shell
+  template:
+    metadata:
+      labels:
+        app: one-ui-shell
+    spec:
+      containers:
+        - name: one-ui-shell
+          image: "impilo/one-ui-shell:preview"
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_IMPILO_ENV
+              value: "preview"
+            - name: NEXT_PUBLIC_GIT_BRANCH
+              value: "claude/staging-ux-orchestration-remediation-Yypyl"
+            - name: NEXT_PUBLIC_GIT_COMMIT
+              value: "5a58424d8c2621abbc589ca70e8f5f61c87527f2"
+            - name: NEXT_PUBLIC_BUILD_DATE
+              value: "2026-05-31T16:00:02Z"
+            - name: NEXT_PUBLIC_BFF_URL
+              value: ""
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+# Source: impilo-vnext/templates/postgres.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: impilo-preview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          envFrom:
+            - secretRef:
+                name: postgres-credentials
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "impilo"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+# Source: impilo-vnext/templates/redis.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: impilo-preview
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+---
+# Source: impilo-vnext/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: impilo-preview
+  namespace: impilo-preview
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+spec:
+  ingressClassName: traefik
+  rules:
+    - http:
+        paths:
+          - path: /internal
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          - path: /actuator
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: experience-bff
+                port:
+                  number: 8160
+          # NOTE: do NOT route /auth to the BFF. The BFF auth endpoints live under
+          # /internal/v1/auth/* (AuthSessionController @RequestMapping("/internal/v1")),
+          # while /auth/* are one-ui-shell pages (login, register, mfa, ...). Routing
+          # /auth to the BFF would shadow the UI login page.
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: one-ui-shell
+                port:
+                  number: 3000
+

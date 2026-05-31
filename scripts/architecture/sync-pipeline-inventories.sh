@@ -42,3 +42,7 @@ mob = ["# Mobile app inventory", "", "| App | Path | Stack |", "|---|---|---|",
 (root / "docs/architecture/MOBILE_APP_INVENTORY.md").write_text("\n".join(mob) + "\n")
 print("Inventories updated.")
 PY
+
+if [[ -f scripts/full-boot/generate-full-boot-artifacts.mjs ]]; then
+  node scripts/full-boot/generate-full-boot-artifacts.mjs 2>/dev/null || true
+fi

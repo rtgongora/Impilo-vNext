@@ -1,0 +1,500 @@
+./FRONTEND_BACKEND_PARITY_AUDIT.md:29:| Nompilo global companion | Partial | Partial | Partial | Embedded presence exists; command/action parity and policy depth ongoing |
+./FRONTEND_BACKEND_PARITY_AUDIT.md:55:- Core transaction shells now expose a real Nompilo handoff command using the BFF endpoint with explicit success/failure operator feedback.
+./FRONTEND_BACKEND_PARITY_AUDIT.md:58:- Core transaction shells now also expose governed Nompilo command execution from live BFF contracts with explicit accepted/error feedback.
+./ROUTE_MAP.md:83:- `NompiloAssistantScreen`
+./deploy/helm/impilo-vnext/values-preview.yaml:44:    SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
+./.github/workflows/ci.yml:63:      - name: Test Tshepo authz + shared visibility
+./tools/dev/up.sh:12:##   ./tools/dev/up.sh --infra      # Also start root postgres + Keycloak (no redis/kafka — those are in Experience compose)
+./tools/dev/up.sh:54:  echo "[INFO] Starting root Postgres + Keycloak (Experience compose already provides Redis + Kafka)..."
+./tools/dev/up.sh:56:  echo "[OK] Root Postgres + Keycloak started"
+./tools/dev/up.sh:107:echo "  Kafka:          localhost:9092"
+./tools/dev/up.ps1:114:    Write-Host "  Kafka:     localhost:9092" -ForegroundColor Green
+./tools/maven/README.md:124:- Kafka and Redis auto-configuration is excluded to prevent network calls.
+./tools/load/outbox-lag/README.md:5:Measures the delay between writing domain events to the `event_outbox` table and their publication to Kafka. Validates that the outbox publisher keeps up with write throughput and that event freshness SLOs are met.
+./tools/load/outbox-lag/outbox-lag-baseline.js:6: *   and its publication to Kafka. This validates the SLO:
+./tools/ops/observability/grafana/dashboards/impilo-experience-bff.json:127:        "title": "Kafka Consumer Lag",
+./tools/ops/prometheus/rules/ring0-alerts.yml:139:      - alert: TshepoAvailabilityBurnCritical
+./tools/ops/prometheus/rules/ring0-alerts.yml:175:      - alert: TshepoAvailabilityBurnWarningPage
+./tools/ops/prometheus/rules/ring0-alerts.yml:233:      - alert: TshepoLatencyP95High
+./tools/ops/prometheus/rules/ring0-alerts.yml:242:          description: "ext_authz decision latency is elevated. Check PolicyEngine performance, Keycloak token introspection, Redis session cache."
+./tools/ops/prometheus/rules/ring0-alerts.yml:245:      - alert: TshepoLatencyP99Critical
+./tools/ops/prometheus/rules/ring0-alerts.yml:258:      - alert: VitoLatencyP95High
+./tools/ops/prometheus/rules/ring0-alerts.yml:270:      - alert: VitoLatencyP99Critical
+./tools/ops/prometheus/rules/ring0-alerts.yml:283:      - alert: VarapiLatencyP95High
+./tools/ops/prometheus/rules/ring0-alerts.yml:295:      - alert: VarapiLatencyP99Critical
+./tools/ops/prometheus/rules/ring0-alerts.yml:363:      - alert: TshepoOutboxLagWarning
+./tools/ops/prometheus/rules/ring0-alerts.yml:372:          description: "Trust events accumulating in outbox. Check Kafka broker connectivity and outbox publisher thread."
+./tools/ops/prometheus/rules/ring0-alerts.yml:375:      - alert: TshepoOutboxLagCritical
+./tools/ops/prometheus/rules/ring0-alerts.yml:384:          description: "Trust audit events not propagating. Audit chain integrity may be compromised. Kafka likely unreachable."
+./tools/ops/prometheus/rules/ring0-alerts.yml:397:          description: "Events accumulating in outbox. Check Kafka connectivity and outbox publisher thread."
+./tools/ops/prometheus/rules/ring0-alerts.yml:409:          description: "Kafka likely unreachable or publisher crashed. Manual event replay may be needed."
+./tools/ops/grafana/dashboards/ring0-golden-signals.json:458:        "alertName": "Ring0|Tshepo|Vito|Varapi|Tuso|Zibo",
+./docker-compose.yml:47:  # Apache Kafka 3.7 (KRaft mode — no ZooKeeper)
+./docker-compose.yml:80:  # Keycloak 25.x (Identity Provider)
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:58:| **E1 Sovereign registry** | 2026-02-07 | `873990cf` | ~20+ | — | Tshepo 6-way split; Vito depth; Tuso/Varapi |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:137:| `44336dad` / `7faf8aa5` | supply-plane Kafka events | Pharmacy/IoT wiring |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:236:| Tshepo | 84 | E1 | Low |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:240:| Vito | 76 | E1 | Low |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:243:| Varapi | 63 | E1 | Low |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:248:| Butano | 46 | E1+ | Low |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:252:| Nompilo | 29 | E5+ | Medium — BFF stubs at HEAD |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:309:| 2026-02-07 `484c899b`–`873990cf` | Scaffold 20 modules; Vito; Tshepo 6-service split; Tuso/Varapi | — | product-registry → msika (`683821bc`) | Foundation; one-ui-shell from birth |
+./VNEXT_FULL_HISTORY_ARCHAEOLOGICAL_SUPPLEMENT.md:336:| Doctrine preserved? | **Yes in docs**; **partial in runtime** (events, Nompilo stubs, missing hook) |
+./DOCTRINE_COMPLIANCE_MATRIX.md:11:| Registry-first doctrine | Partial | Vito/Varapi/Tuso/Zibo/Msika modules | Backend reactor now compiles through registry modules | Complete user-facing registry workflows |
+./DOCTRINE_COMPLIANCE_MATRIX.md:12:| AI/Nompilo doctrine | Partial | `llm-orchestration-service` + mobile-nompilo package | Restored full backend compile path including LLM modules | Explicit provider matrix/fallback policy implementation audit |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:97:### Tag: Internal-Issuance (new file: `useVitoIssuance.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:110:### Tag: Cards (new file: `useVitoCards.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:123:### Tag: Wallet (new file: `useVitoWallet.ts` — distinct from MUSHeX)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:134:### Tag: Biometric (new file: `useVitoBiometric.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:141:### Tag: Match (new file: `useVitoMatch.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:149:### Tag: Recovery (new file: `useVitoRecovery.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:157:### Tag: Registry-Admin (new file: `useVitoRegistryAdmin.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:169:### Tag: Print (add to `useVitoCards.ts` or `useVitoIssuance.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:175:### Tag: QR (new file: `useVitoQr.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:182:### Tag: Slips (new file: `useVitoSlips.ts`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:197:| `useVitoClients.ts` | Internal-Clients: listClients, getClient, verifyClient, deactivateClient, markClientDeceased |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:198:| `useVitoIssuance.ts` | Internal-Issuance: full lifecycle (submit → proof → approve → issue → deliver/reject) + queue list + single get; plus printCardJob |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:199:| `useVitoCards.ts` | Cards: full lifecycle (request → print → activate → inactivate → revoke) + queries (active, history, by-status) |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:200:| `useVitoWallet.ts` | Wallet: create, get, topup, pay, offline voucher, journal — **distinct from MUSHeX finance wallet** |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:201:| `useVitoBiometric.ts` | Biometric: enroll, get metadata |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:202:| `useVitoMatch.ts` | Match: trigger, list pending, resolve |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:203:| `useVitoRecovery.ts` | Recovery: handover, SHS create, SHS verify |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:204:| `useVitoRegistryAdmin.ts` | Registry-Admin: mode, provisional CRUD, dedup queue, OpenCR match |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:205:| `useVitoQr.ts` | QR: resolve token, get public key |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:206:| `useVitoSlips.ts` | Slips: emergency capsule PDF, pickup slip PDF |
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:217:- `VitoClient` (from `Client` schema)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:218:- `VitoIssuanceRequest` (from `IssuanceRequest`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:219:- `VitoProofingEvent` (from `ProofingEvent`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:220:- `VitoSmartCard` (from `SmartCard`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:221:- `VitoWallet` (from `Wallet`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:222:- `VitoWalletJournal` (from `WalletJournal`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:223:- `VitoBiometricMetadata` (from `BiometricMetadata`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:224:- `VitoMatchResult` (from `MatchResult`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:225:- `VitoDedupCase` (from `DedupCase`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:226:- `VitoDelegatedPickup` (from `DelegatedPickup`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:227:- `VitoAddress` (from `Address`)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:233:- All types use the `Vito` prefix to distinguish from conflicting names (e.g. `VitoWallet` vs MUSHeX wallet)
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:246:- **Client registry aggregate (`useClientRegistry.ts`)** — a separate BFF-level aggregate for governance tooling; the new `useVitoClients.ts` provides direct VITO client access. Both can coexist.
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:261:7. `VitoWallet` and `useVitoWallet*` hooks do not touch `/internal/v1/wallets/*` (MUSHeX) paths.
+./zencoder/chats/92a4929b-a827-48b1-af78-216b9c453a37/requirements.md:272:2. **`useVitoClients.ts` vs extending `useClientRegistry.ts`**: The existing `useClientRegistry.ts` hits `/internal/v1/client-registry/*` (a different BFF aggregate). Should we create a separate `useVitoClients.ts` (new VITO direct path) or consolidate into the existing file? Recommendation: separate file to avoid confusion.
+./TEST_FAILURE_ANALYSIS.md:11:2. **DualEmitModeIntegrationIT**: Emit mode precedence and Kafka topic routing behavior
+./TEST_FAILURE_ANALYSIS.md:23:Boots full Spring context with H2 database (Flyway disabled, Kafka/Redis mocked) and tests v1.1 merge flow through MockMvc.
+./TEST_FAILURE_ANALYSIS.md:29:- Mocks JwtDecoder and KafkaTemplate to prevent external dependencies
+./TEST_FAILURE_ANALYSIS.md:306:Tests emit mode precedence and Kafka topic routing. Validates that system properties override YAML configuration, and that the publisher sends to correct Kafka topics based on mode.
+./TEST_FAILURE_ANALYSIS.md:319:resolved = VitoEventMapper.resolveEmitMode("DUAL");
+./TEST_FAILURE_ANALYSIS.md:326:resolved = VitoEventMapper.resolveEmitMode("DUAL");
+./TEST_FAILURE_ANALYSIS.md:333:resolved = VitoEventMapper.resolveEmitMode("V1_1_ONLY");
+./TEST_FAILURE_ANALYSIS.md:340:resolved = VitoEventMapper.resolveEmitMode(null);
+./TEST_FAILURE_ANALYSIS.md:345:The 4-point precedence hierarchy in VitoEventMapper.resolveEmitMode():
+./TEST_FAILURE_ANALYSIS.md:352:- VitoEventMapper.resolveEmitMode(String ymlFallback) - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:388:assertThat(VitoEventMapper.emitLegacy(EmitMode.DUAL)).isTrue();
+./TEST_FAILURE_ANALYSIS.md:389:assertThat(VitoEventMapper.emitV11(EmitMode.DUAL)).isTrue();
+./TEST_FAILURE_ANALYSIS.md:390:assertThat(VitoEventMapper.resolveLegacyTopic("MERGE")).isEqualTo("vito.dedup");
+./TEST_FAILURE_ANALYSIS.md:391:assertThat(VitoEventMapper.resolveV11Topic("MERGE")).isEqualTo("impilo.vito.dedup");
+./TEST_FAILURE_ANALYSIS.md:401:- VitoEventMapper.emitLegacy(EmitMode) - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:402:- VitoEventMapper.emitV11(EmitMode) - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:403:- VitoEventMapper.resolveLegacyTopic(String) - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:404:- VitoEventMapper.resolveV11Topic(String) - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:412:assertThat(VitoEventMapper.emitLegacy(EmitMode.V1_1_ONLY)).isFalse();
+./TEST_FAILURE_ANALYSIS.md:413:assertThat(VitoEventMapper.emitV11(EmitMode.V1_1_ONLY)).isTrue();
+./TEST_FAILURE_ANALYSIS.md:418:assertThat(VitoEventMapper.emitLegacy(EmitMode.LEGACY_ONLY)).isTrue();
+./TEST_FAILURE_ANALYSIS.md:419:assertThat(VitoEventMapper.emitV11(EmitMode.LEGACY_ONLY)).isFalse();
+./TEST_FAILURE_ANALYSIS.md:430:String eventType = VitoEventMapper.resolveV11EventType("MERGE", "vito.merge.executed");
+./TEST_FAILURE_ANALYSIS.md:441:- VitoEventMapper.resolveV11EventType() - FOUND ✓
+./TEST_FAILURE_ANALYSIS.md:490:| VitoEventMapper | ✅ | events/VitoEventMapper.java |
+./TEST_FAILURE_ANALYSIS.md:491:| VitoOutboxPublisher | ✅ | events/VitoOutboxPublisher.java |
+./TEST_FAILURE_ANALYSIS.md:650:[ ] 8. Ensure @MockBean KafkaTemplate is preventing real Kafka from being used
+./README.md:17:| **Trust** (Trust, Identity Assurance & Governance) | TSHEPO (PDP), Envoy ext_authz (PEP), Audit, Tshepo Consent (FHIR), **Mvumo** (sovereign consent orchestration), Device Risk |
+./README.md:74:- **Backend**: Java 21, Spring Boot 3.3.x, PostgreSQL 16, Redis 7, Kafka 3.7.x
+./README.md:77:- **Identity**: Keycloak 25.x, MOSIP (phased)
+./README.md:119:6. **Nompilo capabilities must be grounded** in real API/service support; do not imply unsupported actions.
+./scripts/architecture/generate-parity-inventories.mjs:80:Platform infra (Kafka, Postgres, Redis, observability) is not listed here — see \`docs/registry/services-registry.yaml\`.
+./scripts/architecture/generate-parity-inventories.mjs:158:Vito, Varapi, Tuso, Tshepo (user-facing), Butano, Zibo (admin), Fundo, Nompilo, Ndila, Nhume, MusheX, clinical, enterprise, data/intelligence, telemedicine, notifications — all rows above.
+./scripts/guard/check-duplicate-services.sh:12:  [vito-service]="client registry (Vito)"
+./scripts/guard/check-duplicate-services.sh:13:  [varapi-service]="provider registry (Varapi)"
+./scripts/guard/check-duplicate-services.sh:15:  [tshepo-authz-service]="trust authz (Tshepo)"
+./scripts/guard/check-duplicate-services.sh:16:  [butano-service]="shared health record (Butano)"
+./scripts/guard/check-duplicate-services.sh:22:  [llm-orchestration-service]="Nompilo orchestration"
+./scripts/dev-runtime.sh:94:    log_info "Keycloak:      http://localhost:8080"
+./scripts/registry/bootstrap-registry-templates.mjs:173:        field("vitoRegistryHealthId", "Vito registry Health ID", {
+./scripts/registry/bootstrap-registry-templates.mjs:176:          description: "Issued by Vito after successful registration.",
+./scripts/registry/bootstrap-registry-templates.mjs:364:    field("tshepoDecisionRef", "Tshepo decision reference", { dataType: "string" }),
+./scripts/registry/bootstrap-registry-templates.mjs:375:    "Minimum safe dataset + duplicate search + Vito issuance. Extends client-core + registration-mode.",
+./scripts/registry/bootstrap-registry-templates.mjs:410:    "Canonical coverage is not owned by the EHR. Capture forwards to Vito summary + MusheX eligibility + COSTA billing rules.",
+./scripts/registry/bootstrap-registry-templates.mjs:461:      field("impiloHealthIdAnchor", "Impilo Health ID anchor (Vito)", {}),
+./scripts/registry/bootstrap-registry-templates.mjs:525:      field("entitlementsSummary", "Entitlements (Tshepo)", {}),
+./scripts/registry/bootstrap-registry-templates.mjs:527:      field("tshepoDecisionRef", "Tshepo decision reference", {}),
+./scripts/registry/generate-architecture-registers.mjs:246:        "Kafka/Event Topics",
+./scripts/integration-closure/bootstrap-auth.sh:6:# Bootstraps the Keycloak auth environment for integration testing.
+./scripts/integration-closure/bootstrap-auth.sh:43:# ── 1. Wait for Keycloak to be healthy ─────────────────────────────────────
+./scripts/integration-closure/bootstrap-auth.sh:44:header "Waiting for Keycloak to be healthy"
+./scripts/integration-closure/bootstrap-auth.sh:53:    ok "Keycloak is ready (${ELAPSED}s elapsed)"
+./scripts/integration-closure/bootstrap-auth.sh:56:  info "Keycloak not ready yet (HTTP ${HTTP_CODE})… retrying in ${INTERVAL}s"
+./scripts/integration-closure/bootstrap-auth.sh:62:  err "Keycloak did not become healthy within ${MAX_WAIT}s"
+./scripts/integration-closure/bootstrap-auth.sh:197:ok "Keycloak URL:      ${KEYCLOAK_URL}"
+./scripts/integration-closure/run-runtime-checks.sh:11:  "Kafka|localhost:9092|kafka"
+./scripts/integration-closure/run-runtime-checks.sh:12:  "Keycloak|localhost:8080/health/ready|http"
+./scripts/production-readiness/verify-data-plane-nonblocking.sh:13:#   platform exclusively through the outbox → Kafka → data-ingestion pipeline.
+./scripts/dr/backup-all.sh:7:# uploads to S3/MinIO backup bucket, and optionally exports Keycloak realm.
+./scripts/dr/backup-all.sh:23:#   KEYCLOAK_HOST    Keycloak host (default: localhost:8080)
+./scripts/dr/backup-all.sh:244:# Keycloak realm export
+./scripts/dr/backup-all.sh:255:    log_dry "Would export Keycloak realm 'impilo' → ${export_file}"
+./scripts/dr/backup-all.sh:259:  log_info "Exporting Keycloak realm: impilo"
+./scripts/dr/backup-all.sh:273:      log_ok "Keycloak realm exported: ${export_file}"
+./scripts/dr/backup-all.sh:284:      log_warn "Keycloak realm export failed — API not reachable"
+./scripts/dr/backup-all.sh:287:    log_warn "Keycloak realm export skipped — could not obtain admin token"
+./scripts/dr/backup-all.sh:338:  backup_tier 1 "${TIER1_DBS}" "Ring 0 Trust (TSHEPO, Keycloak, sub-services)"
+./scripts/dr/backup-all.sh:344:  # Keycloak realm export
+./scripts/dr/backup-all.sh:346:  log_info "═══ Keycloak Realm Export ═══"
+./scripts/completeness/generate-completeness-report.mjs:41:  'butano-service': 'ButanoServiceClient',
+./scripts/completeness/generate-completeness-report.mjs:59:  'varapi-service': 'VarapiServiceClient',
+./scripts/completeness/generate-completeness-report.mjs:60:  'vito-service': 'VitoServiceClient',
+./scripts/completeness/generate-completeness-report.mjs:108:function countKafkaListeners(javaFiles) {
+./scripts/completeness/generate-completeness-report.mjs:112:    if (t.includes('@KafkaListener')) n += (t.match(/@KafkaListener/g) || []).length;
+./scripts/completeness/generate-completeness-report.mjs:117:/** Producer-side signals: dedicated outbox publisher classes and direct KafkaTemplate sends. */
+./scripts/completeness/generate-completeness-report.mjs:118:function countKafkaPublishSignals(javaFiles) {
+./scripts/completeness/generate-completeness-report.mjs:143:function pomKafkaDependency(pomPath) {
+./scripts/completeness/generate-completeness-report.mjs:263:function levelFromKafka(n, pomKafka) {
+./scripts/completeness/generate-completeness-report.mjs:265:  if (pomKafka) return 'substantial';
+./scripts/completeness/generate-completeness-report.mjs:299:    const kafkaListeners = countKafkaListeners(javaFiles);
+./scripts/completeness/generate-completeness-report.mjs:300:    const kafkaPublish = countKafkaPublishSignals(javaFiles);
+./scripts/completeness/generate-completeness-report.mjs:305:    const pomKafka = fs.existsSync(pomPath) && pomKafkaDependency(pomPath);
+./scripts/completeness/generate-completeness-report.mjs:341:    const kafkaLevel = levelFromKafka(kafkaN, pomKafka);
+./scripts/completeness/generate-completeness-report.mjs:406:          pom_kafka_dependency: pomKafka,
+./scripts/smoke/smoke.sh:7:#   1. Infrastructure readiness (Postgres, Redis, Kafka)
+./scripts/smoke/smoke.sh:116:# Kafka
+./scripts/smoke/smoke.sh:118:    pass "Kafka is reachable on localhost:9092"
+./scripts/smoke/smoke.sh:120:    fail "Kafka is NOT reachable on localhost:9092"
+./scripts/bootstrap/bootstrap-app-config.sh:92:# ── 5. Keycloak realm JSON ──────────────────────────────────────────────────
+./scripts/bootstrap/bootstrap-app-config.sh:93:info "5/6 Checking Keycloak realm JSON..."
+./scripts/bootstrap/bootstrap-app-config.sh:96:    check_pass "Keycloak realm JSON present"
+./scripts/bootstrap/bootstrap-app-config.sh:98:    check_fail "Keycloak realm JSON missing at tools/auth/impilo-realm.json"
+./scripts/bootstrap/bootstrap-topics.sh:3:# Impilo vNext — Bootstrap: Kafka Topics
+./scripts/bootstrap/bootstrap-topics.sh:6:# Creates all platform Kafka topics. Idempotent — existing topics are skipped.
+./scripts/bootstrap/bootstrap-topics.sh:33:# ── Kafka CLI wrapper ───────────────────────────────────────────────────────
+./scripts/bootstrap/bootstrap-topics.sh:44:# ── Wait for Kafka ──────────────────────────────────────────────────────────
+./scripts/bootstrap/bootstrap-topics.sh:45:info "Waiting for Kafka at ${KAFKA_BOOTSTRAP}..."
+./scripts/bootstrap/bootstrap-topics.sh:51:        ok "Kafka ready (${ELAPSED}s)"
+./scripts/bootstrap/bootstrap-topics.sh:59:    err "Kafka not ready within ${MAX_WAIT}s"
+./scripts/bootstrap/bootstrap-topics.sh:170:echo "  Kafka Topic Bootstrap Summary"
+./scripts/bootstrap/bootstrap-topics.sh:183:ok "Kafka topic bootstrap complete"
+./scripts/bootstrap/bootstrap-auth.sh:3:# Impilo vNext — Bootstrap: Authentication (Keycloak Realm)
+./scripts/bootstrap/bootstrap-auth.sh:6:# Bootstraps the Keycloak impilo realm, verifies test users and clients,
+./scripts/bootstrap/bootstrap-auth.sh:51:info "Keycloak URL: ${KEYCLOAK_URL}"
+./scripts/bootstrap/bootstrap-auth.sh:53:# ── 1. Wait for Keycloak ────────────────────────────────────────────────────
+./scripts/bootstrap/bootstrap-auth.sh:54:header "1/6 Waiting for Keycloak"
+./scripts/bootstrap/bootstrap-auth.sh:62:        ok "Keycloak ready (${ELAPSED}s)"
+./scripts/bootstrap/bootstrap-auth.sh:71:    err "Keycloak not ready within ${MAX_WAIT}s"
+./scripts/bootstrap/bootstrap-auth.sh:72:    err "Is Keycloak running? Check: docker ps | grep keycloak"
+./scripts/bootstrap/bootstrap-auth.sh:192:ok "Keycloak URL:  ${KEYCLOAK_URL}"
+./scripts/reality-check/run-eventing-checks.sh:12:#   5. Kafka topic/consumer alignment
+./scripts/reality-check/run-eventing-checks.sh:158:# Find Kafka producers (services that publish to topics)
+./scripts/reality-check/run-eventing-checks.sh:159:echo "  Searching for Kafka producers..."
+./scripts/reality-check/run-eventing-checks.sh:160:PRODUCERS=$(grep -rn "KafkaTemplate\|kafkaTemplate\|@SendTo\|ProducerFactory\|CompanionOutboxPublisher" \
+./scripts/reality-check/run-eventing-checks.sh:165:# Find Kafka consumers
+./scripts/reality-check/run-eventing-checks.sh:166:echo "  Searching for Kafka consumers..."
+./scripts/reality-check/run-eventing-checks.sh:167:CONSUMERS=$(grep -rn "@KafkaListener\|KafkaListenerContainerFactory\|ConsumerFactory" \
+./scripts/reality-check/run-compose-checks.sh:76:    "kafka:Apache Kafka 3.7"
+./scripts/reality-check/run-compose-checks.sh:77:    "keycloak:Keycloak 25.x"
+./scripts/frontend/generate-wave20-parity-matrix.mjs:32:  { plane: "Experience", domain: "Nompilo", capability: "Guidance, contextual assist", backend: "/internal/v1/guidance/*", webRoute: "/ask", frontEndStatus: "partial", dataSource: "live", priority: "P0", action: "Context panels on plane hubs" },
+./scripts/frontend/generate-parity-docs.mjs:305:    domain: "Nompilo",
+./scripts/frontend/generate-parity-docs.mjs:310:    webClient: "useGuidance.ts, NompiloGlobalCommandBar",
+./scripts/frontend/generate-parity-docs.mjs:457:- Trust admin, registry identity ops, finance/commerce, learning, Nompilo, workflow/dispatch ops, Ndila intelligence, UBOMI
+./scripts/frontend/generate-parity-docs.mjs:462:- Nompilo mobile fallback copy when LLM unavailable
+./scripts/frontend/generate-parity-docs.mjs:479:## Nompilo grounding
+./scripts/runtime-validation/run-eventing-proof.sh:115:# Step 4: Check Kafka topics
+./scripts/runtime-validation/run-eventing-proof.sh:117:echo -e "${BOLD}--- Step 4: Check Kafka topics ---${NC}"
+./scripts/runtime-validation/run-eventing-proof.sh:120:  echo -e "${RED}[FAIL]${NC} Kafka container not found"
+./scripts/runtime-validation/run-eventing-proof.sh:127:    echo -e "${GREEN}[PASS]${NC} Kafka topics listed:"
+./scripts/runtime-validation/run-eventing-proof.sh:131:    echo -e "${RED}[FAIL]${NC} Could not list Kafka topics"
+./scripts/runtime/platformctl.sh:221:    echo "  Keycloak:         http://localhost:8080"
+./scripts/runtime/platformctl.sh:341:    step "2/5 Authentication (Keycloak)"
+./scripts/runtime/platformctl.sh:344:    step "3/5 Kafka topics"
+./scripts/runtime/smoke-matrix.ps1:45:Add-Check -Name "Kafka :9092" -Pass (Test-TcpPort "localhost" 9092) -Detail "Event bus reachability"
+./scripts/runtime/wait-for-readiness.sh:99:wait_for_port "Kafka"      "localhost" "9092" 30 || true
+./scripts/runtime/wait-for-readiness.sh:104:wait_for_health "Keycloak"  "http://localhost:8080/health/ready" 120 || true
+./scripts/runtime/e2e-production-like-smoke.ps1:190:  Add-Check -Area "Auth/Session" -Name "Keycloak token grant" -Status "FAIL" -Detail "Skipped: runtime stack unavailable."
+./scripts/runtime/e2e-production-like-smoke.ps1:194:  Add-Check -Area "Adapters" -Name "Nompilo and Comms adapters" -Status "FAIL" -Detail "Skipped: runtime stack unavailable."
+./scripts/runtime/e2e-production-like-smoke.ps1:236:  Add-Check -Area "Auth/Session" -Name "Keycloak token grant" -Status "PASS" -Detail "integration-test password grant succeeded."
+./scripts/runtime/e2e-production-like-smoke.ps1:238:  Add-Check -Area "Auth/Session" -Name "Keycloak token grant" -Status "FAIL" -Detail "status=$($tokenRes.StatusCode)"
+./scripts/runtime/e2e-production-like-smoke.ps1:324:Add-Check -Area "Adapters" -Name "Nompilo assist route" -Status ($(if ($nompilo.Ok) { "PASS" } else { "FAIL" })) -Detail "status=$($nompilo.StatusCode)"
+./scripts/runtime/e2e-production-like-smoke.ps1:360:Add-LatencyCheck -Area "Load" -Name "Nompilo adapter under load" -DurationsMs $nompiloDurations -SuccessCount $nompiloSuccess -ExpectedCount $LoadIterations
+./scripts/runtime/collect-runtime-evidence.sh:9:#   - Keycloak realm state
+./scripts/runtime/collect-runtime-evidence.sh:10:#   - Kafka topic list
+./scripts/runtime/collect-runtime-evidence.sh:55:        "Kafka:TCP:localhost:9092"
+./scripts/runtime/collect-runtime-evidence.sh:56:        "Keycloak:http://localhost:8080/health/ready"
+./scripts/runtime/collect-runtime-evidence.sh:92:    # ── Keycloak realm ─────────────────────────────────────────────────
+./scripts/runtime/collect-runtime-evidence.sh:93:    echo "=== Keycloak Realm State ==="
+./scripts/runtime/collect-runtime-evidence.sh:99:        echo "  Realm 'impilo': NOT FOUND or Keycloak not running"
+./scripts/runtime/collect-runtime-evidence.sh:103:    # ── Kafka topics ───────────────────────────────────────────────────
+./scripts/runtime/collect-runtime-evidence.sh:104:    echo "=== Kafka Topics ==="
+./scripts/runtime/run-smoke-suite.sh:7:#   1. Infrastructure health (Postgres, Redis, Kafka)
+./scripts/runtime/run-smoke-suite.sh:8:#   2. Auth bootstrap verification (Keycloak realm, test token)
+./scripts/runtime/run-smoke-suite.sh:78:if (echo > /dev/tcp/localhost/9092) 2>/dev/null; then pass "Kafka port 9092 open"; else fail "Kafka not reachable"; fi
+./scripts/runtime/run-smoke-suite.sh:86:    pass "Keycloak healthy"
+./scripts/runtime/run-smoke-suite.sh:98:    skip "Keycloak not reachable (HTTP ${KC_CODE})"
+./scripts/runtime/run-steel-threads.sh:7:#   Thread 1: Auth flow (Keycloak → token → TSHEPO authorize)
+./scripts/runtime/run-steel-threads.sh:11:#   Thread 5: Outbox event proof (POST → outbox → Kafka)
+./scripts/runtime/run-steel-threads.sh:49:info "Thread 1: Auth Flow (Keycloak → Token → TSHEPO)"
+./scripts/runtime/run-steel-threads.sh:51:# Step 1a: Get token from Keycloak
+./scripts/runtime/run-steel-threads.sh:60:    pass "1a. Obtained JWT token from Keycloak"
+./scripts/runtime/run-steel-threads.sh:79:    skip "1a. Could not obtain token (Keycloak may not be bootstrapped)"
+./scripts/runtime/run-steel-threads.sh:141:# Verify Kafka is accepting connections (event bus available)
+./scripts/runtime/run-steel-threads.sh:143:    pass "5a. Kafka event bus reachable"
+./scripts/runtime/run-steel-threads.sh:145:    fail "5a. Kafka not reachable"
+./scripts/federation/issue-pilot-token.sh:6:# This script obtains a federation-scoped JWT from Keycloak for use
+./scripts/federation/issue-pilot-token.sh:11:#   KEYCLOAK_URL    — Keycloak base URL (default: http://localhost:8080)
+./scripts/federation/issue-pilot-token.sh:13:#   CLIENT_ID       — Keycloak client ID for the pod
+./scripts/federation/issue-pilot-token.sh:14:#   CLIENT_SECRET   — Keycloak client secret
+./scripts/federation/issue-pilot-token.sh:33:echo "Keycloak URL: ${KEYCLOAK_URL}"
+./scripts/federation/issue-pilot-token.sh:97:            echo "Ensure Keycloak client '${CLIENT_ID}' has 'impilo-federation' in its audience mappers."
+./scripts/federation/issue-pilot-token.sh:104:    echo "ERROR: Could not connect to Keycloak at ${KEYCLOAK_URL}"
+./scripts/federation/issue-pilot-token.sh:106:    echo "For local development without Keycloak, create a self-signed JWT:"
+./scripts/federation/issue-pilot-token.sh:147:        echo "WARNING: This is a development token. Use Keycloak for production."
+./scripts/federation/verify-federation.sh:189:echo "    Spine VITO merge → Kafka impilo.control.revocation.v1"
+./scripts/federation/verify-federation.sh:193:echo "    Spine revoke → Kafka impilo.federation.pod.revoked.v1"
+./scripts/server-deploy.sh:174:    # Phase 2: Keycloak + HAPI FHIR (depends on postgres)
+./scripts/server-deploy.sh:175:    log_info "Phase 2: Starting Keycloak + HAPI FHIR..."
+./scripts/server-deploy.sh:202:    echo "  Keycloak:         http://$(hostname -I | awk '{print $1}'):8080"
+./scripts/server-deploy.sh:276:    check_health "Keycloak"       "http://localhost:8080/health/ready"
+./DOCTRINE_ALIGNMENT_CHECKLIST.md:31:| `/ask` (Nompilo) | Cross-cutting | Experience, Data & Intelligence | LLM orchestration routes | actor + purpose + policy context | Partial |
+./DOCTRINE_ALIGNMENT_CHECKLIST.md:44:| Global `NompiloAssistantScreen` | Cross-cutting | Experience, Data & Intelligence | `/internal/v1/llm/chat` | actor + purpose + policy context | Partial |
+./FRONTEND_IMPLEMENTATION_STATUS.md:27:| Nompilo contextual companion | Partial | Embedded in mobile and web; full parity in commands and journey integration pending |
+./FRONTEND_IMPLEMENTATION_STATUS.md:46:- Added contract-backed core-transaction command action for Nompilo human handoff requests (`POST /internal/v1/core-transactions/{transactionId}/nompilo/handoff`) with explicit accepted/error feedback states.
+./FRONTEND_IMPLEMENTATION_STATUS.md:49:- Added a second contract-backed core-transaction command path: Nompilo command execution (`POST /internal/v1/core-transactions/{transactionId}/nompilo/command`) with explicit accepted/error feedback states.
+./apps/mobile/provider-app/src/config.ts:4: * Centralizes Keycloak, API base URL, and feature toggles.
+./apps/mobile/provider-app/src/services/coreTransactionService.ts:39:export async function requestNompiloHandoff(transactionId: string, payload?: CoreTransactionRecord) {
+./apps/mobile/provider-app/src/services/coreTransactionService.ts:47:export async function fetchNompiloContext(transactionId: string) {
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:8: *   - global Nompilo assistant launcher and conversation BottomSheet
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:14:import { BottomSheet, NompiloLauncher } from "@impilo/mobile-design-system";
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:19:import { NompiloAssistantScreen } from "../screens/NompiloAssistantScreen";
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:22:  const [nompiloOpen, setNompiloOpen] = useState(false);
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:31:          <NompiloLauncher
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:32:            onPress={() => setNompiloOpen(true)}
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:38:      <BottomSheet isOpen={nompiloOpen} onClose={() => setNompiloOpen(false)}>
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:39:        <NompiloAssistantScreen
+./apps/mobile/provider-app/src/navigation/AppNavigator.tsx:40:          onClose={() => setNompiloOpen(false)}
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:7:  fetchNompiloContext,
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:9:  requestNompiloHandoff,
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:61:    queryFn: () => fetchNompiloContext(activeId),
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:66:    mutationFn: () => requestNompiloHandoff(activeId, { handoffType: "CALL_CENTER" }),
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:68:      Alert.alert("Handoff requested", "Nompilo staffed callback has been queued for this transaction.");
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:71:    onError: () => Alert.alert("Handoff failed", "Could not request Nompilo handoff for this transaction."),
+./apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx:155:          <Text style={styles.handoffTitle}>Nompilo companion</Text>
+./apps/mobile/provider-app/src/screens/provider/PatientRegistrationScreen.tsx:2: * PatientRegistrationScreen — New patient intake aligned with BFF / Vito + registry geo.
+./apps/mobile/provider-app/src/screens/LoginScreen.tsx:2: * LoginScreen — Keycloak PKCE authentication entry point.
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:2: * NompiloAssistantScreen (provider) — modal chat for the provider assistant.
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:4: * Provider tone is calm and clinical, not chatty. Nompilo here helps with
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:21:import { useNompilo, NOMPILO_DISCLAIMER } from "@impilo/mobile-nompilo";
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:26:export interface NompiloAssistantScreenProps {
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:31:export function NompiloAssistantScreen({ onClose, surface }: NompiloAssistantScreenProps) {
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:48:  const { history, loading, lastResult, send } = useNompilo({
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:53:        content: "Hi, I'm Nompilo. How can I help with your work today?",
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:71:        <Text style={styles.title}>Nompilo</Text>
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:135:          placeholder="Ask Nompilo…"
+./apps/mobile/provider-app/src/screens/NompiloAssistantScreen.tsx:138:          accessibilityLabel="Message Nompilo"
+./apps/mobile/packages/mobile-nompilo/package.json:5:  "description": "Nompilo assistant SDK for Impilo mobile apps — warm, role-aware AI helper. Wraps the experience-bff LLM gateway with mobile-safe defaults, graceful fallback when no live model endpoint is available, and trust-aware contextual prompts. Never fabricates clinical, legal, or financial decisions.",
+./apps/mobile/packages/mobile-nompilo/test/fallback.test.ts:4:describe("Nompilo fallback responder", () => {
+./apps/mobile/packages/mobile-nompilo/test/fallback.test.ts:10:    expect(result.reply).toMatch(/Nompilo/);
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:2: * Deterministic mobile-side fallback responder for Nompilo.
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:11:  NompiloAskRequest,
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:12:  NompiloAskResult,
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:13:  NompiloRole,
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:17:  "Nompilo is a helper, not a clinician. Always confirm clinical, legal, or financial decisions with the right person.";
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:20:  "Nompilo's smart assistant isn't available right now, so I'm replying with a short standard guide. Please try again in a few minutes.";
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:32:const ROLE_HINTS: Record<NompiloRole, RoleHints> = {
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:34:    greeting: "Hi, I'm Nompilo — your provider helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:44:      "Tshepo checks consent before sensitive screens open. If you see 'why is this blocked', that screen tells you the missing purpose or consent.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:53:    greeting: "Hi, I'm Nompilo — your Impilo helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:72:    greeting: "Hi, I'm Nompilo — your courier helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:90:    greeting: "Hi, I'm Nompilo — your supervisor view helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:96:    consent: "Sensitive actions still go through Tshepo step-up.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:104:    greeting: "Hi, I'm Nompilo — your outreach helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:119:    greeting: "Hi, I'm Nompilo — your operations helper.",
+./apps/mobile/packages/mobile-nompilo/src/fallback.ts:155:export function buildFallbackResponse(req: NompiloAskRequest): NompiloAskResult {
+./apps/mobile/packages/mobile-nompilo/src/index.ts:2: * @impilo/mobile-nompilo — Nompilo assistant SDK for Impilo mobile apps.
+./apps/mobile/packages/mobile-nompilo/src/index.ts:5: *   import { nompilo, useNompilo } from "@impilo/mobile-nompilo";
+./apps/mobile/packages/mobile-nompilo/src/index.ts:12:  NompiloRole,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:13:  NompiloRiskLevel,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:14:  NompiloMessage,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:15:  NompiloMessageRole,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:16:  NompiloContext,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:17:  NompiloAskRequest,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:18:  NompiloAskResult,
+./apps/mobile/packages/mobile-nompilo/src/index.ts:21:export { configureNompilo, askNompilo, nompilo } from "./nompiloClient";
+./apps/mobile/packages/mobile-nompilo/src/index.ts:22:export type { Nompilo } from "./nompiloClient";
+./apps/mobile/packages/mobile-nompilo/src/index.ts:24:export { useNompilo } from "./hooks";
+./apps/mobile/packages/mobile-nompilo/src/index.ts:25:export type { UseNompiloOptions, UseNompiloState } from "./hooks";
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:2: * React hook for Nompilo chat sessions in mobile apps.
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:4: * Stateless wrapper around `askNompilo`. Holds a small in-memory history,
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:10:import { askNompilo } from "./nompiloClient";
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:12:import type { NompiloContext, NompiloMessage, NompiloAskResult } from "./types";
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:14:export interface UseNompiloOptions {
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:15:  context?: NompiloContext;
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:17:  seed?: NompiloMessage[];
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:22:export interface UseNompiloState {
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:23:  history: NompiloMessage[];
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:25:  lastResult: NompiloAskResult | null;
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:27:  send: (prompt: string) => Promise<NompiloAskResult>;
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:31:export function useNompilo(opts: UseNompiloOptions = {}): UseNompiloState {
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:33:  const [history, setHistory] = useState<NompiloMessage[]>(opts.seed ?? []);
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:35:  const [lastResult, setLastResult] = useState<NompiloAskResult | null>(null);
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:41:        const noop: NompiloAskResult = {
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:51:      const userMsg: NompiloMessage = {
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:57:        const result = await askNompilo({
+./apps/mobile/packages/mobile-nompilo/src/hooks.ts:63:          const next: NompiloMessage[] = [
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:2: * Nompilo mobile client.
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:6: * Tshepo/governance checks and audit. The mobile client only:
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:16:  NompiloAskRequest,
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:17:  NompiloAskResult,
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:18:  NompiloMessage,
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:19:  NompiloRole,
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:24:interface NompiloClientConfig {
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:33:let config: NompiloClientConfig = { chatPath: CHAT_PATH };
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:35:export function configureNompilo(next: NompiloClientConfig): void {
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:39:function systemPromptFor(role: NompiloRole): string {
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:43:        "You are Nompilo, a warm, concise, mobile assistant for Impilo providers.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:46:        "Never claim to bypass Tshepo authorization, consent, or audit.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:51:        "You are Nompilo, a warm, simple, mobile health concierge for Impilo citizens.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:58:        "You are Nompilo, a calm mobile assistant for Impilo couriers and dispatch riders.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:64:        "You are Nompilo, an operations assistant for Impilo supervisors.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:70:        "You are Nompilo, an outreach team assistant.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:76:        "You are Nompilo, a careful administrative helper.",
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:80:      return "You are Nompilo, the Impilo mobile assistant. Be warm, brief and helpful.";
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:84:function buildMessages(req: NompiloAskRequest): NompiloMessage[] {
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:86:  const messages: NompiloMessage[] = [
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:130:export async function askNompilo(req: NompiloAskRequest): Promise<NompiloAskResult> {
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:174:  ask: askNompilo,
+./apps/mobile/packages/mobile-nompilo/src/nompiloClient.ts:177:export type Nompilo = typeof nompilo;
+./apps/mobile/packages/mobile-nompilo/src/types.ts:2: * Nompilo mobile SDK — type contracts.
+./apps/mobile/packages/mobile-nompilo/src/types.ts:4: * Nompilo is the warm, helpful Impilo assistant. On mobile it is *not* allowed
+./apps/mobile/packages/mobile-nompilo/src/types.ts:9: *   - replace Tshepo authorization or Vito identity flows
+./apps/mobile/packages/mobile-nompilo/src/types.ts:21:export type NompiloRole =
+./apps/mobile/packages/mobile-nompilo/src/types.ts:29:export type NompiloRiskLevel = "LOW" | "MODERATE" | "HIGH";
+./apps/mobile/packages/mobile-nompilo/src/types.ts:31:export type NompiloMessageRole = "user" | "assistant" | "system";
+./apps/mobile/packages/mobile-nompilo/src/types.ts:33:export interface NompiloMessage {
+./apps/mobile/packages/mobile-nompilo/src/types.ts:34:  role: NompiloMessageRole;
+./apps/mobile/packages/mobile-nompilo/src/types.ts:40:export interface NompiloContext {
+./apps/mobile/packages/mobile-nompilo/src/types.ts:42:  role: NompiloRole;
+./apps/mobile/packages/mobile-nompilo/src/types.ts:51:export interface NompiloAskRequest {
+./apps/mobile/packages/mobile-nompilo/src/types.ts:53:  history?: NompiloMessage[];
+./apps/mobile/packages/mobile-nompilo/src/types.ts:54:  context?: NompiloContext;
+./apps/mobile/packages/mobile-nompilo/src/types.ts:56:  riskLevel?: NompiloRiskLevel;
+./apps/mobile/packages/mobile-nompilo/src/types.ts:59:export interface NompiloAskResult {
+./apps/mobile/packages/mobile-auth/package.json:5:  "description": "Authentication and session management for Impilo mobile apps. Keycloak PKCE, token lifecycle, biometric unlock.",
+./apps/mobile/packages/mobile-auth/test/tokenManager.test.ts:3:import { KeycloakClient } from "../src/keycloakClient";
+./apps/mobile/packages/mobile-auth/test/tokenManager.test.ts:29:  let kc: KeycloakClient;
+./apps/mobile/packages/mobile-auth/test/tokenManager.test.ts:35:    kc = new KeycloakClient({
+./apps/mobile/packages/mobile-auth/test/keycloak.test.ts:2:import { KeycloakClient, generateCodeVerifier, generateCodeChallenge, AuthError } from "../src/keycloakClient";
+./apps/mobile/packages/mobile-auth/test/keycloak.test.ts:5:describe("KeycloakClient", () => {
+./apps/mobile/packages/mobile-auth/test/keycloak.test.ts:14:    const kc = new KeycloakClient(config);
+./apps/mobile/packages/mobile-auth/test/keycloak.test.ts:26:    const kc = new KeycloakClient(config);
+./apps/mobile/packages/mobile-auth/src/index.ts:4: * Keycloak PKCE authentication, token lifecycle, biometric unlock, session persistence.
+./apps/mobile/packages/mobile-auth/src/index.ts:12:// Keycloak PKCE client
+./apps/mobile/packages/mobile-auth/src/index.ts:13:export { KeycloakClient, AuthError, generateCodeVerifier, generateCodeChallenge } from "./keycloakClient";
+./apps/mobile/packages/mobile-auth/src/index.ts:14:export type { KeycloakConfig, TokenResponse, UserInfo } from "./keycloakClient";
+./apps/mobile/packages/mobile-auth/src/authStore.ts:5: * Wraps KeycloakClient + TokenManager into a reactive Zustand store.
+./apps/mobile/packages/mobile-auth/src/authStore.ts:10:import { KeycloakClient, generateCodeVerifier, generateCodeChallenge, AuthError } from "./keycloakClient";
+./apps/mobile/packages/mobile-auth/src/authStore.ts:11:import type { KeycloakConfig, UserInfo } from "./keycloakClient";
+./apps/mobile/packages/mobile-auth/src/authStore.ts:46:let keycloakClient: KeycloakClient | null = null;
+./apps/mobile/packages/mobile-auth/src/authStore.ts:50:export function configureAuth(config: KeycloakConfig): void {
+./apps/mobile/packages/mobile-auth/src/authStore.ts:51:  keycloakClient = new KeycloakClient(config);
+./apps/mobile/packages/mobile-auth/src/authStore.ts:55:function requireKeycloak(): KeycloakClient {
+./apps/mobile/packages/mobile-auth/src/authStore.ts:74:    const kc = requireKeycloak();
+./apps/mobile/packages/mobile-auth/src/authStore.ts:139:    const kc = requireKeycloak();
+./apps/mobile/packages/mobile-auth/src/authStore.ts:156:    const kc = requireKeycloak();
+./apps/mobile/packages/mobile-auth/src/authStore.ts:199:    const kc = requireKeycloak();
+./apps/mobile/packages/mobile-auth/src/authStore.ts:312: * Resolves the actor ID from Keycloak user info.
+./apps/mobile/packages/mobile-auth/src/authStore.ts:313: * Citizens use their CPID claim (mapped from the Keycloak user attribute) so that
+./apps/mobile/packages/mobile-auth/src/authStore.ts:314: * the backend VITO lookup key matches. Non-citizen actors use the Keycloak subject.
+./apps/mobile/packages/mobile-auth/src/tokenManager.ts:11:import { KeycloakClient, AuthError } from "./keycloakClient";
+./apps/mobile/packages/mobile-auth/src/tokenManager.ts:28:  private readonly keycloakClient: KeycloakClient;
+./apps/mobile/packages/mobile-auth/src/tokenManager.ts:36:  constructor(keycloakClient: KeycloakClient) {
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:2: * Keycloak PKCE Client — OAuth 2.0 Authorization Code Flow with PKCE
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:4: * Implements the full Keycloak OIDC flow for mobile:
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:15:export interface KeycloakConfig {
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:41:  /** CPID claim — populated by the cpid Keycloak protocol mapper for citizen users. */
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:73:export class KeycloakClient {
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:74:  private readonly config: KeycloakConfig;
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:81:  constructor(config: KeycloakConfig) {
+./apps/mobile/packages/mobile-auth/src/keycloakClient.ts:175:   * Revokes a token (access or refresh) at the Keycloak revocation endpoint.
+./apps/mobile/packages/mobile-design-system/src/index.ts:41:export { NompiloLauncher } from "./components/NompiloLauncher";
+./apps/mobile/packages/mobile-design-system/src/index.ts:42:export type { NompiloLauncherProps } from "./components/NompiloLauncher";
+./apps/mobile/packages/mobile-design-system/src/components/NompiloLauncher.tsx:2: * NompiloLauncher — Floating circular launcher for the Nompilo assistant.
+./apps/mobile/packages/mobile-design-system/src/components/NompiloLauncher.tsx:14:export interface NompiloLauncherProps {
+./apps/mobile/packages/mobile-design-system/src/components/NompiloLauncher.tsx:28:export function NompiloLauncher({
+./apps/mobile/packages/mobile-design-system/src/components/NompiloLauncher.tsx:35:}: NompiloLauncherProps) {
+./apps/mobile/packages/mobile-design-system/src/components/NompiloLauncher.tsx:41:      accessibilityLabel="Open Nompilo assistant"
+./apps/mobile/citizen-app/src/config.ts:4: * Centralizes Keycloak, API base URL, and feature toggles.
+./apps/mobile/citizen-app/src/config.ts:38:  // causing Keycloak to redirect to a URL Safari cannot handle.
+./apps/mobile/citizen-app/src/services/walletService.ts:15: * mobile API client injects from the Keycloak session — there is no
+./apps/mobile/citizen-app/src/services/financeService.ts:20: * the mobile API client injects from the Keycloak session — there is no
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:5: *   - the global Nompilo launcher (floating, bottom right)
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:7: *   - the Nompilo conversation BottomSheet
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:13:import { BottomSheet, NompiloLauncher } from "@impilo/mobile-design-system";
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:18:import { NompiloAssistantScreen } from "../screens/NompiloAssistantScreen";
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:21:  const [nompiloOpen, setNompiloOpen] = useState(false);
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:30:          <NompiloLauncher
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:31:            onPress={() => setNompiloOpen(true)}
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:37:      <BottomSheet isOpen={nompiloOpen} onClose={() => setNompiloOpen(false)}>
+./apps/mobile/citizen-app/src/navigation/AppNavigator.tsx:38:        <NompiloAssistantScreen onClose={() => setNompiloOpen(false)} surface="citizen-global" />
+./apps/mobile/citizen-app/src/screens/LoginScreen.tsx:2: * LoginScreen — Keycloak PKCE authentication for citizens.
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:4: * post kinds; visibility selection; topics; Nompilo assist (improve, simplify,
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:107:      setHint("Type something first, then ask Nompilo.");
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:111:    setHint("Nompilo is thinking…");
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:120:        setHint(flagged ? "Nompilo flagged this content. Review before posting." : "Nompilo found no issues.");
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:127:          setHint("Nompilo couldn't update the draft.");
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:131:      setHint("Nompilo assist unavailable.");
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:214:          {/* Nompilo */}
+./apps/mobile/citizen-app/src/screens/social/TimelineComposer.tsx:216:            <Text style={styles.nompiloLabel}>Ask Nompilo</Text>
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:2: * NompiloAssistantScreen (citizen) — modal-style Nompilo chat.
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:5: * `useNompilo` hook to a mobile-friendly chat list: user messages on the
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:25:import { useNompilo, NOMPILO_DISCLAIMER } from "@impilo/mobile-nompilo";
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:30:export interface NompiloAssistantScreenProps {
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:35:export function NompiloAssistantScreen({ onClose, surface }: NompiloAssistantScreenProps) {
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:53:  const { history, loading, lastResult, send } = useNompilo({
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:60:            ? `Hi ${profile.givenName}, I'm Nompilo. How can I help you today?`
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:61:            : "Hi, I'm Nompilo, your Impilo helper. How can I help today?",
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:79:        <Text style={styles.title}>Nompilo</Text>
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:84:              Nompilo's smart helper isn't available right now. I'll reply with simple guidance until it's back.
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:140:          placeholder="Ask Nompilo…"
+./apps/mobile/citizen-app/src/screens/NompiloAssistantScreen.tsx:143:          accessibilityLabel="Message Nompilo"
+./.env.server.example:18:# ----- Kafka -----
+./.env.server.example:21:# ----- Keycloak -----
+./AGENTS.md:16:(2026-05-28) and removed. Multiple Keycloak **client** names remain continuity and wiring
+./AGENTS.md:69:- Relevant user-facing flows must include Nompilo guidance, accessibility, and feedback capture consideration.
+./AGENTS.md:70:- Nompilo must not override provider judgement or become an unaudited decision channel.
+./AGENTS.md:103:- **Nompilo composer assist**: BFF endpoint
+./AGENTS.md:114:- Every service must have an **`event_outbox` table** for reliable Kafka publishing (outbox pattern).
+./AGENTS.md:141:cd services/tshepo-service && ./mvnw test -Dtest=TshepoGoldenContractIT
+./AGENTS.md:194:- Every service's Kafka publishing goes through an outbox table — never publish directly to Kafka in service code
+./AGENTS.md:212:- Integration tests suffixed `IT` (e.g., `TshepoGoldenContractIT.java`)
+./helm/mvumo/values.yaml:22:  # Optional: enable when Mvumo must call Tshepo without a user token (e.g. batch/worker); set from secrets in real deploys
+./helm/learning/values.yaml:21:  # secure-by-default in Kubernetes. Operators must ensure the Keycloak
+./helm/learning/values.yaml:25:  # Transactional outbox → Kafka publisher (Phase 2, single topic per Open Question 2).
+./helm/learning/values.minimal.yaml:45:  # Kafka outbox publisher remains configurable so minimal mode can be
+./helm/learning/values.minimal.yaml:46:  # deployed against a tenant cluster that does or does not have Kafka.
+./helm/learning/values.minimal.yaml:48:  # Kafka-less pilots without affecting native Fundo correctness.
+./helm/impilo-service/templates/networkpolicy.yaml:69:    # Allow Kafka
+./helm/impilo-service/templates/networkpolicy.yaml:77:    # Allow Keycloak for token validation
+./FRONTEND_ARCHITECTURE.md:61:## Nompilo experience-layer placement
+./FRONTEND_ARCHITECTURE.md:63:- Nompilo is global and contextual (role, workflow, permission, trust, accessibility aware)
+./SERVICE_WIRING_MATRIX.md:7:| Tshepo trust cluster | Complete | Complete | Complete | Complete | Partial | Partial | Partial | Partial | Partial | Partial | Cross-service enforcement consistency |
+./SERVICE_WIRING_MATRIX.md:8:| Vito client registry | Complete | Complete | Complete | Complete | Complete | Partial | Partial | Partial | Partial | Partial | End-to-end UX parity |
+./SERVICE_WIRING_MATRIX.md:9:| Varapi provider registry | Complete | Complete | Complete | Complete | Partial | Partial | Partial | Partial | Partial | Partial | Deeper provider workflows |
+./SERVICE_WIRING_MATRIX.md:11:| Butano SHR | Complete | Complete | Complete | Complete | Partial | Partial | Partial | Partial | Partial | Partial | Additional clinical journey surfacing |
+./SERVICE_WIRING_MATRIX.md:19:| Nompilo/LLM orchestration | Complete | Partial | Partial | Complete | Partial | Partial | Partial | Partial | Partial | Partial | Provider abstraction hardening |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:39:- **BFF stubs** for Nompilo command, handoff, and feedback return `ACCEPTED` without downstream calls.
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:128:# 40+ additional pickaxe sweeps (Tshepo, Vito, FHIR, kafka, pharmacy, etc.)
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:179:| Nompilo doctrine | `NOMPILO_INTELLIGENT_JOURNEY_COMPANION.md` | **Partial** — global launcher present; BFF command path stubbed |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:192:| **2026-02-07** `484c899b`–`873990cf` | Scaffold **20 modules**; Vito; Tshepo 6-way split; Tuso/Varapi; **one-ui-shell from birth** | — | `product-registry` → **msika** (`683821bc`) | Sovereign registry foundation |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:230:| Nompilo BFF actions | `CoreTransactionController` feedback/handoff/command | Post-`47de393f` | Full Nompilo orchestration | Stub `ACCEPTED` | **Partial regression** | Wire to guidance/LLM services |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:242:| Workflow orchestration | MANAGE_STATE_MACHINE | Partial — workflow owns instances | No canonical core topic | Via Tshepo on BFF path | Platform journey | **Partial regression** | Emit workflow lifecycle to `core.transaction.events` |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:248:| BFF composition | COMPOSE_EXPERIENCE_VIEW | Reads workflow state | No emit | Correlation IDs in view | All three | **Partial** | Complete hook + Nompilo wire |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:251:| Nompilo feedback | GIVE_FEEDBACK | Contract events defined | Stub only | Not audited | Person | **Serious regression** | Implement BFF downstream |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:260:| **1. Trust** | Tshepo cluster, Mvumo, audit, BFF admin trust | Policy engine, ext_authz path | SecurityConfig gaps on logistics | — | Keys/federation admin blocked | Expand trust surfaces; secure nhume/dispatch |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:261:| **2. Registry** | Vito, Varapi, Tuso, Zibo, Msika, Indawo, Ubomi | Services + BFF proxies | Partial UI depth | — | **UBOMI not wired** | BFF bridge for Ubomi |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:262:| **3. Clinical** | Butano, PCT, OROS, Pharmacy, Inpatient | SHR Live (matrix) | MOCK CDS fallback | — | Unified PCT journey model | Journey DTO; remove MOCK |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:265:| **6. Experience** | one-ui-shell, BFF, mobile, Nompilo | Single shell canonical | **Missing core-tx hook** | Logistics dual paths | Core-tx not in app-registry | Fix hook; registry maturity |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:296:| Vito/Varapi/Tuso | registry services | openapi slices | Yes | Partial | Partial | Partial | Partial | No | Partial | Registry hub depth |
+./VNEXT_HISTORICAL_FUNCTIONALITY_AND_DOCTRINE_REGRESSION_AUDIT.md:304:| Nompilo | guidance, llm | experience-bff | Partial stubs | Partial `/ask` | Global launcher | Global launcher | Partial | Offline fallback OK | Partial | Wire command path |

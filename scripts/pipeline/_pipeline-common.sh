@@ -108,11 +108,42 @@ pipeline_write_reports() {
       echo "PASS — user may authorize preview deploy after explicit approval."
     fi
     echo ""
+    echo "## Full vNext runtime truth"
+    if [[ -f "$REPO_PATH/reports/full-boot/discovery-summary.json" ]]; then
+      python3 -c "
+import json, pathlib
+p = pathlib.Path('$REPO_PATH/reports/full-boot/discovery-summary.json')
+if p.exists():
+    d = json.loads(p.read_text())
+    print(f\"- Discovered components: **{d.get('total', '?')}**\")
+    for plane, n in sorted((d.get('by_plane') or {}).items()):
+        print(f\"  - {plane}: {n}\")
+    for c, n in sorted((d.get('by_classification') or {}).items()):
+        print(f\"  - {c}: {n}\")
+" 2>/dev/null || echo "- (discovery summary parse failed)"
+    else
+      echo "- Run: node scripts/full-boot/generate-full-boot-artifacts.mjs"
+    fi
+    if [[ -f "$REPO_PATH/reports/full-boot/full-boot-runtime-report.json" ]]; then
+      python3 -c "
+import json, pathlib
+r = json.loads(pathlib.Path('$REPO_PATH/reports/full-boot/full-boot-runtime-report.json').read_text())
+print(f\"- Full boot status: **{r.get('full_boot_status')}**\")
+print(f\"- Required full boot: {r.get('required_full_boot')}\")
+print(f\"- Build pass/fail: {r.get('build_pass')}/{r.get('build_fail')}\")
+print(f\"- Images pass / missing Dockerfile: {r.get('image_pass')}/{r.get('image_missing_dockerfile')}\")
+" 2>/dev/null || true
+    fi
+    echo "- Full boot deploy (separate namespace): \`bash scripts/deploy/full-boot-preview-deploy.sh\`"
+    echo "- Slice preview preserved: namespace \`impilo-preview\`"
+    echo ""
     echo "## Next commands"
     echo '```bash'
     echo "bash scripts/pipeline/cursor-local-feedback.sh"
     echo "bash scripts/ci/collect-ci-feedback.sh"
     echo "bash scripts/deploy/manual-authorized-preview-deploy.sh"
+    echo "bash scripts/build/build-full-vnext.sh"
+    echo "bash scripts/guard/check-full-boot-runtime-completeness.sh"
     echo '```'
   } >"$md"
 

@@ -37,6 +37,20 @@ fi
 echo "Matrices: docs/architecture/FRONTEND_BACKEND_PARITY_MATRIX.md, MOBILE_PARITY_MATRIX.md"
 echo ""
 
+echo "── Full vNext boot readiness ──"
+for f in reports/full-boot/discovery-summary.json reports/full-boot/full-build-summary.md \
+  reports/full-boot/full-image-build-summary.md reports/full-boot/full-boot-runtime-report.md; do
+  if [[ -f "$REPO_PATH/$f" ]]; then
+    echo "  $f:"
+    head -n 12 "$REPO_PATH/$f"
+    echo ""
+  fi
+done
+[[ -f docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md ]] && echo "Blockers: docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md"
+echo "Catalog: docs/architecture/FULL_VNEXT_SERVICE_CATALOG.md"
+echo "Full boot deploy (authorized only): bash scripts/deploy/full-boot-preview-deploy.sh"
+echo ""
+
 echo "── GitHub Actions CI ──"
 FB="$(mktemp)"
 bash scripts/ci/collect-ci-feedback.sh 2>&1 | tee "$FB"

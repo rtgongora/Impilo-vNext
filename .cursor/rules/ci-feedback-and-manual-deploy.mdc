@@ -16,6 +16,9 @@ alwaysApply: true
 6. If deploying on VM gates because GitHub CI unavailable, user must type **`AUTHORIZE DEPLOY WITH VM GATES`**.
 7. Never introduce production mocks/stubs without allowlist (`test:no-stubs`).
 8. No backend capability is complete without real frontend surfacing or documented internal-only status.
+9. **Full vNext ≠ slice preview.** Do not call `impilo-preview` full vNext until `check-full-boot-runtime-completeness.sh` reports `FULL_BOOT_PASS`.
+10. Full-boot deploy uses namespace `impilo-full-preview` and phrase `AUTHORIZE FULL BOOT PREVIEW DEPLOY` — never auto-deploy; never destroy `impilo-preview`.
+11. All seven planes and all classified services must be discovered from registry (`docs/registry/services-registry.yaml`) — examples in prompts are not exhaustive.
 
 ## Workflow
 
@@ -35,4 +38,7 @@ bash scripts/pipeline/cursor-local-feedback.sh
 bash scripts/ci/collect-ci-feedback.sh
 bash scripts/guard/check-backend-frontend-parity.sh
 bash scripts/deploy/manual-authorized-preview-deploy.sh
+bash scripts/build/build-full-vnext.sh
+bash scripts/guard/check-full-boot-runtime-completeness.sh
+bash scripts/deploy/full-boot-preview-deploy.sh
 ```

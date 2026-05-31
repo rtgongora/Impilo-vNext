@@ -3,6 +3,14 @@
 set -euo pipefail
 
 PARITY_ALLOWLIST="${PARITY_ALLOWLIST:-config/parity-allowlist.yml}"
+FULL_BOOT_CATALOG="${FULL_BOOT_CATALOG:-docs/architecture/FULL_VNEXT_SERVICE_CATALOG.md}"
+FULL_BOOT_CLASSIFICATION="${FULL_BOOT_CLASSIFICATION:-config/full-boot-service-classification.yml}"
+
+parity_ensure_full_catalog() {
+  if [[ ! -f "$FULL_BOOT_CLASSIFICATION" ]]; then
+    node scripts/full-boot/generate-full-boot-artifacts.mjs 2>/dev/null || true
+  fi
+}
 PARITY_BLOCKING=0
 PARITY_ADVISORY=0
 PARITY_SUMMARY_FILE="${PARITY_SUMMARY_FILE:-/tmp/impilo-parity-summary.txt}"

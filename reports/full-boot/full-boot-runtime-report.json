@@ -1,0 +1,34 @@
+{
+  "total_discovered": 140,
+  "by_plane": {
+    "data": 12,
+    "integration": 45,
+    "enterprise": 15,
+    "clinical": 18,
+    "experience": 29,
+    "registry_spine": 1,
+    "trust": 11,
+    "trust_governance": 2,
+    "registry": 7
+  },
+  "by_classification": {
+    "optional_full_boot": 97,
+    "external_dependency": 9,
+    "required_full_boot": 21,
+    "internal_package": 12,
+    "deprecated_retired": 1
+  },
+  "required_full_boot": 21,
+  "deployed_in_slice": [
+    "experience-bff",
+    "one-ui-shell",
+    "postgres",
+    "redis"
+  ],
+  "healthy_required_estimate": 4,
+  "build_pass": 108,
+  "build_fail": 1,
+  "image_pass": 0,
+  "image_missing_dockerfile": 0,
+  "full_boot_status": "FULL_BOOT_FAIL"
+}

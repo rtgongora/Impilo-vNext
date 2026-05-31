@@ -1,0 +1,45 @@
+USER-SUPPLIED VALUES:
+experienceBff:
+  enabled: true
+  env:
+    AUTH_FALLBACK_ENABLED: "true"
+    IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+    KEYCLOAK_REALM: impilo
+    KEYCLOAK_URL: http://127.0.0.1:1
+    MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+    SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+  replicaCount: 1
+global:
+  buildDate: "2026-05-31T16:00:02Z"
+  environment: preview
+  gitBranch: claude/staging-ux-orchestration-remediation-Yypyl
+  gitCommit: 5a58424d8c2621abbc589ca70e8f5f61c87527f2
+  publicHost: 41.57.127.235
+images:
+  experienceBff:
+    pullPolicy: Never
+    repository: impilo/experience-bff
+    tag: preview
+  oneUiShell:
+    pullPolicy: Never
+    repository: impilo/one-ui-shell
+    tag: preview
+ingress:
+  className: traefik
+  enabled: true
+keycloak:
+  enabled: false
+oneUiShell:
+  enabled: true
+  env:
+    NEXT_PUBLIC_BFF_URL: ""
+  replicaCount: 1
+postgres:
+  enabled: true
+  password: preview-change-me
+redis:
+  enabled: true
