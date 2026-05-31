@@ -21,9 +21,9 @@ docker build -f ui/one-ui-shell/Dockerfile \
   .
 
 echo "Importing images into k3s containerd..."
-docker save "impilo/experience-bff:${TAG}" | sudo k3s ctr images import -
-docker save "impilo/one-ui-shell:${TAG}" | sudo k3s ctr images import -
+# shellcheck source=scripts/deploy/_k3s-import-preview-images.sh
+source "$REPO_PATH/scripts/deploy/_k3s-import-preview-images.sh"
+run_k3s_import_preview_images
 
-# Ensure k3s uses local images (no registry pull)
 echo "Imported images into k3s containerd."
 docker images | grep impilo || true

@@ -14,6 +14,9 @@ if [[ -n "$TARGET_SHA" ]]; then
   git checkout "$TARGET_SHA"
 fi
 
+export DEPLOY_BRANCH="$BRANCH"
+export DEPLOY_COMMIT_SHA="$(git rev-parse HEAD)"
+
 bash scripts/dev/install-dependencies.sh
 bash scripts/dev/build-all.sh
 bash scripts/deploy/preview-build-images.sh

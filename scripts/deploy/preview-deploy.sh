@@ -6,10 +6,14 @@ RELEASE="${RELEASE:-impilo-preview}"
 CHART="$REPO_PATH/deploy/helm/impilo-vnext"
 cd "$REPO_PATH"
 
-BRANCH="$(git branch --show-current 2>/dev/null || echo unknown)"
-COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
-SHORT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
-BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+# shellcheck source=scripts/deploy/_preview-deploy-metadata.sh
+source "$REPO_PATH/scripts/deploy/_preview-deploy-metadata.sh"
+resolve_preview_deploy_metadata
+
+BRANCH="$PREVIEW_DEPLOY_BRANCH"
+COMMIT="$PREVIEW_DEPLOY_COMMIT"
+BUILD_DATE="$PREVIEW_DEPLOY_BUILD_DATE"
+SHORT="$(git rev-parse --short "$COMMIT" 2>/dev/null || echo unknown)"
 
 helm upgrade --install "$RELEASE" "$CHART" \
   --namespace "$NAMESPACE" \

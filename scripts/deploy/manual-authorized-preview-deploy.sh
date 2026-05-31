@@ -112,6 +112,21 @@ if [[ "$LIVE_SHA" != "$EXPECTED_SHA" ]]; then
   exit 1
 fi
 
+LIVE_BRANCH="$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("branch",""))' 2>/dev/null || true)"
+LIVE_ENV="$(echo "$VERSION_JSON" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("environment",""))' 2>/dev/null || true)"
+if [[ "$LIVE_ENV" != "preview" ]]; then
+  echo "FAIL: /health/version environment $LIVE_ENV != preview"
+  exit 1
+fi
+if [[ -z "$LIVE_BRANCH" || "$LIVE_BRANCH" == "unknown" ]]; then
+  echo "FAIL: /health/version branch is empty or unknown (expected $BRANCH)"
+  exit 1
+fi
+if [[ "$LIVE_BRANCH" != "$BRANCH" ]]; then
+  echo "FAIL: /health/version branch $LIVE_BRANCH != expected $BRANCH"
+  exit 1
+fi
+
 kubectl get pods -n impilo-preview 2>/dev/null || true
 echo ""
 echo "SUCCESS: preview at $PREVIEW_URL reflects commit $EXPECTED_SHA (auth: $AUTH_MODE)"
