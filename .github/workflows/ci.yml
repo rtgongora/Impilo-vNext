@@ -334,11 +334,8 @@ jobs:
         working-directory: ui/one-ui-shell
         run: npm run test:routes
 
-      - name: Sync registry maturity snapshot
-        run: node scripts/frontend/sync-registry-maturity.mjs
-
-      - name: Registry maturity drift check
-        run: git diff --exit-code -- ui/one-ui-shell/src/generated/registry-maturity.json
+      - name: Registry maturity drift check (ignore generatedAt-only)
+        run: bash scripts/test/verify-registry-maturity-sync.sh
 
       - name: Launcher dead-end guard
         working-directory: ui/one-ui-shell
@@ -768,8 +765,10 @@ jobs:
 
       - name: Run change-safety guards
         env:
-          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.before }}
+          GITHUB_BASE_REF: ${{ github.event.pull_request.base.ref || '' }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before || '' }}
+          GUARD_BASE_REF: ${{ github.event_name == 'push' && github.event.before || '' }}
         run: bash scripts/guard/run-change-safety-gates.sh
 
   preview-pipeline-gates:

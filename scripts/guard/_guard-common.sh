@@ -22,16 +22,34 @@ guard_filter() {
 
 resolve_base_ref() {
   if [[ -n "${GUARD_BASE_REF:-}" ]]; then
-    echo "$GUARD_BASE_REF"
-    return
+    if git rev-parse --verify "${GUARD_BASE_REF}^{commit}" >/dev/null 2>&1; then
+      echo "$GUARD_BASE_REF"
+      return
+    fi
+  fi
+  if [[ "${GITHUB_EVENT_NAME:-}" == "push" && -n "${GITHUB_EVENT_BEFORE:-}" ]]; then
+    if git rev-parse --verify "${GITHUB_EVENT_BEFORE}^{commit}" >/dev/null 2>&1; then
+      echo "${GITHUB_EVENT_BEFORE}"
+      return
+    fi
   fi
   if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request" && -n "${GITHUB_BASE_REF:-}" ]]; then
-    echo "origin/${GITHUB_BASE_REF}"
+    if git rev-parse --verify "origin/${GITHUB_BASE_REF}" >/dev/null 2>&1; then
+      echo "origin/${GITHUB_BASE_REF}"
+      return
+    fi
+  fi
+  if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+    echo "HEAD~1"
     return
   fi
   if git rev-parse --verify origin/main >/dev/null 2>&1; then
     echo "origin/main"
     return
   fi
-  echo "HEAD~1"
+  if git rev-parse --verify origin/HEAD >/dev/null 2>&1; then
+    echo "origin/HEAD"
+    return
+  fi
+  echo "HEAD"
 }

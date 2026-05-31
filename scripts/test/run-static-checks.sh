@@ -12,9 +12,6 @@ gate_run "frontend-no-stub-guard" bash -c 'cd ui/one-ui-shell && npm run test:no
 
 gate_run "frontend-launcher-guard" bash -c 'cd ui/one-ui-shell && npm run test:launchers' || FAIL=1
 
-gate_run "registry-maturity-sync" bash -c '
-  node scripts/frontend/sync-registry-maturity.mjs
-  git diff --exit-code -- ui/one-ui-shell/src/generated/registry-maturity.json
-' || FAIL=1
+gate_run "registry-maturity-sync" bash scripts/test/verify-registry-maturity-sync.sh || FAIL=1
 
 exit "$FAIL"
