@@ -39,7 +39,8 @@ echo ""
 
 echo "── Full vNext boot readiness ──"
 for f in reports/full-boot/discovery-summary.json reports/full-boot/full-build-summary.md \
-  reports/full-boot/full-image-build-summary.md reports/full-boot/full-boot-runtime-report.md; do
+  reports/full-boot/full-image-build-summary.md reports/full-boot/image-strategy-summary.md \
+  reports/full-boot/full-boot-runtime-report.md; do
   if [[ -f "$REPO_PATH/$f" ]]; then
     echo "  $f:"
     head -n 12 "$REPO_PATH/$f"

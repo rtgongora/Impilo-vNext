@@ -10,23 +10,36 @@ import json, pathlib, yaml, datetime
 
 root = pathlib.Path(".")
 cls = yaml.safe_load((root / "config/full-boot-service-classification.yml").read_text())
-build = {}
-img = {}
-bp = root / "reports/full-boot/full-build-summary.json"
-ip = root / "reports/full-boot/full-image-build-summary.json"
-if bp.exists():
-    b = json.loads(bp.read_text())
-    for r in b.get("results", []):
-        if isinstance(r, str):
-            continue
-        build[r.get("id", "")] = r
-if ip.exists():
-    img = json.loads(ip.read_text())
+entries = cls["classifications"]
 
 lines = [
     "# Full Boot Blocker Triage",
     "",
     f"> Updated: {datetime.datetime.now(datetime.timezone.utc).isoformat()}",
+    "",
+    "> Image doctrine: missing Dockerfile ≠ failure. See `RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`.",
+    "",
+    "## Former missing-Dockerfile reclassification (UI / optional)",
+    "",
+    "| Service | Plane | Reclass | Strategy | Runtime required |",
+    "|---------|-------|---------|----------|------------------|",
+]
+
+ui_optional = [
+    e for e in entries
+    if e.get("component_type") == "frontend_app"
+    and e.get("image_strategy_reclass") in (
+        "buildpack-candidate", "buildpack_candidate", "not-required-mobile-artifact", "shared-template-candidate"
+    )
+]
+for e in sorted(ui_optional, key=lambda x: x["id"]):
+    lines.append(
+        f"| `{e['id']}` | {e.get('plane','?')} | {e.get('image_strategy_reclass')} | {e.get('image_strategy')} | {e.get('runtime_image_required')} |"
+    )
+
+lines += [
+    "",
+    "## Active blockers",
     "",
     "| Plane | Service | Type | Evidence | Log | Fix | Priority | Status |",
     "|-------|---------|------|----------|-----|-----|----------|--------|",
@@ -35,31 +48,41 @@ lines = [
 def add(plane, svc, typ, ev, log, fix, pri, status):
     lines.append(f"| {plane} | `{svc}` | {typ} | {ev} | `{log}` | {fix} | {pri} | {status} |")
 
-for e in cls.get("classifications", []):
+for e in entries:
     sid = e["id"]
     plane = e.get("plane", "?")
-    if e.get("classification") == "required_full_boot":
-        blocker = e.get("blocker") or ""
-        if blocker == "not_deployed_in_preview":
-            add(plane, sid, "missing_infrastructure", "not in impilo-preview", "—", "deploy in impilo-full-preview", "P0", "open")
-        if blocker == "missing_dockerfile":
-            add(plane, sid, "missing Dockerfile", "no Dockerfile", f"reports/full-boot/image-logs/{sid}.log", "Add Dockerfile", "P0", "open")
-    if e.get("blocker"):
-        add(plane, sid, "classification", e["blocker"], "—", e.get("reason", ""), e.get("priority", "P2"), "open")
+    if e.get("image_strategy_status") == "missing_required_image_strategy":
+        add(plane, sid, "missing_required_image_strategy", e.get("image_strategy_reclass", ""), "—",
+            "Assign valid runtime image strategy", "P0", "open")
+    elif e.get("blocker") == "not_deployed_in_preview" and e.get("classification") == "required_full_boot":
+        add(plane, sid, "not_deployed", "not in impilo-preview slice", "—",
+            "Deploy in impilo-full-preview after authorization", "P0", "open")
 
-# Parse build logs for failures
 log_dir = root / "reports/full-boot/build-logs"
 if log_dir.exists():
-    for log in log_dir.glob("*.log"):
+    for log in sorted(log_dir.glob("*.log")):
         if log.name.startswith("_"):
             continue
         text = log.read_text(errors="ignore")
-        if "FAIL" in text and "PASS" not in text.split("\n")[0]:
+        if "FAIL" in text and "PASS" not in text.splitlines()[-1]:
             svc = log.stem
-            ent = next((x for x in cls["classifications"] if x["id"] == svc), {})
-            add(ent.get("plane", "?"), svc, "build failure", "mvn/npm failed", str(log.relative_to(root)), "fix compile/test deps", "P0", "open")
+            ent = next((x for x in entries if x["id"] == svc), {})
+            if ent.get("classification") == "required_full_boot":
+                add(ent.get("plane", "?"), svc, "build failure", "mvn/npm failed", str(log.relative_to(root)),
+                    "fix compile deps", "P0", "open")
+
+img_dir = root / "reports/full-boot/image-logs"
+if img_dir.exists():
+    for log in sorted(img_dir.glob("*.log")):
+        text = log.read_text(errors="ignore")
+        if "FAIL impilo" in text or (text.startswith("FAIL")):
+            svc = log.stem
+            ent = next((x for x in entries if x["id"] == svc), {})
+            if ent.get("runtime_image_required") and ent.get("classification") == "required_full_boot":
+                add(ent.get("plane", "?"), svc, "image build failure", ent.get("image_strategy", ""),
+                    str(log.relative_to(root)), "shared_template or fix Dockerfile COPY jar", "P0", "open")
 
 out = root / "docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md"
 out.write_text("\n".join(lines) + "\n")
-print(f"Wrote {out} ({len(lines)-6} table rows)")
+print(f"Wrote {out}")
 PY

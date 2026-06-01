@@ -120,6 +120,12 @@ if p.exists():
         print(f\"  - {plane}: {n}\")
     for c, n in sorted((d.get('by_classification') or {}).items()):
         print(f\"  - {c}: {n}\")
+    print(f\"- Runtime image required: {d.get('runtime_image_required_count', '?')}\")
+    print(f\"- Missing required strategy: {d.get('missing_required_image_strategy', '?')}\")
+    isc = d.get('image_strategy') or {}
+    if isc:
+        top = sorted(isc.items(), key=lambda x: -x[1])[:6]
+        print(\"- Top image strategies: \" + \", \".join(f\"{k}={v}\" for k,v in top))
 " 2>/dev/null || echo "- (discovery summary parse failed)"
     else
       echo "- Run: node scripts/full-boot/generate-full-boot-artifacts.mjs"
@@ -131,7 +137,13 @@ r = json.loads(pathlib.Path('$REPO_PATH/reports/full-boot/full-boot-runtime-repo
 print(f\"- Full boot status: **{r.get('full_boot_status')}**\")
 print(f\"- Required full boot: {r.get('required_full_boot')}\")
 print(f\"- Build pass/fail: {r.get('build_pass')}/{r.get('build_fail')}\")
-print(f\"- Images pass / missing Dockerfile: {r.get('image_pass')}/{r.get('image_missing_dockerfile')}\")
+print(f\"- Runtime images required: {r.get('runtime_image_required_count', '?')}\")
+print(f\"- Image pass / fail / blocking: {r.get('image_pass')}/{r.get('image_fail')}/{r.get('blocking_failure_count', 0)}\")
+print(f\"- Missing required strategy: {r.get('missing_required_image_strategy_count', 0)}\")
+if r.get('image_strategy_summary'):
+    s = r['image_strategy_summary']
+    print(f\"- Dockerfile / shared / jib: {s.get('dockerfile_count','?')}/{s.get('shared_template_count','?')}/{s.get('jib_count','?')}\")
+    print(f\"- Official image+chart / not-required: {s.get('official_image_count',0)+s.get('official_chart_count',0)}/{s.get('not_required_count','?')}\")
 " 2>/dev/null || true
     fi
     echo "- Full boot deploy (separate namespace): \`bash scripts/deploy/full-boot-preview-deploy.sh\`"

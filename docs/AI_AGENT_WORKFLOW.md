@@ -82,7 +82,9 @@ git remote -v
 - **Source of truth:** `docs/registry/services-registry.yaml` + `config/full-boot-service-classification.yml`
 - **Regenerate catalog:** `node scripts/full-boot/generate-full-boot-artifacts.mjs`
 - **Full build:** `bash scripts/build/build-full-vnext.sh`
-- **Images:** `bash scripts/build/build-full-vnext-images.sh`
+- **Image strategy doctrine:** `docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md` — Dockerfile is not the doctrine; repeatable runtime image strategy is.
+- **Discover targets:** `bash scripts/build/discover-build-targets.sh` → `reports/full-boot/{build-targets,image-strategy-targets,non-runtime-components}.json`
+- **Images:** `bash scripts/build/build-full-vnext-images.sh` (required runtime services only; skips bundled UI/libs/mobile)
 - **Completeness gate:** `bash scripts/guard/check-full-boot-runtime-completeness.sh`
 - **Slice preview (`impilo-preview`)** is not full vNext — preserve it; use **`impilo-full-preview`** only with `AUTHORIZE FULL BOOT PREVIEW DEPLOY`
 - Blockers: `docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md`

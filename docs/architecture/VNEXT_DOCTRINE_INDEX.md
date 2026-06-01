@@ -88,6 +88,7 @@
 | `docs/environment/MOBILE_PARITY_GATE_REPORT.md` | partial-auto | all planes | yes |
 | `docs/environment/MOBILE_PREVIEW_TESTING.md` | human-review | all planes | advisory |
 | `docs/environment/MOBILE_TEST_GATE.md` | partial-auto | all planes | yes |
+| `docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md` | human-review | all planes | advisory |
 | `docs/frontend/DOCTRINE_ALIGNMENT_CHECKLIST.md` | human-review | all planes | advisory |
 | `docs/frontend/GAP_CLOSURE_RULES.md` | partial-auto | all planes | yes |
 | `docs/frontend/WEB_MOBILE_SURFACING_PARITY.md` | partial-auto | all planes | yes |

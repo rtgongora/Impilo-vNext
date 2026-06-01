@@ -1,7 +1,7 @@
 {
-  "total": 140,
+  "total": 141,
   "by_plane": {
-    "trust": 11,
+    "trust": 12,
     "registry": 7,
     "clinical": 18,
     "data": 12,
@@ -12,8 +12,32 @@
   "by_classification": {
     "optional_full_boot": 97,
     "external_dependency": 9,
-    "required_full_boot": 21,
+    "required_full_boot": 22,
     "internal_package": 12,
     "deprecated_retired": 1
-  }
+  },
+  "image_strategy": {
+    "dockerfile": 6,
+    "shared-dockerfile-template": 75,
+    "jib": 5,
+    "buildpacks": 23,
+    "official-upstream-image": 0,
+    "official-helm-chart": 8,
+    "not-required-internal-package": 12,
+    "not-required-mobile-artifact": 2,
+    "not-required-generated-client": 9,
+    "not-required-doctrine-only-component": 1,
+    "unknown-needs-review": 0,
+    "missing-required-image-strategy": 0
+  },
+  "runtime_image_required_count": 22,
+  "dockerfile_count": 6,
+  "shared_template_count": 75,
+  "jib_count": 5,
+  "buildpacks_count": 23,
+  "official_image_count": 0,
+  "official_chart_count": 8,
+  "not_required_count": 24,
+  "unknown_needs_review_count": 0,
+  "missing_required_image_strategy": 0
 }

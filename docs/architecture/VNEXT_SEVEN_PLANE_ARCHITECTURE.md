@@ -9,7 +9,7 @@
 
 | Plane ID | Name | Evidence | Component count |
 |---|---|---|---|
-| trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 11 |
+| trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 7 |
 | clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 18 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
@@ -23,17 +23,18 @@ Evidence: [`docs/architecture/planes/01-trust-identity-assurance-governance.md`]
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `envoy` | infrastructure | required_full_boot | deployable_but_not_deployed | certain |
-| `identity-assurance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `keycloak` | infrastructure | required_full_boot | deployable_but_not_deployed | certain |
-| `mvumo-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-audit-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-authz-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-consent-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-identity-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-keys-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-offline-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `tshepo-service` | backend_service | deprecated_retired | implemented_but_no_deployment_support | certain |
+| `envoy` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `identity-assurance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `keycloak` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `mvumo-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `opa` | infrastructure | optional_full_boot | image_strategy_defined | certain |
+| `tshepo-audit-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `tshepo-authz-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `tshepo-consent-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `tshepo-identity-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `tshepo-keys-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `tshepo-offline-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `tshepo-service` | backend_service | deprecated_retired | no_runtime_image_required | certain |
 
 ## Registry & Sovereign Identity Spine
 
@@ -41,13 +42,13 @@ Evidence: [`docs/architecture/planes/02-registry-sovereign-identity-spine.md`](d
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `indawo-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `product-registry-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `tuso-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `ubomi-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `varapi-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `vito-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `zibo-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
+| `indawo-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `product-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `tuso-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `ubomi-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `varapi-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `vito-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `zibo-service` | backend_service | required_full_boot | image_strategy_defined | certain |
 
 ## Clinical Execution & Shared Health Record
 
@@ -55,24 +56,24 @@ Evidence: [`docs/architecture/planes/03-clinical-execution-shared-health-record.
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `butano-fhir` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `butano-service` | backend_service | required_full_boot | deployable_but_not_deployed | certain |
-| `clinical-knowledge-platform-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `document-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `fhir-gateway-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `forms-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `guidance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `hapi-fhir` | infrastructure | optional_full_boot | deployable_but_not_deployed | certain |
-| `inpatient-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `inventory-elmis-adapter` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `inventory-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `oros-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `pacs-adapter-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `pct-service` | backend_service | required_full_boot | implemented_but_no_deployment_support | certain |
-| `pharmacy-elmis-adapter` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `pharmacy-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `rules-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `scheduling-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
+| `butano-fhir` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `butano-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `clinical-knowledge-platform-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `document-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `fhir-gateway-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `forms-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `guidance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `hapi-fhir` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `inpatient-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `inventory-elmis-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `inventory-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `oros-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `pacs-adapter-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `pct-service` | backend_service | required_full_boot | image_strategy_defined | certain |
+| `pharmacy-elmis-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `pharmacy-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `rules-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `scheduling-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 
 ## Data, Intelligence & Public Health
 
@@ -80,18 +81,18 @@ Evidence: [`docs/architecture/planes/04-data-intelligence-public-health.md`](doc
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `ai-model-registry-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `campaigns-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `data-access-governance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `data-governance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `data-ingestion-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `data-pipeline-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `data-warehouse-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `national-data-repository-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `ndr-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `reporting-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `search-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `surveillance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
+| `ai-model-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `campaigns-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `data-access-governance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `data-governance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `data-ingestion-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `data-pipeline-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `data-warehouse-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `national-data-repository-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `ndr-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `reporting-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `search-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `surveillance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 
 ## Integration, Interoperability & Edge
 
@@ -99,51 +100,51 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `analytics-pipeline-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `asset-registry-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `audit-ledger-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `card-print-agent` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `channels-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `connector-fhir-adapter` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `contract-tests` | library | internal_package | internal_library_only | certain |
-| `developer-portal-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `dhis2` | external_dependency | external_dependency | external_dependency | high |
-| `dispatch-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `external-elmis` | external_dependency | external_dependency | external_dependency | high |
-| `external-pacs-network` | external_dependency | external_dependency | external_dependency | high |
-| `federation-connector` | library | internal_package | internal_library_only | certain |
-| `integration-hub` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `iot-ingestion-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `jobs-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `kafka` | infrastructure | required_full_boot | deployable_but_not_deployed | certain |
-| `landela-adapter-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `lims` | external_dependency | external_dependency | external_dependency | high |
-| `llm-orchestration-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `minio` | infrastructure | required_full_boot | deployable_but_not_deployed | certain |
-| `ndila-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `nhume-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `notification-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `observability-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `offline-edge-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `offline-sdk` | library | internal_package | internal_library_only | certain |
-| `offline-sync-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `ops-instrumentation` | library | internal_package | internal_library_only | certain |
+| `analytics-pipeline-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `asset-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `audit-ledger-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `card-print-agent` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `channels-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `connector-fhir-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `contract-tests` | library | internal_package | no_runtime_image_required | certain |
+| `developer-portal-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `dhis2` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `dispatch-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `external-elmis` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `external-pacs-network` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `federation-connector` | library | internal_package | no_runtime_image_required | certain |
+| `integration-hub` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `iot-ingestion-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `jobs-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `kafka` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `landela-adapter-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `lims` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `llm-orchestration-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `minio` | infrastructure | required_full_boot | image_strategy_defined | certain |
+| `ndila-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `nhume-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `notification-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `observability-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `offline-edge-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `offline-sdk` | library | internal_package | no_runtime_image_required | certain |
+| `offline-sync-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `ops-instrumentation` | library | internal_package | no_runtime_image_required | certain |
 | `postgres` | infrastructure | required_full_boot | deployed_and_healthy | certain |
 | `redis` | infrastructure | required_full_boot | deployed_and_healthy | certain |
-| `referral-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `schema-registry-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `security-baseline` | library | internal_package | internal_library_only | certain |
-| `security-hardening-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `shared-core` | library | internal_package | internal_library_only | certain |
-| `shared-kernel-java` | library | internal_package | internal_library_only | certain |
-| `sms-whatsapp-gateway` | external_dependency | external_dependency | external_dependency | high |
-| `support-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `tech-companion` | library | internal_package | internal_library_only | certain |
-| `tech-companion-harness` | library | internal_package | internal_library_only | certain |
-| `tech-companion-mock` | library | internal_package | internal_library_only | certain |
-| `tshepo-contracts` | library | internal_package | internal_library_only | certain |
-| `tshepo-sdk` | library | internal_package | internal_library_only | certain |
-| `workflow-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
+| `referral-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `schema-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `security-baseline` | library | internal_package | no_runtime_image_required | certain |
+| `security-hardening-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `shared-core` | library | internal_package | no_runtime_image_required | certain |
+| `shared-kernel-java` | library | internal_package | no_runtime_image_required | certain |
+| `sms-whatsapp-gateway` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `support-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `tech-companion` | library | internal_package | no_runtime_image_required | certain |
+| `tech-companion-harness` | library | internal_package | no_runtime_image_required | certain |
+| `tech-companion-mock` | library | internal_package | no_runtime_image_required | certain |
+| `tshepo-contracts` | library | internal_package | no_runtime_image_required | certain |
+| `tshepo-sdk` | library | internal_package | no_runtime_image_required | certain |
+| `workflow-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 
 ## Experience, Workflow & Orchestration
 
@@ -151,35 +152,35 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `butano-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `citizen-app` | mobile_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `community-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `costa-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `developer-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `ehr` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
+| `butano-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `citizen-app` | mobile_app | optional_full_boot | no_runtime_image_required | certain |
+| `community-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `costa-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `developer-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `ehr` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `experience-bff` | backend_service | required_full_boot | deployed_and_healthy | certain |
-| `inventory-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `knowledge-admin` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `learning-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `msika-flow-ops` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `msika-flow-portal` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `msika-flow-vendor` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `msika-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `mushex-finance-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `mushex-ops-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `mushex-payer-portal` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
+| `inventory-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `knowledge-admin` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `learning-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `msika-flow-ops` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `msika-flow-portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `msika-flow-vendor` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `msika-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `mushex-finance-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `mushex-ops-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `mushex-payer-portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `one-ui-shell` | frontend_app | required_full_boot | deployed_and_healthy | certain |
-| `ops-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `ops-docs` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `oros-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `pct-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `pharmacy-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `portal` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `provider-app` | mobile_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `self-service` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `shared-ui` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `support-console` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
-| `zibo-web` | frontend_app | optional_full_boot | buildable_but_not_containerized | certain |
+| `ops-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `ops-docs` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `oros-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `pct-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `pharmacy-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `provider-app` | mobile_app | optional_full_boot | no_runtime_image_required | certain |
+| `self-service` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `shared-ui` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `support-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `zibo-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 
 ## Enterprise Resource & Market Operations
 
@@ -187,18 +188,18 @@ Evidence: [`docs/architecture/planes/07-enterprise-resource-market-operations.md
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `banking-rails` | external_dependency | external_dependency | external_dependency | high |
-| `costing-engine-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `coverage-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `credential-verification-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `general-ledger-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `hr-payroll-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `msika-flow-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `msika-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `mushe-wallet-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `mushex-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `procurement-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `share-slip-service` | backend_service | optional_full_boot | deployable_but_not_deployed | certain |
-| `simba-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `wellness-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
-| `workforce-governance-service` | backend_service | optional_full_boot | implemented_but_no_deployment_support | certain |
+| `banking-rails` | external_dependency | external_dependency | no_runtime_image_required | high |
+| `costing-engine-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `coverage-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `credential-verification-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `general-ledger-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `hr-payroll-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `msika-flow-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `msika-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `mushe-wallet-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `mushex-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `procurement-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `share-slip-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `simba-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `wellness-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `workforce-governance-service` | backend_service | optional_full_boot | image_strategy_defined | certain |

@@ -1,109 +1,22 @@
-ai-model-registry-service	optional_full_boot	services/ai-model-registry-service/Dockerfile
-analytics-pipeline-service	optional_full_boot	services/analytics-pipeline-service/Dockerfile
-asset-registry-service	optional_full_boot	services/asset-registry-service/Dockerfile
-audit-ledger-service	optional_full_boot	services/audit-ledger-service/Dockerfile
-butano-fhir	optional_full_boot	services/butano-fhir/Dockerfile
-butano-service	required_full_boot	services/butano-service/Dockerfile
-butano-web	optional_full_boot	
-campaigns-service	optional_full_boot	services/campaigns-service/Dockerfile
-card-print-agent	optional_full_boot	services/card-print-agent/Dockerfile
-channels-service	optional_full_boot	services/channels-service/Dockerfile
-clinical-knowledge-platform-service	optional_full_boot	services/clinical-knowledge-platform-service/Dockerfile
-community-service	optional_full_boot	services/community-service/Dockerfile
-connector-fhir-adapter	optional_full_boot	services/connector-fhir-adapter/Dockerfile
-costa-console	optional_full_boot	
-costing-engine-service	optional_full_boot	services/costing-engine-service/Dockerfile
-coverage-service	optional_full_boot	services/coverage-service/Dockerfile
-credential-verification-service	optional_full_boot	services/credential-verification-service/Dockerfile
-data-access-governance-service	optional_full_boot	services/data-access-governance-service/Dockerfile
-data-governance-service	optional_full_boot	services/data-governance-service/Dockerfile
-data-ingestion-service	optional_full_boot	services/data-ingestion-service/Dockerfile
-data-pipeline-service	optional_full_boot	services/data-pipeline-service/Dockerfile
-data-warehouse-service	optional_full_boot	services/data-warehouse-service/Dockerfile
-developer-console	optional_full_boot	
-developer-portal-service	optional_full_boot	services/developer-portal-service/Dockerfile
-dispatch-service	optional_full_boot	services/dispatch-service/Dockerfile
-document-service	optional_full_boot	services/document-service/Dockerfile
-ehr	optional_full_boot	
-experience-bff	required_full_boot	services/experience-bff/Dockerfile
-fhir-gateway-service	required_full_boot	services/fhir-gateway-service/Dockerfile
-forms-service	optional_full_boot	services/forms-service/Dockerfile
-general-ledger-service	optional_full_boot	services/general-ledger-service/Dockerfile
-guidance-service	optional_full_boot	services/guidance-service/Dockerfile
-hr-payroll-service	optional_full_boot	services/hr-payroll-service/Dockerfile
-identity-assurance-service	optional_full_boot	services/identity-assurance-service/Dockerfile
-indawo-service	optional_full_boot	services/indawo-service/Dockerfile
-inpatient-service	optional_full_boot	services/inpatient-service/Dockerfile
-integration-hub	optional_full_boot	services/integration-hub/Dockerfile
-inventory-elmis-adapter	optional_full_boot	services/inventory-elmis-adapter/Dockerfile
-inventory-service	optional_full_boot	services/inventory-service/Dockerfile
-inventory-web	optional_full_boot	
-iot-ingestion-service	optional_full_boot	services/iot-ingestion-service/Dockerfile
-jobs-service	optional_full_boot	services/jobs-service/Dockerfile
-knowledge-admin	optional_full_boot	
-landela-adapter-service	optional_full_boot	services/landela-adapter-service/Dockerfile
-learning-service	optional_full_boot	services/learning-service/Dockerfile
-llm-orchestration-service	optional_full_boot	services/llm-orchestration-service/Dockerfile
-msika-flow-ops	optional_full_boot	
-msika-flow-portal	optional_full_boot	
-msika-flow-service	optional_full_boot	services/msika-flow-service/Dockerfile
-msika-flow-vendor	optional_full_boot	
-msika-service	optional_full_boot	services/msika-service/Dockerfile
-msika-web	optional_full_boot	
-mushe-wallet-service	optional_full_boot	services/mushe-wallet-service/Dockerfile
-mushex-finance-console	optional_full_boot	
-mushex-ops-console	optional_full_boot	
-mushex-payer-portal	optional_full_boot	
-mushex-service	optional_full_boot	services/mushex-service/Dockerfile
-mvumo-service	optional_full_boot	services/mvumo-service/Dockerfile
-national-data-repository-service	optional_full_boot	services/national-data-repository-service/Dockerfile
-ndila-service	optional_full_boot	services/ndila-service/Dockerfile
-ndr-service	optional_full_boot	services/ndr-service/Dockerfile
-nhume-service	optional_full_boot	services/nhume-service/Dockerfile
-notification-service	optional_full_boot	services/notification-service/Dockerfile
-observability-service	optional_full_boot	services/observability-service/Dockerfile
-offline-edge-service	optional_full_boot	services/offline-edge-service/Dockerfile
-offline-sync-service	optional_full_boot	services/offline-sync-service/Dockerfile
-one-ui-shell	required_full_boot	
-ops-console	optional_full_boot	
-ops-docs	optional_full_boot	
-oros-service	optional_full_boot	services/oros-service/Dockerfile
-oros-web	optional_full_boot	
-pacs-adapter-service	optional_full_boot	services/pacs-adapter-service/Dockerfile
-pct-service	required_full_boot	services/pct-service/Dockerfile
-pct-web	optional_full_boot	
-pharmacy-elmis-adapter	optional_full_boot	services/pharmacy-elmis-adapter/Dockerfile
-pharmacy-service	optional_full_boot	services/pharmacy-service/Dockerfile
-pharmacy-web	optional_full_boot	
-portal	optional_full_boot	
-procurement-service	optional_full_boot	services/procurement-service/Dockerfile
-product-registry-service	optional_full_boot	services/product-registry-service/Dockerfile
-referral-service	optional_full_boot	services/referral-service/Dockerfile
-reporting-service	optional_full_boot	services/reporting-service/Dockerfile
-rules-service	optional_full_boot	services/rules-service/Dockerfile
-scheduling-service	optional_full_boot	services/scheduling-service/Dockerfile
-schema-registry-service	optional_full_boot	services/schema-registry-service/Dockerfile
-search-service	optional_full_boot	services/search-service/Dockerfile
-security-hardening-service	optional_full_boot	services/security-hardening-service/Dockerfile
-self-service	optional_full_boot	
-share-slip-service	optional_full_boot	services/share-slip-service/Dockerfile
-shared-ui	optional_full_boot	
-simba-service	optional_full_boot	services/simba-service/Dockerfile
-support-console	optional_full_boot	
-support-service	optional_full_boot	services/support-service/Dockerfile
-surveillance-service	optional_full_boot	services/surveillance-service/Dockerfile
-tshepo-audit-service	required_full_boot	services/tshepo-audit-service/Dockerfile
-tshepo-authz-service	required_full_boot	services/tshepo-authz-service/Dockerfile
-tshepo-consent-service	required_full_boot	services/tshepo-consent-service/Dockerfile
-tshepo-identity-service	required_full_boot	services/tshepo-identity-service/Dockerfile
-tshepo-keys-service	required_full_boot	services/tshepo-keys-service/Dockerfile
-tshepo-offline-service	optional_full_boot	services/tshepo-offline-service/Dockerfile
-tuso-service	required_full_boot	services/tuso-service/Dockerfile
-ubomi-service	required_full_boot	services/ubomi-service/Dockerfile
-varapi-service	required_full_boot	services/varapi-service/Dockerfile
-vito-service	required_full_boot	services/vito-service/Dockerfile
-wellness-service	optional_full_boot	services/wellness-service/Dockerfile
-workflow-service	optional_full_boot	services/workflow-service/Dockerfile
-workforce-governance-service	optional_full_boot	services/workforce-governance-service/Dockerfile
-zibo-service	required_full_boot	services/zibo-service/Dockerfile
-zibo-web	optional_full_boot	
+butano-service	required_full_boot	dockerfile	valid	services/butano-service/Dockerfile		docker_build
+envoy	required_full_boot	official_image	valid		envoyproxy/envoy:v1.31-latest	helm_or_upstream_pull
+experience-bff	required_full_boot	shared_template	valid	services/experience-bff/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+fhir-gateway-service	required_full_boot	shared_template	valid	services/fhir-gateway-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+hapi-fhir	required_full_boot	official_image	valid		hapiproject/hapi:v7.4.0	helm_or_upstream_pull
+kafka	required_full_boot	official_image	valid		apache/kafka:3.7.1	helm_or_upstream_pull
+keycloak	required_full_boot	official_image	valid		quay.io/keycloak/keycloak:25.0	helm_or_upstream_pull
+minio	required_full_boot	official_image	valid		minio/minio:latest	helm_or_upstream_pull
+one-ui-shell	required_full_boot	dockerfile	valid	ui/one-ui-shell/Dockerfile		docker_build
+pct-service	required_full_boot	shared_template	valid	services/pct-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+postgres	required_full_boot	official_image	valid		postgres:16-alpine	helm_or_upstream_pull
+redis	required_full_boot	official_image	valid		redis:7-alpine	helm_or_upstream_pull
+tshepo-audit-service	required_full_boot	dockerfile	valid	services/tshepo-audit-service/Dockerfile		docker_build
+tshepo-authz-service	required_full_boot	jib	valid	services/tshepo-authz-service/Dockerfile		shared_template_or_jib
+tshepo-consent-service	required_full_boot	dockerfile	valid	services/tshepo-consent-service/Dockerfile		docker_build
+tshepo-identity-service	required_full_boot	shared_template	valid	services/tshepo-identity-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+tshepo-keys-service	required_full_boot	dockerfile	valid	services/tshepo-keys-service/Dockerfile		docker_build
+tuso-service	required_full_boot	shared_template	valid	services/tuso-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+ubomi-service	required_full_boot	shared_template	valid	services/ubomi-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+varapi-service	required_full_boot	shared_template	valid	services/varapi-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+vito-service	required_full_boot	shared_template	valid	services/vito-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh
+zibo-service	required_full_boot	shared_template	valid	services/zibo-service/Dockerfile		docker_build_or_build-runtime-image-from-jar.sh

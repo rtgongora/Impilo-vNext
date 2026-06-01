@@ -44,7 +44,7 @@
 | forms-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | general-ledger-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | guidance-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| hapi-fhir | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| hapi-fhir | clinical | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
 | hr-payroll-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | identity-assurance-service | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | indawo-service | registry | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
@@ -86,6 +86,7 @@
 | offline-sdk | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | offline-sync-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | one-ui-shell | experience | yes | deploy/helm/impilo-vnext | required | partially_deployable | — | add subchart or impilo-vnext template |
+| opa | trust | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | ops-console | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | ops-docs | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | ops-instrumentation | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |

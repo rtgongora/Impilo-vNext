@@ -1,5 +1,22 @@
 # Full vNext Build and Boot Readiness
 
+## Runtime image strategy (canonical)
+
+Every required runtime component must have a **repeatable image strategy** — not necessarily a Dockerfile.
+
+See **[RUNTIME_IMAGE_STRATEGY_DOCTRINE.md](RUNTIME_IMAGE_STRATEGY_DOCTRINE.md)**.
+
+| Strategy | Build command |
+|----------|----------------|
+| `dockerfile` | `docker build` via `bash scripts/build/build-full-vnext-images.sh` |
+| `shared-dockerfile-template` / `jib` | `bash scripts/build/build-full-vnext.sh` then `build-runtime-image-from-jar.sh <service>` or Jib |
+| `official-upstream-image` / `official-helm-chart` | Validate ref; no local `impilo/` build |
+| `not-required-*` | Skipped with documented reason |
+
+**Doctrine:** Dockerfile is not the doctrine. Repeatable runtime image strategy is the doctrine.
+
+**Failure rule:** blocking only when a **required** runtime service lacks a valid strategy or its strategy build fails.
+
 ## Commands
 
 ```bash
@@ -16,7 +33,7 @@ bash scripts/full-boot/generate-blocker-triage.sh
 
 - Registry: `docs/registry/services-registry.yaml`
 - Classification: `config/full-boot-service-classification.yml`
-- Catalog: `docs/architecture/FULL_VNEXT_SERVICE_CATALOG.md`
+- Container matrix: `docs/environment/FULL_CONTAINERIZATION_MATRIX.md`
 
 ## Preview types
 

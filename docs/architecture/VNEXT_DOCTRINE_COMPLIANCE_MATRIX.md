@@ -40,7 +40,7 @@
 | `forms-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/forms-service` | triage |
 | `general-ledger-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/general-ledger-service` | triage |
 | `guidance-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/guidance-service` | triage |
-| `hapi-fhir` | health-os-doctrine, core-transaction (if domain) | as classified | external-image | — | see MOBILE_PARITY_MATRIX | — | unknown | `docker-compose.yml` | triage |
+| `hapi-fhir` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
 | `hr-payroll-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/hr-payroll-service` | triage |
 | `identity-assurance-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/identity-assurance-service` | triage |
 | `indawo-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/indawo-service` | triage |
@@ -80,6 +80,7 @@
 | `offline-sdk` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/offline-sdk` | triage |
 | `offline-sync-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/offline-sync-service` | triage |
 | `one-ui-shell` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | partial | `ui/one-ui-shell` | triage |
+| `opa` | health-os-doctrine, core-transaction (if domain) | as classified | external-image | — | see MOBILE_PARITY_MATRIX | — | unknown | `docker-compose.yml` | triage |
 | `ops-console` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/ops-console` | triage |
 | `ops-docs` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/ops-docs` | triage |
 | `ops-instrumentation` | health-os-doctrine, core-transaction (if domain) | as classified | library | n/a | see MOBILE_PARITY_MATRIX | n/a | unknown | `libs/ops-instrumentation` | triage |

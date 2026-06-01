@@ -7,6 +7,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
+import {
+  resolveImageStrategy,
+  jarExists,
+  OFFICIAL_UPSTREAM,
+  SHARED_TEMPLATE_PATH,
+  isBlockingStrategy,
+} from "./image-strategy-resolver.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -43,7 +50,9 @@ const REQUIRED_INFRA = new Set([
   "keycloak",
   "envoy",
   "minio",
+  "hapi-fhir",
 ]);
+
 
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
@@ -82,7 +91,12 @@ function scanRepoFacts() {
     .map((d) => d.name);
   const openapi = fs.readdirSync(path.join(ROOT, "contracts/openapi"))
     .filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
-  return { dockerfiles, poms, uiWorkspaces, helmCharts, openapi };
+  const uiDockerfiles = new Set();
+  for (const ws of uiWorkspaces) {
+    if (exists(`ui/${ws}/Dockerfile`)) uiDockerfiles.add(ws);
+  }
+  if (exists("services/experience-bff/Dockerfile")) uiDockerfiles.add("experience-bff");
+  return { dockerfiles, poms, uiWorkspaces, uiDockerfiles, helmCharts, openapi };
 }
 
 function normalizePlane(p) {
@@ -227,6 +241,7 @@ function buildUnifiedCatalog(registry, archRegistry, facts) {
     { id: "minio", plane: "integration", port: 9000 },
     { id: "envoy", plane: "trust", port: 10000 },
     { id: "hapi-fhir", plane: "clinical", port: 8090 },
+    { id: "opa", plane: "trust", port: 8181 },
   ]) {
     if (!byId.has(infra.id)) {
       byId.set(infra.id, {
@@ -269,42 +284,40 @@ function buildUnifiedCatalog(registry, archRegistry, facts) {
 
 function enrichEntry(entry, facts) {
   const mod = entry.maven_module ?? entry.id;
-  const sp = entry.source_path ?? "";
-  const hasDocker = facts.dockerfiles.has(mod);
+  const hasDocker = facts.dockerfiles.has(mod) || facts.uiDockerfiles?.has(entry.id);
   const helmName = mod?.replace(/-service$/, "") ?? mod;
   const hasHelm = facts.helmCharts.some((h) => h === helmName || h === mod || mod?.startsWith(h));
   const inSlice = SLICE_DEPLOYED.has(entry.id);
   const classification = classifyEntry(entry);
+  const img = resolveImageStrategy(entry, facts, classification, ROOT);
+
   let current_status = "unknown";
-  if (entry.component_type === "library") current_status = "internal_library_only";
-  else if (entry.component_type === "external_dependency") current_status = "external_dependency";
+  if (img.image_strategy_status === "not_required") current_status = "no_runtime_image_required";
   else if (inSlice) current_status = "deployed_and_healthy";
-  else if (!entry.buildable) current_status = "deployable_but_not_deployed";
-  else if (entry.buildable && !hasDocker) current_status = "buildable_but_not_containerized";
-  else if (hasDocker && !hasHelm) current_status = "implemented_but_no_deployment_support";
-  else current_status = "deployable_but_not_deployed";
+  else if (img.image_strategy_status === "valid") current_status = "image_strategy_defined";
+  else if (img.image_strategy_status === "missing") current_status = "missing_required_image_strategy";
+  else current_status = "unknown_needs_review";
+
+  const blocker = isBlockingStrategy(img, classification)
+    ? "missing_required_image_strategy"
+    : classification === "required_full_boot" && !inSlice && img.image_required
+      ? "not_deployed_in_preview"
+      : "";
+
+  let recommended_next_action = img.reason ?? "Verify after authorization";
+  if (blocker === "not_deployed_in_preview") recommended_next_action = "Deploy in impilo-full-preview when authorized";
 
   return {
     ...entry,
-    dockerfile_status: hasDocker ? "present" : entry.buildable ? "missing" : "n/a",
-    dockerfile_path: hasDocker ? facts.dockerfiles.get(mod) : null,
+    dockerfile_status: hasDocker ? "present" : entry.buildable ? "optional" : "n/a",
     helm_support: hasHelm ? "chart_in_helm/" : entry.id === "one-ui-shell" || entry.id === "experience-bff" ? "deploy/helm/impilo-vnext" : "none",
-    compose_support: ["postgres", "redis", "kafka", "keycloak", "minio", "hapi-fhir"].includes(entry.id) ? "docker-compose.yml" : "unknown",
     full_boot_classification: classification,
     deploy_order_group: deployOrderGroup(entry, classification),
+    ...img,
+    runtime_image_required: img.image_required,
     current_status,
-    blocker:
-      classification === "required_full_boot" && !inSlice && !hasDocker && entry.buildable
-        ? "missing_dockerfile"
-        : classification === "required_full_boot" && !inSlice
-          ? "not_deployed_in_preview"
-          : "",
-    recommended_next_action:
-      current_status === "buildable_but_not_containerized"
-        ? "Add Dockerfile and image build"
-        : current_status === "deployable_but_not_deployed"
-          ? "Add Helm template or subchart"
-          : "Verify in full-boot namespace after authorization",
+    blocker,
+    recommended_next_action,
   };
 }
 
@@ -358,19 +371,20 @@ function writeServiceCatalog(catalog) {
     e.domain,
     `\`${e.source_path ?? "—"}\``,
     e.build_tool,
-    e.dockerfile_status,
-    e.helm_support,
-    e.default_http_port ?? "—",
-    e.full_boot_classification,
-    e.current_status,
-    e.blocker || "—",
-    e.recommended_next_action,
-  ]);
+      e.image_strategy ?? "—",
+      e.image_strategy_reclass ?? "—",
+      e.image_strategy_status ?? "—",
+      e.default_http_port ?? "—",
+      e.full_boot_classification,
+      e.current_status,
+      e.blocker || "—",
+      e.recommended_next_action,
+    ]);
   const content = [
     "# Full vNext Service Catalog",
     "",
     "> **Source of truth:** [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)",
-    "> overlaid with repo scan (services/, ui/, apps/mobile/, infra, external register).",
+    "> Runtime images: see [`RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`](../environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md).",
     "",
     `**Total components:** ${catalog.length}`,
     "",
@@ -382,8 +396,9 @@ function writeServiceCatalog(catalog) {
         "Domain",
         "Path",
         "Stack",
-        "Dockerfile",
-        "Helm",
+        "Image strategy",
+        "Reclass",
+        "Strategy status",
         "Port",
         "Full-boot class",
         "Status",
@@ -493,27 +508,44 @@ function writeClassificationYaml(catalog) {
     plane: e.primary_plane,
     domain: e.domain,
     component_type: e.component_type,
+    full_boot_classification: e.full_boot_classification,
     classification: e.full_boot_classification,
+    runtime_kind: e.runtime_kind ?? null,
     deploy_order_group: e.deploy_order_group,
     build_required: ["required_full_boot", "optional_full_boot"].includes(e.full_boot_classification) && e.buildable,
-    container_required: e.full_boot_classification === "required_full_boot" && e.buildable,
+    image_required: !!e.image_required,
+    runtime_image_required: !!e.image_required,
+    image_strategy: e.image_strategy,
+    image_strategy_reclass: e.image_strategy_reclass,
+    image_strategy_status: e.image_strategy_status,
+    image_build_command: e.image_build_command ?? null,
+    image_name: e.image_name ?? `impilo/${e.id}`,
+    official_image: e.official_image ?? null,
+    official_chart: e.official_chart ?? null,
+    dockerfile_path: e.dockerfile_path ?? null,
+    shared_template: e.shared_template ?? null,
+    jib_module: e.jib_module ?? null,
+    buildpack_builder: e.buildpack_builder ?? null,
+    container_required: !!e.image_required,
     helm_required: e.full_boot_classification === "required_full_boot",
     health_check_required: e.full_boot_classification === "required_full_boot",
     contract_check_required: e.component_type === "backend_service",
     frontend_surface_expected: e.component_type === "backend_service" && e.exposes_to?.includes?.("experience-bff"),
-    mobile_surface_expected: false,
+    mobile_surface_expected: e.component_type === "mobile_app",
     doctrine_compliance_required: e.full_boot_classification === "required_full_boot",
     source_path: e.source_path,
     build_tool: e.build_tool,
-    dockerfile_path: e.dockerfile_path,
-    priority: e.full_boot_classification === "required_full_boot" ? "P0" : "P2",
+    default_http_port: e.default_http_port ?? null,
+    priority: e.full_boot_classification === "required_full_boot" ? "P0" : e.blocker ? "P1" : "P2",
     blocker: e.blocker || null,
-    reason: `Auto-classified from registry + repo scan (${e.component_type})`,
+    reason: e.reason ?? `Runtime image strategy: ${e.image_strategy}`,
+    classification_confidence: e.classification_confidence ?? "certain",
   }));
   const doc = {
     metadata: {
       generated_at: new Date().toISOString(),
       source: "docs/registry/services-registry.yaml",
+      doctrine: "docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md",
       total_entries: entries.length,
     },
     classifications: entries,
@@ -541,22 +573,66 @@ function writeMatrices(catalog, facts) {
     "utf8"
   );
 
-  const containerRows = catalog
-    .filter((e) => e.component_type === "backend_service" || e.component_type === "frontend_app")
-    .map((e) => [
-      e.id,
-      e.primary_plane,
-      e.dockerfile_status,
-      e.dockerfile_path ?? "—",
-      e.source_path,
-      `impilo/${e.id}`,
-      "preview, preview-<sha>",
-      e.dockerfile_status === "missing" ? "missing Dockerfile" : "—",
-      e.dockerfile_status === "missing" ? "Add Dockerfile" : "build-full-vnext-images.sh",
-    ]);
+  const containerRows = catalog.map((e) => [
+    e.id,
+    e.primary_plane,
+    e.component_type,
+    e.full_boot_classification,
+    e.image_required ? "yes" : "no",
+    e.image_strategy ?? "—",
+    e.image_strategy_status ?? "—",
+    e.dockerfile_path ?? "—",
+    e.shared_template ?? "—",
+    e.jib_module ?? "—",
+    e.buildpack_builder ?? "—",
+    e.official_image ?? e.official_chart ?? "—",
+    e.image_name ?? `impilo/${e.id}`,
+    e.image_build_command ?? "—",
+    e.blocker ? "blocked" : e.image_required ? "pending" : "not_required",
+    e.blocker || "—",
+    e.recommended_next_action ?? "—",
+  ]);
+  const strategyCounts = catalog.reduce((acc, e) => {
+    const k = e.image_strategy ?? "unknown";
+    acc[k] = (acc[k] ?? 0) + 1;
+    return acc;
+  }, {});
   fs.writeFileSync(
     path.join(ROOT, "docs/environment/FULL_CONTAINERIZATION_MATRIX.md"),
-    ["# Full Containerization Matrix", "", toMdTable(["Service", "Plane", "Dockerfile", "Path", "Context", "Image", "Tags", "Blocker", "Remediation"], containerRows)].join("\n") + "\n",
+    [
+      "# Full Containerization / Runtime Image Matrix",
+      "",
+      "> **Doctrine:** [`RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`](RUNTIME_IMAGE_STRATEGY_DOCTRINE.md) — Dockerfile is not the only valid strategy.",
+      "",
+      "## Strategy counts",
+      "",
+      ...Object.entries(strategyCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, n]) => `- **${k}**: ${n}`),
+      "",
+      toMdTable(
+        [
+          "Component",
+          "Plane",
+          "Type",
+          "Full-boot class",
+          "Image required",
+          "Strategy",
+          "Status",
+          "Dockerfile",
+          "Shared template",
+          "Jib module",
+          "Buildpack",
+          "Official image/chart",
+          "Image name",
+          "Build command",
+          "Build status",
+          "Blocker",
+          "Remediation",
+        ],
+        containerRows
+      ),
+    ].join("\n") + "\n",
     "utf8"
   );
 
@@ -573,6 +649,199 @@ function writeMatrices(catalog, facts) {
   fs.writeFileSync(
     path.join(ROOT, "docs/environment/FULL_HELM_DEPLOYABILITY_MATRIX.md"),
     ["# Full Helm Deployability Matrix", "", toMdTable(["Service", "Plane", "Helm", "Location", "Ingress", "Deployability", "Blocker", "Next"], helmRows)].join("\n") + "\n",
+    "utf8"
+  );
+}
+
+function strategyCounts(catalog) {
+  const keys = [
+    "dockerfile",
+    "shared-dockerfile-template",
+    "jib",
+    "buildpacks",
+    "official-upstream-image",
+    "official-helm-chart",
+    "not-required-internal-package",
+    "not-required-mobile-artifact",
+    "not-required-generated-client",
+    "not-required-doctrine-only-component",
+    "unknown-needs-review",
+    "missing-required-image-strategy",
+  ];
+  const acc = Object.fromEntries(keys.map((k) => [k, 0]));
+  for (const e of catalog) {
+    const k = e.image_strategy ?? "unknown-needs-review";
+    acc[k] = (acc[k] ?? 0) + 1;
+  }
+  return acc;
+}
+
+function writeEnvironmentStrategyDocs(catalog, facts) {
+  const counts = strategyCounts(catalog);
+  const buildpackUi = catalog.filter((e) => e.image_strategy === "buildpacks");
+  const javaServices = catalog.filter((e) => e.component_type === "backend_service" && e.build_tool === "maven");
+  const infra = catalog.filter((e) => e.component_type === "infrastructure");
+
+  const prevBuild = { pass: 75, fail: 11, missingDockerfile: 23, duration: "~2h39m", note: "Legacy pipeline treated missing Dockerfile as failure" };
+
+  fs.writeFileSync(
+    path.join(ROOT, "docs/environment/IMAGE_STRATEGY_RECLASSIFICATION_PLAN.md"),
+    [
+      "# Runtime Image Strategy Reclassification Plan",
+      "",
+      "> **Doctrine:** Dockerfile is not the doctrine. Repeatable **runtime image strategy** is the doctrine.",
+      "",
+      "## Previous full image build (legacy pipeline)",
+      "",
+      `| Metric | Value |`,
+      `|--------|-------|`,
+      `| Duration | ${prevBuild.duration} |`,
+      `| Image builds passed | ~${prevBuild.pass} |`,
+      `| Image builds failed | ~${prevBuild.fail} |`,
+      `| Missing Dockerfile findings | ~${prevBuild.missingDockerfile} |`,
+      `| Exit | 127 (summary script bug after last MISSING) |`,
+      "",
+      prevBuild.note + ".",
+      "",
+      "## Why missing Dockerfile is not always a failure",
+      "",
+      "- UI workspaces (`ui/*-web`, `ehr`, `portal`, etc.) are often **bundled** into `one-ui-shell` — not independent K8s deployments.",
+      "- **Internal packages** (`shared-core`, `shared-ui`) are libraries, not runtime workloads.",
+      "- **Mobile apps** ship as Expo artifacts, not container images.",
+      "- **Generated clients** and **external dependencies** are contract-only.",
+      "- **Infrastructure** (Postgres, Redis, Kafka, Keycloak, OPA, Envoy) should use **official upstream images or Helm charts**, not repo Dockerfiles.",
+      "",
+      "## Canonical image strategies",
+      "",
+      "| Strategy | Meaning |",
+      "|----------|---------|",
+      "| `dockerfile` | Dedicated Dockerfile + `docker build` |",
+      "| `shared-dockerfile-template` | Pre-built JAR + `scripts/build/templates/impilo-jre-runtime.Dockerfile` |",
+      "| `jib` | Maven Jib (preferred over Maven-in-Alpine Dockerfiles) |",
+      "| `buildpacks` | Optional `pack build` for standalone UI (usually skipped) |",
+      "| `official-upstream-image` | Pull upstream image (no local build) |",
+      "| `official-helm-chart` | Deploy via Helm chart reference |",
+      "| `not-required-*` | Non-runtime component — skip image build |",
+      "| `unknown-needs-review` | Advisory until classified |",
+      "| `missing-required-image-strategy` | **Blocking** for required full-boot services |",
+      "",
+      "## Blocking vs advisory",
+      "",
+      "**Blocking:** required runtime service lacks valid strategy; strategy build fails; required official image/chart undefined.",
+      "",
+      "**Advisory:** internal package, mobile, generated client, doctrine-only, bundled UI workspace, optional service with valid skip reason.",
+      "",
+      "## Current classification snapshot",
+      "",
+      `**Total components:** ${catalog.length}`,
+      "",
+      ...Object.entries(counts)
+        .filter(([, n]) => n > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, n]) => `- **${k}**: ${n}`),
+      "",
+      `**Runtime image required:** ${catalog.filter((c) => c.image_required).length}`,
+      "",
+      `**Missing required strategy:** ${catalog.filter((c) => c.image_strategy === "missing-required-image-strategy").length}`,
+      "",
+      "Regenerate: `node scripts/full-boot/generate-full-boot-artifacts.mjs`",
+    ].join("\n") + "\n",
+    "utf8"
+  );
+
+  const missingDockerRows = buildpackUi.map((e) => [
+    e.id,
+    e.source_path ?? `ui/${e.id}`,
+    e.primary_plane,
+    e.component_type,
+    "MISSING Dockerfile (legacy)",
+    e.image_strategy,
+    e.blocker ? "yes" : "no",
+    e.reason ?? "Bundled UI — buildpacks optional",
+    "No Dockerfile unless independent deploy required",
+  ]);
+  fs.writeFileSync(
+    path.join(ROOT, "docs/environment/MISSING_DOCKERFILE_RECLASSIFICATION.md"),
+    [
+      "# Missing Dockerfile Reclassification",
+      "",
+      "> Former **~23 missing Dockerfile** findings from the legacy image build — reclassified below.",
+      "",
+      "These are primarily **frontend workspaces** without `ui/<name>/Dockerfile`. They are **not** blocking full boot.",
+      "",
+      toMdTable(
+        ["Item", "Path", "Plane", "Type", "Previous finding", "New strategy", "Blocking", "Reason", "Next action"],
+        missingDockerRows
+      ),
+      "",
+      `**Count:** ${missingDockerRows.length} UI/buildpack workspaces reclassified as non-blocking.`,
+    ].join("\n") + "\n",
+    "utf8"
+  );
+
+  const javaRows = javaServices.map((e) => {
+    const df = e.dockerfile_path ?? "—";
+    const rec =
+      e.image_strategy === "jib"
+        ? "prebuilt-jar-runtime-image or jib"
+        : e.image_strategy === "shared-dockerfile-template"
+          ? "prebuilt-jar-runtime-image (current)"
+          : e.image_strategy === "dockerfile"
+            ? "current Dockerfile acceptable"
+            : "needs review";
+    return [
+      e.id,
+      e.source_path,
+      e.full_boot_classification === "required_full_boot" ? "required" : "optional",
+      jarExists(ROOT, e.maven_module ?? e.id) ? "yes (if reactor built)" : "no",
+      df,
+      e.image_strategy,
+      rec,
+      e.reason ?? "—",
+      e.blocker ? e.recommended_next_action : "—",
+    ];
+  });
+  fs.writeFileSync(
+    path.join(ROOT, "docs/environment/JAVA_SERVICE_IMAGE_STRATEGY_REVIEW.md"),
+    [
+      "# Java Service Image Strategy Review",
+      "",
+      "> Prefer **pre-built JAR + shared JRE template** or **Jib**. Avoid Maven inside Alpine runtime Dockerfiles.",
+      "",
+      `**Maven services in catalog:** ${javaRows.length}`,
+      "",
+      toMdTable(
+        ["Service", "Path", "Full-boot", "JAR after build", "Dockerfile", "Strategy", "Recommended", "Reason", "Changes"],
+        javaRows
+      ),
+    ].join("\n") + "\n",
+    "utf8"
+  );
+
+  const infraRows = infra.map((e) => [
+    e.id,
+    e.official_image ?? "—",
+    e.official_chart ?? "—",
+    "pin in values/compose",
+    e.official_chart ? "Helm subchart or impilo-vnext values" : "compose/k3s manifest",
+    "no",
+    e.reason ?? "Official upstream",
+    "Use pinned versions in deploy; no custom Dockerfile unless fork required",
+  ]);
+  fs.writeFileSync(
+    path.join(ROOT, "docs/environment/INFRASTRUCTURE_IMAGE_STRATEGY_REVIEW.md"),
+    [
+      "# Infrastructure Image Strategy Review",
+      "",
+      "> Identity, policy, database, cache, broker, object storage, ingress — **official images/charts** unless custom implementation required.",
+      "",
+      toMdTable(
+        ["Component", "Official image", "Helm chart", "Version strategy", "Helm release", "Local build", "Reason", "Notes"],
+        infraRows
+      ),
+      "",
+      "See also: `compose/`, `deploy/helm/impilo-vnext/values.yaml`, `docs/environment/FULL_BOOT_INFRASTRUCTURE_PLAN.md`.",
+    ].join("\n") + "\n",
     "utf8"
   );
 }
@@ -603,8 +872,10 @@ function main() {
   writeApiContractCatalog(facts);
   writeClassificationYaml(catalog);
   writeMatrices(catalog, facts);
+  writeEnvironmentStrategyDocs(catalog, facts);
   writeRepoScanList(facts);
 
+  const counts = strategyCounts(catalog);
   const summary = {
     total: catalog.length,
     by_plane: Object.fromEntries(PLANE_META.map(([id]) => [id, catalog.filter((c) => c.primary_plane === id).length])),
@@ -612,6 +883,19 @@ function main() {
       acc[c.full_boot_classification] = (acc[c.full_boot_classification] ?? 0) + 1;
       return acc;
     }, {}),
+    image_strategy: counts,
+    runtime_image_required_count: catalog.filter((c) => c.image_required).length,
+    dockerfile_count: counts["dockerfile"] ?? 0,
+    shared_template_count: counts["shared-dockerfile-template"] ?? 0,
+    jib_count: counts["jib"] ?? 0,
+    buildpacks_count: counts["buildpacks"] ?? 0,
+    official_image_count: counts["official-upstream-image"] ?? 0,
+    official_chart_count: counts["official-helm-chart"] ?? 0,
+    not_required_count: Object.entries(counts)
+      .filter(([k]) => k.startsWith("not-required"))
+      .reduce((s, [, n]) => s + n, 0),
+    unknown_needs_review_count: counts["unknown-needs-review"] ?? 0,
+    missing_required_image_strategy: counts["missing-required-image-strategy"] ?? 0,
   };
   fs.writeFileSync(path.join(REPORTS_DIR, "discovery-summary.json"), JSON.stringify(summary, null, 2), "utf8");
   console.log("Full-boot artifacts generated:", summary);
