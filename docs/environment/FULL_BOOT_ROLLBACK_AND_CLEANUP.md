@@ -61,6 +61,7 @@ done
 sudo -v
 bash scripts/dev/import-full-vnext-images-k3s.sh preview
 NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
+# Gate on IMAGE_PRESENCE: PASS and SUMMARY ok=22 fail=0 (not v-* pod Running alone)
 ```
 
 2. `bash scripts/deploy/full-boot-preview-deploy.sh --preflight`

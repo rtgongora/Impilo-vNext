@@ -25,7 +25,17 @@ bash scripts/dev/import-full-vnext-images-k3s.sh preview
 NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
 ```
 
-Expect verify output: `SUMMARY ok=22 fail=0`. Optional: `sudo k3s ctr images list | grep -E 'impilo|postgres|kafka|keycloak|minio|hapi|envoy' | head -100`
+Expect verify output (authoritative = containerd, not pod Running):
+
+```
+IMAGE_PRESENCE: PASS  (22/22 present)
+SUMMARY ok=22 fail=0
+RUNTIME_DEPLOYMENT: NOT_APPLICABLE
+```
+
+`v-*` pods are **temporary image checks only** — `Completed` is OK; `StartError` on HAPI/Keycloak-like images without `sleep` is **not** a missing-image signal if `IMAGE_PRESENCE` shows PASS.
+
+Optional: `sudo k3s ctr images list -q | grep -E 'impilo|postgres|kafka|keycloak|minio|hapi|envoy' | head -100`
 
 Syntax check (non-destructive):
 
