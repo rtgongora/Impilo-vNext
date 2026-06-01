@@ -1,0 +1,206 @@
+# Full boot target values for namespace impilo-full-preview.
+# Safe preview/demo only — no production secrets. gitBranch/gitCommit/buildDate set at deploy time.
+global:
+  environment: full-preview
+  publicHost: "41.57.127.235"
+  imageTag: preview
+  imagePullPolicy: Never
+  database:
+    enabled: true
+    jdbcUrl: jdbc:postgresql://postgres:5432/impilo
+    username: impilo
+  redis:
+    enabled: true
+    host: redis
+    port: "6379"
+  kafka:
+    bootstrapServers: kafka:9092
+  defaultResources:
+    requests:
+      cpu: 100m
+      memory: 384Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+
+previewSecrets:
+  enabled: true
+  keycloakAdminUser: admin
+  keycloakAdminPassword: preview-keycloak-change-me
+  minioRootUser: impilo-preview
+  minioRootPassword: preview-minio-change-me
+
+images:
+  experienceBff:
+    repository: impilo/experience-bff
+    tag: preview
+    pullPolicy: Never
+  oneUiShell:
+    repository: impilo/one-ui-shell
+    tag: preview
+    pullPolicy: Never
+
+ingress:
+  enabled: true
+  className: traefik
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  username: impilo
+  database: impilo
+  password: preview-postgres-change-me
+
+redis:
+  enabled: true
+  image: redis:7-alpine
+
+kafka:
+  enabled: true
+  image:
+    repository: apache/kafka
+    tag: "3.7.1"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+keycloak:
+  enabled: true
+  image:
+    repository: quay.io/keycloak/keycloak
+    tag: "25.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+envoy:
+  enabled: true
+  image:
+    repository: envoyproxy/envoy
+    tag: v1.31-latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+minio:
+  enabled: true
+  image:
+    repository: minio/minio
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+hapiFhir:
+  enabled: true
+  image:
+    repository: hapiproject/hapi
+    tag: v7.4.0
+    pullPolicy: IfNotPresent
+  database:
+    jdbcUrl: jdbc:postgresql://postgres:5432/hapi
+  resources:
+    requests:
+      cpu: 300m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+experienceBff:
+  enabled: true
+  replicaCount: 1
+  env:
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    KEYCLOAK_URL: http://keycloak:8080
+    KEYCLOAK_REALM: impilo
+    AUTH_FALLBACK_ENABLED: "true"
+    IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
+    TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz-service:8081
+    VITO_BASE_URL: http://vito-service:8082
+    FHIR_GATEWAY_BASE_URL: http://fhir-gateway-service:8091
+    SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
+    MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
+
+oneUiShell:
+  enabled: true
+  replicaCount: 1
+  env:
+    NEXT_PUBLIC_BFF_URL: ""
+    NEXT_PUBLIC_IMPILO_ENV: full-preview
+
+# Required domain microservices (Deployment + Service via templates/microservice.yaml)
+fullBootServices:
+  tshepo-authz-service:
+    enabled: true
+    port: 8081
+    env:
+      TSHEPO_CONSENT_URL: http://tshepo-consent-service:8182
+      TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
+  tshepo-identity-service:
+    enabled: true
+    port: 8181
+  tshepo-consent-service:
+    enabled: true
+    port: 8182
+  tshepo-audit-service:
+    enabled: true
+    port: 8183
+  tshepo-keys-service:
+    enabled: true
+    port: 8184
+  vito-service:
+    enabled: true
+    port: 8082
+  varapi-service:
+    enabled: true
+    port: 8083
+  tuso-service:
+    enabled: true
+    port: 8084
+  zibo-service:
+    enabled: true
+    port: 8085
+  ubomi-service:
+    enabled: true
+    port: 8087
+  butano-service:
+    enabled: true
+    port: 8090
+    readinessInitialDelay: 60
+    livenessInitialDelay: 120
+    env:
+      HAPI_FHIR_URL: http://hapi-fhir:8090/fhir
+  fhir-gateway-service:
+    enabled: true
+    port: 8091
+    env:
+      FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+  pct-service:
+    enabled: true
+    port: 8088
+
+# Explicitly disabled (not in required_full_boot set)
+# opa, landela, workflow, etc. remain off until classification requires them.

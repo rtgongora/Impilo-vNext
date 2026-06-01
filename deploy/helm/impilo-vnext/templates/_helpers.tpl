@@ -1,0 +1,23 @@
+{{- define "impilo.labels" -}}
+app.kubernetes.io/name: {{ .name }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+impilo.io/environment: {{ .Values.global.environment | quote }}
+{{- end }}
+
+{{- define "impilo.globalEnv" -}}
+- name: IMPILO_ENV
+  value: {{ .root.Values.global.environment | quote }}
+- name: IMPILO_GIT_BRANCH
+  value: {{ .root.Values.global.gitBranch | default "" | quote }}
+- name: IMPILO_GIT_COMMIT
+  value: {{ .root.Values.global.gitCommit | default "" | quote }}
+- name: IMPILO_BUILD_DATE
+  value: {{ .root.Values.global.buildDate | default "" | quote }}
+{{- end }}
+
+{{- define "impilo.image" -}}
+{{- $repo := .repository -}}
+{{- $tag := .tag | default "preview" -}}
+{{ $repo }}:{{ $tag }}
+{{- end }}

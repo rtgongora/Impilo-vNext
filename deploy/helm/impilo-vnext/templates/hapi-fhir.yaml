@@ -1,0 +1,68 @@
+{{- if .Values.hapiFhir.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hapi-fhir
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hapi-fhir
+  template:
+    metadata:
+      labels:
+        app: hapi-fhir
+    spec:
+      containers:
+        - name: hapi-fhir
+          image: "{{ .Values.hapiFhir.image.repository }}:{{ .Values.hapiFhir.image.tag }}"
+          imagePullPolicy: {{ .Values.hapiFhir.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: spring.datasource.url
+              value: {{ .Values.hapiFhir.database.jdbcUrl | quote }}
+            - name: spring.datasource.username
+              value: {{ .Values.global.database.username | quote }}
+            - name: spring.datasource.password
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: hapi.fhir.fhir_version
+              value: "R4"
+          startupProbe:
+            httpGet:
+              path: /fhir/metadata
+              port: 8080
+            failureThreshold: 40
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /fhir/metadata
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /fhir/metadata
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.hapiFhir.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hapi-fhir
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: hapi-fhir
+  ports:
+    - port: 8090
+      targetPort: 8080
+{{- end }}

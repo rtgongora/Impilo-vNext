@@ -1,0 +1,206 @@
+{
+  "required": 22,
+  "counts": {
+    "helm_ready": 22
+  },
+  "rows": [
+    {
+      "id": "butano-service",
+      "plane": "clinical",
+      "port": 8090,
+      "deploy_order": "domain_services",
+      "image": "impilo/butano-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "envoy",
+      "plane": "trust",
+      "port": 10000,
+      "deploy_order": "infrastructure",
+      "image": "envoyproxy/envoy:v1.31-latest",
+      "status": "helm_ready",
+      "note": "envoy.yaml"
+    },
+    {
+      "id": "experience-bff",
+      "plane": "experience",
+      "port": 8160,
+      "deploy_order": "experience_layer",
+      "image": "impilo/experience-bff",
+      "status": "helm_ready",
+      "note": "experience-bff.yaml"
+    },
+    {
+      "id": "fhir-gateway-service",
+      "plane": "clinical",
+      "port": 8091,
+      "deploy_order": "domain_services",
+      "image": "impilo/fhir-gateway-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "hapi-fhir",
+      "plane": "clinical",
+      "port": 8090,
+      "deploy_order": "infrastructure",
+      "image": "hapiproject/hapi:v7.4.0",
+      "status": "helm_ready",
+      "note": "hapi-fhir.yaml"
+    },
+    {
+      "id": "kafka",
+      "plane": "integration",
+      "port": 9092,
+      "deploy_order": "infrastructure",
+      "image": "apache/kafka:3.7.1",
+      "status": "helm_ready",
+      "note": "kafka.yaml"
+    },
+    {
+      "id": "keycloak",
+      "plane": "trust",
+      "port": 8080,
+      "deploy_order": "infrastructure",
+      "image": "quay.io/keycloak/keycloak:25.0",
+      "status": "helm_ready",
+      "note": "keycloak.yaml"
+    },
+    {
+      "id": "minio",
+      "plane": "integration",
+      "port": 9000,
+      "deploy_order": "infrastructure",
+      "image": "minio/minio:latest",
+      "status": "helm_ready",
+      "note": "minio.yaml"
+    },
+    {
+      "id": "one-ui-shell",
+      "plane": "experience",
+      "port": null,
+      "deploy_order": "experience_layer",
+      "image": "impilo/one-ui-shell",
+      "status": "helm_ready",
+      "note": "one-ui-shell.yaml"
+    },
+    {
+      "id": "pct-service",
+      "plane": "clinical",
+      "port": 8088,
+      "deploy_order": "domain_services",
+      "image": "impilo/pct-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "postgres",
+      "plane": "integration",
+      "port": 5432,
+      "deploy_order": "infrastructure",
+      "image": "postgres:16-alpine",
+      "status": "helm_ready",
+      "note": "postgres.yaml"
+    },
+    {
+      "id": "redis",
+      "plane": "integration",
+      "port": 6379,
+      "deploy_order": "infrastructure",
+      "image": "redis:7-alpine",
+      "status": "helm_ready",
+      "note": "redis.yaml"
+    },
+    {
+      "id": "tshepo-audit-service",
+      "plane": "trust",
+      "port": 8183,
+      "deploy_order": "identity_trust_policy",
+      "image": "impilo/tshepo-audit-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "tshepo-authz-service",
+      "plane": "trust",
+      "port": 8081,
+      "deploy_order": "identity_trust_policy",
+      "image": "impilo/tshepo-authz-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "tshepo-consent-service",
+      "plane": "trust",
+      "port": 8182,
+      "deploy_order": "identity_trust_policy",
+      "image": "impilo/tshepo-consent-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "tshepo-identity-service",
+      "plane": "trust",
+      "port": 8181,
+      "deploy_order": "identity_trust_policy",
+      "image": "impilo/tshepo-identity-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "tshepo-keys-service",
+      "plane": "trust",
+      "port": 8184,
+      "deploy_order": "identity_trust_policy",
+      "image": "impilo/tshepo-keys-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "tuso-service",
+      "plane": "registry",
+      "port": 8084,
+      "deploy_order": "registries",
+      "image": "impilo/tuso-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "ubomi-service",
+      "plane": "registry",
+      "port": 8087,
+      "deploy_order": "registries",
+      "image": "impilo/ubomi-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "varapi-service",
+      "plane": "registry",
+      "port": 8083,
+      "deploy_order": "registries",
+      "image": "impilo/varapi-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "vito-service",
+      "plane": "registry",
+      "port": 8082,
+      "deploy_order": "registries",
+      "image": "impilo/vito-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    },
+    {
+      "id": "zibo-service",
+      "plane": "registry",
+      "port": 8085,
+      "deploy_order": "registries",
+      "image": "impilo/zibo-service",
+      "status": "helm_ready",
+      "note": "microservice.yaml"
+    }
+  ]
+}

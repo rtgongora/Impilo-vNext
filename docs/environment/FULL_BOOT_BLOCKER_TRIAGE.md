@@ -32,6 +32,16 @@
 | `support-console` | experience | buildpack-candidate | buildpacks | False |
 | `zibo-web` | experience | buildpack-candidate | buildpacks | False |
 
+## Helm deployability (batch 2026-05-31)
+
+| Plane | Service | Type | Evidence | Fix | Priority | Status |
+|-------|---------|------|----------|-----|----------|--------|
+| *all required* | 22 services | helm_ready | `values-full-preview.yaml` + templates | Preflight/dry-run then authorized deploy | P0 | **fixed** (templates) |
+| integration | `kafka` | infrastructure | `templates/kafka.yaml` | Deploy with full boot | P0 | fixed |
+| trust | `keycloak` | safe preview secret | `keycloak-preview-credentials` | Placeholder only | P1 | fixed |
+| clinical | `hapi-fhir` | missing config | HAPI DB `hapi` may not exist on postgres | Add init job or create DB before deploy | P1 | open |
+| experience | ingress | dependency order | Public host may still route to slice | Separate host or port-forward for full-boot smoke | P1 | open |
+
 ## Active blockers
 
 | Plane | Service | Type | Evidence | Log | Fix | Priority | Status |
