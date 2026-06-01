@@ -19,14 +19,14 @@
     "deprecated_retired": 1
   },
   "by_image_strategy": {
-    "shared-dockerfile-template": 75,
+    "shared-dockerfile-template": 65,
     "not-required-generated-client": 9,
-    "dockerfile": 6,
+    "jib": 20,
     "buildpacks": 23,
-    "jib": 5,
     "not-required-mobile-artifact": 2,
     "not-required-internal-package": 12,
     "official-helm-chart": 8,
+    "dockerfile": 1,
     "not-required-doctrine-only-component": 1
   },
   "required_full_boot": 22,
@@ -34,43 +34,33 @@
   "runtime_image_required_count": 22,
   "missing_required_image_strategy": [],
   "missing_required_image_strategy_count": 0,
-  "failing_required_image_builds": [
-    "tshepo-keys-service",
-    "one-ui-shell",
-    "butano-service",
-    "tshepo-consent-service",
-    "tshepo-audit-service"
-  ],
+  "failing_required_image_builds": [],
   "unknown_needs_review": [],
   "not_required_components_count": 24,
   "official_image_chart_defined": 8,
-  "deployed_in_slice": [
-    "experience-bff",
-    "one-ui-shell",
-    "postgres",
-    "redis"
-  ],
-  "healthy_required_estimate": 4,
-  "build_pass": 108,
-  "build_fail": 1,
-  "image_pass": 17,
-  "image_fail": 5,
-  "blocking_failure_count": 5,
+  "deployed_in_slice": [],
+  "healthy_required_estimate": 0,
+  "build_pass": 0,
+  "build_fail": 0,
+  "image_pass": 94,
+  "image_fail": 0,
+  "blocking_failure_count": 0,
   "image_strategy_summary": {
+    "selected_target_count": 117,
     "runtime_image_required_count": 22,
-    "dockerfile_count": 6,
-    "shared_template_count": 75,
-    "jib_count": 5,
+    "dockerfile_count": 1,
+    "shared_template_count": 65,
+    "jib_count": 20,
     "buildpacks_count": 23,
     "official_image_count": 0,
     "official_chart_count": 8,
     "not_required_count": 24,
     "unknown_needs_review_count": 0,
     "missing_required_image_strategy_count": 0,
-    "image_build_pass_count": 17,
-    "image_build_fail_count": 5,
-    "blocking_failure_count": 5,
-    "advisory_count": 0
+    "image_build_pass_count": 94,
+    "image_build_fail_count": 0,
+    "blocking_failure_count": 0,
+    "advisory_count": 23
   },
-  "full_boot_status": "FULL_BOOT_FAIL"
+  "full_boot_status": "FULL_BOOT_PARTIAL"
 }

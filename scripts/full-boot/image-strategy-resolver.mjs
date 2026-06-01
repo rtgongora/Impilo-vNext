@@ -35,7 +35,7 @@ export function analyzeDockerfile(root, relPath) {
     return { present: false, runsMavenInside: false, copiesPrebuiltJar: false, isSharedTemplate: false };
   }
   const text = fs.readFileSync(path.join(root, relPath), "utf8");
-  const runsMavenInside = /\bmvn\s+(clean\s+)?package\b/i.test(text) || /\bapk add\b.*\bmaven\b/i.test(text);
+  const runsMavenInside = /\bmvn\b/i.test(text) || /\bapk add\b.*\bmaven\b/i.test(text);
   const copiesPrebuiltJar = /COPY\s+.*target\/.*\.jar/i.test(text) || /COPY\s+--from=builder.*\.jar/i.test(text);
   const isSharedTemplate =
     /eclipse-temurin:21-jre/i.test(text) &&
@@ -120,7 +120,7 @@ export function resolveImageStrategy(entry, facts, classification, root) {
         image_strategy_reclass: "dockerfile",
         image_strategy_status: "valid",
         dockerfile_path: dfPath,
-        image_build_command: `docker build -f ${dfPath}`,
+        image_build_command: id === "one-ui-shell" ? `docker build -f ${dfPath} .` : `docker build -f ${dfPath}`,
         reason: "Experience layer with dedicated Dockerfile",
       };
     }

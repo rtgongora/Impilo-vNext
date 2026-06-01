@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-01T02:22:07.859Z",
+  "generated_at": "2026-06-01T02:35:38.979Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -80,9 +80,9 @@
       "classification": "required_full_boot",
       "build_required": true,
       "image_required": true,
-      "image_strategy": "dockerfile",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Dockerfile copies pre-built JAR",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -206,9 +206,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -234,9 +234,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "dockerfile",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Dockerfile copies pre-built JAR",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -346,9 +346,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -500,9 +500,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -514,9 +514,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -794,9 +794,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -836,9 +836,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -864,9 +864,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1060,9 +1060,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1312,9 +1312,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1326,9 +1326,9 @@
       "classification": "required_full_boot",
       "build_required": true,
       "image_required": true,
-      "image_strategy": "dockerfile",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Dockerfile copies pre-built JAR",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1354,9 +1354,9 @@
       "classification": "required_full_boot",
       "build_required": true,
       "image_required": true,
-      "image_strategy": "dockerfile",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Dockerfile copies pre-built JAR",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1382,9 +1382,9 @@
       "classification": "required_full_boot",
       "build_required": true,
       "image_required": true,
-      "image_strategy": "dockerfile",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Dockerfile copies pre-built JAR",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {
@@ -1466,9 +1466,9 @@
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
-      "image_strategy": "shared-dockerfile-template",
+      "image_strategy": "jib",
       "image_strategy_status": "valid",
-      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "reason": "Dockerfile runs Maven in container \u2014 prefer Jib or pre-built JAR + shared template",
       "classification_confidence": "certain"
     },
     {

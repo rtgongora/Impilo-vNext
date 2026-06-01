@@ -58,18 +58,16 @@ for e in entries:
         add(plane, sid, "not_deployed", "not in impilo-preview slice", "—",
             "Deploy in impilo-full-preview after authorization", "P0", "open")
 
-log_dir = root / "reports/full-boot/build-logs"
-if log_dir.exists():
-    for log in sorted(log_dir.glob("*.log")):
-        if log.name.startswith("_"):
+build_summary = root / "reports/full-boot/full-build-summary.json"
+if build_summary.exists():
+    bs = json.loads(build_summary.read_text())
+    for r in bs.get("results", []):
+        if r.get("classification") != "required_full_boot" or r.get("status") != "fail":
             continue
-        text = log.read_text(errors="ignore")
-        if "FAIL" in text and "PASS" not in text.splitlines()[-1]:
-            svc = log.stem
-            ent = next((x for x in entries if x["id"] == svc), {})
-            if ent.get("classification") == "required_full_boot":
-                add(ent.get("plane", "?"), svc, "build failure", "mvn/npm failed", str(log.relative_to(root)),
-                    "fix compile deps", "P0", "open")
+        svc = r.get("id")
+        ent = next((x for x in entries if x["id"] == svc), {})
+        add(ent.get("plane", "?"), svc, "build failure", "mvn/npm failed", f"reports/full-boot/build-logs/{svc}.log",
+            "fix compile deps", "P0", "open")
 
 img_dir = root / "reports/full-boot/image-logs"
 if img_dir.exists():

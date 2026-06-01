@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-01T02:22:07.859Z'
+  generated_at: '2026-06-01T03:36:42.242Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 141
@@ -244,16 +244,16 @@ classifications:
     build_required: true
     image_required: true
     runtime_image_required: true
-    image_strategy: dockerfile
-    image_strategy_reclass: dockerfile
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/butano-service/Dockerfile services/butano-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh butano-service
     image_name: impilo/butano-service
     official_image: null
     official_chart: null
     dockerfile_path: services/butano-service/Dockerfile
-    shared_template: null
-    jib_module: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/butano-service
     buildpack_builder: null
     container_required: true
     helm_required: true
@@ -267,7 +267,7 @@ classifications:
     default_http_port: 8090
     priority: P0
     blocker: not_deployed_in_preview
-    reason: Dockerfile copies pre-built JAR
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: butano-web
     canonical_name: butano-web
@@ -692,12 +692,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: >-
-      docker build -f services/costing-engine-service/Dockerfile OR build-runtime-image-from-jar.sh
-      costing-engine-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh costing-engine-service
     image_name: impilo/costing-engine-service
     official_image: null
     official_chart: null
@@ -717,7 +715,7 @@ classifications:
     default_http_port: 8101
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: coverage-service
     canonical_name: coverage-service
@@ -768,16 +766,16 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: dockerfile
-    image_strategy_reclass: dockerfile
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/credential-verification-service/Dockerfile services/credential-verification-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh credential-verification-service
     image_name: impilo/credential-verification-service
     official_image: null
     official_chart: null
     dockerfile_path: services/credential-verification-service/Dockerfile
-    shared_template: null
-    jib_module: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/credential-verification-service
     buildpack_builder: null
     container_required: false
     helm_required: false
@@ -791,7 +789,7 @@ classifications:
     default_http_port: 8094
     priority: P2
     blocker: null
-    reason: Dockerfile copies pre-built JAR
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: data-access-governance-service
     canonical_name: data-access-governance-service
@@ -1111,10 +1109,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/dispatch-service/Dockerfile OR build-runtime-image-from-jar.sh dispatch-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh dispatch-service
     image_name: impilo/dispatch-service
     official_image: null
     official_chart: null
@@ -1134,7 +1132,7 @@ classifications:
     default_http_port: 8320
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: document-service
     canonical_name: document-service
@@ -1744,10 +1742,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/inpatient-service/Dockerfile OR build-runtime-image-from-jar.sh inpatient-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh inpatient-service
     image_name: impilo/inpatient-service
     official_image: null
     official_chart: null
@@ -1767,7 +1765,7 @@ classifications:
     default_http_port: 8121
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: integration-hub
     canonical_name: integration-hub
@@ -1781,10 +1779,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/integration-hub/Dockerfile OR build-runtime-image-from-jar.sh integration-hub
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh integration-hub
     image_name: impilo/integration-hub
     official_image: null
     official_chart: null
@@ -1804,7 +1802,7 @@ classifications:
     default_http_port: 8110
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: inventory-elmis-adapter
     canonical_name: inventory-elmis-adapter
@@ -2710,10 +2708,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/mushex-service/Dockerfile OR build-runtime-image-from-jar.sh mushex-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh mushex-service
     image_name: impilo/mushex-service
     official_image: null
     official_chart: null
@@ -2733,7 +2731,7 @@ classifications:
     default_http_port: 8102
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: mvumo-service
     canonical_name: mvumo-service
@@ -2823,10 +2821,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/ndila-service/Dockerfile OR build-runtime-image-from-jar.sh ndila-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh ndila-service
     image_name: impilo/ndila-service
     official_image: null
     official_chart: null
@@ -2846,7 +2844,7 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: ndr-service
     canonical_name: ndr-service
@@ -2897,10 +2895,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/nhume-service/Dockerfile OR build-runtime-image-from-jar.sh nhume-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh nhume-service
     image_name: impilo/nhume-service
     official_image: null
     official_chart: null
@@ -2920,7 +2918,7 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: notification-service
     canonical_name: notification-service
@@ -3122,7 +3120,7 @@ classifications:
     image_strategy: dockerfile
     image_strategy_reclass: dockerfile
     image_strategy_status: valid
-    image_build_command: docker build -f ui/one-ui-shell/Dockerfile
+    image_build_command: docker build -f ui/one-ui-shell/Dockerfile .
     image_name: impilo/one-ui-shell
     official_image: null
     official_chart: null
@@ -3528,10 +3526,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/pharmacy-service/Dockerfile OR build-runtime-image-from-jar.sh pharmacy-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh pharmacy-service
     image_name: impilo/pharmacy-service
     official_image: null
     official_chart: null
@@ -3551,7 +3549,7 @@ classifications:
     default_http_port: 8096
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: pharmacy-web
     canonical_name: pharmacy-web
@@ -4459,10 +4457,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/surveillance-service/Dockerfile OR build-runtime-image-from-jar.sh surveillance-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh surveillance-service
     image_name: impilo/surveillance-service
     official_image: null
     official_chart: null
@@ -4482,7 +4480,7 @@ classifications:
     default_http_port: 8180
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: tech-companion
     canonical_name: tech-companion
@@ -4607,16 +4605,16 @@ classifications:
     build_required: true
     image_required: true
     runtime_image_required: true
-    image_strategy: dockerfile
-    image_strategy_reclass: dockerfile
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/tshepo-audit-service/Dockerfile services/tshepo-audit-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh tshepo-audit-service
     image_name: impilo/tshepo-audit-service
     official_image: null
     official_chart: null
     dockerfile_path: services/tshepo-audit-service/Dockerfile
-    shared_template: null
-    jib_module: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/tshepo-audit-service
     buildpack_builder: null
     container_required: true
     helm_required: true
@@ -4630,7 +4628,7 @@ classifications:
     default_http_port: 8183
     priority: P0
     blocker: not_deployed_in_preview
-    reason: Dockerfile copies pre-built JAR
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: tshepo-authz-service
     canonical_name: tshepo-authz-service
@@ -4681,16 +4679,16 @@ classifications:
     build_required: true
     image_required: true
     runtime_image_required: true
-    image_strategy: dockerfile
-    image_strategy_reclass: dockerfile
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/tshepo-consent-service/Dockerfile services/tshepo-consent-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh tshepo-consent-service
     image_name: impilo/tshepo-consent-service
     official_image: null
     official_chart: null
     dockerfile_path: services/tshepo-consent-service/Dockerfile
-    shared_template: null
-    jib_module: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/tshepo-consent-service
     buildpack_builder: null
     container_required: true
     helm_required: true
@@ -4704,7 +4702,7 @@ classifications:
     default_http_port: 8182
     priority: P0
     blocker: not_deployed_in_preview
-    reason: Dockerfile copies pre-built JAR
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: tshepo-contracts
     canonical_name: tshepo-contracts
@@ -4794,16 +4792,16 @@ classifications:
     build_required: true
     image_required: true
     runtime_image_required: true
-    image_strategy: dockerfile
-    image_strategy_reclass: dockerfile
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/tshepo-keys-service/Dockerfile services/tshepo-keys-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh tshepo-keys-service
     image_name: impilo/tshepo-keys-service
     official_image: null
     official_chart: null
     dockerfile_path: services/tshepo-keys-service/Dockerfile
-    shared_template: null
-    jib_module: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/tshepo-keys-service
     buildpack_builder: null
     container_required: true
     helm_required: true
@@ -4817,7 +4815,7 @@ classifications:
     default_http_port: 8184
     priority: P0
     blocker: not_deployed_in_preview
-    reason: Dockerfile copies pre-built JAR
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: tshepo-offline-service
     canonical_name: tshepo-offline-service
@@ -5090,10 +5088,10 @@ classifications:
     build_required: true
     image_required: false
     runtime_image_required: false
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
+    image_strategy: jib
+    image_strategy_reclass: jib-candidate
     image_strategy_status: valid
-    image_build_command: docker build -f services/wellness-service/Dockerfile OR build-runtime-image-from-jar.sh wellness-service
+    image_build_command: bash scripts/build/build-runtime-image-from-jar.sh wellness-service
     image_name: impilo/wellness-service
     official_image: null
     official_chart: null
@@ -5113,7 +5111,7 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
   - id: workflow-service
     canonical_name: workflow-service

@@ -1,6 +1,6 @@
 # Full Boot Blocker Triage
 
-> Updated: 2026-06-01T02:26:03.812600+00:00
+> Updated: 2026-06-01T03:36:42.766537+00:00
 
 > Image doctrine: missing Dockerfile ≠ failure. See `RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`.
 
@@ -54,8 +54,3 @@
 | registry | `varapi-service` | not_deployed | not in impilo-preview slice | `—` | Deploy in impilo-full-preview after authorization | P0 | open |
 | registry | `vito-service` | not_deployed | not in impilo-preview slice | `—` | Deploy in impilo-full-preview after authorization | P0 | open |
 | registry | `zibo-service` | not_deployed | not in impilo-preview slice | `—` | Deploy in impilo-full-preview after authorization | P0 | open |
-| clinical | `butano-service` | image build failure | dockerfile | `reports/full-boot/image-logs/butano-service.log` | shared_template or fix Dockerfile COPY jar | P0 | open |
-| experience | `one-ui-shell` | image build failure | dockerfile | `reports/full-boot/image-logs/one-ui-shell.log` | shared_template or fix Dockerfile COPY jar | P0 | open |
-| trust | `tshepo-audit-service` | image build failure | dockerfile | `reports/full-boot/image-logs/tshepo-audit-service.log` | shared_template or fix Dockerfile COPY jar | P0 | open |
-| trust | `tshepo-consent-service` | image build failure | dockerfile | `reports/full-boot/image-logs/tshepo-consent-service.log` | shared_template or fix Dockerfile COPY jar | P0 | open |
-| trust | `tshepo-keys-service` | image build failure | dockerfile | `reports/full-boot/image-logs/tshepo-keys-service.log` | shared_template or fix Dockerfile COPY jar | P0 | open |

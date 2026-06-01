@@ -554,6 +554,20 @@ function writeClassificationYaml(catalog) {
 }
 
 function writeMatrices(catalog, facts) {
+  const imageSummaryPath = path.join(ROOT, "reports/full-boot/full-image-build-summary.json");
+  const imageSummary = exists(path.relative(ROOT, imageSummaryPath)) ? JSON.parse(fs.readFileSync(imageSummaryPath, "utf8")) : {};
+  const perService = imageSummary.per_service ?? {};
+  const normalizeBuildStatus = (id, e) => {
+    const r = perService[id];
+    if (!e.image_required) return "not_required";
+    if (!r) return "unknown";
+    if (r === "missing_strategy") return "missing_required_strategy";
+    if (r === "unknown") return "unknown";
+    if (r.startsWith("fail")) return "fail";
+    if (r === "official_ok" || r.startsWith("pass")) return "pass";
+    if (r === "skip" || r === "skipped") return e.image_required ? "unknown" : "not_required";
+    return "unknown";
+  };
   const buildRows = catalog
     .filter((e) => e.buildable)
     .map((e) => [
@@ -588,7 +602,7 @@ function writeMatrices(catalog, facts) {
     e.official_image ?? e.official_chart ?? "—",
     e.image_name ?? `impilo/${e.id}`,
     e.image_build_command ?? "—",
-    e.blocker ? "blocked" : e.image_required ? "pending" : "not_required",
+    normalizeBuildStatus(e.id, e),
     e.blocker || "—",
     e.recommended_next_action ?? "—",
   ]);

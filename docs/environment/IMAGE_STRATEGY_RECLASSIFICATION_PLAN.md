@@ -46,14 +46,14 @@ Legacy pipeline treated missing Dockerfile as failure.
 
 **Total components:** 141
 
-- **shared-dockerfile-template**: 75
+- **shared-dockerfile-template**: 65
 - **buildpacks**: 23
+- **jib**: 20
 - **not-required-internal-package**: 12
 - **not-required-generated-client**: 9
 - **official-helm-chart**: 8
-- **dockerfile**: 6
-- **jib**: 5
 - **not-required-mobile-artifact**: 2
+- **dockerfile**: 1
 - **not-required-doctrine-only-component**: 1
 
 **Runtime image required:** 22
