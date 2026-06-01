@@ -55,7 +55,14 @@ done
 
 ## Re-attempt after cleanup
 
-1. Pull/import images if needed.
+1. Import and verify images on the VM:
+
+```bash
+sudo -v
+bash scripts/dev/import-full-vnext-images-k3s.sh preview
+NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
+```
+
 2. `bash scripts/deploy/full-boot-preview-deploy.sh --preflight`
 3. `bash scripts/deploy/full-boot-preview-deploy.sh --dry-run`
 4. Authorized deploy with `bash scripts/deploy/full-boot-preview-deploy.sh`

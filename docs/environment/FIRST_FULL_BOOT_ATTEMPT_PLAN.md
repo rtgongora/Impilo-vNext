@@ -11,9 +11,28 @@
 | Required images built (22/22) | Ready |
 | Helm chart + `values-full-preview.yaml` | Ready |
 | Official infra images pulled on VM | Done |
-| k3s image import | Run on VM with sudo: `bash scripts/dev/import-full-vnext-images-k3s.sh preview-$(git rev-parse --short HEAD)` (requires passwordless sudo or interactive terminal) |
+| k3s image import | Interactive VM flow below (`import-full-vnext-images-k3s.sh` + `verify-full-boot-k3s-images.sh`) |
 | HAPI database `hapi` | Init via postgres `initDatabases` + post-install Job |
 | Ingress for full boot | **Disabled** — does not take over public URL |
+
+## Interactive VM: import and verify (before authorized deploy)
+
+```bash
+ssh -p 2276 robert@41.57.127.235
+cd /opt/impilo/repos/Impilo-vNext
+sudo -v
+bash scripts/dev/import-full-vnext-images-k3s.sh preview
+NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
+```
+
+Expect verify output: `SUMMARY ok=22 fail=0`. Optional: `sudo k3s ctr images list | grep -E 'impilo|postgres|kafka|keycloak|minio|hapi|envoy' | head -100`
+
+Syntax check (non-destructive):
+
+```bash
+bash -n scripts/dev/import-full-vnext-images-k3s.sh
+bash -n scripts/dev/verify-full-boot-k3s-images.sh
+```
 
 ## Routing strategy (selected: **A — port-forward first**)
 
