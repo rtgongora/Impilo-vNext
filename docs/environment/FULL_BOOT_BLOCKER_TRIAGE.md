@@ -39,8 +39,15 @@
 | *all required* | 22 services | helm_ready | `values-full-preview.yaml` + templates | Preflight/dry-run then authorized deploy | P0 | **fixed** (templates) |
 | integration | `kafka` | infrastructure | `templates/kafka.yaml` | Deploy with full boot | P0 | fixed |
 | trust | `keycloak` | safe preview secret | `keycloak-preview-credentials` | Placeholder only | P1 | fixed |
-| clinical | `hapi-fhir` | missing config | HAPI DB `hapi` may not exist on postgres | Add init job or create DB before deploy | P1 | open |
-| experience | ingress | dependency order | Public host may still route to slice | Separate host or port-forward for full-boot smoke | P1 | open |
+| clinical | `hapi-fhir` | missing config | HAPI DB `hapi` | `postgres.initDatabases` + `postgres-init-databases` Job (idempotent) | P1 | **fixed** |
+| experience | ingress | dependency order | Public host routes to slice | `ingress.enabled: false` in full boot; port-forward first | P1 | **fixed** (strategy) |
+
+## Pre-deploy preparation (2026-06-01)
+
+| Type | Evidence | Fix | Priority | Status |
+|------|----------|-----|----------|--------|
+| k3s image import | `sudo -n` not available in non-interactive agent shell | Run `import-full-vnext-images-k3s.sh` in VM terminal before authorized deploy | P0 | open (operator) |
+| official infra images | All 6 pulled to Docker on VM | Import into k3s via script above | P1 | open (import) |
 
 ## Active blockers
 

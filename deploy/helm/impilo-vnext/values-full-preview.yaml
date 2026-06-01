@@ -40,8 +40,10 @@ images:
     tag: preview
     pullPolicy: Never
 
+# Full boot does NOT take over http://41.57.127.235 — slice ingress stays on impilo-preview.
+# Validate via kubectl port-forward (see docs/environment/FIRST_FULL_BOOT_ATTEMPT_PLAN.md).
 ingress:
-  enabled: true
+  enabled: false
   className: traefik
 
 postgres:
@@ -50,6 +52,9 @@ postgres:
   username: impilo
   database: impilo
   password: preview-postgres-change-me
+  # HAPI FHIR JDBC target; created idempotently via init ConfigMap + post-install Job.
+  initDatabases:
+    - hapi
 
 redis:
   enabled: true

@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-06-01T04:35:00Z",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "commit_before_batch": "f4df321a",
+  "full_boot_deploy_run": false,
+  "impilo_preview_preserved": true,
+  "impilo_full_preview_namespace_exists": false,
+  "official_infra_images_pulled_docker": true,
+  "infra_images": [
+    "postgres:16-alpine",
+    "apache/kafka:3.7.1",
+    "quay.io/keycloak/keycloak:25.0",
+    "minio/minio:latest",
+    "hapiproject/hapi:v7.4.0",
+    "envoyproxy/envoy:v1.31-latest"
+  ],
+  "required_images_built": "22 pass / 0 fail",
+  "k3s_import_completed": false,
+  "k3s_import_blocker": "sudo password required — run import script in interactive VM terminal",
+  "hapi_db_init": "added — postgres.initDatabases [hapi] + ConfigMap + post-install Job",
+  "routing_strategy": "port-forward first; ingress.enabled=false for impilo-full-preview",
+  "preflight": "PASS",
+  "dry_run": "PASS",
+  "runtime_completeness": "FULL_BOOT_PARTIAL (deployment not attempted)",
+  "authorization_phrase": "AUTHORIZE FULL BOOT PREVIEW DEPLOY",
+  "deploy_command": "bash scripts/deploy/full-boot-preview-deploy.sh"
+}

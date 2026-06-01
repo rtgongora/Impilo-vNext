@@ -61,11 +61,11 @@
   "runtime_healthy": false,
   "build_pass": 0,
   "build_fail": 0,
-  "image_pass": 94,
+  "image_pass": 22,
   "image_fail": 0,
   "blocking_failure_count": 0,
   "image_strategy_summary": {
-    "selected_target_count": 117,
+    "selected_target_count": 22,
     "runtime_image_required_count": 22,
     "dockerfile_count": 1,
     "shared_template_count": 65,
@@ -76,10 +76,10 @@
     "not_required_count": 24,
     "unknown_needs_review_count": 0,
     "missing_required_image_strategy_count": 0,
-    "image_build_pass_count": 94,
+    "image_build_pass_count": 22,
     "image_build_fail_count": 0,
     "blocking_failure_count": 0,
-    "advisory_count": 23
+    "advisory_count": 0
   },
   "full_boot_status": "FULL_BOOT_PARTIAL",
   "full_boot_reason": "deployment not attempted"
