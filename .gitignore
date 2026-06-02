@@ -63,3 +63,6 @@ services/.mvn/
 
 # Expo local state (machine-specific, should not be committed)
 .expo/
+#AI Tools
+.claude
+.codex

@@ -53,6 +53,7 @@ function TaskbarButton({
 export function ShellTaskbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const learningWorkbench = pathname === "/learning" || pathname.startsWith("/learning/");
   const hasRole = useAuthStore((s) => s.hasRole);
   const toggleStart = useShellStore((s) => s.toggleStart);
   const toggleSearch = useShellStore((s) => s.toggleSearch);
@@ -78,12 +79,15 @@ export function ShellTaskbar() {
     <>
       <ShellSosDialog open={sosDialogOpen} onClose={() => setSosDialogOpen(false)} />
       <div
-        className="pointer-events-auto fixed bottom-0 left-0 right-0 z-[10000] border-t border-slate-200/90 bg-white/95 text-slate-800 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100"
-        style={{ height: SHELL_TASKBAR_HEIGHT_PX }}
+        className={`pointer-events-auto group fixed bottom-0 left-0 right-0 z-[10000] border-t border-slate-200/90 bg-white/95 text-slate-800 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md transition-[height] duration-200 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100 ${
+          learningWorkbench ? "h-3 hover:h-[52px] focus-within:h-[52px]" : ""
+        }`}
+        style={learningWorkbench ? undefined : { height: SHELL_TASKBAR_HEIGHT_PX }}
         role="navigation"
         aria-label="Experience shell"
+        title={learningWorkbench ? "Hover or focus to open the shell taskbar" : undefined}
       >
-        <div className="mx-auto flex h-full max-w-[1920px] items-center gap-0.5 overflow-x-auto px-1 sm:gap-1 sm:px-2">
+        <div className={`${learningWorkbench ? "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100" : ""} mx-auto flex h-full max-w-[1920px] items-center gap-0.5 overflow-x-auto px-1 transition-opacity duration-150 sm:gap-1 sm:px-2`}>
           <TaskbarButton onClick={() => toggleStart()} title="Start — launcher" ariaLabel="Start menu">
             <ImpiloBrandLogo variant="mark" size={28} className="h-7 w-7" />
             <span className="hidden text-xs font-semibold text-slate-700 sm:inline dark:text-slate-200">Start</span>

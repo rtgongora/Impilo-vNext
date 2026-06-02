@@ -20,6 +20,7 @@ import {
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle,
   Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play,
+  ChevronDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -593,6 +594,7 @@ export default function HomePage() {
     }
   }, [pathname]);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [quickAccessOpen, setQuickAccessOpen] = useState(false);
   const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
 
@@ -895,6 +897,31 @@ export default function HomePage() {
             />
           </div>
 
+          <section className="rounded-lg border border-gray-200 bg-white">
+            <button
+              type="button"
+              onClick={() => setQuickAccessOpen((open) => !open)}
+              className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+              aria-expanded={quickAccessOpen}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-impilo-50 text-impilo-600">
+                  <Layers className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-gray-900">Quick access</h3>
+                  <p className="mt-0.5 truncate text-xs text-gray-500">
+                    Workplaces, service pathways, schedule, communication, modules and finance surfaces.
+                  </p>
+                </div>
+              </div>
+              <ChevronDown
+                className={`h-5 w-5 shrink-0 text-gray-400 transition-transform ${quickAccessOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {quickAccessOpen && (
+              <div className="space-y-6 border-t border-gray-100 p-4">
           {/* Workplace Selection Hub — when no facility */}
           {!hasWorkContext && (
             <div id="workplace-selection">
@@ -1275,6 +1302,10 @@ export default function HomePage() {
               </div>
             </div>
           )}
+
+              </div>
+            )}
+          </section>
 
           </>)}
 

@@ -254,6 +254,10 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
+    expect(screen.getByRole("button", { name: /Quick access/i })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Launch Client Experience")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Quick access/i }));
+
     expect(screen.getByText("Launch Client Experience")).toBeInTheDocument();
     expect(screen.getByText("Patients waiting")).toBeInTheDocument();
     expect(screen.getByText("6")).toBeInTheDocument();
