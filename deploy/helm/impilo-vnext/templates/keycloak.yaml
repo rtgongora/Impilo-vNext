@@ -37,18 +37,27 @@ spec:
               value: "true"
             - name: KC_METRICS_ENABLED
               value: "true"
+            - name: KC_HTTP_MANAGEMENT_PORT
+              value: "9000"
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: 8080
-            initialDelaySeconds: 60
+              port: 9000
+            initialDelaySeconds: 90
             periodSeconds: 10
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /health/live
-              port: 8080
+              port: 9000
             initialDelaySeconds: 120
             periodSeconds: 20
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.keycloak.resources | nindent 12 }}
 ---

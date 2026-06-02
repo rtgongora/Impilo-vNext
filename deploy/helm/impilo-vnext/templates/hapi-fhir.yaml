@@ -25,12 +25,19 @@ spec:
             - name: spring.datasource.url
               value: {{ .Values.hapiFhir.database.jdbcUrl | quote }}
             - name: spring.datasource.username
-              value: {{ .Values.global.database.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
             - name: spring.datasource.password
               valueFrom:
                 secretKeyRef:
                   name: postgres-credentials
                   key: POSTGRES_PASSWORD
+            - name: spring.datasource.driverClassName
+              value: org.postgresql.Driver
+            - name: spring.jpa.properties.hibernate.dialect
+              value: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
             - name: hapi.fhir.fhir_version
               value: "R4"
           startupProbe:

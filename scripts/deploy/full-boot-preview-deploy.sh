@@ -50,6 +50,11 @@ if [[ ! -f "$VALUES_FILE" ]]; then
   exit 1
 fi
 
+echo "--- Chart integrity ---"
+if ! bash scripts/deploy/check-helm-chart-integrity.sh; then
+  exit 1
+fi
+
 # --- Preflight checks ---
 run_preflight() {
   local fail=0
@@ -155,17 +160,24 @@ fi
 
 run_preflight || true
 
-if ! bash scripts/build/build-full-vnext.sh; then
-  echo "ABORT: full build failed for required targets."
-  exit 1
+if [[ "${FULL_BOOT_SKIP_BUILD:-}" == "1" ]]; then
+  echo "SKIP: FULL_BOOT_SKIP_BUILD=1 (images already built/imported)"
+else
+  if ! bash scripts/build/build-full-vnext.sh; then
+    echo "ABORT: full build failed for required targets."
+    exit 1
+  fi
+  if ! bash scripts/build/build-full-vnext-images.sh --required-only; then
+    echo "ABORT: required image build failed."
+    exit 1
+  fi
 fi
 
-if ! bash scripts/build/build-full-vnext-images.sh --required-only; then
-  echo "ABORT: required image build failed."
-  exit 1
+if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
+  echo "SKIP: FULL_BOOT_SKIP_IMPORT=1 (k3s images already verified)"
+else
+  bash scripts/dev/import-full-vnext-images-k3s.sh "$IMAGE_TAG" || true
 fi
-
-bash scripts/dev/import-full-vnext-images-k3s.sh "$IMAGE_TAG" || true
 
 kubectl create namespace "$NAMESPACE" 2>/dev/null || true
 
@@ -178,7 +190,8 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set global.imageTag="$IMAGE_TAG" \
   --set images.experienceBff.tag="$IMAGE_TAG" \
   --set images.oneUiShell.tag="$IMAGE_TAG" \
-  --wait --timeout 25m
+  --wait --timeout 45m \
+  --atomic=false
 
 kubectl rollout status deployment -n "$NAMESPACE" --timeout=600s || true
 bash scripts/test/run-full-boot-smoke-tests.sh

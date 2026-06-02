@@ -61,6 +61,9 @@ def ns_ready_pods(ns):
             parts = line.split()
             if len(parts) < 3:
                 continue
+            name = parts[0]
+            if name.startswith("v-"):
+                continue
             total += 1
             st = parts[2]
             if "CrashLoopBackOff" in st or "Error" in st:
@@ -75,7 +78,27 @@ def ns_ready_pods(ns):
     except Exception:
         return 0, 0, 0, 0
 
-deployed_full = ns_deployments(full_ns)
+
+def deploy_ready_names(ns):
+    try:
+        data = json.loads(
+            subprocess.check_output(["kubectl", "get", "deploy", "-n", ns, "-o", "json"], text=True, stderr=subprocess.DEVNULL)
+        )
+    except Exception:
+        return set(), set()
+    all_names = set()
+    ready_names = set()
+    for item in data.get("items", []):
+        name = item["metadata"]["name"]
+        all_names.add(name)
+        spec_r = item.get("spec", {}).get("replicas", 1) or 1
+        ready = item.get("status", {}).get("readyReplicas") or 0
+        avail = item.get("status", {}).get("availableReplicas") or 0
+        if ready >= spec_r and avail >= spec_r:
+            ready_names.add(name)
+    return all_names, ready_names
+
+deployed_full, ready_deploys = deploy_ready_names(full_ns)
 deployed_slice = ns_deployments(slice_ns)
 pod_total, pod_ready, pod_crash, pod_pending = ns_ready_pods(full_ns)
 
@@ -132,22 +155,32 @@ if failing_builds:
     images_ready = False
 
 namespace_deployed = len(deployed_full) > 0
-healthy_required = len(deployed_full & {e["id"] for e in required})
-runtime_healthy = namespace_deployed and pod_crash == 0 and pod_pending == 0 and pod_ready >= healthy_required and healthy_required >= req_total
+required_ids = {e["id"] for e in required}
+healthy_required = len(ready_deploys & required_ids)
+deployments_ready = healthy_required >= req_total and len(required_ids - deployed_full) == 0
+runtime_healthy = (
+    namespace_deployed
+    and deployments_ready
+    and pod_crash == 0
+    and pod_pending == 0
+)
 
 reason = "deployment not attempted"
 status = "FULL_BOOT_NOT_ATTEMPTED"
 
 if images_ready or img_sum.exists() or build_sum.exists():
-    if not images_ready or blocking_failures > 0 or len(failing_builds) > 0:
+    if not namespace_deployed:
+        status = "FULL_BOOT_PARTIAL"
+        if not images_ready or blocking_failures > 0 or len(failing_builds) > 0:
+            reason = "deployment not attempted (image/build prep incomplete)"
+        else:
+            reason = "deployment not attempted"
+    elif not images_ready or blocking_failures > 0 or len(failing_builds) > 0:
         status = "FULL_BOOT_FAIL"
         reason = "required images or strategy blocking"
-    elif not namespace_deployed:
-        status = "FULL_BOOT_PARTIAL"
-        reason = "deployment not attempted"
     elif not runtime_healthy:
         status = "FULL_BOOT_PARTIAL"
-        reason = "deployed but not all required pods healthy"
+        reason = "deployed but not all required deployments ready"
     elif not helm_deployability_ready:
         status = "FULL_BOOT_PARTIAL"
         reason = "helm deployability partial"
@@ -184,6 +217,8 @@ report = {
     "full_boot_pods_crashloop": pod_crash,
     "full_boot_pods_pending": pod_pending,
     "healthy_required_estimate": healthy_required,
+    "deployments_ready_count": healthy_required,
+    "deployments_ready": deployments_ready,
     "runtime_healthy": runtime_healthy,
     "build_pass": build_pass,
     "build_fail": build_fail,

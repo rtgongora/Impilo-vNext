@@ -1,9 +1,18 @@
 ALTER TABLE vito.client_identifier
     ADD COLUMN IF NOT EXISTS source_system VARCHAR(100);
 
-ALTER TABLE vito.client_identifier
-    ADD CONSTRAINT IF NOT EXISTS uq_client_identifier
-        UNIQUE (tenant_id, identifier_type, identifier_value);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'uq_client_identifier'
+          AND conrelid = 'vito.client_identifier'::regclass
+    ) THEN
+        ALTER TABLE vito.client_identifier
+            ADD CONSTRAINT uq_client_identifier
+                UNIQUE (tenant_id, identifier_type, identifier_value);
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_client_identifier_lookup
     ON vito.client_identifier (tenant_id, identifier_type, identifier_value);

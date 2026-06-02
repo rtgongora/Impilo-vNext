@@ -35,7 +35,7 @@ spec:
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
               value: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
             - name: KAFKA_CONTROLLER_QUORUM_VOTERS
-              value: "1@kafka:9093"
+              value: "1@127.0.0.1:9093"
             - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
               value: "1"
             - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
@@ -46,16 +46,26 @@ spec:
               value: "0"
             - name: CLUSTER_ID
               value: "impilo-preview-kafka-01"
+            - name: KAFKA_LOG_DIRS
+              value: "/tmp/kraft-combined-logs"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "PLAINTEXT"
+          startupProbe:
+            tcpSocket:
+              port: 9092
+            failureThreshold: 30
+            periodSeconds: 10
           readinessProbe:
             tcpSocket:
               port: 9092
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             tcpSocket:
               port: 9092
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 20
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.kafka.resources | nindent 12 }}
 ---

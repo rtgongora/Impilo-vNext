@@ -52,9 +52,22 @@ postgres:
   username: impilo
   database: impilo
   password: preview-postgres-change-me
-  # HAPI FHIR JDBC target; created idempotently via init ConfigMap + post-install Job.
+  # Per-service DBs (match application.yml JDBC paths); created idempotently via ConfigMap + Job.
   initDatabases:
     - hapi
+    - vito
+    - varapi
+    - tuso
+    - ubomi
+    - zibo
+    - tshepo_authz
+    - tshepo_identity
+    - tshepo_consent
+    - tshepo_audit
+    - tshepo_keys
+    - pct
+    - butano
+    - fhir_gateway
 
 redis:
   enabled: true
@@ -148,6 +161,7 @@ experienceBff:
     SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     SPRING_KAFKA_LISTENER_AUTO_STARTUP: "false"
     MANAGEMENT_HEALTH_KAFKA_ENABLED: "false"
+    SPRING_AUTOCONFIGURE_EXCLUDE: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
 
 oneUiShell:
   enabled: true
@@ -161,39 +175,50 @@ fullBootServices:
   tshepo-authz-service:
     enabled: true
     port: 8081
+    database: tshepo_authz
     env:
       TSHEPO_CONSENT_URL: http://tshepo-consent-service:8182
       TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
   tshepo-identity-service:
     enabled: true
     port: 8181
+    database: tshepo_identity
   tshepo-consent-service:
     enabled: true
     port: 8182
+    database: tshepo_consent
   tshepo-audit-service:
     enabled: true
     port: 8183
+    database: tshepo_audit
   tshepo-keys-service:
     enabled: true
     port: 8184
+    database: tshepo_keys
   vito-service:
     enabled: true
     port: 8082
+    database: vito
   varapi-service:
     enabled: true
     port: 8083
+    database: varapi
   tuso-service:
     enabled: true
     port: 8084
+    database: tuso
   zibo-service:
     enabled: true
     port: 8085
+    database: zibo
   ubomi-service:
     enabled: true
     port: 8087
+    database: ubomi
   butano-service:
     enabled: true
     port: 8090
+    database: butano
     readinessInitialDelay: 60
     livenessInitialDelay: 120
     env:
@@ -201,11 +226,13 @@ fullBootServices:
   fhir-gateway-service:
     enabled: true
     port: 8091
+    database: fhir_gateway
     env:
       FHIR_BASE_URL: http://hapi-fhir:8090/fhir
   pct-service:
     enabled: true
     port: 8088
+    database: pct
 
 # Explicitly disabled (not in required_full_boot set)
 # opa, landela, workflow, etc. remain off until classification requires them.

@@ -30,10 +30,45 @@ spec:
           env:
             {{- include "impilo.globalEnv" (dict "root" $) | nindent 12 }}
             {{- if $.Values.global.database.enabled }}
+            - name: POSTGRES_HOST
+              value: postgres
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_PASSWORD
+            {{- if $svc.database }}
+            - name: DB_NAME
+              value: {{ $svc.database | quote }}
             - name: SPRING_DATASOURCE_URL
-              value: {{ $.Values.global.database.jdbcUrl | quote }}
+              value: {{ printf "jdbc:postgresql://postgres:5432/%s" $svc.database | quote }}
+            {{- end }}
             - name: SPRING_DATASOURCE_USERNAME
-              value: {{ $.Values.global.database.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: POSTGRES_USER
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -46,8 +81,15 @@ spec:
             - name: REDIS_PORT
               value: {{ $.Values.global.redis.port | quote }}
             {{- end }}
-            {{- $kafka := $svc.kafka | default dict }}
-            {{- if not ($kafka.enabled | default false) }}
+            {{- /* When cluster Kafka is enabled, wire outbox services unless explicitly disabled per service. */}}
+            {{- if and $.Values.kafka.enabled (or (not (hasKey ($svc.kafka | default dict) "enabled")) $svc.kafka.enabled) }}
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.global.kafka.bootstrapServers | quote }}
+            - name: SPRING_KAFKA_LISTENER_AUTO_STARTUP
+              value: "false"
+            - name: MANAGEMENT_HEALTH_KAFKA_ENABLED
+              value: "false"
+            {{- else }}
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
               value: "127.0.0.1:9092"
             - name: SPRING_KAFKA_LISTENER_AUTO_STARTUP
@@ -56,9 +98,6 @@ spec:
               value: "false"
             - name: SPRING_AUTOCONFIGURE_EXCLUDE
               value: "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
-            {{- else }}
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: {{ $.Values.global.kafka.bootstrapServers | quote }}
             {{- end }}
             {{- range $k, $v := $svc.env }}
             - name: {{ $k }}
