@@ -10,6 +10,12 @@ export interface FundoSubjectRef {
   subjectId: string;
 }
 
+export interface FundoLanguageOption {
+  code: string;
+  label: string;
+  nativeLabel?: string | null;
+}
+
 export type FundoReportPath =
   | "cohort-completions"
   | "course-completions"
@@ -34,6 +40,13 @@ export function useFundoMyLearning(subject?: FundoSubjectRef) {
       apiClient.get(
         `/internal/v1/learning/v11/my-learning?subjectType=${encodeURIComponent(subject!.subjectType)}&subjectId=${encodeURIComponent(subject!.subjectId)}`,
       ),
+  });
+}
+
+export function useFundoLanguageOptions() {
+  return useQuery<GenericData<{ items: FundoLanguageOption[] }>>({
+    queryKey: ["fundo", "metadata", "languages"],
+    queryFn: () => apiClient.get("/internal/v1/learning/v11/metadata/languages"),
   });
 }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { LearningOverlayForm } from "@/components/learning/LearningOverlayForm";
 import { useAddFundoQuestion, useCreateFundoAssessment } from "@/hooks/queries/useFundoLms";
 
 export default function NewAssessmentPage() {
@@ -56,7 +57,24 @@ export default function NewAssessmentPage() {
   return (
     <AppLayout>
       <PageShell title="New assessment" subtitle="Create assessment and add basic questions.">
-        <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
+        <LearningOverlayForm
+          open
+          title="New Fundo assessment"
+          subtitle="Create the assessment shell, then add objective or manual-review questions."
+          footer={
+            <div className="flex flex-wrap gap-3">
+              <Link href="/learning/admin/assessments" className="text-sm font-medium text-gray-700 hover:underline">
+                Back to Admin assessments
+              </Link>
+              {assessmentId ? (
+                <Link href={`/learning/admin/assessments/${assessmentId}/edit`} className="text-sm font-medium text-impilo-700 hover:underline">
+                  Continue to edit assessment
+                </Link>
+              ) : null}
+            </div>
+          }
+        >
+        <div className="space-y-3">
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Course ID" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Assessment title" value={title} onChange={(e) => setTitle(e.target.value)} />
           <button onClick={createAssessment} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50" disabled={createAssessmentMutation.isPending}>Create assessment</button>
@@ -73,12 +91,10 @@ export default function NewAssessmentPage() {
               <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Correct answer (for objective)" value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)} />
               <textarea className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Rubric JSON (for short-answer/manual marking)" value={rubricJson} onChange={(e) => setRubricJson(e.target.value)} />
               <button onClick={addQuestion} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">Add question</button>
-              <Link href={`/learning/admin/assessments/${assessmentId}/edit`} className="text-xs text-teal-700 hover:underline">
-                Continue to edit assessment
-              </Link>
             </>
           ) : null}
         </div>
+        </LearningOverlayForm>
       </PageShell>
     </AppLayout>
   );

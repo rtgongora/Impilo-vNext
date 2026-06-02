@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { LearningOverlayForm } from "@/components/learning/LearningOverlayForm";
 import { useCreateFundoPathway } from "@/hooks/queries/useFundoLms";
 
 export default function NewPathwayPage() {
@@ -37,7 +38,24 @@ export default function NewPathwayPage() {
   return (
     <AppLayout>
       <PageShell title="New pathway" subtitle="Basic native pathway authoring.">
-        <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
+        <LearningOverlayForm
+          open
+          title="New Fundo pathway"
+          subtitle="Create the pathway shell. Ordered courses are added after the pathway exists."
+          footer={
+            <div className="flex flex-wrap gap-3">
+              <Link href="/learning/admin/pathways" className="text-sm font-medium text-gray-700 hover:underline">
+                Back to Admin pathways
+              </Link>
+              {pathwayId ? (
+                <Link href={`/learning/admin/pathways/${pathwayId}/edit`} className="text-sm font-medium text-impilo-700 hover:underline">
+                  Continue to pathway item authoring
+                </Link>
+              ) : null}
+            </div>
+          }
+        >
+          <div className="space-y-3">
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Pathway code" value={code} onChange={(e) => setCode(e.target.value)} />
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Pathway title" value={title} onChange={(e) => setTitle(e.target.value)} />
           <textarea className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -49,12 +67,8 @@ export default function NewPathwayPage() {
           <button onClick={save} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50" disabled={createPathway.isPending}>Create pathway</button>
           {error ? <p className="text-xs text-rose-700">{error}</p> : null}
           {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
-          {pathwayId ? (
-            <Link href={`/learning/admin/pathways/${pathwayId}/edit`} className="text-xs text-teal-700 hover:underline">
-              Continue to pathway item authoring
-            </Link>
-          ) : null}
-        </div>
+          </div>
+        </LearningOverlayForm>
       </PageShell>
     </AppLayout>
   );
