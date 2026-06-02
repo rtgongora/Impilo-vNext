@@ -11,19 +11,31 @@
 | Required images built (22/22) | Ready |
 | Helm chart + `values-full-preview.yaml` | Ready |
 | Official infra images pulled on VM | Done |
-| k3s image import | Interactive VM flow below (`import-full-vnext-images-k3s.sh` + `verify-full-boot-k3s-images.sh`) |
+| k3s image import | Narrow helper: `sudo bash scripts/operator/install-k3s-image-helper.sh` then `bash scripts/operator/fullboot.sh import-images` |
 | HAPI database `hapi` | Init via postgres `initDatabases` + post-install Job |
 | Ingress for full boot | **Disabled** — does not take over public URL |
 
-## Interactive VM: import and verify (before authorized deploy)
+## VM: import and verify (before authorized deploy)
+
+**One-time (technical operator):**
 
 ```bash
-ssh -p 2276 robert@41.57.127.235
 cd /opt/impilo/repos/Impilo-vNext
-sudo -v
-bash scripts/dev/import-full-vnext-images-k3s.sh preview
-NS=impilo-full-preview bash scripts/dev/verify-full-boot-k3s-images.sh preview
+sudo bash scripts/operator/install-k3s-image-helper.sh
+bash scripts/operator/test-k3s-image-helper.sh
 ```
+
+**Each full boot attempt (Cursor orchestrates; product owner authorizes only):**
+
+```bash
+cd /opt/impilo/repos/Impilo-vNext
+bash scripts/operator/fullboot.sh deploy
+# If checkpoint required: product owner runs sudo-checkpoint-run once, then:
+# Tell Cursor: sudo checkpoint completed
+bash scripts/operator/fullboot.sh continue
+```
+
+If passwordless helper is installed, Cursor rarely needs a sudo checkpoint. Legacy fallback: checkpoint `import_full_boot_images_to_k3s` via `sudo-checkpoint-run` (not manual `k3s ctr` loops).
 
 Expect verify output (authoritative = containerd, not pod Running):
 

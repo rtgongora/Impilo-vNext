@@ -20,6 +20,7 @@ alwaysApply: true
 10. Full-boot deploy uses namespace `impilo-full-preview` and phrase `AUTHORIZE FULL BOOT PREVIEW DEPLOY` — never auto-deploy; never destroy `impilo-preview`.
 11. All seven planes and all classified services must be discovered from registry (`docs/registry/services-registry.yaml`) — examples in prompts are not exhaustive.
 12. **Runtime image strategy** gates full boot (`docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`). Missing Dockerfile ≠ automatic failure; missing **required** strategy or failed required image build = blocking.
+13. **Human sudo checkpoint:** When sudo is required, complete all possible non-sudo work first, then create a single checkpoint (`reports/full-boot/sudo-checkpoint.*`) with one product-owner terminal block (`sudo-checkpoint-run`). Product owner enters password only; then `sudo checkpoint completed` → `bash scripts/operator/fullboot.sh continue`. Do not push tmux/kubectl/helm/image-import orchestration onto the product owner. Sudo ≠ deploy authorization (`AUTHORIZE FULL BOOT PREVIEW DEPLOY`).
 
 ## Workflow
 

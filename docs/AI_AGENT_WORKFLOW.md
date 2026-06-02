@@ -86,6 +86,7 @@ git remote -v
 - **Discover targets:** `bash scripts/build/discover-build-targets.sh` → `reports/full-boot/{build-targets,image-strategy-targets,non-runtime-components}.json`
 - **Images:** `bash scripts/build/build-full-vnext-images.sh` (required runtime services only; skips bundled UI/libs/mobile)
 - **Completeness gate:** `bash scripts/guard/check-full-boot-runtime-completeness.sh`
+- **Full boot operator:** Cursor runs `bash scripts/operator/fullboot.sh deploy` and `continue`. Complete all non-sudo work first. If sudo is required and passwordless helper is unavailable, create **one** human sudo checkpoint (`reports/full-boot/sudo-checkpoint.*`); product owner runs only `sudo-checkpoint-run` + password, then says `sudo checkpoint completed`. Do **not** ask the product owner to manually run kubectl, helm, tmux, or image import orchestration. Sudo consent ≠ `AUTHORIZE FULL BOOT PREVIEW DEPLOY`. See `docs/environment/FULL_BOOT_OPERATOR_MODE.md`
 - **Slice preview (`impilo-preview`)** is not full vNext — preserve it; use **`impilo-full-preview`** only with `AUTHORIZE FULL BOOT PREVIEW DEPLOY`
 - Blockers: `docs/environment/FULL_BOOT_BLOCKER_TRIAGE.md`
 

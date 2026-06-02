@@ -60,3 +60,11 @@ bash scripts/deploy/preview-logs.sh one-ui-shell
 
 Formal Test/Staging is a separate, future environment — see
 `docs/environment/FUTURE_FORMAL_TEST_STAGING_REQUIREMENTS.md`.
+
+## Full boot (`impilo-full-preview`) — separate from slice
+
+- Do **not** modify `impilo-preview` or public ingress for full boot.
+- One-time VM: `sudo bash scripts/operator/install-k3s-image-helper.sh` (narrow NOPASSWD only).
+- Cursor orchestrates: `bash scripts/operator/fullboot.sh deploy` / `continue` / `verify-images` / `status`.
+- If sudo needed without passwordless helper: one human checkpoint → `sudo-checkpoint-run` → product owner says `sudo checkpoint completed` → `fullboot.sh continue`.
+- Deploy only with `AUTHORIZE FULL BOOT PREVIEW DEPLOY` (separate from sudo) — see `docs/environment/FULL_BOOT_OPERATOR_MODE.md`.

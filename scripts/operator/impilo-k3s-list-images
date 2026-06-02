@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Root-only: list k3s/containerd images and verify required full-boot image presence.
+# Installed path: /usr/local/sbin/impilo-k3s-list-images
+# Usage: impilo-k3s-list-images <tag> [repo_path]
+set -euo pipefail
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "ERROR: must run as root (via sudo /usr/local/sbin/impilo-k3s-list-images)" >&2
+  exit 1
+fi
+
+LIB="/usr/local/libexec/impilo/k3s-image-helper-common.sh"
+if [[ ! -f "$LIB" ]]; then
+  echo "ERROR: missing $LIB (re-run install-k3s-image-helper.sh)" >&2
+  exit 1
+fi
+# shellcheck source=/usr/local/libexec/impilo/k3s-image-helper-common.sh
+source "$LIB"
+
+TAG="${1:-}"
+REPO="${2:-$IMPILO_DEFAULT_REPO}"
+
+impilo_validate_tag "$TAG" || exit 2
+impilo_validate_repo "$REPO" || exit 2
+
+impilo_helper_log "list START tag=$TAG repo=$REPO"
+
+echo "=== Impilo k3s image presence (containerd) ==="
+echo "Tag: $TAG"
+echo "Repo: $REPO"
+echo "Time: $(date -Is)"
+echo ""
+
+CTR_LIST="$(mktemp)"
+if ! impilo_ctr_list >"$CTR_LIST"; then
+  echo "IMAGE_PRESENCE: FAIL"
+  echo "  Reason: cannot list containerd images"
+  echo "SUMMARY ok=0 fail=1"
+  impilo_helper_log "list FAIL: ctr list"
+  rm -f "$CTR_LIST"
+  exit 1
+fi
+
+echo "--- containerd images (full-boot related) ---"
+grep -E 'impilo/|postgres:|redis:|apache/kafka|keycloak|minio/|hapi|envoy' "$CTR_LIST" | sort -u | head -80 || true
+echo ""
+
+set +e
+impilo_check_presence "$TAG" "$REPO" "$CTR_LIST"
+exit_code=$?
+set -e
+rm -f "$CTR_LIST"
+
+if [[ "$exit_code" -eq 0 ]]; then
+  impilo_helper_log "list PASS tag=$TAG"
+else
+  impilo_helper_log "list FAIL tag=$TAG"
+fi
+exit "$exit_code"

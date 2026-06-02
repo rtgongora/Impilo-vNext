@@ -1,141 +1,104 @@
-# Preview deployment — sudo and k3s image import hardening
+# Deployment sudo and k3s image import hardening
 
-## Current issue
+## Problem
 
-Preview images are built with **Docker** (user `robert`, `docker` group) but must be loaded into **k3s containerd** with:
-
-```bash
-docker save <image> | sudo k3s ctr images import -
-```
-
-The k3s containerd socket (`/run/k3s/containerd/containerd.sock`) is **root-only**. Any import step requires elevated privileges.
-
-## Why the first authorized deploy failed in the Cursor agent shell
-
-1. `scripts/dev/build-images.sh` (via `manual-authorized-preview-deploy.sh`) reached **“Importing images into k3s containerd…”**.
-2. The agent subshell is **non-interactive** (`sudo` cannot prompt for a password).
-3. `sudo -n` failed (no cached credential in that session).
-4. `SUDO_PASS` was **not** set (and must not be committed or documented).
-5. Docker builds **completed**, but k3s never received the new images until import was run in an **interactive VM terminal** where `sudo` succeeded.
-
-**Important:** Interactive `sudo` in your SSH or Cursor **terminal** does **not** carry over to the agent’s separate non-TTY shell.
-
-## Current manual workaround (safe fallback — option D)
-
-Use the VM terminal (Remote SSH) after VM quality gates and explicit deploy authorization:
+Full boot loads Docker-built images into **k3s containerd** with:
 
 ```bash
-cd /opt/impilo/repos/Impilo-vNext
-export DEPLOY_BRANCH="claude/staging-ux-orchestration-remediation-Yypyl"
-export DEPLOY_COMMIT_SHA="$(git rev-parse HEAD)"
-
-# If images already built (tags :preview exist):
-bash scripts/dev/import-images-k3s.sh
-
-# Full authorized path (rebuilds if needed):
-printf 'AUTHORIZE DEPLOY WITH VM GATES\n' | bash scripts/deploy/manual-authorized-preview-deploy.sh
+docker save <image> -o /tmp/impilo-image-….tar
+k3s ctr images import <tar>
 ```
 
-Verify:
+The containerd socket is **root-only**. Cursor’s agent shell is **non-interactive** and cannot reliably prompt for sudo. The product owner should not re-enter passwords for every full boot attempt.
 
-```bash
-curl -s http://41.57.127.235/health/version
-kubectl get pods -n impilo-preview
-bash scripts/deploy/preview-smoke-test.sh
-```
+## Rejected approaches
 
-## Options evaluated
+| Approach | Why rejected |
+|----------|----------------|
+| `robert ALL=(ALL) NOPASSWD: ALL` | Too broad |
+| `SUDO_PASS` in repo, docs, or shell history | Secret leakage |
+| Cursor running arbitrary `sudo k3s …` / `sudo docker …` | No input validation or audit boundary |
+| Writable helper scripts under `/opt/impilo/...` | Tampering risk |
 
-| Option | Summary | Verdict |
-|--------|---------|---------|
-| **A. Limited NOPASSWD sudo** | Allow `robert` to run **one** root-owned import script, no args | **Recommended** for automation |
-| **B. Root-owned deploy helper** | Same as A if script is installed under `/usr/local/sbin/` and owned `root:root` | **Recommended** (implementation of A) |
-| **C. Local registry** | Push to registry; k3s pulls without `ctr import` | More moving parts; needs `registries.yaml`, pull secrets, host reachability; **not** default for single-node preview |
-| **D. Interactive sudo only** | Documented fallback | **Valid today**; keep for break-glass |
+## Chosen model (narrow helper)
 
-**Rejected:**
+| Property | Implementation |
+|----------|----------------|
+| Root-owned helpers | `/usr/local/sbin/impilo-k3s-import-images`, `/usr/local/sbin/impilo-k3s-list-images` |
+| Shared library | `/usr/local/libexec/impilo/k3s-image-helper-common.sh` (`0644`, root only) |
+| Sudoers | `/etc/sudoers.d/impilo-k3s-image-helper` — **only** the two sbin paths |
+| Install | `sudo bash scripts/operator/install-k3s-image-helper.sh` |
+| Uninstall | `sudo bash scripts/operator/uninstall-k3s-image-helper.sh` |
+| Audit log | `/var/log/impilo-k3s-image-helper.log` |
+| Repo mirror log | `reports/full-boot/k3s-image-import-helper.log` |
 
-- Broad `NOPASSWD: ALL` for `robert`
-- Storing `SUDO_PASS` in repo, docs, or shell history
-- Committing sudo passwords or `.env` secrets
-
-## Recommended long-term solution (A + B)
-
-Use the repo script **`scripts/deploy/k3s-import-preview-images.sh`**, installed on the VM as a **root-owned** executable, with **passwordless sudo only for that path**.
-
-The script:
-
-- Runs only as **root** (`id -u` check)
-- Imports **only** `impilo/experience-bff:preview` and `impilo/one-ui-shell:preview`
-- Verifies images exist in Docker before import
-- Does not accept extra arguments (reduces injection surface)
-
-Call path from repo scripts: `scripts/deploy/_k3s-import-preview-images.sh` → tries `sudo -n` on the installed helper, then interactive `sudo`, then optional `SUDO_PASS` (CI/bootstrap only, never in git).
-
-### Install on the VM (one-time, operator)
-
-```bash
-cd /opt/impilo/repos/Impilo-vNext
-sudo cp scripts/deploy/k3s-import-preview-images.sh /usr/local/sbin/k3s-import-preview-images.sh
-sudo chown root:root /usr/local/sbin/k3s-import-preview-images.sh
-sudo chmod 755 /usr/local/sbin/k3s-import-preview-images.sh
-```
-
-### Exact sudoers rule (recommended)
-
-Create **`/etc/sudoers.d/impilo-k3s-import`** with mode `0440`:
+### Exact sudoers rule
 
 ```sudoers
-# Impilo preview: import only pre-built :preview images into k3s containerd.
-Defaults!/usr/local/sbin/k3s-import-preview-images.sh !env_keep
-robert ALL=(root) NOPASSWD: /usr/local/sbin/k3s-import-preview-images.sh
+Defaults!/usr/local/sbin/impilo-k3s-import-images !env_keep
+Defaults!/usr/local/sbin/impilo-k3s-list-images !env_keep
+robert ALL=(root) NOPASSWD: /usr/local/sbin/impilo-k3s-import-images, /usr/local/sbin/impilo-k3s-list-images
 ```
 
-Validate before saving:
+Validate before relying on it:
 
 ```bash
-sudo visudo -cf /etc/sudoers.d/impilo-k3s-import
+sudo visudo -cf /etc/sudoers.d/impilo-k3s-image-helper
+sudo visudo -c
 ```
 
-**Do not** add `NOPASSWD` for `/usr/bin/k3s`, `docker`, or the repo copy under `/opt/impilo/...` (writable by deploy user). Only the **installed** root-owned path above.
+**Do not** add NOPASSWD for `/usr/bin/k3s`, `/usr/bin/docker`, `/usr/bin/ctr`, `/usr/bin/kubectl`, or `/bin/bash`.
 
-### Risks
+### Helper input validation
 
-| Risk | Mitigation |
-|------|------------|
-| Script tampering before `cp` to `/usr/local/sbin` | Install from known-good commit; `chown root:root`; review script in PRs |
-| User replaces `/usr/local/sbin` binary | Root-only write on `/usr/local/sbin`; audit with `rpm -V` / checksum |
-| Import of wrong images | Hard-coded image list; tags fixed to `:preview` |
-| Passwordless sudo expansion | Single entry in `sudoers.d`; no wildcards |
+- **Tag:** `preview` or `preview-[a-f0-9]{7,40}` only
+- **Repo:** `/opt/impilo/repos/Impilo-vNext` only (must contain classification YAML)
+- **Tar import:** only `/tmp/impilo-image-*` or `reports/full-boot/*.tar`
+- **Image set:** derived from `required_full_boot` classification + fixed infra list — no user-supplied shell commands
 
-### Rollback plan
-
-1. Remove sudoers drop-in: `sudo rm /etc/sudoers.d/impilo-k3s-import`
-2. Remove helper: `sudo rm /usr/local/sbin/k3s-import-preview-images.sh`
-3. Confirm: `sudo -n -l` as `robert` should **not** list the import command
-4. Fall back to **interactive sudo** (option D) for imports
-5. Preview cluster unchanged; only the import **mechanism** reverts
-
-## Branch metadata fix (related)
-
-`/health/version` showed `"branch": ""` because `preview-deploy.sh` used `git branch --show-current` while the repo was in **detached HEAD** after `git checkout $DEPLOY_COMMIT_SHA`.
-
-**Fix:** `scripts/deploy/_preview-deploy-metadata.sh` resolves branch from `DEPLOY_BRANCH`, then detached-HEAD fallbacks (`origin/*` at HEAD). `github-actions-remote-preview-deploy.sh` exports `DEPLOY_BRANCH` / `DEPLOY_COMMIT_SHA` before Helm.
-
-**Live preview:** Still shows empty branch until the next Helm upgrade (metadata-only). No redeploy was performed for this doc change. To patch live metadata only (requires approval):
+### Rollback
 
 ```bash
-helm upgrade impilo-preview deploy/helm/impilo-vnext -n impilo-preview \
-  -f deploy/helm/impilo-vnext/values-preview.yaml \
-  --set global.gitBranch="claude/staging-ux-orchestration-remediation-Yypyl" \
-  --set global.gitCommit="5a58424d8c2621abbc589ca70e8f5f61c87527f2" \
-  --reuse-values
-kubectl rollout restart deployment/experience-bff -n impilo-preview
+sudo bash scripts/operator/uninstall-k3s-image-helper.sh
+sudo -n -l   # as robert — must NOT list impilo helpers
 ```
+
+## Repo integration
+
+| Script | Behavior |
+|--------|----------|
+| `scripts/dev/import-full-vnext-images-k3s.sh` | Prefer `sudo -n /usr/local/sbin/impilo-k3s-import-images` |
+| `scripts/dev/verify-full-boot-k3s-images.sh` | Prefer `sudo -n /usr/local/sbin/impilo-k3s-list-images` |
+| `scripts/operator/fullboot.sh` | Product-owner wrapper |
+| `scripts/deploy/full-boot-preview-deploy.sh` | Calls `fullboot.sh import-images` / `verify-images` unless `FULL_BOOT_SKIP_IMPORT=1` |
+
+## Legacy slice preview (two images)
+
+`scripts/deploy/k3s-import-preview-images.sh` remains for **slice** `impilo-preview` (BFF + shell only). Full boot uses the **new** helpers and full classification (22 images).
+
+## Human sudo consent checkpoint (full boot helper)
+
+When passwordless helpers are not available, `scripts/operator/fullboot.sh` must:
+
+1. Complete all non-sudo preparation first.
+2. Write `reports/full-boot/sudo-checkpoint.json` and `.md`.
+3. Print **one** product-owner command block (SSH + `sudo-checkpoint-run`).
+4. Stop until the product owner runs the checkpoint and tells Cursor `sudo checkpoint completed`.
+5. Resume with `bash scripts/operator/fullboot.sh continue`.
+
+`sudo-checkpoint-run` reads the checkpoint JSON, runs **only** the named allowed action, writes `sudo-checkpoint-result.json`, and refuses arbitrary commands.
+
+**Sudo consent ≠ deploy authorization.** Helm deploy still requires `AUTHORIZE FULL BOOT PREVIEW DEPLOY`.
+
+Before creating a checkpoint, the helper checks whether `verify-images` already reports `IMAGE_PRESENCE: PASS` and `SUMMARY ok=22 fail=0` — if so, skip import and do not ask for sudo.
+
+## Cursor vs interactive terminal
+
+Interactive `sudo -v` in your SSH session does **not** apply to the agent’s separate shell. Install the narrow helper once on the VM so both can use `sudo -n` on the approved paths only.
 
 ## References
 
+- [FULL_BOOT_OPERATOR_MODE.md](./FULL_BOOT_OPERATOR_MODE.md)
 - [DEV_PREVIEW_OPERATIONS.md](./DEV_PREVIEW_OPERATIONS.md)
-- [HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md](./HUMAN_AUTHORIZED_PREVIEW_DEPLOYMENT.md)
-- `scripts/deploy/k3s-import-preview-images.sh`
-- `scripts/deploy/_k3s-import-preview-images.sh`
+- `scripts/operator/install-k3s-image-helper.sh`
+- `scripts/operator/test-k3s-image-helper.sh`

@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Root-only: import approved Impilo full-boot images from local Docker into k3s containerd.
+# Installed path: /usr/local/sbin/impilo-k3s-import-images
+# Usage: impilo-k3s-import-images <tag> [repo_path]
+set -euo pipefail
+
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "ERROR: must run as root (via sudo /usr/local/sbin/impilo-k3s-import-images)" >&2
+  exit 1
+fi
+
+LIB="/usr/local/libexec/impilo/k3s-image-helper-common.sh"
+if [[ ! -f "$LIB" ]]; then
+  echo "ERROR: missing $LIB (re-run install-k3s-image-helper.sh)" >&2
+  exit 1
+fi
+# shellcheck source=/usr/local/libexec/impilo/k3s-image-helper-common.sh
+source "$LIB"
+
+TAG="${1:-}"
+REPO="${2:-$IMPILO_DEFAULT_REPO}"
+
+impilo_validate_tag "$TAG" || exit 2
+impilo_validate_repo "$REPO" || exit 2
+
+if ! command -v docker >/dev/null 2>&1; then
+  echo "ERROR: docker required" >&2
+  impilo_helper_log "import FAIL: docker missing tag=$TAG"
+  exit 1
+fi
+
+impilo_helper_log "import START tag=$TAG repo=$REPO user=${SUDO_USER:-root}"
+
+IMPORTED=0
+FAILED=0
+SKIPPED=0
+
+import_ref() {
+  local ref="$1"
+  local required="${2:-0}"
+  if ! docker image inspect "$ref" >/dev/null 2>&1; then
+    if [[ "$required" == "1" ]]; then
+      echo "FAIL  $ref  (required image not in local docker)"
+      impilo_helper_log "FAIL required missing docker $ref"
+      FAILED=$((FAILED + 1))
+      return 1
+    fi
+    echo "SKIP  $ref  (not in local docker)"
+    impilo_helper_log "SKIP optional missing docker $ref"
+    SKIPPED=$((SKIPPED + 1))
+    return 0
+  fi
+  local safe
+  safe="$(echo "$ref" | tr '/:@' '___')"
+  local tar="/tmp/impilo-image-${safe}.tar"
+  echo "IMPORT  $ref"
+  if ! docker save "$ref" -o "$tar"; then
+    echo "FAIL  $ref  (docker save)"
+    impilo_helper_log "FAIL docker save $ref"
+    FAILED=$((FAILED + 1))
+    rm -f "$tar"
+    return 1
+  fi
+  if impilo_ctr_import "$tar"; then
+    IMPORTED=$((IMPORTED + 1))
+    impilo_helper_log "OK $ref"
+  else
+    echo "FAIL  $ref  (ctr import)"
+    impilo_helper_log "FAIL ctr import $ref"
+    FAILED=$((FAILED + 1))
+  fi
+  rm -f "$tar"
+}
+
+mapfile -t REQUIRED < <(impilo_required_refs "$TAG" "$REPO")
+for ref in "${REQUIRED[@]}"; do
+  [[ -n "$ref" ]] || continue
+  import_ref "$ref" 1 || true
+done
+
+while read -r ref; do
+  [[ -n "$ref" ]] || continue
+  if printf '%s\n' "${REQUIRED[@]}" | grep -qxF "$ref" 2>/dev/null; then
+    continue
+  fi
+  import_ref "$ref" 1 || true
+done < <(impilo_infra_refs)
+
+while read -r ref; do
+  [[ -n "$ref" ]] || continue
+  if printf '%s\n' "${REQUIRED[@]}" | grep -qxF "$ref" 2>/dev/null; then
+    continue
+  fi
+  import_ref "$ref" 0 || true
+done < <(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E "^impilo/.+:(${TAG}|preview-)" || true)
+
+echo ""
+echo "imported_count=$IMPORTED failed_count=$FAILED skipped_count=$SKIPPED"
+impilo_helper_log "import END imported=$IMPORTED failed=$FAILED skipped=$SKIPPED tag=$TAG"
+
+if [[ "$FAILED" -gt 0 ]]; then
+  exit 1
+fi
+
+# Required refs must exist in docker or have been skipped — verify presence after import
+CTR_LIST="$(mktemp)"
+impilo_ctr_list >"$CTR_LIST" || true
+set +e
+impilo_check_presence "$TAG" "$REPO" "$CTR_LIST"
+check_exit=$?
+set -e
+rm -f "$CTR_LIST"
+if [[ "$check_exit" -ne 0 ]]; then
+  impilo_helper_log "import FAIL: post-import verify missing required images"
+  exit 1
+fi
+exit 0

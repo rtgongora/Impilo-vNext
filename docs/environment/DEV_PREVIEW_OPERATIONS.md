@@ -76,7 +76,20 @@ Expect `/health/version`:
 
 ### Sudo / image import
 
-Cursor agent shells cannot use interactive `sudo`. Use the **VM terminal** for deploy, or install the limited import helper — [DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md](./DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md).
+Cursor agent shells cannot use interactive `sudo`. For **full boot** (22 images):
+
+1. **Preferred:** one-time `sudo bash scripts/operator/install-k3s-image-helper.sh` — then Cursor runs `bash scripts/operator/fullboot.sh deploy` / `continue` without passwords.
+2. **Fallback:** human sudo checkpoint — Cursor completes non-sudo work, writes `reports/full-boot/sudo-checkpoint.*`, product owner runs **one** SSH block + `sudo-checkpoint-run`, then tells Cursor `sudo checkpoint completed`; Cursor runs `bash scripts/operator/fullboot.sh continue`.
+
+```bash
+bash scripts/operator/fullboot.sh status
+bash scripts/operator/fullboot.sh verify-images
+bash scripts/operator/fullboot.sh sudo-checkpoint-status
+```
+
+Do **not** ask the product owner to manually orchestrate kubectl, helm, tmux, or full import loops.
+
+See [FULL_BOOT_OPERATOR_MODE.md](./FULL_BOOT_OPERATOR_MODE.md) and [DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md](./DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md).
 
 **Do not** store `SUDO_PASS` in the repo or shell history.
 
