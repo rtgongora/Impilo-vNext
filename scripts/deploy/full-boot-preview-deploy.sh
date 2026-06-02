@@ -175,8 +175,18 @@ fi
 
 if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "SKIP: FULL_BOOT_SKIP_IMPORT=1 (k3s images already verified)"
+  echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
 else
-  bash scripts/dev/import-full-vnext-images-k3s.sh "$IMAGE_TAG" || true
+  echo "--- Import images into k3s/containerd (mandatory) ---"
+  if ! bash scripts/dev/import-full-vnext-images-k3s.sh "$IMAGE_TAG"; then
+    echo "ABORT: k3s image import failed. Run: sudo -v && bash scripts/dev/import-full-vnext-images-k3s.sh $IMAGE_TAG"
+    exit 1
+  fi
+  echo "--- Verify image presence in k3s ---"
+  if ! NS="$NAMESPACE" bash scripts/dev/verify-full-boot-k3s-images.sh "$IMAGE_TAG"; then
+    echo "ABORT: k3s image verification failed (need IMAGE_PRESENCE PASS, ok=22 fail=0)"
+    exit 1
+  fi
 fi
 
 kubectl create namespace "$NAMESPACE" 2>/dev/null || true

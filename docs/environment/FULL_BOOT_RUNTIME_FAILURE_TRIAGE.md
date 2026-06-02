@@ -2,8 +2,9 @@
 
 **Branch:** `claude/staging-ux-orchestration-remediation-Yypyl`  
 **Namespace:** `impilo-full-preview` (failed Helm rev 3; slice `impilo-preview` preserved)  
-**Captured:** 2026-06-02 after first authorized full boot attempt  
-**Status:** `FULL_BOOT_FAIL` — 7/22 deployments Available; 15/22 not Ready  
+**Captured:** 2026-06-02 (attempt 1), attempt-2 evidence under `reports/full-boot/attempt-2/`  
+**Latest attempt:** #2 — Helm rev 1, status `failed` (45m wait timeout); **10/22** Available  
+**Status:** `FULL_BOOT_FAIL` — do not claim success until 22/22 Ready + smoke/completeness PASS  
 
 Do **not** treat deployment existence as success. Readiness and pod `Ready` state are required.
 
@@ -35,7 +36,20 @@ Do **not** treat deployment existence as success. Readiness and pod `Ready` stat
 | pct-service | V002: `pct_encounters` does not exist (Flyway used `public` schema) | `flyway.schemas` / `default-schema: pct` + Hibernate `default_schema: pct` |
 | vito-service | V027 `ADD CONSTRAINT IF NOT EXISTS` invalid in PostgreSQL | DO block in V027 (commit `9e9b1146`) — **rebuild image** |
 | tshepo-authz-service | Duplicate Flyway V012 | Renamed to V013 (commit `9e9b1146`) — **rebuild image** |
-| Kafka / Keycloak / HAPI | Chart-only fixes from `9e9b1146` | **Runtime validation** on second deploy |
+| Kafka / Keycloak / HAPI | Chart-only fixes from `9e9b1146` | **Validated on attempt 2** (all Ready) |
+
+---
+
+## Attempt 2 (2026-06-02) — stale image caveat
+
+- **10/22** deployments Available: postgres, redis, kafka, keycloak, hapi-fhir, minio, envoy, experience-bff, one-ui-shell, ubomi.
+- **12/22** not Ready: all listed Java domain services.
+- Deploy log showed `FULL_BOOT_SKIP_IMPORT=1` — rebuilt Docker images at `0dc6f82a` may **not** have been loaded into k3s/containerd.
+- Java failure signatures (duplicate `FhirContext`, `BearerTokenResolver`, V027 syntax, duplicate V012) match **pre-fix images** until attempt 3 imports fresh `impilo/*:preview` layers.
+- `postgres-init-databases` Job: not found post-install on attempt 2 — retest on clean namespace (attempt 3).
+- Evidence: `reports/full-boot/attempt-2/` (helm, k8s, events, `java-service-logs.txt`).
+
+**Attempt 3 requirement:** mandatory `import-full-vnext-images-k3s.sh preview` + verify `ok=22 fail=0` before deploy; **unset** `FULL_BOOT_SKIP_IMPORT`; clean delete `impilo-full-preview` namespace.
 
 ---
 

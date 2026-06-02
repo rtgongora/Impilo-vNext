@@ -1,0 +1,55 @@
+LAST SEEN   TYPE      REASON      OBJECT                                         MESSAGE
+56m         Warning   Unhealthy   pod/tshepo-keys-service-77b948d545-w7tpm       Liveness probe failed: Get "http://10.42.0.154:8184/actuator/health": dial tcp 10.42.0.154:8184: connect: connection refused
+47m         Normal    Started     pod/tshepo-consent-service-5858c8f489-z7tnt    Container started
+25m         Warning   Unhealthy   pod/tshepo-keys-service-77b948d545-w7tpm       Readiness probe failed: Get "http://10.42.0.154:8184/actuator/health": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+21m         Warning   Unhealthy   pod/varapi-service-65b4c87587-xplzg            Readiness probe failed: Get "http://10.42.0.159:8083/actuator/health": dial tcp 10.42.0.159:8083: connect: connection refused
+11m         Warning   Unhealthy   pod/tshepo-authz-service-7d9dfdc775-97ft6      Readiness probe failed: Get "http://10.42.0.156:8081/actuator/health": dial tcp 10.42.0.156:8081: connect: connection refused
+11m         Warning   Unhealthy   pod/tshepo-audit-service-955f64f68-7z9cm       Readiness probe failed: Get "http://10.42.0.150:8183/actuator/health": dial tcp 10.42.0.150:8183: connect: connection refused
+6m19s       Warning   BackOff     pod/tuso-service-56d7c4fc6b-jhr25              Back-off restarting failed container tuso-service in pod tuso-service-56d7c4fc6b-jhr25_impilo-full-preview(0e75e574-36b8-49ff-8227-278be1dcc1b2)
+6m18s       Warning   BackOff     pod/tshepo-keys-service-77b948d545-w7tpm       Back-off restarting failed container tshepo-keys-service in pod tshepo-keys-service-77b948d545-w7tpm_impilo-full-preview(ba866ad2-446d-4ed3-979a-acff3191f002)
+6m12s       Warning   BackOff     pod/tshepo-audit-service-955f64f68-7z9cm       Back-off restarting failed container tshepo-audit-service in pod tshepo-audit-service-955f64f68-7z9cm_impilo-full-preview(e872a20c-d15d-4b3e-8efc-4545542e6daa)
+6m11s       Warning   BackOff     pod/butano-service-6dcdc465f8-f2kvr            Back-off restarting failed container butano-service in pod butano-service-6dcdc465f8-f2kvr_impilo-full-preview(96b6c769-2323-4923-8bf8-8bca830f0643)
+6m7s        Warning   BackOff     pod/fhir-gateway-service-79754d64cf-7w98h      Back-off restarting failed container fhir-gateway-service in pod fhir-gateway-service-79754d64cf-7w98h_impilo-full-preview(ef1a117a-b315-4b61-b8d7-da9e4634aae4)
+6m2s        Warning   BackOff     pod/tshepo-authz-service-7d9dfdc775-97ft6      Back-off restarting failed container tshepo-authz-service in pod tshepo-authz-service-7d9dfdc775-97ft6_impilo-full-preview(7426cc00-d15d-42b7-ab1b-442dddb4adc6)
+6m1s        Warning   BackOff     pod/varapi-service-65b4c87587-xplzg            Back-off restarting failed container varapi-service in pod varapi-service-65b4c87587-xplzg_impilo-full-preview(22b9e850-07d2-465c-b41f-753a246ca93e)
+5m54s       Warning   BackOff     pod/vito-service-657bfbbf4-f9k7q               Back-off restarting failed container vito-service in pod vito-service-657bfbbf4-f9k7q_impilo-full-preview(8b877223-4e13-41cb-965a-5bddf6f28aed)
+5m53s       Warning   BackOff     pod/tshepo-identity-service-56758b8fbb-z242p   Back-off restarting failed container tshepo-identity-service in pod tshepo-identity-service-56758b8fbb-z242p_impilo-full-preview(fbaa3c11-7ef7-4c0e-986b-8a35fa1110a1)
+5m50s       Warning   BackOff     pod/zibo-service-6866b9b8d7-knr4x              Back-off restarting failed container zibo-service in pod zibo-service-6866b9b8d7-knr4x_impilo-full-preview(f84a23f2-a8fc-4131-8d86-28c6252a5e0d)
+5m46s       Warning   BackOff     pod/tshepo-consent-service-5858c8f489-z7tnt    Back-off restarting failed container tshepo-consent-service in pod tshepo-consent-service-5858c8f489-z7tnt_impilo-full-preview(620c3490-0d34-4196-bd44-ad647316290b)
+5m38s       Warning   BackOff     pod/pct-service-7d6545cf54-8gs96               Back-off restarting failed container pct-service in pod pct-service-7d6545cf54-8gs96_impilo-full-preview(b55f6335-aa49-4ac5-96e8-d677b20478f9)
+5m4s        Normal    Pulled      pod/tuso-service-56d7c4fc6b-jhr25              Container image "impilo/tuso-service:preview" already present on machine and can be accessed by the pod
+4m54s       Normal    Pulled      pod/tshepo-audit-service-955f64f68-7z9cm       Container image "impilo/tshepo-audit-service:preview" already present on machine and can be accessed by the pod
+4m52s       Normal    Pulled      pod/tshepo-identity-service-56758b8fbb-z242p   Container image "impilo/tshepo-identity-service:preview" already present on machine and can be accessed by the pod
+4m52s       Normal    Pulled      pod/tshepo-keys-service-77b948d545-w7tpm       Container image "impilo/tshepo-keys-service:preview" already present on machine and can be accessed by the pod
+4m52s       Normal    Pulled      pod/tshepo-authz-service-7d9dfdc775-97ft6      Container image "impilo/tshepo-authz-service:preview" already present on machine and can be accessed by the pod
+4m49s       Normal    Pulled      pod/varapi-service-65b4c87587-xplzg            Container image "impilo/varapi-service:preview" already present on machine and can be accessed by the pod
+4m47s       Normal    Pulled      pod/zibo-service-6866b9b8d7-knr4x              Container image "impilo/zibo-service:preview" already present on machine and can be accessed by the pod
+4m45s       Normal    Pulled      pod/vito-service-657bfbbf4-f9k7q               Container image "impilo/vito-service:preview" already present on machine and can be accessed by the pod
+4m44s       Normal    Pulled      pod/pct-service-7d6545cf54-8gs96               Container image "impilo/pct-service:preview" already present on machine and can be accessed by the pod
+4m43s       Normal    Pulled      pod/butano-service-6dcdc465f8-f2kvr            Container image "impilo/butano-service:preview" already present on machine and can be accessed by the pod
+4m41s       Normal    Pulled      pod/fhir-gateway-service-79754d64cf-7w98h      Container image "impilo/fhir-gateway-service:preview" already present on machine and can be accessed by the pod
+4m33s       Normal    Pulled      pod/tshepo-consent-service-5858c8f489-z7tnt    Container image "impilo/tshepo-consent-service:preview" already present on machine and can be accessed by the pod
+112s        Warning   Unhealthy   pod/tshepo-keys-service-77b948d545-w7tpm       Readiness probe failed: Get "http://10.42.0.154:8184/actuator/health": dial tcp 10.42.0.154:8184: connect: connection refused
+111s        Warning   Unhealthy   pod/tshepo-audit-service-955f64f68-7z9cm       Liveness probe failed: Get "http://10.42.0.150:8183/actuator/health": dial tcp 10.42.0.150:8183: connect: connection refused
+111s        Warning   Unhealthy   pod/tshepo-authz-service-7d9dfdc775-97ft6      Liveness probe failed: Get "http://10.42.0.156:8081/actuator/health": dial tcp 10.42.0.156:8081: connect: connection refused
+110s        Normal    Killing     pod/tuso-service-56d7c4fc6b-jhr25              Container tuso-service failed liveness probe, will be restarted
+110s        Warning   Unhealthy   pod/varapi-service-65b4c87587-xplzg            Liveness probe failed: Get "http://10.42.0.159:8083/actuator/health": dial tcp 10.42.0.159:8083: connect: connection refused
+108s        Warning   Unhealthy   pod/pct-service-7d6545cf54-8gs96               Readiness probe failed: Get "http://10.42.0.155:8088/actuator/health": dial tcp 10.42.0.155:8088: connect: connection refused
+107s        Warning   Unhealthy   pod/tshepo-identity-service-56758b8fbb-z242p   Readiness probe failed: Get "http://10.42.0.157:8181/actuator/health": dial tcp 10.42.0.157:8181: connect: connection refused
+105s        Warning   Unhealthy   pod/vito-service-657bfbbf4-f9k7q               Readiness probe failed: Get "http://10.42.0.167:8082/actuator/health": dial tcp 10.42.0.167:8082: connect: connection refused
+104s        Warning   Unhealthy   pod/fhir-gateway-service-79754d64cf-7w98h      Readiness probe failed: Get "http://10.42.0.152:8091/actuator/health": dial tcp 10.42.0.152:8091: connect: connection refused
+103s        Warning   Unhealthy   pod/tshepo-consent-service-5858c8f489-z7tnt    Readiness probe failed: Get "http://10.42.0.153:8182/actuator/health": dial tcp 10.42.0.153:8182: connect: connection refused
+103s        Warning   Unhealthy   pod/zibo-service-6866b9b8d7-knr4x              Readiness probe failed: Get "http://10.42.0.163:8085/actuator/health": dial tcp 10.42.0.163:8085: connect: connection refused
+100s        Warning   Unhealthy   pod/tuso-service-56d7c4fc6b-jhr25              Readiness probe failed: Get "http://10.42.0.160:8084/actuator/health": dial tcp 10.42.0.160:8084: connect: connection refused
+91s         Normal    Killing     pod/tshepo-audit-service-955f64f68-7z9cm       Container tshepo-audit-service failed liveness probe, will be restarted
+91s         Normal    Killing     pod/tshepo-identity-service-56758b8fbb-z242p   Container tshepo-identity-service failed liveness probe, will be restarted
+91s         Normal    Killing     pod/tshepo-authz-service-7d9dfdc775-97ft6      Container tshepo-authz-service failed liveness probe, will be restarted
+91s         Normal    Killing     pod/tshepo-keys-service-77b948d545-w7tpm       Container tshepo-keys-service failed liveness probe, will be restarted
+90s         Warning   Unhealthy   pod/butano-service-6dcdc465f8-f2kvr            Readiness probe failed: Get "http://10.42.0.166:8090/actuator/health": dial tcp 10.42.0.166:8090: connect: connection refused
+90s         Normal    Killing     pod/varapi-service-65b4c87587-xplzg            Container varapi-service failed liveness probe, will be restarted
+90s         Normal    Killing     pod/zibo-service-6866b9b8d7-knr4x              Container zibo-service failed liveness probe, will be restarted
+89s         Normal    Killing     pod/vito-service-657bfbbf4-f9k7q               Container vito-service failed liveness probe, will be restarted
+71s         Normal    Killing     pod/pct-service-7d6545cf54-8gs96               Container pct-service failed liveness probe, will be restarted
+71s         Normal    Killing     pod/fhir-gateway-service-79754d64cf-7w98h      Container fhir-gateway-service failed liveness probe, will be restarted
+71s         Normal    Killing     pod/tshepo-consent-service-5858c8f489-z7tnt    Container tshepo-consent-service failed liveness probe, will be restarted
+49s         Normal    Killing     pod/butano-service-6dcdc465f8-f2kvr            Container butano-service failed liveness probe, will be restarted

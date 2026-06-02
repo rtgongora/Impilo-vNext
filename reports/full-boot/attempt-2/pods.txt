@@ -1,0 +1,23 @@
+NAME                                       READY   STATUS    RESTARTS         AGE    IP            NODE            NOMINATED NODE   READINESS GATES
+butano-service-6dcdc465f8-f2kvr            0/1     Running   25 (10m ago)     112m   10.42.0.166   user-hvm-domu   <none>           <none>
+envoy-85756c7bfb-rvzgf                     1/1     Running   0                112m   10.42.0.161   user-hvm-domu   <none>           <none>
+experience-bff-86c675d967-w6trv            1/1     Running   0                112m   10.42.0.165   user-hvm-domu   <none>           <none>
+fhir-gateway-service-79754d64cf-7w98h      0/1     Running   25 (10m ago)     112m   10.42.0.152   user-hvm-domu   <none>           <none>
+hapi-fhir-6dcf6888-4wdr7                   1/1     Running   2 (105m ago)     112m   10.42.0.169   user-hvm-domu   <none>           <none>
+kafka-5855b4bf4b-c886k                     1/1     Running   0                112m   10.42.0.158   user-hvm-domu   <none>           <none>
+keycloak-86666595d7-gbk8d                  1/1     Running   0                112m   10.42.0.162   user-hvm-domu   <none>           <none>
+minio-5497fc6568-vp788                     1/1     Running   0                112m   10.42.0.151   user-hvm-domu   <none>           <none>
+one-ui-shell-6764bddd9d-8vjv7              1/1     Running   0                112m   10.42.0.164   user-hvm-domu   <none>           <none>
+pct-service-7d6545cf54-8gs96               0/1     Running   24 (9m52s ago)   112m   10.42.0.155   user-hvm-domu   <none>           <none>
+postgres-5f78849444-2rj6m                  1/1     Running   1 (110m ago)     112m   10.42.0.170   user-hvm-domu   <none>           <none>
+redis-c46d5dffc-299vk                      1/1     Running   0                112m   10.42.0.149   user-hvm-domu   <none>           <none>
+tshepo-audit-service-955f64f68-7z9cm       0/1     Running   25 (9m56s ago)   112m   10.42.0.150   user-hvm-domu   <none>           <none>
+tshepo-authz-service-7d9dfdc775-97ft6      0/1     Running   25 (10m ago)     112m   10.42.0.156   user-hvm-domu   <none>           <none>
+tshepo-consent-service-5858c8f489-z7tnt    0/1     Running   24 (9m53s ago)   112m   10.42.0.153   user-hvm-domu   <none>           <none>
+tshepo-identity-service-56758b8fbb-z242p   0/1     Running   24 (10m ago)     112m   10.42.0.157   user-hvm-domu   <none>           <none>
+tshepo-keys-service-77b948d545-w7tpm       0/1     Running   24 (9m53s ago)   112m   10.42.0.154   user-hvm-domu   <none>           <none>
+tuso-service-56d7c4fc6b-jhr25              0/1     Running   25 (10m ago)     112m   10.42.0.160   user-hvm-domu   <none>           <none>
+ubomi-service-77b5794b99-vgh24             1/1     Running   2 (106m ago)     112m   10.42.0.168   user-hvm-domu   <none>           <none>
+varapi-service-65b4c87587-xplzg            0/1     Running   24 (9m50s ago)   112m   10.42.0.159   user-hvm-domu   <none>           <none>
+vito-service-657bfbbf4-f9k7q               0/1     Running   25 (10m ago)     112m   10.42.0.167   user-hvm-domu   <none>           <none>
+zibo-service-6866b9b8d7-knr4x              0/1     Running   24 (9m52s ago)   112m   10.42.0.163   user-hvm-domu   <none>           <none>

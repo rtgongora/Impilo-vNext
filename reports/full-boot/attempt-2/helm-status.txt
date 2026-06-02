@@ -1,0 +1,6 @@
+NAME: impilo-full-preview
+LAST DEPLOYED: Tue Jun  2 03:22:30 2026
+NAMESPACE: impilo-full-preview
+STATUS: failed
+REVISION: 1
+TEST SUITE: None

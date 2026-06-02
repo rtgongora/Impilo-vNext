@@ -1,0 +1,95 @@
+NAME                                           READY   STATUS    RESTARTS         AGE    IP            NODE            NOMINATED NODE   READINESS GATES
+pod/butano-service-6dcdc465f8-f2kvr            0/1     Running   25 (10m ago)     112m   10.42.0.166   user-hvm-domu   <none>           <none>
+pod/envoy-85756c7bfb-rvzgf                     1/1     Running   0                112m   10.42.0.161   user-hvm-domu   <none>           <none>
+pod/experience-bff-86c675d967-w6trv            1/1     Running   0                112m   10.42.0.165   user-hvm-domu   <none>           <none>
+pod/fhir-gateway-service-79754d64cf-7w98h      0/1     Running   25 (10m ago)     112m   10.42.0.152   user-hvm-domu   <none>           <none>
+pod/hapi-fhir-6dcf6888-4wdr7                   1/1     Running   2 (105m ago)     112m   10.42.0.169   user-hvm-domu   <none>           <none>
+pod/kafka-5855b4bf4b-c886k                     1/1     Running   0                112m   10.42.0.158   user-hvm-domu   <none>           <none>
+pod/keycloak-86666595d7-gbk8d                  1/1     Running   0                112m   10.42.0.162   user-hvm-domu   <none>           <none>
+pod/minio-5497fc6568-vp788                     1/1     Running   0                112m   10.42.0.151   user-hvm-domu   <none>           <none>
+pod/one-ui-shell-6764bddd9d-8vjv7              1/1     Running   0                112m   10.42.0.164   user-hvm-domu   <none>           <none>
+pod/pct-service-7d6545cf54-8gs96               0/1     Running   24 (9m51s ago)   112m   10.42.0.155   user-hvm-domu   <none>           <none>
+pod/postgres-5f78849444-2rj6m                  1/1     Running   1 (110m ago)     112m   10.42.0.170   user-hvm-domu   <none>           <none>
+pod/redis-c46d5dffc-299vk                      1/1     Running   0                112m   10.42.0.149   user-hvm-domu   <none>           <none>
+pod/tshepo-audit-service-955f64f68-7z9cm       0/1     Running   25 (9m55s ago)   112m   10.42.0.150   user-hvm-domu   <none>           <none>
+pod/tshepo-authz-service-7d9dfdc775-97ft6      0/1     Running   25 (10m ago)     112m   10.42.0.156   user-hvm-domu   <none>           <none>
+pod/tshepo-consent-service-5858c8f489-z7tnt    0/1     Running   24 (9m52s ago)   112m   10.42.0.153   user-hvm-domu   <none>           <none>
+pod/tshepo-identity-service-56758b8fbb-z242p   0/1     Running   24 (10m ago)     112m   10.42.0.157   user-hvm-domu   <none>           <none>
+pod/tshepo-keys-service-77b948d545-w7tpm       0/1     Running   24 (9m52s ago)   112m   10.42.0.154   user-hvm-domu   <none>           <none>
+pod/tuso-service-56d7c4fc6b-jhr25              0/1     Running   25 (10m ago)     112m   10.42.0.160   user-hvm-domu   <none>           <none>
+pod/ubomi-service-77b5794b99-vgh24             1/1     Running   2 (106m ago)     112m   10.42.0.168   user-hvm-domu   <none>           <none>
+pod/varapi-service-65b4c87587-xplzg            0/1     Running   24 (9m49s ago)   112m   10.42.0.159   user-hvm-domu   <none>           <none>
+pod/vito-service-657bfbbf4-f9k7q               0/1     Running   25 (10m ago)     112m   10.42.0.167   user-hvm-domu   <none>           <none>
+pod/zibo-service-6866b9b8d7-knr4x              0/1     Running   24 (9m51s ago)   112m   10.42.0.163   user-hvm-domu   <none>           <none>
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)              AGE    SELECTOR
+service/butano-service            ClusterIP   10.43.27.71     <none>        8090/TCP             112m   app=butano-service
+service/envoy                     ClusterIP   10.43.81.177    <none>        10000/TCP,9901/TCP   112m   app=envoy
+service/experience-bff            ClusterIP   10.43.162.22    <none>        8160/TCP             112m   app=experience-bff
+service/fhir-gateway-service      ClusterIP   10.43.63.38     <none>        8091/TCP             112m   app=fhir-gateway-service
+service/hapi-fhir                 ClusterIP   10.43.8.198     <none>        8090/TCP             112m   app=hapi-fhir
+service/kafka                     ClusterIP   10.43.119.49    <none>        9092/TCP             112m   app=kafka
+service/keycloak                  ClusterIP   10.43.196.74    <none>        8080/TCP             112m   app=keycloak
+service/minio                     ClusterIP   10.43.22.100    <none>        9000/TCP,9001/TCP    112m   app=minio
+service/one-ui-shell              ClusterIP   10.43.237.245   <none>        3000/TCP             112m   app=one-ui-shell
+service/pct-service               ClusterIP   10.43.68.106    <none>        8088/TCP             112m   app=pct-service
+service/postgres                  ClusterIP   10.43.65.12     <none>        5432/TCP             112m   app=postgres
+service/redis                     ClusterIP   10.43.184.122   <none>        6379/TCP             112m   app=redis
+service/tshepo-audit-service      ClusterIP   10.43.228.190   <none>        8183/TCP             112m   app=tshepo-audit-service
+service/tshepo-authz-service      ClusterIP   10.43.27.106    <none>        8081/TCP             112m   app=tshepo-authz-service
+service/tshepo-consent-service    ClusterIP   10.43.106.49    <none>        8182/TCP             112m   app=tshepo-consent-service
+service/tshepo-identity-service   ClusterIP   10.43.104.166   <none>        8181/TCP             112m   app=tshepo-identity-service
+service/tshepo-keys-service       ClusterIP   10.43.204.79    <none>        8184/TCP             112m   app=tshepo-keys-service
+service/tuso-service              ClusterIP   10.43.12.164    <none>        8084/TCP             112m   app=tuso-service
+service/ubomi-service             ClusterIP   10.43.13.8      <none>        8087/TCP             112m   app=ubomi-service
+service/varapi-service            ClusterIP   10.43.30.85     <none>        8083/TCP             112m   app=varapi-service
+service/vito-service              ClusterIP   10.43.83.251    <none>        8082/TCP             112m   app=vito-service
+service/zibo-service              ClusterIP   10.43.205.148   <none>        8085/TCP             112m   app=zibo-service
+
+NAME                                      READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS                IMAGES                                   SELECTOR
+deployment.apps/butano-service            0/1     1            0           112m   butano-service            impilo/butano-service:preview            app=butano-service
+deployment.apps/envoy                     1/1     1            1           112m   envoy                     envoyproxy/envoy:v1.31-latest            app=envoy
+deployment.apps/experience-bff            1/1     1            1           112m   experience-bff            impilo/experience-bff:preview            app=experience-bff
+deployment.apps/fhir-gateway-service      0/1     1            0           112m   fhir-gateway-service      impilo/fhir-gateway-service:preview      app=fhir-gateway-service
+deployment.apps/hapi-fhir                 1/1     1            1           112m   hapi-fhir                 hapiproject/hapi:v7.4.0                  app=hapi-fhir
+deployment.apps/kafka                     1/1     1            1           112m   kafka                     apache/kafka:3.7.1                       app=kafka
+deployment.apps/keycloak                  1/1     1            1           112m   keycloak                  quay.io/keycloak/keycloak:25.0           app=keycloak
+deployment.apps/minio                     1/1     1            1           112m   minio                     minio/minio:latest                       app=minio
+deployment.apps/one-ui-shell              1/1     1            1           112m   one-ui-shell              impilo/one-ui-shell:preview              app=one-ui-shell
+deployment.apps/pct-service               0/1     1            0           112m   pct-service               impilo/pct-service:preview               app=pct-service
+deployment.apps/postgres                  1/1     1            1           112m   postgres                  postgres:16-alpine                       app=postgres
+deployment.apps/redis                     1/1     1            1           112m   redis                     redis:7-alpine                           app=redis
+deployment.apps/tshepo-audit-service      0/1     1            0           112m   tshepo-audit-service      impilo/tshepo-audit-service:preview      app=tshepo-audit-service
+deployment.apps/tshepo-authz-service      0/1     1            0           112m   tshepo-authz-service      impilo/tshepo-authz-service:preview      app=tshepo-authz-service
+deployment.apps/tshepo-consent-service    0/1     1            0           112m   tshepo-consent-service    impilo/tshepo-consent-service:preview    app=tshepo-consent-service
+deployment.apps/tshepo-identity-service   0/1     1            0           112m   tshepo-identity-service   impilo/tshepo-identity-service:preview   app=tshepo-identity-service
+deployment.apps/tshepo-keys-service       0/1     1            0           112m   tshepo-keys-service       impilo/tshepo-keys-service:preview       app=tshepo-keys-service
+deployment.apps/tuso-service              0/1     1            0           112m   tuso-service              impilo/tuso-service:preview              app=tuso-service
+deployment.apps/ubomi-service             1/1     1            1           112m   ubomi-service             impilo/ubomi-service:preview             app=ubomi-service
+deployment.apps/varapi-service            0/1     1            0           112m   varapi-service            impilo/varapi-service:preview            app=varapi-service
+deployment.apps/vito-service              0/1     1            0           112m   vito-service              impilo/vito-service:preview              app=vito-service
+deployment.apps/zibo-service              0/1     1            0           112m   zibo-service              impilo/zibo-service:preview              app=zibo-service
+
+NAME                                                 DESIRED   CURRENT   READY   AGE    CONTAINERS                IMAGES                                   SELECTOR
+replicaset.apps/butano-service-6dcdc465f8            1         1         0       112m   butano-service            impilo/butano-service:preview            app=butano-service,pod-template-hash=6dcdc465f8
+replicaset.apps/envoy-85756c7bfb                     1         1         1       112m   envoy                     envoyproxy/envoy:v1.31-latest            app=envoy,pod-template-hash=85756c7bfb
+replicaset.apps/experience-bff-86c675d967            1         1         1       112m   experience-bff            impilo/experience-bff:preview            app=experience-bff,pod-template-hash=86c675d967
+replicaset.apps/fhir-gateway-service-79754d64cf      1         1         0       112m   fhir-gateway-service      impilo/fhir-gateway-service:preview      app=fhir-gateway-service,pod-template-hash=79754d64cf
+replicaset.apps/hapi-fhir-6dcf6888                   1         1         1       112m   hapi-fhir                 hapiproject/hapi:v7.4.0                  app=hapi-fhir,pod-template-hash=6dcf6888
+replicaset.apps/kafka-5855b4bf4b                     1         1         1       112m   kafka                     apache/kafka:3.7.1                       app=kafka,pod-template-hash=5855b4bf4b
+replicaset.apps/keycloak-86666595d7                  1         1         1       112m   keycloak                  quay.io/keycloak/keycloak:25.0           app=keycloak,pod-template-hash=86666595d7
+replicaset.apps/minio-5497fc6568                     1         1         1       112m   minio                     minio/minio:latest                       app=minio,pod-template-hash=5497fc6568
+replicaset.apps/one-ui-shell-6764bddd9d              1         1         1       112m   one-ui-shell              impilo/one-ui-shell:preview              app=one-ui-shell,pod-template-hash=6764bddd9d
+replicaset.apps/pct-service-7d6545cf54               1         1         0       112m   pct-service               impilo/pct-service:preview               app=pct-service,pod-template-hash=7d6545cf54
+replicaset.apps/postgres-5f78849444                  1         1         1       112m   postgres                  postgres:16-alpine                       app=postgres,pod-template-hash=5f78849444
+replicaset.apps/redis-c46d5dffc                      1         1         1       112m   redis                     redis:7-alpine                           app=redis,pod-template-hash=c46d5dffc
+replicaset.apps/tshepo-audit-service-955f64f68       1         1         0       112m   tshepo-audit-service      impilo/tshepo-audit-service:preview      app=tshepo-audit-service,pod-template-hash=955f64f68
+replicaset.apps/tshepo-authz-service-7d9dfdc775      1         1         0       112m   tshepo-authz-service      impilo/tshepo-authz-service:preview      app=tshepo-authz-service,pod-template-hash=7d9dfdc775
+replicaset.apps/tshepo-consent-service-5858c8f489    1         1         0       112m   tshepo-consent-service    impilo/tshepo-consent-service:preview    app=tshepo-consent-service,pod-template-hash=5858c8f489
+replicaset.apps/tshepo-identity-service-56758b8fbb   1         1         0       112m   tshepo-identity-service   impilo/tshepo-identity-service:preview   app=tshepo-identity-service,pod-template-hash=56758b8fbb
+replicaset.apps/tshepo-keys-service-77b948d545       1         1         0       112m   tshepo-keys-service       impilo/tshepo-keys-service:preview       app=tshepo-keys-service,pod-template-hash=77b948d545
+replicaset.apps/tuso-service-56d7c4fc6b              1         1         0       112m   tuso-service              impilo/tuso-service:preview              app=tuso-service,pod-template-hash=56d7c4fc6b
+replicaset.apps/ubomi-service-77b5794b99             1         1         1       112m   ubomi-service             impilo/ubomi-service:preview             app=ubomi-service,pod-template-hash=77b5794b99
+replicaset.apps/varapi-service-65b4c87587            1         1         0       112m   varapi-service            impilo/varapi-service:preview            app=varapi-service,pod-template-hash=65b4c87587
+replicaset.apps/vito-service-657bfbbf4               1         1         0       112m   vito-service              impilo/vito-service:preview              app=vito-service,pod-template-hash=657bfbbf4
+replicaset.apps/zibo-service-6866b9b8d7              1         1         0       112m   zibo-service              impilo/zibo-service:preview              app=zibo-service,pod-template-hash=6866b9b8d7

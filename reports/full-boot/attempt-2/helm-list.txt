@@ -1,0 +1,2 @@
+NAME               	NAMESPACE          	REVISION	UPDATED                              	STATUS	CHART             	APP VERSION
+impilo-full-preview	impilo-full-preview	1       	2026-06-02 03:22:30.9970633 +0200 CAT	failed	impilo-vnext-0.1.0	preview    
