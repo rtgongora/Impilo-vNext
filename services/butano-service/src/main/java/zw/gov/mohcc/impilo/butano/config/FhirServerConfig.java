@@ -1,6 +1,5 @@
 package zw.gov.mohcc.impilo.butano.config;
 
-import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.jpa.api.config.JpaStorageSettings;
 import ca.uhn.fhir.jpa.api.dao.DaoRegistry;
 import ca.uhn.fhir.jpa.config.r4.JpaR4Config;
@@ -59,18 +58,6 @@ public class FhirServerConfig {
 
     @Value("${hapi.fhir.enforce-referential-integrity-on-delete:false}")
     private boolean enforceReferentialIntegrityOnDelete;
-
-    /**
-     * Provides the FHIR R4 context as the primary FhirContext bean.
-     *
-     * <p>HAPI FHIR JPA internally creates a FhirContext; we mark ours as
-     * {@code @Primary} to ensure all components use the R4 context consistently.</p>
-     */
-    @Bean
-    @Primary
-    public FhirContext fhirContext() {
-        return FhirContext.forR4();
-    }
 
     /**
      * Configures HAPI FHIR JPA storage settings.

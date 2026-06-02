@@ -26,14 +26,16 @@ Do **not** treat deployment existence as success. Readiness and pod `Ready` stat
 
 ---
 
-## Remaining blockers (not fully closed in chart-only batch)
+## Remaining blockers (second-attempt prep — 2026-06-02)
 
-| Service | Issue | Next action |
-|---------|-------|-------------|
-| butano-service | `NoUniqueBeanDefinitionException` for `FhirContext` | Application config: single primary `FhirContext` bean |
-| fhir-gateway-service | `ClassNotFoundException: BearerTokenResolver` | Add/fix Spring Security OAuth2 resource server dependency |
-| pct-service | V002: `pct_encounters` does not exist | Retest on clean DB after init; if persists, fix Flyway schema/search_path |
-| Domain images | Flyway fixes in **vito** / **tshepo-authz** require **image rebuild** before second deploy | `FULL_BOOT_IMAGE_TAG=preview` rebuild or `FULL_BOOT_SKIP_BUILD=0` |
+| Service | Issue | Fix applied (source) |
+|---------|-------|---------------------|
+| butano-service | `NoUniqueBeanDefinitionException` for `FhirContext` | Removed duplicate `@Bean fhirContext()`; use HAPI JPA `primaryFhirContext` from `JpaR4Config` |
+| fhir-gateway-service | `ClassNotFoundException: BearerTokenResolver` | Added `spring-boot-starter-oauth2-resource-server` to `pom.xml` |
+| pct-service | V002: `pct_encounters` does not exist (Flyway used `public` schema) | `flyway.schemas` / `default-schema: pct` + Hibernate `default_schema: pct` |
+| vito-service | V027 `ADD CONSTRAINT IF NOT EXISTS` invalid in PostgreSQL | DO block in V027 (commit `9e9b1146`) — **rebuild image** |
+| tshepo-authz-service | Duplicate Flyway V012 | Renamed to V013 (commit `9e9b1146`) — **rebuild image** |
+| Kafka / Keycloak / HAPI | Chart-only fixes from `9e9b1146` | **Runtime validation** on second deploy |
 
 ---
 
