@@ -4,8 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
-import { useFundoPathway } from "@/hooks/queries/useFundoLms";
+import { useAddFundoPathwayItem, useFundoPathway, useUpdateFundoPathway } from "@/hooks/queries/useFundoLms";
 
 export default function EditPathwayPage() {
   const params = useParams<{ pathwayId: string }>();
@@ -18,12 +17,14 @@ export default function EditPathwayPage() {
   const [required, setRequired] = useState(true);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const updatePathway = useUpdateFundoPathway();
+  const addPathwayItem = useAddFundoPathwayItem();
   const pathway = ((pathwayData?.data as Record<string, unknown>)?.pathway as Record<string, unknown>) ?? {};
   const items = ((pathway.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
 
   async function save() {
     if (!pathwayId) return;
-    await apiClient.put(`/internal/v1/learning/v11/pathways/${encodeURIComponent(pathwayId)}`, { title, status });
+    await updatePathway.mutateAsync({ pathwayId, body: { title: title.trim() || undefined, status } });
     setSaved(true);
     setMessage("Pathway metadata updated.");
     void refetch();
@@ -34,10 +35,13 @@ export default function EditPathwayPage() {
       setMessage("Course ID is required to add a pathway item.");
       return;
     }
-    await apiClient.post(`/internal/v1/learning/v11/pathways/${encodeURIComponent(pathwayId)}/items`, {
-      courseId: courseId.trim(),
-      sequence: Number(sequence || 1),
-      required,
+    await addPathwayItem.mutateAsync({
+      pathwayId,
+      body: {
+        courseId: courseId.trim(),
+        sequence: Number(sequence || 1),
+        required,
+      },
     });
     setCourseId("");
     setMessage("Pathway item added.");
@@ -54,7 +58,7 @@ export default function EditPathwayPage() {
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="ARCHIVED">ARCHIVED</option>
           </select>
-          <button onClick={save} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Save metadata</button>
+          <button onClick={save} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700">Save metadata</button>
           {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
           {message ? <p className="text-xs text-gray-600">{message}</p> : null}
         </div>

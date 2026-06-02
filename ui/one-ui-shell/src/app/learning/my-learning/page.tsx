@@ -19,6 +19,10 @@ export default function MyLearningPage() {
     ["In progress", listOf(payload.inProgress)],
     ["Completed", listOf(payload.completed)],
     ["Overdue", listOf(payload.overdue)],
+    ["Recommended", listOf(payload.recommended)],
+    ["Assigned pathways", listOf(payload.assignedPathways)],
+    ["Certificates", listOf(payload.certificates)],
+    ["CPD eligible completions", listOf(payload.cpdEligibleCompletions)],
   ] as const;
 
   return (
@@ -41,8 +45,23 @@ export default function MyLearningPage() {
                   {items.slice(0, 8).map((item) => (
                     <li key={String(item.id)} className="flex items-center justify-between gap-2">
                       <span>{String(item.courseTitle ?? item.courseId ?? "Course")}</span>
-                      {item.id ? (
-                        <Link href={`/learning/enrolments/${item.id}`} className="text-teal-700 hover:underline">
+                      {item.id && !title.includes("Recommended") && !title.includes("pathway") && !title.includes("Certificates") ? (
+                        <Link href={`/learning/enrolments/${item.id}`} className="text-impilo-700 hover:underline">
+                          Open
+                        </Link>
+                      ) : null}
+                      {item.id && title.includes("Recommended") ? (
+                        <Link href={`/learning/courses/${item.id}`} className="text-impilo-700 hover:underline">
+                          Open
+                        </Link>
+                      ) : null}
+                      {item.id && title.includes("pathway") ? (
+                        <Link href={`/learning/pathways/${item.id}`} className="text-impilo-700 hover:underline">
+                          Open
+                        </Link>
+                      ) : null}
+                      {item.id && title.includes("Certificates") ? (
+                        <Link href={`/learning/certificates/${item.id}`} className="text-impilo-700 hover:underline">
                           Open
                         </Link>
                       ) : null}

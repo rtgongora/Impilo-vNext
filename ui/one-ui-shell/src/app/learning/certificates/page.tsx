@@ -24,6 +24,11 @@ export default function CertificatesPage() {
               </Link>
             </li>
           ))}
+          {items.length === 0 ? (
+            <li className="rounded border border-dashed border-gray-200 p-3 text-sm text-gray-500">
+              No certificates have been issued for this learner yet.
+            </li>
+          ) : null}
         </ul>
       </PageShell>
     </AppLayout>

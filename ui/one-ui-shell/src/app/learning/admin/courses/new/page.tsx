@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useCreateFundoCourse } from "@/hooks/queries/useFundoLms";
 
 export default function NewCoursePage() {
   const [title, setTitle] = useState("");
@@ -15,7 +15,7 @@ export default function NewCoursePage() {
   const [status, setStatus] = useState("DRAFT");
   const [saved, setSaved] = useState<string>("");
   const [error, setError] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const createCourse = useCreateFundoCourse();
 
   async function save() {
     setError("");
@@ -23,9 +23,8 @@ export default function NewCoursePage() {
       setError("Course code and title are required.");
       return;
     }
-    setIsSaving(true);
     try {
-      const res = (await apiClient.post("/internal/v1/learning/v11/catalog", {
+      const res = (await createCourse.mutateAsync({
         code: code.trim(),
         title: title.trim(),
         description: description.trim(),
@@ -42,8 +41,6 @@ export default function NewCoursePage() {
       setSaved(id);
     } catch {
       setError("Failed to create course. Check fields and try again.");
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -63,7 +60,7 @@ export default function NewCoursePage() {
               <option value="ARCHIVED">ARCHIVED</option>
             </select>
           </div>
-          <button onClick={save} disabled={isSaving} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white disabled:opacity-50">Create course</button>
+          <button onClick={save} disabled={createCourse.isPending} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50">Create course</button>
           {error ? <p className="text-xs text-rose-700">{error}</p> : null}
           {saved ? <p className="text-xs text-emerald-700">Created: {saved}</p> : null}
           {saved ? (

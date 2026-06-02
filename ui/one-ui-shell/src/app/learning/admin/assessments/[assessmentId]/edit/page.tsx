@@ -4,8 +4,14 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
-import { useFundoAssessment, useFundoPendingReviews, useManualReviewFundoAttempt } from "@/hooks/queries/useFundoLms";
+import {
+  useAddFundoQuestion,
+  useFundoAssessment,
+  useFundoPendingReviews,
+  useManualReviewFundoAttempt,
+  useUpdateFundoAssessment,
+  useUpdateFundoQuestion,
+} from "@/hooks/queries/useFundoLms";
 
 export default function EditAssessmentPage() {
   const params = useParams<{ assessmentId: string }>();
@@ -23,6 +29,9 @@ export default function EditAssessmentPage() {
   const [reviewFeedback, setReviewFeedback] = useState("");
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const updateAssessment = useUpdateFundoAssessment();
+  const addQuestionMutation = useAddFundoQuestion();
+  const updateQuestionMutation = useUpdateFundoQuestion();
   const manualReviewMutation = useManualReviewFundoAttempt();
   const assessment = ((data?.data as Record<string, unknown>)?.assessment as Record<string, unknown>) ?? {};
   const questions = ((assessment.questions as Array<Record<string, unknown>>) ?? []).filter(Boolean);
@@ -32,10 +41,7 @@ export default function EditAssessmentPage() {
   async function save() {
     if (!assessmentId) return;
     setMessage("");
-    await apiClient.put(`/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}`, {
-      title,
-      status,
-    });
+    await updateAssessment.mutateAsync({ assessmentId, body: { title: title.trim() || undefined, status } });
     setSaved(true);
     setMessage("Assessment metadata updated.");
     void refetch();
@@ -46,13 +52,16 @@ export default function EditAssessmentPage() {
       setMessage("Question prompt is required.");
       return;
     }
-    await apiClient.post(`/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}/questions`, {
-      questionType,
-      prompt: prompt.trim(),
-      optionsJson: JSON.stringify(optionsCsv.split(",").map((v) => v.trim()).filter(Boolean)),
-      correctAnswerJson: JSON.stringify(correctAnswer),
-      rubricJson,
-      points: 1,
+    await addQuestionMutation.mutateAsync({
+      assessmentId,
+      body: {
+        questionType,
+        prompt: prompt.trim(),
+        optionsJson: JSON.stringify(optionsCsv.split(",").map((v) => v.trim()).filter(Boolean)),
+        correctAnswerJson: JSON.stringify(correctAnswer),
+        rubricJson,
+        points: 1,
+      },
     });
     setPrompt("");
     setMessage("Question added.");
@@ -60,16 +69,18 @@ export default function EditAssessmentPage() {
   }
 
   async function updateQuestion(questionId: string) {
-    await apiClient.put(
-      `/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId ?? "")}/questions/${encodeURIComponent(questionId)}`,
-      {
+    if (!assessmentId) return;
+    await updateQuestionMutation.mutateAsync({
+      assessmentId,
+      questionId,
+      body: {
         questionType,
         prompt: prompt.trim(),
         optionsJson: JSON.stringify(optionsCsv.split(",").map((v) => v.trim()).filter(Boolean)),
         correctAnswerJson: JSON.stringify(correctAnswer),
         rubricJson,
       },
-    );
+    });
     setMessage("Question updated.");
     void refetch();
   }
@@ -99,7 +110,7 @@ export default function EditAssessmentPage() {
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="ARCHIVED">ARCHIVED</option>
           </select>
-          <button onClick={save} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Save metadata</button>
+          <button onClick={save} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700">Save metadata</button>
           {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
           {message ? <p className="text-xs text-gray-600">{message}</p> : null}
         </div>

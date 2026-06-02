@@ -4,8 +4,14 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
+import {
+  useCreateFundoLesson,
+  useCreateFundoModule,
+  useUpdateFundoCourse,
+  useUpdateFundoLesson,
+  useUpdateFundoModule,
+} from "@/hooks/queries/useFundoLms";
 
 export default function EditCoursePage() {
   const params = useParams<{ courseId: string }>();
@@ -23,15 +29,17 @@ export default function EditCoursePage() {
   const [moduleIdForLesson, setModuleIdForLesson] = useState("");
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const updateCourse = useUpdateFundoCourse();
+  const createModule = useCreateFundoModule();
+  const updateModule = useUpdateFundoModule();
+  const createLesson = useCreateFundoLesson();
+  const updateLesson = useUpdateFundoLesson();
   const modules = ((((structureData?.data as Record<string, unknown>)?.structure as Record<string, unknown>)?.modules as Array<Record<string, unknown>>) ?? []).filter(Boolean);
 
   async function save() {
     if (!courseId) return;
     setMessage("");
-    await apiClient.put(`/internal/v1/learning/v11/catalog/${encodeURIComponent(courseId)}`, {
-      title,
-      status,
-    });
+    await updateCourse.mutateAsync({ courseId, body: { title: title.trim() || undefined, status } });
     setSaved(true);
     setMessage("Course metadata updated.");
     void refetch();
@@ -43,10 +51,7 @@ export default function EditCoursePage() {
       return;
     }
     setMessage("");
-    await apiClient.post(`/internal/v1/learning/v11/courses/${encodeURIComponent(courseId)}/modules`, {
-      title: moduleTitle.trim(),
-      status: "DRAFT",
-    });
+    await createModule.mutateAsync({ courseId, body: { title: moduleTitle.trim(), status: "DRAFT" } });
     setModuleTitle("");
     setMessage("Module created.");
     void refetch();
@@ -58,20 +63,56 @@ export default function EditCoursePage() {
       return;
     }
     setMessage("");
-    await apiClient.post(`/internal/v1/learning/v11/modules/${encodeURIComponent(moduleIdForLesson)}/lessons`, {
-      title: lessonTitle.trim(),
-      contentType: lessonContentType,
-      contentBody: lessonBody.trim(),
-      contentRef: lessonContentRef.trim() || undefined,
-      contentFormat: lessonContentFormat,
-      contentBlocksJson: lessonBlocksText.trim() || undefined,
-      status: "DRAFT",
-      required: true,
+    await createLesson.mutateAsync({
+      moduleId: moduleIdForLesson,
+      body: {
+        title: lessonTitle.trim(),
+        contentType: lessonContentType,
+        contentBody: lessonBody.trim(),
+        contentRef: lessonContentRef.trim() || undefined,
+        contentFormat: lessonContentFormat,
+        contentBlocksJson: lessonBlocksText.trim() || undefined,
+        status: "DRAFT",
+        required: true,
+      },
     });
     setLessonTitle("");
     setLessonBody("");
     setLessonContentRef("");
     setMessage("Lesson created.");
+    void refetch();
+  }
+
+  async function renameModule(moduleId: string, currentTitle: unknown) {
+    const nextTitle = moduleTitle.trim() || String(currentTitle ?? "").trim();
+    if (!nextTitle) {
+      setMessage("Enter a module title before updating.");
+      return;
+    }
+    await updateModule.mutateAsync({ moduleId, body: { title: nextTitle, status: "DRAFT" } });
+    setMessage("Module updated.");
+    void refetch();
+  }
+
+  async function updateExistingLesson(lessonId: string) {
+    if (!lessonTitle.trim()) {
+      setMessage("Enter the replacement lesson title before updating.");
+      return;
+    }
+    await updateLesson.mutateAsync({
+      lessonId,
+      body: {
+        title: lessonTitle.trim(),
+        contentType: lessonContentType,
+        contentBody: lessonBody.trim(),
+        contentRef: lessonContentRef.trim() || undefined,
+        contentFormat: lessonContentFormat,
+        contentBlocksJson: lessonBlocksText.trim() || undefined,
+        status: "DRAFT",
+        required: true,
+      },
+    });
+    setMessage("Lesson updated.");
     void refetch();
   }
 
@@ -85,7 +126,7 @@ export default function EditCoursePage() {
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="ARCHIVED">ARCHIVED</option>
           </select>
-          <button onClick={save} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Save metadata</button>
+          <button onClick={save} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700">Save metadata</button>
           {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
           {message ? <p className="text-xs text-gray-600">{message}</p> : null}
         </div>
@@ -96,7 +137,12 @@ export default function EditCoursePage() {
             <button onClick={addModule} className="mt-2 rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">Add module</button>
             <ul className="mt-3 space-y-1 text-xs text-gray-600">
               {modules.map((m) => (
-                <li key={String(m.id)}>{String(m.title ?? "Module")} ({String(m.id)})</li>
+                <li key={String(m.id)} className="flex items-center justify-between gap-2">
+                  <span>{String(m.title ?? "Module")} ({String(m.id)})</span>
+                  <button onClick={() => renameModule(String(m.id), m.title)} className="text-impilo-700 hover:underline">
+                    Update using title field
+                  </button>
+                </li>
               ))}
             </ul>
           </div>
@@ -127,8 +173,11 @@ export default function EditCoursePage() {
             <button onClick={addLesson} className="mt-2 rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">Add lesson</button>
             <ul className="mt-3 space-y-1 text-xs text-gray-600">
               {modules.flatMap((m) => ((m.lessons as Array<Record<string, unknown>>) ?? [])).slice(0, 8).map((lesson) => (
-                <li key={String(lesson.id)}>
-                  {String(lesson.title ?? lesson.id)} • {String(lesson.contentType ?? "TEXT")} • {String(lesson.contentFormat ?? "PLAIN_TEXT")}
+                <li key={String(lesson.id)} className="flex items-center justify-between gap-2">
+                  <span>{String(lesson.title ?? lesson.id)} • {String(lesson.contentType ?? "TEXT")} • {String(lesson.contentFormat ?? "PLAIN_TEXT")}</span>
+                  <button onClick={() => updateExistingLesson(String(lesson.id))} className="text-impilo-700 hover:underline">
+                    Update using form values
+                  </button>
                 </li>
               ))}
             </ul>

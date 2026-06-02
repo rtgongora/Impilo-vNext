@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useCreateFundoPathway } from "@/hooks/queries/useFundoLms";
 
 export default function NewPathwayPage() {
   const [code, setCode] = useState("");
@@ -14,6 +14,7 @@ export default function NewPathwayPage() {
   const [pathwayId, setPathwayId] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const createPathway = useCreateFundoPathway();
 
   async function save() {
     setError("");
@@ -21,7 +22,7 @@ export default function NewPathwayPage() {
       setError("Pathway code and title are required.");
       return;
     }
-    const res = (await apiClient.post("/internal/v1/learning/v11/pathways", {
+    const res = (await createPathway.mutateAsync({
       code: code.trim(),
       title: title.trim(),
       description: description.trim(),
@@ -45,7 +46,7 @@ export default function NewPathwayPage() {
             <option value="PUBLISHED">PUBLISHED</option>
             <option value="ARCHIVED">ARCHIVED</option>
           </select>
-          <button onClick={save} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Create pathway</button>
+          <button onClick={save} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50" disabled={createPathway.isPending}>Create pathway</button>
           {error ? <p className="text-xs text-rose-700">{error}</p> : null}
           {saved ? <p className="text-xs text-emerald-700">Saved.</p> : null}
           {pathwayId ? (

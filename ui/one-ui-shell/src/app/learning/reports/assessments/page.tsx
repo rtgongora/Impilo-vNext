@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoPendingReviews, useFundoReportFiltered } from "@/hooks/queries/useFundoLms";
@@ -56,7 +57,12 @@ export default function AssessmentPerformanceReportPage() {
               {pendingItems.map((item) => (
                 <li key={String(item.id)} className="flex items-center justify-between border-b border-gray-100 py-1">
                   <span>Attempt {String(item.attemptNo ?? "-")} • {String(item.subjectType ?? "-")}/{String(item.subjectId ?? "-")}</span>
-                  <span className="text-xs text-amber-700">{String(item.manualReviewStatus ?? "PENDING")}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-amber-700">{String(item.manualReviewStatus ?? "PENDING")}</span>
+                    <Link href={`/learning/admin/assessments/${assessmentId}/edit`} className="text-impilo-700 hover:underline">
+                      Review
+                    </Link>
+                  </div>
                 </li>
               ))}
               {pendingItems.length === 0 ? <li className="text-gray-500">No pending manual reviews.</li> : null}

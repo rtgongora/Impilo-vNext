@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useFundoCourseAssessments, useFundoEnrolment, useFundoEnrolmentProgress, useIssueFundoCertificate, useStartFundoEnrolment } from "@/hooks/queries/useFundoLms";
+import {
+  useCancelFundoEnrolment,
+  useFundoCourseAssessments,
+  useFundoEnrolment,
+  useFundoEnrolmentProgress,
+  useIssueFundoCertificate,
+  useStartFundoEnrolment,
+} from "@/hooks/queries/useFundoLms";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
 
 type AnyRecord = Record<string, unknown>;
@@ -12,9 +19,10 @@ type AnyRecord = Record<string, unknown>;
 export default function EnrolmentPlayerPage() {
   const params = useParams<{ enrolmentId: string }>();
   const enrolmentId = params?.enrolmentId;
-  const { data: enrolData } = useFundoEnrolment(enrolmentId);
-  const { data: progressData } = useFundoEnrolmentProgress(enrolmentId);
+  const { data: enrolData, refetch: refetchEnrolment } = useFundoEnrolment(enrolmentId);
+  const { data: progressData, refetch: refetchProgress } = useFundoEnrolmentProgress(enrolmentId);
   const startMutation = useStartFundoEnrolment();
+  const cancelMutation = useCancelFundoEnrolment();
   const certMutation = useIssueFundoCertificate();
   const enrolment = ((enrolData?.data as AnyRecord)?.enrolment ?? {}) as AnyRecord;
   const courseId = String(enrolment.courseId ?? "");
@@ -38,14 +46,24 @@ export default function EnrolmentPlayerPage() {
   const currentLesson: AnyRecord | undefined = firstIncompleteLesson ?? lessons[0];
   const assessments = (((assessmentData?.data as AnyRecord)?.items as AnyRecord[]) ?? []).filter(Boolean);
   const canIssueCertificate = String(enrolment.status) === "COMPLETED" || percent >= 100;
+  const canCancel = !["COMPLETED", "CANCELLED"].includes(String(enrolment.status));
 
   return (
     <AppLayout>
       <PageShell title="Enrolment" subtitle={`Course player shell • ${String(enrolment.status ?? "ENROLLED")}`}>
         <div className="mb-3 flex flex-wrap gap-2">
           <button
-            onClick={() => enrolmentId && startMutation.mutate(enrolmentId)}
-            className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+            onClick={() =>
+              enrolmentId &&
+              startMutation.mutate(enrolmentId, {
+                onSuccess: () => {
+                  void refetchEnrolment();
+                  void refetchProgress();
+                },
+              })
+            }
+            className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700"
+            disabled={startMutation.isPending}
           >
             Start / Continue
           </button>
@@ -58,11 +76,31 @@ export default function EnrolmentPlayerPage() {
             </Link>
           ) : null}
           <button
-            onClick={() => enrolmentId && canIssueCertificate && certMutation.mutate(enrolmentId)}
+            onClick={() =>
+              enrolmentId &&
+              canIssueCertificate &&
+              certMutation.mutate(enrolmentId, {
+                onSuccess: () => void refetchEnrolment(),
+              })
+            }
             className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canIssueCertificate}
           >
             Issue certificate
+          </button>
+          <button
+            onClick={() =>
+              enrolmentId &&
+              canCancel &&
+              cancelMutation.mutate(
+                { enrolmentId, reason: "Cancelled from Fundo learner workspace" },
+                { onSuccess: () => void refetchEnrolment() },
+              )
+            }
+            className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!canCancel || cancelMutation.isPending}
+          >
+            Cancel enrolment
           </button>
         </div>
         <div className="rounded border border-gray-200 bg-white p-4">

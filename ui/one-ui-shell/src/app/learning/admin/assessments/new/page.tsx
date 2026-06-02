@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient } from "@/lib/api-client";
+import { useAddFundoQuestion, useCreateFundoAssessment } from "@/hooks/queries/useFundoLms";
 
 export default function NewAssessmentPage() {
   const [courseId, setCourseId] = useState("");
@@ -16,6 +16,8 @@ export default function NewAssessmentPage() {
   const [correctAnswer, setCorrectAnswer] = useState("true");
   const [rubricJson, setRubricJson] = useState('[{"criterion":"Accuracy","weight":50},{"criterion":"Completeness","weight":50}]');
   const [error, setError] = useState("");
+  const createAssessmentMutation = useCreateFundoAssessment();
+  const addQuestionMutation = useAddFundoQuestion();
 
   async function createAssessment() {
     setError("");
@@ -23,7 +25,7 @@ export default function NewAssessmentPage() {
       setError("Course ID and assessment title are required.");
       return;
     }
-    const res = (await apiClient.post("/internal/v1/learning/v11/assessments", {
+    const res = (await createAssessmentMutation.mutateAsync({
       courseId: courseId.trim(),
       title: title.trim(),
       assessmentType: "QUIZ",
@@ -38,13 +40,16 @@ export default function NewAssessmentPage() {
 
   async function addQuestion() {
     if (!assessmentId) return;
-    await apiClient.post(`/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}/questions`, {
-      questionType,
-      prompt,
-      optionsJson: JSON.stringify(optionsCsv.split(",").map((v) => v.trim()).filter(Boolean)),
-      correctAnswerJson: JSON.stringify(correctAnswer),
-      rubricJson,
-      points: 1,
+    await addQuestionMutation.mutateAsync({
+      assessmentId,
+      body: {
+        questionType,
+        prompt,
+        optionsJson: JSON.stringify(optionsCsv.split(",").map((v) => v.trim()).filter(Boolean)),
+        correctAnswerJson: JSON.stringify(correctAnswer),
+        rubricJson,
+        points: 1,
+      },
     });
   }
 
@@ -54,7 +59,7 @@ export default function NewAssessmentPage() {
         <div className="max-w-xl space-y-2 rounded border border-gray-200 bg-white p-4">
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Course ID" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
           <input className="w-full rounded border border-gray-300 px-2 py-1 text-sm" placeholder="Assessment title" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <button onClick={createAssessment} className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white">Create assessment</button>
+          <button onClick={createAssessment} className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50" disabled={createAssessmentMutation.isPending}>Create assessment</button>
           {error ? <p className="text-xs text-rose-700">{error}</p> : null}
           {assessmentId ? (
             <>

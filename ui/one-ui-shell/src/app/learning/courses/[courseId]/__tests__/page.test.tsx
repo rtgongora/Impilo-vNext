@@ -83,6 +83,7 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
 
 vi.mock("@/hooks/queries/useFundoLms", () => ({
   useCreateFundoEnrolment: () => ({ mutate: vi.fn() }),
+  useFundoCourseAssessments: () => ({ data: { data: { items: [] } } }),
 }));
 
 vi.mock("@/components/learning/LearningSubjectPicker", () => ({

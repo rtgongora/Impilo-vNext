@@ -9,13 +9,30 @@ export default function CohortReportPage() {
   const [pathwayId, setPathwayId] = useState("");
   const [courseId, setCourseId] = useState("");
   const { data } = useFundoReportFiltered("cohort-completions", { pathwayId, courseId, limit: 100 });
-  const items = (((data?.data as Record<string, unknown>)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
+  const payload = (data?.data ?? {}) as Record<string, unknown>;
+  const totals = (payload.totals ?? {}) as Record<string, unknown>;
+  const items = ((payload.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   return (
     <AppLayout>
       <PageShell title="Cohort completions" subtitle="Completion and certificate metrics by cohort/course.">
         <div className="mb-3 grid gap-2 rounded border border-gray-200 bg-white p-3 sm:grid-cols-2">
           <input value={pathwayId} onChange={(e) => setPathwayId(e.target.value)} placeholder="Filter pathway ID" className="rounded border border-gray-300 px-2 py-1 text-sm" />
           <input value={courseId} onChange={(e) => setCourseId(e.target.value)} placeholder="Filter course ID" className="rounded border border-gray-300 px-2 py-1 text-sm" />
+        </div>
+        <div className="mb-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            ["Courses", totals.courses],
+            ["Enrolled", totals.enrolledCount],
+            ["In progress", totals.inProgressCount],
+            ["Completed", totals.completedCount],
+            ["Cancelled", totals.cancelledCount],
+            ["Certificates", totals.certificatesIssued],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded border border-gray-200 bg-white p-3">
+              <p className="text-xs text-gray-500">{String(label)}</p>
+              <p className="text-lg font-semibold text-gray-900">{String(value ?? 0)}</p>
+            </div>
+          ))}
         </div>
         <div className="overflow-auto rounded border border-gray-200 bg-white">
           <table className="min-w-full text-sm">

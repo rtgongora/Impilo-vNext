@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
@@ -20,6 +21,11 @@ export default function CpdEvidencePage() {
               <p className="font-medium text-gray-900">Course: {String(e.courseId)}</p>
               <p>Certificate: {String(e.certificateId ?? "-")}</p>
               <p>CPD points: {String(e.cpdPoints ?? "-")}</p>
+              {e.certificateId ? (
+                <Link href={`/learning/certificates/${String(e.certificateId)}`} className="text-impilo-700 hover:underline">
+                  Open certificate
+                </Link>
+              ) : null}
             </li>
           ))}
           {evidence.length === 0 ? <p className="text-sm text-gray-500">No CPD evidence yet.</p> : null}

@@ -6,8 +6,9 @@ import { ArrowLeft, BadgeCheck, BookOpenCheck, CheckCircle2, Clock, GraduationCa
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
-import { useCreateFundoEnrolment } from "@/hooks/queries/useFundoLms";
+import { useCreateFundoEnrolment, useFundoCourseAssessments } from "@/hooks/queries/useFundoLms";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
+import { useState } from "react";
 
 /**
  * Phase 6B — native Impilo Fundo course detail page. Renders the Phase 5B
@@ -18,10 +19,13 @@ export default function LearningCourseDetailPage() {
   const params = useParams<{ courseId: string }>();
   const courseId = typeof params?.courseId === "string" ? params.courseId : undefined;
   const { data, isLoading, isError } = useFundoCourseStructure(courseId);
+  const { data: assessmentsData } = useFundoCourseAssessments(courseId);
   const createEnrolment = useCreateFundoEnrolment();
   const subject = useLearningSubject();
+  const [enrolmentId, setEnrolmentId] = useState("");
 
   const structure = data?.data?.structure;
+  const assessments = (((assessmentsData?.data as Record<string, unknown> | undefined)?.items as Array<Record<string, unknown>>) ?? []).filter(Boolean);
   const titleText = structure?.title ?? "Impilo Fundo Course";
 
   return (
@@ -88,20 +92,36 @@ export default function LearningCourseDetailPage() {
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() =>
-                    createEnrolment.mutate({
-                      courseId: structure.id,
-                      subjectType: subject.subjectType,
-                      subjectId: subject.subjectId,
-                      enrolmentType: "SELF",
-                    })
+                    createEnrolment.mutate(
+                      {
+                        courseId: structure.id,
+                        subjectType: subject.subjectType,
+                        subjectId: subject.subjectId,
+                        enrolmentType: "SELF",
+                      },
+                      {
+                        onSuccess: (res) => {
+                          const envelope = (res as Record<string, unknown>).data as Record<string, unknown> | undefined;
+                          const enrolment = envelope?.enrolment as Record<string, unknown> | undefined;
+                          const id = String(enrolment?.id ?? "");
+                          if (id) setEnrolmentId(id);
+                        },
+                      },
+                    )
                   }
-                  className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+                  className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50"
+                  disabled={createEnrolment.isPending}
                 >
                   Enrol / Continue
                 </button>
                 <Link href="/learning/my-learning" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
                   View my learning
                 </Link>
+                {enrolmentId ? (
+                  <Link href={`/learning/enrolments/${enrolmentId}`} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
+                    Open enrolment
+                  </Link>
+                ) : null}
               </div>
             </div>
 
@@ -151,6 +171,23 @@ export default function LearningCourseDetailPage() {
                 ))}
               </ol>
             )}
+            <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+              <p className="text-sm font-semibold text-gray-900">Assessments</p>
+              {assessments.length === 0 ? (
+                <p className="mt-2 text-sm text-gray-500">No assessments are linked to this course yet.</p>
+              ) : (
+                <ul className="mt-2 space-y-1 text-sm">
+                  {assessments.map((assessment) => (
+                    <li key={String(assessment.id)} className="flex items-center justify-between gap-3 border-t border-gray-100 py-2 first:border-t-0">
+                      <span>{String(assessment.title ?? "Assessment")}</span>
+                      <Link href={`/learning/assessments/${String(assessment.id)}`} className="text-impilo-700 hover:underline">
+                        Open
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </>
         ) : null}
       </PageShell>

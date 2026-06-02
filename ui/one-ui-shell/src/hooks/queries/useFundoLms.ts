@@ -10,6 +10,12 @@ export interface FundoSubjectRef {
   subjectId: string;
 }
 
+export type FundoReportPath =
+  | "cohort-completions"
+  | "course-completions"
+  | "overdue-learning"
+  | "assessment-performance";
+
 function buildQuery(params: Record<string, string | number | boolean | undefined>) {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
@@ -55,6 +61,17 @@ export function useFundoEnrolmentProgress(enrolmentId?: string) {
     queryKey: ["fundo", "enrolment-progress", enrolmentId],
     enabled: Boolean(enrolmentId),
     queryFn: () => apiClient.get(`/internal/v1/learning/v11/enrolments/${encodeURIComponent(enrolmentId!)}/progress`),
+  });
+}
+
+export function useFundoProgress(subject?: FundoSubjectRef) {
+  return useQuery<GenericData<Record<string, unknown>>>({
+    queryKey: ["fundo", "progress", subject],
+    enabled: Boolean(subject?.subjectType && subject?.subjectId),
+    queryFn: () =>
+      apiClient.get(
+        `/internal/v1/learning/v11/progress?subjectType=${encodeURIComponent(subject!.subjectType)}&subjectId=${encodeURIComponent(subject!.subjectId)}`,
+      ),
   });
 }
 
@@ -161,12 +178,12 @@ export function useFundoReportsOverview() {
   });
 }
 
-export function useFundoReport(path: "cohort-completions" | "course-completions" | "overdue-learning" | "assessment-performance") {
+export function useFundoReport(path: FundoReportPath) {
   return useFundoReportFiltered(path, {});
 }
 
 export function useFundoReportFiltered(
-  path: "cohort-completions" | "course-completions" | "overdue-learning" | "assessment-performance",
+  path: FundoReportPath,
   filters: Record<string, string | number | undefined>,
 ) {
   return useQuery<GenericData<Record<string, unknown>>>({
@@ -190,6 +207,13 @@ export function useCreateFundoEnrolment() {
   return useMutation({
     mutationFn: (body: Record<string, unknown>) =>
       apiClient.post("/internal/v1/learning/v11/enrolments", body),
+  });
+}
+
+export function useCancelFundoEnrolment() {
+  return useMutation({
+    mutationFn: ({ enrolmentId, reason }: { enrolmentId: string; reason?: string }) =>
+      apiClient.post(`/internal/v1/learning/v11/enrolments/${encodeURIComponent(enrolmentId)}/cancel`, { reason }),
   });
 }
 
@@ -231,5 +255,104 @@ export function useIssueFundoCertificate() {
   return useMutation({
     mutationFn: (enrolmentId: string) =>
       apiClient.post(`/internal/v1/learning/v11/enrolments/${encodeURIComponent(enrolmentId)}/certificate`, {}),
+  });
+}
+
+export function useCreateFundoCourse() {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/learning/v11/catalog", body),
+  });
+}
+
+export function useUpdateFundoCourse() {
+  return useMutation({
+    mutationFn: ({ courseId, body }: { courseId: string; body: Record<string, unknown> }) =>
+      apiClient.put(`/internal/v1/learning/v11/catalog/${encodeURIComponent(courseId)}`, body),
+  });
+}
+
+export function useCreateFundoModule() {
+  return useMutation({
+    mutationFn: ({ courseId, body }: { courseId: string; body: Record<string, unknown> }) =>
+      apiClient.post(`/internal/v1/learning/v11/courses/${encodeURIComponent(courseId)}/modules`, body),
+  });
+}
+
+export function useUpdateFundoModule() {
+  return useMutation({
+    mutationFn: ({ moduleId, body }: { moduleId: string; body: Record<string, unknown> }) =>
+      apiClient.put(`/internal/v1/learning/v11/modules/${encodeURIComponent(moduleId)}`, body),
+  });
+}
+
+export function useCreateFundoLesson() {
+  return useMutation({
+    mutationFn: ({ moduleId, body }: { moduleId: string; body: Record<string, unknown> }) =>
+      apiClient.post(`/internal/v1/learning/v11/modules/${encodeURIComponent(moduleId)}/lessons`, body),
+  });
+}
+
+export function useUpdateFundoLesson() {
+  return useMutation({
+    mutationFn: ({ lessonId, body }: { lessonId: string; body: Record<string, unknown> }) =>
+      apiClient.put(`/internal/v1/learning/v11/lessons/${encodeURIComponent(lessonId)}`, body),
+  });
+}
+
+export function useCreateFundoPathway() {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/learning/v11/pathways", body),
+  });
+}
+
+export function useUpdateFundoPathway() {
+  return useMutation({
+    mutationFn: ({ pathwayId, body }: { pathwayId: string; body: Record<string, unknown> }) =>
+      apiClient.put(`/internal/v1/learning/v11/pathways/${encodeURIComponent(pathwayId)}`, body),
+  });
+}
+
+export function useAddFundoPathwayItem() {
+  return useMutation({
+    mutationFn: ({ pathwayId, body }: { pathwayId: string; body: Record<string, unknown> }) =>
+      apiClient.post(`/internal/v1/learning/v11/pathways/${encodeURIComponent(pathwayId)}/items`, body),
+  });
+}
+
+export function useCreateFundoAssessment() {
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) => apiClient.post("/internal/v1/learning/v11/assessments", body),
+  });
+}
+
+export function useUpdateFundoAssessment() {
+  return useMutation({
+    mutationFn: ({ assessmentId, body }: { assessmentId: string; body: Record<string, unknown> }) =>
+      apiClient.put(`/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}`, body),
+  });
+}
+
+export function useAddFundoQuestion() {
+  return useMutation({
+    mutationFn: ({ assessmentId, body }: { assessmentId: string; body: Record<string, unknown> }) =>
+      apiClient.post(`/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}/questions`, body),
+  });
+}
+
+export function useUpdateFundoQuestion() {
+  return useMutation({
+    mutationFn: ({
+      assessmentId,
+      questionId,
+      body,
+    }: {
+      assessmentId: string;
+      questionId: string;
+      body: Record<string, unknown>;
+    }) =>
+      apiClient.put(
+        `/internal/v1/learning/v11/assessments/${encodeURIComponent(assessmentId)}/questions/${encodeURIComponent(questionId)}`,
+        body,
+      ),
   });
 }
