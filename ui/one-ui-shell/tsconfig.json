@@ -16,7 +16,8 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/*": ["../shared-ui/*"]
+      "@shared/*": ["../shared-ui/*"],
+      "@registry-templates/*": ["../../registry-templates/*"]
     }
   },
   "include": [

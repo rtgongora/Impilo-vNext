@@ -501,6 +501,53 @@ async function requestBlob(path: string): Promise<Blob> {
   return response.blob();
 }
 
+/** POST raw DICOM bytes to PACS ingest (Orthanc REST). Returns response body as text (JSON). */
+async function requestDicomPost(path: string, body: ArrayBuffer): Promise<string> {
+  const headers: Record<string, string> = {
+    ...getV11Headers(),
+    "Content-Type": "application/dicom",
+    "Idempotency-Key": crypto.randomUUID(),
+  };
+
+  const response = await fetch(`${BFF_BASE_URL}${path}`, {
+    method: "POST",
+    headers,
+    credentials: fetchCredentials,
+    body,
+  });
+
+  if (response.status === 401) {
+    const refreshed = await attemptRefresh();
+    if (!refreshed) {
+      handleAuthFailure();
+      throw { status: 401, error: { code: "SESSION_EXPIRED", message: "Session expired" } };
+    }
+    const retryHeaders: Record<string, string> = {
+      ...getV11Headers(),
+      "Content-Type": "application/dicom",
+      "Idempotency-Key": crypto.randomUUID(),
+    };
+    const retry = await fetch(`${BFF_BASE_URL}${path}`, {
+      method: "POST",
+      headers: retryHeaders,
+      credentials: fetchCredentials,
+      body,
+    });
+    if (!retry.ok) {
+      const errorBody = await retry.text().catch(() => "");
+      throw { status: retry.status, error: { message: errorBody || "DICOM upload failed" } };
+    }
+    return retry.text();
+  }
+
+  if (!response.ok) {
+    const errorBody = await response.text().catch(() => "");
+    throw { status: response.status, error: { message: errorBody || "DICOM upload failed" } };
+  }
+
+  return response.text();
+}
+
 export const apiClient = {
   get: <T>(path: string, opts?: ApiRequestOptions) => request<T>("GET", path, undefined, "json", opts),
   getBlob: (path: string) => requestBlob(path),
@@ -510,4 +557,5 @@ export const apiClient = {
   patch: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("PATCH", path, body, "json", opts),
   delete: <T>(path: string, body?: unknown, opts?: ApiRequestOptions) => request<T>("DELETE", path, body, "json", opts),
   postForm: <T>(path: string, body: FormData, opts?: ApiRequestOptions) => requestForm<T>("POST", path, body, opts),
+  postDicom: (path: string, body: ArrayBuffer) => requestDicomPost(path, body),
 };

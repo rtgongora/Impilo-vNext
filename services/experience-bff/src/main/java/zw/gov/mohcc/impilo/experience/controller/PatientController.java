@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
+import zw.gov.mohcc.impilo.experience.fhir.FhirR4PatientMapper;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -79,9 +80,7 @@ public class PatientController {
                     familyName != null ? familyName : "", dob, sex, nationalId, phone);
             patient = withRegistrationOverlay(patient, patientData, true);
 
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", patient);
-            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            Map<String, Object> response = patientResponse(patient, requestId, correlationId);
             return ResponseEntity.status(201).body(response);
         } catch (Exception e) {
             log.info("VITO unavailable — creating patient locally: {}", e.getMessage());
@@ -95,10 +94,20 @@ public class PatientController {
         patient = withRegistrationOverlay(patient, patientData, false);
         PATIENTS.add(patient);
 
+        return ResponseEntity.status(201).body(patientResponse(patient, requestId, correlationId));
+    }
+
+    private static Map<String, Object> patientResponse(
+            Map<String, Object> patient, String requestId, String correlationId) {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", patient);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
-        return ResponseEntity.status(201).body(response);
+        response.put("fhir", Map.of("Patient", FhirR4PatientMapper.toPatientResource(patient)));
+        response.put("meta", Map.of(
+                "request_id", requestId,
+                "correlation_id", correlationId,
+                "fhirVersion", "R4",
+                "shrWrite", "deferred"));
+        return response;
     }
 
     /**
@@ -242,6 +251,17 @@ public class PatientController {
         copyIfPresent(attrs, request, "locality_gazetteer_id");
         copyIfPresent(attrs, request, "locality_proposal_text");
         copyIfPresent(attrs, request, "coverage");
+        copyIfPresent(attrs, request, "middle_name", "middleName");
+        copyIfPresent(attrs, request, "email");
+        copyIfPresent(attrs, request, "passport_reference", "passportReference");
+        copyIfPresent(attrs, request, "address_line1", "addressLine1");
+        copyIfPresent(attrs, request, "city");
+        copyIfPresent(attrs, request, "district");
+        copyIfPresent(attrs, request, "province");
+        copyIfPresent(attrs, request, "preferred_language", "preferredLanguage");
+        copyIfPresent(attrs, request, "emergency_contact_name", "emergencyContactName");
+        copyIfPresent(attrs, request, "emergency_contact_phone", "emergencyContactPhone");
+        copyIfPresent(attrs, request, "marital_status", "maritalStatus");
         attrs.put("registryDelegation", delegatedToVito);
         attrs.put("registrySyncState", delegatedToVito ? "VITO_ISSUED" : "OFFLINE_PROVISIONAL_LOCAL_FALLBACK");
         out.put("attributes", attrs);
@@ -249,8 +269,12 @@ public class PatientController {
     }
 
     private static void copyIfPresent(Map<String, Object> attrs, Map<String, Object> req, String key) {
-        if (req.containsKey(key) && req.get(key) != null) {
-            attrs.put(key, req.get(key));
+        copyIfPresent(attrs, req, key, key);
+    }
+
+    private static void copyIfPresent(Map<String, Object> attrs, Map<String, Object> req, String reqKey, String attrKey) {
+        if (req.containsKey(reqKey) && req.get(reqKey) != null) {
+            attrs.put(attrKey, req.get(reqKey));
         }
     }
 

@@ -9,7 +9,7 @@
  * and ExpandableCategoryCards.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -20,11 +20,14 @@ import {
   Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, Image,
   Wifi, Wrench, Layers, QrCode, Bell, FlaskConical, FileCheck, Clipboard, Play,
-  LayoutDashboard,
+  LayoutDashboard, UserPlus, FileHeart, Zap,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { WorkplaceSelectionHub } from "@/components/home/WorkplaceSelectionHub";
+import { ExpandableWorkCategoryCard } from "@/components/home/ExpandableWorkCategoryCard";
+import { MyProfessionalHub } from "@/components/home/MyProfessionalHub";
+import { PersonalHub } from "@/components/home/PersonalHub";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
@@ -41,28 +44,9 @@ import { useProviderPrivileges } from "@/hooks/queries/useProviderPrivileges";
 import { useCommunityGroups, useJoinGroup } from "@/hooks/queries/useCommunity";
 import { useFacilityActiveShiftCount, useFacilityQueueStats } from "@/hooks/queries/useFacilityOperations";
 import { apiClient } from "@/lib/api-client";
+import { matchesRequiredRole } from "@/lib/auth/role-groups";
+import { filterWorkSurfaceCategories } from "@/data/workSurfaceModules";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
-
-// ── Module category types ────────────────────────────────────────
-interface ModuleItem {
-  label: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  requiresClinical?: boolean;
-  requiresAdmin?: boolean;
-  requiresFinance?: boolean;
-  requiresDispenser?: boolean;
-}
-
-interface ModuleCategory {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  modules: ModuleItem[];
-}
 
 interface WorkerLaunchAction {
   label: string;
@@ -145,196 +129,6 @@ function getOperatingSignals(model?: FacilityOperatingModel): OperatingSignal[] 
         }
       : null,
   ].filter((signal): signal is OperatingSignal => signal !== null);
-}
-
-// ── Module categories (aligned to Lovable ExpandableCategoryCards) ──
-function getModuleCategories(roles: {
-  isClinical: boolean; isAdmin: boolean; isFinance: boolean; isDispenser: boolean;
-  isQueueManager: boolean;
-}): ModuleCategory[] {
-  const cats: ModuleCategory[] = [];
-
-  if (roles.isClinical || roles.isDispenser) {
-    cats.push({
-      id: "clinical",
-      title: "Clinical Care & Orders",
-      icon: Stethoscope,
-      color: "bg-impilo-500",
-      modules: [
-        ...(roles.isClinical ? [
-          { label: "Clinical Hub", description: "All 10 clinical modules", href: "/clinical", icon: Stethoscope, color: "bg-impilo-100 text-impilo-500" },
-          { label: "Queues & Wards", description: "Intake, triage, waiting, and ward status", href: "/queue", icon: Users, color: "bg-orange-100 text-orange-600" },
-          { label: "Walk-in Registration", description: "Register a patient directly into queue flow", href: "/queue/walk-in", icon: Users, color: "bg-amber-100 text-amber-600" },
-          { label: "Bookings & Appointments", description: "Scheduling, waitlist, and planned arrivals", href: "/scheduling", icon: Calendar, color: "bg-cyan-100 text-cyan-600" },
-          { label: "Referrals", description: "Telemedicine and referral coordination", href: "/telemedicine", icon: Video, color: "bg-teal-100 text-teal-600" },
-          { label: "Laboratory (LIMS)", description: "Select a chart, then continue into orders and results", href: "/queue/search?workflow=lims", icon: TestTube2, color: "bg-violet-100 text-violet-700" },
-          { label: "Imaging (PACS)", description: "Select a chart, then continue into imaging review", href: "/queue/search?workflow=pacs", icon: Scan, color: "bg-rose-100 text-rose-700" },
-        ] : []),
-        ...(roles.isClinical || roles.isDispenser ? [
-          { label: "Pharmacy & Rx", description: "Prescriptions, dispensing, and stock follow-through", href: "/pharmacy", icon: Pill, color: "bg-green-100 text-green-600" },
-        ] : []),
-      ],
-    });
-  }
-
-  if (roles.isClinical || roles.isAdmin || roles.isQueueManager || roles.isDispenser) {
-    cats.push({
-      id: "facility-ops",
-      title: "Facility Operations",
-      icon: Clock,
-      color: "bg-rose-500",
-      modules: [
-        {
-          label: "Facility command centre",
-          description: "Unified entry to queues, flow board, scheduling, rosters, and alerts",
-          href: "/facility-operations",
-          icon: LayoutDashboard,
-          color: "bg-rose-100 text-rose-700",
-        },
-        ...(roles.isClinical ? [
-          { label: "Shift Handoff", description: "Care continuity reports", href: "/shift/handover", icon: Clock, color: "bg-amber-100 text-amber-600" },
-        ] : []),
-        { label: "Control Tower", description: "Real-time facility operations", href: "/clinical/control-tower", icon: BarChart3, color: "bg-rose-100 text-rose-600" },
-        { label: "Operations & Roster", description: "Shifts, roster, and workforce visibility", href: "/shift", icon: Clock, color: "bg-cyan-100 text-cyan-600" },
-        { label: "Communication Hub", description: "Messages, pages, and calls", href: "/communication", icon: MessageSquare, color: "bg-impilo-100 text-impilo-500" },
-        { label: "Provider Noticeboard", description: "Announcements and staffing updates", href: "/scheduling/noticeboard", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
-        ...(roles.isAdmin ? [
-          { label: "Omnichannel Hub", description: "SMS, callbacks, disclosure, and access channels", href: "/omnichannel", icon: Radio, color: "bg-teal-100 text-teal-600" },
-        ] : []),
-      ],
-    });
-  }
-
-  if (roles.isFinance) {
-    cats.push({
-      id: "finance",
-      title: "Finance & Billing",
-      icon: Receipt,
-      color: "bg-emerald-500",
-      modules: [
-        { label: "Billing", description: "Bills & invoices", href: "/finance/billing", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
-        { label: "Payments", description: "Payment tracking", href: "/finance/payments", icon: Receipt, color: "bg-green-100 text-green-600" },
-        { label: "Claims", description: "Insurance claims", href: "/finance/claims", icon: ClipboardList, color: "bg-purple-100 text-purple-600" },
-        { label: "Tariffs", description: "Tariff schedules", href: "/finance/tariffs", icon: BarChart3, color: "bg-amber-100 text-amber-600" },
-      ],
-    });
-  }
-
-  cats.push({
-    id: "registry",
-    title: "Registries & Reference",
-    icon: Database,
-    color: "bg-indigo-500",
-    modules: [
-      { label: "Providers", description: "Provider registry", href: "/registry/providers", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
-      { label: "Facilities", description: "Facility registry", href: "/registry/facilities", icon: Building2, color: "bg-purple-100 text-purple-600" },
-      { label: "Products", description: "Product catalogue", href: "/registry/products", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Terminology", description: "ICD, SNOMED, LOINC", href: "/registry/terminology", icon: BookOpen, color: "bg-impilo-100 text-impilo-500" },
-    ],
-  });
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "identity",
-      title: "Identity Services",
-      icon: Shield,
-      color: "bg-indigo-500",
-      modules: [
-        { label: "ID Services Hub", description: "Generate, validate & recover IDs", href: "/id-services", icon: Shield, color: "bg-indigo-100 text-indigo-600" },
-        { label: "Patient PHID", description: "Generate patient health IDs", href: "/id-services?tab=generate", icon: Users, color: "bg-impilo-100 text-impilo-500" },
-        { label: "Provider ID", description: "Healthcare worker IDs", href: "/id-services?tab=generate", icon: Stethoscope, color: "bg-teal-100 text-teal-600" },
-        { label: "ID Validation", description: "Verify ID authenticity", href: "/id-services?tab=validate", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "ID Recovery", description: "Recover lost IDs", href: "/id-services?tab=recovery", icon: Shield, color: "bg-amber-100 text-amber-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "public-health",
-      title: "Public Health",
-      icon: Shield,
-      color: "bg-amber-600",
-      modules: [
-        { label: "PH Operations", description: "Surveillance & response hub", href: "/public-health", icon: Shield, color: "bg-amber-100 text-amber-600" },
-        { label: "Surveillance", description: "Disease surveillance & eIDSR", href: "/public-health?tab=surveillance", icon: Shield, color: "bg-red-100 text-red-600" },
-        { label: "Outbreaks", description: "Outbreak management", href: "/public-health?tab=outbreaks", icon: Shield, color: "bg-red-100 text-red-600" },
-        { label: "Campaigns", description: "Immunization & outreach", href: "/public-health?tab=campaigns", icon: Shield, color: "bg-green-100 text-green-600" },
-        { label: "INDAWO Sites", description: "Premises registry", href: "/public-health?tab=sites", icon: Shield, color: "bg-emerald-100 text-emerald-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "coverage",
-      title: "Coverage & Financing",
-      icon: Shield,
-      color: "bg-violet-500",
-      modules: [
-        { label: "Coverage Hub", description: "Schemes, eligibility & claims", href: "/coverage", icon: Shield, color: "bg-violet-100 text-violet-600" },
-        { label: "Eligibility Check", description: "Real-time coverage verification", href: "/coverage?tab=eligibility", icon: Users, color: "bg-green-100 text-green-600" },
-        { label: "Claims", description: "Submit and track claims", href: "/coverage?tab=claims", icon: FileText, color: "bg-purple-100 text-purple-600" },
-        { label: "Settlement", description: "Remittance & payouts", href: "/coverage?tab=settlement", icon: Receipt, color: "bg-emerald-100 text-emerald-600" },
-        { label: "Schemes", description: "Plan administration", href: "/coverage?tab=schemes", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
-      ],
-    });
-  }
-
-  cats.push({
-    id: "operations",
-    title: "Supply & Marketplace",
-    icon: Package,
-    color: "bg-orange-500",
-    modules: [
-      { label: "Inventory", description: "Stock management", href: "/inventory", icon: Package, color: "bg-orange-100 text-orange-600" },
-      { label: "Marketplace", description: "Health products & vendors", href: "/marketplace", icon: ShoppingCart, color: "bg-purple-100 text-purple-600" },
-      { label: "Reports", description: "Analytics & dashboards", href: "/reports", icon: BarChart3, color: "bg-indigo-100 text-indigo-600" },
-    ],
-  });
-
-  if (roles.isClinical) {
-    cats.push({
-      id: "clinical-tools",
-      title: "Clinical Tools",
-      icon: Shield,
-      color: "bg-pink-500",
-      modules: [
-        { label: "Voice Dictation", description: "Speech-to-text for notes", href: "/clinical/dictation", icon: Shield, color: "bg-pink-100 text-pink-600" },
-        { label: "Offline Sync", description: "Sync status & conflicts", href: "/clinical-tools?tab=offline", icon: Shield, color: "bg-impilo-100 text-impilo-500" },
-        { label: "Documents", description: "Document management", href: "/clinical-tools?tab=documents", icon: FileText, color: "bg-impilo-100 text-impilo-500" },
-        { label: "CDS Alerts", description: "Clinical decision support", href: "/clinical-tools?tab=cds", icon: Shield, color: "bg-red-100 text-red-600" },
-      ],
-    });
-  }
-
-  if (roles.isAdmin) {
-    cats.push({
-      id: "admin",
-      title: "Governance & Admin",
-      icon: Shield,
-      color: "bg-slate-600",
-      modules: [
-        { label: "User Management", description: "Users, roles & policies", href: "/admin/users", icon: Users, color: "bg-red-100 text-red-600" },
-        { label: "Audit Trail", description: "System audit logs", href: "/admin/audit", icon: ClipboardList, color: "bg-amber-100 text-amber-600" },
-        { label: "System Settings", description: "Configuration & security", href: "/admin", icon: Settings, color: "bg-gray-100 text-gray-600" },
-      ],
-    });
-    cats.push({
-      id: "ai-governance",
-      title: "AI Governance",
-      icon: Shield,
-      color: "bg-cyan-600",
-      modules: [
-        { label: "AI Governance Hub", description: "Policy, audit & decision controls", href: "/ai-governance", icon: Shield, color: "bg-cyan-100 text-cyan-700" },
-        { label: "Governance Datasets", description: "Register and classify datasets", href: "/ai-governance?tab=datasets", icon: Database, color: "bg-indigo-100 text-indigo-700" },
-        { label: "Decision Rules", description: "Policy rules for AI access", href: "/ai-governance?tab=rules", icon: Shield, color: "bg-violet-100 text-violet-700" },
-        { label: "Policy Publishing", description: "Publish AI governance policy versions", href: "/ai-governance?tab=policy", icon: FileText, color: "bg-emerald-100 text-emerald-700" },
-      ],
-    });
-  }
-
-  return cats;
 }
 
 function getWorkerLaunchActions(args: {
@@ -595,9 +389,18 @@ type HomeTab = "work" | "professional" | "personal";
 
 export default function HomePage() {
   const user = useAuthStore((s) => s.user);
+  const hasRole = useAuthStore((s) => s.hasRole);
   const shift = useShiftStore((s) => s.shift);
   const roleGroup = useRoleGroup();
-  const { isClinical, isAdmin, isFinance, isDispenser, isQueueManager } = roleGroup;
+  const {
+    isClinical,
+    isAdmin,
+    isFinance,
+    isDispenser,
+    isQueueManager,
+    isCommerce,
+    isPrescriber,
+  } = roleGroup;
   const { facility, selectFacility, enterMode, operationalMode, availableOperationalModes } =
     useExperienceEntry();
   const pathname = usePathname();
@@ -608,7 +411,6 @@ export default function HomePage() {
       homeContextSyncPass.current = false;
     }
   }, [pathname]);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const hasProfessionalRoles = isClinical || isAdmin || isFinance || isDispenser || isQueueManager;
   const [activeTab, setActiveTab] = useState<HomeTab>("personal");
 
@@ -747,14 +549,31 @@ export default function HomePage() {
   const queueStats = queueStatsQuery.data?.data;
   const { activeShiftCount } = useFacilityActiveShiftCount(facility?.id);
 
-  // Module categories
-  const categories = getModuleCategories({
-    isClinical,
-    isAdmin,
-    isFinance,
-    isDispenser,
-    isQueueManager,
-  });
+  const isRegistryAdmin = matchesRequiredRole(hasRole, "REGISTRY_ADMIN");
+
+  const workSurfaceCategories = useMemo(
+    () =>
+      filterWorkSurfaceCategories({
+        isClinical,
+        isAdmin,
+        isFinance,
+        isDispenser,
+        isQueueManager,
+        isCommerce,
+        isPrescriber,
+        isRegistryAdmin,
+      }),
+    [
+      isClinical,
+      isAdmin,
+      isFinance,
+      isDispenser,
+      isQueueManager,
+      isCommerce,
+      isPrescriber,
+      isRegistryAdmin,
+    ],
+  );
   const workerLaunchActions = getWorkerLaunchActions(
     { isClinical, isAdmin, isFinance, isDispenser, isQueueManager },
     selectedOperatingModel,
@@ -798,9 +617,9 @@ export default function HomePage() {
   return (
     <AppLayout>
       <PageShell title="Home">
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Welcome + Context */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -916,7 +735,7 @@ export default function HomePage() {
             </div>
           )}
 
-          {(isClinical || isDispenser || isFinance || isAdmin) && (
+          {(isClinical || isDispenser || isFinance || isAdmin) && hasWorkContext && (
             <div className="space-y-4">
               <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
                 <div className="rounded-2xl bg-gradient-to-r from-impilo-700 via-impilo-600 to-cyan-600 p-6 text-white shadow-sm">
@@ -1145,12 +964,14 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Communication Noticeboard (Lovable ModuleHome) */}
+          {hasWorkContext && (
+            <>
+          {/* Communication Noticeboard — Lovable ModuleHome parity */}
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-impilo-500" />
-                Communication & Access
+                Communication Noticeboard
               </h3>
               <Link href="/communication" className="text-xs text-impilo-500 hover:text-impilo-700">
                 View All →
@@ -1159,17 +980,17 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-2 mb-3">
               <Link href="/communication?tab=messages"
                 className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-impilo-50 hover:border-impilo-200 transition-colors">
-                <FileText className="w-5 h-5 text-impilo-500" />
+                <MessageSquare className="w-5 h-5 text-impilo-500" />
                 Messages
               </Link>
               <Link href="/communication?tab=pages"
                 className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-amber-50 hover:border-amber-300 transition-colors">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                <Bell className="w-5 h-5 text-amber-500" />
                 Pages
               </Link>
               <Link href="/communication?tab=calls"
                 className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-green-50 hover:border-green-300 transition-colors">
-                <Video className="w-5 h-5 text-green-600" />
+                <Phone className="w-5 h-5 text-green-600" />
                 Calls
               </Link>
               <Link href="/omnichannel"
@@ -1186,56 +1007,76 @@ export default function HomePage() {
             <AnnouncementsBanner />
           </div>
 
-          {/* Module Categories (Lovable ExpandableCategoryCards) */}
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Modules</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {categories.map((cat) => {
-                const CatIcon = cat.icon;
-                const isExpanded = expandedCategory === cat.id;
-                return (
-                  <div key={cat.id}>
-                    <button
-                      onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
-                      className={`w-full text-left rounded-lg border p-4 transition-all ${
-                        isExpanded ? "border-impilo-200 bg-impilo-50 shadow-sm" : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-lg ${cat.color} flex items-center justify-center shrink-0`}>
-                          <CatIcon className="w-4.5 h-4.5 text-white" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{cat.title}</p>
-                          <p className="text-xs text-gray-500">{cat.modules.length} modules</p>
-                        </div>
-                      </div>
-                    </button>
-                    {isExpanded && (
-                      <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3 space-y-1">
-                        {cat.modules.map((mod) => {
-                          const ModIcon = mod.icon;
-                          return (
-                            <Link key={mod.href + mod.label} href={mod.href}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group">
-                              <div className={`w-7 h-7 rounded ${mod.color} flex items-center justify-center shrink-0`}>
-                                <ModIcon className="w-3.5 h-3.5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm text-gray-900 group-hover:text-impilo-500">{mod.label}</p>
-                                <p className="text-xs text-gray-500 truncate">{mod.description}</p>
-                              </div>
-                              <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0 ml-auto" />
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+          {/* Quick Access — Lovable Work tab */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              Quick Access
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/clinical"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors group">
+                <FileHeart className="w-5 h-5 text-red-600 group-hover:text-white" />
+                EHR
+              </Link>
+              <Link href="/facility-operations"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-impilo-600 hover:text-white hover:border-impilo-600 transition-colors group">
+                <ClipboardList className="w-5 h-5 text-impilo-600 group-hover:text-white" />
+                Dashboard
+              </Link>
+              <Link href="/queue"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-colors group">
+                <Users className="w-5 h-5 text-blue-500 group-hover:text-white" />
+                Queue
+              </Link>
+              <Link href="/pharmacy/prescriptions"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-colors group">
+                <Pill className="w-5 h-5 text-emerald-600 group-hover:text-white" />
+                Prescribe
+              </Link>
+              <Link href="/registry/intake"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-green-500 hover:text-white hover:border-green-500 transition-colors group">
+                <UserPlus className="w-5 h-5 text-green-500 group-hover:text-white" />
+                Register
+              </Link>
+              <Link href="/lab"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-purple-500 hover:text-white hover:border-purple-500 transition-colors group">
+                <TestTube2 className="w-5 h-5 text-purple-500 group-hover:text-white" />
+                Lab
+              </Link>
+              <Link href="/queue/search?workflow=pacs"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-colors group">
+                <Scan className="w-5 h-5 text-rose-500 group-hover:text-white" />
+                Radiology
+              </Link>
+              <Link href="/scheduling"
+                className="inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border border-gray-200 rounded-lg hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-colors group">
+                <Calendar className="w-5 h-5 text-orange-500 group-hover:text-white" />
+                Schedule
+              </Link>
             </div>
           </div>
+
+          {/* Module categories — Lovable-style dialog cards */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Modules</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 auto-rows-fr">
+              {workSurfaceCategories.map((cat) => (
+                <ExpandableWorkCategoryCard
+                  key={cat.id}
+                  id={cat.id}
+                  title={cat.title}
+                  description={cat.description}
+                  modules={cat.modules}
+                  icon={cat.icon}
+                  color={cat.color}
+                  categoryRestricted={!!cat.categoryRequires?.length}
+                />
+              ))}
+            </div>
+          </div>
+            </>
+          )}
 
           {/* Finance Overview (finance users only) */}
           {isFinance && (
@@ -1263,291 +1104,73 @@ export default function HomePage() {
 
           </>)}
 
-          {/* ═══ PROFESSIONAL TAB ═══ */}
+          {/* ═══ PROFESSIONAL TAB (Lovable MyProfessionalHub shell) ═══ */}
           {activeTab === "professional" && (
             <div className="space-y-6">
-              {(availableOperationalModes.includes("registry_admin") ||
-                availableOperationalModes.includes("organization_admin")) && (
-                <div className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-5">
-                  <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-amber-700" />
-                    Administrative planes
-                  </h3>
-                  <p className="mt-1 text-xs text-gray-600 max-w-2xl">
-                    Enter sovereign registry governance or organization operations explicitly — separate from
-                    Facility Work (facility → workspace → shift). These match the context strip at the top of
-                    the shell.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    {availableOperationalModes.includes("registry_admin") && (
-                      <Link
-                        href="/registry-admin"
-                        className="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-950 hover:border-amber-400 transition-colors"
-                      >
-                        <ShieldCheck className="h-4 w-4" />
-                        Registry administration
-                      </Link>
-                    )}
-                    {availableOperationalModes.includes("organization_admin") && (
-                      <Link
-                        href="/organization-admin"
-                        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5 text-sm font-medium text-violet-950 hover:border-violet-400 transition-colors"
-                      >
-                        <UserCog className="h-4 w-4" />
-                        Organization administration
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
+              <MyProfessionalHub
+                displayName={user?.displayName}
+                isClinical={isClinical}
+                licenses={licenses}
+                licenseActive={licenseActive}
+                facilities={facilities}
+                facilitiesLoading={facilitiesLoading}
+                privileges={privileges}
+                showRegistryAdmin={availableOperationalModes.includes("registry_admin")}
+                showOrgAdmin={availableOperationalModes.includes("organization_admin")}
+                onStartShift={handleFacilitySelect}
+                onSwitchToWork={() => switchTab("work")}
+                onStartVirtualSession={() => enterFacilityFreeMode("clinical", "/telemedicine")}
+              />
 
-              {/* Credentials & License - Compact Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* License Card - Prominent */}
-                <div className={`rounded-xl border-2 p-4 ${licenseActive ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Award className={`w-5 h-5 ${licenseActive ? "text-green-600" : "text-red-600"}`} />
-                    <span className={`text-sm font-semibold ${licenseActive ? "text-green-700" : "text-red-700"}`}>
-                      {licenseActive ? "Licensed" : "Action Required"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-600">
-                    {licenses.length > 0 ? `${licenses.length} license${licenses.length > 1 ? "s" : ""} on record` : "No license data"}
-                  </p>
-                  <Link href="/home/credentials" className="text-xs text-impilo-500 hover:text-impilo-700 mt-2 inline-block">
-                    Manage →
-                  </Link>
-                </div>
-                {/* CPD Progress */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-900">CPD Progress</span>
-                    <span className="text-xs text-impilo-500">18/25 pts</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-impilo-500 rounded-full h-2" style={{ width: "72%" }} />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">Current cycle</p>
-                </div>
-                {/* Quick Actions */}
-                <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <span className="text-sm font-medium text-gray-900 mb-3 block">Quick Actions</span>
-                  <div className="space-y-2">
-                    <Link href="/home/certifications" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
-                      <Award className="w-3.5 h-3.5" /> Certifications
-                    </Link>
-                    <Link href="/professional" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
-                      <User className="w-3.5 h-3.5" /> Full Profile
-                    </Link>
-                    <Link href="/home/transcripts" className="flex items-center gap-2 text-xs text-gray-600 hover:text-impilo-500">
-                      <FileText className="w-3.5 h-3.5" /> CPD Transcripts
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Affiliations (from VARAPI privileges or facility list fallback) */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Building2 className="w-5 h-5 text-purple-600" /> Facility Affiliations
-                </h3>
-                {privileges.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {privileges.slice(0, 6).map((priv, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">Facility {priv.facilityId?.slice(0, 8)}</p>
-                            <p className="text-xs text-gray-500">{priv.privilegeType} · {priv.scope}</p>
-                          </div>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          priv.status === "APPROVED" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-                        }`}>{priv.status}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : facilities.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {facilities.slice(0, 4).map((f) => (
-                      <div key={f.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-gray-400" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{f.attributes.name}</p>
-                            <p className="text-xs text-gray-500">{f.attributes.facilityType}</p>
-                          </div>
-                        </div>
-                        <button onClick={() => handleFacilitySelect(f)}
-                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium">
-                          Start Shift →
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-400">No facility affiliations found.</p>
-                )}
-              </div>
-
-              {/* Work Modes — all ways a professional can work */}
               {isClinical && (
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
                   <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
                     <Globe className="w-5 h-5 text-teal-600" /> Other Ways to Work
                   </h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Not at a facility? Choose how you are working today.
-                  </p>
+                  <p className="text-sm text-gray-500 mb-4">Not at a facility? Choose how you are working today.</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {/* Telemedicine & Virtual */}
-                    <button onClick={() => enterFacilityFreeMode("clinical", "/telemedicine")}
-                      className="text-left bg-green-50 rounded-lg border border-green-200 p-4 hover:border-green-400 transition-all group">
+                    <button onClick={() => enterFacilityFreeMode("clinical", "/telemedicine")} className="text-left bg-green-50 rounded-lg border border-green-200 p-4 hover:border-green-400 transition-all group">
                       <Video className="w-5 h-5 text-green-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-green-700">Telemedicine & Virtual</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Video/voice consultations, remote patient monitoring, e-prescribing</p>
+                      <p className="text-sm font-medium text-gray-900">Telemedicine & Virtual</p>
                     </button>
-                    {/* Independent Practice */}
-                    <button onClick={() => enterIndependentMode("independent_practice")}
-                      className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
+                    <button onClick={() => enterIndependentMode("independent_practice")} className="text-left bg-amber-50 rounded-lg border border-amber-200 p-4 hover:border-amber-400 transition-all group">
                       <Briefcase className="w-5 h-5 text-amber-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-amber-700">Independent Practice</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Work under your own licence without facility context</p>
+                      <p className="text-sm font-medium text-gray-900">Independent Practice</p>
                     </button>
-                    {/* Field Work */}
-                    <button onClick={() => enterIndependentMode("community_outreach")}
-                      className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
+                    <button onClick={() => enterIndependentMode("community_outreach")} className="text-left bg-teal-50 rounded-lg border border-teal-200 p-4 hover:border-teal-400 transition-all group">
                       <MapPin className="w-5 h-5 text-teal-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-teal-700">Field & Community Work</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Community outreach, home visits, mobile clinics, school health</p>
+                      <p className="text-sm font-medium text-gray-900">Field & Community Work</p>
                     </button>
-                    {/* Emergency Response */}
-                    <button onClick={() => enterIndependentMode("emergency_response")}
-                      className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
+                    <button onClick={() => enterIndependentMode("emergency_response")} className="text-left bg-red-50 rounded-lg border border-red-200 p-4 hover:border-red-400 transition-all group">
                       <Siren className="w-5 h-5 text-red-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-red-700">Emergency Response</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Disaster, outbreak, mass casualty — elevated trust, break-glass access</p>
+                      <p className="text-sm font-medium text-gray-900">Emergency Response</p>
                     </button>
-                    {/* Above Site */}
-                    <button onClick={() => enterFacilityFreeMode("admin", "/reports")}
-                      className="text-left bg-indigo-50 rounded-lg border border-indigo-200 p-4 hover:border-indigo-400 transition-all group">
+                    <button onClick={() => enterFacilityFreeMode("admin", "/reports")} className="text-left bg-indigo-50 rounded-lg border border-indigo-200 p-4 hover:border-indigo-400 transition-all group">
                       <Layers className="w-5 h-5 text-indigo-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-700">Above-Site & Programme</p>
-                      <p className="text-xs text-gray-500 mt-0.5">District/provincial oversight, programme management, surveillance, reporting</p>
+                      <p className="text-sm font-medium text-gray-900">Above-Site & Programme</p>
                     </button>
-                    {/* Maintenance & Configuration */}
-                    <button onClick={() => enterFacilityFreeMode("admin", "/admin")}
-                      className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-gray-400 transition-all group">
+                    <button onClick={() => enterFacilityFreeMode("admin", "/admin")} className="text-left bg-gray-50 rounded-lg border border-gray-200 p-4 hover:border-gray-400 transition-all group">
                       <Wrench className="w-5 h-5 text-gray-600 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700">Maintenance & Configuration</p>
-                      <p className="text-xs text-gray-500 mt-0.5">System setup, master data, user management, integrations, troubleshooting</p>
+                      <p className="text-sm font-medium text-gray-900">Maintenance & Configuration</p>
                     </button>
                   </div>
                 </div>
               )}
             </div>
           )}
-
-          {/* ═══ PERSONAL TAB ═══ */}
+          {/* ═══ PERSONAL TAB (Lovable PersonalHub shell) ═══ */}
           {activeTab === "personal" && (
             <div className="space-y-6">
-              {/* My Health Quick Actions */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Heart className="w-5 h-5 text-pink-600" /> My Health
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Link href="/scheduling" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-impilo-50 border border-impilo-200 hover:border-impilo-400 transition-colors text-center">
-                    <Calendar className="w-6 h-6 text-impilo-500" />
-                    <span className="text-xs font-medium text-gray-900">Book Visit</span>
-                  </Link>
-                  <Link href="/telemedicine" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-green-50 border border-green-200 hover:border-green-400 transition-colors text-center">
-                    <Video className="w-6 h-6 text-green-600" />
-                    <span className="text-xs font-medium text-gray-900">Video Call</span>
-                  </Link>
-                  <Link href="/home/medications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-amber-50 border border-amber-200 hover:border-amber-400 transition-colors text-center">
-                    <Pill className="w-6 h-6 text-amber-600" />
-                    <span className="text-xs font-medium text-gray-900">My Medications</span>
-                  </Link>
-                  <Link href="/home/notifications" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-purple-50 border border-purple-200 hover:border-purple-400 transition-colors text-center">
-                    <FileText className="w-6 h-6 text-purple-600" />
-                    <span className="text-xs font-medium text-gray-900">Messages</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Personal Links */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <User className="w-5 h-5 text-gray-600" /> Account & Settings
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Link href="/home/profile" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <User className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Profile</p>
-                      <p className="text-xs text-gray-500">View and edit your profile</p>
-                    </div>
-                  </Link>
-                  <Link href="/home/preferences" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <Settings className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Preferences</p>
-                      <p className="text-xs text-gray-500">Language, notifications, display</p>
-                    </div>
-                  </Link>
-                  <Link href="/settings/security" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <Shield className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Security & Privacy</p>
-                      <p className="text-xs text-gray-500">Password, MFA, sessions</p>
-                    </div>
-                  </Link>
-                  <Link href="/marketplace" className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200 hover:border-impilo-200 transition-colors">
-                    <ShoppingCart className="w-5 h-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Health Marketplace</p>
-                      <p className="text-xs text-gray-500">Browse products & services</p>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Community Groups */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-purple-600" /> Communities
-                </h3>
-                {communityGroups.length === 0 ? (
-                  <p className="text-sm text-gray-400">No community groups available yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {communityGroups.slice(0, 4).map((group) => (
-                      <div key={group.id} className="flex items-center justify-between bg-gray-50 rounded-lg border border-gray-200 p-3">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{group.attributes.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {group.attributes.groupType} · {group.attributes.memberCount} members
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => joinGroup.mutate({ groupId: group.id, memberId: user?.id ?? "" })}
-                          disabled={joinGroup.isPending}
-                          className="text-xs text-impilo-500 hover:text-impilo-700 font-medium"
-                        >
-                          Join
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Community Feed */}
+              <PersonalHub
+                user={user}
+                communityGroups={communityGroups}
+                onJoinGroup={(groupId) => joinGroup.mutate({ groupId, memberId: user?.id ?? "" })}
+                joinPending={joinGroup.isPending}
+              />
               <FeedSection />
             </div>
           )}
+
 
         </div>
       </PageShell>
@@ -1605,7 +1228,7 @@ function CitizenHome({
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr_260px] gap-5">
 
         {/* ════ LEFT COLUMN — Quick nav ════ */}
-        <aside className="hidden lg:block space-y-4">
+        <aside className="hidden lg:block lg:sticky lg:top-6 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto lg:overscroll-contain space-y-5 pr-1">
           {/* Health ID QR - always visible */}
           <Link href="/citizen/health-id/qr"
             className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-impilo-50 to-impilo-100 border border-impilo-200 hover:border-impilo-300 transition-colors">

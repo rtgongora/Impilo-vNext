@@ -61,6 +61,9 @@ vi.mock("@/hooks/useRoleGroup", () => ({
     isAdmin: true,
     isFinance: false,
     isDispenser: false,
+    isQueueManager: true,
+    isCommerce: true,
+    isPrescriber: true,
   }),
 }));
 
@@ -264,24 +267,17 @@ describe("HomePage", () => {
     expect(screen.getByRole("link", { name: /Walk-in Registration/i })).toHaveAttribute("href", "/queue/walk-in");
     expect(screen.getByRole("link", { name: /Waiting Room/i })).toHaveAttribute("href", "/queue/waiting");
     expect(screen.getByRole("link", { name: /New Teleconsult/i })).toHaveAttribute("href", "/telemedicine/new");
-    expect(screen.getByText("Communication & Access")).toBeInTheDocument();
+    expect(screen.getByText("Communication Noticeboard")).toBeInTheDocument();
+    expect(screen.getByText("Quick Access")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Omnichannel" })).toHaveAttribute("href", "/omnichannel");
 
-    await user.click(screen.getByRole("button", { name: /Clinical Care & Orders/i }));
+    await user.click(screen.getByRole("button", { name: /Clinical Care/i }));
 
-    expect(screen.getByRole("link", { name: /Laboratory \(LIMS\)/i })).toHaveAttribute(
-      "href",
-      "/queue/search?workflow=lims",
-    );
-    expect(screen.getByRole("link", { name: /Imaging \(PACS\)/i })).toHaveAttribute(
-      "href",
-      "/queue/search?workflow=pacs",
-    );
+    expect(screen.getByRole("button", { name: /Laboratory/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Imaging \(PACS\)/i })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Facility Operations/i }));
+    await user.click(screen.getByRole("button", { name: /Administration & Reports/i }));
 
-    expect(screen.getByRole("link", { name: /Omnichannel Hub/i })).toHaveAttribute("href", "/omnichannel");
-    expect(screen.queryByText("Orders & Pharmacy")).not.toBeInTheDocument();
-    expect(screen.queryByText("Omnichannel & Access")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /System Admin/i })).toBeInTheDocument();
   });
 });

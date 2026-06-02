@@ -83,6 +83,8 @@ export function VitoClientRegistrationWizard({ facilityId, sourceWorkflow, onReg
   const [planCode, setPlanCode] = useState("");
   const [patientCpidPreview, setPatientCpidPreview] = useState("");
   const [serviceCodePreview, setServiceCodePreview] = useState("");
+  const [coveragePreview, setCoveragePreview] = useState<unknown>(null);
+  const [coveragePreviewBusy, setCoveragePreviewBusy] = useState(false);
   const [eligibilityConsent, setEligibilityConsent] = useState("DEFERRED");
 
   const [dupQuery, setDupQuery] = useState("");

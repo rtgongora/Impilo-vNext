@@ -127,7 +127,7 @@ export default function WalkInPage() {
             Back to queue
           </Link>
 
-          <div className="max-w-2xl space-y-6">
+          <div className="max-w-3xl space-y-8">
             {selectedPatient ? (
               <div className="rounded-3xl border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
                 <p className="font-medium">Selected patient</p>

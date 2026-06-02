@@ -381,7 +381,7 @@ export function ExperienceSidebar() {
       <aside
         data-sidebar
         className={[
-          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200 md:static md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex h-screen min-h-0 flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200 md:static md:translate-x-0",
           shellClasses,
           mobileOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
@@ -540,9 +540,9 @@ export function ExperienceSidebar() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-5">
           {visibleZones.map((zone) => (
-            <section key={zone.id} className="mb-6">
+            <section key={zone.id} className="mb-8">
               {!collapsed && (
                 <div className="mb-2 flex items-center justify-between px-2">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">

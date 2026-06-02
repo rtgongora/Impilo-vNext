@@ -1,0 +1,49 @@
+/* DWV layer host — https://github.com/ivmartel/dwv */
+.impilo-dwv-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  overflow: hidden;
+  background: #000;
+}
+
+.impilo-dwv-root .dwv-layer-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.impilo-dwv-root .layerGroup {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.impilo-dwv-root .layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.impilo-dwv-root canvas {
+  display: block;
+}
+
+/* Fullscreen: keep viewer filling the screen */
+.impilo-imaging-viewer-panel:fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  background: #000;
+}
+
+.impilo-imaging-viewer-panel:fullscreen .impilo-dwv-root {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}

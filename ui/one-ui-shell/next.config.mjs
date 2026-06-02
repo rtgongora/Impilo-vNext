@@ -2,6 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const registryTemplatesRoot = path.join(__dirname, "..", "..", "registry-templates");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -10,19 +11,48 @@ const nextConfig = {
   distDir: ".next-build",
   transpilePackages: ["shared-ui"],
   experimental: {
-    // Monorepo: trace shared-ui into standalone output (Next 14)
+    serverComponentsExternalPackages: ["dwv", "konva", "canvas"],
     outputFileTracingRoot: path.join(__dirname, ".."),
-    // Disable client-side router cache for dynamic pages so that
-    // pre-auth prefetch redirects (middleware → /auth/login) are not
-    // reused after the user logs in and navigates to /home.
     staleTimes: {
       dynamic: 0,
       static: 300,
     },
   },
   eslint: {
-    // Merged Experience tree; align lint cleanup in a follow-up pass.
     ignoreDuringBuilds: true,
+  },
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@registry-templates": registryTemplatesRoot,
+    };
+
+    if (isServer) {
+      config.externals = [...(config.externals || []), "dwv", "konva", "canvas"];
+    }
+
+    // DWV ships a pre-minified ESM bundle; Next SWC must not re-parse it (_do duplicate error).
+    config.module.rules.unshift({
+      test: /[\\/]node_modules[\\/]dwv[\\/]dist[\\/].*\.js$/,
+      type: "javascript/auto",
+      resolve: {
+        fullySpecified: false,
+      },
+    });
+
+    for (const rule of config.module.rules) {
+      if (!rule.oneOf) continue;
+      for (const oneOf of rule.oneOf) {
+        if (!oneOf.exclude) {
+          oneOf.exclude = [];
+        } else if (!Array.isArray(oneOf.exclude)) {
+          oneOf.exclude = [oneOf.exclude];
+        }
+        oneOf.exclude.push(/[\\/]node_modules[\\/]dwv[\\/]/);
+      }
+    }
+
+    return config;
   },
   async rewrites() {
     const gateway =

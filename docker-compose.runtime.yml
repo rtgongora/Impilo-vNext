@@ -560,7 +560,10 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
-    mem_limit: 768m
+      TSHEPO_AUTHZ_BASE_URL: http://tshepo-authz:8081
+      TSHEPO_BASE_URL: http://tshepo:8081
+      ZIBO_BASE_URL: http://zibo:8085
+    mem_limit: 1024m
     ports:
       - "8160:8160"
     depends_on:
@@ -568,8 +571,14 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      vito:
+        condition: service_healthy
       clinical-knowledge-platform:
         condition: service_healthy
+      orthanc:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8160/actuator/health || exit 1"]
       interval: 10s
@@ -577,11 +586,36 @@ services:
       retries: 15
       start_period: 30s
 
+  # ── Orthanc — DICOM/PACS server (port 8042) ─────────────────────────
+  # Backs Imaging/PACS in the Experience UI. The BFF proxies to this via
+  # ORTHANC_BASE_URL / ORTHANC_DICOMWEB_URL above.
+  orthanc:
+    image: orthancteam/orthanc:24.7.3
+    environment:
+      ORTHANC__NAME: "Impilo PACS"
+      ORTHANC__REGISTERED_USERS: |
+        {"orthanc": "orthanc"}
+      ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__DICOM_WEB__ENABLE: "true"
+      ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+    ports:
+      - "8042:8042"
+      - "4242:4242"
+    volumes:
+      - orthanc_data:/var/lib/orthanc/db
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8042/system || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   # ── One UI Shell — unified user-facing Experience (port 3000) ───────
   one-ui-shell:
     build:
-      context: ./ui
-      dockerfile: one-ui-shell/Dockerfile
+      context: .
+      dockerfile: ui/one-ui-shell/Dockerfile
       args:
         NEXT_PUBLIC_BFF_URL: http://localhost:8160
         NEXT_PUBLIC_API_GATEWAY_URL: http://localhost:10000
@@ -606,3 +640,4 @@ services:
 volumes:
   pg_data:
   minio_data:
+  orthanc_data:

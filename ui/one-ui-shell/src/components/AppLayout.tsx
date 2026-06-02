@@ -16,6 +16,7 @@ import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
+import { BackendPendingToastHost } from "@/components/experience/BackendPendingToastHost";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
@@ -102,9 +103,10 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <OperationalContextStrip />
-        <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
+        <main className="flex-1 overflow-auto p-6 md:p-8 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
       </div>
       <ProactiveAssistant />
+      <BackendPendingToastHost />
     </div>
   );
 }

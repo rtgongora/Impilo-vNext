@@ -8,20 +8,18 @@ import {
   AlertCircle,
   Calendar,
   ClipboardList,
-  Contrast,
   FileText,
   Grid3X3,
   Image,
   Loader2,
-  Maximize2,
-  Minimize2,
   Monitor,
-  RotateCw,
   Search,
-  ZoomIn,
-  ZoomOut,
+  Upload,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClinicalDicomViewer } from "@/components/imaging/ClinicalDicomViewer";
+import { DicomDropZone } from "@/components/imaging/DicomDropZone";
+import { DicomUploadDialog } from "@/components/imaging/DicomUploadDialog";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -29,8 +27,7 @@ import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useImagingStudies, useSyncImagingHierarchy } from "@/hooks/queries/useImaging";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { apiClient } from "@/lib/api-client";
-
-const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
+import { isDicomCandidate } from "@/lib/dicom/dicomService";
 
 interface OrthancStudy {
   ID: string;
@@ -132,6 +129,7 @@ function useStudySeries(studyId: string | null, seriesIds: string[]) {
 export default function ImagingPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const queryClient = useQueryClient();
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -153,10 +151,13 @@ export default function ImagingPage() {
   const [selectedStudy, setSelectedStudy] = useState<OrthancStudy | null>(selectedStudyDefault);
   const [selectedInstance, setSelectedInstance] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [brightness, setBrightness] = useState(100);
-  const [contrast, setContrast] = useState(100);
-  const [zoom, setZoom] = useState(100);
-  const [rotation, setRotation] = useState(0);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [localFiles, setLocalFiles] = useState<File[] | undefined>(undefined);
+  const [localFileName, setLocalFileName] = useState<string | null>(null);
+  /** Fresh viewer instance per upload avoids stale DWV layer-group DOM refs. */
+  const [viewerSession, setViewerSession] = useState(0);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -177,13 +178,6 @@ export default function ImagingPage() {
     selectedStudy?.Series ?? []
   );
 
-  const resetViewerControls = useCallback(() => {
-    setBrightness(100);
-    setContrast(100);
-    setZoom(100);
-    setRotation(0);
-  }, []);
-
   const toggleFullscreen = useCallback(() => {
     if (!viewerRef.current) return;
 
@@ -193,6 +187,38 @@ export default function ImagingPage() {
       document.exitFullscreen?.();
     }
   }, [isFullscreen]);
+
+  const loadLocalDicomFile = useCallback((file: File) => {
+    if (!isDicomCandidate(file)) {
+      setLocalError("Please select a DICOM file (.dcm). ZIP folders or JPEG previews cannot be opened directly.");
+      return;
+    }
+    setLocalLoading(true);
+    setLocalError(null);
+    setLocalFiles([file]);
+    setLocalFileName(file.name);
+    setViewerSession((n) => n + 1);
+    setSelectedInstance(null);
+    setSelectedStudy(null);
+    setLocalLoading(false);
+  }, []);
+
+  const handleViewLocalPayload = useCallback((payload: { file: File; fileName: string }) => {
+    setLocalFiles([payload.file]);
+    setLocalFileName(payload.fileName);
+    setViewerSession((n) => n + 1);
+    setSelectedInstance(null);
+    setSelectedStudy(null);
+    setLocalError(null);
+  }, []);
+
+  const handleClearLocalImage = useCallback(() => {
+    setLocalFiles(undefined);
+    setLocalFileName(null);
+    setLocalError(null);
+  }, []);
+
+  const viewerActive = Boolean((localFiles && localFiles.length > 0) || selectedInstance);
 
   useEffect(() => {
     const handler = () => setIsFullscreen(Boolean(document.fullscreenElement));
@@ -306,8 +332,18 @@ export default function ImagingPage() {
                       : "Patient-matched studies only (no cross-patient fallback)"}
                   </p>
                 </div>
-                <div className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
-                  {visibleStudies.length}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUploadOpen(true)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-impilo-200 bg-white px-2 py-1 text-xs font-medium text-impilo-700 hover:bg-impilo-50"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    View / upload
+                  </button>
+                  <div className="rounded-full bg-impilo-50 px-2.5 py-1 text-xs font-medium text-impilo-600">
+                    {visibleStudies.length}
+                  </div>
                 </div>
               </div>
 
@@ -323,7 +359,17 @@ export default function ImagingPage() {
                   <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-center">
                     <AlertCircle className="mx-auto mb-2 h-8 w-8 text-amber-500" />
                     <p className="text-sm text-gray-700">PACS server unavailable</p>
-                    <p className="mt-1 text-xs text-gray-500">Orthanc may not be running.</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Orthanc isn&apos;t reachable. You can still open a local <code>.dcm</code> file and diagnose it with measurements below.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setUploadOpen(true)}
+                      className="mt-3 inline-flex items-center gap-1 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-impilo-700"
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      Upload / view DICOM
+                    </button>
                   </div>
                 )}
 
@@ -402,7 +448,6 @@ export default function ImagingPage() {
                       onClick={() => {
                         setSelectedStudy(study);
                         setSelectedInstance(null);
-                        resetViewerControls();
                       }}
                       className={`w-full rounded-xl border p-3 text-left transition-colors ${
                         isSelected
@@ -436,106 +481,65 @@ export default function ImagingPage() {
 
             <div
               ref={viewerRef}
-              className="overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
+              className="impilo-imaging-viewer-panel flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
             >
-              <div className="flex items-center justify-between border-b border-gray-700 bg-gray-900 px-3 py-2">
-                <div className="flex items-center gap-1">
-                  <ToolButton
-                    icon={<ZoomIn className="h-4 w-4" />}
-                    label="Zoom in"
-                    onClick={() => setZoom((current) => Math.min(current + 25, 400))}
-                  />
-                  <ToolButton
-                    icon={<ZoomOut className="h-4 w-4" />}
-                    label="Zoom out"
-                    onClick={() => setZoom((current) => Math.max(current - 25, 25))}
-                  />
-                  <ToolButton
-                    icon={<RotateCw className="h-4 w-4" />}
-                    label="Rotate"
-                    onClick={() => setRotation((current) => (current + 90) % 360)}
-                  />
-                  <ToolButton
-                    icon={<Contrast className="h-4 w-4" />}
-                    label="Reset view"
-                    onClick={resetViewerControls}
-                  />
-                  <span className="ml-2 text-xs text-gray-400">{zoom}%</span>
+              {localError && (
+                <div className="border-b border-amber-700/50 bg-amber-900/40 px-3 py-2 text-xs text-amber-200">
+                  {localError}
                 </div>
+              )}
 
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <label className="text-xs text-gray-400">B</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="200"
-                      value={brightness}
-                      onChange={(event) => setBrightness(Number(event.target.value))}
-                      className="h-1 w-16"
-                      aria-label="Brightness"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <label className="text-xs text-gray-400">C</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="200"
-                      value={contrast}
-                      onChange={(event) => setContrast(Number(event.target.value))}
-                      className="h-1 w-16"
-                      aria-label="Contrast"
-                    />
-                  </div>
-                  <ToolButton
-                    icon={isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                    label={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
-                    onClick={toggleFullscreen}
+              <div className="flex min-h-0 flex-1 flex-col">
+                {localFiles && localFiles.length > 0 ? (
+                  <ClinicalDicomViewer
+                    key={`dicom-viewer-${viewerSession}`}
+                    localFiles={localFiles}
+                    initialLabel={localFileName ? `Local · ${localFileName}` : "Local DICOM"}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={toggleFullscreen}
+                    onOpenUpload={() => setUploadOpen(true)}
+                    className="flex-1"
                   />
-                </div>
-              </div>
+                ) : selectedInstance ? (
+                  <ClinicalDicomViewer
+                    instanceId={selectedInstance}
+                    seriesLabel={selectedSeries?.label}
+                    isFullscreen={isFullscreen}
+                    onToggleFullscreen={toggleFullscreen}
+                    onOpenUpload={() => setUploadOpen(true)}
+                    className="flex-1"
+                  />
+                ) : selectedStudy && !selectedInstance ? (
+                  <SeriesBrowser
+                    isLoading={isLoadingSeries}
+                    series={series}
+                    onSelectInstance={setSelectedInstance}
+                  />
+                ) : (
+                  <DicomDropZone
+                    loading={localLoading}
+                    onFileSelected={(file) => void loadLocalDicomFile(file)}
+                    onOpenUploadDialog={() => setUploadOpen(true)}
+                    onReject={(msg) => setLocalError(msg)}
+                  />
+                )}
 
-              <div className="flex min-h-[520px] flex-col">
-                <div className="flex-1 items-center justify-center overflow-hidden p-4">
-                  {!selectedStudy && (
-                    <div className="flex h-full flex-col items-center justify-center text-center">
-                      <Monitor className="mb-3 h-16 w-16 text-gray-600" />
-                      <p className="text-sm text-gray-400">Select a study to review imaging</p>
-                      <p className="mt-1 text-xs text-gray-600">
-                        The viewer keeps chart follow-up linked to PACS review.
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedStudy && !selectedInstance && (
-                    <SeriesBrowser
-                      isLoading={isLoadingSeries}
-                      series={series}
-                      onSelectInstance={setSelectedInstance}
-                    />
-                  )}
-
-                  {selectedStudy && selectedInstance && (
-                    <div className="flex h-full items-center justify-center overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`${BFF_BASE_URL}/internal/v1/pacs/instances/${selectedInstance}/preview`}
-                        alt="DICOM instance preview"
-                        className="max-h-full max-w-full object-contain"
-                        style={{
-                          filter: `brightness(${brightness}%) contrast(${contrast}%)`,
-                          transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
-                          transition: "transform 0.2s ease",
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {selectedStudy && selectedInstance && (
-                  <div className="border-t border-gray-700 bg-gray-900 px-4 py-2 text-xs text-gray-300">
-                    Reviewing {selectedSeries?.label ?? "selected series"}. Use Documents or Notes to record interpretation handoff from this image review.
+                {viewerActive && (
+                  <div className="flex items-center justify-between gap-2 border-t border-gray-700 bg-gray-900 px-4 py-2 text-xs text-gray-300">
+                    <span>
+                      {localFiles?.length
+                        ? "DWV viewer: pan/zoom, window/level, scroll, draw (ruler, shapes). Upload more via toolbar."
+                        : `PACS · ${selectedSeries?.label ?? "instance"}. Same diagnosis tools in the toolbar.`}
+                    </span>
+                    {localFiles?.length ? (
+                      <button
+                        type="button"
+                        onClick={handleClearLocalImage}
+                        className="shrink-0 rounded border border-gray-600 px-2 py-1 hover:bg-gray-800"
+                      >
+                        Close image
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </div>
@@ -582,6 +586,21 @@ export default function ImagingPage() {
             </div>
           </div>
         </div>
+
+        <DicomUploadDialog
+          open={uploadOpen}
+          onOpenChange={setUploadOpen}
+          patientId={patientId}
+          onViewLocal={handleViewLocalPayload}
+          onSuccess={(lastInstanceId) => {
+            void queryClient.invalidateQueries({ queryKey: ["pacs", "studies", patientId] });
+            if (lastInstanceId) {
+              setLocalFiles(undefined);
+              setLocalFileName(null);
+              setSelectedInstance(lastInstanceId);
+            }
+          }}
+        />
       </PageShell>
     </EHRLayout>
   );
@@ -637,28 +656,6 @@ function SeriesBrowser({
         </button>
       ))}
     </div>
-  );
-}
-
-function ToolButton({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded p-1.5 text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
-      title={label}
-      aria-label={label}
-    >
-      {icon}
-    </button>
   );
 }
 

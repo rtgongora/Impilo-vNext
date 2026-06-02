@@ -17,6 +17,7 @@ import { OperationalContextStrip } from "./experience/OperationalContextStrip";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
 import { ClinicalSupportStrip } from "@/components/clinical/ClinicalSupportStrip";
 import { FloatingClinicalAssist } from "@/components/clinical/FloatingClinicalAssist";
+import { BackendPendingToastHost } from "@/components/experience/BackendPendingToastHost";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
 
@@ -91,10 +92,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </header>
         {isAuthenticated ? <ClinicalSupportStrip /> : null}
         <OperationalContextStrip />
-        <main className="flex-1 overflow-auto p-4 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
+        <main className="flex-1 overflow-auto p-6 md:p-8 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
       </div>
       <ProactiveAssistant />
       {isAuthenticated ? <FloatingClinicalAssist /> : null}
+      <BackendPendingToastHost />
     </div>
   );
 }
