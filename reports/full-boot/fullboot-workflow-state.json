@@ -1,8 +1,8 @@
 {
   "workflow": "fullboot-deploy",
-  "updated_at": "2026-06-03T09:58:49.374671+00:00",
-  "status": "awaiting_sudo_checkpoint",
-  "checkpoint_id": "cp-20260603115849-6acbb3cd",
+  "updated_at": "2026-06-03T10:34:52.351201+00:00",
+  "status": "started",
+  "checkpoint_id": "cp-20260603123036-c5821ee2",
   "image_tag": "preview",
-  "next_step_after_continue": "post_cleanup_verify_and_registry"
+  "next_step_after_continue": "ensure_images"
 }

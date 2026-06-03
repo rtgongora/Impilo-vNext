@@ -1,21 +1,21 @@
 # Full Boot Runtime Completeness Report
 
-**Status:** `FULL_BOOT_PARTIAL`
-**Reason:** deployed but not all required deployments ready
+**Status:** `FULL_BOOT_PASS`
+**Reason:** images, helm, and runtime healthy
 
 | Phase | State |
 |-------|-------|
 | Images ready | True |
 | Helm deployability ready | True (22/22) |
 | Namespace deployed | True (impilo-full-preview) |
-| Runtime healthy | False |
+| Runtime healthy | True |
 
 | Metric | Value |
 |--------|-------|
 | Total discovered | 141 |
 | Required full boot | 22 |
-| Image pass / fail | 22 / 0 |
+| Image pass / fail | 3 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
 | Deployed in full boot | 22 |
-| Pods ready / total | 13 / 22 |
+| Pods ready / total | 22 / 22 |
 

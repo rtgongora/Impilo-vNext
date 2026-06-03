@@ -4,9 +4,9 @@
   "deployments": {
     "butano-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "envoy": {
       "replicas": 1,
@@ -58,9 +58,9 @@
     },
     "pct-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "postgres": {
       "replicas": 1,
@@ -76,15 +76,15 @@
     },
     "tshepo-audit-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "tshepo-authz-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "tshepo-consent-service": {
       "replicas": 1,
@@ -94,9 +94,9 @@
     },
     "tshepo-identity-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "tshepo-keys-service": {
       "replicas": 1,
@@ -106,9 +106,9 @@
     },
     "tuso-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "ubomi-service": {
       "replicas": 1,
@@ -118,98 +118,33 @@
     },
     "varapi-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "vito-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     },
     "zibo-service": {
       "replicas": 1,
-      "ready": 0,
-      "available": 0,
-      "healthy": false
+      "ready": 1,
+      "available": 1,
+      "healthy": true
     }
   },
   "missing_deployments": [],
-  "unhealthy_deployments": [
-    {
-      "id": "butano-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "pct-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "tshepo-audit-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "tshepo-authz-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "tshepo-identity-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "tuso-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "varapi-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "vito-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    },
-    {
-      "id": "zibo-service",
-      "ready": 0,
-      "available": 0,
-      "replicas": 1
-    }
-  ],
+  "unhealthy_deployments": [],
   "runtime_pods_count": 22,
   "verify_pods_ignored": 0,
-  "crashloop": [
-    "butano-service-b78d5d944-ftjlh",
-    "pct-service-7c5685f896-d4lmw",
-    "tshepo-audit-service-659c49bb78-7zf55",
-    "tshepo-authz-service-5b688b6bc7-5gh7v",
-    "tshepo-identity-service-747c57f4f6-d7r6t",
-    "tuso-service-76887d4c4d-qm6h5",
-    "varapi-service-dbbd986fc-s2xsd",
-    "vito-service-df5548684-lj9zl",
-    "zibo-service-5d78f686f-w94t2"
-  ],
+  "crashloop": [],
   "pending": [],
   "not_ready_pods": [],
   "jobs": [],
   "health_version_reachable": false,
   "health_version_snippet": null,
   "health_version_note": "skipped \u2014 set FULL_BOOT_BASE_URL to port-forward BFF (e.g. http://127.0.0.1:18160)",
-  "pass": false
+  "pass": true
 }
