@@ -2,8 +2,10 @@ package zw.gov.mohcc.impilo.butano;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import zw.gov.mohcc.impilo.butano.config.ButanoProperties;
@@ -24,6 +26,12 @@ import zw.gov.mohcc.impilo.butano.config.ButanoProperties;
 @SpringBootApplication(exclude = {
         ElasticsearchRestClientAutoConfiguration.class
 })
+@EntityScan(basePackages = {
+        "zw.gov.mohcc.impilo.butano.persistence.entity",
+        "ca.uhn.fhir.jpa.model.entity",
+        "ca.uhn.fhir.jpa.entity"
+})
+@EnableJpaRepositories(basePackages = "zw.gov.mohcc.impilo.butano.persistence.repository")
 @EnableScheduling
 @EnableKafka
 @EnableConfigurationProperties(ButanoProperties.class)

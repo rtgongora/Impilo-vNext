@@ -4,6 +4,8 @@ server:
     context-path: /
 
 spring:
+  main:
+    allow-circular-references: true
   application:
     name: butano-service
 
@@ -29,11 +31,7 @@ spring:
         order_inserts: true
         order_updates: true
         search:
-          enabled: true
-          backend:
-            type: lucene
-            directory:
-              root: ${LUCENE_INDEX_DIR:/tmp/butano-lucene}
+          enabled: false
 
   flyway:
     enabled: true
