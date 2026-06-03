@@ -5,6 +5,9 @@
 -- Purpose : Complete production schema for Facility Registry
 -- =============================================
 
+-- Trigram extension required before GIN indexes using gin_trgm_ops
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 -- ═══════════════════════════════════════════════════════════════════════
 -- 1. Facility Register (GOFR-compatible)
 -- ═══════════════════════════════════════════════════════════════════════
@@ -429,10 +432,3 @@ CREATE TABLE tuso.gofr_sync_log (
     completed_at    TIMESTAMPTZ,
     status          VARCHAR(20)     NOT NULL DEFAULT 'RUNNING'
 );
-
--- ═══════════════════════════════════════════════════════════════════════
--- 9. Enable trigram extension for facility name search
--- ═══════════════════════════════════════════════════════════════════════
-
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
-

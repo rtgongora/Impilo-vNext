@@ -24,7 +24,7 @@ public class ProvisionalCpidEntity {
     private UUID tenantId;
 
     @Column(name = "o_cpid", nullable = false, unique = true)
-    private UUID oCpid;
+    private UUID originCpid;
 
     @Column(name = "facility_id", nullable = false)
     private UUID facilityId;
@@ -57,8 +57,8 @@ public class ProvisionalCpidEntity {
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
-    public UUID getOCpid() { return oCpid; }
-    public void setOCpid(UUID oCpid) { this.oCpid = oCpid; }
+    public UUID getOriginCpid() { return originCpid; }
+    public void setOriginCpid(UUID originCpid) { this.originCpid = originCpid; }
 
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }

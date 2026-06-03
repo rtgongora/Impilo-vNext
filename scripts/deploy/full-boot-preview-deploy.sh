@@ -178,12 +178,14 @@ if [[ "${FULL_BOOT_SKIP_IMPORT:-}" == "1" ]]; then
   echo "WARN: deploy may use stale containerd layers if import was not run for tag $IMAGE_TAG"
 else
   echo "--- Import images into k3s/containerd (mandatory) ---"
-  if ! bash scripts/dev/import-full-vnext-images-k3s.sh "$IMAGE_TAG"; then
-    echo "ABORT: k3s image import failed. Run: sudo -v && bash scripts/dev/import-full-vnext-images-k3s.sh $IMAGE_TAG"
+  if ! bash scripts/operator/fullboot.sh import-images; then
+    echo "ABORT: k3s image import failed."
+    echo "  Install helper: sudo bash scripts/operator/install-k3s-image-helper.sh"
+    echo "  Then: bash scripts/operator/fullboot.sh import-images"
     exit 1
   fi
   echo "--- Verify image presence in k3s ---"
-  if ! NS="$NAMESPACE" bash scripts/dev/verify-full-boot-k3s-images.sh "$IMAGE_TAG"; then
+  if ! bash scripts/operator/fullboot.sh verify-images; then
     echo "ABORT: k3s image verification failed (need IMAGE_PRESENCE PASS, ok=22 fail=0)"
     exit 1
   fi

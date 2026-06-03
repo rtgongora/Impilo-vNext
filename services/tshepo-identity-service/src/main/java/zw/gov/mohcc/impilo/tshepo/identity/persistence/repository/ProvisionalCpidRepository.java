@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface ProvisionalCpidRepository extends JpaRepository<ProvisionalCpidEntity, Long> {
 
-    Optional<ProvisionalCpidEntity> findByTenantIdAndOCpid(UUID tenantId, UUID oCpid);
+    Optional<ProvisionalCpidEntity> findByTenantIdAndOriginCpid(UUID tenantId, UUID originCpid);
 
     List<ProvisionalCpidEntity> findByTenantIdAndStatus(UUID tenantId, String status);
 }

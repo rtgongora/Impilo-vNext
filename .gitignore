@@ -73,6 +73,7 @@ reports/pipeline/*.json
 # Full-boot generated reports (summaries committed; logs stay local)
 reports/full-boot/build-logs/
 reports/full-boot/image-logs/
+reports/full-boot/local-registry-data/
 !reports/full-boot/*.md
 !reports/full-boot/*.json
 !reports/full-boot/*.txt

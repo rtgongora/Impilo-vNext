@@ -33,6 +33,14 @@ Wait until gone:
 kubectl get namespace impilo-full-preview
 ```
 
+## k3s image helper (optional rollback)
+
+Removing the helper does **not** affect running clusters; it only revokes passwordless import/list:
+
+```bash
+sudo bash scripts/operator/uninstall-k3s-image-helper.sh
+```
+
 ## Verify slice preserved
 
 ```bash

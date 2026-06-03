@@ -1,0 +1,8 @@
+{
+  "checkpoint_id": "cp-20260603115849-6acbb3cd",
+  "completed_at": "2026-06-03T10:19:04.710326+00:00",
+  "required_action": "cleanup_duplicate_k3s_import_processes",
+  "success": true,
+  "log_file_path": "/opt/impilo/repos/Impilo-vNext/reports/full-boot/sudo-checkpoint-run.log",
+  "resume_command": "bash scripts/operator/fullboot.sh continue"
+}

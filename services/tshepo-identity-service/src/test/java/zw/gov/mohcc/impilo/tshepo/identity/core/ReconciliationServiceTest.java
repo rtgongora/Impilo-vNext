@@ -89,7 +89,7 @@ class ReconciliationServiceTest {
         ProvisionalCpidEntity entity = new ProvisionalCpidEntity();
         entity.setId(1L);
         entity.setTenantId(tenantId());
-        entity.setOCpid(oCpid());
+        entity.setOriginCpid(oCpid());
         entity.setFacilityId(facilityId());
         entity.setDeviceFingerprint(deviceFingerprint());
         entity.setStatus(status);
@@ -152,7 +152,7 @@ class ReconciliationServiceTest {
             ProvisionalCpidEntity saved = captor.getValue();
 
             assertEquals(tenantId(), saved.getTenantId());
-            assertEquals(generatedOCpid, saved.getOCpid());
+            assertEquals(generatedOCpid, saved.getOriginCpid());
             assertEquals(facilityId(), saved.getFacilityId());
             assertEquals(deviceFingerprint(), saved.getDeviceFingerprint());
             assertEquals("PROVISIONAL", saved.getStatus());
@@ -193,7 +193,7 @@ class ReconciliationServiceTest {
         @DisplayName("maps O-CPID to canonical CPID and creates id_mapping")
         void reconcile_newReconciliation_mapsToCanonical() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
             when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
@@ -216,7 +216,7 @@ class ReconciliationServiceTest {
         @DisplayName("updates provisional entity status to RECONCILED")
         void reconcile_updatesProvisionalEntity() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
             when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
@@ -242,7 +242,7 @@ class ReconciliationServiceTest {
         @DisplayName("creates id_mapping entry when none exists for the Health ID")
         void reconcile_createsIdMapping() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
             when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
@@ -268,7 +268,7 @@ class ReconciliationServiceTest {
         @DisplayName("does not create duplicate id_mapping when one already exists")
         void reconcile_existingMapping_doesNotDuplicate() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
             when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
 
@@ -288,7 +288,7 @@ class ReconciliationServiceTest {
         @DisplayName("returns existing result if already reconciled (idempotent)")
         void reconcile_alreadyReconciled_returnsExisting() {
             ProvisionalCpidEntity alreadyReconciled = buildProvisionalEntity("RECONCILED");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(alreadyReconciled));
 
             ReconcileRequest request = new ReconcileRequest(tenantId(), oCpid(), healthId());
@@ -308,7 +308,7 @@ class ReconciliationServiceTest {
         @Test
         @DisplayName("throws IdentityNotFoundException for unknown O-CPID")
         void reconcile_unknownOCpid_throws() {
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.empty());
 
             ReconcileRequest request = new ReconcileRequest(tenantId(), oCpid(), healthId());
@@ -322,7 +322,7 @@ class ReconciliationServiceTest {
         @DisplayName("publishes OCPID_RECONCILED outbox event")
         void reconcile_publishesOutboxEvent() {
             ProvisionalCpidEntity provisional = buildProvisionalEntity("PROVISIONAL");
-            when(provisionalRepo.findByTenantIdAndOCpid(tenantId(), oCpid()))
+            when(provisionalRepo.findByTenantIdAndOriginCpid(tenantId(), oCpid()))
                     .thenReturn(Optional.of(provisional));
             when(cpidGenerator.generateCpid(tenantId(), healthId())).thenReturn(canonicalCpid());
             when(mappingRepo.findByTenantIdAndHealthId(tenantId(), healthId()))
@@ -354,9 +354,9 @@ class ReconciliationServiceTest {
         @DisplayName("returns only PROVISIONAL entries for the given tenant")
         void listUnreconciled_returnsProvisionalOnly() {
             ProvisionalCpidEntity e1 = buildProvisionalEntity("PROVISIONAL");
-            e1.setOCpid(UUID.randomUUID());
+            e1.setOriginCpid(UUID.randomUUID());
             ProvisionalCpidEntity e2 = buildProvisionalEntity("PROVISIONAL");
-            e2.setOCpid(UUID.randomUUID());
+            e2.setOriginCpid(UUID.randomUUID());
 
             when(provisionalRepo.findByTenantIdAndStatus(tenantId(), "PROVISIONAL"))
                     .thenReturn(List.of(e1, e2));

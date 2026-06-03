@@ -65,7 +65,7 @@ public class ReconciliationService {
 
         ProvisionalCpidEntity entity = new ProvisionalCpidEntity();
         entity.setTenantId(tenantId);
-        entity.setOCpid(oCpid);
+        entity.setOriginCpid(oCpid);
         entity.setFacilityId(facilityId);
         entity.setDeviceFingerprint(deviceFingerprint);
         entity.setStatus("PROVISIONAL");
@@ -95,14 +95,14 @@ public class ReconciliationService {
     @Transactional
     public ReconcileResponse reconcile(ReconcileRequest request) {
         ProvisionalCpidEntity provisional = provisionalRepo
-                .findByTenantIdAndOCpid(request.tenantId(), request.oCpid())
+                .findByTenantIdAndOriginCpid(request.tenantId(), request.oCpid())
                 .orElseThrow(() -> new IdentityNotFoundException(
                         "Provisional CPID not found"));
 
         if ("RECONCILED".equals(provisional.getStatus())) {
             // Already reconciled — return the existing result
             return new ReconcileResponse(
-                    provisional.getOCpid(),
+                    provisional.getOriginCpid(),
                     provisional.getCanonicalCpid(),
                     provisional.getStatus(),
                     provisional.getReconciledAt()
@@ -130,7 +130,7 @@ public class ReconciliationService {
         provisional.setReconciledAt(now);
         provisionalRepo.save(provisional);
 
-        publishOutboxEvent("ProvisionalCpid", provisional.getOCpid().toString(),
+        publishOutboxEvent("ProvisionalCpid", provisional.getOriginCpid().toString(),
                 "OCPID_RECONCILED",
                 Map.of("tenantId", request.tenantId(),
                        "oCpid", request.oCpid(),
@@ -141,7 +141,7 @@ public class ReconciliationService {
                 request.oCpid(), canonicalCpid, request.tenantId());
 
         return new ReconcileResponse(
-                provisional.getOCpid(),
+                provisional.getOriginCpid(),
                 canonicalCpid,
                 "RECONCILED",
                 now
@@ -161,7 +161,7 @@ public class ReconciliationService {
 
     private ProvisionalCpidResponse toResponse(ProvisionalCpidEntity entity) {
         return new ProvisionalCpidResponse(
-                entity.getOCpid(),
+                entity.getOriginCpid(),
                 entity.getFacilityId(),
                 entity.getDeviceFingerprint(),
                 entity.getStatus(),

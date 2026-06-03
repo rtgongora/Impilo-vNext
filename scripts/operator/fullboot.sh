@@ -235,6 +235,10 @@ fb_continue_workflow() {
   if [[ "${action:-}" == "cleanup_duplicate_k3s_import_processes" ]]; then
     echo "--- continue: post-cleanup foundation ---"
     bash "$REPO/scripts/operator/registry-up.sh" || true
+    bash "$REPO/scripts/build/push-images-to-local-registry.sh" required 2>/dev/null || true
+    if ! fb_k3s_registry_configured; then
+      echo "NOTE: k3s registry mirror not configured — run: bash scripts/operator/fullboot.sh registry-config"
+    fi
     bash "$0" helper-status
     echo "--- verify-images ---"
     fb_verify_images || true
