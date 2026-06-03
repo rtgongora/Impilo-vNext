@@ -83,14 +83,8 @@ push_one() {
   fi
   local sid="${src#impilo/}"; sid="${sid%%:*}"
   if curl -sf "http://${REGISTRY}/v2/impilo/${sid}/manifests/${TAG}" >/dev/null 2>&1; then
-    local local_id remote_id
-    local_id="$(docker image inspect "$src" --format '{{.Id}}' 2>/dev/null || echo "")"
-    remote_id="$(curl -sf -H 'Accept: application/vnd.docker.distribution.manifest.v2+json' \
-      "http://${REGISTRY}/v2/impilo/${sid}/manifests/${TAG}" | sha256sum | awk '{print $1}')" 2>/dev/null || echo "")
-    if [[ -n "$local_id" && -n "$remote_id" && "$local_id" == *"$remote_id"* ]]; then
-      echo "SKIP  $dest  (already in registry)"
-      return 0
-    fi
+    echo "SKIP  $dest  (tag already in registry)"
+    return 0
   fi
   docker tag "$src" "$dest"
   if docker push "$dest"; then

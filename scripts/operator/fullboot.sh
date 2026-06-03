@@ -330,6 +330,14 @@ case "$CMD" in
   registry-up)
     bash "$REPO/scripts/operator/registry-up.sh"
     ;;
+  registry-config)
+    fb_ensure_reports
+    if fb_k3s_registry_configured; then
+      echo "OK: k3s already configured for local registry"
+      exit 0
+    fi
+    fb_request_registry_checkpoint
+    ;;
   cleanup-imports)
     fb_ensure_reports
     if fb_import_active || fb_helper_outdated; then

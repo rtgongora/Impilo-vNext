@@ -100,6 +100,22 @@ fb_allowed_checkpoint_action() {
   esac
 }
 
+fb_request_registry_checkpoint() {
+  local action="configure_k3s_local_registry"
+  local marker="CHECKPOINT_REGISTRY: k3s registries.yaml configured"
+  local log="$(fb_reports)/sudo-checkpoint-run.log"
+  fb_write_checkpoint "$action" "$marker" \
+    "cd $(fb_repo) && git pull && sudo -v && bash scripts/operator/fullboot.sh sudo-checkpoint-run" \
+    "$log" "registry_configured"
+  fb_workflow_update "awaiting_sudo_checkpoint" "registry_configured"
+  fb_print_product_owner_block "$action"
+  exit 2
+}
+
+fb_k3s_registry_configured() {
+  [[ -f /etc/rancher/k3s/registries.yaml ]] && grep -q '127.0.0.1:5000' /etc/rancher/k3s/registries.yaml 2>/dev/null
+}
+
 fb_request_cleanup_imports_checkpoint() {
   local action="cleanup_duplicate_k3s_import_processes"
   local marker="CHECKPOINT_CLEANUP: no impilo-k3s-import processes and helper version matches repo"
