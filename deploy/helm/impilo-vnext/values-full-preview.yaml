@@ -16,7 +16,8 @@ global:
     port: "6379"
   kafka:
     bootstrapServers: kafka:9092
-  javaToolOptions: "-XX:MaxRAMPercentage=70.0 -XX:+UseG1GC"
+  # Images already set -XX:+UseZGC on the java command; do not add a second GC via JAVA_TOOL_OPTIONS.
+  javaToolOptions: "-XX:MaxRAMPercentage=70.0"
   defaultResources:
     requests:
       cpu: 100m
