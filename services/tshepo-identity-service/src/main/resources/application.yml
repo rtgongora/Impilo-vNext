@@ -49,7 +49,7 @@ tshepo:
     # Default scoped-token TTL in seconds
     token-ttl-seconds: 300
     # AES-256-GCM key for MOSIP link_ref encryption (Base64-encoded, 32 bytes)
-    mosip-kek: ${TSHEPO_MOSIP_KEK:Y2hhbmdlbWUtZ2VuZXJhdGUtYS1yZWFsLWtlaw==}
+    mosip-kek: ${TSHEPO_MOSIP_KEK:aW1waWxvLXRzaGVwby1tb3NpcC1rZWstZGV2LTMyYnk=}
     # URL of the keys-service for Ed25519 signing
     keys-service-url: ${TSHEPO_KEYS_SERVICE_URL:http://localhost:8184}
     # URL of VITO service for Impilo ID → Health ID resolution
