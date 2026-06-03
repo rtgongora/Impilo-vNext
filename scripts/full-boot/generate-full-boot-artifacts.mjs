@@ -871,6 +871,45 @@ function writeRepoScanList(facts) {
   fs.writeFileSync(path.join(REPORTS_DIR, "repo-deployable-candidate-files.txt"), lines.sort().join("\n") + "\n", "utf8");
 }
 
+function validateFullBootWaves(catalog) {
+  const wavesPath = path.join(ROOT, "config/full-boot-waves.yml");
+  if (!fs.existsSync(wavesPath)) {
+    throw new Error("Missing config/full-boot-waves.yml — run wave generator or commit waves file");
+  }
+  const wavesDoc = readYaml(wavesPath);
+  const runtimeIds = new Set(
+    catalog
+      .filter((c) => c.image_required && !c.official_image)
+      .map((c) => c.id)
+  );
+  const assigned = new Set();
+  const dupes = [];
+  for (const wave of wavesDoc.waves ?? []) {
+    for (const sid of wave.services ?? []) {
+      if (assigned.has(sid)) dupes.push(sid);
+      assigned.add(sid);
+    }
+  }
+  if (dupes.length) {
+    throw new Error(`full-boot-waves.yml duplicate service ids: ${[...new Set(dupes)].join(", ")}`);
+  }
+  const missing = [...runtimeIds].filter((id) => !assigned.has(id));
+  const extra = [...assigned].filter((id) => !runtimeIds.has(id));
+  if (missing.length) {
+    throw new Error(
+      `full-boot-waves.yml missing ${missing.length} runtime service(s): ${missing.slice(0, 12).join(", ")}${missing.length > 12 ? "…" : ""}`
+    );
+  }
+  if (extra.length) {
+    throw new Error(
+      `full-boot-waves.yml unknown ids (not runtime-required): ${extra.slice(0, 12).join(", ")}${extra.length > 12 ? "…" : ""}`
+    );
+  }
+  console.log(
+    `full-boot-waves.yml OK: ${wavesDoc.waves?.length ?? 0} waves, ${assigned.size} services assigned`
+  );
+}
+
 function main() {
   const registry = readYaml(REGISTRY_PATH);
   const archRegistry = exists("docs/architecture/services-registry.yaml") ? readYaml(ARCH_REGISTRY_PATH) : { services: [] };
@@ -888,6 +927,7 @@ function main() {
   writeMatrices(catalog, facts);
   writeEnvironmentStrategyDocs(catalog, facts);
   writeRepoScanList(facts);
+  validateFullBootWaves(catalog);
 
   const counts = strategyCounts(catalog);
   const summary = {

@@ -29,8 +29,19 @@ Commands:
   continue              Resume after successful sudo checkpoint (Cursor runs this)
   retry                 Re-attempt last workflow step from state
   report                Summary of verify/checkpoint/workflow logs
+  smoke                 Post-deploy runtime smoke tests
+  completeness          Post-deploy runtime completeness gate
+  diagnose              Post-deploy pod/deployment failure summary
+  helper-status         Installed vs repo k3s helper version + import lock state
+  registry-status     Local OCI registry health
+  registry-up         Start local registry (no sudo)
+  cleanup-imports     Stop duplicate imports via sudo checkpoint if needed
   sudo-checkpoint-run   Product owner: run pending privileged checkpoint only
   sudo-checkpoint-status  Show pending checkpoint and last result
+  wave-status           Show full-boot wave expansion progress
+  wave-build <n>        Build images for wave N
+  wave-deploy <n>       Deploy wave N (requires deploy authorization)
+  wave-report           Report wave status
 
 Human sudo checkpoint (when passwordless helper unavailable):
   1. Cursor runs deploy/import-images → writes reports/full-boot/sudo-checkpoint.*
@@ -100,8 +111,20 @@ fb_request_import_checkpoint() {
   exit "$CHECKPOINT_EXIT"
 }
 
+fb_guard_import_not_active() {
+  if fb_import_active; then
+    echo "FAIL: k3s image import already running — cannot start another import or deploy."
+    fb_request_cleanup_imports_checkpoint
+  fi
+}
+
 fb_import_images_flow() {
   fb_ensure_reports
+  fb_guard_import_not_active
+  if fb_helper_outdated; then
+    echo "WARN: installed k3s helper is outdated (repo v$(fb_helper_version_repo) vs installed v$(fb_helper_version_installed))"
+    fb_request_cleanup_imports_checkpoint
+  fi
   if fb_ensure_images_ready; then
     return 0
   fi
@@ -209,6 +232,26 @@ fb_continue_workflow() {
     fb_clear_checkpoint_pending
   fi
 
+  if [[ "${action:-}" == "cleanup_duplicate_k3s_import_processes" ]]; then
+    echo "--- continue: post-cleanup foundation ---"
+    bash "$REPO/scripts/operator/registry-up.sh" || true
+    bash "$0" helper-status
+    echo "--- verify-images ---"
+    fb_verify_images || true
+    fb_workflow_update "foundation_ready" "phase1_deploy_when_authorized"
+    echo "Foundation cleanup complete. Full boot deploy NOT run (phase 0)."
+    echo "Next: bash scripts/operator/fullboot.sh registry-status"
+    echo "       bash scripts/operator/fullboot.sh verify-images"
+    exit 0
+  fi
+
+  if [[ "${action:-}" == "configure_k3s_local_registry" ]]; then
+    echo "--- continue: registry configured ---"
+    bash "$REPO/scripts/operator/registry-up.sh" || true
+    fb_workflow_update "registry_ready"
+    exit 0
+  fi
+
   echo "--- continue: verify images ---"
   fb_verify_images || true
   if ! fb_verify_passed "$(fb_reports)/k3s-image-verify-preview.log"; then
@@ -244,8 +287,13 @@ case "$CMD" in
       echo "k3s image helper: INSTALLED (sudo password required for import/list)"
     else
       echo "k3s image helper: NOT INSTALLED"
-      echo "  One-time: sudo bash scripts/operator/install-k3s-image-helper.sh"
     fi
+    if fb_import_active; then
+      echo "IMPORT: ACTIVE (duplicate — run: bash scripts/operator/fullboot.sh cleanup-imports)"
+    else
+      echo "IMPORT: idle"
+    fi
+    bash "$0" helper-status 2>/dev/null | tail -8 || true
     bash "$0" sudo-checkpoint-status
     ;;
   prepare)
@@ -258,11 +306,80 @@ case "$CMD" in
   import-images)
     fb_import_images_flow
     ;;
+  helper-status)
+    echo "=== k3s image helper status ==="
+    repo_v="$(fb_helper_version_repo)"
+    inst_v="$(fb_helper_version_installed)"
+    echo "repo_version: $repo_v"
+    echo "installed_version: ${inst_v:-none}"
+    if fb_helper_outdated; then
+      echo "HELPER_STATUS: OUTDATED (installed=${inst_v:-none} repo=${repo_v:-?}; run cleanup-imports)"
+    else
+      echo "HELPER_STATUS: CURRENT (v$inst_v)"
+    fi
+    if fb_import_active; then
+      echo "IMPORT_STATUS: ACTIVE"
+      pgrep -af 'impilo-k3s-import-images' || true
+    else
+      echo "IMPORT_STATUS: idle"
+    fi
+    ;;
+  registry-status)
+    bash "$REPO/scripts/operator/registry-status.sh"
+    ;;
+  registry-up)
+    bash "$REPO/scripts/operator/registry-up.sh"
+    ;;
+  cleanup-imports)
+    fb_ensure_reports
+    if fb_import_active || fb_helper_outdated; then
+      fb_request_cleanup_imports_checkpoint
+    fi
+    echo "OK: no duplicate imports detected; helper version $(fb_helper_version_installed)"
+    ;;
   deploy)
     fb_ensure_reports
+    fb_guard_import_not_active
     fb_workflow_update "started" "ensure_images"
     fb_import_images_flow
     fb_run_prepare
+    fb_run_deploy_if_authorized
+    ;;
+  wave-status|  wave-report)
+    bash "$REPO/scripts/operator/wave-ready-matrix.sh" 2>/dev/null || true
+    WAVE_REPORT="$(fb_reports)/wave-status.json"
+    if [[ -f "$WAVE_REPORT" ]]; then
+      python3 -m json.tool "$WAVE_REPORT" 2>/dev/null || cat "$WAVE_REPORT"
+    else
+      python3 - "$REPO" <<'PY'
+import yaml, json, pathlib
+repo = pathlib.Path(__import__("sys").argv[1])
+waves = yaml.safe_load((repo / "config/full-boot-waves.yml").read_text())
+print(json.dumps(waves, indent=2))
+PY
+    fi
+    ;;
+  wave-build)
+    WAVE_N="${2:-1}"
+    echo "--- wave-build $WAVE_N ---"
+    bash "$REPO/scripts/build/build-full-vnext-images.sh" --wave "$WAVE_N" 2>/dev/null || \
+      bash "$REPO/scripts/build/build-full-vnext-images.sh" --only "$(python3 -c "
+import yaml, pathlib, sys
+w=yaml.safe_load(open('config/full-boot-waves.yml'))
+n=int(sys.argv[1])
+ids=[]
+for wave in w['waves']:
+    if wave['id']==n:
+        ids=wave['services']
+        break
+print(','.join(ids))
+" "$WAVE_N")"
+    bash "$REPO/scripts/build/push-images-to-local-registry.sh" required
+    ;;
+  wave-deploy)
+    WAVE_N="${2:-}"
+    echo "wave-deploy requires FULLBOOT_DEPLOY_AUTHORIZED and wave number — use deploy after wave-build"
+    fb_guard_import_not_active
     fb_run_deploy_if_authorized
     ;;
   continue)
@@ -291,6 +408,58 @@ case "$CMD" in
         fb_print_deploy_auth_block
         ;;
     esac
+    ;;
+  smoke)
+    export FULL_BOOT_NAMESPACE="$IMPILO_FULLBOOT_NS"
+    bash scripts/test/run-full-boot-smoke-tests.sh
+    ;;
+  completeness)
+    export FULL_BOOT_NAMESPACE="$IMPILO_FULLBOOT_NS"
+    bash scripts/guard/check-full-boot-runtime-completeness.sh
+    ;;
+  diagnose)
+    fb_ensure_reports
+    diag="$(fb_reports)/fullboot-diagnose.log"
+    {
+      echo "=== Full boot diagnose ($(date -Is)) ==="
+      echo "Namespace: $IMPILO_FULLBOOT_NS"
+      echo ""
+      echo "--- Helm ---"
+      helm list -n "$IMPILO_FULLBOOT_NS" 2>&1 || true
+      helm status impilo-full-preview -n "$IMPILO_FULLBOOT_NS" 2>&1 || true
+      echo ""
+      echo "--- Deployments (not Available) ---"
+      kubectl get deploy -n "$IMPILO_FULLBOOT_NS" -o wide 2>&1 || true
+      python3 <<'PY' 2>/dev/null || true
+import json, subprocess
+ns = "impilo-full-preview"
+raw = subprocess.check_output(["kubectl", "get", "deploy", "-n", ns, "-o", "json"], text=True)
+items = json.loads(raw).get("items", [])
+not_ready = []
+for d in items:
+    name = d["metadata"]["name"]
+    spec = d["spec"].get("replicas", 1)
+    status = d.get("status", {})
+    avail = status.get("availableReplicas", 0) or 0
+    ready = status.get("readyReplicas", 0) or 0
+    if avail < spec or ready < spec:
+        not_ready.append(f"{name}: ready={ready}/{spec} available={avail}/{spec}")
+print("NOT_READY_DEPLOYMENTS:", len(not_ready))
+for line in not_ready:
+    print(" ", line)
+PY
+      echo ""
+      echo "--- CrashLoopBackOff pods ---"
+      kubectl get pods -n "$IMPILO_FULLBOOT_NS" --field-selector=status.phase=Running 2>/dev/null | head -5 || true
+      kubectl get pods -n "$IMPILO_FULLBOOT_NS" 2>/dev/null | grep -E 'CrashLoopBackOff|Error|ImagePull|CreateContainer' || echo "(none matching filter)"
+      echo ""
+      echo "--- Pods Running but not Ready ---"
+      kubectl get pods -n "$IMPILO_FULLBOOT_NS" 2>/dev/null | awk 'NR==1 || ($2 !~ /^[0-9]+\/[0-9]+$/ || $2 !~ /^([0-9]+)\/\1$/)' | head -40 || true
+      echo ""
+      echo "--- Recent events (last 25) ---"
+      kubectl get events -n "$IMPILO_FULLBOOT_NS" --sort-by=.lastTimestamp 2>/dev/null | tail -25 || true
+    } | tee "$diag"
+    echo "Diagnose log: $diag"
     ;;
   report)
     fb_ensure_reports

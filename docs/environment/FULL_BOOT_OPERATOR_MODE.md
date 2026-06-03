@@ -24,12 +24,32 @@ sudo -n /usr/local/sbin/impilo-k3s-list-images <tag>
 
 Allowed tags: `preview` or `preview-<git-sha>` (hex only).
 
-Helpers:
+Helpers (version **2** — `IMPILO_HELPER_VERSION` in `k3s-image-helper-common.sh`):
 
-- Import only images listed in `config/full-boot-service-classification.yml` (`required_full_boot`) plus approved infra images
+- **Default import:** `required_full_boot` + infra only, **missing-only** (skip refs already in containerd)
+- **Single-flight lock:** `/tmp/impilo-k3s-import.lock` — second import exits until cleanup checkpoint
+- **Flags:** `--only svc1,svc2` (selected required refs only, **no sweep**); `--all-local-preview` (only mode that sweeps all `impilo/*:preview*`); `--force` (re-import even if present)
 - Write logs to `/var/log/impilo-k3s-image-helper.log` and `reports/full-boot/k3s-image-import-helper.log`
 - Refuse arbitrary tar paths (only `/tmp/impilo-image-*` and repo `reports/full-boot/*.tar`)
 - Refuse repo paths other than `/opt/impilo/repos/Impilo-vNext`
+
+## Local OCI registry (preferred image path)
+
+Build → push to VM-local registry → k3s pull (`IfNotPresent`):
+
+```bash
+bash scripts/operator/registry-up.sh
+bash scripts/build/push-images-to-local-registry.sh required   # parallel, missing-only
+bash scripts/operator/registry-status.sh
+```
+
+One-time k3s trust (sudo checkpoint `configure_k3s_local_registry`):
+
+```bash
+# Cursor writes checkpoint when registry pull fails; product owner runs sudo-checkpoint-run
+```
+
+Helm full boot uses `global.imageRegistry: 127.0.0.1:5000` in `values-full-preview.yaml`.
 
 ## What this does **not** permit
 
@@ -70,14 +90,32 @@ export FULLBOOT_DEPLOY_AUTHORIZED=1
 printf '%s\n' 'AUTHORIZE FULL BOOT PREVIEW DEPLOY' | bash scripts/operator/fullboot.sh deploy
 ```
 
+## Sudo checkpoint actions
+
+| Action | Purpose |
+|--------|---------|
+| `cleanup_duplicate_k3s_import_processes` | Kill runaway imports, clear lock/tars, reinstall helper v2 |
+| `configure_k3s_local_registry` | Write `/etc/rancher/k3s/registries.yaml` + restart k3s |
+| `import_full_boot_images_to_k3s` | Legacy tar import path (missing-only default) |
+
+Trigger cleanup from Cursor:
+
+```bash
+bash scripts/operator/fullboot.sh cleanup-imports
+```
+
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `status` | Slice + full-boot NS + helper + checkpoint state |
+| `status` | Slice + full-boot NS + helper + import lock + checkpoint |
+| `helper-status` | Repo vs installed helper version |
+| `registry-up` / `registry-status` | Local OCI registry |
+| `cleanup-imports` | Stop duplicate imports (sudo checkpoint if needed) |
 | `prepare` | Preflight + dry-run (no deploy) |
 | `verify-images` | 22-image presence check |
-| `import-images` | Import (passwordless or checkpoint) |
+| `import-images` | Import (passwordless or checkpoint; blocked while import active) |
+| `wave-status` / `wave-build` / `wave-report` | Phased expansion (`config/full-boot-waves.yml`) |
 | `deploy` | Orchestrate; stop at checkpoint or deploy auth |
 | `continue` | Resume after successful checkpoint |
 | `sudo-checkpoint-run` | Product owner: run pending privileged action only |

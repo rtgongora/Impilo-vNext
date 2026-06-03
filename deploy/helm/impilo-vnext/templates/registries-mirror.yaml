@@ -1,0 +1,9 @@
+# Reference only — applied by configure_k3s_local_registry sudo checkpoint, not by Helm.
+# mirrors:
+#   "127.0.0.1:5000":
+#     endpoint:
+#       - "http://127.0.0.1:5000"
+# configs:
+#   "127.0.0.1:5000":
+#     tls:
+#       insecure_skip_verify: true

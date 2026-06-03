@@ -19,5 +19,13 @@ impilo.io/environment: {{ .Values.global.environment | quote }}
 {{- define "impilo.image" -}}
 {{- $repo := .repository -}}
 {{- $tag := .tag | default "preview" -}}
+{{- $registry := "" -}}
+{{- if .root -}}
+{{- $registry = .root.Values.global.imageRegistry | default "" -}}
+{{- end -}}
+{{- if $registry -}}
+{{ printf "%s/%s:%s" $registry $repo $tag }}
+{{- else -}}
 {{ $repo }}:{{ $tag }}
+{{- end -}}
 {{- end }}

@@ -1,100 +1,43 @@
 #!/usr/bin/env bash
-# Import built impilo/* and official full-boot infra images into k3s containerd.
+# Import full-boot images into k3s containerd via narrow helper (default: required+infra, missing-only).
 set -euo pipefail
 source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 
 TAG="${1:-preview}"
-IMPORT_INFRA="${IMPORT_INFRA:-1}"
-IMPORTED=0
-FAILED=0
+shift 2>/dev/null || shift 1 2>/dev/null || true
+REPO="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
+HELPER_IMPORT="/usr/local/sbin/impilo-k3s-import-images"
+EXTRA_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --only)
+      EXTRA_ARGS+=("--only" "${2:-}")
+      shift 2
+      ;;
+    --all-local-preview|--force)
+      EXTRA_ARGS+=("$1")
+      shift
+      ;;
+    *)
+      echo "Unknown arg: $1" >&2
+      exit 1
+      ;;
+  esac
+done
 
-if command -v k3s >/dev/null 2>&1 || command -v ctr >/dev/null 2>&1; then
-  if ! sudo -n true 2>/dev/null; then
-    if [[ -z "${SUDO_PASS:-}" ]]; then
-      echo "ERROR: k3s image import requires passwordless sudo, SUDO_PASS, or an interactive VM terminal."
-      echo "  Run: sudo -v"
-      echo "  Then: bash scripts/dev/import-full-vnext-images-k3s.sh preview"
-      exit 2
-    fi
-    SUDO_CMD=(sudo -S)
-  else
-    SUDO_CMD=(sudo -n)
-  fi
-else
-  SUDO_CMD=()
+if [[ "$(id -u)" -eq 0 && -x "$HELPER_IMPORT" ]]; then
+  exec "$HELPER_IMPORT" "$TAG" "$REPO" "${EXTRA_ARGS[@]}"
 fi
 
-# Import a saved tar into k3s/containerd (returns 0 on success).
-ctr_import_tar() {
-  local tar="$1"
-  if [[ ${#SUDO_CMD[@]} -gt 0 ]]; then
-    if [[ -n "${SUDO_PASS:-}" ]]; then
-      if echo "$SUDO_PASS" | "${SUDO_CMD[@]}" k3s ctr images import "$tar" 2>/dev/null \
-        || echo "$SUDO_PASS" | "${SUDO_CMD[@]}" ctr -n k8s.io images import "$tar"; then
-        return 0
-      fi
-      return 1
-    fi
-    if "${SUDO_CMD[@]}" k3s ctr images import "$tar" 2>/dev/null \
-      || "${SUDO_CMD[@]}" ctr -n k8s.io images import "$tar"; then
-      return 0
-    fi
-    return 1
+if [[ -x "$HELPER_IMPORT" ]]; then
+  if sudo -n "$HELPER_IMPORT" "$TAG" "$REPO" "${EXTRA_ARGS[@]}"; then
+    exit 0
   fi
-  if command -v k3s >/dev/null 2>&1; then
-    k3s ctr images import "$tar"
-    return
-  fi
-  if command -v ctr >/dev/null 2>&1; then
-    ctr -n k8s.io images import "$tar"
-    return
-  fi
-  echo "WARN: no k3s/ctr available"
-  return 1
-}
-
-import_ref() {
-  local ref="$1"
-  local safe
-  safe="$(echo "$ref" | tr '/:@' '___')"
-  local tar="/tmp/impilo-image-${safe}.tar"
-  echo "Saving $ref -> $tar"
-  if ! docker save "$ref" -o "$tar"; then
-    FAILED=$((FAILED + 1))
-    return 1
-  fi
-  if ctr_import_tar "$tar"; then
-    IMPORTED=$((IMPORTED + 1))
-  else
-    FAILED=$((FAILED + 1))
-  fi
-  rm -f "$tar"
-}
-
-while read -r ref; do
-  [[ -z "$ref" ]] && continue
-  import_ref "$ref" || true
-done < <(docker images --format '{{.Repository}}:{{.Tag}}' | grep -E '^impilo/.+:('"${TAG}"'|preview-)' || true)
-
-if [[ "$IMPORT_INFRA" == "1" ]]; then
-  INFRA_REFS=(
-    postgres:16-alpine
-    redis:7-alpine
-    apache/kafka:3.7.1
-    quay.io/keycloak/keycloak:25.0
-    minio/minio:latest
-    hapiproject/hapi:v7.4.0
-    envoyproxy/envoy:v1.31-latest
-  )
-  for ref in "${INFRA_REFS[@]}"; do
-    if docker image inspect "$ref" >/dev/null 2>&1; then
-      import_ref "$ref" || true
-    else
-      echo "WARN: infra image not local, skip: $ref"
-      FAILED=$((FAILED + 1))
-    fi
-  done
+  echo "ERROR: helper import failed or import already running (single-flight lock)." >&2
+  echo "  bash scripts/operator/fullboot.sh cleanup-imports" >&2
+  exit 2
 fi
 
-echo "Imported: $IMPORTED failed: $FAILED"
-[[ $FAILED -eq 0 ]]
+echo "ERROR: install narrow helper: sudo bash scripts/operator/install-k3s-image-helper.sh" >&2
+echo "  Then: bash scripts/operator/fullboot.sh import-images" >&2
+exit 2

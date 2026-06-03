@@ -23,12 +23,16 @@ spec:
       containers:
         - name: {{ $name }}
           {{- $img := $svc.image | default dict }}
-          image: "{{ include "impilo.image" (dict "repository" ($img.repository | default (printf "impilo/%s" $name)) "tag" ($img.tag | default $.Values.global.imageTag | default "preview")) }}"
+          image: "{{ include "impilo.image" (dict "root" $ "repository" ($img.repository | default (printf "impilo/%s" $name)) "tag" ($img.tag | default $.Values.global.imageTag | default "preview")) }}"
           imagePullPolicy: {{ $img.pullPolicy | default $.Values.global.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - containerPort: {{ $svc.port }}
           env:
             {{- include "impilo.globalEnv" (dict "root" $) | nindent 12 }}
+            {{- if $.Values.global.javaToolOptions }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ $.Values.global.javaToolOptions | quote }}
+            {{- end }}
             {{- if $.Values.global.database.enabled }}
             - name: POSTGRES_HOST
               value: postgres

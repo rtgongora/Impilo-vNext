@@ -1,0 +1,146 @@
+# Registry-driven wave expansion for full boot (~109 runtime services).
+# Wave 0 = required_full_boot gate (22). Waves 1–7 = optional by plane (dependency order).
+version: 1
+image_tag: preview
+waves:
+  - id: 0
+    name: required-full-boot
+    description: 22 required services + infra (green gate)
+    services:
+      - butano-service
+      - experience-bff
+      - fhir-gateway-service
+      - one-ui-shell
+      - pct-service
+      - tshepo-audit-service
+      - tshepo-authz-service
+      - tshepo-consent-service
+      - tshepo-identity-service
+      - tshepo-keys-service
+      - tuso-service
+      - ubomi-service
+      - varapi-service
+      - vito-service
+      - zibo-service
+  - id: 1
+    name: optional-trust
+    plane: trust
+    services:
+      - identity-assurance-service
+      - mvumo-service
+      - tshepo-offline-service
+  - id: 2
+    name: optional-registry
+    plane: registry
+    services:
+      - indawo-service
+      - product-registry-service
+  - id: 3
+    name: optional-clinical
+    plane: clinical
+    services:
+      - butano-fhir
+      - clinical-knowledge-platform-service
+      - document-service
+      - forms-service
+      - guidance-service
+      - inpatient-service
+      - inventory-elmis-adapter
+      - inventory-service
+      - oros-service
+      - pacs-adapter-service
+      - pharmacy-elmis-adapter
+      - pharmacy-service
+      - rules-service
+      - scheduling-service
+  - id: 4
+    name: optional-data
+    plane: data
+    services:
+      - ai-model-registry-service
+      - campaigns-service
+      - data-access-governance-service
+      - data-governance-service
+      - data-ingestion-service
+      - data-pipeline-service
+      - data-warehouse-service
+      - national-data-repository-service
+      - ndr-service
+      - reporting-service
+      - search-service
+      - surveillance-service
+  - id: 5
+    name: optional-integration
+    plane: integration
+    services:
+      - analytics-pipeline-service
+      - asset-registry-service
+      - audit-ledger-service
+      - card-print-agent
+      - channels-service
+      - connector-fhir-adapter
+      - developer-portal-service
+      - dispatch-service
+      - integration-hub
+      - iot-ingestion-service
+      - jobs-service
+      - landela-adapter-service
+      - llm-orchestration-service
+      - ndila-service
+      - nhume-service
+      - notification-service
+      - observability-service
+      - offline-edge-service
+      - offline-sync-service
+      - referral-service
+      - schema-registry-service
+      - security-hardening-service
+      - support-service
+      - workflow-service
+  - id: 6
+    name: optional-experience
+    plane: experience
+    services:
+      - butano-web
+      - community-service
+      - costa-console
+      - developer-console
+      - ehr
+      - inventory-web
+      - knowledge-admin
+      - learning-service
+      - msika-flow-ops
+      - msika-flow-portal
+      - msika-flow-vendor
+      - msika-web
+      - mushex-finance-console
+      - mushex-ops-console
+      - mushex-payer-portal
+      - ops-console
+      - ops-docs
+      - oros-web
+      - pct-web
+      - pharmacy-web
+      - portal
+      - self-service
+      - shared-ui
+      - support-console
+      - zibo-web
+  - id: 7
+    name: optional-enterprise
+    plane: enterprise
+    services:
+      - costing-engine-service
+      - coverage-service
+      - credential-verification-service
+      - general-ledger-service
+      - hr-payroll-service
+      - msika-flow-service
+      - msika-service
+      - mushe-wallet-service
+      - mushex-service
+      - procurement-service
+      - share-slip-service
+      - simba-service
+      - wellness-service
+      - workforce-governance-service

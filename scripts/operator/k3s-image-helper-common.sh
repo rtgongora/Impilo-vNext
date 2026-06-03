@@ -4,8 +4,10 @@
 [[ -n "${_IMPILO_K3S_HELPER_COMMON_LOADED:-}" ]] && return 0
 _IMPILO_K3S_HELPER_COMMON_LOADED=1
 
+IMPILO_HELPER_VERSION="2"
 IMPILO_DEFAULT_REPO="/opt/impilo/repos/Impilo-vNext"
 IMPILO_HELPER_LOG="/var/log/impilo-k3s-image-helper.log"
+IMPILO_IMPORT_LOCK="/tmp/impilo-k3s-import.lock"
 IMPILO_TAG_REGEX='^preview(-[a-f0-9]{7,40})?$'
 
 impilo_helper_log() {
@@ -85,6 +87,41 @@ impilo_ctr_list() {
   return 1
 }
 
+# Returns 0 if ref appears present in containerd list file (missing-only skip).
+impilo_ref_in_containerd() {
+  local ref="$1"
+  local ctr_file="$2"
+  [[ -f "$ctr_file" ]] || return 1
+  local repo_name="${ref%%:*}"
+  local want_tag="${ref#*:}"
+  [[ "$want_tag" == "$ref" ]] && want_tag="latest"
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    [[ "$line" != *"$repo_name"* ]] && continue
+    if [[ "$want_tag" == "preview" ]]; then
+      if [[ "$line" == *":preview" ]] || [[ "$line" == *":preview-"* ]]; then
+        return 0
+      fi
+    elif [[ "$line" == *":${want_tag}"* ]]; then
+      return 0
+    fi
+  done <"$ctr_file"
+  return 1
+}
+
+impilo_acquire_import_lock() {
+  exec {IMPILO_LOCK_FD}>"$IMPILO_IMPORT_LOCK"
+  if ! flock -n "$IMPILO_LOCK_FD"; then
+    local holder=""
+    holder="$(cat "${IMPILO_IMPORT_LOCK}.pid" 2>/dev/null || echo unknown)"
+    echo "ERROR: k3s image import already running (lock holder PID $holder)" >&2
+    echo "Wait for it to finish or run cleanup_duplicate_k3s_import_processes checkpoint." >&2
+    return 1
+  fi
+  echo $$ >"${IMPILO_IMPORT_LOCK}.pid"
+  return 0
+}
+
 impilo_infra_refs() {
   cat <<'EOF'
 postgres:16-alpine
@@ -97,7 +134,6 @@ envoyproxy/envoy:v1.31-latest
 EOF
 }
 
-# Prints required image refs (one per line) for tag $1 from classification YAML.
 impilo_required_refs() {
   local tag="$1"
   local repo="$2"
@@ -118,6 +154,29 @@ for e in req:
         refs.append(f"impilo/{e['id']}:{tag}")
 for r in refs:
     print(r)
+PY
+}
+
+impilo_runtime_refs() {
+  local tag="$1"
+  local repo="$2"
+  python3 - "$repo" "$tag" <<'PY'
+import sys
+import yaml
+
+repo, tag = sys.argv[1], sys.argv[2]
+doc = yaml.safe_load(open(f"{repo}/config/full-boot-service-classification.yml"))
+skip = {"not-required-generated-client", "not-required-mobile-artifact", "not-required-internal-package",
+        "not-required-doctrine-only-component", "official-helm-chart", "unknown-needs-review"}
+for e in doc["classifications"]:
+    strat = e.get("image_strategy", "")
+    if strat in skip or strat.startswith("not-required"):
+        continue
+    if e.get("official_image"):
+        off = e["official_image"]
+        print(off if ":" in off else f"{off}:latest")
+    elif strat in ("shared-dockerfile-template", "dockerfile", "jib", "buildpacks"):
+        print(f"impilo/{e['id']}:{tag}")
 PY
 }
 
@@ -172,6 +231,7 @@ def image_present(ref: str) -> tuple[bool, str]:
     if matches:
         return True, matches[0]
     return False, ""
+
 
 present = 0
 missing = []

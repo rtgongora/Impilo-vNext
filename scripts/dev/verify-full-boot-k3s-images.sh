@@ -21,14 +21,28 @@ echo "Runtime readiness is NOT APPLICABLE until Helm deploy into $NS."
 echo ""
 
 # --- A. containerd image list (authoritative) ---
+HELPER_LIST="/usr/local/sbin/impilo-k3s-list-images"
+REPO_ROOT="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 CTR_IMAGES=""
+if [[ -x "$HELPER_LIST" ]] && sudo -n -l 2>/dev/null | grep -q 'impilo-k3s-list-images'; then
+  set +e
+  sudo -n "$HELPER_LIST" "$TAG" "$REPO_ROOT" 2>&1 | tee "$REPORT"
+  helper_exit=${PIPESTATUS[0]}
+  set -e
+  echo ""
+  echo "Log: $REPORT"
+  exit "$helper_exit"
+fi
+
 if sudo -n k3s ctr images list -q >/dev/null 2>&1; then
   CTR_IMAGES="$(sudo -n k3s ctr images list -q 2>/dev/null || true)"
 elif [[ -n "${SUDO_PASS:-}" ]]; then
   CTR_IMAGES="$(echo "$SUDO_PASS" | sudo -S k3s ctr images list -q 2>/dev/null || true)"
 else
   echo "IMAGE_PRESENCE: FAIL"
-  echo "  Reason: cannot run 'sudo k3s ctr images list' (run sudo -v first)."
+  echo "  Reason: cannot list containerd images."
+  echo "  Install narrow helper: sudo bash scripts/operator/install-k3s-image-helper.sh"
+  echo "  Then: bash scripts/operator/fullboot.sh verify-images"
   echo ""
   exit 2
 fi
