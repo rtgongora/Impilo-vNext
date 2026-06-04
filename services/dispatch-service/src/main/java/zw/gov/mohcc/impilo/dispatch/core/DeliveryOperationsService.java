@@ -209,7 +209,7 @@ public class DeliveryOperationsService {
         FleetAssetEntity asset = new FleetAssetEntity(UUID.randomUUID(), tenantId, str(body, "assetCode", "ASSET-" + System.nanoTime()), str(body, "assetType", "VAN"));
         asset.setPlateNumber(str(body, "plateNumber", null));
         asset.setStatus(str(body, "status", "AVAILABLE"));
-        asset.setCapacityKg(toDouble(body.get("capacityKg")));
+        asset.setCapacityKg(toBigDecimal(body.get("capacityKg")));
         return fleetRepository.save(asset);
     }
 
@@ -218,7 +218,7 @@ public class DeliveryOperationsService {
         FleetAssetEntity asset = fleetRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Fleet asset not found: " + id));
         if (body.containsKey("status")) asset.setStatus(str(body, "status", asset.getStatus()));
         if (body.containsKey("plateNumber")) asset.setPlateNumber(str(body, "plateNumber", asset.getPlateNumber()));
-        if (body.containsKey("capacityKg")) asset.setCapacityKg(toDouble(body.get("capacityKg")));
+        if (body.containsKey("capacityKg")) asset.setCapacityKg(toBigDecimal(body.get("capacityKg")));
         asset.setUpdatedAt(OffsetDateTime.now());
         return fleetRepository.save(asset);
     }
@@ -232,7 +232,7 @@ public class DeliveryOperationsService {
                 str(body, "fullName", "Unknown Courier"));
         courier.setPhone(str(body, "phone", null));
         courier.setStatus(str(body, "status", "ACTIVE"));
-        courier.setRating(toDouble(body.get("rating")));
+        courier.setRating(toBigDecimal(body.get("rating")));
         return courierRepository.save(courier);
     }
 
@@ -241,7 +241,7 @@ public class DeliveryOperationsService {
         DriverCourierProfileEntity courier = courierRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Courier not found: " + id));
         if (body.containsKey("phone")) courier.setPhone(str(body, "phone", courier.getPhone()));
         if (body.containsKey("status")) courier.setStatus(str(body, "status", courier.getStatus()));
-        if (body.containsKey("rating")) courier.setRating(toDouble(body.get("rating")));
+        if (body.containsKey("rating")) courier.setRating(toBigDecimal(body.get("rating")));
         courier.setUpdatedAt(OffsetDateTime.now());
         return courierRepository.save(courier);
     }
@@ -516,6 +516,11 @@ public class DeliveryOperationsService {
     private Double toDouble(Object value) {
         if (value == null) return null;
         try { return Double.parseDouble(value.toString()); } catch (NumberFormatException ex) { return null; }
+    }
+
+    private java.math.BigDecimal toBigDecimal(Object value) {
+        if (value == null) return null;
+        try { return new java.math.BigDecimal(value.toString()); } catch (NumberFormatException ex) { return null; }
     }
 
     public static class DeliveryNotFoundException extends RuntimeException {

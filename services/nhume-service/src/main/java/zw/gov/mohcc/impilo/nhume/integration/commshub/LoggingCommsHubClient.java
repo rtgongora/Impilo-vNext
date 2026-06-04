@@ -3,7 +3,6 @@ package zw.gov.mohcc.impilo.nhume.integration.commshub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -15,7 +14,6 @@ import java.util.UUID;
  * {@code impilo.nhume.comms-hub.base-url} is wired and Comms Hub is online.
  */
 @Component
-@ConditionalOnMissingBean(CommsHubClient.class)
 public class LoggingCommsHubClient implements CommsHubClient {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingCommsHubClient.class);
