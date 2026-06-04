@@ -983,8 +983,16 @@ function main() {
   validateRegistryInventoryContract(catalog, registry);
   validateFullBootWaves(catalog);
 
+  // Regenerate runtime values overlay. Do NOT default to --max-wave 0 (that disables 71
+  // microservices and clobbers the committed wave-7 overlay). Set FULL_BOOT_MAX_WAVE=N
+  // only when intentionally generating a partial wave slice.
   try {
-    execSync("node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0", {
+    const maxWave = process.env.FULL_BOOT_MAX_WAVE;
+    const waveArg =
+      maxWave !== undefined && String(maxWave).trim() !== ""
+        ? ` --max-wave ${String(maxWave).trim()}`
+        : "";
+    execSync(`node scripts/full-boot/generate-full-preview-runtime-values.mjs${waveArg}`, {
       cwd: ROOT,
       stdio: ["ignore", "inherit", "inherit"],
     });

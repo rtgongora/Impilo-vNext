@@ -6,6 +6,11 @@ source "$(dirname "$0")/../full-boot/_full-boot-common.sh"
 cd "$REPO_PATH"
 full_boot_ensure_artifacts
 
+# Helm audit needs fullBootServices from generated overlay (not values-full-preview.yaml alone).
+if [[ ! -f "$REPO_PATH/deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml" ]]; then
+  node "$REPO_PATH/scripts/full-boot/generate-full-preview-runtime-values.mjs" >/dev/null 2>&1 || true
+fi
+
 REPORT_JSON="$FULL_BOOT_REPORTS/full-boot-runtime-report.json"
 REPORT_MD="$FULL_BOOT_REPORTS/full-boot-runtime-report.md"
 mkdir -p "$FULL_BOOT_REPORTS"

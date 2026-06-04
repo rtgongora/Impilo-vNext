@@ -13,6 +13,7 @@ ROOT = Path(os.environ.get("REPO_PATH", Path(__file__).resolve().parents[2]))
 CLS_PATH = ROOT / "config/full-boot-service-classification.yml"
 HELM_DIR = ROOT / "deploy/helm/impilo-vnext"
 VALUES_FULL = HELM_DIR / "values-full-preview.yaml"
+VALUES_RUNTIME_GEN = HELM_DIR / "values-full-preview-runtime.generated.yaml"
 TEMPLATES_DIR = HELM_DIR / "templates"
 
 DEDICATED = {
@@ -50,6 +51,23 @@ TEMPLATE_MAP = {
 }
 
 
+def load_merged_values() -> dict:
+    """Merge static full-preview values with generated fullBootServices overlay."""
+    values = yaml.safe_load(VALUES_FULL.read_text()) if VALUES_FULL.exists() else {}
+    if not isinstance(values, dict):
+        values = {}
+    if VALUES_RUNTIME_GEN.exists():
+        gen = yaml.safe_load(VALUES_RUNTIME_GEN.read_text()) or {}
+        if isinstance(gen, dict):
+            if gen.get("fullBootServices"):
+                values["fullBootServices"] = gen["fullBootServices"]
+            if gen.get("postgres"):
+                pg = values.get("postgres") or {}
+                pg.update(gen["postgres"])
+                values["postgres"] = pg
+    return values
+
+
 def helm_coverage(sid: str, values: dict, template_text: str) -> tuple[str, str]:
     if sid in DEDICATED:
         key = INFRA_KEYS.get(sid)
@@ -66,12 +84,14 @@ def helm_coverage(sid: str, values: dict, template_text: str) -> tuple[str, str]
         return "helm_missing", f"missing {tpl}"
     svc = (values.get("fullBootServices") or {}).get(sid)
     if not svc:
-        return "config_missing", "not in fullBootServices"
-    if svc.get("enabled") is False:
-        return "helm_partial", "disabled"
+        return "config_missing", "not in fullBootServices (runtime.generated)"
     if "fullBootServices" not in template_text:
         return "helm_missing", "microservice template"
-    return "helm_ready", "microservice.yaml"
+    # Generic microservice.yaml deploys every fullBootServices entry; enabled is wave state.
+    note = "microservice.yaml"
+    if svc.get("enabled") is False:
+        note = "microservice.yaml (wave-disabled)"
+    return "helm_ready", note
 
 
 def main() -> None:
@@ -85,7 +105,7 @@ def main() -> None:
     template_text = "\n".join(
         p.read_text() for p in TEMPLATES_DIR.iterdir() if p.suffix in (".yaml", ".tpl")
     )
-    values = yaml.safe_load(VALUES_FULL.read_text()) if VALUES_FULL.exists() else {}
+    values = load_merged_values()
 
     rows = []
     for e in required:
