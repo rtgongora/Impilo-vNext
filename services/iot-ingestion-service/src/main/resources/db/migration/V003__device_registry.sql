@@ -1,5 +1,7 @@
 -- =============================================================================
 -- IoT V003 — Device Registry (Health OS §17)
+
+CREATE SCHEMA IF NOT EXISTS iot;
 --
 -- "Devices are first-class entities in the Health Operating System and may
 --  participate directly in the experience layer."
