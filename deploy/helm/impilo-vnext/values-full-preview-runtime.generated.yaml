@@ -1,9 +1,9 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 3
-# Microservices: 84 | enabled: 32 (waves 0–3)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 4
+# Microservices: 84 | enabled: 44 (waves 0–4)
 fullBootServices:
   ai-model-registry-service:
-    enabled: false
+    enabled: true
     port: 8280
     database: ai_model_registry
   analytics-pipeline-service:
@@ -38,7 +38,7 @@ fullBootServices:
         cpu: '2'
         memory: 2Gi
   campaigns-service:
-    enabled: false
+    enabled: true
     port: 8190
     database: campaigns
   card-print-agent:
@@ -74,23 +74,23 @@ fullBootServices:
     port: 8094
     database: credential_verification
   data-access-governance-service:
-    enabled: false
+    enabled: true
     port: 8170
     database: data_access_governance
   data-governance-service:
-    enabled: false
+    enabled: true
     port: 8220
     database: data_governance
   data-ingestion-service:
-    enabled: false
+    enabled: true
     port: 8210
     database: data_ingestion
   data-pipeline-service:
-    enabled: false
+    enabled: true
     port: 8215
     database: data_pipeline
   data-warehouse-service:
-    enabled: false
+    enabled: true
     port: 8233
     database: data_warehouse
   developer-portal-service:
@@ -192,7 +192,7 @@ fullBootServices:
     port: 8195
     database: mvumo
   national-data-repository-service:
-    enabled: false
+    enabled: true
     port: 8152
     database: national_data_repository
   ndila-service:
@@ -200,7 +200,7 @@ fullBootServices:
     port: 8155
     database: ndila
   ndr-service:
-    enabled: false
+    enabled: true
     port: 8232
     database: ndr
   nhume-service:
@@ -260,7 +260,7 @@ fullBootServices:
     port: 8399
     database: referral
   reporting-service:
-    enabled: false
+    enabled: true
     port: 8176
     database: reporting
   rules-service:
@@ -276,7 +276,7 @@ fullBootServices:
     port: 8371
     database: schema_registry
   search-service:
-    enabled: false
+    enabled: true
     port: 8230
     database: search
   security-hardening-service:
@@ -296,7 +296,7 @@ fullBootServices:
     port: 8340
     database: support
   surveillance-service:
-    enabled: false
+    enabled: true
     port: 8180
     database: surveillance
   tshepo-audit-service:
@@ -361,6 +361,8 @@ fullBootServices:
     port: 8085
     database: zibo
 postgres:
+  maxConnections: 400
+  sharedBuffers: 256MB
   initDatabases:
     - ai_model_registry
     - analytics_pipeline

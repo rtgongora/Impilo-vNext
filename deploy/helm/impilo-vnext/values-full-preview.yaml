@@ -59,22 +59,10 @@ postgres:
   username: impilo
   database: impilo
   password: preview-postgres-change-me
-  # Per-service DBs (match application.yml JDBC paths); created idempotently via ConfigMap + Job.
-  initDatabases:
-    - hapi
-    - vito
-    - varapi
-    - tuso
-    - ubomi
-    - zibo
-    - tshepo_authz
-    - tshepo_identity
-    - tshepo_consent
-    - tshepo_audit
-    - tshepo_keys
-    - pct
-    - butano
-    - fhir_gateway
+  # Full preview: max_connections + per-service DB list come from
+  # values-full-preview-runtime.generated.yaml (regenerated on each deploy).
+  maxConnections: 400
+  sharedBuffers: 256MB
 
 redis:
   enabled: true

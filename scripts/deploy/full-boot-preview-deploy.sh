@@ -300,7 +300,7 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set global.imageTag="$IMAGE_TAG" \
   --set images.experienceBff.tag="$IMAGE_TAG" \
   --set images.oneUiShell.tag="$IMAGE_TAG" \
-  --wait --timeout 45m \
+  --wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" \
   --atomic=false
 
 kubectl rollout status deployment -n "$NAMESPACE" --timeout=600s || true
