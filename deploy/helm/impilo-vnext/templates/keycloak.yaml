@@ -19,7 +19,11 @@ spec:
         - name: keycloak
           image: "{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
           imagePullPolicy: {{ .Values.keycloak.image.pullPolicy }}
+          {{- if (.Values.keycloak.realmImport | default dict).enabled }}
+          args: ["start-dev", "--http-port=8080", "--import-realm"]
+          {{- else }}
           args: ["start-dev", "--http-port=8080"]
+          {{- end }}
           ports:
             - containerPort: 8080
           env:
@@ -60,6 +64,18 @@ spec:
             failureThreshold: 6
           resources:
             {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          {{- if (.Values.keycloak.realmImport | default dict).enabled }}
+          volumeMounts:
+            - name: realm-import
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+          {{- end }}
+      {{- if (.Values.keycloak.realmImport | default dict).enabled }}
+      volumes:
+        - name: realm-import
+          configMap:
+            name: keycloak-realm-import
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service

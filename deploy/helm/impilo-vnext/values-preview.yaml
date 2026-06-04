@@ -14,8 +14,11 @@ images:
     tag: preview
     pullPolicy: Never
 
+# Legacy 4-service slice. Per Highest-Validated-Stack-Wins, the public IP is served by the
+# latest validated full stack (impilo-full-preview), not this slice. This slice is a
+# short-lived rollback fallback only, so its public ingress is disabled.
 ingress:
-  enabled: true
+  enabled: false
   className: traefik
 
 redis:

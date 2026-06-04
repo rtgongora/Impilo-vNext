@@ -1,0 +1,12 @@
+{{- if and .Values.keycloak.enabled (.Values.keycloak.realmImport | default dict).enabled }}
+# Realm seed for preview: imported by Keycloak on startup via --import-realm.
+# Makes login durable across Keycloak restarts (start-dev uses ephemeral H2).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-import
+  namespace: {{ .Release.Namespace }}
+data:
+  realm-impilo.json: |-
+{{ .Files.Get "files/realm-impilo-preview.json" | indent 4 }}
+{{- end }}
