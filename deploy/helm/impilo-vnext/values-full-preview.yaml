@@ -18,6 +18,8 @@ global:
     bootstrapServers: kafka:9092
   # Images already set -XX:+UseZGC on the java command; do not add a second GC via JAVA_TOOL_OPTIONS.
   javaToolOptions: "-XX:MaxRAMPercentage=70.0"
+  # Preview has no OTLP collector; empty endpoint crashes Spring Boot 3.3 OTLP autoconfig.
+  previewDisableTracing: true
   defaultResources:
     requests:
       cpu: 100m

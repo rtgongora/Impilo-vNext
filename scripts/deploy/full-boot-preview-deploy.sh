@@ -134,7 +134,7 @@ fi
 
 helm_values_args() {
   local args=(-f "$VALUES_FILE")
-  node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave "$FULL_BOOT_MAX_WAVE"
+  node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null
   if [[ -f "$RUNTIME_VALUES" ]]; then
     args+=(-f "$RUNTIME_VALUES")
   else

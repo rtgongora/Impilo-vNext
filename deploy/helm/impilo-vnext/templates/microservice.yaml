@@ -33,6 +33,10 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: {{ $.Values.global.javaToolOptions | quote }}
             {{- end }}
+            {{- if $.Values.global.previewDisableTracing }}
+            - name: MANAGEMENT_TRACING_ENABLED
+              value: "false"
+            {{- end }}
             {{- if $.Values.global.database.enabled }}
             - name: POSTGRES_HOST
               value: postgres
