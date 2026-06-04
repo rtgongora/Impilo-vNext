@@ -1,0 +1,285 @@
+{
+  "generated_at": "2026-06-04T07:32:06.492921+00:00",
+  "namespace": "impilo-full-preview",
+  "max_wave": 4,
+  "assigned": 46,
+  "ready": 45,
+  "services": [
+    {
+      "wave": 0,
+      "service": "butano-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "experience-bff",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "fhir-gateway-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "one-ui-shell",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "pct-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tshepo-audit-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tshepo-authz-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tshepo-consent-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tshepo-identity-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tshepo-keys-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "tuso-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "ubomi-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "varapi-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "vito-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 0,
+      "service": "zibo-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 1,
+      "service": "identity-assurance-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 1,
+      "service": "mvumo-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 1,
+      "service": "tshepo-offline-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 2,
+      "service": "indawo-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 2,
+      "service": "product-registry-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "butano-fhir",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "clinical-knowledge-platform-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "document-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "forms-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "guidance-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "inpatient-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "inventory-elmis-adapter",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "inventory-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "oros-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "pacs-adapter-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "pharmacy-elmis-adapter",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "pharmacy-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "rules-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 3,
+      "service": "scheduling-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "ai-model-registry-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "campaigns-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "data-access-governance-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "data-governance-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "data-ingestion-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "data-pipeline-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "data-warehouse-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "national-data-repository-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "ndr-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "reporting-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "search-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 4,
+      "service": "surveillance-service",
+      "deployed": true,
+      "ready": false
+    }
+  ]
+}

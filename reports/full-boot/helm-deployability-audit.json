@@ -1,7 +1,8 @@
 {
   "required": 22,
   "counts": {
-    "helm_ready": 22
+    "config_missing": 13,
+    "helm_ready": 9
   },
   "rows": [
     {
@@ -10,8 +11,8 @@
       "port": 8090,
       "deploy_order": "domain_services",
       "image": "impilo/butano-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "envoy",
@@ -37,8 +38,8 @@
       "port": 8091,
       "deploy_order": "domain_services",
       "image": "impilo/fhir-gateway-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "hapi-fhir",
@@ -91,8 +92,8 @@
       "port": 8088,
       "deploy_order": "domain_services",
       "image": "impilo/pct-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "postgres",
@@ -118,8 +119,8 @@
       "port": 8183,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-audit-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "tshepo-authz-service",
@@ -127,8 +128,8 @@
       "port": 8081,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-authz-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "tshepo-consent-service",
@@ -136,8 +137,8 @@
       "port": 8182,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-consent-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "tshepo-identity-service",
@@ -145,8 +146,8 @@
       "port": 8181,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-identity-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "tshepo-keys-service",
@@ -154,8 +155,8 @@
       "port": 8184,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-keys-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "tuso-service",
@@ -163,8 +164,8 @@
       "port": 8084,
       "deploy_order": "registries",
       "image": "impilo/tuso-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "ubomi-service",
@@ -172,8 +173,8 @@
       "port": 8087,
       "deploy_order": "registries",
       "image": "impilo/ubomi-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "varapi-service",
@@ -181,8 +182,8 @@
       "port": 8083,
       "deploy_order": "registries",
       "image": "impilo/varapi-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "vito-service",
@@ -190,8 +191,8 @@
       "port": 8082,
       "deploy_order": "registries",
       "image": "impilo/vito-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     },
     {
       "id": "zibo-service",
@@ -199,8 +200,8 @@
       "port": 8085,
       "deploy_order": "registries",
       "image": "impilo/zibo-service",
-      "status": "helm_ready",
-      "note": "microservice.yaml"
+      "status": "config_missing",
+      "note": "not in fullBootServices"
     }
   ]
 }

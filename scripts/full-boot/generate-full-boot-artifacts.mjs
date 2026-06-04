@@ -986,7 +986,7 @@ function main() {
   try {
     execSync("node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0", {
       cwd: ROOT,
-      stdio: "inherit",
+      stdio: ["ignore", "inherit", "inherit"],
     });
   } catch (e) {
     console.warn("WARN: runtime values generation failed:", e?.message ?? e);

@@ -375,6 +375,7 @@ PY
     WAVE_N="${2:-1}"
     echo "--- wave-build $WAVE_N (cumulative waves 0..$WAVE_N) ---"
     bash "$REPO/scripts/build/build-full-vnext-images.sh" --wave "$WAVE_N"
+    export FULL_BOOT_IMAGE_TAG="$(fb_tag)"
     IMPILO_PUSH_WAVE="$WAVE_N" bash "$REPO/scripts/build/push-images-to-local-registry.sh" wave "$WAVE_N"
     ;;
   wave-deploy)

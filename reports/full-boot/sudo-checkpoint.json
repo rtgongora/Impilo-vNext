@@ -1,0 +1,16 @@
+{
+  "checkpoint_id": "cp-20260604035439-5f524ec7",
+  "timestamp": "2026-06-04T03:54:39+02:00",
+  "repo_path": "/opt/impilo/repos/Impilo-vNext",
+  "branch": "claude/staging-ux-orchestration-remediation-Yypyl",
+  "commit": "5f524ec7",
+  "required_action": "import_full_boot_images_to_k3s",
+  "exact_command_to_run": "cd /opt/impilo/repos/Impilo-vNext && git pull && sudo -v && bash scripts/operator/fullboot.sh sudo-checkpoint-run",
+  "expected_success_marker": "IMAGE_PRESENCE: PASS and SUMMARY ok=22 fail=0",
+  "log_file_path": "/opt/impilo/repos/Impilo-vNext/reports/full-boot/sudo-checkpoint-run.log",
+  "resume_command": "bash scripts/operator/fullboot.sh continue",
+  "safety_note": "Runs only the named checkpoint action. Does not deploy full boot. Does not modify impilo-preview.",
+  "affected_namespace": "impilo-full-preview",
+  "protected_namespace": "impilo-preview",
+  "resume_after_success": "verify_images_and_prepare"
+}

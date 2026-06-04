@@ -32,6 +32,12 @@
       "available": 1,
       "healthy": true
     },
+    "identity-assurance-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "kafka": {
       "replicas": 1,
       "ready": 1,
@@ -45,6 +51,12 @@
       "healthy": true
     },
     "minio": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "mvumo-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -104,6 +116,12 @@
       "available": 1,
       "healthy": true
     },
+    "tshepo-offline-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "tuso-service": {
       "replicas": 1,
       "ready": 1,
@@ -137,7 +155,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 22,
+  "runtime_pods_count": 25,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
