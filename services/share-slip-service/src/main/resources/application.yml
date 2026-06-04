@@ -15,7 +15,8 @@ spring:
       minimum-idle: 5
   jpa:
     hibernate:
-      ddl-auto: validate
+      # Flyway owns schema; skip Hibernate uuid[] validation (converter maps at runtime).
+      ddl-auto: none
     open-in-view: false
     properties:
       hibernate:

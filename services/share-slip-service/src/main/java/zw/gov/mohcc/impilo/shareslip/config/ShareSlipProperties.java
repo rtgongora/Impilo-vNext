@@ -1,13 +1,11 @@
 package zw.gov.mohcc.impilo.shareslip.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * Share Slip service configuration properties.
  * Bound from application.yml under the 'share-slip' prefix.
  */
-@Component
 @ConfigurationProperties(prefix = "share-slip")
 public class ShareSlipProperties {
 
