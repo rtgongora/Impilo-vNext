@@ -121,6 +121,30 @@ public class PacsServiceClient {
         return extractData(response);
     }
 
+    public JsonNode saveImagingEdit(String studyId, String seriesId, String instanceId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/series/" + seriesId + "/instances/" + instanceId + "/edits";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listImagingEdits(String studyId, String seriesId, String instanceId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/series/" + seriesId + "/instances/" + instanceId + "/edits";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode saveStudyImagingEdit(String studyId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/edits";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listStudyImagingEdits(String studyId) {
+        String url = baseUrl + "/internal/v1/imaging-studies/" + studyId + "/edits";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

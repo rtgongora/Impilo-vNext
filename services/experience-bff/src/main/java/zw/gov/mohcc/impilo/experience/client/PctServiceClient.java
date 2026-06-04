@@ -1031,6 +1031,24 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    public JsonNode createTriageImagingLink(Map<String, Object> body) {
+        String url = baseUrl + "/v1/triage-imaging-links";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listTriageImagingLinks(String journeyId, String studyId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/triage-imaging-links");
+        if (journeyId != null && !journeyId.isBlank()) {
+            builder.queryParam("journey_id", journeyId);
+        }
+        if (studyId != null && !studyId.isBlank()) {
+            builder.queryParam("study_id", studyId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

@@ -611,6 +611,25 @@ services:
       retries: 10
       start_period: 20s
 
+  coturn:
+    image: coturn/coturn:4.6.3
+    command: >
+      -n
+      --log-file=stdout
+      --lt-cred-mech
+      --realm=impilo.local
+      --fingerprint
+      --use-auth-secret
+      --static-auth-secret=${TURN_SECRET:-impilo-turn-secret}
+      --external-ip=127.0.0.1
+      --listening-port=3478
+      --min-port=49152
+      --max-port=49200
+    ports:
+      - "3478:3478"
+      - "3478:3478/udp"
+      - "49152-49200:49152-49200/udp"
+
   # ── One UI Shell — unified user-facing Experience (port 3000) ───────
   one-ui-shell:
     build:

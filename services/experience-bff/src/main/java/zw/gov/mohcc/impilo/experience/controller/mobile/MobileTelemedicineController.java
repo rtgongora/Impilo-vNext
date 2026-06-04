@@ -9,6 +9,8 @@ import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Mobile telemedicine session endpoints.
@@ -22,6 +24,8 @@ import java.util.*;
 public class MobileTelemedicineController {
 
     private final PctServiceClient pctClient;
+    private static final Map<String, List<Map<String, Object>>> RTC_SIGNALS = new ConcurrentHashMap<>();
+    private static final AtomicLong RTC_SEQUENCE = new AtomicLong(0);
 
     public MobileTelemedicineController(PctServiceClient pctClient) {
         this.pctClient = pctClient;
@@ -153,5 +157,43 @@ public class MobileTelemedicineController {
             }
         } catch (Exception ignored) {}
         return ResponseEntity.ok(Map.of("data", List.of()));
+    }
+
+    @PostMapping("/sessions/{id}/rtc/signal")
+    public ResponseEntity<Map<String, Object>> pushRtcSignal(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        String key = id.toString();
+        Map<String, Object> signal = new LinkedHashMap<>();
+        signal.put("sequence", RTC_SEQUENCE.incrementAndGet());
+        signal.put("session_id", key);
+        signal.put("type", body.get("type"));
+        signal.put("from", body.get("from"));
+        signal.put("to", body.get("to"));
+        signal.put("payload", body.get("payload"));
+        signal.put("created_at", OffsetDateTime.now().toString());
+        RTC_SIGNALS.computeIfAbsent(key, __ -> new ArrayList<>()).add(signal);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", signal,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
+    }
+
+    @GetMapping("/sessions/{id}/rtc/signals")
+    public ResponseEntity<Map<String, Object>> pollRtcSignals(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(name = "after", defaultValue = "0") long after) {
+        List<Map<String, Object>> signals = RTC_SIGNALS.getOrDefault(id.toString(), List.of())
+                .stream()
+                .filter(s -> Long.parseLong(String.valueOf(s.get("sequence"))) > after)
+                .toList();
+        return ResponseEntity.ok(Map.of(
+                "data", signals,
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+        ));
     }
 }

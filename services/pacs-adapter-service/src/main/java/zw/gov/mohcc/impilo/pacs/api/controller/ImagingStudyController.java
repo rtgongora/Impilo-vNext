@@ -16,6 +16,8 @@ import zw.gov.mohcc.impilo.pacs.api.dto.ImagingSearchRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.LaunchViewerRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.SaveImagingEditRequest;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingEditEntity;
 import zw.gov.mohcc.impilo.pacs.core.ImagingStudyService;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingOrderLinkEntity;
@@ -133,6 +135,37 @@ public class ImagingStudyController {
     @GetMapping("/{id}/order-links")
     public ResponseEntity<List<ImagingOrderLinkEntity>> listOrderLinks(@PathVariable Long id) {
         return ResponseEntity.ok(imagingStudyService.listOrderLinks(id));
+    }
+
+    @PostMapping("/{studyId}/series/{seriesId}/instances/{instanceId}/edits")
+    public ResponseEntity<ImagingEditEntity> saveImagingEdit(
+            @PathVariable Long studyId,
+            @PathVariable Long seriesId,
+            @PathVariable Long instanceId,
+            @Valid @RequestBody SaveImagingEditRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(imagingStudyService.saveImagingEdit(studyId, seriesId, instanceId, request, actorId()));
+    }
+
+    @GetMapping("/{studyId}/series/{seriesId}/instances/{instanceId}/edits")
+    public ResponseEntity<List<ImagingEditEntity>> listImagingEdits(
+            @PathVariable Long studyId,
+            @PathVariable Long seriesId,
+            @PathVariable Long instanceId) {
+        return ResponseEntity.ok(imagingStudyService.listImagingEdits(studyId, seriesId, instanceId));
+    }
+
+    @PostMapping("/{studyId}/edits")
+    public ResponseEntity<ImagingEditEntity> saveStudyImagingEdit(
+            @PathVariable Long studyId,
+            @Valid @RequestBody SaveImagingEditRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(imagingStudyService.saveStudyImagingEdit(studyId, request, actorId()));
+    }
+
+    @GetMapping("/{studyId}/edits")
+    public ResponseEntity<List<ImagingEditEntity>> listStudyImagingEdits(@PathVariable Long studyId) {
+        return ResponseEntity.ok(imagingStudyService.listStudyImagingEdits(studyId));
     }
 
     private static String actorId() {

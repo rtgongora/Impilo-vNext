@@ -8,6 +8,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.imaging.ImagingAccessPolicyService;
 import zw.gov.mohcc.impilo.experience.imaging.ImagingGovernanceService;
@@ -24,16 +25,19 @@ import java.util.Map;
 public class ImagingExperienceController {
 
     private final PacsServiceClient pacsServiceClient;
+    private final PctServiceClient pctServiceClient;
     private final ImagingAccessPolicyService imagingAccessPolicyService;
     private final ImagingGovernanceService imagingGovernanceService;
     private final ObjectMapper objectMapper;
 
     public ImagingExperienceController(
             PacsServiceClient pacsServiceClient,
+            PctServiceClient pctServiceClient,
             ImagingAccessPolicyService imagingAccessPolicyService,
             ImagingGovernanceService imagingGovernanceService,
             ObjectMapper objectMapper) {
         this.pacsServiceClient = pacsServiceClient;
+        this.pctServiceClient = pctServiceClient;
         this.imagingAccessPolicyService = imagingAccessPolicyService;
         this.imagingGovernanceService = imagingGovernanceService;
         this.objectMapper = objectMapper;
@@ -173,6 +177,73 @@ public class ImagingExperienceController {
         JsonNode raw = pacsServiceClient.listReportLinks(studyId);
         audit(request, "IMAGING_REPORT_LIST", "GET:imaging/report-links", "SUCCESS",
                 "imaging_study", studyId, Map.of());
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @PostMapping("/studies/{studyId}/series/{seriesId}/instances/{instanceId}/edits")
+    public ResponseEntity<Map<String, Object>> saveImagingEdit(
+            HttpServletRequest request,
+            @PathVariable String studyId,
+            @PathVariable String seriesId,
+            @PathVariable String instanceId,
+            @RequestBody Map<String, Object> body,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedMutate();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.saveImagingEdit(studyId, seriesId, instanceId, body);
+        Map<String, Object> triageLinkPayload = new LinkedHashMap<>();
+        triageLinkPayload.put("journey_id", body.get("journey_id"));
+        triageLinkPayload.put("triage_record_id", body.get("triage_record_id"));
+        triageLinkPayload.put("study_id", Long.parseLong(studyId));
+        triageLinkPayload.put("series_id", Long.parseLong(seriesId));
+        triageLinkPayload.put("instance_id", Long.parseLong(instanceId));
+        if (raw.has("id")) {
+            triageLinkPayload.put("imaging_edit_id", raw.get("id").asLong());
+        }
+        pctServiceClient.createTriageImagingLink(triageLinkPayload);
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @GetMapping("/studies/{studyId}/series/{seriesId}/instances/{instanceId}/edits")
+    public ResponseEntity<Map<String, Object>> listImagingEdits(
+            @PathVariable String studyId,
+            @PathVariable String seriesId,
+            @PathVariable String instanceId,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedRead();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.listImagingEdits(studyId, seriesId, instanceId);
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @PostMapping("/studies/{studyId}/edits")
+    public ResponseEntity<Map<String, Object>> saveStudyImagingEdit(
+            @PathVariable String studyId,
+            @RequestBody Map<String, Object> body,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedMutate();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.saveStudyImagingEdit(studyId, body);
+        Map<String, Object> triageLinkPayload = new LinkedHashMap<>();
+        triageLinkPayload.put("journey_id", body.get("journey_id"));
+        triageLinkPayload.put("triage_record_id", body.get("triage_record_id"));
+        triageLinkPayload.put("study_id", Long.parseLong(studyId));
+        if (raw.has("id")) triageLinkPayload.put("imaging_edit_id", raw.get("id").asLong());
+        pctServiceClient.createTriageImagingLink(triageLinkPayload);
+        return ResponseEntity.ok(envelope(raw));
+    }
+
+    @GetMapping("/studies/{studyId}/edits")
+    public ResponseEntity<Map<String, Object>> listStudyImagingEdits(
+            @PathVariable String studyId,
+            @RequestParam(name = "chart_patient_cpid", required = false) String chartPatientCpid) {
+        imagingGovernanceService.assertGovernedRead();
+        JsonNode study = pacsServiceClient.getStudy(studyId);
+        imagingAccessPolicyService.assertStudyMatchesPatient(study, chartPatientCpid);
+        JsonNode raw = pacsServiceClient.listStudyImagingEdits(studyId);
         return ResponseEntity.ok(envelope(raw));
     }
 

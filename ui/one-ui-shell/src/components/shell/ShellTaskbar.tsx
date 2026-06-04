@@ -78,7 +78,7 @@ export function ShellTaskbar() {
     <>
       <ShellSosDialog open={sosDialogOpen} onClose={() => setSosDialogOpen(false)} />
       <div
-        className="pointer-events-auto fixed bottom-0 left-0 right-0 z-[10000] border-t border-slate-200/90 bg-white/95 text-slate-800 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100"
+        className="pointer-events-auto fixed bottom-0 left-0 right-0 z-[120] border-t border-slate-200/90 bg-white/95 text-slate-800 shadow-[0_-4px_24px_rgba(15,23,42,0.08)] backdrop-blur-md dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-100"
         style={{ height: SHELL_TASKBAR_HEIGHT_PX }}
         role="navigation"
         aria-label="Experience shell"

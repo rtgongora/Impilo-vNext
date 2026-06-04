@@ -154,8 +154,6 @@ export default function ImagingPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localFiles, setLocalFiles] = useState<File[] | undefined>(undefined);
   const [localFileName, setLocalFileName] = useState<string | null>(null);
-  /** Fresh viewer instance per upload avoids stale DWV layer-group DOM refs. */
-  const [viewerSession, setViewerSession] = useState(0);
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -197,7 +195,6 @@ export default function ImagingPage() {
     setLocalError(null);
     setLocalFiles([file]);
     setLocalFileName(file.name);
-    setViewerSession((n) => n + 1);
     setSelectedInstance(null);
     setSelectedStudy(null);
     setLocalLoading(false);
@@ -206,7 +203,6 @@ export default function ImagingPage() {
   const handleViewLocalPayload = useCallback((payload: { file: File; fileName: string }) => {
     setLocalFiles([payload.file]);
     setLocalFileName(payload.fileName);
-    setViewerSession((n) => n + 1);
     setSelectedInstance(null);
     setSelectedStudy(null);
     setLocalError(null);
@@ -481,7 +477,7 @@ export default function ImagingPage() {
 
             <div
               ref={viewerRef}
-              className="impilo-imaging-viewer-panel flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
+              className="impilo-imaging-viewer-panel flex min-h-[min(72vh,640px)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-black shadow-sm"
             >
               {localError && (
                 <div className="border-b border-amber-700/50 bg-amber-900/40 px-3 py-2 text-xs text-amber-200">
@@ -492,7 +488,6 @@ export default function ImagingPage() {
               <div className="flex min-h-0 flex-1 flex-col">
                 {localFiles && localFiles.length > 0 ? (
                   <ClinicalDicomViewer
-                    key={`dicom-viewer-${viewerSession}`}
                     localFiles={localFiles}
                     initialLabel={localFileName ? `Local · ${localFileName}` : "Local DICOM"}
                     isFullscreen={isFullscreen}

@@ -408,7 +408,7 @@ export function ExperienceSidebar() {
       <aside
         data-sidebar
         className={[
-          "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200",
+          "fixed left-0 top-0 z-50 flex h-[calc(100dvh-var(--shell-taskbar-height,0px))] flex-col border-r border-slate-200 bg-[linear-gradient(180deg,#0f172a_0%,#111827_100%)] text-slate-200 transition-transform duration-200",
           shellClasses,
           navDrawerOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full pointer-events-none",
         ].join(" ")}

@@ -11,15 +11,27 @@ import {
   Contrast,
   Image as ImageIcon,
   Loader2,
+  Maximize2,
+  Minimize2,
   Monitor,
   Move,
   SunMedium,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { useLaunchImagingViewer } from "@/hooks/queries/useImaging";
 import { apiClient } from "@/lib/api-client";
 import { applyWindowLevelToRgba, decodeNativeGrayscaleForWl } from "@/lib/dicom/nativeWindowLevel";
+import {
+  clampDicomZoom,
+  DICOM_ZOOM_DEFAULT,
+  DICOM_ZOOM_MAX,
+  DICOM_ZOOM_MIN,
+  stepDicomZoom,
+} from "@/lib/dicom/viewportZoom";
+import "@/components/imaging/dicom-viewport.css";
 
 interface DicomwebTagBlock {
   Value?: unknown[];
@@ -150,8 +162,10 @@ export default function DicomViewerPage() {
   const [viewMode, setViewMode] = useState<"rendered" | "native">("rendered");
   const [windowCenter, setWindowCenter] = useState(128);
   const [windowWidth, setWindowWidth] = useState(256);
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(DICOM_ZOOM_DEFAULT);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const viewerPanelRef = useRef<HTMLDivElement>(null);
   const panDrag = useRef<{
     active: boolean;
     startX: number;
@@ -173,6 +187,8 @@ export default function DicomViewerPage() {
     h: number;
   } | null>(null);
   const [nativeHint, setNativeHint] = useState<string | null>(null);
+  const [saveStatePending, setSaveStatePending] = useState(false);
+  const [saveStateMessage, setSaveStateMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const sop = active?.sop;
@@ -269,14 +285,55 @@ export default function DicomViewerPage() {
   const nextInstance = useCallback(() => {
     setInstanceIx((i) => Math.min(i + 1, Math.max(0, instances.length - 1)));
     setSubFrameIx(0);
-    setPan({ x: 0, y: 0 });
   }, [instances.length]);
 
   const prevInstance = useCallback(() => {
     setInstanceIx((i) => Math.max(i - 1, 0));
     setSubFrameIx(0);
-    setPan({ x: 0, y: 0 });
   }, []);
+
+  useEffect(() => {
+    if (!governedStudyId || !activeSeriesUid || !active?.sop) return;
+    void (async () => {
+      try {
+        const edits = await apiClient.get<{ success: boolean; data: Array<Record<string, unknown>> }>(
+          `/internal/v1/imaging/studies/${encodeURIComponent(governedStudyId)}/edits?chart_patient_cpid=${encodeURIComponent(patientId)}`,
+        );
+        const latest = edits.data?.[0];
+        if (!latest) return;
+        const viewportRaw = latest.viewportData ?? latest.viewport_data;
+        if (typeof viewportRaw !== "string") return;
+        const viewport = JSON.parse(viewportRaw) as { zoom?: number; pan?: { x: number; y: number }; windowCenter?: number; windowWidth?: number };
+        if (typeof viewport.zoom === "number") setZoom(clampDicomZoom(viewport.zoom));
+        if (viewport.pan) setPan(viewport.pan);
+        if (typeof viewport.windowCenter === "number") setWindowCenter(viewport.windowCenter);
+        if (typeof viewport.windowWidth === "number") setWindowWidth(viewport.windowWidth);
+      } catch {
+        // No saved edit state yet for this instance.
+      }
+    })();
+  }, [governedStudyId, activeSeriesUid, active?.sop, patientId, instanceIx]);
+
+  async function saveViewportState() {
+    if (!governedStudyId || !activeSeriesUid) return;
+    setSaveStatePending(true);
+    setSaveStateMessage(null);
+    try {
+      await apiClient.post(
+        `/internal/v1/imaging/studies/${encodeURIComponent(governedStudyId)}/edits?chart_patient_cpid=${encodeURIComponent(patientId)}`,
+        {
+          edit_type: "VIEW_STATE",
+          annotation_data: JSON.stringify({ frame: dicomFrameNumber, mode: viewMode, seriesUid: activeSeriesUid, sop: active?.sop }),
+          viewport_data: JSON.stringify({ zoom, pan, windowCenter, windowWidth }),
+        },
+      );
+      setSaveStateMessage("Saved view state");
+    } catch {
+      setSaveStateMessage("Could not save view state");
+    } finally {
+      setSaveStatePending(false);
+    }
+  }
 
   const nextFrame = useCallback(() => {
     setSubFrameIx((ix) => {
@@ -322,9 +379,37 @@ export default function DicomViewerPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const handler = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!viewerPanelRef.current) return;
+    if (!document.fullscreenElement) {
+      void viewerPanelRef.current.requestFullscreen();
+    } else {
+      void document.exitFullscreen();
+    }
+  }, []);
+
+  const onViewportWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setZoom((z) => stepDicomZoom(z, e.deltaY));
+  }, []);
+
+  const zoomIn = useCallback(() => {
+    setZoom((z) => clampDicomZoom(z + (z >= 400 ? 40 : z >= 200 ? 25 : 15)));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoom((z) => clampDicomZoom(z - (z > 400 ? 40 : z > 200 ? 25 : 15)));
+  }, []);
+
   const resetView = useCallback(() => {
     setPan({ x: 0, y: 0 });
-    setZoom(100);
+    setZoom(DICOM_ZOOM_DEFAULT);
     if (viewMode === "rendered") {
       setWindowCenter(128);
       setWindowWidth(256);
@@ -403,7 +488,12 @@ export default function DicomViewerPage() {
             </div>
 
             <div className="space-y-3">
-              <div className="rounded-2xl border border-slate-200 bg-slate-900 p-3 text-slate-100">
+              <div
+                ref={viewerPanelRef}
+                className={`impilo-dicom-viewer-panel rounded-2xl border border-slate-200 bg-slate-900 p-3 text-slate-100 ${
+                  isFullscreen ? "flex h-full w-full flex-col" : ""
+                }`}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="text-xs font-mono break-all opacity-90">Study {studyUid}</div>
                   <div className="flex flex-wrap gap-1 rounded-lg border border-slate-600 p-0.5 text-[10px]">
@@ -474,6 +564,38 @@ export default function DicomViewerPage() {
                         </button>
                       </>
                     )}
+                    <span className="mx-1 h-5 w-px bg-slate-600" aria-hidden />
+                    <button
+                      type="button"
+                      onClick={zoomOut}
+                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                      aria-label="Zoom out"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={zoomIn}
+                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                      aria-label="Zoom in"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetView}
+                      className="rounded-lg border border-slate-600 px-2 py-1 text-[10px] uppercase tracking-wide hover:bg-slate-800"
+                    >
+                      Fit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={toggleFullscreen}
+                      className="rounded-lg border border-slate-600 px-2 py-1 hover:bg-slate-800"
+                      aria-label={isFullscreen ? "Exit full screen" : "Full screen viewer"}
+                    >
+                      {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </button>
                   </div>
                 </div>
                 <div
@@ -483,43 +605,61 @@ export default function DicomViewerPage() {
                   onPointerUp={onPanPointerUp}
                   onPointerCancel={onPanPointerUp}
                   onDoubleClick={resetView}
-                  className="relative mt-2 flex min-h-[360px] cursor-grab touch-none items-center justify-center overflow-hidden rounded-xl bg-black active:cursor-grabbing"
+                  onWheel={onViewportWheel}
+                  className={`impilo-dicom-viewport relative mt-2 flex cursor-grab touch-none items-center justify-center overflow-hidden rounded-xl bg-black active:cursor-grabbing ${
+                    isFullscreen ? "min-h-0 flex-1" : "h-[min(80vh,860px)] min-h-[420px]"
+                  }`}
                 >
                   {loadingInstances && viewMode === "rendered" && (
                     <Loader2 className="h-8 w-8 animate-spin text-slate-300" />
                   )}
                   {viewMode === "rendered" && !loadingInstances && imgUrl && (
                     <div
-                      className="flex max-h-[70vh] max-w-full items-center justify-center"
-                      style={{
-                        transform: `translate(${pan.x}px, ${pan.y}px)`,
-                      }}
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imgUrl}
-                        alt="DICOM rendered frame"
-                        className="max-h-[70vh] max-w-full select-none object-contain"
-                        draggable={false}
+                      <div
+                        className="flex max-h-full max-w-full items-center justify-center"
                         style={{
-                          filter: `brightness(${wlFilter.brightness}%) contrast(${wlFilter.contrast}%)`,
                           transform: `scale(${zoom / 100})`,
+                          transformOrigin: "center center",
                         }}
-                      />
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imgUrl}
+                          alt="DICOM rendered frame"
+                          className={`max-w-full select-none object-contain ${
+                            isFullscreen ? "max-h-full" : "max-h-[min(80vh,860px)]"
+                          }`}
+                          draggable={false}
+                          style={{
+                            filter: `brightness(${wlFilter.brightness}%) contrast(${wlFilter.contrast}%)`,
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
                   {viewMode === "native" && (
                     <div
-                      className="flex max-h-[70vh] max-w-full items-center justify-center"
-                      style={{
-                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom / 100})`,
-                      }}
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ transform: `translate(${pan.x}px, ${pan.y}px)` }}
                     >
-                      <canvas
-                        ref={canvasRef}
-                        className="max-h-[70vh] max-w-full select-none object-contain bg-black"
-                        style={{ imageRendering: "pixelated" }}
-                      />
+                      <div
+                        className="flex max-h-full max-w-full items-center justify-center"
+                        style={{
+                          transform: `scale(${zoom / 100})`,
+                          transformOrigin: "center center",
+                        }}
+                      >
+                        <canvas
+                          ref={canvasRef}
+                          className={`max-w-full select-none object-contain bg-black ${
+                            isFullscreen ? "max-h-full" : "max-h-[min(80vh,860px)]"
+                          }`}
+                          style={{ imageRendering: "pixelated" }}
+                        />
+                      </div>
                     </div>
                   )}
                   {viewMode === "rendered" && !loadingInstances && !imgUrl && (
@@ -565,24 +705,35 @@ export default function DicomViewerPage() {
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    Zoom {zoom}%
+                    Zoom {zoom}% (max {DICOM_ZOOM_MAX}%)
                     <input
                       type="range"
-                      min={50}
-                      max={200}
+                      min={DICOM_ZOOM_MIN}
+                      max={DICOM_ZOOM_MAX}
                       value={zoom}
-                      onChange={(e) => setZoom(Number(e.target.value))}
+                      onChange={(e) => setZoom(clampDicomZoom(Number(e.target.value)))}
                       className="w-full"
                     />
                   </label>
                 </div>
                 <p className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
                   <Move className="h-3 w-3" />
-                  Drag the viewport to pan. Double-click resets pan, zoom, and window.
+                  Drag to pan · scroll wheel to zoom · double-click or Fit resets view · fullscreen for large-display reading.
                 </p>
                 <div className="mt-2 text-[11px] font-mono text-slate-400 break-all">
                   Series {activeSeriesUid ?? "—"} · SOP {active?.sop ?? "—"} · Multi-frame{" "}
                   {subFrameIx + 1} / {frameCount} · Instance {instanceIx + 1} / {Math.max(1, instances.length)}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={saveViewportState}
+                    disabled={!governedStudyId || saveStatePending}
+                    className="rounded border border-slate-600 px-2 py-1 text-[11px] hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {saveStatePending ? "Saving..." : "Save view / edits"}
+                  </button>
+                  {saveStateMessage ? <span className="text-[11px] text-slate-400">{saveStateMessage}</span> : null}
                 </div>
                 {nativeHint && (
                   <p className="mt-1 text-[10px] text-amber-200/90">{nativeHint}</p>

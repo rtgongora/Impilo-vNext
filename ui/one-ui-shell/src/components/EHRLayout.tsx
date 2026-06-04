@@ -41,7 +41,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
 
   return (
     <ClinicalGuidanceProvider>
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex h-dvh flex-col overflow-hidden bg-gray-50">
         <TopBar />
         <OperationalContextStrip />
         <PatientBanner />
@@ -57,7 +57,7 @@ export function EHRLayout({ children }: { children: ReactNode }) {
               {menuRight ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelRight className="w-3.5 h-3.5" />}
             </button>
           </div>
-          <main className="relative flex-1 overflow-auto p-3 pb-[var(--shell-taskbar-height,0px)]">
+          <main className="relative flex-1 overflow-y-auto overflow-x-hidden p-3 pb-[calc(var(--shell-taskbar-height,0px)+0.75rem)]">
             {children}
             <ClinicalKnowledgeDock />
           </main>

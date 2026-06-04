@@ -12,6 +12,7 @@ import {
   useLayoutEffect,
 } from "react";
 import { DicomImage, renderDicomToCanvas, DicomMeasurements } from "@/lib/dicom/dicomService";
+import { clampDicomZoom, stepDicomZoom } from "@/lib/dicom/viewportZoom";
 
 export interface ViewerState {
   zoom: number;
@@ -355,7 +356,7 @@ export const DicomCanvas = forwardRef<DicomCanvasRef, DicomCanvasProps>(
           onViewerStateChange?.({ pan: { x: viewerState.pan.x + dx, y: viewerState.pan.y + dy } });
           setDragStart({ x: e.clientX, y: e.clientY });
         } else if (activeTool === "zoom") {
-          onViewerStateChange?.({ zoom: Math.max(10, Math.min(400, viewerState.zoom + dy * -0.5)) });
+          onViewerStateChange?.({ zoom: clampDicomZoom(viewerState.zoom + dy * -0.5) });
           setDragStart({ x: e.clientX, y: e.clientY });
         } else if (activeTool === "window") {
           onViewerStateChange?.({
@@ -410,7 +411,7 @@ export const DicomCanvas = forwardRef<DicomCanvasRef, DicomCanvasProps>(
     const handleWheel = useCallback(
       (e: React.WheelEvent) => {
         e.preventDefault();
-        onViewerStateChange?.({ zoom: Math.max(10, Math.min(400, viewerState.zoom + (e.deltaY > 0 ? -10 : 10))) });
+        onViewerStateChange?.({ zoom: stepDicomZoom(viewerState.zoom, e.deltaY) });
       },
       [viewerState.zoom, onViewerStateChange],
     );

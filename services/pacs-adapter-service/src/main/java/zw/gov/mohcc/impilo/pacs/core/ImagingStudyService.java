@@ -16,10 +16,12 @@ import zw.gov.mohcc.impilo.pacs.api.dto.ImagingSearchRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.LaunchViewerRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
+import zw.gov.mohcc.impilo.pacs.api.dto.SaveImagingEditRequest;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
 import zw.gov.mohcc.impilo.pacs.integration.OrthancClient;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingAccessAuditEntity;
+import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingEditEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingInstanceEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingOrderLinkEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingReportLinkEntity;
@@ -28,6 +30,7 @@ import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingViewerSessionEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingAccessAuditRepository;
+import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingEditRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingInstanceRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingOrderLinkRepository;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingReportLinkRepository;
@@ -68,6 +71,7 @@ public class ImagingStudyService {
     private final ImagingAccessAuditRepository accessAuditRepository;
     private final ImagingReportLinkRepository reportLinkRepository;
     private final ImagingOrderLinkRepository orderLinkRepository;
+    private final ImagingEditRepository imagingEditRepository;
     private final OrthancClient orthancClient;
     private final boolean allowPlaceholderOrthancForward;
 
@@ -83,7 +87,8 @@ public class ImagingStudyService {
             ImagingViewerSessionRepository viewerSessionRepository,
             ImagingAccessAuditRepository accessAuditRepository,
             ImagingReportLinkRepository reportLinkRepository,
-            ImagingOrderLinkRepository orderLinkRepository) {
+            ImagingOrderLinkRepository orderLinkRepository,
+            ImagingEditRepository imagingEditRepository) {
         this.studyRepository = studyRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
@@ -96,6 +101,7 @@ public class ImagingStudyService {
         this.accessAuditRepository = accessAuditRepository;
         this.reportLinkRepository = reportLinkRepository;
         this.orderLinkRepository = orderLinkRepository;
+        this.imagingEditRepository = imagingEditRepository;
     }
 
     public List<ImagingStudyEntity> listStudies() {
@@ -346,6 +352,39 @@ public class ImagingStudyService {
     public List<ImagingOrderLinkEntity> listOrderLinks(Long studyId) {
         getStudy(studyId);
         return orderLinkRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
+    }
+
+    @Transactional
+    public ImagingEditEntity saveImagingEdit(
+            Long studyId, Long seriesId, Long instanceId, SaveImagingEditRequest request, String actorId) {
+        getStudy(studyId);
+        ImagingEditEntity edit = new ImagingEditEntity();
+        edit.setStudyId(studyId);
+        edit.setSeriesId(seriesId);
+        edit.setInstanceId(instanceId);
+        edit.setEditorActorId(actorId);
+        edit.setEditType(request.getEditType() != null ? request.getEditType() : "ANNOTATION");
+        edit.setAnnotationData(request.getAnnotationData() != null ? request.getAnnotationData() : "{}");
+        edit.setViewportData(request.getViewportData());
+        edit.setTriageRecordId(request.getTriageRecordId());
+        edit.setJourneyId(request.getJourneyId());
+        edit.setUpdatedAt(OffsetDateTime.now());
+        return imagingEditRepository.save(edit);
+    }
+
+    public List<ImagingEditEntity> listImagingEdits(Long studyId, Long seriesId, Long instanceId) {
+        getStudy(studyId);
+        return imagingEditRepository.findByStudyIdAndSeriesIdAndInstanceIdOrderByCreatedAtDesc(studyId, seriesId, instanceId);
+    }
+
+    @Transactional
+    public ImagingEditEntity saveStudyImagingEdit(Long studyId, SaveImagingEditRequest request, String actorId) {
+        return saveImagingEdit(studyId, null, null, request, actorId);
+    }
+
+    public List<ImagingEditEntity> listStudyImagingEdits(Long studyId) {
+        getStudy(studyId);
+        return imagingEditRepository.findByStudyIdOrderByCreatedAtDesc(studyId);
     }
 
     private void recordAccess(Long studyId, Long seriesId, Long instanceId,

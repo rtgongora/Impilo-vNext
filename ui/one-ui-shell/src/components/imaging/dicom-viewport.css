@@ -1,0 +1,17 @@
+/* Dedicated WADO-RS viewer (/ehr/.../imaging/viewer) */
+.impilo-dicom-viewer-panel:fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  background: #0f172a;
+}
+
+.impilo-dicom-viewer-panel:fullscreen .impilo-dicom-viewport {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+}

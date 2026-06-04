@@ -63,10 +63,10 @@ export function ClinicalKnowledgeDock() {
       <button
         type="button"
         aria-label="Close clinical guidance"
-        className="fixed inset-0 z-[60] bg-black/20 lg:bg-transparent"
+        className="fixed inset-0 z-[200] bg-black/20 lg:bg-transparent"
         onClick={closeDock}
       />
-      <aside className="fixed inset-y-0 right-0 z-[70] flex w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-xl">
+      <aside className="fixed inset-y-0 right-0 z-[210] flex w-full max-w-md flex-col border-l border-gray-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
           <div className="flex gap-1 rounded-lg bg-gray-100 p-0.5 text-xs">
             <button

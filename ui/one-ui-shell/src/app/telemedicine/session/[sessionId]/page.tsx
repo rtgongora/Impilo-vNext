@@ -49,6 +49,11 @@ export default function TeleconsultSessionPage() {
   const [videoActive, setVideoActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const callTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const localStreamRef = useRef<MediaStream | null>(null);
+  const peerRef = useRef<RTCPeerConnection | null>(null);
+  const signalCursorRef = useRef(0);
 
   // Response draft (Stage 6)
   const [responseNote, setResponseNote] = useState("");
@@ -115,6 +120,103 @@ export default function TeleconsultSessionPage() {
     }
     return () => { if (callTimer.current) clearInterval(callTimer.current); };
   }, [callActive]);
+
+  useEffect(() => {
+    return () => {
+      localStreamRef.current?.getTracks().forEach((track) => track.stop());
+      peerRef.current?.close();
+    };
+  }, []);
+
+  async function postSignal(type: string, payload: unknown) {
+    await apiClient.post(`/internal/v1/mobile/provider/telemedicine/sessions/${sessionId}/rtc/signal`, {
+      type,
+      from: user?.id ?? "anonymous",
+      payload,
+    });
+  }
+
+  async function ensurePeerConnection() {
+    if (peerRef.current) return peerRef.current;
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: ["stun:stun.l.google.com:19302"] }],
+    });
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        void postSignal("ice-candidate", event.candidate.toJSON());
+      }
+    };
+    pc.ontrack = (event) => {
+      if (remoteVideoRef.current && event.streams[0]) {
+        remoteVideoRef.current.srcObject = event.streams[0];
+      }
+    };
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((track) => {
+        pc.addTrack(track, localStreamRef.current as MediaStream);
+      });
+    }
+    peerRef.current = pc;
+    return pc;
+  }
+
+  async function startVideoCall() {
+    if (!localStreamRef.current) {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+    }
+    const pc = await ensurePeerConnection();
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await postSignal("offer", offer);
+  }
+
+  async function stopVideoCall() {
+    setVideoActive(false);
+    setCallActive(false);
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    localStreamRef.current = null;
+    peerRef.current?.close();
+    peerRef.current = null;
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+  }
+
+  useEffect(() => {
+    if (!callActive) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await apiClient.get<{ data: Array<Record<string, unknown>> }>(
+          `/internal/v1/mobile/provider/telemedicine/sessions/${sessionId}/rtc/signals?after=${signalCursorRef.current}`,
+        );
+        const signals = res.data ?? [];
+        for (const signal of signals) {
+          const seq = Number(signal.sequence ?? 0);
+          if (seq > signalCursorRef.current) signalCursorRef.current = seq;
+          if ((signal.from as string) === (user?.id ?? "anonymous")) continue;
+          const type = String(signal.type ?? "");
+          const payload = signal.payload;
+          const pc = await ensurePeerConnection();
+          if (type === "offer" && payload) {
+            await pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            await postSignal("answer", answer);
+          } else if (type === "answer" && payload) {
+            await pc.setRemoteDescription(new RTCSessionDescription(payload as RTCSessionDescriptionInit));
+          } else if (type === "ice-candidate" && payload) {
+            await pc.addIceCandidate(new RTCIceCandidate(payload as RTCIceCandidateInit));
+          }
+        }
+      } catch {
+        // Keep polling during call; transient errors are tolerated.
+      }
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [callActive, sessionId, user?.id]);
 
   async function handleSendMessage() {
     if (!newMessage.trim()) return;
@@ -258,7 +360,8 @@ export default function TeleconsultSessionPage() {
 
   // ── 3-Pane Session Workspace ──
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <AppLayout>
+    <div className="flex h-full min-h-[calc(100dvh-8rem)] flex-col bg-gray-50">
       {/* Top bar */}
       <header className="h-12 bg-white border-b px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -297,12 +400,20 @@ export default function TeleconsultSessionPage() {
         <div className="w-80 border-r bg-white flex flex-col shrink-0">
           {/* Call controls */}
           <div className="p-3 border-b flex items-center justify-center gap-2">
-            <button onClick={() => { setCallActive(!callActive); setVideoActive(false); }}
+            <button onClick={() => { if (callActive) { void stopVideoCall(); } else { setCallActive(true); } setVideoActive(false); }}
               className={`p-2.5 rounded-full transition-colors ${callActive ? "bg-red-500 text-white" : "bg-green-100 text-green-700 hover:bg-green-200"}`}
               title={callActive ? "End call" : "Audio call"}>
               {callActive ? <PhoneOff className="w-5 h-5" /> : <Phone className="w-5 h-5" />}
             </button>
-            <button onClick={() => { setVideoActive(!videoActive); if (!callActive) setCallActive(true); }}
+            <button onClick={async () => {
+              if (videoActive) {
+                await stopVideoCall();
+                return;
+              }
+              setCallActive(true);
+              setVideoActive(true);
+              await startVideoCall();
+            }}
               className={`p-2.5 rounded-full transition-colors ${videoActive ? "bg-red-500 text-white" : "bg-blue-100 text-blue-700 hover:bg-blue-200"}`}
               title={videoActive ? "Stop video" : "Video call"}>
               {videoActive ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
@@ -314,8 +425,9 @@ export default function TeleconsultSessionPage() {
 
           {/* Video preview */}
           {videoActive && (
-            <div className="h-40 bg-gray-900 flex items-center justify-center text-gray-500 text-xs">
-              <Video className="w-8 h-8 opacity-30" />
+            <div className="grid h-48 grid-cols-2 gap-2 bg-gray-900 p-2">
+              <video ref={localVideoRef} autoPlay muted playsInline className="h-full w-full rounded object-cover" />
+              <video ref={remoteVideoRef} autoPlay playsInline className="h-full w-full rounded object-cover bg-gray-800" />
             </div>
           )}
 
@@ -500,5 +612,6 @@ export default function TeleconsultSessionPage() {
         </div>
       </div>
     </div>
+    </AppLayout>
   );
 }

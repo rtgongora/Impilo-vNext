@@ -28,7 +28,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const toggleNavDrawer = useShellStore((s) => s.toggleNavDrawer);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <ExperienceSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b bg-white px-4 sm:px-6 flex items-center justify-between gap-2 shrink-0">
@@ -103,7 +103,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <OperationalContextStrip />
-        <main className="flex-1 overflow-auto p-6 md:p-8 pb-[var(--shell-taskbar-height,0px)]">{children}</main>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-[calc(var(--shell-taskbar-height,0px)+1rem)] md:p-8 md:pb-[calc(var(--shell-taskbar-height,0px)+1rem)]">{children}</main>
       </div>
       <ProactiveAssistant />
       <BackendPendingToastHost />
