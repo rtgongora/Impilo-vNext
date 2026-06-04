@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { randomUUID } from "@/lib/uuid";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -255,7 +256,7 @@ export function normalizeCounter(resource: unknown): PublicHealthCounter {
       readString(outer, "id") ||
       readString(record, "id") ||
       readString(record, "metric_key", "label", "name") ||
-      crypto.randomUUID(),
+      randomUUID(),
     label: readString(record, "label", "name", "metric_name") || "Counter",
     value:
       readString(record, "value", "metric_value") ||

@@ -18,6 +18,7 @@
 
 import { TRUST_HEADERS } from "./contracts";
 import type { ApiError, AuthzResponse, StepUpChallenge } from "./contracts";
+import { randomUUID } from "./uuid";
 
 // Re-export for convenience
 export { TRUST_HEADERS };
@@ -70,7 +71,7 @@ async function request<T>(
   options?: { purposeOfUse?: string }
 ): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${path}`;
-  const correlationId = crypto.randomUUID();
+  const correlationId = randomUUID();
 
   // --- Build trust headers from stores ---
   // Dynamic imports avoid circular deps and always read latest Zustand state

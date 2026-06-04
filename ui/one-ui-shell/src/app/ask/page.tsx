@@ -17,6 +17,7 @@ import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck, BookMarked } from 
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
+import { randomUUID } from "@/lib/uuid";
 import { useAskEdlizClinical, useClinicalPathways, useStartClinicalPathwaySession } from "@/hooks/queries/useGuidance";
 
 interface Message {
@@ -81,7 +82,7 @@ export default function AskPage() {
     if (!text || sending) return;
 
     const userMsg: Message = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       role: "user",
       content: text,
       timestamp: new Date().toISOString(),
@@ -109,7 +110,7 @@ export default function AskPage() {
           const warnings =
             Array.isArray(d?.warnings) && d.warnings.length > 0 ? `\n\nWarnings: ${d.warnings.join(" ")}` : "";
           const assistantMsg: Message = {
-            id: crypto.randomUUID(),
+            id: randomUUID(),
             role: "assistant",
             content: (d?.answer_summary as string) || "No indexed answer was available for that question." + citations + warnings,
             timestamp: new Date().toISOString(),
@@ -121,7 +122,7 @@ export default function AskPage() {
           setMessages((prev) => [
             ...prev,
             {
-              id: crypto.randomUUID(),
+              id: randomUUID(),
               role: "assistant",
               content: "The clinical knowledge service is unavailable. Try general guidance or retry later.",
               timestamp: new Date().toISOString(),
@@ -139,7 +140,7 @@ export default function AskPage() {
       })
       .then((res) => {
         const assistantMsg: Message = {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           role: "assistant",
           content: res?.data?.response ?? "I received your question. The guidance service is processing your request.",
           timestamp: new Date().toISOString(),
@@ -148,7 +149,7 @@ export default function AskPage() {
       })
       .catch(() => {
         const errorMsg: Message = {
-          id: crypto.randomUUID(),
+          id: randomUUID(),
           role: "assistant",
           content: "I was unable to process your question at this time. The guidance service may be temporarily unavailable.",
           timestamp: new Date().toISOString(),

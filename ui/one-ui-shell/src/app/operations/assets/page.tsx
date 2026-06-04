@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { SupplyPlaneContextBar } from "@/components/experience/SupplyPlaneContextBar";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { randomUUID } from "@/lib/uuid";
 
 type AssetStatus = "IN_SERVICE" | "MAINTENANCE" | "RETIRED";
 
@@ -27,7 +28,7 @@ const STATUS_STYLES: Record<AssetStatus, string> = {
 };
 
 function uid() {
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 export default function AssetsPage() {

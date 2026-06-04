@@ -8,6 +8,7 @@ import { PageShell } from "@/components/PageShell";
 import { SupplyPlaneContextBar } from "@/components/experience/SupplyPlaneContextBar";
 import { useInventoryItems } from "@/hooks/queries/useInventory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { randomUUID } from "@/lib/uuid";
 
 type RowStatus = "DRAFT" | "SUBMITTED" | "APPROVED";
 
@@ -39,7 +40,7 @@ export default function InventoryReconciliationPage() {
     if (!selectedItem) return;
     const counted = Number(countedInput);
     if (Number.isNaN(counted)) return;
-    const id = crypto.randomUUID();
+    const id = randomUUID();
     setRows((prev) => [
       {
         id,

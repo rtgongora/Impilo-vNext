@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { emitShellEvent } from "@/lib/shell/shell-events";
+import { randomUUID } from "@/lib/uuid";
 import type { AppDefinition, RecentItem, RunningTask, RunningTaskStatus, RunningTaskType } from "@/lib/shell/types";
 
 const STORAGE_PINNED = "exp:shell_pins";
@@ -39,7 +40,7 @@ function saveJson(key: string, value: unknown) {
 }
 
 function newId(): string {
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 export interface ShellStore {

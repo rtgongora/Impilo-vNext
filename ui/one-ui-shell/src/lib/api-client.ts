@@ -23,6 +23,7 @@
  */
 
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { randomUUID } from "@/lib/uuid";
 
 // Use NEXT_PUBLIC_BFF_URL when explicitly set (Docker, tests, SSR).
 // In the browser without an explicit URL, use relative paths so requests proxy
@@ -67,7 +68,7 @@ function getV12Headers(): Record<string, string> {
     "Content-Type": "application/json",
     "X-Tenant-ID": getTenantId(),
     "X-Pod-ID": getPodId(),
-    "X-Request-ID": crypto.randomUUID(),
+    "X-Request-ID": randomUUID(),
     "X-Correlation-ID": getCorrelationId(),
   };
 
@@ -197,7 +198,7 @@ function getCorrelationId(): string {
     const stored = sessionStorage.getItem("exp:correlation_id");
     if (stored) return stored;
   }
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 function getAuthToken(): string | null {
@@ -257,7 +258,7 @@ async function attemptRefresh(): Promise<boolean> {
   refreshPromise = (async () => {
     try {
       const headers = getV11Headers();
-      headers["Idempotency-Key"] = crypto.randomUUID();
+      headers["Idempotency-Key"] = randomUUID();
       // Don't send the expired token for the refresh call
       delete headers["Authorization"];
 
@@ -336,7 +337,7 @@ async function request<T>(
   const headers = { ...getV11Headers(), ...opts?.extraHeaders };
 
   if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
-    headers["Idempotency-Key"] = crypto.randomUUID();
+    headers["Idempotency-Key"] = randomUUID();
   }
 
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
@@ -353,7 +354,7 @@ async function request<T>(
       // Retry the original request with the new token
       const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
       if (["POST", "PUT", "PATCH"].includes(method) || (method === "DELETE" && body !== undefined)) {
-        retryHeaders["Idempotency-Key"] = crypto.randomUUID();
+        retryHeaders["Idempotency-Key"] = randomUUID();
       }
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {
         method,
@@ -407,7 +408,7 @@ async function requestForm<T>(
   delete headers["Content-Type"];
 
   if (["POST", "PUT", "PATCH"].includes(method)) {
-    headers["Idempotency-Key"] = crypto.randomUUID();
+    headers["Idempotency-Key"] = randomUUID();
   }
 
   const response = await fetch(`${BFF_BASE_URL}${path}`, {
@@ -423,7 +424,7 @@ async function requestForm<T>(
       const retryHeaders = { ...getV11Headers(), ...opts?.extraHeaders };
       delete retryHeaders["Content-Type"];
       if (["POST", "PUT", "PATCH"].includes(method)) {
-        retryHeaders["Idempotency-Key"] = crypto.randomUUID();
+        retryHeaders["Idempotency-Key"] = randomUUID();
       }
 
       const retryResponse = await fetch(`${BFF_BASE_URL}${path}`, {

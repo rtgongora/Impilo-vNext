@@ -6,6 +6,7 @@
  */
 
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { randomUUID } from "@/lib/uuid";
 
 const PREFIX = '/api/v1/portal';
 
@@ -30,7 +31,7 @@ function readSessionHeaders(): Record<string, string> {
     'x-actor-id': actorId,
     'x-actor-type': 'CITIZEN',
     'x-purpose-of-use': 'SELF_SERVICE',
-    'x-correlation-id': crypto.randomUUID(),
+    'x-correlation-id': randomUUID(),
     'x-access-mode': 'EXTERNAL',
   };
   if (token) headers.Authorization = `Bearer ${token}`;

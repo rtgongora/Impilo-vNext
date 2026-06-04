@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { apiClient } from "@/lib/api-client";
+import { randomUUID } from "@/lib/uuid";
 import type { RecentItem } from "@/lib/shell/types";
 import { useShellStore } from "@/hooks/useShellStore";
 
@@ -12,7 +13,7 @@ function normalizeRecentItems(raw: unknown): RecentItem[] {
   for (const row of raw) {
     if (!row || typeof row !== "object") continue;
     const o = row as Record<string, unknown>;
-    const id = typeof o.id === "string" ? o.id : crypto.randomUUID();
+    const id = typeof o.id === "string" ? o.id : randomUUID();
     const kind = o.kind === "app" || o.kind === "route" || o.kind === "resource" || o.kind === "search" ? o.kind : "route";
     const title = typeof o.title === "string" ? o.title : "Item";
     const href = typeof o.href === "string" ? o.href : "/home";
