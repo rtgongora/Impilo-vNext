@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-04T16:02:45.682269+00:00",
+  "generated_at": "2026-06-04T17:59:38.505538+00:00",
   "namespace": "impilo-full-preview",
-  "max_wave": 6,
-  "assigned": 95,
-  "ready": 72,
+  "max_wave": 7,
+  "assigned": 109,
+  "ready": 86,
   "services": [
     {
       "wave": 0,
@@ -574,6 +574,90 @@
       "service": "zibo-web",
       "deployed": false,
       "ready": false
+    },
+    {
+      "wave": 7,
+      "service": "costing-engine-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "coverage-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "credential-verification-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "general-ledger-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "hr-payroll-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "msika-flow-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "msika-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "mushe-wallet-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "mushex-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "procurement-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "share-slip-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "simba-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "wellness-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 7,
+      "service": "workforce-governance-service",
+      "deployed": true,
+      "ready": true
     }
   ]
 }

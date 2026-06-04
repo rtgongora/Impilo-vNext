@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-06-04T17:59:39.665309+00:00",
+  "wave": 7,
+  "passed": true,
+  "gates": [
+    "diagnose",
+    "smoke",
+    "completeness",
+    "public_health_version"
+  ]
+}

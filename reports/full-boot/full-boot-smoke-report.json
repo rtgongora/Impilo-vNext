@@ -74,6 +74,24 @@
       "available": 1,
       "healthy": true
     },
+    "costing-engine-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "coverage-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "credential-verification-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "data-access-governance-service": {
       "replicas": 1,
       "ready": 1,
@@ -146,6 +164,12 @@
       "available": 1,
       "healthy": true
     },
+    "general-ledger-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "guidance-service": {
       "replicas": 1,
       "ready": 1,
@@ -153,6 +177,12 @@
       "healthy": true
     },
     "hapi-fhir": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "hr-payroll-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -237,6 +267,30 @@
       "healthy": true
     },
     "minio": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "msika-flow-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "msika-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "mushe-wallet-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "mushex-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -338,6 +392,12 @@
       "available": 1,
       "healthy": true
     },
+    "procurement-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "product-registry-service": {
       "replicas": 1,
       "ready": 1,
@@ -387,6 +447,18 @@
       "healthy": true
     },
     "security-hardening-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "share-slip-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "simba-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -464,7 +536,19 @@
       "available": 1,
       "healthy": true
     },
+    "wellness-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "workflow-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "workforce-governance-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -479,7 +563,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 79,
+  "runtime_pods_count": 93,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
