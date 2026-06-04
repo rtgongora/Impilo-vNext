@@ -1,0 +1,293 @@
+{
+  "generated_at": "2026-06-04T01:37:23.724667+00:00",
+  "doctrine": "run-not-applicable for non-k3s registry entries",
+  "total_non_runtime": 47,
+  "pass": 47,
+  "fail": 0,
+  "skip": 0,
+  "run_not_applicable": true,
+  "entries": [
+    {
+      "id": "banking-rails",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "butano-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "citizen-app",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "mobile monorepo present \u2014 artifact lane"
+    },
+    {
+      "id": "civil-registry-system",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "contract-tests",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "costa-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "developer-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "dhis2",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "ehr",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "external-elmis",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "external-idp",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "external-pacs-network",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "federation-connector",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "inventory-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "knowledge-admin",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "lims",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "mosip",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "msika-flow-ops",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "msika-flow-portal",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "msika-flow-vendor",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "msika-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "mushex-finance-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "mushex-ops-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "mushex-payer-portal",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "offline-sdk",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "ops-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "ops-docs",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "ops-instrumentation",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "oros-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "pct-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "pharmacy-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "portal",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "provider-app",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "mobile monorepo present \u2014 artifact lane"
+    },
+    {
+      "id": "security-baseline",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "self-service",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "shared-core",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "shared-kernel-java",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "shared-ui",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "sms-whatsapp-gateway",
+      "lane": "doctrine_only",
+      "status": "pass",
+      "detail": "contract-only client"
+    },
+    {
+      "id": "support-console",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    },
+    {
+      "id": "tech-companion",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "tech-companion-harness",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "tech-companion-mock",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "tshepo-contracts",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "tshepo-sdk",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Maven/npm library \u2014 not a K8s workload"
+    },
+    {
+      "id": "tshepo-service",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "Deprecated or future-only"
+    },
+    {
+      "id": "zibo-web",
+      "lane": "build_validate_only",
+      "status": "pass",
+      "detail": "bundled UI workspace \u2014 build via ui monorepo"
+    }
+  ]
+}

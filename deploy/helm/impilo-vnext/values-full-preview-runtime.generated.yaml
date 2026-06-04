@@ -1,0 +1,445 @@
+# AUTO-GENERATED — do not edit by hand.
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0
+# Microservices: 84 | enabled: 13 (waves 0–0)
+fullBootServices:
+  ai-model-registry-service:
+    enabled: false
+    port: 8280
+    database: ai_model_registry
+  analytics-pipeline-service:
+    enabled: false
+    port: 8365
+    database: analytics_pipeline
+  asset-registry-service:
+    enabled: false
+    port: 8310
+    database: asset_registry
+  audit-ledger-service:
+    enabled: false
+    port: 8350
+    database: audit_ledger
+  butano-fhir:
+    enabled: false
+    port: 8289
+    database: butano_fhir
+  butano-service:
+    enabled: true
+    port: 8090
+    database: butano
+    env:
+      HAPI_FHIR_URL: http://hapi-fhir:8090/fhir
+    readinessInitialDelay: 60
+    livenessInitialDelay: 120
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1Gi
+      limits:
+        cpu: '2'
+        memory: 2Gi
+  campaigns-service:
+    enabled: false
+    port: 8190
+    database: campaigns
+  card-print-agent:
+    enabled: false
+    port: 8291
+    database: card_print_agent
+  channels-service:
+    enabled: false
+    port: 8130
+    database: channels
+  clinical-knowledge-platform-service:
+    enabled: false
+    port: 8270
+    database: clinical_knowledge_platform
+  community-service:
+    enabled: false
+    port: 8122
+    database: community
+  connector-fhir-adapter:
+    enabled: false
+    port: 8151
+    database: connector_fhir_adapter
+  costing-engine-service:
+    enabled: false
+    port: 8101
+    database: costing_engine
+  coverage-service:
+    enabled: false
+    port: 8140
+    database: coverage
+  credential-verification-service:
+    enabled: false
+    port: 8094
+    database: credential_verification
+  data-access-governance-service:
+    enabled: false
+    port: 8170
+    database: data_access_governance
+  data-governance-service:
+    enabled: false
+    port: 8220
+    database: data_governance
+  data-ingestion-service:
+    enabled: false
+    port: 8210
+    database: data_ingestion
+  data-pipeline-service:
+    enabled: false
+    port: 8215
+    database: data_pipeline
+  data-warehouse-service:
+    enabled: false
+    port: 8233
+    database: data_warehouse
+  developer-portal-service:
+    enabled: false
+    port: 8370
+    database: developer_portal
+  dispatch-service:
+    enabled: false
+    port: 8320
+    database: dispatch
+  document-service:
+    enabled: false
+    port: 8093
+    database: document
+  fhir-gateway-service:
+    enabled: true
+    port: 8091
+    database: fhir_gateway
+    env:
+      FHIR_BASE_URL: http://hapi-fhir:8090/fhir
+  forms-service:
+    enabled: false
+    port: 8240
+    database: forms
+  general-ledger-service:
+    enabled: false
+    port: 8281
+    database: general_ledger
+  guidance-service:
+    enabled: false
+    port: 8260
+    database: guidance
+  hr-payroll-service:
+    enabled: false
+    port: 8282
+    database: hr_payroll
+  identity-assurance-service:
+    enabled: false
+    port: 8201
+    database: identity_assurance
+  indawo-service:
+    enabled: false
+    port: 8150
+    database: indawo
+  inpatient-service:
+    enabled: false
+    port: 8121
+    database: inpatient
+  integration-hub:
+    enabled: false
+    port: 8110
+    database: integration_hub
+  inventory-elmis-adapter:
+    enabled: false
+    port: 8108
+    database: inventory_elmis_adapter
+  inventory-service:
+    enabled: false
+    port: 8098
+    database: inventory
+  iot-ingestion-service:
+    enabled: false
+    port: 8330
+    database: iot_ingestion
+  jobs-service:
+    enabled: false
+    port: 8109
+    database: jobs
+  landela-adapter-service:
+    enabled: false
+    port: 8092
+    database: landela_adapter
+  learning-service:
+    enabled: false
+    port: 8235
+    database: learning
+  llm-orchestration-service:
+    enabled: false
+    port: 8265
+    database: llm_orchestration
+  msika-flow-service:
+    enabled: false
+    port: 8100
+    database: msika_flow
+  msika-service:
+    enabled: false
+    port: 8086
+    database: msika
+  mushe-wallet-service:
+    enabled: false
+    port: 8126
+    database: mushe_wallet
+  mushex-service:
+    enabled: false
+    port: 8102
+    database: mushex
+  mvumo-service:
+    enabled: false
+    port: 8195
+    database: mvumo
+  national-data-repository-service:
+    enabled: false
+    port: 8152
+    database: national_data_repository
+  ndila-service:
+    enabled: false
+    port: 8155
+    database: ndila
+  ndr-service:
+    enabled: false
+    port: 8232
+    database: ndr
+  nhume-service:
+    enabled: false
+    port: 8210
+    database: nhume
+  notification-service:
+    enabled: false
+    port: 8200
+    database: notification
+  observability-service:
+    enabled: false
+    port: 8211
+    database: observability
+  offline-edge-service:
+    enabled: false
+    port: 8360
+    database: offline_edge
+  offline-sync-service:
+    enabled: false
+    port: 8095
+    database: offline_sync
+  oros-service:
+    enabled: false
+    port: 8089
+    database: oros
+  pacs-adapter-service:
+    enabled: false
+    port: 8113
+    database: pacs_adapter
+  pct-service:
+    enabled: true
+    port: 8088
+    database: pct
+  pharmacy-elmis-adapter:
+    enabled: false
+    port: 8099
+    database: pharmacy_elmis_adapter
+  pharmacy-service:
+    enabled: false
+    port: 8096
+    database: pharmacy
+  procurement-service:
+    enabled: false
+    port: 8283
+    database: procurement
+  product-registry-service:
+    enabled: false
+    port: 8097
+    database: product_registry
+  referral-service:
+    enabled: false
+    port: 8399
+    database: referral
+  reporting-service:
+    enabled: false
+    port: 8176
+    database: reporting
+  rules-service:
+    enabled: false
+    port: 8241
+    database: rules
+  scheduling-service:
+    enabled: false
+    port: 8128
+    database: scheduling
+  schema-registry-service:
+    enabled: false
+    port: 8371
+    database: schema_registry
+  search-service:
+    enabled: false
+    port: 8230
+    database: search
+  security-hardening-service:
+    enabled: false
+    port: 8221
+    database: security_hardening
+  share-slip-service:
+    enabled: false
+    port: 8104
+    database: share_slip
+  simba-service:
+    enabled: false
+    port: 8125
+    database: simba
+  support-service:
+    enabled: false
+    port: 8340
+    database: support
+  surveillance-service:
+    enabled: false
+    port: 8180
+    database: surveillance
+  tshepo-audit-service:
+    enabled: true
+    port: 8183
+    database: tshepo_audit
+  tshepo-authz-service:
+    enabled: true
+    port: 8081
+    database: tshepo_authz
+    env:
+      TSHEPO_CONSENT_URL: http://tshepo-consent-service:8182
+      TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
+  tshepo-consent-service:
+    enabled: true
+    port: 8182
+    database: tshepo_consent
+  tshepo-identity-service:
+    enabled: true
+    port: 8181
+    database: tshepo_identity
+  tshepo-keys-service:
+    enabled: true
+    port: 8184
+    database: tshepo_keys
+  tshepo-offline-service:
+    enabled: false
+    port: 8185
+    database: tshepo_offline
+  tuso-service:
+    enabled: true
+    port: 8084
+    database: tuso
+  ubomi-service:
+    enabled: true
+    port: 8087
+    database: ubomi
+  varapi-service:
+    enabled: true
+    port: 8083
+    database: varapi
+  vito-service:
+    enabled: true
+    port: 8082
+    database: vito
+    env:
+      VITO_HMAC_PEPPER: preview-vito-hmac-pepper-change-me-0123456789
+  wellness-service:
+    enabled: false
+    port: 8161
+    database: wellness
+  workflow-service:
+    enabled: false
+    port: 8250
+    database: workflow
+  workforce-governance-service:
+    enabled: false
+    port: 8165
+    database: workforce_governance
+  zibo-service:
+    enabled: true
+    port: 8085
+    database: zibo
+postgres:
+  initDatabases:
+    - ai_model_registry
+    - analytics_pipeline
+    - asset_registry
+    - audit_ledger
+    - butano
+    - butano_fhir
+    - campaigns
+    - card_print_agent
+    - channels
+    - clinical_knowledge_platform
+    - community
+    - connector_fhir_adapter
+    - costing_engine
+    - coverage
+    - credential_verification
+    - data_access_governance
+    - data_governance
+    - data_ingestion
+    - data_pipeline
+    - data_warehouse
+    - developer_portal
+    - dispatch
+    - document
+    - fhir_gateway
+    - forms
+    - general_ledger
+    - guidance
+    - hapi
+    - hr_payroll
+    - identity_assurance
+    - indawo
+    - inpatient
+    - integration_hub
+    - inventory
+    - inventory_elmis_adapter
+    - iot_ingestion
+    - jobs
+    - landela_adapter
+    - learning
+    - llm_orchestration
+    - msika
+    - msika_flow
+    - mushe_wallet
+    - mushex
+    - mvumo
+    - national_data_repository
+    - ndila
+    - ndr
+    - nhume
+    - notification
+    - observability
+    - offline_edge
+    - offline_sync
+    - oros
+    - pacs_adapter
+    - pct
+    - pharmacy
+    - pharmacy_elmis_adapter
+    - procurement
+    - product_registry
+    - referral
+    - reporting
+    - rules
+    - scheduling
+    - schema_registry
+    - search
+    - security_hardening
+    - share_slip
+    - simba
+    - support
+    - surveillance
+    - tshepo_audit
+    - tshepo_authz
+    - tshepo_consent
+    - tshepo_identity
+    - tshepo_keys
+    - tshepo_offline
+    - tuso
+    - ubomi
+    - varapi
+    - vito
+    - wellness
+    - workflow
+    - workforce_governance
+    - zibo

@@ -43,10 +43,12 @@ images:
     tag: preview
     pullPolicy: IfNotPresent
 
-# Full boot does NOT take over http://41.57.127.235 — slice ingress stays on impilo-preview.
-# Validate via kubectl port-forward (see docs/environment/FIRST_FULL_BOOT_ATTEMPT_PLAN.md).
+# Highest-Validated-Stack-Wins: the public IP (http://41.57.127.235) surfaces the latest
+# CI/CD-passed preview generation. The full stack now owns the public ingress; the legacy
+# 4-service impilo-preview slice is a short-lived rollback fallback only and must not also
+# serve the IP (its ingress is disabled). See docs/environment/FIRST_FULL_BOOT_ATTEMPT_PLAN.md.
 ingress:
-  enabled: false
+  enabled: true
   className: traefik
 
 postgres:
@@ -92,6 +94,11 @@ kafka:
 
 keycloak:
   enabled: true
+  # Seed the impilo realm (client experience-ui + users/roles) on every Keycloak start
+  # so browser login works durably. start-dev uses ephemeral H2, so --import-realm
+  # re-seeds from the mounted ConfigMap (files/realm-impilo-preview.json) on each boot.
+  realmImport:
+    enabled: true
   image:
     repository: quay.io/keycloak/keycloak
     tag: "25.0"
@@ -173,78 +180,5 @@ oneUiShell:
     NEXT_PUBLIC_BFF_URL: ""
     NEXT_PUBLIC_IMPILO_ENV: full-preview
 
-# Required domain microservices (Deployment + Service via templates/microservice.yaml)
-fullBootServices:
-  tshepo-authz-service:
-    enabled: true
-    port: 8081
-    database: tshepo_authz
-    env:
-      TSHEPO_CONSENT_URL: http://tshepo-consent-service:8182
-      TSHEPO_KEYS_URL: http://tshepo-keys-service:8184
-  tshepo-identity-service:
-    enabled: true
-    port: 8181
-    database: tshepo_identity
-  tshepo-consent-service:
-    enabled: true
-    port: 8182
-    database: tshepo_consent
-  tshepo-audit-service:
-    enabled: true
-    port: 8183
-    database: tshepo_audit
-  tshepo-keys-service:
-    enabled: true
-    port: 8184
-    database: tshepo_keys
-  vito-service:
-    enabled: true
-    port: 8082
-    database: vito
-    env:
-      VITO_HMAC_PEPPER: preview-vito-hmac-pepper-change-me-0123456789
-  varapi-service:
-    enabled: true
-    port: 8083
-    database: varapi
-  tuso-service:
-    enabled: true
-    port: 8084
-    database: tuso
-  zibo-service:
-    enabled: true
-    port: 8085
-    database: zibo
-  ubomi-service:
-    enabled: true
-    port: 8087
-    database: ubomi
-  butano-service:
-    enabled: true
-    port: 8090
-    database: butano
-    readinessInitialDelay: 60
-    livenessInitialDelay: 120
-    resources:
-      requests:
-        cpu: 200m
-        memory: 1Gi
-      limits:
-        cpu: "2"
-        memory: 2Gi
-    env:
-      HAPI_FHIR_URL: http://hapi-fhir:8090/fhir
-  fhir-gateway-service:
-    enabled: true
-    port: 8091
-    database: fhir_gateway
-    env:
-      FHIR_BASE_URL: http://hapi-fhir:8090/fhir
-  pct-service:
-    enabled: true
-    port: 8088
-    database: pct
-
-# Explicitly disabled (not in required_full_boot set)
-# opa, landela, workflow, etc. remain off until classification requires them.
+# Domain microservices: see values-full-preview-runtime.generated.yaml (wave-enabled set).
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave <N>

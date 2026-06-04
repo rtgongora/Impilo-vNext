@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-03T09:58:23.177Z'
+  generated_at: '2026-06-04T01:37:22.637Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 141
@@ -43,6 +43,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: analytics-pipeline-service
     canonical_name: analytics-pipeline-service
     plane: integration
@@ -82,6 +85,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: asset-registry-service
     canonical_name: asset-registry-service
     plane: integration
@@ -121,6 +127,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: audit-ledger-service
     canonical_name: audit-ledger-service
     plane: integration
@@ -158,6 +167,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: banking-rails
     canonical_name: banking-rails
     plane: enterprise
@@ -195,6 +207,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: butano-fhir
     canonical_name: butano-fhir
     plane: clinical
@@ -232,6 +247,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: butano-service
     canonical_name: butano-service
     plane: clinical
@@ -269,6 +287,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: butano-web
     canonical_name: butano-web
     plane: experience
@@ -306,6 +327,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: campaigns-service
     canonical_name: campaigns-service
     plane: data
@@ -343,6 +367,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: card-print-agent
     canonical_name: card-print-agent
     plane: integration
@@ -380,6 +407,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: channels-service
     canonical_name: channels-service
     plane: integration
@@ -417,6 +447,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: citizen-app
     canonical_name: citizen-app
     plane: experience
@@ -454,6 +487,9 @@ classifications:
     blocker: null
     reason: Expo/mobile artifact — not K8s service image
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Expo/mobile artifact — not K8s service image
   - id: civil-registry-system
     canonical_name: civil-registry-system
     plane: registry_spine
@@ -491,6 +527,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: clinical-knowledge-platform-service
     canonical_name: clinical-knowledge-platform-service
     plane: clinical
@@ -530,6 +569,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: community-service
     canonical_name: community-service
     plane: experience
@@ -567,6 +609,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: connector-fhir-adapter
     canonical_name: connector-fhir-adapter
     plane: integration
@@ -606,6 +651,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: contract-tests
     canonical_name: contract-tests
     plane: integration
@@ -643,6 +691,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: costa-console
     canonical_name: costa-console
     plane: experience
@@ -680,6 +731,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: costing-engine-service
     canonical_name: costing-engine-service
     plane: enterprise
@@ -717,6 +771,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: coverage-service
     canonical_name: coverage-service
     plane: enterprise
@@ -754,6 +811,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: credential-verification-service
     canonical_name: credential-verification-service
     plane: enterprise
@@ -791,6 +851,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: data-access-governance-service
     canonical_name: data-access-governance-service
     plane: data
@@ -830,6 +893,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: data-governance-service
     canonical_name: data-governance-service
     plane: data
@@ -869,6 +935,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: data-ingestion-service
     canonical_name: data-ingestion-service
     plane: data
@@ -908,6 +977,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: data-pipeline-service
     canonical_name: data-pipeline-service
     plane: data
@@ -945,6 +1017,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: data-warehouse-service
     canonical_name: data-warehouse-service
     plane: data
@@ -984,6 +1059,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: developer-console
     canonical_name: developer-console
     plane: experience
@@ -1021,6 +1099,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: developer-portal-service
     canonical_name: developer-portal-service
     plane: integration
@@ -1060,6 +1141,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: dhis2
     canonical_name: dhis2
     plane: integration
@@ -1097,6 +1181,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: dispatch-service
     canonical_name: dispatch-service
     plane: integration
@@ -1134,6 +1221,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: document-service
     canonical_name: document-service
     plane: clinical
@@ -1171,6 +1261,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: ehr
     canonical_name: ehr
     plane: experience
@@ -1208,6 +1301,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: envoy
     canonical_name: envoy
     plane: trust
@@ -1245,6 +1341,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: experience-bff
     canonical_name: experience-bff
     plane: experience
@@ -1282,6 +1381,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_dedicated
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: external-elmis
     canonical_name: external-elmis
     plane: integration
@@ -1319,6 +1421,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: external-idp
     canonical_name: external-idp
     plane: trust_governance
@@ -1356,6 +1461,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: external-pacs-network
     canonical_name: external-pacs-network
     plane: integration
@@ -1393,6 +1501,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: federation-connector
     canonical_name: federation-connector
     plane: integration
@@ -1430,6 +1541,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: fhir-gateway-service
     canonical_name: fhir-gateway-service
     plane: clinical
@@ -1467,6 +1581,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: forms-service
     canonical_name: forms-service
     plane: clinical
@@ -1504,6 +1621,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: general-ledger-service
     canonical_name: general-ledger-service
     plane: enterprise
@@ -1543,6 +1663,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: guidance-service
     canonical_name: guidance-service
     plane: clinical
@@ -1580,6 +1703,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: hapi-fhir
     canonical_name: hapi-fhir
     plane: clinical
@@ -1617,6 +1743,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: hr-payroll-service
     canonical_name: hr-payroll-service
     plane: enterprise
@@ -1654,6 +1783,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: identity-assurance-service
     canonical_name: identity-assurance-service
     plane: trust
@@ -1693,6 +1825,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: indawo-service
     canonical_name: indawo-service
     plane: registry
@@ -1730,6 +1865,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: inpatient-service
     canonical_name: inpatient-service
     plane: clinical
@@ -1767,6 +1905,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: integration-hub
     canonical_name: integration-hub
     plane: integration
@@ -1804,6 +1945,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: inventory-elmis-adapter
     canonical_name: inventory-elmis-adapter
     plane: clinical
@@ -1841,6 +1985,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: inventory-service
     canonical_name: inventory-service
     plane: clinical
@@ -1878,6 +2025,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: inventory-web
     canonical_name: inventory-web
     plane: experience
@@ -1915,6 +2065,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: iot-ingestion-service
     canonical_name: iot-ingestion-service
     plane: integration
@@ -1952,6 +2105,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: jobs-service
     canonical_name: jobs-service
     plane: integration
@@ -1989,6 +2145,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: kafka
     canonical_name: kafka
     plane: integration
@@ -2026,6 +2185,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: keycloak
     canonical_name: keycloak
     plane: trust
@@ -2063,6 +2225,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: knowledge-admin
     canonical_name: knowledge-admin
     plane: experience
@@ -2100,6 +2265,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: landela-adapter-service
     canonical_name: landela-adapter-service
     plane: integration
@@ -2139,6 +2307,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: learning-service
     canonical_name: learning-service
     plane: experience
@@ -2176,6 +2347,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: lims
     canonical_name: lims
     plane: integration
@@ -2213,6 +2387,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: llm-orchestration-service
     canonical_name: llm-orchestration-service
     plane: integration
@@ -2252,6 +2429,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: minio
     canonical_name: minio
     plane: integration
@@ -2289,6 +2469,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: mosip
     canonical_name: mosip
     plane: trust_governance
@@ -2326,6 +2509,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: msika-flow-ops
     canonical_name: msika-flow-ops
     plane: experience
@@ -2363,6 +2549,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: msika-flow-portal
     canonical_name: msika-flow-portal
     plane: experience
@@ -2400,6 +2589,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: msika-flow-service
     canonical_name: msika-flow-service
     plane: enterprise
@@ -2437,6 +2629,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: msika-flow-vendor
     canonical_name: msika-flow-vendor
     plane: experience
@@ -2474,6 +2669,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: msika-service
     canonical_name: msika-service
     plane: enterprise
@@ -2511,6 +2709,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: msika-web
     canonical_name: msika-web
     plane: experience
@@ -2548,6 +2749,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: mushe-wallet-service
     canonical_name: mushe-wallet-service
     plane: enterprise
@@ -2585,6 +2789,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: mushex-finance-console
     canonical_name: mushex-finance-console
     plane: experience
@@ -2622,6 +2829,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: mushex-ops-console
     canonical_name: mushex-ops-console
     plane: experience
@@ -2659,6 +2869,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: mushex-payer-portal
     canonical_name: mushex-payer-portal
     plane: experience
@@ -2696,6 +2909,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: mushex-service
     canonical_name: mushex-service
     plane: enterprise
@@ -2733,6 +2949,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: mvumo-service
     canonical_name: mvumo-service
     plane: trust
@@ -2770,6 +2989,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: national-data-repository-service
     canonical_name: national-data-repository-service
     plane: data
@@ -2809,6 +3031,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: ndila-service
     canonical_name: ndila-service
     plane: integration
@@ -2846,6 +3071,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: ndr-service
     canonical_name: ndr-service
     plane: data
@@ -2883,6 +3111,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: nhume-service
     canonical_name: nhume-service
     plane: integration
@@ -2920,6 +3151,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: notification-service
     canonical_name: notification-service
     plane: integration
@@ -2957,6 +3191,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: observability-service
     canonical_name: observability-service
     plane: integration
@@ -2994,6 +3231,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: offline-edge-service
     canonical_name: offline-edge-service
     plane: integration
@@ -3031,6 +3271,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: offline-sdk
     canonical_name: offline-sdk
     plane: integration
@@ -3068,6 +3311,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: offline-sync-service
     canonical_name: offline-sync-service
     plane: integration
@@ -3105,6 +3351,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: one-ui-shell
     canonical_name: one-ui-shell
     plane: experience
@@ -3142,6 +3391,9 @@ classifications:
     blocker: null
     reason: Experience layer with dedicated Dockerfile
     classification_confidence: certain
+    deployment_lane: runtime_dedicated
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: opa
     canonical_name: opa
     plane: trust
@@ -3179,6 +3431,9 @@ classifications:
     blocker: null
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: ops-console
     canonical_name: ops-console
     plane: experience
@@ -3216,6 +3471,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: ops-docs
     canonical_name: ops-docs
     plane: experience
@@ -3253,6 +3511,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: ops-instrumentation
     canonical_name: ops-instrumentation
     plane: integration
@@ -3290,6 +3551,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: oros-service
     canonical_name: oros-service
     plane: clinical
@@ -3327,6 +3591,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: oros-web
     canonical_name: oros-web
     plane: experience
@@ -3364,6 +3631,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: pacs-adapter-service
     canonical_name: pacs-adapter-service
     plane: clinical
@@ -3401,6 +3671,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pct-service
     canonical_name: pct-service
     plane: clinical
@@ -3438,6 +3711,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pct-web
     canonical_name: pct-web
     plane: experience
@@ -3475,6 +3751,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: pharmacy-elmis-adapter
     canonical_name: pharmacy-elmis-adapter
     plane: clinical
@@ -3514,6 +3793,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pharmacy-service
     canonical_name: pharmacy-service
     plane: clinical
@@ -3551,6 +3833,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: pharmacy-web
     canonical_name: pharmacy-web
     plane: experience
@@ -3588,6 +3873,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: portal
     canonical_name: portal
     plane: experience
@@ -3625,6 +3913,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: postgres
     canonical_name: postgres
     plane: integration
@@ -3662,6 +3953,9 @@ classifications:
     blocker: null
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: procurement-service
     canonical_name: procurement-service
     plane: enterprise
@@ -3699,6 +3993,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: product-registry-service
     canonical_name: product-registry-service
     plane: registry
@@ -3738,6 +4035,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: provider-app
     canonical_name: provider-app
     plane: experience
@@ -3775,6 +4075,9 @@ classifications:
     blocker: null
     reason: Expo/mobile artifact — not K8s service image
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Expo/mobile artifact — not K8s service image
   - id: redis
     canonical_name: redis
     plane: integration
@@ -3812,6 +4115,9 @@ classifications:
     blocker: null
     reason: Infrastructure uses upstream image/chart
     classification_confidence: certain
+    deployment_lane: runtime_official
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: referral-service
     canonical_name: referral-service
     plane: integration
@@ -3849,6 +4155,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: reporting-service
     canonical_name: reporting-service
     plane: data
@@ -3886,6 +4195,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: rules-service
     canonical_name: rules-service
     plane: clinical
@@ -3923,6 +4235,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: scheduling-service
     canonical_name: scheduling-service
     plane: clinical
@@ -3960,6 +4275,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: schema-registry-service
     canonical_name: schema-registry-service
     plane: integration
@@ -3999,6 +4317,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: search-service
     canonical_name: search-service
     plane: data
@@ -4036,6 +4357,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: security-baseline
     canonical_name: security-baseline
     plane: integration
@@ -4073,6 +4397,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: security-hardening-service
     canonical_name: security-hardening-service
     plane: integration
@@ -4112,6 +4439,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: self-service
     canonical_name: self-service
     plane: experience
@@ -4149,6 +4479,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: share-slip-service
     canonical_name: share-slip-service
     plane: enterprise
@@ -4186,6 +4519,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: shared-core
     canonical_name: shared-core
     plane: integration
@@ -4223,6 +4559,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: shared-kernel-java
     canonical_name: shared-kernel-java
     plane: integration
@@ -4260,6 +4599,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: shared-ui
     canonical_name: shared-ui
     plane: experience
@@ -4297,6 +4639,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: simba-service
     canonical_name: simba-service
     plane: enterprise
@@ -4334,6 +4679,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: sms-whatsapp-gateway
     canonical_name: sms-whatsapp-gateway
     plane: integration
@@ -4371,6 +4719,9 @@ classifications:
     blocker: null
     reason: External or contract-only dependency
     classification_confidence: high
+    deployment_lane: doctrine_only
+    run_applicable: false
+    run_not_applicable_reason: External or contract-only dependency
   - id: support-console
     canonical_name: support-console
     plane: experience
@@ -4408,6 +4759,9 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
   - id: support-service
     canonical_name: support-service
     plane: integration
@@ -4445,6 +4799,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: surveillance-service
     canonical_name: surveillance-service
     plane: data
@@ -4482,6 +4839,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tech-companion
     canonical_name: tech-companion
     plane: integration
@@ -4519,6 +4879,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: tech-companion-harness
     canonical_name: tech-companion-harness
     plane: integration
@@ -4556,6 +4919,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: tech-companion-mock
     canonical_name: tech-companion-mock
     plane: integration
@@ -4593,6 +4959,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: tshepo-audit-service
     canonical_name: tshepo-audit-service
     plane: trust
@@ -4630,6 +4999,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-authz-service
     canonical_name: tshepo-authz-service
     plane: trust
@@ -4667,6 +5039,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-consent-service
     canonical_name: tshepo-consent-service
     plane: trust
@@ -4704,6 +5079,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-contracts
     canonical_name: tshepo-contracts
     plane: integration
@@ -4741,6 +5119,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: tshepo-identity-service
     canonical_name: tshepo-identity-service
     plane: trust
@@ -4780,6 +5161,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-keys-service
     canonical_name: tshepo-keys-service
     plane: trust
@@ -4817,6 +5201,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-offline-service
     canonical_name: tshepo-offline-service
     plane: trust
@@ -4854,6 +5241,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: tshepo-sdk
     canonical_name: tshepo-sdk
     plane: integration
@@ -4891,6 +5281,9 @@ classifications:
     blocker: null
     reason: Maven/npm library — not a K8s workload
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Maven/npm library — not a K8s workload
   - id: tshepo-service
     canonical_name: tshepo-service
     plane: trust
@@ -4928,6 +5321,9 @@ classifications:
     blocker: null
     reason: Deprecated or future-only
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: Deprecated or future-only
   - id: tuso-service
     canonical_name: tuso-service
     plane: registry
@@ -4965,6 +5361,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: ubomi-service
     canonical_name: ubomi-service
     plane: registry
@@ -5002,6 +5401,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: varapi-service
     canonical_name: varapi-service
     plane: registry
@@ -5039,6 +5441,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: vito-service
     canonical_name: vito-service
     plane: registry
@@ -5076,6 +5481,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: wellness-service
     canonical_name: wellness-service
     plane: enterprise
@@ -5113,6 +5521,9 @@ classifications:
     blocker: null
     reason: Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: workflow-service
     canonical_name: workflow-service
     plane: integration
@@ -5150,6 +5561,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: workforce-governance-service
     canonical_name: workforce-governance-service
     plane: enterprise
@@ -5189,6 +5603,9 @@ classifications:
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: zibo-service
     canonical_name: zibo-service
     plane: registry
@@ -5226,6 +5643,9 @@ classifications:
     blocker: not_deployed_in_preview
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: zibo-web
     canonical_name: zibo-web
     plane: experience
@@ -5263,3 +5683,6 @@ classifications:
     blocker: null
     reason: UI workspace not independently deployed — not a missing Dockerfile failure
     classification_confidence: certain
+    deployment_lane: build_validate_only
+    run_applicable: false
+    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure

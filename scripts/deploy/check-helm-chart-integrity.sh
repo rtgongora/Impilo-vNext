@@ -4,6 +4,8 @@ set -euo pipefail
 REPO_PATH="${REPO_PATH:-/opt/impilo/repos/Impilo-vNext}"
 CHART_DIR="$REPO_PATH/deploy/helm/impilo-vnext"
 VALUES_FILE="$CHART_DIR/values-full-preview.yaml"
+RUNTIME_VALUES="$CHART_DIR/values-full-preview-runtime.generated.yaml"
+FULL_BOOT_MAX_WAVE="${FULL_BOOT_MAX_WAVE:-0}"
 MIN_TEMPLATES="${MIN_HELM_TEMPLATES:-12}"
 REQUIRED_DEPLOYMENTS="${REQUIRED_FULL_BOOT_DEPLOYMENTS:-22}"
 
@@ -44,7 +46,15 @@ fi
 grep -q 'fullBootServices' "$CHART_DIR/templates/microservice.yaml" \
   || fail "microservice.yaml missing fullBootServices loop"
 
-rendered="$(helm template impilo-chart-integrity "$CHART_DIR" -f "$VALUES_FILE" -n impilo-full-preview 2>/dev/null)" \
+HELM_VAL_ARGS=(-f "$VALUES_FILE")
+if [[ -f "$RUNTIME_VALUES" ]]; then
+  node "$REPO_PATH/scripts/full-boot/generate-full-preview-runtime-values.mjs" --max-wave "$FULL_BOOT_MAX_WAVE" >/dev/null 2>&1 || true
+  HELM_VAL_ARGS+=(-f "$RUNTIME_VALUES")
+else
+  echo "WARN: missing $RUNTIME_VALUES — microservice deployments may be absent"
+fi
+
+rendered="$(helm template impilo-chart-integrity "$CHART_DIR" "${HELM_VAL_ARGS[@]}" -n impilo-full-preview 2>/dev/null)" \
   || fail "helm template failed"
 
 dep_count="$(echo "$rendered" | awk '/^kind: Deployment$/{c++} END{print c+0}')"

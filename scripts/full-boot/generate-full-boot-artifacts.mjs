@@ -5,6 +5,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import yaml from "js-yaml";
 import {
@@ -14,6 +15,12 @@ import {
   SHARED_TEMPLATE_PATH,
   isBlockingStrategy,
 } from "./image-strategy-resolver.mjs";
+import {
+  deploymentLane,
+  isRuntimeK8sMicroservice,
+  isWaveRuntimeService,
+  runNotApplicableReason,
+} from "./full-boot-lanes.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
@@ -540,6 +547,9 @@ function writeClassificationYaml(catalog) {
     blocker: e.blocker || null,
     reason: e.reason ?? `Runtime image strategy: ${e.image_strategy}`,
     classification_confidence: e.classification_confidence ?? "certain",
+    deployment_lane: deploymentLane(e),
+    run_applicable: deploymentLane(e).startsWith("runtime_"),
+    run_not_applicable_reason: runNotApplicableReason(e),
   }));
   const doc = {
     metadata: {
@@ -871,27 +881,70 @@ function writeRepoScanList(facts) {
   fs.writeFileSync(path.join(REPORTS_DIR, "repo-deployable-candidate-files.txt"), lines.sort().join("\n") + "\n", "utf8");
 }
 
+function validateRegistryInventoryContract(catalog, registry) {
+  const regServices = registry.services ?? [];
+  const regIds = new Set(regServices.map((s) => s.id));
+  const clsById = new Map(catalog.map((c) => [c.id, c]));
+  const missing = [...regIds].filter((id) => !clsById.has(id));
+  const byLane = {};
+  for (const e of catalog) {
+    const lane = deploymentLane(e);
+    byLane[lane] = (byLane[lane] ?? 0) + 1;
+  }
+  const runtimeK8s = catalog.filter(isRuntimeK8sMicroservice).length;
+  const buildValidate = catalog.filter((c) => deploymentLane(c) === "build_validate_only").length;
+  const inv = {
+    generated_at: new Date().toISOString(),
+    registry_service_count: regIds.size,
+    classification_total: catalog.length,
+    registry_services_missing_from_classification: missing,
+    unclassified_registry_gaps: missing.length,
+    runtime_k8s_microservice_count: runtimeK8s,
+    wave_runtime_service_count: catalog.filter(isWaveRuntimeService).length,
+    build_validate_only_count: buildValidate,
+    by_deployment_lane: byLane,
+  };
+  ensureDir(REPORTS_DIR);
+  fs.writeFileSync(
+    path.join(REPORTS_DIR, "registry-inventory-contract.json"),
+    JSON.stringify(inv, null, 2),
+    "utf8"
+  );
+  if (missing.length) {
+    throw new Error(
+      `Registry inventory gap: ${missing.length} service(s) missing from classification: ${missing.slice(0, 8).join(", ")}`
+    );
+  }
+  console.log(
+    `registry inventory OK: ${regIds.size} registry services, ${catalog.length} classifications, runtime_k8s=${runtimeK8s}`
+  );
+}
+
 function validateFullBootWaves(catalog) {
   const wavesPath = path.join(ROOT, "config/full-boot-waves.yml");
   if (!fs.existsSync(wavesPath)) {
     throw new Error("Missing config/full-boot-waves.yml — run wave generator or commit waves file");
   }
   const wavesDoc = readYaml(wavesPath);
-  const runtimeIds = new Set(
-    catalog
-      .filter((c) => c.image_required && !c.official_image)
-      .map((c) => c.id)
-  );
+  const clsById = new Map(catalog.map((c) => [c.id, c]));
+  const runtimeIds = new Set(catalog.filter(isWaveRuntimeService).map((c) => c.id));
   const assigned = new Set();
   const dupes = [];
+  const unknown = [];
   for (const wave of wavesDoc.waves ?? []) {
     for (const sid of wave.services ?? []) {
+      if (!clsById.has(sid)) unknown.push(sid);
       if (assigned.has(sid)) dupes.push(sid);
       assigned.add(sid);
     }
   }
   if (dupes.length) {
     throw new Error(`full-boot-waves.yml duplicate service ids: ${[...new Set(dupes)].join(", ")}`);
+  }
+  if (unknown.length) {
+    throw new Error(
+      `full-boot-waves.yml unknown ids (not in classification): ${unknown.slice(0, 12).join(", ")}${unknown.length > 12 ? "…" : ""}`
+    );
   }
   const missing = [...runtimeIds].filter((id) => !assigned.has(id));
   const extra = [...assigned].filter((id) => !runtimeIds.has(id));
@@ -902,7 +955,7 @@ function validateFullBootWaves(catalog) {
   }
   if (extra.length) {
     throw new Error(
-      `full-boot-waves.yml unknown ids (not runtime-required): ${extra.slice(0, 12).join(", ")}${extra.length > 12 ? "…" : ""}`
+      `full-boot-waves.yml extra ids (not wave-runtime): ${extra.slice(0, 12).join(", ")}${extra.length > 12 ? "…" : ""}`
     );
   }
   console.log(
@@ -927,7 +980,17 @@ function main() {
   writeMatrices(catalog, facts);
   writeEnvironmentStrategyDocs(catalog, facts);
   writeRepoScanList(facts);
+  validateRegistryInventoryContract(catalog, registry);
   validateFullBootWaves(catalog);
+
+  try {
+    execSync("node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0", {
+      cwd: ROOT,
+      stdio: "inherit",
+    });
+  } catch (e) {
+    console.warn("WARN: runtime values generation failed:", e?.message ?? e);
+  }
 
   const counts = strategyCounts(catalog);
   const summary = {

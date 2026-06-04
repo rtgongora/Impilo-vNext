@@ -7,12 +7,18 @@ full_boot_ensure_artifacts
 ONLY_SERVICES=()
 REQUIRED_ONLY=0
 SUMMARY_ONLY=0
+WAVE_MAX=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --only)
       [[ $# -ge 2 ]] || { echo "--only requires a service name"; exit 2; }
       ONLY_SERVICES+=("$2")
+      shift 2
+      ;;
+    --wave)
+      [[ $# -ge 2 ]] || { echo "--wave requires a number"; exit 2; }
+      WAVE_MAX="$2"
       shift 2
       ;;
     --required-only)
@@ -25,11 +31,18 @@ while [[ $# -gt 0 ]]; do
       ;;
     *)
       echo "Unknown argument: $1"
-      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--required-only] [--summary-only] [--only <service>]..."
+      echo "Usage: bash scripts/build/build-full-vnext-images.sh [--required-only] [--summary-only] [--wave N] [--only <service>]..."
       exit 2
       ;;
   esac
 done
+
+if [[ -n "$WAVE_MAX" ]]; then
+  IFS=',' read -ra WAVE_IDS <<<"$(bash scripts/full-boot/wave-service-ids.sh "$WAVE_MAX")"
+  for sid in "${WAVE_IDS[@]}"; do
+    [[ -n "$sid" ]] && ONLY_SERVICES+=("$sid")
+  done
+fi
 
 LOG_DIR="$FULL_BOOT_REPORTS/image-logs"
 mkdir -p "$LOG_DIR"

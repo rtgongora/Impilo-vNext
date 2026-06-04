@@ -373,26 +373,33 @@ PY
     ;;
   wave-build)
     WAVE_N="${2:-1}"
-    echo "--- wave-build $WAVE_N ---"
-    bash "$REPO/scripts/build/build-full-vnext-images.sh" --wave "$WAVE_N" 2>/dev/null || \
-      bash "$REPO/scripts/build/build-full-vnext-images.sh" --only "$(python3 -c "
-import yaml, pathlib, sys
-w=yaml.safe_load(open('config/full-boot-waves.yml'))
-n=int(sys.argv[1])
-ids=[]
-for wave in w['waves']:
-    if wave['id']==n:
-        ids=wave['services']
-        break
-print(','.join(ids))
-" "$WAVE_N")"
-    bash "$REPO/scripts/build/push-images-to-local-registry.sh" required
+    echo "--- wave-build $WAVE_N (cumulative waves 0..$WAVE_N) ---"
+    bash "$REPO/scripts/build/build-full-vnext-images.sh" --wave "$WAVE_N"
+    IMPILO_PUSH_WAVE="$WAVE_N" bash "$REPO/scripts/build/push-images-to-local-registry.sh" wave "$WAVE_N"
     ;;
   wave-deploy)
     WAVE_N="${2:-}"
-    echo "wave-deploy requires FULLBOOT_DEPLOY_AUTHORIZED and wave number — use deploy after wave-build"
+    [[ -n "$WAVE_N" ]] || { echo "Usage: fullboot.sh wave-deploy <wave-number>"; exit 2; }
+    echo "--- wave-deploy $WAVE_N (cumulative enablement through wave $WAVE_N) ---"
+    fb_ensure_reports
     fb_guard_import_not_active
-    fb_run_deploy_if_authorized
+    export FULL_BOOT_MAX_WAVE="$WAVE_N"
+    node "$REPO/scripts/full-boot/generate-full-preview-runtime-values.mjs" --max-wave "$WAVE_N"
+    if ! fb_deploy_authorized; then
+      echo "Set FULLBOOT_DEPLOY_AUTHORIZED=1 with phrase AUTHORIZE FULL BOOT PREVIEW DEPLOY"
+      fb_workflow_update "awaiting_deploy_auth" "wave_deploy_$WAVE_N"
+      fb_print_deploy_auth_block
+      exit 0
+    fi
+    export FULL_BOOT_IMAGE_TAG="$(fb_tag)"
+    export FULL_BOOT_SKIP_BUILD=1
+    unset FULL_BOOT_SKIP_IMPORT || true
+    fb_import_images_flow
+    printf '%s\n' "$DEPLOY_PHRASE" | FULL_BOOT_MAX_WAVE="$WAVE_N" FULLBOOT_DEPLOY_AUTHORIZED=1 \
+      bash "$REPO/scripts/deploy/full-boot-preview-deploy.sh"
+    bash "$REPO/scripts/operator/wave-gates.sh" "$WAVE_N" || true
+    bash "$REPO/scripts/build/build-non-runtime-registry-lane.sh" || true
+    fb_workflow_update "wave_deploy_completed" "wave_$WAVE_N"
     ;;
   continue)
     fb_continue_workflow

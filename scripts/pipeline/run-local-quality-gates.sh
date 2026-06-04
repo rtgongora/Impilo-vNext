@@ -83,6 +83,10 @@ pipeline_run_phase full-boot-doctrine "Doctrine compliance" "$full_boot_blocking
   bash scripts/guard/check-doctrine-compliance.sh || true
 pipeline_run_phase full-boot-runtime "Full-boot runtime completeness" 0 \
   bash scripts/guard/check-full-boot-runtime-completeness.sh || true
+pipeline_run_phase full-boot-waves "Full-boot wave coverage" 0 \
+  bash scripts/guard/check-full-boot-waves.sh || true
+pipeline_run_phase full-boot-inventory "Registry inventory contract" 0 \
+  bash scripts/guard/check-registry-inventory-contract.sh || true
 
 # 13. Change-safety
 pipeline_run_phase change-safety "Change-safety gates" 1 \

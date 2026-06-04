@@ -116,6 +116,7 @@ bash scripts/operator/fullboot.sh cleanup-imports
 | `verify-images` | 22-image presence check |
 | `import-images` | Import (passwordless or checkpoint; blocked while import active) |
 | `wave-status` / `wave-build` / `wave-report` | Phased expansion (`config/full-boot-waves.yml`) |
+| `wave-deploy <N>` | Regenerate runtime Helm overlay (waves 0–N), import, Helm upgrade, wave gates |
 | `deploy` | Orchestrate; stop at checkpoint or deploy auth |
 | `continue` | Resume after successful checkpoint |
 | `sudo-checkpoint-run` | Product owner: run pending privileged action only |
@@ -159,6 +160,45 @@ bash scripts/operator/test-k3s-image-helper.sh
 
 Expected: `SUMMARY pass=… fail=0` and `sudo -n /usr/local/sbin/impilo-k3s-list-images preview` prints `IMAGE_PRESENCE: PASS` when images are imported.
 
+## Full-registry wave expansion
+
+Runtime microservices are generated into
+`deploy/helm/impilo-vnext/values-full-preview-runtime.generated.yaml` (not hand-edited).
+Each wave **additively enables** services through wave *N* without duplicating shared infra.
+
+```bash
+# Build + push cumulative wave images
+bash scripts/operator/fullboot.sh wave-build 1
+
+# Deploy through wave 1 (requires AUTHORIZE FULL BOOT PREVIEW DEPLOY)
+export FULLBOOT_DEPLOY_AUTHORIZED=1
+printf '%s\n' 'AUTHORIZE FULL BOOT PREVIEW DEPLOY' | bash scripts/operator/fullboot.sh wave-deploy 1
+
+# Non-runtime lane (UI workspaces, mobile, internal packages)
+bash scripts/build/build-non-runtime-registry-lane.sh
+```
+
+Guards:
+
+```bash
+bash scripts/guard/check-registry-inventory-contract.sh
+bash scripts/guard/check-full-boot-waves.sh
+```
+
+### Wave rollback (disable to prior generation)
+
+To roll back **enabled** microservices without destroying `impilo-preview`:
+
+```bash
+export FULL_BOOT_MAX_WAVE=0   # prior wave number
+node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0
+export FULLBOOT_DEPLOY_AUTHORIZED=1
+printf '%s\n' 'AUTHORIZE FULL BOOT PREVIEW DEPLOY' | bash scripts/deploy/full-boot-preview-deploy.sh
+bash scripts/operator/report-preview-generation.sh
+```
+
+Public ingress stays on `impilo-full-preview`; only the enabled Deployment set shrinks.
+
 ## Rollback
 
 ```bash
@@ -178,10 +218,42 @@ bash scripts/operator/fullboot.sh verify-images
 
 without interactive sudo. Do **not** set `FULL_BOOT_SKIP_IMPORT=1` unless images were just verified.
 
+## Public preview generation (Highest-Validated-Stack-Wins)
+
+The public IP `http://41.57.127.235` surfaces the **latest validated preview generation**, not
+a fixed starter slice. Each higher-count validated stack **replaces** the previous lower-count
+one as the public target:
+
+```text
+4-service preview -> 22-service preview -> next validated wave -> ...
+```
+
+- The full stack (`impilo-full-preview`) owns the public Traefik ingress
+  (`ingress.enabled: true` in `values-full-preview.yaml`).
+- The legacy 4-service slice (`impilo-preview`) is a **rollback fallback only** — its pods may
+  stay running but it has **no public ingress** (`ingress.enabled: false` in `values-preview.yaml`).
+- Exactly **one** ingress may claim the public entrypoint. Verify with:
+
+```bash
+bash scripts/operator/report-preview-generation.sh   # SINGLE_PUBLIC_STACK: yes
+kubectl get ingress -A                                # only impilo-full-preview
+```
+
+### Rollback to the slice (emergency)
+
+```bash
+# Re-point the IP at the 4-service slice and take the full stack off it.
+helm upgrade impilo-preview deploy/helm/impilo-vnext -n impilo-preview \
+  -f deploy/helm/impilo-vnext/values-preview.yaml --set ingress.enabled=true
+kubectl -n impilo-full-preview delete ingress impilo-full-preview
+```
+
 ## Success criteria
 
 - `IMAGE_PRESENCE: PASS` and `SUMMARY ok=22 fail=0` from verify
 - Full boot deploy: **22/22** required deployments Available (not merely present)
-- `impilo-preview` slice unchanged and healthy at `http://41.57.127.235/health/version`
+- `http://41.57.127.235/health/version` shows `environment: full-preview` and the deployed commit
+- `scripts/operator/report-preview-generation.sh` reports `SINGLE_PUBLIC_STACK: yes`
+  (full stack public, slice demoted to fallback)
 
 See also: [DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md](./DEPLOYMENT_SUDO_AND_IMAGE_IMPORT_HARDENING.md)

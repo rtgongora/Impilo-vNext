@@ -12,6 +12,7 @@ TAG="${FULL_BOOT_IMAGE_TAG:-preview}"
 PARALLEL="${IMPILO_PUSH_PARALLEL:-4}"
 MODE="${1:-required}"
 ONLY_IDS="${IMPILO_PUSH_ONLY:-}"
+WAVE_MAX="${IMPILO_PUSH_WAVE:-}"
 
 bash "$REPO/scripts/operator/registry-up.sh"
 
@@ -51,8 +52,30 @@ for e in doc["classifications"]:
         print(f"impilo/{e['id']}:{tag}")
 PY
     ;;
+  wave)
+    [[ -n "$WAVE_MAX" ]] || WAVE_MAX="${2:-}"
+    [[ -n "$WAVE_MAX" ]] || { echo "Usage: $0 wave <N>  (or IMPILO_PUSH_WAVE=N)" >&2; exit 2; }
+    ONLY_IDS="$(bash "$REPO/scripts/full-boot/wave-service-ids.sh" "$WAVE_MAX")"
+    python3 - "$REPO" "$TAG" "$ONLY_IDS" <<'PY' >"$refs_file"
+import sys, yaml
+repo, tag, only_csv = sys.argv[1], sys.argv[2], sys.argv[3]
+only = [s for s in only_csv.split(",") if s]
+doc = yaml.safe_load(open(f"{repo}/config/full-boot-service-classification.yml"))
+by_id = {e["id"]: e for e in doc["classifications"]}
+for sid in only:
+    e = by_id.get(sid)
+    if not e:
+        continue
+    if e.get("official_image"):
+        o = e["official_image"]
+        print(o if ":" in o else f"{o}:latest")
+    elif e.get("image_strategy") in ("shared-dockerfile-template", "dockerfile", "jib", "buildpacks"):
+        if e.get("image_required") or e.get("component_type") == "backend_service":
+            print(f"impilo/{sid}:{tag}")
+PY
+    ;;
   *)
-    echo "Usage: $0 [required|runtime]" >&2
+    echo "Usage: $0 [required|runtime|wave <N>]" >&2
     exit 1
     ;;
 esac

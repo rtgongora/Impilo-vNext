@@ -4,16 +4,31 @@
 **Namespace:** `impilo-full-preview`  
 **Slice (do not modify):** `impilo-preview` at `http://41.57.127.235`
 
+## Full-registry expansion (waves 0–7)
+
+All **runtime K8s microservices** are declared in
+`values-full-preview-runtime.generated.yaml` (from classification + waves).
+Wave *N* cumulatively enables services in `config/full-boot-waves.yml` through wave *N*.
+Non-runtime registry entries use `scripts/build/build-non-runtime-registry-lane.sh`
+(build/validate only, `run-not-applicable` in k3s).
+
+```bash
+bash scripts/guard/check-registry-inventory-contract.sh
+bash scripts/operator/fullboot.sh wave-build 1
+bash scripts/operator/fullboot.sh wave-deploy 1   # + AUTHORIZE FULL BOOT PREVIEW DEPLOY
+bash scripts/operator/report-preview-generation.sh
+```
+
 ## Preconditions (this batch)
 
 | Check | Status |
 |-------|--------|
 | Required images built (22/22) | Ready |
-| Helm chart + `values-full-preview.yaml` | Ready |
+| Helm chart + `values-full-preview.yaml` + runtime generated overlay | Ready |
 | Official infra images pulled on VM | Done |
 | k3s image import | Narrow helper: `sudo bash scripts/operator/install-k3s-image-helper.sh` then `bash scripts/operator/fullboot.sh import-images` |
 | HAPI database `hapi` | Init via postgres `initDatabases` + post-install Job |
-| Ingress for full boot | **Disabled** — does not take over public URL |
+| Ingress for full boot | **Enabled** — the full stack owns the public IP (Highest-Validated-Stack-Wins) |
 
 ## VM: import and verify (before authorized deploy)
 
@@ -56,44 +71,46 @@ bash -n scripts/dev/import-full-vnext-images-k3s.sh
 bash -n scripts/dev/verify-full-boot-k3s-images.sh
 ```
 
-## Routing strategy (selected: **A — port-forward first**)
+## Routing strategy (current: **full stack owns the public IP**)
 
-Full boot **must not** disturb the slice Traefik ingress on `41.57.127.235`. Therefore:
+**Highest-Validated-Stack-Wins.** The public IP `http://41.57.127.235` surfaces the latest
+validated preview generation. The full stack (`impilo-full-preview`) owns the Traefik ingress;
+the legacy 4-service slice (`impilo-preview`) is a rollback fallback with its ingress disabled.
+Exactly one ingress claims the public entrypoint (the ingress name is the Helm release name, so
+slice and full-stack ingresses never silently collide).
 
-1. **`ingress.enabled: false`** in `values-full-preview.yaml` for `impilo-full-preview`.
-2. After authorized deploy, validate with **kubectl port-forward** from the VM or laptop with kubeconfig:
+1. **`ingress.enabled: true`** in `values-full-preview.yaml`; **`ingress.enabled: false`** in
+   `values-preview.yaml` (slice). The cutover also deletes any live slice ingress object.
+2. Validate directly on the public IP after an authorized deploy:
 
 ```bash
-# Experience BFF (health/version, APIs)
+curl -s http://41.57.127.235/health/version          # environment: full-preview + deployed commit
+curl -s -o /dev/null -w "%{http_code}\n" http://41.57.127.235/   # 307 -> /auth/login (shell)
+bash scripts/operator/report-preview-generation.sh    # SINGLE_PUBLIC_STACK: yes
+```
+
+3. Browser confirmation: open `http://41.57.127.235`, Sign In with any email/password for a
+   CITIZEN preview session (Keycloak realm seeding is a follow-up to unlock provider/clinical
+   authenticated flows; until then the BFF issues a local fallback session).
+4. Internal-only debugging (optional) still works via port-forward:
+
+```bash
 kubectl port-forward -n impilo-full-preview svc/experience-bff 18160:8160
-
-# One UI shell
 kubectl port-forward -n impilo-full-preview svc/one-ui-shell 13000:3000
-
-# Optional: HAPI metadata
-kubectl port-forward -n impilo-full-preview svc/hapi-fhir 18090:8090
 ```
 
-3. Smoke checks against local forwards:
+### Rollback
 
-```bash
-curl -s http://127.0.0.1:18160/health/version
-curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:13000/
-```
+Re-enable the slice ingress and remove the full-stack ingress (see
+[FULL_BOOT_OPERATOR_MODE.md](./FULL_BOOT_OPERATOR_MODE.md) "Rollback to the slice").
 
-4. Confirm slice still healthy:
+### Superseded options
 
-```bash
-curl -s http://41.57.127.235/health/version
-kubectl get pods -n impilo-preview
-```
-
-### Not used for first attempt
-
-| Option | Why deferred |
-|--------|----------------|
-| B — `/full-preview` ingress path | Risk of Traefik rule overlap with slice; add only after port-forward proof |
-| C — separate host | No DNS/host allocated yet |
+| Option | Status |
+|--------|--------|
+| A — port-forward only, ingress disabled | Superseded: was the first-attempt safety posture; IP now serves the full stack |
+| B — `/full-preview` ingress path | Not needed — the full stack owns `/` directly |
+| C — separate host | Future: a DNS hostname can replace the bare IP |
 
 ## Deploy sequence (after authorization)
 
