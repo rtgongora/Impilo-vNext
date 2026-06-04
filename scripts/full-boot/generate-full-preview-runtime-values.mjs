@@ -173,7 +173,7 @@ function main() {
     },
     fullBootServices,
     postgres: {
-      maxConnections: 400,
+      maxConnections: 600,
       sharedBuffers: "256MB",
       initDatabases: [...initDatabases].sort(),
     },

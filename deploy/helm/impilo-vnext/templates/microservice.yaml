@@ -29,6 +29,8 @@ spec:
             - containerPort: {{ $svc.port }}
           env:
             {{- include "impilo.globalEnv" (dict "root" $) | nindent 12 }}
+            - name: SERVER_PORT
+              value: {{ $svc.port | quote }}
             {{- if $.Values.global.javaToolOptions }}
             - name: JAVA_TOOL_OPTIONS
               value: {{ $.Values.global.javaToolOptions | quote }}

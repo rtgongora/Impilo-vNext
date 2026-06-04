@@ -61,7 +61,7 @@ postgres:
   password: preview-postgres-change-me
   # Full preview: max_connections + per-service DB list come from
   # values-full-preview-runtime.generated.yaml (regenerated on each deploy).
-  maxConnections: 400
+  maxConnections: 600
   sharedBuffers: 256MB
 
 redis:
