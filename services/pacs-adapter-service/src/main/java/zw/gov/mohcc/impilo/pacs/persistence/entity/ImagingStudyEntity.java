@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.pacs.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -94,7 +96,8 @@ public class ImagingStudyEntity {
     @Column(name = "reason_display", length = 500)
     private String reasonDisplay;
 
-    @Column(name = "metadata", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
     @Column(name = "created_at", updatable = false)

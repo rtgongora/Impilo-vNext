@@ -10,6 +10,7 @@ import zw.gov.mohcc.impilo.shared.auth.TrustContext;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,7 +54,7 @@ public class OcrService {
             OcrProvider.OcrResult result = provider.extract(objectId, content, object.getMimeType());
             job.setStatus("COMPLETED");
             job.setExtractedText(result.extractedText());
-            job.setConfidence(result.confidence());
+            job.setConfidence(BigDecimal.valueOf(result.confidence()));
             job.setCompletedAt(OffsetDateTime.now());
             return toPayload(ocrJobRepository.save(job));
         } catch (Exception ex) {

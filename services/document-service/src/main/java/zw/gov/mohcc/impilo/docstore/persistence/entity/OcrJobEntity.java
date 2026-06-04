@@ -9,6 +9,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -38,8 +39,8 @@ public class OcrJobEntity {
     @Column(name = "extracted_text")
     private String extractedText;
 
-    @Column(name = "confidence")
-    private Double confidence;
+    @Column(name = "confidence", precision = 5, scale = 4)
+    private BigDecimal confidence;
 
     @Column(name = "error_message")
     private String errorMessage;
@@ -86,8 +87,8 @@ public class OcrJobEntity {
     public void setStatus(String status) { this.status = status; }
     public String getExtractedText() { return extractedText; }
     public void setExtractedText(String extractedText) { this.extractedText = extractedText; }
-    public Double getConfidence() { return confidence; }
-    public void setConfidence(Double confidence) { this.confidence = confidence; }
+    public BigDecimal getConfidence() { return confidence; }
+    public void setConfidence(BigDecimal confidence) { this.confidence = confidence; }
     public String getErrorMessage() { return errorMessage; }
     public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
     public String getRequestedBy() { return requestedBy; }

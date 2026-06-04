@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 2
-# Microservices: 84 | enabled: 18 (waves 0–2)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 3
+# Microservices: 84 | enabled: 32 (waves 0–3)
 fullBootServices:
   ai-model-registry-service:
     enabled: false
@@ -19,7 +19,7 @@ fullBootServices:
     port: 8350
     database: audit_ledger
   butano-fhir:
-    enabled: false
+    enabled: true
     port: 8289
     database: butano_fhir
   butano-service:
@@ -50,7 +50,7 @@ fullBootServices:
     port: 8130
     database: channels
   clinical-knowledge-platform-service:
-    enabled: false
+    enabled: true
     port: 8270
     database: clinical_knowledge_platform
   community-service:
@@ -102,7 +102,7 @@ fullBootServices:
     port: 8320
     database: dispatch
   document-service:
-    enabled: false
+    enabled: true
     port: 8093
     database: document
   fhir-gateway-service:
@@ -112,7 +112,7 @@ fullBootServices:
     env:
       FHIR_BASE_URL: http://hapi-fhir:8090/fhir
   forms-service:
-    enabled: false
+    enabled: true
     port: 8240
     database: forms
   general-ledger-service:
@@ -120,7 +120,7 @@ fullBootServices:
     port: 8281
     database: general_ledger
   guidance-service:
-    enabled: false
+    enabled: true
     port: 8260
     database: guidance
   hr-payroll-service:
@@ -136,7 +136,7 @@ fullBootServices:
     port: 8150
     database: indawo
   inpatient-service:
-    enabled: false
+    enabled: true
     port: 8121
     database: inpatient
   integration-hub:
@@ -144,11 +144,11 @@ fullBootServices:
     port: 8110
     database: integration_hub
   inventory-elmis-adapter:
-    enabled: false
+    enabled: true
     port: 8108
     database: inventory_elmis_adapter
   inventory-service:
-    enabled: false
+    enabled: true
     port: 8098
     database: inventory
   iot-ingestion-service:
@@ -224,11 +224,11 @@ fullBootServices:
     port: 8095
     database: offline_sync
   oros-service:
-    enabled: false
+    enabled: true
     port: 8089
     database: oros
   pacs-adapter-service:
-    enabled: false
+    enabled: true
     port: 8113
     database: pacs_adapter
   pct-service:
@@ -236,11 +236,11 @@ fullBootServices:
     port: 8088
     database: pct
   pharmacy-elmis-adapter:
-    enabled: false
+    enabled: true
     port: 8099
     database: pharmacy_elmis_adapter
   pharmacy-service:
-    enabled: false
+    enabled: true
     port: 8096
     database: pharmacy
   procurement-service:
@@ -264,11 +264,11 @@ fullBootServices:
     port: 8176
     database: reporting
   rules-service:
-    enabled: false
+    enabled: true
     port: 8241
     database: rules
   scheduling-service:
-    enabled: false
+    enabled: true
     port: 8128
     database: scheduling
   schema-registry-service:
