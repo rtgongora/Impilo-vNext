@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -52,7 +54,8 @@ public class DeliveryProofEntity {
     @Column(name = "webhook_ref", length = 255)
     private String webhookRef;
 
-    @Column(name = "metadata_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata_json", nullable = false, columnDefinition = "jsonb")
     private String metadataJson = "{}";
 
     @Column(name = "verified", nullable = false)

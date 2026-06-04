@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.connectorfhir.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -13,7 +15,8 @@ public class RelayDestinationEntity {
     @Column(name = "endpoint_url", nullable = false, length = 512) private String endpointUrl;
     @Column(name = "resource_types", length = 512) private String resourceTypes = "*";
     @Column(name = "auth_type", length = 32) private String authType = "NONE";
-    @Column(name = "auth_config", columnDefinition = "TEXT") private String authConfigJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "auth_config", columnDefinition = "jsonb") private String authConfigJson;
     @Column(nullable = false) private boolean enabled = true;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt = OffsetDateTime.now();

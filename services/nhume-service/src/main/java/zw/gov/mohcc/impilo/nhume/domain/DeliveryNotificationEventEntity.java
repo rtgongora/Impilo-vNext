@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,7 +35,8 @@ public class DeliveryNotificationEventEntity {
     @Column(name = "template_code", length = 64)
     private String templateCode;
 
-    @Column(name = "payload_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb")
     private String payloadJson = "{}";
 
     @Column(name = "dispatched_at", nullable = false)

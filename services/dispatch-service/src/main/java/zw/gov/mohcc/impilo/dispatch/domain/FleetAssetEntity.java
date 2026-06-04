@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -31,10 +33,11 @@ public class FleetAssetEntity {
     @Column(name = "plate_number")
     private String plateNumber;
 
-    @Column(name = "capacity_kg")
-    private Double capacityKg;
+    @Column(name = "capacity_kg", precision = 10, scale = 2)
+    private java.math.BigDecimal capacityKg;
 
-    @Column(name = "metadata_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;
 
     @Column(name = "last_latitude")
@@ -69,8 +72,8 @@ public class FleetAssetEntity {
     public void setStatus(String status) { this.status = status; }
     public String getPlateNumber() { return plateNumber; }
     public void setPlateNumber(String plateNumber) { this.plateNumber = plateNumber; }
-    public Double getCapacityKg() { return capacityKg; }
-    public void setCapacityKg(Double capacityKg) { this.capacityKg = capacityKg; }
+    public java.math.BigDecimal getCapacityKg() { return capacityKg; }
+    public void setCapacityKg(java.math.BigDecimal capacityKg) { this.capacityKg = capacityKg; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
     public Double getLastLatitude() { return lastLatitude; }

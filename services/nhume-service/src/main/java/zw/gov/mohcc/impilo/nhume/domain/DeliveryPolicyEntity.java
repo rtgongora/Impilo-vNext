@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -49,13 +51,16 @@ public class DeliveryPolicyEntity {
     @Column(name = "cold_chain_required", nullable = false)
     private boolean coldChainRequired;
 
-    @Column(name = "proof_methods_required", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "proof_methods_required", nullable = false, columnDefinition = "jsonb")
     private String proofMethodsRequired = "[\"RECIPIENT_SIGNATURE\"]";
 
-    @Column(name = "allowed_modes", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "allowed_modes", nullable = false, columnDefinition = "jsonb")
     private String allowedModes = "[]";
 
-    @Column(name = "allowed_courier_kinds", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "allowed_courier_kinds", nullable = false, columnDefinition = "jsonb")
     private String allowedCourierKinds = "[]";
 
     @Column(name = "notification_set", length = 64)

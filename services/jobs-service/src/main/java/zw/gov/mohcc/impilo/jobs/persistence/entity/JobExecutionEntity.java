@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.jobs.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -31,7 +33,8 @@ public class JobExecutionEntity {
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
-    @Column(name = "result", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "result", columnDefinition = "jsonb")
     private String result;
 
     @Column(name = "idempotency_key", length = 255)

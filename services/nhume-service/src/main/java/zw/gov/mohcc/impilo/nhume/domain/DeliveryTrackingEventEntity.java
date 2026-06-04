@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -46,7 +48,8 @@ public class DeliveryTrackingEventEntity {
     @Column(name = "source", nullable = false, length = 48)
     private String source = "NHUME";
 
-    @Column(name = "payload_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payload_json", columnDefinition = "jsonb")
     private String payloadJson;
 
     @Column(name = "created_at", nullable = false)

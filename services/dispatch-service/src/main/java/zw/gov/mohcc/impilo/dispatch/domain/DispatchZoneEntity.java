@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -25,7 +27,8 @@ public class DispatchZoneEntity {
     @Column(name = "zone_name", nullable = false)
     private String zoneName;
 
-    @Column(name = "boundary_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "boundary_json", columnDefinition = "jsonb")
     private String boundaryJson;
 
     @Column(name = "active", nullable = false)

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -43,7 +45,8 @@ public class DispatchZoneEntity {
     @Column(name = "radius_m")
     private Integer radiusM;
 
-    @Column(name = "polygon_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "polygon_json", columnDefinition = "jsonb")
     private String polygonJson;
 
     @Column(name = "notes", columnDefinition = "TEXT")

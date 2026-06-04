@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.devportal.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -15,7 +17,8 @@ public class ClientEntity {
     @Column(name = "contact_email") private String contactEmail;
     @Column(name = "status", nullable = false) private String status = "ACTIVE";
     @Column(name = "sandbox_enabled", nullable = false) private boolean sandboxEnabled = false;
-    @Column(name = "sandbox_config", columnDefinition = "TEXT") private String sandboxConfig;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "sandbox_config", columnDefinition = "jsonb") private String sandboxConfig;
     @Column(name = "deprecation_posture", nullable = false) private String deprecationPosture = "NONE";
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt = OffsetDateTime.now();

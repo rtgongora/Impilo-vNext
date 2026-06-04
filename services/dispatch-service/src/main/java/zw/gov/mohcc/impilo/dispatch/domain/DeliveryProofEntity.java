@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -31,7 +33,8 @@ public class DeliveryProofEntity {
     @Column(name = "captured_by")
     private String capturedBy;
 
-    @Column(name = "details_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "details_json", columnDefinition = "jsonb")
     private String detailsJson;
 
     @Column(name = "captured_at", nullable = false)

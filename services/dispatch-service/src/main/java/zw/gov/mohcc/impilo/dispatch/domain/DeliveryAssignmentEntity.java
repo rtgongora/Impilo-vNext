@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -28,7 +30,8 @@ public class DeliveryAssignmentEntity {
     @Column(name = "assignment_status", nullable = false)
     private String assignmentStatus = "ASSIGNED";
 
-    @Column(name = "notes_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "notes_json", columnDefinition = "jsonb")
     private String notesJson;
 
     @Column(name = "assigned_at", nullable = false)

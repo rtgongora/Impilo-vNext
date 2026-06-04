@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.assetregistry.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
@@ -81,7 +83,8 @@ public class EquipmentEntity {
     @Column(name = "device_id", length = 255)
     private String deviceId;
 
-    @Column(name = "metadata_json", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;
 
     @Column(name = "created_at", nullable = false)

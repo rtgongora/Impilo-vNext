@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -28,7 +30,8 @@ public class DeliveryExceptionEntity {
     @Column(name = "summary", nullable = false, length = 512)
     private String summary;
 
-    @Column(name = "details_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "details_json", nullable = false, columnDefinition = "jsonb")
     private String detailsJson = "{}";
 
     @Column(name = "raised_by", length = 255)

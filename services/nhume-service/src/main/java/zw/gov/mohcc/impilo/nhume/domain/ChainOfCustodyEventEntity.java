@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -59,7 +61,8 @@ public class ChainOfCustodyEventEntity {
     @Column(name = "evidence_uri", length = 1024)
     private String evidenceUri;
 
-    @Column(name = "exception_flags", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "exception_flags", nullable = false, columnDefinition = "jsonb")
     private String exceptionFlags = "[]";
 
     @Column(name = "audit_event_id")

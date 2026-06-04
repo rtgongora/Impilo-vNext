@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -55,10 +57,12 @@ public class AutonomousMissionEntity {
     @Column(name = "simulation_mode", nullable = false)
     private boolean simulationMode = true;
 
-    @Column(name = "telemetry_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "telemetry_json", nullable = false, columnDefinition = "jsonb")
     private String telemetryJson = "{}";
 
-    @Column(name = "raw_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "raw_json", columnDefinition = "jsonb")
     private String rawJson;
 
     @Column(name = "created_at", nullable = false)

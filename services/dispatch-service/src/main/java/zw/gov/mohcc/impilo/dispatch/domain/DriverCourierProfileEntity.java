@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -31,10 +33,11 @@ public class DriverCourierProfileEntity {
     @Column(name = "status", nullable = false)
     private String status = "ACTIVE";
 
-    @Column(name = "rating")
-    private Double rating;
+    @Column(name = "rating", precision = 4, scale = 2)
+    private java.math.BigDecimal rating;
 
-    @Column(name = "metadata_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;
 
     @Column(name = "created_at", nullable = false)
@@ -63,8 +66,8 @@ public class DriverCourierProfileEntity {
     public void setPhone(String phone) { this.phone = phone; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public Double getRating() { return rating; }
-    public void setRating(Double rating) { this.rating = rating; }
+    public java.math.BigDecimal getRating() { return rating; }
+    public void setRating(java.math.BigDecimal rating) { this.rating = rating; }
     public String getMetadataJson() { return metadataJson; }
     public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

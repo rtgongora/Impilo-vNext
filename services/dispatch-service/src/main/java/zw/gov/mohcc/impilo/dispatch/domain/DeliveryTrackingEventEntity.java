@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -34,7 +36,8 @@ public class DeliveryTrackingEventEntity {
     @Column(name = "source")
     private String source;
 
-    @Column(name = "details_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "details_json", columnDefinition = "jsonb")
     private String detailsJson;
 
     @Column(name = "created_at", nullable = false)

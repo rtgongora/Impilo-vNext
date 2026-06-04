@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.connectorfhir.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -22,7 +24,8 @@ public class OutboxEventEntity {
     @Column(name = "subject_id", nullable = false, length = 255) private String subjectId;
     @Column(name = "subject_type", nullable = false, length = 64) private String subjectType;
     @Column(name = "occurred_at", nullable = false) private OffsetDateTime occurredAt;
-    @Column(name = "payload_json", nullable = false, columnDefinition = "TEXT") private String payloadJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payload_json", nullable = false, columnDefinition = "jsonb") private String payloadJson;
     @Column(name = "partition_key", length = 255) private String partitionKey;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
     @Column(name = "published_at") private OffsetDateTime publishedAt;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -31,7 +33,8 @@ public class AutonomousMissionEntity {
     @Column(name = "status", nullable = false)
     private String status = "PLANNED";
 
-    @Column(name = "mission_payload_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "mission_payload_json", columnDefinition = "jsonb")
     private String missionPayloadJson;
 
     @Column(name = "created_at", nullable = false)

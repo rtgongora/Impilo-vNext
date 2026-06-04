@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.workflow.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -15,8 +17,10 @@ public class WorkflowDefinitionEntity {
     @Column(length = 64) private String category = "GENERAL";
     @Column(nullable = false) private int version = 1;
     @Column(nullable = false, length = 32) private String status = "DRAFT";
-    @Column(name = "schema_json", columnDefinition = "TEXT") private String schemaJson;
-    @Column(name = "steps_json", nullable = false, columnDefinition = "TEXT") private String stepsJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "schema_json", columnDefinition = "jsonb") private String schemaJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "steps_json", nullable = false, columnDefinition = "jsonb") private String stepsJson;
     @Column(name = "created_at", nullable = false) private OffsetDateTime createdAt = OffsetDateTime.now();
     @Column(name = "updated_at", nullable = false) private OffsetDateTime updatedAt = OffsetDateTime.now();
     @Column(name = "published_at") private OffsetDateTime publishedAt;

@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.jobs.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -28,7 +30,8 @@ public class JobDefinitionEntity {
     @Column(name = "job_type", nullable = false, length = 50)
     private String jobType;
 
-    @Column(name = "config", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "config", columnDefinition = "jsonb")
     private String config;
 
     @Column(name = "enabled")

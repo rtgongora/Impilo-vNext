@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -65,10 +67,12 @@ public class DriverCourierProfileEntity {
     @Column(name = "training_status", nullable = false, length = 32)
     private String trainingStatus = "OK";
 
-    @Column(name = "delivery_zones_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "delivery_zones_json", nullable = false, columnDefinition = "jsonb")
     private String deliveryZonesJson = "[]";
 
-    @Column(name = "allowed_modes_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "allowed_modes_json", nullable = false, columnDefinition = "jsonb")
     private String allowedModesJson = "[]";
 
     @Column(name = "device_fingerprint", length = 255)

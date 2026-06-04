@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -104,10 +106,12 @@ public class FleetAssetEntity {
     @Column(name = "last_seen_at")
     private OffsetDateTime lastSeenAt;
 
-    @Column(name = "compliance_docs_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "compliance_docs_json", nullable = false, columnDefinition = "jsonb")
     private String complianceDocsJson = "[]";
 
-    @Column(name = "autonomous_profile_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "autonomous_profile_json", nullable = false, columnDefinition = "jsonb")
     private String autonomousProfileJson = "{}";
 
     @Column(name = "active", nullable = false)

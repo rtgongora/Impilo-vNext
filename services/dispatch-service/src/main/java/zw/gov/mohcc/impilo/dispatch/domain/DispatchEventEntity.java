@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.dispatch.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -23,7 +25,8 @@ public class DispatchEventEntity {
     @Column(name = "status", nullable = false, length = 32)
     private String status;
 
-    @Column(name = "notes_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "notes_json", columnDefinition = "jsonb")
     private String notesJson;
 
     @Column(name = "created_at", nullable = false)

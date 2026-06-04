@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.nhume.domain;
 
 import jakarta.persistence.Column;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -37,7 +39,8 @@ public class DeliveryIntegrationProviderEntity {
     @Column(name = "webhook_secret", length = 255)
     private String webhookSecret;
 
-    @Column(name = "config_json", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "config_json", nullable = false, columnDefinition = "jsonb")
     private String configJson = "{}";
 
     @Column(name = "simulation_mode", nullable = false)
