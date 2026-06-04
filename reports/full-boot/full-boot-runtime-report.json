@@ -57,6 +57,7 @@
     "card-print-agent",
     "channels-service",
     "clinical-knowledge-platform-service",
+    "community-service",
     "connector-fhir-adapter",
     "data-access-governance-service",
     "data-governance-service",
@@ -83,6 +84,7 @@
     "kafka",
     "keycloak",
     "landela-adapter-service",
+    "learning-service",
     "llm-orchestration-service",
     "minio",
     "mvumo-service",
@@ -131,8 +133,8 @@
     "postgres",
     "redis"
   ],
-  "full_boot_pods_total": 77,
-  "full_boot_pods_ready": 77,
+  "full_boot_pods_total": 79,
+  "full_boot_pods_ready": 79,
   "full_boot_pods_crashloop": 0,
   "full_boot_pods_pending": 0,
   "healthy_required_estimate": 22,
@@ -141,11 +143,11 @@
   "runtime_healthy": true,
   "build_pass": 0,
   "build_fail": 0,
-  "image_pass": 11,
+  "image_pass": 72,
   "image_fail": 0,
   "blocking_failure_count": 0,
   "image_strategy_summary": {
-    "selected_target_count": 11,
+    "selected_target_count": 95,
     "runtime_image_required_count": 22,
     "dockerfile_count": 1,
     "shared_template_count": 65,
@@ -156,10 +158,10 @@
     "not_required_count": 24,
     "unknown_needs_review_count": 0,
     "missing_required_image_strategy_count": 0,
-    "image_build_pass_count": 11,
+    "image_build_pass_count": 72,
     "image_build_fail_count": 0,
     "blocking_failure_count": 0,
-    "advisory_count": 0
+    "advisory_count": 23
   },
   "full_boot_status": "FULL_BOOT_PARTIAL",
   "full_boot_reason": "helm deployability partial"
