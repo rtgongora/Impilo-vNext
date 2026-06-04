@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 5
-# Microservices: 84 | enabled: 68 (waves 0–5)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 6
+# Microservices: 84 | enabled: 70 (waves 0–6)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -54,7 +54,7 @@ fullBootServices:
     port: 8270
     database: clinical_knowledge_platform
   community-service:
-    enabled: false
+    enabled: true
     port: 8122
     database: community
   connector-fhir-adapter:
@@ -164,7 +164,7 @@ fullBootServices:
     port: 8092
     database: landela_adapter
   learning-service:
-    enabled: false
+    enabled: true
     port: 8235
     database: learning
   llm-orchestration-service:

@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-04T13:53:43.321029+00:00",
+  "generated_at": "2026-06-04T16:02:45.682269+00:00",
   "namespace": "impilo-full-preview",
-  "max_wave": 5,
-  "assigned": 70,
-  "ready": 70,
+  "max_wave": 6,
+  "assigned": 95,
+  "ready": 72,
   "services": [
     {
       "wave": 0,
@@ -424,6 +424,156 @@
       "service": "workflow-service",
       "deployed": true,
       "ready": true
+    },
+    {
+      "wave": 6,
+      "service": "butano-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "community-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 6,
+      "service": "costa-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "developer-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "ehr",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "inventory-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "knowledge-admin",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "learning-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 6,
+      "service": "msika-flow-ops",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "msika-flow-portal",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "msika-flow-vendor",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "msika-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "mushex-finance-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "mushex-ops-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "mushex-payer-portal",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "ops-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "ops-docs",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "oros-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "pct-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "pharmacy-web",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "portal",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "self-service",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "shared-ui",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "support-console",
+      "deployed": false,
+      "ready": false
+    },
+    {
+      "wave": 6,
+      "service": "zibo-web",
+      "deployed": false,
+      "ready": false
     }
   ]
 }

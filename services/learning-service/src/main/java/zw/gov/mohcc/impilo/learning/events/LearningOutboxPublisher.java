@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -97,27 +98,17 @@ public class LearningOutboxPublisher {
     @Nullable private final Counter publishedSuccessCounter;
     @Nullable private final Counter publishedFailureCounter;
 
+    /**
+     * Spring wiring (single constructor — dual public constructors prevented
+     * default-constructor instantiation failures at runtime).
+     */
+    @Autowired
     public LearningOutboxPublisher(
             LearningOutboxRepository outboxRepository,
             KafkaTemplate<String, String> kafkaTemplate,
             @Value("${learning.outbox.topics.default:platform.learning.events}") String defaultTopic,
-            @Value("${learning.outbox.publisher.batch-size:100}") int batchSize) {
-        this(outboxRepository, kafkaTemplate, defaultTopic, batchSize, null);
-    }
-
-    /**
-     * Full constructor used by Spring when a {@link MeterRegistry} bean is
-     * present, and by unit tests that want to assert metric increments.
-     *
-     * @param meterRegistry optional Micrometer registry; when {@code null} the
-     *                      publisher runs without metric instrumentation.
-     */
-    public LearningOutboxPublisher(
-            LearningOutboxRepository outboxRepository,
-            KafkaTemplate<String, String> kafkaTemplate,
-            String defaultTopic,
-            int batchSize,
-            @Nullable MeterRegistry meterRegistry) {
+            @Value("${learning.outbox.publisher.batch-size:100}") int batchSize,
+            @Autowired(required = false) @Nullable MeterRegistry meterRegistry) {
         this.outboxRepository = outboxRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.defaultTopic = defaultTopic;
@@ -132,12 +123,6 @@ public class LearningOutboxPublisher {
                     .description("Outbox events whose Kafka publish attempt failed in learning-service")
                     .tag(TAG_OUTCOME, OUTCOME_FAILURE)
                     .register(meterRegistry);
-            // Lightweight fallback backlog gauge — only registered when there is
-            // a MeterRegistry. The platform-wide `impilo.ops.outbox.lag` gauge
-            // from `ops-instrumentation` remains the canonical backlog source in
-            // production; this one is a publisher-local convenience that
-            // reads from the same repository so dashboards built against either
-            // name will work.
             Gauge.builder(METRIC_BACKLOG, this, p -> p.currentBacklog())
                     .description("Unpublished rows currently in lrn_event_outbox (publisher-local view)")
                     .register(meterRegistry);

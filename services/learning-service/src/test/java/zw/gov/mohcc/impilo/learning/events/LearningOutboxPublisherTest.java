@@ -46,7 +46,8 @@ class LearningOutboxPublisherTest {
                 mock(LearningOutboxRepository.class),
                 kafkaTemplateMock(),
                 DEFAULT_TOPIC,
-                100);
+                100,
+                null);
 
         assertThat(publisher.routeTopic("learning.completion.recorded")).isEqualTo(DEFAULT_TOPIC);
         assertThat(publisher.routeTopic("fundo.sync.completed")).isEqualTo(DEFAULT_TOPIC);
@@ -63,7 +64,7 @@ class LearningOutboxPublisherTest {
 
         KafkaTemplate<String, String> kafka = kafkaTemplateMock();
 
-        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100);
+        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100, null);
         publisher.publishPendingEvents();
 
         verify(kafka, never()).send(anyString(), anyString(), anyString());
@@ -79,7 +80,7 @@ class LearningOutboxPublisherTest {
 
         KafkaTemplate<String, String> kafka = kafkaTemplateMock();
 
-        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100);
+        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100, null);
         publisher.publishPendingEvents();
 
         verify(kafka, times(1)).send(eq(DEFAULT_TOPIC), eq("agg-1"), eq("{\"ok\":true}"));
@@ -103,7 +104,7 @@ class LearningOutboxPublisherTest {
                 .thenThrow(new RuntimeException("simulated broker outage"));
         when(kafka.send(eq(DEFAULT_TOPIC), eq("agg-good"), anyString())).thenReturn(null);
 
-        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100);
+        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100, null);
         publisher.publishPendingEvents();
 
         assertThat(bad.getPublishedAt())
@@ -184,7 +185,7 @@ class LearningOutboxPublisherTest {
         KafkaTemplate<String, String> kafka = kafkaTemplateMock();
 
         // 4-arg constructor (no MeterRegistry) — Phase 2 contract.
-        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100);
+        LearningOutboxPublisher publisher = new LearningOutboxPublisher(repo, kafka, DEFAULT_TOPIC, 100, null);
         publisher.publishPendingEvents();
 
         assertThat(row.getPublishedAt()).isNotNull();

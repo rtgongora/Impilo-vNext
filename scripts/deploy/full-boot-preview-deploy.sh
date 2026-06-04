@@ -118,7 +118,8 @@ done
 
 full_boot_ensure_artifacts
 resolve_preview_deploy_metadata
-IMAGE_TAG="${FULL_BOOT_IMAGE_TAG:-$(full_boot_image_tag)}"
+# Stable registry tag for preview; commit-scoped tags are opt-in via FULL_BOOT_IMAGE_TAG.
+IMAGE_TAG="${FULL_BOOT_IMAGE_TAG:-preview}"
 
 echo "=== Full boot preview ($MODE) ==="
 echo "Branch: $PREVIEW_DEPLOY_BRANCH"
@@ -300,8 +301,7 @@ helm upgrade --install "$RELEASE_NAME" "$CHART_DIR" \
   --set global.imageTag="$IMAGE_TAG" \
   --set images.experienceBff.tag="$IMAGE_TAG" \
   --set images.oneUiShell.tag="$IMAGE_TAG" \
-  --wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" \
-  --atomic=false
+  --wait --timeout "${FULL_BOOT_HELM_WAIT_TIMEOUT:-60m}" --atomic=false
 
 kubectl rollout status deployment -n "$NAMESPACE" --timeout=600s || true
 bash scripts/test/run-full-boot-smoke-tests.sh
