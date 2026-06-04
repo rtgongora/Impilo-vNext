@@ -80,7 +80,7 @@ public class PaymentIntentEntity {
 
     @Version
     @Column(name = "lock_version")
-    private Long lockVersion;
+    private Integer lockVersion;
 
     @PrePersist
     protected void onCreate() {
@@ -222,11 +222,11 @@ public class PaymentIntentEntity {
         this.updatedAt = updatedAt;
     }
 
-    public Long getLockVersion() {
+    public Integer getLockVersion() {
         return lockVersion;
     }
 
-    public void setLockVersion(Long lockVersion) {
+    public void setLockVersion(Integer lockVersion) {
         this.lockVersion = lockVersion;
     }
 }
