@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-06-04T07:32:06.492921+00:00",
+  "generated_at": "2026-06-04T13:53:43.321029+00:00",
   "namespace": "impilo-full-preview",
-  "max_wave": 4,
-  "assigned": 46,
-  "ready": 45,
+  "max_wave": 5,
+  "assigned": 70,
+  "ready": 70,
   "services": [
     {
       "wave": 0,
@@ -279,7 +279,151 @@
       "wave": 4,
       "service": "surveillance-service",
       "deployed": true,
-      "ready": false
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "analytics-pipeline-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "asset-registry-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "audit-ledger-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "card-print-agent",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "channels-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "connector-fhir-adapter",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "developer-portal-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "dispatch-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "integration-hub",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "iot-ingestion-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "jobs-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "landela-adapter-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "llm-orchestration-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "ndila-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "nhume-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "notification-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "observability-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "offline-edge-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "offline-sync-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "referral-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "schema-registry-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "security-hardening-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "support-service",
+      "deployed": true,
+      "ready": true
+    },
+    {
+      "wave": 5,
+      "service": "workflow-service",
+      "deployed": true,
+      "ready": true
     }
   ]
 }
