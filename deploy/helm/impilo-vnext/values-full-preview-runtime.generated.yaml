@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
-# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 0
-# Microservices: 84 | enabled: 13 (waves 0–0)
+# Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs --max-wave 2
+# Microservices: 84 | enabled: 18 (waves 0–2)
 fullBootServices:
   ai-model-registry-service:
     enabled: false
@@ -128,11 +128,11 @@ fullBootServices:
     port: 8282
     database: hr_payroll
   identity-assurance-service:
-    enabled: false
+    enabled: true
     port: 8201
     database: identity_assurance
   indawo-service:
-    enabled: false
+    enabled: true
     port: 8150
     database: indawo
   inpatient-service:
@@ -188,7 +188,7 @@ fullBootServices:
     port: 8102
     database: mushex
   mvumo-service:
-    enabled: false
+    enabled: true
     port: 8195
     database: mvumo
   national-data-repository-service:
@@ -248,9 +248,13 @@ fullBootServices:
     port: 8283
     database: procurement
   product-registry-service:
-    enabled: false
+    enabled: true
     port: 8097
     database: product_registry
+    env:
+      KEYCLOAK_ISSUER: ''
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: ''
+      IMPILO_SECURITY_ALLOW_ANONYMOUS: 'true'
   referral-service:
     enabled: false
     port: 8399
@@ -319,7 +323,7 @@ fullBootServices:
     port: 8184
     database: tshepo_keys
   tshepo-offline-service:
-    enabled: false
+    enabled: true
     port: 8185
     database: tshepo_offline
   tuso-service:
