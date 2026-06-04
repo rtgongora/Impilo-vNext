@@ -1,8 +1,7 @@
 {
   "required": 22,
   "counts": {
-    "config_missing": 13,
-    "helm_ready": 9
+    "helm_ready": 22
   },
   "rows": [
     {
@@ -11,8 +10,8 @@
       "port": 8090,
       "deploy_order": "domain_services",
       "image": "impilo/butano-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "envoy",
@@ -38,8 +37,8 @@
       "port": 8091,
       "deploy_order": "domain_services",
       "image": "impilo/fhir-gateway-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "hapi-fhir",
@@ -92,8 +91,8 @@
       "port": 8088,
       "deploy_order": "domain_services",
       "image": "impilo/pct-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "postgres",
@@ -119,8 +118,8 @@
       "port": 8183,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-audit-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "tshepo-authz-service",
@@ -128,8 +127,8 @@
       "port": 8081,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-authz-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "tshepo-consent-service",
@@ -137,8 +136,8 @@
       "port": 8182,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-consent-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "tshepo-identity-service",
@@ -146,8 +145,8 @@
       "port": 8181,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-identity-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "tshepo-keys-service",
@@ -155,8 +154,8 @@
       "port": 8184,
       "deploy_order": "identity_trust_policy",
       "image": "impilo/tshepo-keys-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "tuso-service",
@@ -164,8 +163,8 @@
       "port": 8084,
       "deploy_order": "registries",
       "image": "impilo/tuso-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "ubomi-service",
@@ -173,8 +172,8 @@
       "port": 8087,
       "deploy_order": "registries",
       "image": "impilo/ubomi-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "varapi-service",
@@ -182,8 +181,8 @@
       "port": 8083,
       "deploy_order": "registries",
       "image": "impilo/varapi-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "vito-service",
@@ -191,8 +190,8 @@
       "port": 8082,
       "deploy_order": "registries",
       "image": "impilo/vito-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     },
     {
       "id": "zibo-service",
@@ -200,8 +199,8 @@
       "port": 8085,
       "deploy_order": "registries",
       "image": "impilo/zibo-service",
-      "status": "config_missing",
-      "note": "not in fullBootServices"
+      "status": "helm_ready",
+      "note": "microservice.yaml"
     }
   ]
 }
