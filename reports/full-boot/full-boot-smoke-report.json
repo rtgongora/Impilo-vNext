@@ -2,7 +2,115 @@
   "namespace": "impilo-full-preview",
   "required_count": 22,
   "deployments": {
+    "ai-model-registry-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "analytics-pipeline-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "asset-registry-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "audit-ledger-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "butano-fhir": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "butano-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "campaigns-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "card-print-agent": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "channels-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "clinical-knowledge-platform-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "connector-fhir-adapter": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "data-access-governance-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "data-governance-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "data-ingestion-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "data-pipeline-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "data-warehouse-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "developer-portal-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "dispatch-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "document-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -26,6 +134,18 @@
       "available": 1,
       "healthy": true
     },
+    "forms-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "guidance-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "hapi-fhir": {
       "replicas": 1,
       "ready": 1,
@@ -33,6 +153,48 @@
       "healthy": true
     },
     "identity-assurance-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "indawo-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "inpatient-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "integration-hub": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "inventory-elmis-adapter": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "inventory-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "iot-ingestion-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "jobs-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -50,6 +212,18 @@
       "available": 1,
       "healthy": true
     },
+    "landela-adapter-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "llm-orchestration-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "minio": {
       "replicas": 1,
       "ready": 1,
@@ -62,7 +236,67 @@
       "available": 1,
       "healthy": true
     },
+    "national-data-repository-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "ndila-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "ndr-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "nhume-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "notification-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "observability-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "offline-edge-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "offline-sync-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "one-ui-shell": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "oros-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "pacs-adapter-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -74,13 +308,85 @@
       "available": 1,
       "healthy": true
     },
+    "pharmacy-elmis-adapter": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "pharmacy-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "postgres": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
       "healthy": true
     },
+    "product-registry-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "redis": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "referral-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "reporting-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "rules-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "scheduling-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "schema-registry-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "search-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "security-hardening-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "support-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
+    "surveillance-service": {
       "replicas": 1,
       "ready": 1,
       "available": 1,
@@ -146,6 +452,12 @@
       "available": 1,
       "healthy": true
     },
+    "workflow-service": {
+      "replicas": 1,
+      "ready": 1,
+      "available": 1,
+      "healthy": true
+    },
     "zibo-service": {
       "replicas": 1,
       "ready": 1,
@@ -155,7 +467,7 @@
   },
   "missing_deployments": [],
   "unhealthy_deployments": [],
-  "runtime_pods_count": 25,
+  "runtime_pods_count": 77,
   "verify_pods_ignored": 0,
   "crashloop": [],
   "pending": [],
