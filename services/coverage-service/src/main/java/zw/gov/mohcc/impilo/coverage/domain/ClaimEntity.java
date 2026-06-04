@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -43,7 +45,8 @@ public class ClaimEntity {
     @Column(name = "claim_type", nullable = false, length = 32)
     private String claimType;
 
-    @Column(name = "line_items", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "line_items", nullable = false, columnDefinition = "jsonb")
     private String lineItems;
 
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
@@ -52,7 +55,8 @@ public class ClaimEntity {
     @Column(name = "approved_amount", precision = 12, scale = 2)
     private BigDecimal approvedAmount;
 
-    @Column(name = "adjudication", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "adjudication", columnDefinition = "jsonb")
     private String adjudication;
 
     @Column(name = "submitted_at")

@@ -39,16 +39,20 @@ public class PreauthRequestEntity {
     @Column(name = "status", nullable = false, length = 16)
     private String status = "PENDING";
 
-    @Column(name = "clinical_info", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "clinical_info", columnDefinition = "jsonb")
     private String clinicalInfo;
 
-    @Column(name = "requested_items", nullable = false, columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "requested_items", nullable = false, columnDefinition = "jsonb")
     private String requestedItems;
 
-    @Column(name = "decision_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "decision_json", columnDefinition = "jsonb")
     private String decisionJson;
 
-    @Column(name = "decision_evidence_json", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "decision_evidence_json", columnDefinition = "jsonb")
     private String decisionEvidenceJson;
 
     @Column(name = "quantity_requested", precision = 10, scale = 2)
@@ -64,7 +68,7 @@ public class PreauthRequestEntity {
     private BigDecimal annualLimit;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "approval_conditions")
+    @Column(name = "approval_conditions", columnDefinition = "jsonb")
     private String approvalConditions = "{}";
 
     @Column(name = "utilization_period", length = 16)

@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -40,7 +42,8 @@ public class RemittanceEntity {
     @Column(name = "reference_number", length = 128)
     private String referenceNumber;
 
-    @Column(name = "line_items", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "line_items", columnDefinition = "jsonb")
     private String lineItems;
 
     @Column(name = "notes", columnDefinition = "TEXT")

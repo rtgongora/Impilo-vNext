@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -34,7 +36,8 @@ public class AppealEntity {
     @Column(name = "appeal_reason", nullable = false, columnDefinition = "TEXT")
     private String reason;
 
-    @Column(name = "appeal_evidence", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "appeal_evidence", columnDefinition = "jsonb")
     private String evidenceJson;
 
     @Column(name = "status", nullable = false, length = 30)
