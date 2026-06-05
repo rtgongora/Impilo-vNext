@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-05-31. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-05. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 
@@ -22,7 +22,7 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | MusheX / COSTA | Enterprise | /internal/v1/finance/*, /internal/v1/wallet/* | Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | yes | /finance/*, /wallet | yes | partially surfaced |
 | Fundo | Experience | /internal/v1/learning/v11/* | LMS courses, studio, certificates | /internal/v1/learning/v11/* | yes | /learning/* | yes | partially surfaced |
 | Social | Experience | /internal/v1/social/* | Timeline, communities, pages | /internal/v1/social/* | yes | /social, /communities, /pages | yes | fully surfaced |
-| UBOMI | Registry | ubomi-service /v1/births | CRVS births/deaths | ubomi-service /v1/births | uncertain | /ubomi | yes | missing |
+| UBOMI | Registry | ubomi-service /v1/births | CRVS births/deaths | ubomi-service /v1/births | yes | /ubomi | yes | partially surfaced |
 | ZIBO | Registry | /v1/artifacts, /v1/packs | Terminology governance | /v1/artifacts, /v1/packs | yes | ui/zibo-web | no | partially surfaced |
 | Nompilo | Experience | /internal/v1/guidance/*, /internal/v1/llm/* | Guidance, LLM chat, core-transaction assist | /internal/v1/guidance/*, /internal/v1/llm/* | yes | /ask, global command bar | yes | partially surfaced |
 | Integration Hub | Integration | /internal/v1/integration-hub/* | Routes, dead letters, dispatch | /internal/v1/integration-hub/* | yes | /admin/integration-status, /settings/integrations | yes | partially surfaced |

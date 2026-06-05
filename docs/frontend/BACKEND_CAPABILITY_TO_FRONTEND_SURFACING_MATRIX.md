@@ -1,22 +1,22 @@
 # Backend Capability to Frontend Surfacing Matrix
 
-> Generated: 2026-06-04. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
+> Generated: 2026-06-05. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
 
 ## Summary
 
 | Maturity | Count |
 |----------|-------|
 | Live | 2 |
-| Partial | 19 |
+| Partial | 20 |
 | Fixture | 0 |
-| Not Wired | 1 |
+| Not Wired | 0 |
 | Blocked | 0 |
 
 ## Matrix
 
 | plane | domain | capability | backend | contract | webRoute | webClient | web | mobile | nompilo | maturity | priority | gap | action |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Trust | TSHEPO | Trust admin (policies, break-glass, devices, audit) | /internal/v1/admin/trust/* | contracts/openapi/tshepo-authz.openapi.yaml | /admin/trust, /settings/security | useTrustAdmin.ts | partial | partial | partial | Partial | HIGH | Chart-access audit only on some surfaces | Expand trust context panel on settings + admin |
+| Trust | TSHEPO | Trust admin (policies, break-glass, devices, audit) | /internal/v1/admin/trust/* | contracts/openapi/tshepo-authz.openapi.yaml | /admin/trust, /settings/security | useTrustAdmin.ts | partial | partial | partial | Partial | HIGH | Device block UX still admin-only | Trust governance strip on settings; deepen device admin |
 | Registry | VITO | Client search, register, profile, Health ID | /internal/v1/identity/*, /internal/v1/registry/* | contracts/openapi/vito.openapi.yaml | /id-services, /registry/* | useIdentity.ts, useClientRegistry.ts | partial | partial | partial | Partial | HIGH | Issuance queue / card ops not fully surfaced | Registry hub depth + mobile health-id parity |
 | Registry | VARAPI | Provider registry, licenses, privileges, CPD | /internal/v1/registry/* | contracts/openapi/varapi.openapi.yaml | /registry/providers/* | useRegistry.ts, useLicenses.ts, useCpd.ts | partial | partial | no | Partial | HIGH | Council import / reconciliation queue thin | Verification workflow screens |
 | Registry | TUSO | Facility/workspace registry, bookings | /internal/v1/facilities, /internal/v1/registry/* | contracts/openapi/tuso.openapi.yaml | /facility/*, /registry/facilities/* | useFacilities.ts, useTusoRegistry.ts | partial | partial | partial | Partial | HIGH | Control-tower / digital readiness dashboards thin | Facility operating model detail pages |
@@ -32,11 +32,11 @@
 | Enterprise | MusheX / COSTA | Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | contracts/openapi/mushex.openapi.yaml, costa.openapi.yaml | /finance/*, /wallet | useMusheWallet.ts, useFinanceBillingWorkspace.ts | partial | partial | no | Partial | HIGH | No raw /mushex/v1 in browser | Finance journey mobile parity |
 | Experience | Fundo | LMS courses, studio, certificates | /internal/v1/learning/v11/* | contracts/openapi/learning.openapi.yaml | /learning/* | useFundoLms.ts, useFundoStudio.ts | partial | partial | partial | Partial | MEDIUM | Mobile learning shell shallow | Fundo mobile module depth |
 | Experience | Social | Timeline, communities, pages | /internal/v1/social/* | contracts/openapi/social.openapi.yaml | /social, /communities, /pages | useSocial.ts | yes | yes | no | Live | LOW | Moderation admin partial | Moderation workflow surfacing |
-| Registry | UBOMI | CRVS births/deaths | ubomi-service /v1/births | contracts/openapi/ubomi.openapi.yaml | /ubomi | useUbomiRegistry.ts (new) | no | no | no | Not Wired | HIGH | Placeholder page only | BFF bridge + honest Not wired until live |
+| Registry | UBOMI | CRVS births/deaths | ubomi-service /v1/births | contracts/openapi/ubomi.openapi.yaml | /ubomi | useUbomiRegistry.ts (new) | partial | no | no | Partial | HIGH | Mobile CRVS parity missing | UBOMI births/deaths/verify live when service up; mobile parity |
 | Registry | ZIBO | Terminology governance | /v1/artifacts, /v1/packs | contracts/openapi/zibo.openapi.yaml | ui/zibo-web | ziboApi.ts | partial | n/a | no | Partial | LOW | Separate zibo-web app only | Shell link + maturity on terminology nav |
 | Experience | Nompilo | Guidance, LLM chat, core-transaction assist | /internal/v1/guidance/*, /internal/v1/llm/* | experience-bff.openapi.yaml | /ask, global command bar | useGuidance.ts, NompiloGlobalCommandBar | partial | partial | partial | Partial | HIGH | Route context not always passed | Context query params + fallback label |
 | Integration | Integration Hub | Routes, dead letters, dispatch | /internal/v1/integration-hub/* | contracts/openapi/integration-hub.openapi.yaml | /admin/integration-status, /settings/integrations | useIntegrationHub.ts | partial | partial | no | Partial | MEDIUM | Adapter template admin thin | Integration admin depth |
-| Platform | Workflow / Dispatch | Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | contracts/openapi/workflow.openapi.yaml | /operations/workflows, /operations/dispatch | useDispatchOps.ts | partial | partial | partial | Partial | HIGH | Detail pages and offline queue UX | Guided workflow/dispatch detail |
+| Platform | Workflow / Dispatch | Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | contracts/openapi/workflow.openapi.yaml | /operations/workflows, /operations/dispatch | useDispatchOps.ts | partial | partial | partial | Partial | HIGH | Dispatch detail + offline queue UX | Workflow instance table + dispatch guided detail |
 | Platform | Admin / Governance | Users, tenants, roles, audit, feature flags | /internal/v1/admin/* | experience-bff.openapi.yaml | /admin/*, /organization-admin/* | useAdminUsers.ts, useTrustAdmin.ts | partial | partial | no | Partial | MEDIUM | Keys/federation blocked | Document Blocked surfaces explicitly |
 
 ## Trust headers (all BFF paths)
