@@ -35,7 +35,7 @@ import java.util.Map;
  *
  * <h3>Role Groups (aligned with frontend AuthGuardProvider ROLE_GROUPS)</h3>
  * <ul>
- *   <li>ADMIN: SYSTEM_ADMIN, FACILITY_ADMIN, DEVELOPER</li>
+ *   <li>ADMIN: SYSTEM_ADMIN, SUPER_ADMIN, FACILITY_ADMIN, DEVELOPER</li>
  *   <li>FINANCE: SYSTEM_ADMIN, FACILITY_ADMIN, FINANCE</li>
  *   <li>CLINICAL: CLINICIAN, NURSE, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
  *   <li>PRESCRIBER: CLINICIAN, FACILITY_ADMIN, SYSTEM_ADMIN, DEVELOPER</li>
@@ -53,49 +53,53 @@ public class SecurityConfig {
 
     // ── Role group arrays ────────────────────────────────────────────
     // Each array lists the Keycloak realm roles that grant access to the group.
-    // SYSTEM_ADMIN and DEVELOPER have override access to all groups.
+    // SYSTEM_ADMIN, SUPER_ADMIN, and DEVELOPER have override access to all groups.
 
-    private static final String[] ADMIN_ROLES = {
-            "SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"};
+    private static final String[] PLATFORM_OVERRIDES = {
+            "SYSTEM_ADMIN", "DEVELOPER", "SUPER_ADMIN"};
+
+    private static final String[] ADMIN_ROLES = mergeRoleSets(
+            new String[]{"FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
     /** Tuso locality proposal approval + ZW geo bulk import (registry operators). */
-    private static final String[] REGISTRY_OPS_ROLES = {
-            "SYSTEM_ADMIN", "DEVELOPER", "REGISTRY_ADMIN"};
+    private static final String[] REGISTRY_OPS_ROLES = mergeRoleSets(
+            new String[]{"REGISTRY_ADMIN"}, PLATFORM_OVERRIDES);
 
-    private static final String[] FINANCE_ROLES = {
-            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"};
+    private static final String[] FINANCE_ROLES = mergeRoleSets(
+            new String[]{"FACILITY_ADMIN", "FINANCE"}, new String[]{"SYSTEM_ADMIN", "SUPER_ADMIN"});
 
-    private static final String[] PAYER_OPS_ROLES = {
-            "SYSTEM_ADMIN", "FINANCE", "DEVELOPER"};
+    private static final String[] PAYER_OPS_ROLES = mergeRoleSets(
+            new String[]{"FINANCE"}, PLATFORM_OVERRIDES);
 
-    private static final String[] MSIKA_GOVERNANCE_ROLES = {
-            "SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE", "DEVELOPER"};
+    private static final String[] MSIKA_GOVERNANCE_ROLES = mergeRoleSets(
+            new String[]{"FACILITY_ADMIN", "FINANCE"}, PLATFORM_OVERRIDES);
 
-    private static final String[] CLINICAL_ROLES = {
-            "CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] CLINICAL_ROLES = mergeRoleSets(
+            new String[]{"CLINICIAN", "NURSE", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
-    private static final String[] PRESCRIBER_ROLES = {
-            "CLINICIAN", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] PRESCRIBER_ROLES = mergeRoleSets(
+            new String[]{"CLINICIAN", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
-    private static final String[] DISPENSER_ROLES = {
-            "PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] DISPENSER_ROLES = mergeRoleSets(
+            new String[]{"PHARMACIST", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
-    private static final String[] QUEUE_ROLES = {
-            "CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] QUEUE_ROLES = mergeRoleSets(
+            new String[]{"CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
-    private static final String[] COMMERCE_ROLES = {
-            "FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] COMMERCE_ROLES = mergeRoleSets(
+            new String[]{"FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN"},
+            PLATFORM_OVERRIDES);
 
-    private static final String[] CITIZEN_ROLES = {
-            "CITIZEN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] CITIZEN_ROLES = mergeRoleSets(
+            new String[]{"CITIZEN"}, PLATFORM_OVERRIDES);
 
     // Health OS §4: Caregiving roles — delegated care partners and family caregivers
-    private static final String[] CAREGIVER_ROLES = {
-            "CAREGIVER", "CARE_PARTNER", "CITIZEN", "SYSTEM_ADMIN"};
+    private static final String[] CAREGIVER_ROLES = mergeRoleSets(
+            new String[]{"CAREGIVER", "CARE_PARTNER", "CITIZEN"}, new String[]{"SYSTEM_ADMIN", "SUPER_ADMIN"});
 
     // Health OS §7: Public health and community health roles (+ DEVELOPER for governed dev access)
-    private static final String[] PUBLIC_HEALTH_ROLES = {
-            "PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"};
+    private static final String[] PUBLIC_HEALTH_ROLES = mergeRoleSets(
+            new String[]{"PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN"}, PLATFORM_OVERRIDES);
 
     /** District / provincial / national operational snapshots (queue stats across facilities). */
     private static final String[] OPERATIONS_AGGREGATE_ROLES = mergeRoleSets(

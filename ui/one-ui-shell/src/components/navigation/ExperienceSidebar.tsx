@@ -53,6 +53,7 @@ import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
 import { useShellStore } from "@/hooks/useShellStore";
 import { WORK_MODE_LABELS } from "@/hooks/useWorkModeStore";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+import { expandRoleGroup } from "@/lib/auth/privileged-roles";
 
 interface SidebarItem {
   href: string;
@@ -78,12 +79,13 @@ interface SidebarSpotlight {
   }>;
 }
 
-const ADMIN_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"];
-const FINANCE_ROLES = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"];
-const CLINICAL_ROLES = ["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
-const QUEUE_ROLES = ["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
-const DISPENSER_ROLES = ["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
-const PUBLIC_HEALTH_ROLES = ["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"];
+const ADMIN_ROLES = expandRoleGroup(["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER"]);
+const FINANCE_ROLES = expandRoleGroup(["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"]);
+const CLINICAL_ROLES = expandRoleGroup(["CLINICIAN", "NURSE", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
+const QUEUE_ROLES = expandRoleGroup(["CLINICIAN", "NURSE", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
+const DISPENSER_ROLES = expandRoleGroup(["PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
+const PUBLIC_HEALTH_ROLES = expandRoleGroup(["PUBLIC_HEALTH_OFFICER", "ENV_HEALTH", "CHW", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"]);
+const OPERATOR_SWITCH_ROLES = expandRoleGroup(["FACILITY_ADMIN", "SYSTEM_ADMIN", "FINANCE", "SUPER_ADMIN"]);
 
 /**
  * Returns true when the user should see citizen-only experience.
@@ -534,7 +536,7 @@ export function ExperienceSidebar() {
               {(["PROVIDER", "OPERATOR", "CITIZEN"] as const)
                 .filter((r) => r !== user.actorType && user.roles.some((role) =>
                   r === "PROVIDER" ? ["CLINICIAN", "NURSE", "PHARMACIST"].includes(role) :
-                  r === "OPERATOR" ? ["FACILITY_ADMIN", "SYSTEM_ADMIN", "FINANCE"].includes(role) :
+                  r === "OPERATOR" ? OPERATOR_SWITCH_ROLES.includes(role) :
                   true
                 ))
                 .map((role) => (

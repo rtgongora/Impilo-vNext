@@ -4,7 +4,9 @@
  * Must stay aligned with `AuthGuardProvider` / backend SecurityConfig.java role-group arrays.
  */
 
-export const ROLE_GROUPS: Record<string, string[]> = {
+import { expandRoleGroup } from "@/lib/auth/privileged-roles";
+
+const RAW_ROLE_GROUPS: Record<string, string[]> = {
   REGISTRY_ADMIN: ["SYSTEM_ADMIN", "HIE_ADMIN"],
   ORGANIZATION_ADMIN: ["SYSTEM_ADMIN", "FACILITY_ADMIN", "DEVELOPER", "FINANCE"],
   ADMIN_OR_HIE: ["SYSTEM_ADMIN", "HIE_ADMIN", "FACILITY_ADMIN", "DEVELOPER"],
@@ -34,6 +36,11 @@ export const ROLE_GROUPS: Record<string, string[]> = {
   ],
   COMMERCE: ["FINANCE", "CLINICIAN", "NURSE", "PHARMACIST", "SUPPORT_AGENT", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"],
 };
+
+/** SUPER_ADMIN inherits every group that grants SYSTEM_ADMIN or DEVELOPER override. */
+export const ROLE_GROUPS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(RAW_ROLE_GROUPS).map(([key, roles]) => [key, expandRoleGroup(roles)]),
+);
 
 export function matchesRequiredRole(hasRole: (r: string) => boolean, requiredRole: string): boolean {
   const group = ROLE_GROUPS[requiredRole];

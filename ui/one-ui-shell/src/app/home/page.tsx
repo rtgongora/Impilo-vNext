@@ -2195,7 +2195,7 @@ function TimelineComposer({ userName }: { userName: string }) {
 /** Live citizen timeline posts from the BFF. */
 function TimelineFeed({ userId }: { userId?: string }) {
   const hasRole = useAuthStore((s) => s.hasRole);
-  const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("DEVELOPER");
+  const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("SUPER_ADMIN") || hasRole("DEVELOPER");
   const { data, isLoading } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["personal-feed", userId],
     queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=10"),
@@ -2438,7 +2438,7 @@ function AnnouncementsBanner() {
 /** Community feed section using existing citizen feed infrastructure */
 function FeedSection() {
   const hasRole = useAuthStore((s) => s.hasRole);
-  const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("DEVELOPER");
+  const isCitizenAccess = hasRole("CITIZEN") || hasRole("SYSTEM_ADMIN") || hasRole("SUPER_ADMIN") || hasRole("DEVELOPER");
   const { data } = useQuery<{ data: Array<{ id: string; attributes: Record<string, unknown> }> }>({
     queryKey: ["personal-feed"],
     queryFn: () => apiClient.get("/internal/v1/mobile/citizen/feed?size=5"),
