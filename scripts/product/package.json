@@ -1,0 +1,9 @@
+{
+  "name": "@impilo/product-truth",
+  "private": true,
+  "description": "Product Truth Recovery Map generator (Phase 1)",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate-product-truth-recovery.mjs"
+  }
+}
