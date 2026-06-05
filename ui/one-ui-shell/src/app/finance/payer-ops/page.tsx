@@ -1,5 +1,6 @@
 "use client";
 import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { PayerOpsReviewsTable } from "@/components/finance/PayerOpsReviewsTable";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -559,13 +560,36 @@ export default function FinancePayerOpsPage() {
                 Fetch reviews
               </button>
             </div>
-            {reviewsQ.isLoading ? (
-              <p className="mt-3 text-sm text-slate-500">Loading…</p>
-            ) : reviewsQ.isError ? (
-              <p className="mt-3 text-sm text-red-700">Request failed.</p>
-            ) : reviewsQ.data != null ? (
-              <QueryResultPanel title="Reviews Q" isPending={reviewsQ.isPending} isLoading={reviewsQ.isPending} isError={reviewsQ.isError} error={reviewsQ.error} data={reviewsQ.data} />
-            ) : reviewsArmed ? null : (
+            {reviewsArmed ? (
+              <div className="mt-3">
+                <PayerOpsReviewsTable
+                  data={reviewsQ.data}
+                  isLoading={reviewsQ.isLoading}
+                  error={reviewsQ.isError ? (reviewsQ.error as Error) : null}
+                  pendingReviewId={
+                    approveM.isPending || rejectM.isPending ? reviewId : undefined
+                  }
+                  onApprove={(id) => {
+                    setReviewId(id);
+                    try {
+                      const body = JSON.parse(reviewNoteJson || "{}") as unknown;
+                      approveM.mutate({ reviewId: id, body });
+                    } catch {
+                      /* invalid JSON body — operator must fix note field */
+                    }
+                  }}
+                  onReject={(id) => {
+                    setReviewId(id);
+                    try {
+                      const body = JSON.parse(reviewNoteJson || "{}") as unknown;
+                      rejectM.mutate({ reviewId: id, body });
+                    } catch {
+                      /* invalid JSON body — operator must fix note field */
+                    }
+                  }}
+                />
+              </div>
+            ) : (
               <p className="mt-3 text-xs text-slate-500">Click fetch to query.</p>
             )}
 

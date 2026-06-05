@@ -1,5 +1,4 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { useState } from "react";
 import { Baby, Loader2, Search, Skull } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -259,8 +258,20 @@ export default function UbomiShellPage() {
                 placeholder="Enter registration number"
               />
               {verifyQ.isFetching ? <p className="mt-3 text-sm text-slate-500">Looking up…</p> : null}
+              {verifyQ.isError ? (
+                <p className="mt-3 text-sm text-red-700">Verification lookup failed.</p>
+              ) : null}
               {verifyQ.data?.data ? (
-                <QueryResultPanel title="Verify Q" isPending={verifyQ.isPending} isLoading={verifyQ.isPending} isError={verifyQ.isError} error={verifyQ.error} data={verifyQ.data.data} />
+                <dl className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 text-sm">
+                  {Object.entries(verifyQ.data.data as Record<string, unknown>).map(([key, value]) => (
+                    <div key={key}>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{key}</dt>
+                      <dd className="mt-0.5 text-slate-900">{String(value ?? "—")}</dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : regNo.trim() && !verifyQ.isFetching ? (
+                <p className="mt-3 text-sm text-slate-500">No registration found for that number.</p>
               ) : null}
             </section>
           ) : null}

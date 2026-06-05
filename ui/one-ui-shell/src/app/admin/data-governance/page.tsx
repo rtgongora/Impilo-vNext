@@ -1,5 +1,4 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Data governance admin — export/access requests, rules, lineage.
  * Route: /admin/data-governance
@@ -136,9 +135,18 @@ export default function DataGovernanceAdminPage() {
                 </button>
               </div>
               {createEvalM.isError && errorBanner(createEvalM.error)}
-              {createEvalM.isSuccess && (
-                <QueryResultPanel title="Create Eval M" isPending={createEvalM.isPending} isLoading={createEvalM.isPending} isError={createEvalM.isError} error={createEvalM.error} data={createEvalM.data} />
-              )}
+              {createEvalM.isSuccess && createEvalM.data ? (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+                  Export evaluation submitted. Decision id:{" "}
+                  <span className="font-mono text-xs">
+                    {String(
+                      (createEvalM.data as Record<string, unknown>).id ??
+                        (createEvalM.data as { data?: { id?: string } }).data?.id ??
+                        "pending",
+                    )}
+                  </span>
+                </div>
+              ) : null}
             </div>
 
             <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">

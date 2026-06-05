@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { OperatorTelemetryPanel } from "@/components/operations/OperatorTelemetryPanel";
+import { WorkflowInstancesTable } from "@/components/operations/WorkflowInstancesTable";
 import { PageShell } from "@/components/PageShell";
 import {
   useWorkflowDefinitions,
@@ -318,35 +319,15 @@ export default function WorkflowOperationsPage() {
               <p className="mt-1 text-xs text-slate-600">
                 Runtime instances for operational monitoring and handoff continuity.
               </p>
-              {instances.isLoading ? (
-                <p className="mt-3 text-sm text-slate-600">Loading instances...</p>
-              ) : instances.isError ? (
-                <p className="mt-3 text-sm text-rose-700">Workflow instances unavailable.</p>
-              ) : instances.items.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-600">No workflow instances returned.</p>
-              ) : (
-                <ol className="mt-3 space-y-2">
-                  {instances.items.slice(0, 8).map((entry, index) => {
-                    const id = readOperatorString(entry, ["id", "instanceId", "workflowInstanceId"], `instance-${index + 1}`);
-                    const state = readOperatorString(entry, ["state", "status"], "UNKNOWN");
-                    const workflowRef = readOperatorString(entry, ["workflowCode", "workflowRef", "definitionId"], "workflow");
-                    return (
-                      <li key={`${id}-${index}`} className="rounded-md border border-slate-200 bg-slate-50 p-2">
-                        <p className="text-sm font-medium text-slate-900">{id}</p>
-                        <p className="text-xs text-slate-600">Workflow: {workflowRef}</p>
-                        <p className="text-xs text-slate-600">State: {state}</p>
-                        <button
-                          type="button"
-                          className="mt-2 rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                          onClick={() => setTransitionInstanceId(id)}
-                        >
-                          Use for transition
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
+              <div className="mt-3">
+                <WorkflowInstancesTable
+                  data={instances.items}
+                  isLoading={instances.isLoading}
+                  error={instances.isError ? new Error("Workflow instances unavailable") : null}
+                  selectedId={transitionInstanceId}
+                  onSelect={(id) => setTransitionInstanceId(id)}
+                />
+              </div>
             </section>
           </div>
         </div>
