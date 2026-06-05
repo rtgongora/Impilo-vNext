@@ -477,26 +477,13 @@ public class AuthSessionController {
                     ? locationHeader.substring(locationHeader.lastIndexOf("/") + 1)
                     : null;
 
-            // 4. Assign CITIZEN realm role
-            if (userId != null) {
-                try {
-                    String rolesUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + role;
-                    ResponseEntity<JsonNode> roleResponse = restTemplate.exchange(
-                            rolesUrl, HttpMethod.GET,
-                            new HttpEntity<>(adminHeaders),
-                            JsonNode.class);
-
-                    if (roleResponse.getStatusCode().is2xxSuccessful() && roleResponse.getBody() != null) {
-                        String assignUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
-                        restTemplate.exchange(
-                                assignUrl, HttpMethod.POST,
-                                new HttpEntity<>(List.of(roleResponse.getBody()), adminHeaders),
-                                String.class);
-                        log.info("Role {} assigned to user {}", role, userId);
-                    }
-                } catch (Exception e) {
-                    log.warn("Failed to assign role {} to user {}: {}", role, userId, e.getMessage());
-                }
+            // 4. Assign CITIZEN realm role (required — account is unusable without it)
+            if (userId != null && !assignRealmRole(userId, role, adminHeaders)) {
+                log.error("Failed to assign role {} to user {} — registration cannot complete", role, userId);
+                deleteKeycloakUser(userId, adminHeaders);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                        "error", Map.of("code", "ROLE_ASSIGNMENT_FAILED",
+                                "message", "Account could not be activated. Please try again or contact support.")));
             }
 
             log.info("User registered: email={}, role={}, keycloakId={}, healthId={}", email, role, userId, healthId.isEmpty() ? "none" : healthId);
@@ -729,8 +716,51 @@ public class AuthSessionController {
     }
 
     private String determineActorType(List<String> roles) {
-        if (roles.contains("SYSTEM_ADMIN") || roles.contains("SUPPORT_AGENT") || roles.contains("FINANCE")) return "OPERATOR";
-        if (roles.contains("CLINICIAN") || roles.contains("NURSE") || roles.contains("FACILITY_ADMIN")) return "PROVIDER";
+        if (roles.contains("SYSTEM_ADMIN") || roles.contains("SUPER_ADMIN") || roles.contains("DEVELOPER")
+                || roles.contains("SUPPORT_AGENT") || roles.contains("FINANCE")) {
+            return "OPERATOR";
+        }
+        if (roles.contains("CLINICIAN") || roles.contains("NURSE") || roles.contains("FACILITY_ADMIN")) {
+            return "PROVIDER";
+        }
         return "CITIZEN";
+    }
+
+    private boolean assignRealmRole(String userId, String roleName, HttpHeaders adminHeaders) {
+        try {
+            String rolesUrl = keycloakUrl + "/admin/realms/" + realm + "/roles/" + roleName;
+            ResponseEntity<JsonNode> roleResponse = restTemplate.exchange(
+                    rolesUrl, HttpMethod.GET,
+                    new HttpEntity<>(adminHeaders),
+                    JsonNode.class);
+
+            if (!roleResponse.getStatusCode().is2xxSuccessful() || roleResponse.getBody() == null) {
+                return false;
+            }
+
+            String assignUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId + "/role-mappings/realm";
+            ResponseEntity<String> assignResponse = restTemplate.exchange(
+                    assignUrl, HttpMethod.POST,
+                    new HttpEntity<>(List.of(roleResponse.getBody()), adminHeaders),
+                    String.class);
+            if (!assignResponse.getStatusCode().is2xxSuccessful()) {
+                return false;
+            }
+            log.info("Role {} assigned to user {}", roleName, userId);
+            return true;
+        } catch (Exception e) {
+            log.warn("Failed to assign role {} to user {}: {}", roleName, userId, e.getMessage());
+            return false;
+        }
+    }
+
+    private void deleteKeycloakUser(String userId, HttpHeaders adminHeaders) {
+        try {
+            String userUrl = keycloakUrl + "/admin/realms/" + realm + "/users/" + userId;
+            restTemplate.exchange(userUrl, HttpMethod.DELETE, new HttpEntity<>(adminHeaders), String.class);
+            log.info("Rolled back Keycloak user {}", userId);
+        } catch (Exception e) {
+            log.warn("Failed to roll back Keycloak user {}: {}", userId, e.getMessage());
+        }
     }
 }

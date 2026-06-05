@@ -18,6 +18,8 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 2 | Environment shows Preview/Sandbox | | |
 | 3 | Branch + commit SHA visible (version endpoint or UI) | | |
 | 4 | Login/auth page or auth fallback behavior | | Keycloak may be off in MVP |
+| 4a | Citizen sign-up `/auth/register` completes or shows explicit error (not silent failure) | | Expect CITIZEN role; `ROLE_ASSIGNMENT_FAILED` must not leave orphan account |
+| 4b | SUPER_ADMIN (or SYSTEM_ADMIN+DEVELOPER) sees Work/Admin/Finance nav zones | | Platform override roles expand sidebar visibility |
 | 5 | Main navigation / shell loads | | |
 | 6 | Registry workflows (if backend up) | | May 503 without registry services |
 | 7 | Clinical workflows | | Partial without full stack |

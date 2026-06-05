@@ -127,14 +127,22 @@ export default function RegisterPage() {
           channel: "WEB",
         });
         router.push("/home");
+      } else if (attrs.status === "REGISTERED") {
+        router.push(`/auth/login?registered=true&message=${encodeURIComponent(attrs.message ?? "Account created. Please sign in.")}`);
       } else {
-        // Registration succeeded but auto-login failed
-        router.push("/auth/login?registered=true");
+        setError("Registration completed but sign-in could not start automatically. Please sign in manually.");
       }
     } catch (err: unknown) {
       const apiErr = err as { error?: { message?: string; code?: string } };
-      if (apiErr?.error?.code === "USER_EXISTS") {
+      const code = apiErr?.error?.code;
+      if (code === "USER_EXISTS") {
         setError("An account with this email already exists. Please sign in instead.");
+      } else if (code === "AUTH_SERVICE_UNAVAILABLE") {
+        setError("Registration is temporarily unavailable. Please try again in a few minutes.");
+      } else if (code === "ROLE_ASSIGNMENT_FAILED") {
+        setError("Your account could not be activated. Please try again or contact support.");
+      } else if (code === "VALIDATION") {
+        setError(apiErr?.error?.message ?? "Please check your details and try again.");
       } else {
         setError(apiErr?.error?.message ?? "Registration failed. Please try again.");
       }
