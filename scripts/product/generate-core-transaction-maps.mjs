@@ -1,0 +1,1637 @@
+#!/usr/bin/env node
+/**
+ * Phase 2 — Core Transaction Mapping generator.
+ * Inputs: Phase 1 product-truth-recovery-map.json + existing doctrine/contracts.
+ * Run: node scripts/product/generate-core-transaction-maps.mjs
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, "../..");
+const DATE = new Date().toISOString();
+const OUT_DOCS = path.join(ROOT, "docs/product");
+const OUT_REPORTS = path.join(ROOT, "reports/product");
+
+const COMPLETION_STATUSES = [
+  "transaction-complete",
+  "backend-ready-but-frontend-incomplete",
+  "backend-partial",
+  "frontend-route-exists-but-disconnected",
+  "mobile-missing",
+  "trust-security-incomplete",
+  "event-data-incomplete",
+  "unclear-intent",
+  "unknown-needs-review",
+];
+
+function parseYaml(filePath) {
+  const script = `import json,yaml,sys; print(json.dumps(yaml.safe_load(open(sys.argv[1],encoding="utf-8"))))`;
+  const r = spawnSync("python3", ["-c", script, filePath], { encoding: "utf8" });
+  return JSON.parse(r.stdout);
+}
+
+function csvEscape(v) {
+  return `"${String(v ?? "").replace(/"/g, '""')}"`;
+}
+
+function mdTable(rows, cols, max = 40) {
+  const slice = rows.slice(0, max);
+  const h = `| ${cols.join(" | ")} |`;
+  const s = `| ${cols.map(() => "---").join(" | ")} |`;
+  const b = slice.map((r) => `| ${cols.map((c) => String(r[c] ?? "").replace(/\|/g, "\\|").slice(0, 70)).join(" | ")} |`).join("\n");
+  const more = rows.length > max ? `\n\n_…and ${rows.length - max} more in JSON/CSV._\n` : "";
+  return `${h}\n${s}\n${b}${more}`;
+}
+
+// ── Load Phase 1 recovery map ───────────────────────────────────────────────
+const recoveryPath = path.join(OUT_REPORTS, "product-truth-recovery-map.json");
+const recovery = JSON.parse(fs.readFileSync(recoveryPath, "utf8"));
+const entries = recovery.entries || [];
+
+const backendServices = entries.filter((e) => e.componentType === "backend-service");
+const frontendRoutes = entries.filter((e) => e.componentType === "frontend-route");
+const mobileScreens = entries.filter((e) => e.componentType === "mobile-screen");
+const routePaths = new Set(frontendRoutes.map((e) => e.canonicalName));
+
+function routesMatching(...prefixes) {
+  return [...routePaths].filter((p) => prefixes.some((pre) => p === pre || p.startsWith(pre + "/") || p.startsWith(pre))).sort();
+}
+
+function screensMatching(...parts) {
+  return mobileScreens
+    .filter((s) => parts.some((p) => s.sourcePath.toLowerCase().includes(p.toLowerCase())))
+    .map((s) => s.sourcePath)
+    .sort();
+}
+
+// ── Journey registry (discovered + minimum required set) ────────────────────
+const JOURNEYS = [
+  {
+    id: "citizen-onboarding",
+    journeyName: "Citizen / Client Onboarding",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "IDENTITY",
+    initiatingActor: "citizen",
+    respondingActor: "platform-registry",
+    transactionObject: "Health ID + person anchor",
+    context: "self-service registration; assurance level pending",
+    entryPoint: "/auth/register",
+    startState: "DRAFT",
+    steps: "register → assurance → identity resolution → Health ID issued → consent review",
+    backendServices: ["vito-service", "tshepo-identity-service", "identity-assurance-service", "tshepo-consent-service", "experience-bff"],
+    apis: "/internal/v1/auth/*, /internal/v1/identity/*, /internal/v1/vito/*",
+    frontendRoutes: routesMatching("/auth/register", "/auth/register/assurance", "/auth/register/status", "/id-services"),
+    mobileScreens: screensMatching("personal/HealthId", "personal/Profile"),
+    dataReadWritten: "VITO clients; identity issuance; consent directives",
+    eventsEmitted: "identity.issued; core.transaction.events",
+    trustSecurityChecks: "TSHEPO session; identity assurance; consent",
+    auditRequirements: "registration audit chain; identity issuance log",
+    completionState: "IDENTITY_RESOLVED",
+    implStatus: "partial",
+    missingBackend: "issuance queue ops depth",
+    missingFrontend: "card ops / pickup verification thin",
+    relatedJourneys: ["consent-capture", "health-id-issuance"],
+    poAcceptanceTest: "Citizen completes registration, receives Health ID, sees next-step guidance",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "provider-login",
+    journeyName: "Provider Login & Role Activation",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "ENTRY",
+    initiatingActor: "provider",
+    respondingActor: "platform-trust",
+    transactionObject: "authenticated session + Provider ID activation",
+    context: "facility-bound professional capacity",
+    entryPoint: "/auth/login/provider-id",
+    startState: "INITIATED",
+    steps: "login → MFA → provider lookup → role activation → session established",
+    backendServices: ["tshepo-authz-service", "tshepo-identity-service", "varapi-service", "experience-bff"],
+    apis: "/internal/v1/auth/*, /internal/v1/identity/providers",
+    frontendRoutes: routesMatching("/auth/login", "/auth/login/provider-id", "/auth/mfa", "/auth/resolving"),
+    mobileScreens: screensMatching("Auth", "Login"),
+    dataReadWritten: "session; provider registry lookup",
+    eventsEmitted: "auth.session.created",
+    trustSecurityChecks: "ext_authz; step-up; device trust",
+    auditRequirements: "login audit; provider activation log",
+    completionState: "TRUST_CONTEXT_ESTABLISHED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "device block UX admin-only",
+    relatedJourneys: ["workspace-context-selection", "facility-context-selection"],
+    poAcceptanceTest: "Provider signs in with Provider ID, activates role, lands in workspace",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "workspace-context-selection",
+    journeyName: "Workspace / Shift Context Selection",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "TRUST_AND_CONSENT",
+    initiatingActor: "provider",
+    respondingActor: "platform-registry",
+    transactionObject: "active workspace + shift context",
+    context: "department/ward/workspace under facility",
+    entryPoint: "/workspace",
+    startState: "TRUST_CONTEXT_ESTABLISHED",
+    steps: "select facility → select workspace → select shift → context headers injected",
+    backendServices: ["tuso-service", "experience-bff"],
+    apis: "/internal/v1/workspaces/*, /internal/v1/shifts/*, /internal/v1/facilities",
+    frontendRoutes: routesMatching("/workspace", "/shift", "/facility"),
+    mobileScreens: screensMatching("provider/Dashboard", "provider/Launch"),
+    dataReadWritten: "TUSO workspace/shift records",
+    eventsEmitted: "workspace.context.changed",
+    trustSecurityChecks: "facility guard; X-Workspace-ID; X-Shift-ID headers",
+    auditRequirements: "context switch audit",
+    completionState: "TRUST_CONTEXT_ESTABLISHED",
+    implStatus: "partial",
+    missingBackend: "control-tower dashboards thin",
+    missingFrontend: "workspace settings coming-soon stub",
+    relatedJourneys: ["facility-context-selection", "provider-patient-encounter"],
+    poAcceptanceTest: "Provider selects workspace/shift; subsequent requests carry trust context",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "facility-context-selection",
+    journeyName: "Facility Context Selection",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "TRUST_AND_CONSENT",
+    initiatingActor: "provider",
+    respondingActor: "tuso-service",
+    transactionObject: "Facility ID context",
+    context: "regulated facility operating model",
+    entryPoint: "/facility",
+    startState: "TRUST_CONTEXT_ESTABLISHED",
+    steps: "facility search → select → X-Facility-ID set → queue/EHR unlocked",
+    backendServices: ["tuso-service", "experience-bff"],
+    apis: "/internal/v1/facilities, /internal/v1/registry/*",
+    frontendRoutes: routesMatching("/facility"),
+    mobileScreens: screensMatching("provider/"),
+    dataReadWritten: "facility registry; workspace bindings",
+    eventsEmitted: "facility.context.selected",
+    trustSecurityChecks: "facility guard; purpose-of-use",
+    auditRequirements: "facility access audit",
+    completionState: "ACCESS_GRANTED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "digital readiness dashboards thin",
+    relatedJourneys: ["workspace-context-selection", "queue-walk-in"],
+    poAcceptanceTest: "Provider selects facility; queue and EHR routes become available",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "patient-search-selection",
+    journeyName: "Patient Search & Selection",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "IDENTITY",
+    initiatingActor: "provider",
+    respondingActor: "vito-service",
+    transactionObject: "subject Health ID / CPID selection",
+    context: "facility queue or EHR entry",
+    entryPoint: "/queue/search",
+    startState: "IDENTITY_PENDING",
+    steps: "search → match → select patient → open chart or queue item",
+    backendServices: ["vito-service", "experience-bff", "pct-service"],
+    apis: "/internal/v1/vito/*, /internal/v1/identity/*, /internal/v1/queue",
+    frontendRoutes: routesMatching("/queue/search", "/ehr"),
+    mobileScreens: screensMatching("provider/Patients", "provider/PatientSearch"),
+    dataReadWritten: "client registry read; queue item link",
+    eventsEmitted: "patient.selected",
+    trustSecurityChecks: "purpose-of-use; subject relationship; consent",
+    auditRequirements: "patient access audit",
+    completionState: "IDENTITY_RESOLVED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "",
+    relatedJourneys: ["queue-walk-in", "provider-patient-encounter"],
+    poAcceptanceTest: "Provider searches patient, selects, opens chart with correct CPID",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "queue-walk-in",
+    journeyName: "Queue / Walk-in Registration",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "SCHEDULING_OR_QUEUE",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "queue item + journey start",
+    context: "facility outpatient reception",
+    entryPoint: "/queue/walk-in",
+    startState: "QUEUED",
+    steps: "walk-in capture → triage queue → waiting room → call next",
+    backendServices: ["pct-service", "vito-service", "tuso-service", "experience-bff"],
+    apis: "/internal/v1/queue, /internal/v1/queues, /internal/v1/journeys",
+    frontendRoutes: routesMatching("/queue"),
+    mobileScreens: screensMatching("provider/Queue"),
+    dataReadWritten: "queue items; patient journeys",
+    eventsEmitted: "pct.queue.item.created; core.transaction.events",
+    trustSecurityChecks: "facility context; RBAC",
+    auditRequirements: "queue action audit",
+    completionState: "READY_FOR_PROVIDER",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "",
+    relatedJourneys: ["patient-search-selection", "outpatient-consultation"],
+    poAcceptanceTest: "Walk-in registered, appears in queue, provider can call",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "provider-patient-encounter",
+    journeyName: "Provider Patient Encounter",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "Encounter ID",
+    context: "EHR encounter workspace",
+    entryPoint: "/ehr/[patientId]/encounter/[encounterId]",
+    startState: "IN_SERVICE",
+    steps: "open chart → start encounter → document → orders → complete encounter",
+    backendServices: ["pct-service", "butano-service", "experience-bff", "guidance-service"],
+    apis: "/internal/v1/encounters/*, /internal/v1/core-transactions/*",
+    frontendRoutes: routesMatching("/ehr/[patientId]/encounter", "/ehr/[patientId]/encounters", "/core-transaction"),
+    mobileScreens: screensMatching("provider/Encounter", "provider/encounter"),
+    dataReadWritten: "encounter lifecycle; clinical notes; vitals",
+    eventsEmitted: "pct.encounter.*; core.transaction.events",
+    trustSecurityChecks: "provider capacity; consent; break-glass if emergency",
+    auditRequirements: "encounter audit chain",
+    completionState: "CLINICAL_COMPLETION_PENDING",
+    implStatus: "wired",
+    missingBackend: "pathway execution orchestration partial",
+    missingFrontend: "core-transaction pages use fixtures",
+    relatedJourneys: ["outpatient-consultation", "lab-order-result", "prescription-dispense"],
+    poAcceptanceTest: "Provider completes encounter end-to-end with real PCT data",
+    completionClassification: "frontend-route-exists-but-disconnected",
+  },
+  {
+    id: "outpatient-consultation",
+    journeyName: "Outpatient Consultation",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "consultation encounter",
+    context: "outpatient clinic",
+    entryPoint: "/clinical",
+    startState: "IN_SERVICE",
+    steps: "queue → triage → consult → orders → discharge instructions",
+    backendServices: ["pct-service", "butano-service", "oros-service", "pharmacy-service", "experience-bff"],
+    apis: "/internal/v1/encounters, /internal/v1/triage, /internal/v1/clinical-notes",
+    frontendRoutes: routesMatching("/clinical", "/queue/triage", "/ehr"),
+    mobileScreens: screensMatching("provider/Triage", "provider/Vitals"),
+    dataReadWritten: "encounter; vitals; notes; orders",
+    eventsEmitted: "core.transaction.events; pct-clinical-encounter",
+    trustSecurityChecks: "standard clinical authz",
+    auditRequirements: "clinical audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "EHR orders not yet writable via typed BFF command",
+    relatedJourneys: ["provider-patient-encounter", "prescription-dispense"],
+    poAcceptanceTest: "Outpatient consult documented with vitals, note, and next steps",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "inpatient-admission",
+    journeyName: "Inpatient Admission Workflow",
+    coreTransactionType: "EMERGENCY",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "inpatient-service",
+    transactionObject: "Admission ID + bed assignment",
+    context: "ward/inpatient unit",
+    entryPoint: "/ehr/[patientId]/inpatient",
+    startState: "ADMITTED",
+    steps: "admit → bed assign → ward rounds → discharge planning",
+    backendServices: ["inpatient-service", "pct-service", "tuso-service", "experience-bff"],
+    apis: "/internal/v1/inpatient/*, /internal/v1/beds/*",
+    frontendRoutes: routesMatching("/inpatient", "/beds", "/ehr"),
+    mobileScreens: screensMatching("provider/Inpatient", "provider/Bed"),
+    dataReadWritten: "admission; bed state; ward movements",
+    eventsEmitted: "inpatient.admission.*",
+    trustSecurityChecks: "inpatient permissions; ward context",
+    auditRequirements: "admission/discharge audit",
+    completionState: "ADMITTED",
+    implStatus: "partial",
+    missingBackend: "ward movement depth",
+    missingFrontend: "inpatient UX partial vs backend",
+    relatedJourneys: ["provider-patient-encounter", "emergency-encounter"],
+    poAcceptanceTest: "Patient admitted, bed assigned, visible in ward worklist",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "telemedicine-encounter",
+    journeyName: "Telemedicine Encounter",
+    coreTransactionType: "TELEMEDICINE",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "teleconsult referral + session",
+    context: "remote care; consent required",
+    entryPoint: "/telemedicine",
+    startState: "SCHEDULED",
+    steps: "create session → consent → routing → consult (RTC blocked) → referral update",
+    backendServices: ["pct-service", "mvumo-service", "rtc-gateway-service", "experience-bff"],
+    apis: "/internal/v1/teleconsult/*, /internal/v1/mvumo/*",
+    frontendRoutes: routesMatching("/telemedicine"),
+    mobileScreens: screensMatching("telehealth", "Teleconsult"),
+    dataReadWritten: "referral; consent request; session metadata",
+    eventsEmitted: "teleconsult.session.*",
+    trustSecurityChecks: "consent; remote session authz",
+    auditRequirements: "telehealth audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "RTC media intentionally unavailable",
+    missingFrontend: "real-time media transport blocked",
+    relatedJourneys: ["consent-capture", "referral-create"],
+    poAcceptanceTest: "Teleconsult created, consented, referral persisted without RTC",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "lab-order-result",
+    journeyName: "Lab Order & Result",
+    coreTransactionType: "LABORATORY",
+    lifecycleStage: "ORDERS_AND_ANCILLARY",
+    initiatingActor: "provider",
+    respondingActor: "oros-service",
+    transactionObject: "Lab Order ID + Result ID",
+    context: "encounter ancillary",
+    entryPoint: "/ehr/[patientId]/orders",
+    startState: "ORDERS_PENDING",
+    steps: "order lab → acknowledge → result → review → chart update",
+    backendServices: ["oros-service", "pct-service", "butano-service", "experience-bff"],
+    apis: "/internal/v1/lab-orders/*, /internal/v1/orders, /v1/orders",
+    frontendRoutes: routesMatching("/lab", "/ehr/[patientId]/orders", "/ehr/[patientId]/results"),
+    mobileScreens: screensMatching("provider/Lab", "provider/Results"),
+    dataReadWritten: "orders; results; SHR contribution",
+    eventsEmitted: "finance-oros-pharmacy; core.transaction.events",
+    trustSecurityChecks: "order authz; result visibility",
+    auditRequirements: "order/result audit",
+    completionState: "PENDING_RESULT",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "orders page read-only; BFF write contract gap",
+    relatedJourneys: ["provider-patient-encounter", "imaging-order-result"],
+    poAcceptanceTest: "Lab ordered and result returned to provider worklist",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "imaging-order-result",
+    journeyName: "Imaging Order & Result",
+    coreTransactionType: "IMAGING",
+    lifecycleStage: "ORDERS_AND_ANCILLARY",
+    initiatingActor: "provider",
+    respondingActor: "pacs-adapter-service",
+    transactionObject: "Imaging study + report",
+    context: "radiology/imaging unit",
+    entryPoint: "/ehr/[patientId]/imaging",
+    startState: "ORDERS_PENDING",
+    steps: "order imaging → PACS retrieve → viewer → report",
+    backendServices: ["pacs-adapter-service", "oros-service", "document-service", "experience-bff"],
+    apis: "/internal/v1/imaging/*, /internal/v1/pacs/*",
+    frontendRoutes: routesMatching("/imaging", "/pacs", "/ehr"),
+    mobileScreens: screensMatching("provider/Pacs", "provider/Imaging"),
+    dataReadWritten: "imaging metadata; DICOM refs; audit",
+    eventsEmitted: "imaging-pipeline",
+    trustSecurityChecks: "imaging access audit; CPID-only SHR",
+    auditRequirements: "PACS access audit",
+    completionState: "COMPLETED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "",
+    relatedJourneys: ["lab-order-result", "document-upload"],
+    poAcceptanceTest: "Imaging study visible in viewer with audit trail",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "prescription-dispense",
+    journeyName: "Prescription & Dispense",
+    coreTransactionType: "PHARMACY",
+    lifecycleStage: "ORDERS_AND_ANCILLARY",
+    initiatingActor: "provider",
+    respondingActor: "pharmacy-service",
+    transactionObject: "Prescription ID",
+    context: "pharmacy workspace",
+    entryPoint: "/ehr/[patientId]/medications",
+    startState: "ORDERS_PENDING",
+    steps: "prescribe → verify → dispense → patient instructions",
+    backendServices: ["pharmacy-service", "pct-service", "zibo-service", "experience-bff"],
+    apis: "/internal/v1/pharmacy/*",
+    frontendRoutes: routesMatching("/pharmacy", "/ehr/[patientId]/medications"),
+    mobileScreens: screensMatching("provider/Prescribing", "provider/Prescription"),
+    dataReadWritten: "prescription; dispense events",
+    eventsEmitted: "core.transaction.events; finance-oros-pharmacy",
+    trustSecurityChecks: "prescribing privileges; formulary",
+    auditRequirements: "prescribing audit",
+    completionState: "COMPLETED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "mobile prescribing depth",
+    relatedJourneys: ["outpatient-consultation", "lab-order-result"],
+    poAcceptanceTest: "Prescription created, dispensed, visible in patient meds",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "referral-create",
+    journeyName: "Referral Create & Manage",
+    coreTransactionType: "REFERRAL",
+    lifecycleStage: "FOLLOW_UP_CONTINUITY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "Referral ID",
+    context: "inter-facility or specialist routing",
+    entryPoint: "/ehr/[patientId]/referrals",
+    startState: "INITIATED",
+    steps: "create referral → route → accept → complete",
+    backendServices: ["pct-service", "referral-service", "tuso-service", "varapi-service", "experience-bff"],
+    apis: "/internal/v1/referrals/*",
+    frontendRoutes: routesMatching("/referrals", "/queue/incoming-referrals", "/ehr/[patientId]/referrals"),
+    mobileScreens: screensMatching("provider/Referral"),
+    dataReadWritten: "referral state; routing metadata",
+    eventsEmitted: "core.transaction.events",
+    trustSecurityChecks: "referral authz; routing validation",
+    auditRequirements: "referral audit",
+    completionState: "REFERRED_OUT",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "",
+    relatedJourneys: ["telemedicine-encounter", "appointment-scheduling"],
+    poAcceptanceTest: "Referral created, routed, visible at destination facility",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "appointment-scheduling",
+    journeyName: "Appointment Scheduling",
+    coreTransactionType: "APPOINTMENT",
+    lifecycleStage: "SCHEDULING_OR_QUEUE",
+    initiatingActor: "citizen",
+    respondingActor: "scheduling-service",
+    transactionObject: "Appointment ID",
+    context: "facility booking",
+    entryPoint: "/queue/scheduled",
+    startState: "SCHEDULED",
+    steps: "find slot → book → confirm → remind → check-in",
+    backendServices: ["scheduling-service", "tuso-service", "notification-service", "experience-bff"],
+    apis: "/internal/v1/appointments/*, /internal/v1/scheduling/*",
+    frontendRoutes: routesMatching("/queue/scheduled", "/scheduling"),
+    mobileScreens: screensMatching("Appointment", "Schedule"),
+    dataReadWritten: "appointment; booking slots",
+    eventsEmitted: "appointment.booked",
+    trustSecurityChecks: "booking permissions",
+    auditRequirements: "scheduling audit",
+    completionState: "SCHEDULED",
+    implStatus: "partial",
+    missingBackend: "scheduling depth varies",
+    missingFrontend: "citizen booking UX thin",
+    relatedJourneys: ["queue-walk-in", "citizen-onboarding"],
+    poAcceptanceTest: "Appointment booked and appears in facility schedule",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "consent-capture",
+    journeyName: "Consent Capture",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "TRUST_AND_CONSENT",
+    initiatingActor: "citizen",
+    respondingActor: "mvumo-service",
+    transactionObject: "Consent directive",
+    context: "care, telehealth, data sharing",
+    entryPoint: "/consent",
+    startState: "TRUST_CONTEXT_ESTABLISHED",
+    steps: "present policy → capture consent → store directive → enforce",
+    backendServices: ["mvumo-service", "tshepo-consent-service", "experience-bff"],
+    apis: "/internal/v1/consent/*, /internal/v1/mvumo/*",
+    frontendRoutes: routesMatching("/consent", "/settings"),
+    mobileScreens: screensMatching("Consent", "personal/Consent"),
+    dataReadWritten: "consent directives; mvumo records",
+    eventsEmitted: "trust-governance; core.transaction.events",
+    trustSecurityChecks: "consent evaluation; purpose-of-use",
+    auditRequirements: "consent audit mandatory",
+    completionState: "TRUST_CONTEXT_ESTABLISHED",
+    implStatus: "wired",
+    missingBackend: "remote-session template parity partial",
+    missingFrontend: "admin workflow parity",
+    relatedJourneys: ["telemedicine-encounter", "citizen-onboarding"],
+    poAcceptanceTest: "Consent captured, enforced on subsequent clinical access",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "payment-billing-claim",
+    journeyName: "Payment / Billing / Exemption / Claim",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "FINANCIAL_SETTLEMENT",
+    initiatingActor: "citizen",
+    respondingActor: "costing-engine-service",
+    transactionObject: "Invoice / Claim / Payment",
+    context: "encounter billing or coverage",
+    entryPoint: "/finance",
+    startState: "FINANCIAL_PROCESSING",
+    steps: "estimate → coverage check → pay/exempt → claim → remittance",
+    backendServices: ["costing-engine-service", "mushex-service", "coverage-service", "mushe-wallet-service", "experience-bff"],
+    apis: "/internal/v1/finance/*, /internal/v1/coverage/*, /internal/v1/wallet/*",
+    frontendRoutes: routesMatching("/finance", "/coverage"),
+    mobileScreens: screensMatching("Wallet", "Billing", "Finance"),
+    dataReadWritten: "billing; claims; payments; remittance",
+    eventsEmitted: "core.transaction.events; finance-oros-pharmacy",
+    trustSecurityChecks: "financial authz; purpose-of-use",
+    auditRequirements: "financial audit chain",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "long-tail finance routes",
+    missingFrontend: "payer-ops stubs; MusheX raw paths not in browser",
+    relatedJourneys: ["wallet-payment", "coverage-enrollment"],
+    poAcceptanceTest: "Bill generated, payment or claim completed with audit",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "document-upload",
+    journeyName: "Document Upload / Scan / Index",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "RECORD_CONTRIBUTION",
+    initiatingActor: "provider",
+    respondingActor: "document-service",
+    transactionObject: "Document ID",
+    context: "clinical or administrative record",
+    entryPoint: "/ehr/[patientId]/documents",
+    startState: "DRAFT",
+    steps: "upload → index → attach to encounter → retrieve",
+    backendServices: ["document-service", "landela-adapter-service", "experience-bff"],
+    apis: "/internal/v1/clinical-documents/*, /internal/v1/documents/*",
+    frontendRoutes: routesMatching("/documents", "/ehr/[patientId]/documents"),
+    mobileScreens: screensMatching("Document"),
+    dataReadWritten: "document metadata; storage refs",
+    eventsEmitted: "document-store",
+    trustSecurityChecks: "document access authz",
+    auditRequirements: "document access audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "scanning pipeline depth",
+    missingFrontend: "indexing UX partial",
+    relatedJourneys: ["imaging-order-result", "provider-patient-encounter"],
+    poAcceptanceTest: "Document uploaded, indexed, retrievable in chart",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "dispatch-delivery",
+    journeyName: "Dispatch / Delivery (NHUME)",
+    coreTransactionType: "MARKETPLACE",
+    lifecycleStage: "INSTRUCTIONS_AND_NOTIFICATIONS",
+    initiatingActor: "courier",
+    respondingActor: "dispatch-service",
+    transactionObject: "Delivery run / order fulfilment",
+    context: "logistics; medication or supply delivery",
+    entryPoint: "/operations/dispatch",
+    startState: "TASKED",
+    steps: "assign run → navigate → deliver → confirm → reconcile",
+    backendServices: ["dispatch-service", "nhume-service", "oros-service", "experience-bff"],
+    apis: "/internal/v1/dispatch/*, /internal/v1/nhume/*",
+    frontendRoutes: routesMatching("/operations/dispatch", "/nhume"),
+    mobileScreens: screensMatching("courier", "Delivery"),
+    dataReadWritten: "delivery runs; proof of delivery",
+    eventsEmitted: "dispatch.*",
+    trustSecurityChecks: "courier role; route authz",
+    auditRequirements: "delivery audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "dual nhume vs dispatch BFF path",
+    missingFrontend: "dispatch detail + offline queue UX",
+    relatedJourneys: ["marketplace-order", "notification-comms"],
+    poAcceptanceTest: "Courier completes delivery run with POD",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "notification-comms",
+    journeyName: "Notification & Communications",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "INSTRUCTIONS_AND_NOTIFICATIONS",
+    initiatingActor: "platform",
+    respondingActor: "notification-service",
+    transactionObject: "Notification / message",
+    context: "omnichannel comms hub",
+    entryPoint: "/communication",
+    startState: "INITIATED",
+    steps: "compose → send → deliver → track → feedback",
+    backendServices: ["notification-service", "channels-service", "community-service", "experience-bff"],
+    apis: "/internal/v1/notifications/*, /internal/v1/communication/*, /internal/v1/omnichannel/*",
+    frontendRoutes: routesMatching("/communication", "/omnichannel", "/notifications"),
+    mobileScreens: screensMatching("Messaging", "messaging"),
+    dataReadWritten: "notification store; delivery status",
+    eventsEmitted: "notification.sent",
+    trustSecurityChecks: "comms authz; consent for outreach",
+    auditRequirements: "comms audit",
+    completionState: "COMPLETED",
+    implStatus: "wired",
+    missingBackend: "template/campaign admin depth",
+    missingFrontend: "campaign admin thin",
+    relatedJourneys: ["consent-capture", "appointment-scheduling"],
+    poAcceptanceTest: "Notification sent and delivery status visible",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "fundo-learning",
+    journeyName: "Fundo / Learning Journey",
+    coreTransactionType: "TRAINING_OR_COMPETENCY",
+    lifecycleStage: "SERVICE_SELECTION",
+    initiatingActor: "provider",
+    respondingActor: "learning-service",
+    transactionObject: "Enrolment / competency record",
+    context: "professional development",
+    entryPoint: "/learning",
+    startState: "INITIATED",
+    steps: "browse catalog → enrol → complete assessment → CPD credit",
+    backendServices: ["learning-service", "varapi-service", "experience-bff"],
+    apis: "/internal/v1/learning/*",
+    frontendRoutes: routesMatching("/learning"),
+    mobileScreens: screensMatching("Learning", "learning"),
+    dataReadWritten: "enrolments; assessments; CPD",
+    eventsEmitted: "learning.completed",
+    trustSecurityChecks: "provider identity for CPD",
+    auditRequirements: "competency audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "mobile learning shell shallow",
+    relatedJourneys: ["provider-login", "credential-verification"],
+    poAcceptanceTest: "Provider enrols, completes module, CPD reflected",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "reporting-dashboard",
+    journeyName: "Data / Report / Dashboard Journey",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "REPORTING_ANALYTICS_AUDIT",
+    initiatingActor: "data-analyst",
+    respondingActor: "reporting-service",
+    transactionObject: "Report run / dashboard view",
+    context: "operations or public health intelligence",
+    entryPoint: "/reports",
+    startState: "INITIATED",
+    steps: "select report → run → view → export → audit",
+    backendServices: ["reporting-service", "data-warehouse-service", "surveillance-service", "experience-bff"],
+    apis: "/internal/v1/reports/*, /internal/v1/intelligence-plane/*",
+    frontendRoutes: routesMatching("/reports", "/data-intelligence", "/monitoring"),
+    mobileScreens: screensMatching("Reports"),
+    dataReadWritten: "report runs; aggregates",
+    eventsEmitted: "analytics.reporting.aggregate",
+    trustSecurityChecks: "reporting RBAC; de-identification",
+    auditRequirements: "report access audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "NDR/warehouse depth",
+    missingFrontend: "Ndila map dashboards incomplete",
+    relatedJourneys: ["public-health-outreach", "surveillance-outbreak"],
+    poAcceptanceTest: "Analyst runs report with correct scope and audit",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "registry-administration",
+    journeyName: "Registry Administration",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "IDENTITY",
+    initiatingActor: "registry-administrator",
+    respondingActor: "vito-service",
+    transactionObject: "Registry record governance",
+    context: "national registry ops",
+    entryPoint: "/registry",
+    startState: "INITIATED",
+    steps: "search → verify → reconcile → issue → audit",
+    backendServices: ["vito-service", "varapi-service", "tuso-service", "zibo-service", "product-registry-service", "experience-bff"],
+    apis: "/internal/v1/registry/*, /internal/v1/vito/*",
+    frontendRoutes: routesMatching("/registry", "/registry-admin", "/operations/vito"),
+    mobileScreens: screensMatching("registry"),
+    dataReadWritten: "registry records; reconciliation queues",
+    eventsEmitted: "registry.*",
+    trustSecurityChecks: "registry admin RBAC",
+    auditRequirements: "registry audit mandatory",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "council import queue thin",
+    missingFrontend: "issuance/card ops not fully surfaced",
+    relatedJourneys: ["health-id-issuance", "provider-registry-onboarding"],
+    poAcceptanceTest: "Registry admin reconciles record with full audit",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "integration-sync-replay",
+    journeyName: "Integration / Sync / Replay",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "REPORTING_ANALYTICS_AUDIT",
+    initiatingActor: "integration-system",
+    respondingActor: "integration-hub",
+    transactionObject: "Integration message / replay job",
+    context: "external system or edge node",
+    entryPoint: "/developer",
+    startState: "PENDING_SYNC",
+    steps: "receive → validate → route → process → replay on failure",
+    backendServices: ["integration-hub", "connector-fhir-adapter", "fhir-gateway-service", "offline-sync-service", "experience-bff"],
+    apis: "/internal/v1/integration-hub/*, /internal/v1/fhir/*, /internal/v1/extensions/*",
+    frontendRoutes: routesMatching("/developer", "/admin/integration"),
+    mobileScreens: [],
+    dataReadWritten: "integration routes; dead letters",
+    eventsEmitted: "integration.*",
+    trustSecurityChecks: "integration credentials; FHIR gateway authz",
+    auditRequirements: "integration audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "adapter template admin thin",
+    missingFrontend: "integration status partial",
+    relatedJourneys: ["device-system-event", "offline-clinical-queue"],
+    poAcceptanceTest: "Integration message processed or dead-lettered with replay",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "device-system-event",
+    journeyName: "Device / System Event Journey",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "RECEIVE_TRIGGER",
+    initiatingActor: "device",
+    respondingActor: "iot-ingestion-service",
+    transactionObject: "Device event / telemetry",
+    context: "IoT, card printer, edge node",
+    entryPoint: "system ingress (no UI)",
+    startState: "INITIATED",
+    steps: "ingest → validate → route → store → alert",
+    backendServices: ["iot-ingestion-service", "card-print-agent", "offline-edge-service", "tshepo-authz-service"],
+    apis: "/v1/devices, device agent protocols",
+    frontendRoutes: routesMatching("/admin", "/operations"),
+    mobileScreens: [],
+    dataReadWritten: "device events; telemetry",
+    eventsEmitted: "device.*",
+    trustSecurityChecks: "device registration; mTLS",
+    auditRequirements: "device event audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "device admin UX backend-only",
+    missingFrontend: "no direct citizen UI (by design)",
+    relatedJourneys: ["health-id-issuance", "integration-sync-replay"],
+    poAcceptanceTest: "Device event ingested and auditable",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "health-id-issuance",
+    journeyName: "Health ID Issuance & Card Ops",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "IDENTITY",
+    initiatingActor: "registry-administrator",
+    respondingActor: "vito-service",
+    transactionObject: "Health ID + physical card",
+    context: "registration office / VITO ops",
+    entryPoint: "/operations/vito",
+    startState: "IDENTITY_PENDING",
+    steps: "verify identity → issue ID → print card → pickup verify",
+    backendServices: ["vito-service", "card-print-agent", "share-slip-service", "experience-bff"],
+    apis: "/internal/v1/vito/*, /v1/cards, /v1/print",
+    frontendRoutes: routesMatching("/operations/vito", "/id-services"),
+    mobileScreens: screensMatching("HealthId", "Card"),
+    dataReadWritten: "identity issuance; card records",
+    eventsEmitted: "identity.issued",
+    trustSecurityChecks: "issuance authz; biometric verify",
+    auditRequirements: "issuance audit",
+    completionState: "IDENTITY_RESOLVED",
+    implStatus: "partial",
+    missingBackend: "pickup verify BFF routes missing",
+    missingFrontend: "card pickup page blocked",
+    relatedJourneys: ["citizen-onboarding", "registry-administration"],
+    poAcceptanceTest: "Health ID issued, card printed, pickup verified",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "marketplace-order",
+    journeyName: "Marketplace Order",
+    coreTransactionType: "MARKETPLACE",
+    lifecycleStage: "SERVICE_SELECTION",
+    initiatingActor: "citizen",
+    respondingActor: "msika-flow-service",
+    transactionObject: "Order ID",
+    context: "citizen marketplace",
+    entryPoint: "/marketplace",
+    startState: "INITIATED",
+    steps: "browse → cart → order → pay → fulfil",
+    backendServices: ["msika-flow-service", "msika-service", "mushe-wallet-service", "experience-bff"],
+    apis: "/internal/v1/marketplace/*, /internal/v1/commerce/*",
+    frontendRoutes: routesMatching("/marketplace"),
+    mobileScreens: screensMatching("marketplace", "Marketplace", "Cart", "Order"),
+    dataReadWritten: "orders; payment intents",
+    eventsEmitted: "core.transaction.events",
+    trustSecurityChecks: "commerce authz",
+    auditRequirements: "order audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "order list routes 501 on some paths",
+    missingFrontend: "booking list unavailable",
+    relatedJourneys: ["wallet-payment", "dispatch-delivery"],
+    poAcceptanceTest: "Citizen places order and tracks fulfilment",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "wellness-journey",
+    journeyName: "Wellness & Lifestyle Journey",
+    coreTransactionType: "WELLNESS",
+    lifecycleStage: "ACCESS_SERVICE",
+    initiatingActor: "citizen",
+    respondingActor: "wellness-service",
+    transactionObject: "Wellness activity / journey record",
+    context: "consumer wellness pillar",
+    entryPoint: "/wellness",
+    startState: "INITIATED",
+    steps: "discover → enrol → track → coach → continue",
+    backendServices: ["wellness-service", "simba-service", "guidance-service", "experience-bff"],
+    apis: "/internal/v1/wellness/*, /internal/v1/mobile/citizen/wellness/*",
+    frontendRoutes: routesMatching("/wellness"),
+    mobileScreens: screensMatching("wellness", "Wellness"),
+    dataReadWritten: "wellness journeys; activities",
+    eventsEmitted: "wellness.*",
+    trustSecurityChecks: "citizen scope; minimal friction",
+    auditRequirements: "wellness participation audit",
+    completionState: "FOLLOW_UP_ACTIVE",
+    implStatus: "partial",
+    missingBackend: "proxy vs explicit controller mix",
+    missingFrontend: "routes map coming-soon",
+    relatedJourneys: ["citizen-monitoring", "fundo-learning"],
+    poAcceptanceTest: "Citizen tracks wellness activity with real backend",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "social-community",
+    journeyName: "Social / Community / Timeline",
+    coreTransactionType: "WELLNESS",
+    lifecycleStage: "ACCESS_SERVICE",
+    initiatingActor: "citizen",
+    respondingActor: "community-service",
+    transactionObject: "Post / community membership",
+    context: "social timeline",
+    entryPoint: "/social",
+    startState: "INITIATED",
+    steps: "feed → compose → publish → engage → moderate",
+    backendServices: ["community-service", "llm-orchestration-service", "experience-bff"],
+    apis: "/internal/v1/social/*, /internal/v1/mobile/citizen/social/*",
+    frontendRoutes: routesMatching("/social", "/communities", "/groups"),
+    mobileScreens: screensMatching("social", "Feed", "Community"),
+    dataReadWritten: "social posts; communities",
+    eventsEmitted: "social.*",
+    trustSecurityChecks: "content policy; authz",
+    auditRequirements: "social moderation audit",
+    completionState: "COMPLETED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "public health alerts placeholder in rail",
+    relatedJourneys: ["notification-comms", "public-health-outreach"],
+    poAcceptanceTest: "Citizen posts to feed with real BFF backing",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "public-health-outreach",
+    journeyName: "Public Health / CHW Outreach",
+    coreTransactionType: "COMMUNITY_OUTREACH",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "community-health-worker",
+    respondingActor: "community-service",
+    transactionObject: "Outreach visit record",
+    context: "field outreach mode",
+    entryPoint: "/public-health",
+    startState: "IN_SERVICE",
+    steps: "household list → visit → screen → follow-up",
+    backendServices: ["community-service", "surveillance-service", "campaigns-service", "indawo-service", "experience-bff"],
+    apis: "/internal/v1/public-health/*, /internal/v1/community/*",
+    frontendRoutes: routesMatching("/public-health"),
+    mobileScreens: screensMatching("outreach", "Outreach", "publicHealth"),
+    dataReadWritten: "outreach visits; screening data",
+    eventsEmitted: "campaigns-outbound",
+    trustSecurityChecks: "CHW role; outreach authz",
+    auditRequirements: "field visit audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "field ops mobile thinner than web",
+    relatedJourneys: ["surveillance-outbreak", "reporting-dashboard"],
+    poAcceptanceTest: "CHW records outreach visit on mobile",
+    completionClassification: "mobile-missing",
+  },
+  {
+    id: "crvs-ubomi",
+    journeyName: "Civil Registration (UBOMI / CRVS)",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "RECORD_CONTRIBUTION",
+    initiatingActor: "registry-administrator",
+    respondingActor: "ubomi-service",
+    transactionObject: "Vital event record",
+    context: "birth/death/marriage registration",
+    entryPoint: "/registry",
+    startState: "DRAFT",
+    steps: "capture event → verify → register → certificate",
+    backendServices: ["ubomi-service", "vito-service", "experience-bff"],
+    apis: "/internal/v1/ubomi/*",
+    frontendRoutes: routesMatching("/registry", "/ubomi"),
+    mobileScreens: [],
+    dataReadWritten: "vital events; certificates",
+    eventsEmitted: "ubomi.*",
+    trustSecurityChecks: "CRVS authz",
+    auditRequirements: "vital event audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "mobile CRVS parity missing",
+    relatedJourneys: ["registry-administration", "citizen-onboarding"],
+    poAcceptanceTest: "Vital event registered with certificate issuance",
+    completionClassification: "mobile-missing",
+  },
+  {
+    id: "coverage-enrollment",
+    journeyName: "Coverage Enrollment",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "COST_AND_COVERAGE",
+    initiatingActor: "citizen",
+    respondingActor: "coverage-service",
+    transactionObject: "Coverage plan / member enrollment",
+    context: "payer operations",
+    entryPoint: "/coverage",
+    startState: "COVERAGE_CHECK_PENDING",
+    steps: "eligibility → enroll → confirm → use at service",
+    backendServices: ["coverage-service", "experience-bff"],
+    apis: "/internal/v1/coverage/*",
+    frontendRoutes: routesMatching("/coverage"),
+    mobileScreens: screensMatching("Coverage", "coverage"),
+    dataReadWritten: "coverage plans; member status",
+    eventsEmitted: "coverage.*",
+    trustSecurityChecks: "coverage authz",
+    auditRequirements: "enrollment audit",
+    completionState: "COVERAGE_CONFIRMED",
+    implStatus: "partial",
+    missingBackend: "contracting surfaces bounded",
+    missingFrontend: "intelligence surfaces partial",
+    relatedJourneys: ["payment-billing-claim"],
+    poAcceptanceTest: "Citizen enrolls in coverage plan",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "wallet-payment",
+    journeyName: "Wallet Payment",
+    coreTransactionType: "MARKETPLACE",
+    lifecycleStage: "FINANCIAL_SETTLEMENT",
+    initiatingActor: "citizen",
+    respondingActor: "mushe-wallet-service",
+    transactionObject: "Wallet transaction",
+    context: "personal finance / checkout",
+    entryPoint: "/wallet",
+    startState: "PRE_SERVICE_PAYMENT_PENDING",
+    steps: "fund wallet → pay → receipt → reconcile",
+    backendServices: ["mushe-wallet-service", "mushex-service", "experience-bff"],
+    apis: "/internal/v1/wallet/*",
+    frontendRoutes: routesMatching("/wallet"),
+    mobileScreens: screensMatching("Wallet", "wallet"),
+    dataReadWritten: "wallet balance; payments",
+    eventsEmitted: "wallet.payment.*",
+    trustSecurityChecks: "wallet authz; payment rail",
+    auditRequirements: "payment audit",
+    completionState: "PRE_SERVICE_PAYMENT_COMPLETED",
+    implStatus: "wired",
+    missingBackend: "",
+    missingFrontend: "",
+    relatedJourneys: ["marketplace-order", "payment-billing-claim"],
+    poAcceptanceTest: "Citizen pays from wallet with typed fail-close",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "offline-clinical-queue",
+    journeyName: "Offline Clinical Queue",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "offline-sync-service",
+    transactionObject: "Offline queue item",
+    context: "offline edge; provider offline mode",
+    entryPoint: "mobile offline mode",
+    startState: "PENDING_SYNC",
+    steps: "capture offline → queue locally → sync → reconcile conflicts",
+    backendServices: ["offline-sync-service", "offline-edge-service", "pct-service", "experience-bff"],
+    apis: "/internal/v1/mobile/provider/offline/*",
+    frontendRoutes: routesMatching("/operations"),
+    mobileScreens: screensMatching("offline", "Offline"),
+    dataReadWritten: "offline queue; sync state",
+    eventsEmitted: "offline.sync.*",
+    trustSecurityChecks: "offline trust envelope",
+    auditRequirements: "offline action audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "federation depth",
+    missingFrontend: "offline conflict UX",
+    relatedJourneys: ["provider-patient-encounter", "integration-sync-replay"],
+    poAcceptanceTest: "Provider works offline, syncs without data loss",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "emergency-encounter",
+    journeyName: "Emergency / ED Encounter",
+    coreTransactionType: "EMERGENCY",
+    lifecycleStage: "ENCOUNTER_OR_DELIVERY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "Emergency encounter",
+    context: "ED/casualty; break-glass possible",
+    entryPoint: "/clinical/emergency",
+    startState: "EMERGENCY_OVERRIDE",
+    steps: "triage → treat → stabilize → admit or discharge",
+    backendServices: ["pct-service", "butano-service", "inpatient-service", "tshepo-authz-service", "experience-bff"],
+    apis: "/internal/v1/encounters/*, /v1/break-glass",
+    frontendRoutes: routesMatching("/clinical/emergency", "/ehr"),
+    mobileScreens: screensMatching("Emergency", "Triage"),
+    dataReadWritten: "emergency encounter; triage",
+    eventsEmitted: "core.transaction.events",
+    trustSecurityChecks: "break-glass; emergency override",
+    auditRequirements: "break-glass audit mandatory",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "ED flow depth vs backend",
+    relatedJourneys: ["inpatient-admission", "provider-patient-encounter"],
+    poAcceptanceTest: "Emergency encounter with break-glass audit if used",
+    completionClassification: "trust-security-incomplete",
+  },
+  {
+    id: "core-transaction-orchestration",
+    journeyName: "Core Transaction Orchestration Shell",
+    coreTransactionType: "FACILITY_WALK_IN",
+    lifecycleStage: "MANAGE_STATE_MACHINE",
+    initiatingActor: "platform",
+    respondingActor: "experience-bff",
+    transactionObject: "Core Transaction ID",
+    context: "unified transaction spine",
+    entryPoint: "/core-transaction",
+    startState: "INITIATED",
+    steps: "create tx → timeline → next-actions → journey views → complete",
+    backendServices: ["experience-bff", "workflow-service", "pct-service", "costing-engine-service"],
+    apis: "/internal/v1/core-transactions/*, /experience/core-transactions/*",
+    frontendRoutes: routesMatching("/core-transaction", "/client-journey", "/provider-workspace", "/platform-journey"),
+    mobileScreens: [],
+    dataReadWritten: "transaction orchestration state",
+    eventsEmitted: "core.transaction.events",
+    trustSecurityChecks: "full trust stack",
+    auditRequirements: "transaction audit chain",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "BFF routes exist",
+    missingFrontend: "UI uses fixtures not live BFF",
+    relatedJourneys: ["provider-patient-encounter", "payment-billing-claim"],
+    poAcceptanceTest: "Core transaction shell shows live timeline from BFF",
+    completionClassification: "frontend-route-exists-but-disconnected",
+  },
+  {
+    id: "surveillance-outbreak",
+    journeyName: "Surveillance / Outbreak Response",
+    coreTransactionType: "COMMUNITY_OUTREACH",
+    lifecycleStage: "REPORTING_ANALYTICS_AUDIT",
+    initiatingActor: "health-information-officer",
+    respondingActor: "surveillance-service",
+    transactionObject: "Outbreak signal / case",
+    context: "public health intelligence",
+    entryPoint: "/public-health",
+    startState: "INITIATED",
+    steps: "detect signal → investigate → campaign → report",
+    backendServices: ["surveillance-service", "campaigns-service", "ndila-service", "experience-bff"],
+    apis: "/internal/v1/public-health/*",
+    frontendRoutes: routesMatching("/public-health", "/ndila"),
+    mobileScreens: screensMatching("publicHealth"),
+    dataReadWritten: "surveillance signals; campaigns",
+    eventsEmitted: "campaigns-outbound; ndila-events",
+    trustSecurityChecks: "public health RBAC",
+    auditRequirements: "surveillance audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "Ndila map dashboards incomplete",
+    relatedJourneys: ["public-health-outreach", "reporting-dashboard"],
+    poAcceptanceTest: "Outbreak signal investigated with campaign linkage",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "ai-guidance-nompilo",
+    journeyName: "AI Guidance / Nompilo Assist",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "COMPOSE_EXPERIENCE_VIEW",
+    initiatingActor: "citizen",
+    respondingActor: "guidance-service",
+    transactionObject: "Guidance session / suggestion",
+    context: "in-flow intelligent assist",
+    entryPoint: "/ask",
+    startState: "INITIATED",
+    steps: "ask → classify context → guide → handoff if needed",
+    backendServices: ["guidance-service", "llm-orchestration-service", "search-service", "experience-bff"],
+    apis: "/internal/v1/guidance/*, /internal/v1/assistant/*, /internal/v1/search*",
+    frontendRoutes: routesMatching("/ask", "/guidance", "/nhume"),
+    mobileScreens: screensMatching("Nompilo"),
+    dataReadWritten: "guidance sessions; search index",
+    eventsEmitted: "guidance.*",
+    trustSecurityChecks: "assist must not override clinical judgement",
+    auditRequirements: "Nompilo assist audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "route context not always passed",
+    relatedJourneys: ["provider-patient-encounter", "wellness-journey"],
+    poAcceptanceTest: "Nompilo explains next step with route context",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "credential-verification",
+    journeyName: "Credential Verification",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "TRUST_AND_CONSENT",
+    initiatingActor: "facility-administrator",
+    respondingActor: "credential-verification-service",
+    transactionObject: "Credential verification record",
+    context: "provider licensure check",
+    entryPoint: "/verify",
+    startState: "INITIATED",
+    steps: "submit credential → verify → record → notify",
+    backendServices: ["credential-verification-service", "varapi-service", "experience-bff"],
+    apis: "/internal/v1/credentials/*, /internal/v1/verify/*",
+    frontendRoutes: routesMatching("/verify"),
+    mobileScreens: [],
+    dataReadWritten: "verification records",
+    eventsEmitted: "credential.verified",
+    trustSecurityChecks: "verification authz",
+    auditRequirements: "verification audit",
+    completionState: "COMPLETED",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "verification workflow screens thin",
+    relatedJourneys: ["provider-registry-onboarding", "fundo-learning"],
+    poAcceptanceTest: "Credential verified and reflected in provider standing",
+    completionClassification: "backend-partial",
+  },
+  {
+    id: "provider-registry-onboarding",
+    journeyName: "Provider Registry Onboarding",
+    coreTransactionType: "ADMINISTRATIVE_HEALTH",
+    lifecycleStage: "IDENTITY",
+    initiatingActor: "registry-administrator",
+    respondingActor: "varapi-service",
+    transactionObject: "Provider ID + licensure",
+    context: "provider registry",
+    entryPoint: "/registry/providers",
+    startState: "DRAFT",
+    steps: "register → council verify → privilege assign → activate",
+    backendServices: ["varapi-service", "credential-verification-service", "experience-bff"],
+    apis: "/internal/v1/registry/*, /v1/internal/providers/*",
+    frontendRoutes: routesMatching("/registry/providers", "/registry"),
+    mobileScreens: screensMatching("Professional"),
+    dataReadWritten: "provider registry; licensure",
+    eventsEmitted: "provider.registered",
+    trustSecurityChecks: "registry admin RBAC",
+    auditRequirements: "provider registry audit",
+    completionState: "IDENTITY_RESOLVED",
+    implStatus: "partial",
+    missingBackend: "council import queue",
+    missingFrontend: "reconciliation queue thin",
+    relatedJourneys: ["provider-login", "credential-verification"],
+    poAcceptanceTest: "Provider onboarded with valid licensure",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "citizen-monitoring",
+    journeyName: "Citizen Remote Monitoring",
+    coreTransactionType: "CHRONIC_CARE",
+    lifecycleStage: "FOLLOW_UP_CONTINUITY",
+    initiatingActor: "citizen",
+    respondingActor: "wellness-service",
+    transactionObject: "Monitoring observation",
+    context: "home monitoring pillar",
+    entryPoint: "/monitoring",
+    startState: "FOLLOW_UP_ACTIVE",
+    steps: "pair device → record obs → alert → clinician review",
+    backendServices: ["wellness-service", "iot-ingestion-service", "notification-service", "experience-bff"],
+    apis: "/internal/v1/wellness/*, /internal/v1/mobile/citizen/monitoring/*",
+    frontendRoutes: routesMatching("/monitoring"),
+    mobileScreens: screensMatching("Monitoring", "monitoring"),
+    dataReadWritten: "observations; alerts",
+    eventsEmitted: "wellness.monitoring.*",
+    trustSecurityChecks: "citizen scope",
+    auditRequirements: "monitoring audit",
+    completionState: "FOLLOW_UP_ACTIVE",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "monitoring depth",
+    relatedJourneys: ["wellness-journey", "chronic-care"],
+    poAcceptanceTest: "Citizen records monitoring obs visible to care team",
+    completionClassification: "backend-ready-but-frontend-incomplete",
+  },
+  {
+    id: "chronic-care",
+    journeyName: "Chronic Care Management",
+    coreTransactionType: "CHRONIC_CARE",
+    lifecycleStage: "FOLLOW_UP_CONTINUITY",
+    initiatingActor: "provider",
+    respondingActor: "pct-service",
+    transactionObject: "Care plan / chronic encounter",
+    context: "longitudinal chronic disease",
+    entryPoint: "/ehr/[patientId]",
+    startState: "FOLLOW_UP_ACTIVE",
+    steps: "care plan → visits → meds → monitoring → review",
+    backendServices: ["pct-service", "pharmacy-service", "butano-service", "wellness-service", "experience-bff"],
+    apis: "/internal/v1/encounters/*, /internal/v1/pharmacy/*",
+    frontendRoutes: routesMatching("/ehr", "/caregiving"),
+    mobileScreens: screensMatching("caregiving", "Caregiving"),
+    dataReadWritten: "care plans; encounters; meds",
+    eventsEmitted: "core.transaction.events",
+    trustSecurityChecks: "chronic care authz",
+    auditRequirements: "care plan audit",
+    completionState: "FOLLOW_UP_ACTIVE",
+    implStatus: "partial",
+    missingBackend: "",
+    missingFrontend: "care plan UX depth",
+    relatedJourneys: ["citizen-monitoring", "prescription-dispense"],
+    poAcceptanceTest: "Chronic care plan active with follow-up scheduling",
+    completionClassification: "backend-partial",
+  },
+];
+
+// ── Map backend services to journeys ────────────────────────────────────────
+const serviceToJourneys = new Map();
+for (const j of JOURNEYS) {
+  for (const svc of j.backendServices) {
+    if (!serviceToJourneys.has(svc)) serviceToJourneys.set(svc, []);
+    serviceToJourneys.get(svc).push(j.id);
+  }
+}
+
+const allRegistryServices = backendServices.map((e) => e.canonicalName);
+const mappedServices = [...serviceToJourneys.keys()];
+const unmappedServices = allRegistryServices.filter((s) => !mappedServices.includes(s));
+
+// Supporting/internal services not mapped to user journeys
+const SUPPORTING_SERVICES = new Set([
+  "shared-core", "audit-ledger-service", "observability-service", "security-hardening-service",
+  "data-governance-service", "data-access-governance-service", "schema-registry-service",
+  "ai-model-registry-service", "developer-portal-service", "jobs-service", "analytics-pipeline-service",
+  "data-pipeline-service", "national-data-repository-service", "ndr-service", "rtc-gateway-service",
+  "tshepo-service", "tshepo-audit-service", "tshepo-keys-service", "tshepo-offline-service",
+  "workforce-governance-service", "hr-payroll-service", "general-ledger-service", "procurement-service",
+  "inventory-service", "inventory-elmis-adapter", "pharmacy-elmis-adapter", "msika-apps-service",
+  "butano-fhir", "referral-service", "ndila-service", "nhume-service", "llm-orchestration-service",
+  "support-service", "learning-service", "simba-service", "mvumo-service", "zibo-service",
+  "product-registry-service", "asset-registry-service", "indawo-service", "data-ingestion-service",
+  "data-warehouse-service", "fhir-gateway-service", "connector-fhir-adapter", "integration-hub",
+  "landela-adapter-service", "card-print-agent", "share-slip-service", "identity-assurance-service",
+  "channels-service", "forms-service", "rules-service", "clinical-knowledge-platform-service",
+  "search-service", "scheduling-service", "offline-edge-service",
+]);
+
+const unmappedUserFacing = unmappedServices.filter((s) => !SUPPORTING_SERVICES.has(s));
+
+// Routes mapped to journeys
+const mappedRouteSet = new Set();
+for (const j of JOURNEYS) {
+  for (const r of j.frontendRoutes) mappedRouteSet.add(r);
+}
+const mappedRouteCount = mappedRouteSet.size;
+
+// Completion matrix rows
+const completionRows = JOURNEYS.map((j) => ({
+  journeyId: j.id,
+  journeyName: j.journeyName,
+  coreTransactionType: j.coreTransactionType,
+  classification: j.completionClassification,
+  implStatus: j.implStatus,
+  missingBackend: j.missingBackend,
+  missingFrontend: j.missingFrontend,
+  backendServices: j.backendServices.join("; "),
+  frontendRouteCount: j.frontendRoutes.length,
+  mobileScreenCount: j.mobileScreens.length,
+  poAcceptanceTest: j.poAcceptanceTest,
+}));
+
+const transactionComplete = completionRows.filter((r) => r.classification === "transaction-complete").length;
+
+// ── Write JSON/CSV ──────────────────────────────────────────────────────────
+fs.mkdirSync(OUT_DOCS, { recursive: true });
+fs.mkdirSync(OUT_REPORTS, { recursive: true });
+
+const journeyFields = [
+  "journeyName", "initiatingActor", "respondingActor", "transactionObject", "context",
+  "entryPoint", "startState", "steps", "backendServices", "apis", "frontendRoutes",
+  "mobileScreens", "dataReadWritten", "eventsEmitted", "trustSecurityChecks",
+  "auditRequirements", "completionState", "currentImplementationStatus", "missingBackendWork",
+  "missingFrontendMobileWork", "relatedJourneys", "productOwnerAcceptanceTest",
+  "coreTransactionType", "lifecycleStage", "completionClassification",
+];
+
+const journeyExport = JOURNEYS.map((j) => ({
+  journeyId: j.id,
+  journeyName: j.journeyName,
+  initiatingActor: j.initiatingActor,
+  respondingActor: j.respondingActor,
+  transactionObject: j.transactionObject,
+  context: j.context,
+  entryPoint: j.entryPoint,
+  startState: j.startState,
+  steps: j.steps,
+  backendServices: j.backendServices,
+  apis: j.apis,
+  frontendRoutes: j.frontendRoutes,
+  mobileScreens: j.mobileScreens,
+  dataReadWritten: j.dataReadWritten,
+  eventsEmitted: j.eventsEmitted,
+  trustSecurityChecks: j.trustSecurityChecks,
+  auditRequirements: j.auditRequirements,
+  completionState: j.completionState,
+  currentImplementationStatus: j.implStatus,
+  missingBackendWork: j.missingBackend,
+  missingFrontendMobileWork: j.missingFrontend,
+  relatedJourneys: j.relatedJourneys,
+  productOwnerAcceptanceTest: j.poAcceptanceTest,
+  coreTransactionType: j.coreTransactionType,
+  lifecycleStage: j.lifecycleStage,
+  completionClassification: j.completionClassification,
+}));
+
+fs.writeFileSync(
+  path.join(OUT_REPORTS, "core-transaction-journey-maps.json"),
+  JSON.stringify({ generatedAt: DATE, journeyCount: JOURNEYS.length, journeys: journeyExport, serviceToJourneys: Object.fromEntries(serviceToJourneys), unmappedServices }, null, 2)
+);
+
+const jCsvCols = ["journeyId", ...journeyFields.flatMap((f) => (f === "backendServices" || f === "frontendRoutes" || f === "mobileScreens" || f === "relatedJourneys" ? [] : [f]))];
+// Simpler flat CSV
+const flatJourneyCols = [
+  "journeyId", "journeyName", "initiatingActor", "respondingActor", "transactionObject", "context",
+  "entryPoint", "startState", "steps", "backendServices", "apis", "frontendRoutes", "mobileScreens",
+  "dataReadWritten", "eventsEmitted", "trustSecurityChecks", "auditRequirements", "completionState",
+  "currentImplementationStatus", "missingBackendWork", "missingFrontendMobileWork", "relatedJourneys",
+  "productOwnerAcceptanceTest", "coreTransactionType", "lifecycleStage", "completionClassification",
+];
+const jCsv = [flatJourneyCols.join(",")];
+for (const j of journeyExport) {
+  jCsv.push(flatJourneyCols.map((c) => {
+    const v = j[c];
+    if (Array.isArray(v)) return csvEscape(v.join("; "));
+    return csvEscape(v);
+  }).join(","));
+}
+fs.writeFileSync(path.join(OUT_REPORTS, "core-transaction-journey-maps.csv"), jCsv.join("\n") + "\n");
+
+fs.writeFileSync(
+  path.join(OUT_REPORTS, "core-transaction-completion-matrix.json"),
+  JSON.stringify({
+    generatedAt: DATE,
+    journeyCount: JOURNEYS.length,
+    transactionComplete,
+    classificationCounts: Object.fromEntries(
+      COMPLETION_STATUSES.map((s) => [s, completionRows.filter((r) => r.classification === s).length])
+    ),
+    mappedBackendServices: mappedServices.length,
+    unmappedBackendServices: unmappedServices.length,
+    unmappedUserFacingServices: unmappedUserFacing,
+    mappedFrontendRoutes: mappedRouteCount,
+    rows: completionRows,
+  }, null, 2)
+);
+
+const mCsv = ["journeyId,journeyName,coreTransactionType,classification,implStatus,missingBackend,missingFrontend,backendServices,frontendRouteCount,mobileScreenCount,poAcceptanceTest"];
+for (const r of completionRows) {
+  mCsv.push([r.journeyId, r.journeyName, r.coreTransactionType, r.classification, r.implStatus, r.missingBackend, r.missingFrontend, r.backendServices, r.frontendRouteCount, r.mobileScreenCount, r.poAcceptanceTest].map(csvEscape).join(","));
+}
+fs.writeFileSync(path.join(OUT_REPORTS, "core-transaction-completion-matrix.csv"), mCsv.join("\n") + "\n");
+
+// ── Doctrine doc ────────────────────────────────────────────────────────────
+const doctrine = `# Core Transaction Orchestration Doctrine
+
+> Generated: ${DATE}
+> Branch: \`claude/staging-ux-orchestration-remediation-Yypyl\`
+> Phase: **2 — Core Transaction Mapping**
+> Canonical predecessor: [CORE_TRANSACTION_DOCTRINE.md](../doctrine/CORE_TRANSACTION_DOCTRINE.md)
+
+## Foundational statement
+
+**The Core Transaction Doctrine is the spine of Impilo vNext.**
+
+Every major feature must support a core transaction or be explicitly classified as supporting/internal infrastructure. A capability is not complete because an API exists, a page exists, or a button exists.
+
+A transaction is complete only when the intended actor can enter the correct context, start the relevant core transaction, use real backend capability, move through a coherent frontend/mobile journey, complete the transaction end-to-end, and understand what comes next.
+
+## The seven orchestration questions
+
+Every core transaction mapping must answer:
+
+| Question | Orchestration field |
+|----------|---------------------|
+| Who or what is initiating? | **Initiating actor** — citizen, provider, nurse, device, scheduled job, external system, etc. |
+| Who or what is responding? | **Responding actor** — sovereign service or composed BFF façade |
+| What is being transacted? | **Transaction object** — Health ID, Encounter, Order, Claim, Consent, etc. |
+| In what context? | **Transaction context** — facility, workspace, shift, purpose-of-use, assurance level |
+| What services must cooperate? | **Required orchestration** — BFF composes; sovereign services own truth |
+| What records/events/trust apply? | **Data, events, trust checks, audit** |
+| What is the completion state? | **Completion state** — canonical \`CoreTransactionState\` from \`contracts/core-transaction.ts\` |
+
+## Orchestration model
+
+\`\`\`
+Actor → Context → Transaction Type → Lifecycle Stage → Cooperating Services
+  → BFF Composition → Web/Mobile Journey → State Transition → Events + Audit → Next Action
+\`\`\`
+
+### Initiating actor
+
+Actors are not always human persons. Valid initiators include: client/citizen, provider, nurse, pharmacist, laboratory user, radiology user, facility administrator, registry administrator, community health worker, courier, device, mobile app, AI assistant (Nompilo), scheduled job, facility pod, external integration system, offline edge node.
+
+### Responding actor
+
+The **responding actor** is the sovereign service that owns the transaction object's source of truth, composed through Experience BFF. BFF orchestrates; it does not become SoR for clinical, registry, trust, or finance truth.
+
+### Transaction object
+
+Bound to \`CoreTransactionType\` in [\`contracts/core-transaction.ts\`](../../contracts/core-transaction.ts): e.g. \`FACILITY_WALK_IN\`, \`APPOINTMENT\`, \`TELEMEDICINE\`, \`PHARMACY\`, \`LABORATORY\`, \`IMAGING\`, \`REFERRAL\`, \`MARKETPLACE\`, \`WELLNESS\`, \`TRAINING_OR_COMPETENCY\`, \`COMMUNITY_OUTREACH\`, \`CHRONIC_CARE\`, \`EMERGENCY\`, \`ADMINISTRATIVE_HEALTH\`.
+
+### Transaction context
+
+Mandatory trust headers (see \`CompanionHeaders\` / \`api-client.ts\`): tenant, pod, actor, facility, workspace, shift, purpose-of-use, assurance level. Context activation precedes transaction start.
+
+### Required orchestration
+
+1. Envoy → TSHEPO \`ext_authz\` before any service
+2. Experience BFF composes sovereign calls under \`/internal/v1/*\`
+3. State machine tracked via \`/internal/v1/core-transactions/*\` where applicable
+4. Outbox → Kafka for reliable event emission
+
+### Completion state
+
+Canonical states in \`contracts/core-transaction.ts\`. Terminal success: \`COMPLETED\`, \`CLOSED\`. Failure/denial: \`ACCESS_DENIED\`, \`CONSENT_DENIED\`, \`PAYMENT_FAILED\`, etc.
+
+### Audit / trust / security requirements
+
+- Every meaningful action: permission decision + audit event
+- Break-glass and emergency override: explicit audit chain
+- Consent evaluation before clinical/financial actions where required
+- No PII in BUTANO SHR (CPID only)
+
+### Event / data outputs
+
+- Domain events via \`event_outbox\` tables
+- Core transaction dual-emit: \`core.transaction.events\` (see \`contracts/asyncapi/core-transaction-events.asyncapi.yaml\`)
+- Reporting aggregates: \`analytics.reporting.aggregate\`
+
+### Frontend / mobile journey implications
+
+- **One UI Shell** (\`ui/one-ui-shell\`) is the canonical web orchestration surface
+- Mobile: \`citizen-app\` + \`provider-app\` with mode-specific journeys
+- Journey must be coherent: entry → steps → completion → next action (Nompilo may explain)
+- Fixture-backed doctrine pages (\`/core-transaction\`, \`/client-journey\`) are **not** transaction-complete
+
+## Classification rule
+
+| Class | Meaning |
+|-------|---------|
+| **Core transaction journey** | User-facing end-to-end flow mapped in journey maps |
+| **Supporting service** | Infrastructure, analytics, adapter, or internal plumbing — not a standalone journey |
+| **Internal-only** | Trust enforcement, audit, observability — no direct UI required |
+
+## Phase 2 outputs
+
+| Artifact | Path |
+|----------|------|
+| Journey maps | [CORE_TRANSACTION_JOURNEY_MAPS.md](./CORE_TRANSACTION_JOURNEY_MAPS.md) |
+| Completion matrix | [CORE_TRANSACTION_COMPLETION_MATRIX.md](./CORE_TRANSACTION_COMPLETION_MATRIX.md) |
+| Journey JSON | [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json) |
+| Matrix JSON | [core-transaction-completion-matrix.json](../../reports/product/core-transaction-completion-matrix.json) |
+
+## References
+
+- [\`docs/doctrine/CORE_TRANSACTION_DOCTRINE.md\`](../doctrine/CORE_TRANSACTION_DOCTRINE.md)
+- [\`docs/architecture/three-journey-core-transaction-map.md\`](../architecture/three-journey-core-transaction-map.md)
+- [\`docs/templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md\`](../templates/CORE_TRANSACTION_FEATURE_ALIGNMENT_CHECKLIST.md)
+- Phase 1: [PRODUCT_TRUTH_RECOVERY_MAP.md](./PRODUCT_TRUTH_RECOVERY_MAP.md)
+`;
+fs.writeFileSync(path.join(OUT_DOCS, "CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md"), doctrine);
+
+// ── Journey maps MD ─────────────────────────────────────────────────────────
+const journeysMd = `# Core Transaction Journey Maps
+
+> Generated: ${DATE}
+> Journeys discovered: **${JOURNEYS.length}**
+> Regenerate: \`node scripts/product/generate-core-transaction-maps.mjs\`
+
+See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md) for spine doctrine.
+
+## Summary
+
+${mdTable(
+  JOURNEYS.map((j) => ({
+    journey: j.journeyName,
+    type: j.coreTransactionType,
+    initiator: j.initiatingActor,
+    entry: j.entryPoint,
+    status: j.implStatus,
+    classification: j.completionClassification,
+  })),
+  ["journey", "type", "initiator", "entry", "status", "classification"],
+  50
+)}
+
+## Journey detail (sample — full data in JSON/CSV)
+
+${JOURNEYS.slice(0, 5)
+  .map(
+    (j) => `### ${j.journeyName}
+
+- **Initiating actor:** ${j.initiatingActor}
+- **Responding actor:** ${j.respondingActor}
+- **Transaction object:** ${j.transactionObject}
+- **Context:** ${j.context}
+- **Entry point:** ${j.entryPoint}
+- **Steps:** ${j.steps}
+- **Backend services:** ${j.backendServices.join(", ")}
+- **APIs:** ${j.apis}
+- **Web routes:** ${j.frontendRoutes.slice(0, 5).join(", ")}${j.frontendRoutes.length > 5 ? "…" : ""}
+- **Mobile screens:** ${j.mobileScreens.slice(0, 3).join(", ") || "none mapped"}
+- **Completion state:** ${j.completionState}
+- **Status:** ${j.implStatus} — ${j.completionClassification}
+- **PO acceptance test:** ${j.poAcceptanceTest}
+`
+  )
+  .join("\n")}
+
+_Full ${JOURNEYS.length} journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._
+`;
+fs.writeFileSync(path.join(OUT_DOCS, "CORE_TRANSACTION_JOURNEY_MAPS.md"), journeysMd);
+
+// ── Completion matrix MD ────────────────────────────────────────────────────
+const classCounts = Object.fromEntries(
+  COMPLETION_STATUSES.map((s) => [s, completionRows.filter((r) => r.classification === s).length])
+);
+
+const topGaps = completionRows
+  .filter((r) => r.classification !== "transaction-complete")
+  .slice(0, 15);
+
+const firstBatch = [
+  "provider-patient-encounter",
+  "core-transaction-orchestration",
+  "health-id-issuance",
+  "payment-billing-claim",
+  "lab-order-result",
+  "public-health-outreach",
+  "crvs-ubomi",
+];
+
+const matrixMd = `# Core Transaction Completion Matrix
+
+> Generated: ${DATE}
+> Journeys: **${JOURNEYS.length}** | Transaction-complete: **${transactionComplete}**
+> Regenerate: \`node scripts/product/generate-core-transaction-maps.mjs\`
+
+## Classification counts
+
+| Classification | Count |
+|----------------|------:|
+${Object.entries(classCounts)
+  .filter(([, n]) => n > 0)
+  .map(([k, n]) => `| ${k} | ${n} |`)
+  .join("\n")}
+
+## Coverage
+
+| Metric | Count |
+|--------|------:|
+| Backend services mapped to journeys | ${mappedServices.length} |
+| Backend services unmapped | ${unmappedServices.length} |
+| Unmapped user-facing (needs review) | ${unmappedUserFacing.length} |
+| Frontend routes mapped to journeys | ${mappedRouteCount} |
+
+## Completion matrix
+
+${mdTable(
+  completionRows.map((r) => ({
+    journey: r.journeyName,
+    type: r.coreTransactionType,
+    classification: r.classification,
+    routes: r.frontendRouteCount,
+    mobile: r.mobileScreenCount,
+    gap: r.missingFrontend || r.missingBackend || "—",
+  })),
+  ["journey", "type", "classification", "routes", "mobile", "gap"],
+  45
+)}
+
+## Recommended first completion batch
+
+Prioritize journeys that unblock the clinical spine and remove fixture/disconnected surfaces:
+
+${firstBatch.map((id) => {
+  const j = JOURNEYS.find((x) => x.id === id);
+  return j ? `1. **${j.journeyName}** — ${j.completionClassification}: ${j.missingFrontend || j.missingBackend}` : "";
+}).filter(Boolean).join("\n")}
+
+## Unmapped backend services (supporting/internal)
+
+${unmappedServices.slice(0, 30).map((s) => `- ${s}`).join("\n")}
+
+${unmappedUserFacing.length ? `\n## Unmapped user-facing services (review required)\n\n${unmappedUserFacing.map((s) => `- ${s}`).join("\n")}` : ""}
+`;
+fs.writeFileSync(path.join(OUT_DOCS, "CORE_TRANSACTION_COMPLETION_MATRIX.md"), matrixMd);
+
+console.log("Core Transaction Mapping generated");
+console.log(`  Journeys: ${JOURNEYS.length}`);
+console.log(`  Mapped backend services: ${mappedServices.length}`);
+console.log(`  Unmapped backend services: ${unmappedServices.length}`);
+console.log(`  Mapped frontend routes: ${mappedRouteCount}`);
+console.log(`  Transaction-complete: ${transactionComplete}`);
