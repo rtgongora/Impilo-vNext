@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-05T07:27:31.894Z
+> Generated: 2026-06-05T07:32:17.772Z
 > Journeys discovered: **42**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 

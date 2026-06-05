@@ -1,6 +1,6 @@
 # Core Transaction Orchestration Doctrine
 
-> Generated: 2026-06-05T07:27:31.894Z
+> Generated: 2026-06-05T07:32:17.772Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **2 — Core Transaction Mapping**
 > Canonical predecessor: [CORE_TRANSACTION_DOCTRINE.md](../doctrine/CORE_TRANSACTION_DOCTRINE.md)
@@ -80,6 +80,15 @@ Canonical states in `contracts/core-transaction.ts`. Terminal success: `COMPLETE
 - Mobile: `citizen-app` + `provider-app` with mode-specific journeys
 - Journey must be coherent: entry → steps → completion → next action (Nompilo may explain)
 - Fixture-backed doctrine pages (`/core-transaction`, `/client-journey`) are **not** transaction-complete
+
+### Completion priority (Phase 3+)
+
+**Prioritize the clinical spine and complete orchestration on existing surfaces first** — wire fixtures to BFF, close write-contract gaps, extend mobile parity on routes that already exist.
+
+This is a **sequencing preference**, not a ban on new UI:
+- **New UI is in scope** when it completes an orchestrated core transaction journey (new step, screen, or route required by the journey map).
+- **Do not** add cosmetic pages, mock demos, or disconnected shells that bypass the transaction spine.
+- **Do not** delete working routes or replace API-integrated flows with static UI — extend and wire what exists.
 
 ## Classification rule
 

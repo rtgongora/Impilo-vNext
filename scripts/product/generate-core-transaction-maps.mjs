@@ -1477,6 +1477,15 @@ Canonical states in \`contracts/core-transaction.ts\`. Terminal success: \`COMPL
 - Journey must be coherent: entry → steps → completion → next action (Nompilo may explain)
 - Fixture-backed doctrine pages (\`/core-transaction\`, \`/client-journey\`) are **not** transaction-complete
 
+### Completion priority (Phase 3+)
+
+**Prioritize the clinical spine and complete orchestration on existing surfaces first** — wire fixtures to BFF, close write-contract gaps, extend mobile parity on routes that already exist.
+
+This is a **sequencing preference**, not a ban on new UI:
+- **New UI is in scope** when it completes an orchestrated core transaction journey (new step, screen, or route required by the journey map).
+- **Do not** add cosmetic pages, mock demos, or disconnected shells that bypass the transaction spine.
+- **Do not** delete working routes or replace API-integrated flows with static UI — extend and wire what exists.
+
 ## Classification rule
 
 | Class | Meaning |
@@ -1614,7 +1623,7 @@ ${mdTable(
 
 ## Recommended first completion batch
 
-Prioritize journeys that unblock the clinical spine and remove fixture/disconnected surfaces:
+Prioritize the clinical spine and **complete orchestration on existing surfaces** (wire fixtures to BFF, close write gaps, extend mobile parity). New UI remains in scope when a journey map requires a missing step or screen — this is sequencing, not a moratorium on new surfaces.
 
 ${firstBatch.map((id) => {
   const j = JOURNEYS.find((x) => x.id === id);

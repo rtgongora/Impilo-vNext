@@ -1,6 +1,6 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-05T07:27:31.894Z
+> Generated: 2026-06-05T07:32:17.772Z
 > Journeys: **42** | Transaction-complete: **0**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -72,7 +72,7 @@
 
 ## Recommended first completion batch
 
-Prioritize journeys that unblock the clinical spine and remove fixture/disconnected surfaces:
+Prioritize the clinical spine and **complete orchestration on existing surfaces** (wire fixtures to BFF, close write gaps, extend mobile parity). New UI remains in scope when a journey map requires a missing step or screen — this is sequencing, not a moratorium on new surfaces.
 
 1. **Provider Patient Encounter** — frontend-route-exists-but-disconnected: core-transaction pages use fixtures
 1. **Core Transaction Orchestration Shell** — frontend-route-exists-but-disconnected: UI uses fixtures not live BFF
