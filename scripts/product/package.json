@@ -1,10 +1,11 @@
 {
   "name": "@impilo/product-truth",
   "private": true,
-  "description": "Product Truth Recovery Map generator (Phase 1)",
+  "description": "Product Truth Recovery and orchestration map generators",
   "type": "module",
   "scripts": {
     "generate": "node generate-product-truth-recovery.mjs",
-    "generate-transactions": "node generate-core-transaction-maps.mjs"
+    "generate-transactions": "node generate-core-transaction-maps.mjs",
+    "generate-orchestration": "node generate-experience-orchestration.mjs"
   }
 }
