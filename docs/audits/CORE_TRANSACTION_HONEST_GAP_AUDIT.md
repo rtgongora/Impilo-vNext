@@ -37,9 +37,9 @@ Each row below records the **true gap** on:
 | Workspace / Shift Context Selection | Workspace settings stub; context headers wired |
 | Facility Context Selection | Digital readiness dashboards thin |
 | Patient Search & Selection | Orchestration rail not on search surface; chart link only |
-| Outpatient Consultation | EHR orders read-only; typed lab-order write from encounter missing |
+| Outpatient Consultation | Lab orders writable from encounter; discharge/imaging lanes still partial |
 | Telemedicine Encounter | RTC media intentionally blocked; referral/consent path partial |
-| Lab Order & Result | Orders page read-only; BFF POST exists but encounter UI not wired |
+| Lab Order & Result | Promoted to transaction-complete (outpatient orders batch) |
 | Imaging Order & Result | Viewer exists; order compose from encounter incomplete |
 | Prescription & Dispense | Web wired; mobile prescribing depth missing |
 | Referral Create & Manage | BFF + routes exist; incoming-referrals handoff UX thin |
