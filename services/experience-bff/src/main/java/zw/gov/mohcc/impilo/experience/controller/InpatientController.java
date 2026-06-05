@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -33,6 +35,21 @@ public class InpatientController {
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, operation + ": upstream returned no payload");
         }
         return node;
+    }
+
+    private static String extractAdmissionRef(JsonNode created) {
+        if (created == null || created.isNull()) {
+            return null;
+        }
+        String direct = created.path("admissionRef").asText(null);
+        if (direct != null && !direct.isBlank()) {
+            return direct;
+        }
+        direct = created.path("id").asText(null);
+        if (direct != null && !direct.isBlank()) {
+            return direct;
+        }
+        return created.path("admissionId").asText(null);
     }
 
     private static ResponseStatusException upstreamFailure(String operation, Exception cause) {
@@ -85,9 +102,17 @@ public class InpatientController {
             @RequestBody Map<String, Object> body) {
         try {
             JsonNode created = requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission");
+            String admissionRef = extractAdmissionRef(created);
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            if (admissionRef != null) {
+                meta.put("admission_ref", admissionRef);
+                meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", created,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {

@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-05T08:46:44.674Z
+> Generated: 2026-06-05T11:01:08.565Z
 > Journeys discovered: **42**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -15,7 +15,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | provider | /workspace | partial | backend-ready-but-frontend-incomplete |
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | backend-ready-but-frontend-incomplete |
 | Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | backend-ready-but-frontend-incomplete |
-| Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | backend-ready-but-frontend-incomplete |
+| Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | transaction-complete |
 | Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | backend-ready-but-frontend-incomplete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | backend-partial |

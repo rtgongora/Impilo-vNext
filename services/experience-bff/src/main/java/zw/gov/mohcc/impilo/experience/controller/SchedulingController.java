@@ -10,8 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -30,13 +32,17 @@ public class SchedulingController {
 
     private final TusoServiceClient tusoClient;
     private final SchedulingServiceClient schedulingServiceClient;
+    private final PctServiceClient pctClient;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
     private boolean useRemoteSlots;
 
-    public SchedulingController(TusoServiceClient tusoClient, SchedulingServiceClient schedulingServiceClient) {
+    public SchedulingController(TusoServiceClient tusoClient,
+                                SchedulingServiceClient schedulingServiceClient,
+                                PctServiceClient pctClient) {
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
+        this.pctClient = pctClient;
     }
 
     public record CreateAppointmentRequest(
@@ -124,6 +130,95 @@ public class SchedulingController {
         response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "CONFIRMED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Check in a scheduled appointment — bridges scheduling into the outpatient queue spine
+     * by starting a PCT journey and enqueueing a walk-in queue item.
+     */
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<Map<String, Object>> checkInAppointment(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            JsonNode appointment = tusoClient.getAppointment(id.toString());
+            if (appointment == null || appointment.isNull()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                        "error", Map.of("code", "APPOINTMENT_NOT_FOUND", "message", "Appointment not found"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+
+            String patientCpid = firstNonBlank(
+                    textOr(appointment, "patientCpid"),
+                    textOr(appointment, "patient_cpid"),
+                    textOr(appointment.path("attributes"), "cpid"));
+            String facilityId = firstNonBlank(
+                    textOr(appointment, "facilityId"),
+                    textOr(appointment, "facility_id"),
+                    textOr(appointment.path("attributes"), "facilityId"));
+            String patientId = firstNonBlank(
+                    textOr(appointment, "patientId"),
+                    textOr(appointment, "patient_id"),
+                    textOr(appointment.path("attributes"), "patientId"));
+
+            if (facilityId == null || facilityId.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", Map.of("code", "VALIDATION", "message", "facility_id is required on appointment"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+
+            UUID facilityUuid = UUID.fromString(facilityId.trim());
+            String subjectRef = patientCpid != null && !patientCpid.isBlank()
+                    ? patientCpid.trim()
+                    : (patientId != null ? patientId : id.toString());
+
+            JsonNode journeyData = pctClient.startJourney(subjectRef, facilityUuid, null, null);
+            if (journeyData == null || !journeyData.has("journeyId")) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "error", Map.of("code", "PCT_UNAVAILABLE", "message", "Could not start PCT journey for check-in"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+
+            String journeyId = journeyData.get("journeyId").asText();
+            JsonNode queues = pctClient.listQueues(facilityUuid, null);
+            UUID queueUuid = findScheduledQueueId(queues);
+            JsonNode queueItem = null;
+            if (queueUuid != null) {
+                queueItem = pctClient.enqueue(queueUuid, journeyId, 0);
+            }
+
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("appointment_id", id.toString());
+            meta.put("journey_id", journeyId);
+            meta.put("core_transaction_id", CoreTransactionCompositionService.journeyTransactionId(journeyId));
+            if (patientId != null) {
+                meta.put("patient_id", patientId);
+            }
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", Map.of(
+                    "appointment_id", id.toString(),
+                    "status", "CHECKED_IN",
+                    "journey_id", journeyId,
+                    "queue_item", queueItem != null ? queueItem : Map.of()));
+            response.put("meta", meta);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", ex.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception ex) {
+            log.warn("Appointment check-in failed for {}: {}", id, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "CHECK_IN_FAILED", "message", "Appointment check-in failed"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
     }
 
     @PostMapping("/{id}/cancel")
@@ -292,6 +387,45 @@ public class SchedulingController {
     /**
      * Half-hour labels (HH:mm UTC) touched by each booking — matches legacy BFF slot stepping.
      */
+    private static String textOr(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String value = node.path(field).asText(null);
+        return value != null && !value.isBlank() ? value : null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    private static UUID findScheduledQueueId(JsonNode queues) {
+        if (queues == null || !queues.isArray()) {
+            return null;
+        }
+        for (JsonNode q : queues) {
+            String type = q.path("queueType").asText("");
+            if ("WALK_IN".equalsIgnoreCase(type) || "CONSULTATION".equalsIgnoreCase(type)) {
+                String qid = q.path("queueId").asText(null);
+                if (qid != null && !qid.isBlank()) {
+                    return UUID.fromString(qid);
+                }
+            }
+        }
+        if (!queues.isEmpty()) {
+            String qid = queues.get(0).path("queueId").asText(null);
+            if (qid != null && !qid.isBlank()) {
+                return UUID.fromString(qid);
+            }
+        }
+        return null;
+    }
+
     private static Set<String> occupiedHalfHourLabels(List<OffsetDateTime[]> intervals,
                                                      OffsetDateTime dayStart, OffsetDateTime dayEnd) {
         Set<String> labels = new HashSet<>();

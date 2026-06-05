@@ -60,7 +60,10 @@ describe("WalkInPage", () => {
   beforeEach(() => {
     push.mockReset();
     post.mockReset();
-    post.mockResolvedValue({ data: { id: "entry-1" } });
+    post.mockResolvedValue({
+      data: { id: "entry-1" },
+      meta: { journey_id: "journey-42", core_transaction_id: "journey-42" },
+    });
   });
 
   it("can receive a patient from search and create the queue entry in place", async () => {
@@ -83,6 +86,8 @@ describe("WalkInPage", () => {
         }),
       ),
     );
-    expect(push).toHaveBeenCalledWith("/queue");
+    expect(push).toHaveBeenCalledWith(
+      "/ehr/patient-1/encounters?journey_id=journey-42&transaction_id=journey-42",
+    );
   });
 });

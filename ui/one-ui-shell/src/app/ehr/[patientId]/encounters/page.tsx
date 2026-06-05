@@ -21,6 +21,7 @@ import { useTelemedicineSessions } from "@/hooks/queries/useTelemedicine";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { isReferralReceivingHere, parseConsultationCoordinationMeta } from "@/lib/consult-workflows";
+import { JourneyOrchestrationRail } from "@/components/queue/JourneyOrchestrationRail";
 
 /* ------------------------------------------------------------------ */
 /*  Badge helpers                                                      */
@@ -154,6 +155,14 @@ export default function EncountersPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {transactionFromUrl.startsWith("journey-") ? (
+              <JourneyOrchestrationRail
+                transactionId={transactionFromUrl}
+                patientId={patientId}
+                journeyId={journeyFromUrl || undefined}
+              />
+            ) : null}
+
             <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#eef6ff_45%,#fffaf5_100%)] p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">

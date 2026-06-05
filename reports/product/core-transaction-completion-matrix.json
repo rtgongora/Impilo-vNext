@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-06-05T08:46:44.674Z",
+  "generatedAt": "2026-06-05T11:01:08.565Z",
   "journeyCount": 42,
-  "transactionComplete": 2,
+  "transactionComplete": 3,
   "classificationCounts": {
-    "transaction-complete": 2,
-    "backend-ready-but-frontend-incomplete": 26,
+    "transaction-complete": 3,
+    "backend-ready-but-frontend-incomplete": 25,
     "backend-partial": 11,
     "frontend-route-exists-but-disconnected": 0,
     "mobile-missing": 2,
@@ -87,7 +87,7 @@
       "journeyId": "queue-walk-in",
       "journeyName": "Queue / Walk-in Registration",
       "coreTransactionType": "FACILITY_WALK_IN",
-      "classification": "backend-ready-but-frontend-incomplete",
+      "classification": "transaction-complete",
       "implStatus": "wired",
       "missingBackend": "",
       "missingFrontend": "",

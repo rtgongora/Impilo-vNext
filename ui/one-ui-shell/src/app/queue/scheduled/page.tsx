@@ -50,6 +50,23 @@ export default function ScheduledQueuePage() {
       apiClient.post(`/internal/v1/appointments/${appointmentId}/cancel`, { reason: "Cancelled from scheduled queue" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
   });
+  const checkInAppointment = useMutation({
+    mutationFn: (appointmentId: string) =>
+      apiClient.post<ApiResponse<{ journey_id?: string; status?: string }>>(
+        `/internal/v1/appointments/${appointmentId}/check-in`,
+      ),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      const meta = response.meta as Record<string, string | undefined> | undefined;
+      const patientId = meta?.patient_id;
+      const journeyId = meta?.journey_id ?? response.meta?.journey_id;
+      const transactionId = meta?.core_transaction_id ?? response.meta?.core_transaction_id;
+      if (patientId && journeyId && transactionId) {
+        const params = new URLSearchParams({ journey_id: journeyId, transaction_id: transactionId });
+        router.push(`/ehr/${patientId}/encounters?${params.toString()}`);
+      }
+    },
+  });
 
   const entries = data?.data ?? [];
   const scheduledToday = entries.filter((entry) => {
@@ -156,6 +173,16 @@ export default function ScheduledQueuePage() {
                             >
                               Open Chart
                             </Link>
+                          ) : null}
+                          {status === "SCHEDULED" || status === "CONFIRMED" ? (
+                            <button
+                              type="button"
+                              onClick={() => checkInAppointment.mutate(entry.id)}
+                              disabled={checkInAppointment.isPending}
+                              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              Check in
+                            </button>
                           ) : null}
                           {status === "SCHEDULED" ? (
                             <button

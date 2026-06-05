@@ -1,15 +1,15 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-05T08:46:44.674Z
-> Journeys: **42** | Transaction-complete: **2**
+> Generated: 2026-06-05T11:01:08.565Z
+> Journeys: **42** | Transaction-complete: **3**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 2 |
-| backend-ready-but-frontend-incomplete | 26 |
+| transaction-complete | 3 |
+| backend-ready-but-frontend-incomplete | 25 |
 | backend-partial | 11 |
 | mobile-missing | 2 |
 | trust-security-incomplete | 1 |
@@ -32,7 +32,7 @@
 | Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 8 | 0 | workspace settings coming-soon stub |
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 2 | 56 | digital readiness dashboards thin |
 | Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
-| Queue / Walk-in Registration | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 7 | 1 | — |
+| Queue / Walk-in Registration | FACILITY_WALK_IN | transaction-complete | 7 | 1 | — |
 | Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
 | Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | EHR orders not yet writable via typed BFF command |
 | Inpatient Admission Workflow | EMERGENCY | backend-partial | 36 | 2 | inpatient UX partial vs backend |

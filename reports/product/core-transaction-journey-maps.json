@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-05T08:46:44.674Z",
+  "generatedAt": "2026-06-05T11:01:08.565Z",
   "journeyCount": 42,
   "journeys": [
     {
@@ -346,7 +346,7 @@
       "productOwnerAcceptanceTest": "Walk-in registered, appears in queue, provider can call",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "SCHEDULING_OR_QUEUE",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "provider-patient-encounter",

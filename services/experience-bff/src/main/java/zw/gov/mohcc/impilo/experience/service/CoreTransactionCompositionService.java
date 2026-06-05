@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DispatchServiceClient;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.WorkflowServiceClient;
 
@@ -21,11 +22,13 @@ public class CoreTransactionCompositionService {
     private static final Logger log = LoggerFactory.getLogger(CoreTransactionCompositionService.class);
     public static final String ENCOUNTER_TX_PREFIX = "encounter-";
     public static final String JOURNEY_TX_PREFIX = "journey-";
+    public static final String ADMISSION_TX_PREFIX = "admission-";
 
     private final WorkflowServiceClient workflowServiceClient;
     private final PctServiceClient pctServiceClient;
     private final CostaServiceClient costaServiceClient;
     private final DispatchServiceClient dispatchServiceClient;
+    private final InpatientServiceClient inpatientServiceClient;
     private final ObjectMapper objectMapper;
 
     public CoreTransactionCompositionService(WorkflowServiceClient workflowServiceClient,
@@ -33,10 +36,20 @@ public class CoreTransactionCompositionService {
                                             CostaServiceClient costaServiceClient,
                                             DispatchServiceClient dispatchServiceClient,
                                             ObjectMapper objectMapper) {
+        this(workflowServiceClient, pctServiceClient, costaServiceClient, dispatchServiceClient, null, objectMapper);
+    }
+
+    public CoreTransactionCompositionService(WorkflowServiceClient workflowServiceClient,
+                                            PctServiceClient pctServiceClient,
+                                            CostaServiceClient costaServiceClient,
+                                            DispatchServiceClient dispatchServiceClient,
+                                            InpatientServiceClient inpatientServiceClient,
+                                            ObjectMapper objectMapper) {
         this.workflowServiceClient = workflowServiceClient;
         this.pctServiceClient = pctServiceClient;
         this.costaServiceClient = costaServiceClient;
         this.dispatchServiceClient = dispatchServiceClient;
+        this.inpatientServiceClient = inpatientServiceClient;
         this.objectMapper = objectMapper;
     }
 
@@ -96,6 +109,9 @@ public class CoreTransactionCompositionService {
         }
         if (transactionId != null && transactionId.startsWith(JOURNEY_TX_PREFIX)) {
             return composeFromPctJourney(transactionId.substring(JOURNEY_TX_PREFIX.length()));
+        }
+        if (transactionId != null && transactionId.startsWith(ADMISSION_TX_PREFIX)) {
+            return composeFromInpatientAdmission(stripAdmissionTransactionId(transactionId));
         }
         if (transactionId != null && transactionId.startsWith("delivery-")) {
             String deliveryId = transactionId.substring("delivery-".length());
@@ -756,6 +772,18 @@ public class CoreTransactionCompositionService {
         return JOURNEY_TX_PREFIX + journeyId;
     }
 
+    public static String admissionTransactionId(String admissionRef) {
+        return ADMISSION_TX_PREFIX + admissionRef;
+    }
+
+    public static boolean isAdmissionTransactionId(String transactionId) {
+        return transactionId != null && transactionId.startsWith(ADMISSION_TX_PREFIX);
+    }
+
+    private static String stripAdmissionTransactionId(String transactionId) {
+        return transactionId.substring(ADMISSION_TX_PREFIX.length());
+    }
+
     public static boolean isEncounterTransactionId(String transactionId) {
         return transactionId != null && transactionId.startsWith(ENCOUNTER_TX_PREFIX);
     }
@@ -812,6 +840,36 @@ public class CoreTransactionCompositionService {
             return null;
         } catch (Exception ex) {
             log.warn("PCT encounter composition failed for {}: {}", encounterId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private ObjectNode composeFromInpatientAdmission(String admissionRef) {
+        if (admissionRef == null || admissionRef.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode admission = inpatientServiceClient != null
+                    ? inpatientServiceClient.getAdmission(admissionRef)
+                    : null;
+            ObjectNode pseudo = objectMapper.createObjectNode();
+            pseudo.put("id", admissionTransactionId(admissionRef));
+            String status = admission != null ? stringOr(admission, "status", "ADMITTED") : "ADMITTED";
+            pseudo.put("state", mapEncounterStatusToTransactionState(status));
+            pseudo.put("transactionType", "EMERGENCY");
+            pseudo.put("serviceCode", "svc.inpatient.admission");
+            pseudo.put("admissionRef", admissionRef);
+            pseudo.put("cpid", admission != null ? stringOr(admission, "patientCpid", stringOr(admission, "cpid", "")) : "");
+            pseudo.put("facilityId", admission != null ? stringOr(admission, "facilityId", "tuso:unknown") : "tuso:unknown");
+            pseudo.put("correlationId", admissionRef);
+            ObjectNode view = toCoreTransactionView(pseudo, "EMERGENCY");
+            ObjectNode audit = (ObjectNode) view.get("auditSummary");
+            if (audit != null) {
+                audit.put("sourceSystem", "inpatient-service");
+            }
+            return view;
+        } catch (Exception ex) {
+            log.warn("Inpatient admission composition failed for {}: {}", admissionRef, ex.getMessage());
             return null;
         }
     }
