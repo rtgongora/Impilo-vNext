@@ -61,6 +61,15 @@ const COMPLETION_EVIDENCE = {
       "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/service/JourneyCoreTransactionCompositionTest.java",
     ],
   },
+  "lab-order-result": {
+    bffEndpoints: ["/internal/v1/lab-orders"],
+    uiRoutes: ["/ehr/[patientId]/encounter/[encounterId]", "/ehr/[patientId]/orders"],
+    tests: [
+      "ui/one-ui-shell/src/components/encounter/EncounterLabOrdersPanel.test.tsx",
+      "ui/one-ui-shell/src/lib/lab-order-bff.test.ts",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/LabOrdersControllerTest.java",
+    ],
+  },
 };
 
 const CHECK_ONLY = process.argv.includes("--check-only");
@@ -375,8 +384,8 @@ const JOURNEYS = [
     completionState: "COMPLETED",
     implStatus: "partial",
     missingBackend: "",
-    missingFrontend: "EHR orders not yet writable via typed BFF command",
-    relatedJourneys: ["provider-patient-encounter", "prescription-dispense"],
+    missingFrontend: "discharge instructions orchestration and imaging write lanes still partial",
+    relatedJourneys: ["provider-patient-encounter", "prescription-dispense", "lab-order-result"],
     poAcceptanceTest: "Outpatient consult documented with vitals, note, and next steps",
     completionClassification: "backend-ready-but-frontend-incomplete",
   },
@@ -457,12 +466,12 @@ const JOURNEYS = [
     trustSecurityChecks: "order authz; result visibility",
     auditRequirements: "order/result audit",
     completionState: "PENDING_RESULT",
-    implStatus: "partial",
+    implStatus: "wired",
     missingBackend: "",
-    missingFrontend: "orders page read-only; BFF write contract gap",
-    relatedJourneys: ["provider-patient-encounter", "imaging-order-result"],
+    missingFrontend: "",
+    relatedJourneys: ["provider-patient-encounter", "outpatient-consultation", "imaging-order-result"],
     poAcceptanceTest: "Lab ordered and result returned to provider worklist",
-    completionClassification: "backend-ready-but-frontend-incomplete",
+    completionClassification: "transaction-complete",
   },
   {
     id: "imaging-order-result",

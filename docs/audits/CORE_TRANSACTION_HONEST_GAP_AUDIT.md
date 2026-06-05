@@ -1,7 +1,7 @@
 # Core Transaction Honest Gap Audit
 
 > **Generated:** 2026-06-05 (post-recovery)  
-> **Baseline:** evidence-gated generator — **3/42 transaction-complete**  
+> **Baseline:** evidence-gated generator — **4/42 transaction-complete** (after outpatient orders batch)  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md)
 
 ## Summary
@@ -21,6 +21,7 @@
 | Queue / Walk-in Registration | `/queue/walk-in` → `apiClient.post /internal/v1/queue/entries` → PCT journey meta → `JourneyOrchestrationRail` on encounters |
 | Provider Patient Encounter | `/ehr/.../encounter/[id]` → `useEncounterCoreTransaction` → BFF `encounter-{id}` composition |
 | Core Transaction Orchestration Shell | `/core-transaction` → `useCoreTransactionFeed` → BFF `/internal/v1/core-transactions` |
+| Lab Order & Result | `EncounterLabOrdersPanel` / orders page → `useCreateLabOrder` → `POST /internal/v1/lab-orders` → OROS `placeOrder` |
 
 ## Chain template (per incomplete journey)
 
@@ -93,7 +94,7 @@ Each row below records the **true gap** on:
 | Walk-in → journey transaction meta | **Complete** (transaction-complete) |
 | Appointment check-in → queue spine | **Partial** (BFF + scheduled UI; not transaction-complete) |
 | Admission → `admission-{ref}` transaction id | **Partial** (BFF meta + admission rail; not transaction-complete) |
-| Outpatient consult orders write | **Open** |
+| Outpatient consult orders write | **Complete** for lab lane (`EncounterLabOrdersPanel` + typed BFF body) |
 | Inpatient discharge correlation | **Open** |
 
 ## Next honest batches (recommended order)

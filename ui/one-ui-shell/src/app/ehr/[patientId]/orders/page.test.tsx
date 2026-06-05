@@ -3,14 +3,16 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import OrdersPage from "./page";
 
-const { invalidateQueries, post, mockUseProductRegistrySearch } = vi.hoisted(() => ({
+const { invalidateQueries, post, mutateAsync, mockUseProductRegistrySearch } = vi.hoisted(() => ({
   invalidateQueries: vi.fn(),
   post: vi.fn(),
+  mutateAsync: vi.fn(),
   mockUseProductRegistrySearch: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1" }),
+  useSearchParams: () => new URLSearchParams("encounterId=enc-1"),
 }));
 
 vi.mock("@/components/EHRLayout", () => ({
@@ -59,6 +61,12 @@ vi.mock("@/hooks/queries/useEncounters", () => ({
         },
       ],
     },
+  }),
+}));
+
+vi.mock("@/hooks/queries/usePatients", () => ({
+  usePatient: () => ({
+    data: { data: { id: "patient-1", attributes: { cpid: "CPID-ZW-00001" } } },
   }),
 }));
 
@@ -118,7 +126,7 @@ vi.mock("@/hooks/queries/useLabOrders", () => ({
   }),
   useCreateLabOrder: () => ({
     mutate: vi.fn(),
-    mutateAsync: vi.fn().mockResolvedValue({}),
+    mutateAsync,
     isPending: false,
     isError: false,
   }),
@@ -141,8 +149,10 @@ vi.mock("@/lib/api-client", () => ({
 describe("OrdersPage", () => {
   beforeEach(() => {
     post.mockReset();
+    mutateAsync.mockReset();
     invalidateQueries.mockReset();
     post.mockResolvedValue({});
+    mutateAsync.mockResolvedValue({ data: { id: "order-new" } });
     mockUseProductRegistrySearch.mockImplementation((params: { q?: string } | undefined) => {
       if (params?.q === "cbc") {
         return {
@@ -188,6 +198,26 @@ describe("OrdersPage", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("guided-submit-action"));
     expect(post).not.toHaveBeenCalled();
+  });
+
+  it("submits lab action through typed lab-orders BFF contract", async () => {
+    render(<OrdersPage />);
+    fireEvent.change(screen.getByTestId("guided-lab-name"), { target: { value: "Troponin" } });
+    fireEvent.change(screen.getByTestId("guided-lab-code"), { target: { value: "TROP" } });
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          patientId: "patient-1",
+          encounterId: "enc-1",
+          testName: "Troponin",
+          testCode: "TROP",
+          patientCpid: "CPID-ZW-00001",
+          pctEncounterRef: "enc-1",
+        }),
+      ),
+    );
   });
 
   it("submits medication action through canonical pharmacy endpoint", async () => {

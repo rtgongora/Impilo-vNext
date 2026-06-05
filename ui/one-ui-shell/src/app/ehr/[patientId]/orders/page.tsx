@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   Activity,
   Camera,
@@ -34,6 +34,7 @@ import {
 } from "@/hooks/queries/useLabOrders";
 import { useClinicalWorklist } from "@/hooks/queries/useClinicalWorklist";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { usePatient } from "@/hooks/queries/usePatients";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -147,15 +148,23 @@ function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] 
 
 export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
+  const searchParams = useSearchParams();
   const { patientId } = params;
+  const encounterIdFromUrl = searchParams.get("encounterId") ?? "";
   const { user } = useAuthStore();
   const { isClinical } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
+  const { data: patientData } = usePatient(patientId);
+  const patientCpid = String(patientData?.data?.attributes?.cpid ?? "");
   const { data: encountersData } = useEncounters(patientId);
-  const activeEncounter = (encountersData?.data ?? []).find(
-    (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
-  );
+  const activeEncounter =
+    (encounterIdFromUrl
+      ? (encountersData?.data ?? []).find((encounter) => encounter.id === encounterIdFromUrl)
+      : undefined) ??
+    (encountersData?.data ?? []).find(
+      (encounter) =>
+        encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+    );
 
   const queryClient = useQueryClient();
   const { data: ordersData, isLoading } = useLabOrders(patientId);
@@ -296,6 +305,8 @@ export default function OrdersPage() {
           facilityId: facility.id,
           orderedBy: user?.id ?? "",
           orderedByName: user?.displayName ?? user?.email ?? "",
+          patientCpid: patientCpid || undefined,
+          pctEncounterRef: activeEncounter?.id ?? "",
         });
       } else if (guidedLane === "MEDICATION") {
         await apiClient.post("/internal/v1/pharmacy/prescriptions", {
@@ -360,6 +371,8 @@ export default function OrdersPage() {
         facilityId: facility?.id ?? form.facility_id,
         orderedBy: form.ordered_by || user?.id || "",
         orderedByName: form.ordered_by_name || user?.displayName || user?.email || "",
+        patientCpid: patientCpid || undefined,
+        pctEncounterRef: activeEncounter?.id ?? "",
       },
       {
         onSuccess: () => {
@@ -560,6 +573,7 @@ export default function OrdersPage() {
                       Test Name
                       <input
                         type="text"
+                        data-testid="guided-lab-name"
                         value={guidedForm.lab_name}
                         onChange={(e) => updateGuidedField("lab_name", e.target.value)}
                         required
@@ -571,6 +585,7 @@ export default function OrdersPage() {
                       Test Code
                       <input
                         type="text"
+                        data-testid="guided-lab-code"
                         value={guidedForm.lab_code}
                         onChange={(e) => updateGuidedField("lab_code", e.target.value)}
                         required

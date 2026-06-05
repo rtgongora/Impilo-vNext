@@ -1,15 +1,15 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-05T11:01:08.565Z
-> Journeys: **42** | Transaction-complete: **3**
+> Generated: 2026-06-05T11:18:38.306Z
+> Journeys: **42** | Transaction-complete: **4**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 3 |
-| backend-ready-but-frontend-incomplete | 25 |
+| transaction-complete | 4 |
+| backend-ready-but-frontend-incomplete | 24 |
 | backend-partial | 11 |
 | mobile-missing | 2 |
 | trust-security-incomplete | 1 |
@@ -34,10 +34,10 @@
 | Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | transaction-complete | 7 | 1 | — |
 | Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
-| Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | EHR orders not yet writable via typed BFF command |
+| Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | discharge instructions orchestration and imaging write lanes still par |
 | Inpatient Admission Workflow | EMERGENCY | backend-partial | 36 | 2 | inpatient UX partial vs backend |
 | Telemedicine Encounter | TELEMEDICINE | backend-ready-but-frontend-incomplete | 3 | 3 | real-time media transport blocked |
-| Lab Order & Result | LABORATORY | backend-ready-but-frontend-incomplete | 7 | 3 | orders page read-only; BFF write contract gap |
+| Lab Order & Result | LABORATORY | transaction-complete | 7 | 3 | — |
 | Imaging Order & Result | IMAGING | backend-ready-but-frontend-incomplete | 35 | 1 | — |
 | Prescription & Dispense | PHARMACY | backend-ready-but-frontend-incomplete | 6 | 1 | mobile prescribing depth |
 | Referral Create & Manage | REFERRAL | backend-ready-but-frontend-incomplete | 2 | 1 | — |
@@ -78,7 +78,7 @@ Prioritize the clinical spine and **complete orchestration on existing surfaces*
 1. **Core Transaction Orchestration Shell** — transaction-complete: 
 1. **Health ID Issuance & Card Ops** — backend-partial: card pickup page blocked
 1. **Payment / Billing / Exemption / Claim** — backend-ready-but-frontend-incomplete: payer-ops stubs; MusheX raw paths not in browser
-1. **Lab Order & Result** — backend-ready-but-frontend-incomplete: orders page read-only; BFF write contract gap
+1. **Lab Order & Result** — transaction-complete: 
 1. **Public Health / CHW Outreach** — mobile-missing: field ops mobile thinner than web
 1. **Civil Registration (UBOMI / CRVS)** — mobile-missing: mobile CRVS parity missing
 

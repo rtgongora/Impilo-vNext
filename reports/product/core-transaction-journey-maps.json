@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-05T11:01:08.565Z",
+  "generatedAt": "2026-06-05T11:18:38.306Z",
   "journeyCount": 42,
   "journeys": [
     {
@@ -473,10 +473,11 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "EHR orders not yet writable via typed BFF command",
+      "missingFrontendMobileWork": "discharge instructions orchestration and imaging write lanes still partial",
       "relatedJourneys": [
         "provider-patient-encounter",
-        "prescription-dispense"
+        "prescription-dispense",
+        "lab-order-result"
       ],
       "productOwnerAcceptanceTest": "Outpatient consult documented with vitals, note, and next steps",
       "coreTransactionType": "FACILITY_WALK_IN",
@@ -639,17 +640,18 @@
       "trustSecurityChecks": "order authz; result visibility",
       "auditRequirements": "order/result audit",
       "completionState": "PENDING_RESULT",
-      "currentImplementationStatus": "partial",
+      "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "orders page read-only; BFF write contract gap",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
+        "outpatient-consultation",
         "imaging-order-result"
       ],
       "productOwnerAcceptanceTest": "Lab ordered and result returned to provider worklist",
       "coreTransactionType": "LABORATORY",
       "lifecycleStage": "ORDERS_AND_ANCILLARY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "imaging-order-result",

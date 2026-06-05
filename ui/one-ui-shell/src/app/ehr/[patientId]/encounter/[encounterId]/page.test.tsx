@@ -19,6 +19,12 @@ vi.mock("@/components/clinical/ClinicalFinanceContextStrip", () => ({
 vi.mock("@/components/clinical/EncounterVitalsGuidance", () => ({
   EncounterVitalsGuidance: () => <div data-testid="encounter-vitals-guidance" />,
 }));
+vi.mock("@/components/encounter/EncounterOrchestrationRail", () => ({
+  EncounterOrchestrationRail: () => <div data-testid="encounter-orchestration-rail" />,
+}));
+vi.mock("@/components/encounter/EncounterLabOrdersPanel", () => ({
+  EncounterLabOrdersPanel: () => <div data-testid="encounter-lab-orders-panel">Lab orders</div>,
+}));
 vi.mock("@/hooks/useClinicalAlerts", () => ({ useClinicalAlerts: () => [] }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/useAuthStore", () => ({ useAuthStore: () => ({ user: { id: "user-1", displayName: "Dr. Moyo" } }) }));
@@ -77,5 +83,6 @@ describe("EncounterPage", () => {
     expect(screen.getByText("Encounter loop status")).toBeInTheDocument();
     expect(screen.getByText("Specialist responses are back and should be reviewed before closure.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Visit Outcome" })).toHaveAttribute("href", "/ehr/patient-1/discharge?encounterId=enc-1");
+    expect(screen.getByTestId("encounter-lab-orders-panel")).toBeInTheDocument();
   });
 });

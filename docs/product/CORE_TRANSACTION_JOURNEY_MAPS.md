@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-05T11:01:08.565Z
+> Generated: 2026-06-05T11:18:38.306Z
 > Journeys discovered: **42**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -20,7 +20,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | backend-ready-but-frontend-incomplete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | backend-partial |
 | Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-ready-but-frontend-incomplete |
-| Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | partial | backend-ready-but-frontend-incomplete |
+| Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
 | Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | backend-ready-but-frontend-incomplete |
 | Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | backend-ready-but-frontend-incomplete |
 | Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | backend-ready-but-frontend-incomplete |

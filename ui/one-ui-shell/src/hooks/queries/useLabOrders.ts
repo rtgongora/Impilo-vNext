@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { toLabOrderBffBody, type LabOrderUiPayload } from "@/lib/lab-order-bff";
 
 export interface LabOrderResource {
   id: string;
@@ -27,17 +28,7 @@ export interface LabOrderResource {
   };
 }
 
-interface CreateLabOrderPayload {
-  patientId: string;
-  encounterId: string;
-  testName: string;
-  testCode: string;
-  category: string;
-  priority: string;
-  clinicalNotes?: string | null;
-  facilityId: string;
-  [key: string]: unknown;
-}
+export type CreateLabOrderPayload = LabOrderUiPayload;
 
 type LabOrdersResponse = ApiResponse<LabOrderResource[]>;
 type LabOrderResponse = ApiResponse<LabOrderResource>;
@@ -67,7 +58,7 @@ export function useCreateLabOrder() {
 
   return useMutation<LabOrderResponse, unknown, CreateLabOrderPayload>({
     mutationFn: (payload: CreateLabOrderPayload) =>
-      apiClient.post<LabOrderResponse>("/internal/v1/lab-orders", payload),
+      apiClient.post<LabOrderResponse>("/internal/v1/lab-orders", toLabOrderBffBody(payload)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] });
     },
