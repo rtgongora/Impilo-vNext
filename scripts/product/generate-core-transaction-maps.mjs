@@ -27,6 +27,93 @@ const COMPLETION_STATUSES = [
   "unknown-needs-review",
 ];
 
+/** Authority for the completion bar — see docs/frontend/GAP_CLOSURE_RULES.md */
+const GAP_CLOSURE_AUTHORITY = "docs/frontend/GAP_CLOSURE_RULES.md";
+
+/**
+ * Evidence-gated completion registry.
+ * A journey may be `transaction-complete` ONLY when listed here with real BFF routes,
+ * UI routes, and at least one passing test file that exists on disk.
+ */
+const COMPLETION_EVIDENCE = {
+  "provider-patient-encounter": {
+    bffEndpoints: ["/internal/v1/core-transactions", "/internal/v1/encounters"],
+    uiRoutes: ["/ehr/[patientId]/encounter/[encounterId]"],
+    tests: [
+      "ui/one-ui-shell/src/components/encounter/EncounterOrchestrationRail.test.tsx",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/service/EncounterCoreTransactionCompositionTest.java",
+    ],
+  },
+  "core-transaction-orchestration": {
+    bffEndpoints: ["/internal/v1/core-transactions"],
+    uiRoutes: ["/core-transaction"],
+    tests: [
+      "ui/one-ui-shell/src/features/core-transaction/__tests__/core-transaction.test.tsx",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/CoreTransactionControllerTest.java",
+    ],
+  },
+  "queue-walk-in": {
+    bffEndpoints: ["/internal/v1/queue/entries", "/internal/v1/core-transactions"],
+    uiRoutes: ["/queue/walk-in", "/ehr/[patientId]/encounters"],
+    tests: [
+      "ui/one-ui-shell/src/app/queue/walk-in/page.test.tsx",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/QueueControllerTest.java",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/service/JourneyCoreTransactionCompositionTest.java",
+    ],
+  },
+};
+
+const CHECK_ONLY = process.argv.includes("--check-only");
+
+function enforceCompletionEvidence(journeys) {
+  const errors = [];
+  const complete = journeys.filter((j) => j.completionClassification === "transaction-complete");
+  const evidenceIds = new Set(Object.keys(COMPLETION_EVIDENCE));
+
+  if (complete.length !== evidenceIds.size) {
+    errors.push(
+      `transaction-complete count (${complete.length}) must equal evidence registry size (${evidenceIds.size}). ` +
+        `No blanket metric flips — add evidence before marking complete.`,
+    );
+  }
+
+  for (const journey of complete) {
+    const evidence = COMPLETION_EVIDENCE[journey.id];
+    if (!evidence) {
+      errors.push(`Journey "${journey.id}" is transaction-complete but has no COMPLETION_EVIDENCE entry.`);
+      continue;
+    }
+    for (const field of ["bffEndpoints", "uiRoutes", "tests"]) {
+      const value = evidence[field];
+      if (!Array.isArray(value) || value.length === 0) {
+        errors.push(`Journey "${journey.id}": evidence.${field} must be a non-empty array.`);
+      }
+    }
+    for (const testPath of evidence.tests ?? []) {
+      const abs = path.join(ROOT, testPath);
+      if (!fs.existsSync(abs)) {
+        errors.push(`Journey "${journey.id}": missing evidence test file: ${testPath}`);
+      }
+    }
+  }
+
+  for (const id of evidenceIds) {
+    const journey = journeys.find((j) => j.id === id);
+    if (!journey || journey.completionClassification !== "transaction-complete") {
+      errors.push(`Evidence registry entry "${id}" requires journey classification transaction-complete.`);
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error("COMPLETION EVIDENCE ENFORCEMENT FAILED");
+    console.error(`Authority: ${GAP_CLOSURE_AUTHORITY}`);
+    for (const err of errors) {
+      console.error(`  - ${err}`);
+    }
+    process.exit(1);
+  }
+}
+
 function parseYaml(filePath) {
   const script = `import json,yaml,sys; print(json.dumps(yaml.safe_load(open(sys.argv[1],encoding="utf-8"))))`;
   const r = spawnSync("python3", ["-c", script, filePath], { encoding: "utf8" });
@@ -235,7 +322,7 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["patient-search-selection", "outpatient-consultation"],
     poAcceptanceTest: "Walk-in registered, appears in queue, provider can call",
-    completionClassification: "backend-ready-but-frontend-incomplete",
+    completionClassification: "transaction-complete",
   },
   {
     id: "provider-patient-encounter",
@@ -1303,6 +1390,15 @@ const completionRows = JOURNEYS.map((j) => ({
 }));
 
 const transactionComplete = completionRows.filter((r) => r.classification === "transaction-complete").length;
+
+enforceCompletionEvidence(JOURNEYS);
+
+if (CHECK_ONLY) {
+  console.log("Completion evidence check passed");
+  console.log(`  Transaction-complete: ${transactionComplete}`);
+  console.log(`  Evidence registry: ${Object.keys(COMPLETION_EVIDENCE).length}`);
+  process.exit(0);
+}
 
 // ── Write JSON/CSV ──────────────────────────────────────────────────────────
 fs.mkdirSync(OUT_DOCS, { recursive: true });

@@ -45,25 +45,29 @@ if [[ "${PIPELINE_SKIP_BACKEND:-0}" != "1" ]]; then
     bash scripts/test/run-backend-checks.sh
 fi
 
-# 7. Backend-frontend parity
+# 7. Core transaction completion evidence (blocks metric fraud)
+pipeline_run_phase core-tx-evidence "Core transaction completion evidence" 1 \
+  bash scripts/guard/check-core-transaction-completion-evidence.sh
+
+# 8. Backend-frontend parity
 pipeline_run_phase parity-web "Backend-to-frontend parity" 1 \
   bash scripts/guard/check-backend-frontend-parity.sh
 
-# 8. Mobile parity (blocking for new gaps)
+# 9. Mobile parity (blocking for new gaps)
 pipeline_run_phase parity-mobile "Mobile parity" 1 \
   bash scripts/guard/check-mobile-parity.sh
 
-# 9. API contracts
+# 10. API contracts
 pipeline_run_phase api-contracts "API contract checks" 1 \
   bash scripts/test/run-api-contract-checks.sh
 
-# 10. Integration
+# 11. Integration
 if [[ "${PIPELINE_SKIP_INTEGRATION:-0}" != "1" ]]; then
   pipeline_run_phase integration "Integration baseline" 1 \
     bash scripts/test/run-integration-checks.sh
 fi
 
-# 11. Regression
+# 12. Regression
 if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
   export PREVIEW_BASE_URL="${PREVIEW_BASE_URL:-http://127.0.0.1}"
   pipeline_run_phase regression "Regression checks" 1 \
@@ -72,7 +76,7 @@ if [[ "${PIPELINE_SKIP_REGRESSION:-0}" != "1" ]]; then
     bash tests/regression/frontend-backend-parity-smoke.sh
 fi
 
-# 12. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
+# 13. Full-boot readiness (advisory unless PIPELINE_FULL_BOOT_BLOCKING=1)
 full_boot_blocking=0
 [[ "${PIPELINE_FULL_BOOT_BLOCKING:-0}" == "1" ]] && full_boot_blocking=1
 pipeline_run_phase full-boot-discover "Full-boot artifact generation" 0 \
@@ -88,15 +92,15 @@ pipeline_run_phase full-boot-waves "Full-boot wave coverage" 0 \
 pipeline_run_phase full-boot-inventory "Registry inventory contract" 0 \
   bash scripts/guard/check-registry-inventory-contract.sh || true
 
-# 13. Change-safety
+# 14. Change-safety
 pipeline_run_phase change-safety "Change-safety gates" 1 \
   bash scripts/guard/run-change-safety-gates.sh
 
-# 14. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
+# 15. Mobile build/typecheck (advisory — deep parity in parity-mobile phase)
 pipeline_run_phase mobile "Mobile build checks" 0 \
   bash scripts/test/run-mobile-checks.sh || true
 
-# 15. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
+# 16. Web E2E (advisory unless PIPELINE_E2E_BLOCKING=1)
 if [[ "${PIPELINE_SKIP_E2E:-1}" != "1" ]]; then
   e2e_blocking=0
   [[ "${PIPELINE_E2E_BLOCKING:-0}" == "1" ]] && e2e_blocking=1
