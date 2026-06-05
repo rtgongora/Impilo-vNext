@@ -6,7 +6,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Screen,
   Header,
@@ -21,7 +21,7 @@ import {
 } from "@impilo/mobile-design-system";
 import { useEncounterStore, encounterStore } from "../../stores/encounterStore";
 import { closeEncounter, addEncounterNotes } from "../../services/encounterService";
-import { listCoreTransactions } from "../../services/coreTransactionService";
+import { applyCoreTransactionAction, listCoreTransactions } from "../../services/coreTransactionService";
 import { VitalsPanel } from "./VitalsPanel";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
@@ -58,13 +58,14 @@ export function EncounterScreen() {
     enabled: Boolean(activeEncounter?.id),
   });
 
+  const queryClient = useQueryClient();
+
   const encounterTransaction = useMemo(() => {
     const row = encounterTransactionQuery.data?.[0];
     if (!row || typeof row !== "object") return null;
     const envelope = row as Record<string, unknown>;
     const tx = (envelope.transaction as Record<string, unknown> | undefined) ?? envelope;
     const nextActions = Array.isArray(envelope.nextActions) ? envelope.nextActions : [];
-    const firstAction = nextActions[0] as Record<string, unknown> | undefined;
     return {
       id: String(tx.id ?? ""),
       state: String(tx.currentState ?? ""),
@@ -72,9 +73,26 @@ export function EncounterScreen() {
         ((envelope.journeys as Record<string, unknown> | undefined)?.provider as Record<string, unknown> | undefined)
           ?.currentStage ?? "",
       ),
-      nextAction: typeof firstAction?.label === "string" ? firstAction.label : undefined,
+      nextActions: nextActions
+        .map((action) => action as Record<string, unknown>)
+        .filter((action) => typeof action.code === "string" && typeof action.label === "string")
+        .map((action) => ({ code: String(action.code), label: String(action.label) })),
     };
   }, [encounterTransactionQuery.data]);
+
+  const applyTransactionAction = useMutation({
+    mutationFn: ({ transactionId, actionCode }: { transactionId: string; actionCode: string }) =>
+      applyCoreTransactionAction(transactionId, actionCode, {
+        encounterId: activeEncounter?.id,
+        patientId: activeEncounter?.patientId,
+        source: "mobile-encounter-screen",
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["provider-encounter-core-transaction", activeEncounter?.id],
+      });
+    },
+  });
 
   const handleCloseEncounter = useCallback(async () => {
     if (!activeEncounter) return;
@@ -186,8 +204,23 @@ export function EncounterScreen() {
                   {`Provider stage: ${encounterTransaction.providerStage}`}
                 </Text>
               ) : null}
-              {encounterTransaction.nextAction ? (
-                <Text style={styles.transactionNext}>{`Next: ${encounterTransaction.nextAction}`}</Text>
+              {encounterTransaction.nextActions.length > 0 ? (
+                <View style={styles.transactionActions}>
+                  {encounterTransaction.nextActions.map((action) => (
+                    <Button
+                      key={action.code}
+                      title={action.label}
+                      variant="outline"
+                      loading={applyTransactionAction.isPending}
+                      onPress={() => {
+                        applyTransactionAction.mutate({
+                          transactionId: encounterTransaction.id,
+                          actionCode: action.code,
+                        });
+                      }}
+                    />
+                  ))}
+                </View>
               ) : null}
             </CardBody>
           </Card>
@@ -278,5 +311,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 13,
     color: "#2563EB",
+  },
+  transactionActions: {
+    marginTop: 12,
+    gap: 8,
   },
 });

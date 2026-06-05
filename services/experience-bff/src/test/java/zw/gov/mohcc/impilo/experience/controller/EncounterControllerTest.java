@@ -61,7 +61,10 @@ class EncounterControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.createEncounter("t1", "pod-1", "req-3", "corr-3", null, request);
         assertEquals(201, response.getStatusCode().value());
-        assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+        Map<?, ?> meta = (Map<?, ?>) response.getBody().get("meta");
+        assertEquals("req-3", meta.get("request_id"));
+        assertEquals("encounter-1", meta.get("core_transaction_id"));
+        assertEquals("journey-1", meta.get("journey_id"));
     }
 
     @Test

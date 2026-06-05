@@ -43,6 +43,7 @@ describe("EncounterOrchestrationRail", () => {
     });
     renderRail();
     expect(screen.getByText(/Encounter transaction not linked yet/)).toBeInTheDocument();
+    expect(screen.getByText(/Start the encounter from the encounters list/)).toBeInTheDocument();
   });
 
   it("shows transaction context when linked", () => {

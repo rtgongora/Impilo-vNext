@@ -71,7 +71,7 @@ export default function WalkInPage() {
       }
 
       const patientCpid = selectedPatient?.attributes?.cpid ?? undefined;
-      await apiClient.post<ApiResponse<QueueEntryResource>>(
+      const response = await apiClient.post<ApiResponse<QueueEntryResource>>(
         "/internal/v1/queue/entries",
         {
           patient_id: patientId,
@@ -82,7 +82,17 @@ export default function WalkInPage() {
         },
       );
 
-      router.push("/queue");
+      const params = new URLSearchParams();
+      const journeyId = response.meta?.journey_id;
+      const transactionId = response.meta?.core_transaction_id;
+      if (journeyId) params.set("journey_id", journeyId);
+      if (transactionId) params.set("transaction_id", transactionId);
+      const query = params.toString();
+      router.push(
+        query
+          ? `/ehr/${patientId}/encounters?${query}`
+          : `/ehr/${patientId}/encounters`,
+      );
     } catch {
       setError("Failed to create queue entry. Please try again.");
     } finally {

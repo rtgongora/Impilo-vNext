@@ -99,6 +99,19 @@ function detectStub(sourcePath) {
   return text ? STUB_PATTERNS.some((re) => re.test(text)) : false;
 }
 
+const HOOK_PATTERNS = [
+  /useCoreTransaction\w+/,
+  /useEncounterCoreTransaction/,
+  /useEncounters?\b/,
+  /usePatients?\b/,
+  /useQueue\w+/,
+];
+function detectHookFromSource(sourcePath) {
+  if (!sourcePath) return false;
+  const text = readText(path.join(ROOT, sourcePath));
+  return text ? HOOK_PATTERNS.some((re) => re.test(text)) : false;
+}
+
 const routesTs = readText(path.join(ROOT, "ui/one-ui-shell/src/lib/routes.ts"));
 const routeMeta = new Map();
 for (const m of routesTs.matchAll(/\{\s*path:\s*"([^"]+)"[^}]*zone:\s*"([^"]+)"[^}]*guard:\s*"([^"]+)"[^}]*pageTitle:\s*"([^"]+)"/g)) {
@@ -116,7 +129,7 @@ for (const e of frontendRouteEntries) {
   const zoneInfo = ZONE_ACTOR[meta.zone || e.serviceDomainPlane?.split("/")[1]] || {};
   const matchedJourneys = findJourneysForRoute(routePath);
   const primary = matchedJourneys[0];
-  const hasHook = Boolean(e.apiClientHook);
+  const hasHook = Boolean(e.apiClientHook) || detectHookFromSource(e.sourcePath);
   const isStub = detectStub(e.sourcePath);
   const isUnregistered = e.componentType === "frontend-page-unregistered";
 
@@ -125,8 +138,13 @@ for (const e of frontendRouteEntries) {
   else if (isUnregistered) status = "orphan-frontend";
   else if (matchedJourneys.length === 0 && !hasHook) status = "isolated-page";
   else if (matchedJourneys.length === 0) status = "unclear-intent";
-  else if (primary?.currentImplementationStatus === "wired" && hasHook) status = "coherent";
-  else if (matchedJourneys.length > 0) status = "missing-journey";
+  else if (
+    (primary?.currentImplementationStatus === "wired" ||
+      primary?.completionClassification === "transaction-complete") &&
+    hasHook
+  ) {
+    status = "coherent";
+  } else if (matchedJourneys.length > 0) status = "missing-journey";
 
   orchestrationEntries.push({
     surfaceType: "frontend-route",
@@ -166,7 +184,12 @@ for (const e of mobileEntries) {
   const primary = matchedJourneys[0];
   const app = e.sourcePath.includes("citizen-app") ? "citizen" : "provider";
   let status = primary ? "partial" : "missing-journey";
-  if (primary?.currentImplementationStatus === "wired") status = "coherent";
+  if (
+    primary?.currentImplementationStatus === "wired" ||
+    primary?.completionClassification === "transaction-complete"
+  ) {
+    status = "coherent";
+  }
 
   orchestrationEntries.push({
     surfaceType: "mobile-screen",

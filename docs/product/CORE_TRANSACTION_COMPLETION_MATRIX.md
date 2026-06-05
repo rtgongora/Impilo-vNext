@@ -1,20 +1,16 @@
 # Core Transaction Completion Matrix
 
-## Phase 4 completion update (2026-06-05)
-
-**Provider Patient Encounter** — orchestration linked on encounter page via `EncounterOrchestrationRail` and BFF `encounter_id` filter. Classification moves from `frontend-route-exists-but-disconnected` toward **orchestration-linked** (journey not yet fully `transaction-complete` until queue→transaction correlation ships).
-
-> Generated: 2026-06-05T07:32:17.772Z
-> Journeys: **42** | Transaction-complete: **0**
+> Generated: 2026-06-05T08:46:44.674Z
+> Journeys: **42** | Transaction-complete: **2**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
+| transaction-complete | 2 |
 | backend-ready-but-frontend-incomplete | 26 |
 | backend-partial | 11 |
-| frontend-route-exists-but-disconnected | 2 |
 | mobile-missing | 2 |
 | trust-security-incomplete | 1 |
 
@@ -37,7 +33,7 @@
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 2 | 56 | digital readiness dashboards thin |
 | Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 7 | 1 | — |
-| Provider Patient Encounter | FACILITY_WALK_IN | orchestration-linked (Phase 4) | 3 | 1 | queue→transaction_id correlation pending |
+| Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
 | Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | EHR orders not yet writable via typed BFF command |
 | Inpatient Admission Workflow | EMERGENCY | backend-partial | 36 | 2 | inpatient UX partial vs backend |
 | Telemedicine Encounter | TELEMEDICINE | backend-ready-but-frontend-incomplete | 3 | 3 | real-time media transport blocked |
@@ -66,7 +62,7 @@
 | Wallet Payment | MARKETPLACE | backend-ready-but-frontend-incomplete | 6 | 1 | — |
 | Offline Clinical Queue | FACILITY_WALK_IN | backend-partial | 25 | 4 | offline conflict UX |
 | Emergency / ED Encounter | EMERGENCY | trust-security-incomplete | 36 | 2 | ED flow depth vs backend |
-| Core Transaction Orchestration Shell | FACILITY_WALK_IN | frontend-route-exists-but-disconnected | 4 | 0 | UI uses fixtures not live BFF |
+| Core Transaction Orchestration Shell | FACILITY_WALK_IN | transaction-complete | 4 | 0 | — |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | backend-ready-but-frontend-incomplete | 6 | 2 | Ndila map dashboards incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 21 | 2 | route context not always passed |
 | Credential Verification | ADMINISTRATIVE_HEALTH | backend-partial | 1 | 0 | verification workflow screens thin |
@@ -78,8 +74,8 @@
 
 Prioritize the clinical spine and **complete orchestration on existing surfaces** (wire fixtures to BFF, close write gaps, extend mobile parity). New UI remains in scope when a journey map requires a missing step or screen — this is sequencing, not a moratorium on new surfaces.
 
-1. **Provider Patient Encounter** — frontend-route-exists-but-disconnected: core-transaction pages use fixtures
-1. **Core Transaction Orchestration Shell** — frontend-route-exists-but-disconnected: UI uses fixtures not live BFF
+1. **Provider Patient Encounter** — transaction-complete: pathway execution orchestration partial
+1. **Core Transaction Orchestration Shell** — transaction-complete: 
 1. **Health ID Issuance & Card Ops** — backend-partial: card pickup page blocked
 1. **Payment / Billing / Exemption / Claim** — backend-ready-but-frontend-incomplete: payer-ops stubs; MusheX raw paths not in browser
 1. **Lab Order & Result** — backend-ready-but-frontend-incomplete: orders page read-only; BFF write contract gap

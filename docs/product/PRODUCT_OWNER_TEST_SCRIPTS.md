@@ -26,8 +26,8 @@
 | 2 | Search for a known test patient (name or CPID) | Result list with Open Chart / Add to Queue |
 | 3 | Click **Open Chart** | Patient chart `/ehr/{patientId}` |
 | 4 | Open **Encounters** (`/ehr/{patientId}/encounters`) | Encounter history + Start encounter |
-| 5 | Start new **OUTPATIENT** encounter (or open active) | Redirect to `/ehr/{patientId}/encounter/{encounterId}` |
-| 6 | Observe **Encounter transaction journey** rail (below patient journey panel) | Loading → linked transaction OR explicit empty state |
+| 5 | Start new **OUTPATIENT** encounter (or open active) | Redirect to `/ehr/{patientId}/encounter/{encounterId}?transaction_id=encounter-{id}` |
+| 6 | Observe **Encounter transaction journey** rail (below patient journey panel) | Loading → PCT-backed `encounter-{id}` transaction with next actions |
 | 7 | If linked: note transaction state, provider stage, correlation ID | Badges and next-action buttons visible |
 | 8 | Capture vitals or triage (if encounter active) | Success toast / saved state |
 | 9 | Click a **Next trusted action** (if present) | Action submits; no mock/fixture data |

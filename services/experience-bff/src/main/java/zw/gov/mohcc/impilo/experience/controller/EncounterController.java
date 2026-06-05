@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -143,9 +144,20 @@ public class EncounterController {
             if (pctEnc == null) {
                 return upstreamFailure("PCT_UNAVAILABLE", "No encounter create payload returned", requestId, correlationId);
             }
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            String encounterId = extractEncounterId(pctEnc);
+            if (encounterId != null) {
+                meta.put("encounter_id", encounterId);
+                meta.put("core_transaction_id", CoreTransactionCompositionService.encounterTransactionId(encounterId));
+            }
+            if (journeyId != null && !journeyId.isBlank()) {
+                meta.put("journey_id", journeyId);
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", pctEnc,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    "meta", meta));
         } catch (Exception e) {
             log.warn("PCT startEncounter failed: {}", e.getMessage());
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
@@ -245,6 +257,23 @@ public class EncounterController {
         } catch (Exception ex) {
             return upstreamFailure("PCT_UNAVAILABLE", ex.getMessage(), requestId, correlationId);
         }
+    }
+
+    private static String extractEncounterId(JsonNode pctEncounter) {
+        if (pctEncounter == null || pctEncounter.isNull()) {
+            return null;
+        }
+        if (pctEncounter.has("id") && !pctEncounter.get("id").isNull()) {
+            return pctEncounter.get("id").asText();
+        }
+        if (pctEncounter.has("encounterId") && !pctEncounter.get("encounterId").isNull()) {
+            return pctEncounter.get("encounterId").asText();
+        }
+        JsonNode attributes = pctEncounter.path("attributes");
+        if (attributes.has("id") && !attributes.get("id").isNull()) {
+            return attributes.get("id").asText();
+        }
+        return null;
     }
 
     private static String strVal(Map<String, Object> map, String... keys) {

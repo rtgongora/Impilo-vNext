@@ -63,8 +63,8 @@ export function EncounterOrchestrationRail({ encounterId, patientId }: Encounter
           <div className="space-y-1 text-sm">
             <p className="font-medium text-slate-900">Encounter transaction not linked yet</p>
             <p className="text-slate-600">
-              Queue or walk-in registration will attach a FACILITY_WALK_IN transaction when workflow dispatch is in
-              scope for this facility.
+              Start the encounter from the encounters list after walk-in registration, or confirm the encounter exists
+              in PCT for this facility.
             </p>
             <Link href={`/ehr/${patientId}/encounters`} className="text-xs font-medium text-impilo-600 hover:underline">
               Review encounter history

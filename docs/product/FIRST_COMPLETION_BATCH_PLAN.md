@@ -1,7 +1,7 @@
 # First Completion Batch Plan — Provider Patient Encounter
 
 > Phase 4A–4B | Branch: `claude/staging-ux-orchestration-remediation-Yypyl`  
-> Status: **implemented** (2026-06-05)
+> Status: **transaction-complete** (2026-06-05, remediation pass)
 
 ## Selected batch
 
@@ -11,7 +11,7 @@
 | Core transaction type | `FACILITY_WALK_IN` |
 | Actor / persona | Regulated provider (clinician, nurse, midwife, allied health) |
 | Classification (pre-Phase 4) | `frontend-route-exists-but-disconnected` |
-| Classification (post-Phase 4) | `orchestration-linked` — encounter page resolves live core transaction |
+| Classification (post-Phase 4) | `transaction-complete` — PCT-backed encounter transactions + queue correlation |
 
 ## Actor and context
 

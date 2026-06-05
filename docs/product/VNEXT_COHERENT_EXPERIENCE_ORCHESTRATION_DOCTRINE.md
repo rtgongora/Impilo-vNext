@@ -1,6 +1,6 @@
 # vNext Coherent Experience Orchestration Doctrine
 
-> Generated: 2026-06-05T07:37:40.190Z
+> Generated: 2026-06-05T08:46:44.754Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **3 — Coherent Experience Orchestration**
 > Spine: [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md)

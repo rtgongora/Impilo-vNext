@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-05T07:37:40.190Z",
+  "generatedAt": "2026-06-05T08:46:44.754Z",
   "entryCount": 872,
   "entries": [
     {
@@ -518,7 +518,7 @@
       "nextActions": "complete encounter",
       "completionCriteria": "Provider completes encounter end-to-end with real PCT data",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/core-transaction/page.tsx",
       "apiClientHook": ""
     },
@@ -544,7 +544,7 @@
       "nextActions": "complete",
       "completionCriteria": "Core transaction shell shows live timeline from BFF",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/client-journey/page.tsx",
       "apiClientHook": ""
     },
@@ -570,7 +570,7 @@
       "nextActions": "complete",
       "completionCriteria": "Core transaction shell shows live timeline from BFF",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/provider-workspace/page.tsx",
       "apiClientHook": ""
     },
@@ -596,7 +596,7 @@
       "nextActions": "complete",
       "completionCriteria": "Core transaction shell shows live timeline from BFF",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/platform-journey/page.tsx",
       "apiClientHook": ""
     },
@@ -1480,7 +1480,7 @@
       "nextActions": "",
       "completionCriteria": "",
       "doctrineCompliance": "unmapped",
-      "orchestrationStatus": "isolated-page",
+      "orchestrationStatus": "unclear-intent",
       "sourcePath": "ui/one-ui-shell/src/app/kiosk/page.tsx",
       "apiClientHook": ""
     },
@@ -2546,7 +2546,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/page.tsx",
       "apiClientHook": ""
     },
@@ -2572,7 +2572,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/summary/page.tsx",
       "apiClientHook": ""
     },
@@ -2598,7 +2598,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/ips/page.tsx",
       "apiClientHook": ""
     },
@@ -2650,7 +2650,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/maternity/page.tsx",
       "apiClientHook": ""
     },
@@ -2676,7 +2676,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/history/page.tsx",
       "apiClientHook": ""
     },
@@ -2702,7 +2702,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/conditions/page.tsx",
       "apiClientHook": ""
     },
@@ -2728,7 +2728,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/medications/page.tsx",
       "apiClientHook": ""
     },
@@ -2754,7 +2754,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/allergies/page.tsx",
       "apiClientHook": ""
     },
@@ -2780,7 +2780,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/orders/page.tsx",
       "apiClientHook": ""
     },
@@ -2806,7 +2806,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/results/page.tsx",
       "apiClientHook": ""
     },
@@ -2832,7 +2832,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/notes/page.tsx",
       "apiClientHook": ""
     },
@@ -2858,7 +2858,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/documents/page.tsx",
       "apiClientHook": ""
     },
@@ -2884,7 +2884,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/encounters/page.tsx",
       "apiClientHook": ""
     },
@@ -2910,7 +2910,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/encounter/[encounterId]/page.tsx",
       "apiClientHook": ""
     },
@@ -2936,7 +2936,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/immunizations/page.tsx",
       "apiClientHook": ""
     },
@@ -2962,7 +2962,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/consults/page.tsx",
       "apiClientHook": ""
     },
@@ -3066,7 +3066,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/discharge/page.tsx",
       "apiClientHook": ""
     },
@@ -3092,7 +3092,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/care-plans/page.tsx",
       "apiClientHook": ""
     },
@@ -3118,7 +3118,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/procedures/page.tsx",
       "apiClientHook": ""
     },
@@ -3144,7 +3144,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/growth-chart/page.tsx",
       "apiClientHook": ""
     },
@@ -3170,7 +3170,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/family-history/page.tsx",
       "apiClientHook": ""
     },
@@ -3196,7 +3196,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/social-history/page.tsx",
       "apiClientHook": ""
     },
@@ -3222,7 +3222,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/functional-status/page.tsx",
       "apiClientHook": ""
     },
@@ -3248,7 +3248,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/advance-directives/page.tsx",
       "apiClientHook": ""
     },
@@ -3274,7 +3274,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/care-team/page.tsx",
       "apiClientHook": ""
     },
@@ -3326,7 +3326,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/goals/page.tsx",
       "apiClientHook": ""
     },
@@ -3352,7 +3352,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/assessments/page.tsx",
       "apiClientHook": ""
     },
@@ -3404,7 +3404,7 @@
       "nextActions": "open chart or queue item",
       "completionCriteria": "Provider searches patient, selects, opens chart with correct CPID",
       "doctrineCompliance": "mapped-to-core-transaction",
-      "orchestrationStatus": "missing-journey",
+      "orchestrationStatus": "coherent",
       "sourcePath": "ui/one-ui-shell/src/app/ehr/[patientId]/imaging/page.tsx",
       "apiClientHook": ""
     },

@@ -1,12 +1,6 @@
 # vNext Experience Orchestration Map
 
-## Phase 4 completion update (2026-06-05)
-
-- `/ehr/[patientId]/encounter/[encounterId]` — **orchestration-linked** via `EncounterOrchestrationRail` + `useEncounterCoreTransaction` (BFF `GET /internal/v1/core-transactions?encounter_id=`).
-- Mobile `EncounterScreen` — transaction context card (read-only parity).
-
-
-> Generated: 2026-06-05T07:37:40.190Z
+> Generated: 2026-06-05T08:46:44.754Z
 > Entries: **872**
 
 JSON: [experience-orchestration-map.json](../../reports/product/experience-orchestration-map.json)
@@ -15,14 +9,14 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 
 | Status | Count |
 |--------|------:|
-| coherent | 104 |
+| coherent | 136 |
 | partial | 135 |
-| isolated-page | 39 |
+| isolated-page | 38 |
 | orphan-backend | 175 |
 | orphan-frontend | 27 |
 | mock-stub | 9 |
-| unclear-intent | 27 |
-| missing-journey | 356 |
+| unclear-intent | 28 |
+| missing-journey | 324 |
 
 | route | actor | journey | status |
 | --- | --- | --- | --- |
@@ -45,10 +39,10 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 | /account-deletion | citizen | — | isolated-page |
 | /privacy/app-stores | citizen | — | unclear-intent |
 | /clinical | provider | outpatient-consultation | missing-journey |
-| /core-transaction | provider | provider-patient-encounter | missing-journey |
-| /client-journey | platform | core-transaction-orchestration | missing-journey |
-| /provider-workspace | platform | core-transaction-orchestration | missing-journey |
-| /platform-journey | platform | core-transaction-orchestration | missing-journey |
+| /core-transaction | provider | provider-patient-encounter | coherent |
+| /client-journey | platform | core-transaction-orchestration | coherent |
+| /provider-workspace | platform | core-transaction-orchestration | coherent |
+| /platform-journey | platform | core-transaction-orchestration | coherent |
 | /clinical-tools | provider | outpatient-consultation | missing-journey |
 | /clinical-tools/rules | provider | outpatient-consultation | missing-journey |
 | /clinical-tools/forms | provider | outpatient-consultation | mock-stub |

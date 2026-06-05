@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-05T07:32:17.772Z
+> Generated: 2026-06-05T08:46:44.674Z
 > Journeys discovered: **42**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -16,7 +16,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | backend-ready-but-frontend-incomplete |
 | Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | backend-ready-but-frontend-incomplete |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | backend-ready-but-frontend-incomplete |
-| Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | orchestration-linked (Phase 4) |
+| Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | backend-ready-but-frontend-incomplete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | backend-partial |
 | Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-ready-but-frontend-incomplete |
@@ -45,7 +45,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Wallet Payment | MARKETPLACE | citizen | /wallet | wired | backend-ready-but-frontend-incomplete |
 | Offline Clinical Queue | FACILITY_WALK_IN | provider | mobile offline mode | partial | backend-partial |
 | Emergency / ED Encounter | EMERGENCY | provider | /clinical/emergency | partial | trust-security-incomplete |
-| Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | partial | frontend-route-exists-but-disconnected |
+| Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | wired | transaction-complete |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | health-information-officer | /public-health | partial | backend-ready-but-frontend-incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | backend-ready-but-frontend-incomplete |
 | Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | backend-partial |

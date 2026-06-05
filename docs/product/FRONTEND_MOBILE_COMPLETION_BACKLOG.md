@@ -7,7 +7,7 @@
 
 | Journey | Web | Mobile | Notes |
 |---------|-----|--------|-------|
-| Provider Patient Encounter | `/ehr/[patientId]/encounter/[encounterId]` — `EncounterOrchestrationRail` + `useEncounterCoreTransaction` | `EncounterScreen` transaction context card | BFF `encounter_id` filter on core-transactions list |
+| Provider Patient Encounter | Queue/search/encounters pass `journey_id` + `transaction_id`; PCT-backed `encounter-{id}` composition; `EncounterOrchestrationRail` | `EncounterScreen` transaction context + action apply | BFF encounter/journey transaction IDs in create meta |
 
 ## High priority — next batches
 
@@ -34,7 +34,7 @@
 
 | Area | Limitation |
 |------|------------|
-| Provider encounter | Transaction context read-only on mobile; action apply deferred to web rail in Phase 4 |
+| Provider encounter | Mobile applies core-transaction next actions via BFF (parity with web rail) |
 | CRVS / UBOMI | No mobile screens |
 | Field public health | Thinner than web |
 

@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ClipboardList, Plus, Loader2, Receipt, ArrowRightLeft, Video, FileText } from "lucide-react";
 import { EHRLayout } from "@/components/EHRLayout";
@@ -59,7 +59,10 @@ const EMPTY_FORM = {
 export default function EncountersPage() {
   const params = useParams<{ patientId: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const patientId = params.patientId;
+  const journeyFromUrl = searchParams.get("journey_id") ?? "";
+  const transactionFromUrl = searchParams.get("transaction_id") ?? "";
 
   const facility = useFacilityStore((s) => s.facility);
   const { isClinical } = useRoleGroup();
@@ -93,8 +96,12 @@ export default function EncountersPage() {
     return { openReferrals, receivingHere, teleconsultActivity, returnedGuidance };
   }, [clinicalNotes, facility, referrals, telemedicineSessions]);
 
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [showForm, setShowForm] = useState(Boolean(journeyFromUrl));
+  const [form, setForm] = useState({
+    ...EMPTY_FORM,
+    journey_id: journeyFromUrl,
+    entry_point: journeyFromUrl ? "QUEUE_WALK_IN" : EMPTY_FORM.entry_point,
+  });
 
   function updateField(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -119,8 +126,18 @@ export default function EncountersPage() {
           setForm({ ...EMPTY_FORM });
           setShowForm(false);
           const newEncounterId = data?.data?.id;
+          const coreTransactionId =
+            data?.meta?.core_transaction_id ?? transactionFromUrl ?? undefined;
           if (newEncounterId) {
-            router.push(`/ehr/${patientId}/encounter/${newEncounterId}`);
+            const params = new URLSearchParams();
+            if (coreTransactionId) params.set("transaction_id", coreTransactionId);
+            if (data?.meta?.journey_id) params.set("journey_id", data.meta.journey_id);
+            const query = params.toString();
+            router.push(
+              query
+                ? `/ehr/${patientId}/encounter/${newEncounterId}?${query}`
+                : `/ehr/${patientId}/encounter/${newEncounterId}`,
+            );
           }
         } },
     );

@@ -19,6 +19,8 @@ import java.util.Map;
 public class CoreTransactionCompositionService {
 
     private static final Logger log = LoggerFactory.getLogger(CoreTransactionCompositionService.class);
+    public static final String ENCOUNTER_TX_PREFIX = "encounter-";
+    public static final String JOURNEY_TX_PREFIX = "journey-";
 
     private final WorkflowServiceClient workflowServiceClient;
     private final PctServiceClient pctServiceClient;
@@ -63,6 +65,7 @@ public class CoreTransactionCompositionService {
             failures.add("WORKFLOW_UNAVAILABLE");
         }
 
+        appendWorkflowInstanceTransactions(items, failures, state, type);
         appendDeliveryTransactions(items, failures, state, type);
 
         if (encounterId != null && !encounterId.isBlank()) {
@@ -71,6 +74,12 @@ public class CoreTransactionCompositionService {
                 String linkedEncounter = item.path("clinicalContext").path("encounterId").asText("");
                 if (encounterId.equals(linkedEncounter)) {
                     filtered.add(item);
+                }
+            }
+            if (filtered.isEmpty()) {
+                ObjectNode encounterBacked = composeFromPctEncounter(encounterId);
+                if (encounterBacked != null) {
+                    filtered.add(encounterBacked);
                 }
             }
             items = filtered;
@@ -82,6 +91,12 @@ public class CoreTransactionCompositionService {
     }
 
     public ObjectNode getCoreTransaction(String transactionId) {
+        if (isEncounterTransactionId(transactionId)) {
+            return composeFromPctEncounter(stripEncounterTransactionId(transactionId));
+        }
+        if (transactionId != null && transactionId.startsWith(JOURNEY_TX_PREFIX)) {
+            return composeFromPctJourney(transactionId.substring(JOURNEY_TX_PREFIX.length()));
+        }
         if (transactionId != null && transactionId.startsWith("delivery-")) {
             String deliveryId = transactionId.substring("delivery-".length());
             try {
@@ -107,6 +122,9 @@ public class CoreTransactionCompositionService {
     }
 
     public JsonNode applyAction(String transactionId, String actionCode, Map<String, Object> payload) {
+        if (isEncounterTransactionId(transactionId)) {
+            return applyEncounterTransactionAction(stripEncounterTransactionId(transactionId), actionCode, payload);
+        }
         Map<String, Object> body = Map.of(
                 "actionCode", actionCode,
                 "payload", payload
@@ -728,6 +746,156 @@ public class CoreTransactionCompositionService {
             case "PENDING_SYNC", "FAILED_SYNC", "PENDING_RECONCILIATION" -> "HANDLE_FAILURE_OFFLINE_AND_RECONCILIATION";
             default -> "MANAGE_STATE_MACHINE";
         };
+    }
+
+    public static String encounterTransactionId(String encounterId) {
+        return ENCOUNTER_TX_PREFIX + encounterId;
+    }
+
+    public static String journeyTransactionId(String journeyId) {
+        return JOURNEY_TX_PREFIX + journeyId;
+    }
+
+    public static boolean isEncounterTransactionId(String transactionId) {
+        return transactionId != null && transactionId.startsWith(ENCOUNTER_TX_PREFIX);
+    }
+
+    private static String stripEncounterTransactionId(String transactionId) {
+        return transactionId.substring(ENCOUNTER_TX_PREFIX.length());
+    }
+
+    private JsonNode applyEncounterTransactionAction(String encounterId, String actionCode, Map<String, Object> payload) {
+        if ("COMPLETE_ENCOUNTER".equalsIgnoreCase(actionCode)) {
+            try {
+                long encId = Long.parseLong(encounterId.trim());
+                pctServiceClient.completeEncounter(encId);
+            } catch (Exception ex) {
+                log.warn("Encounter completion via core-transaction action failed: {}", ex.getMessage());
+                throw new IllegalStateException("Unable to complete encounter " + encounterId + ": " + ex.getMessage(), ex);
+            }
+        }
+        ObjectNode view = composeFromPctEncounter(encounterId);
+        if (view == null) {
+            throw new IllegalStateException("Encounter transaction not found for encounter " + encounterId);
+        }
+        return view;
+    }
+
+    private ObjectNode composeFromPctEncounter(String encounterId) {
+        if (encounterId == null || encounterId.isBlank()) {
+            return null;
+        }
+        try {
+            long encId = Long.parseLong(encounterId.trim());
+            JsonNode pctEncounter = pctServiceClient.getEncounter(encId);
+            if (pctEncounter == null || pctEncounter.isNull()) {
+                return null;
+            }
+            ObjectNode pseudo = objectMapper.createObjectNode();
+            pseudo.put("id", encounterTransactionId(encounterId));
+            pseudo.put("state", mapEncounterStatusToTransactionState(stringOr(pctEncounter, "status", "IN_SERVICE")));
+            pseudo.put("transactionType", "FACILITY_WALK_IN");
+            pseudo.put("serviceCode", "svc.pct.encounter");
+            pseudo.put("encounterId", encounterId);
+            pseudo.put("journeyId", stringOr(pctEncounter, "journeyId", ""));
+            pseudo.put("cpid", stringOr(pctEncounter, "subjectCpid", stringOr(pctEncounter, "patientCpid", "")));
+            pseudo.put("facilityId", stringOr(pctEncounter, "facilityId", "tuso:unknown"));
+            pseudo.put("correlationId", stringOr(pctEncounter, "encounterRef", encounterId));
+            ObjectNode view = toCoreTransactionView(pseudo, "FACILITY_WALK_IN");
+            ObjectNode audit = (ObjectNode) view.get("auditSummary");
+            if (audit != null) {
+                audit.put("sourceSystem", "pct-service");
+            }
+            return view;
+        } catch (NumberFormatException ex) {
+            log.debug("Invalid encounter id for core-transaction composition: {}", encounterId);
+            return null;
+        } catch (Exception ex) {
+            log.warn("PCT encounter composition failed for {}: {}", encounterId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private ObjectNode composeFromPctJourney(String journeyId) {
+        if (journeyId == null || journeyId.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode journey = pctServiceClient.getJourney(journeyId);
+            if (journey == null || journey.isNull()) {
+                return null;
+            }
+            ObjectNode pseudo = objectMapper.createObjectNode();
+            pseudo.put("id", journeyTransactionId(journeyId));
+            pseudo.put("state", mapJourneyStateToTransactionState(stringOr(journey, "state", "QUEUED")));
+            pseudo.put("transactionType", "FACILITY_WALK_IN");
+            pseudo.put("serviceCode", "svc.pct.journey");
+            pseudo.put("journeyId", journeyId);
+            pseudo.put("cpid", stringOr(journey, "patientCpid", ""));
+            pseudo.put("facilityId", stringOr(journey, "facilityId", "tuso:unknown"));
+            pseudo.put("correlationId", journeyId);
+            ObjectNode view = toCoreTransactionView(pseudo, "FACILITY_WALK_IN");
+            ObjectNode audit = (ObjectNode) view.get("auditSummary");
+            if (audit != null) {
+                audit.put("sourceSystem", "pct-service");
+            }
+            return view;
+        } catch (Exception ex) {
+            log.warn("PCT journey composition failed for {}: {}", journeyId, ex.getMessage());
+            return null;
+        }
+    }
+
+    private static String mapEncounterStatusToTransactionState(String status) {
+        if (status == null) {
+            return "IN_SERVICE";
+        }
+        return switch (status.toUpperCase()) {
+            case "COMPLETED", "CLOSED", "DISCHARGED" -> "COMPLETED";
+            case "CANCELLED" -> "CANCELLED";
+            case "STARTED", "ACTIVE", "IN_PROGRESS" -> "IN_SERVICE";
+            default -> "IN_SERVICE";
+        };
+    }
+
+    private static String mapJourneyStateToTransactionState(String state) {
+        if (state == null) {
+            return "QUEUED";
+        }
+        return switch (state.toUpperCase()) {
+            case "ARRIVED", "WAITING" -> "QUEUED";
+            case "IN_SERVICE" -> "IN_SERVICE";
+            case "COMPLETED", "CLOSED" -> "COMPLETED";
+            default -> "QUEUED";
+        };
+    }
+
+    private void appendWorkflowInstanceTransactions(ArrayNode items, ArrayNode failures, String state, String type) {
+        if (type != null && !type.isBlank() && !"FACILITY_WALK_IN".equalsIgnoreCase(type)) {
+            return;
+        }
+        try {
+            JsonNode raw = workflowServiceClient.listInstances(state);
+            for (JsonNode instance : asNodeArray(raw)) {
+                ObjectNode pseudo = objectMapper.createObjectNode();
+                String instanceId = stringOr(instance, "instanceId", stringOr(instance, "id", "unknown"));
+                pseudo.put("id", instanceId);
+                pseudo.put("state", stringOr(instance, "status", stringOr(instance, "currentStep", "INITIATED")));
+                pseudo.put("transactionType", "FACILITY_WALK_IN");
+                pseudo.put("serviceCode", "svc.workflow.instance");
+                JsonNode context = instance.path("context");
+                if (context.isObject()) {
+                    pseudo.put("encounterId", stringOr(context, "encounterId", ""));
+                    pseudo.put("journeyId", stringOr(context, "journeyId", ""));
+                    pseudo.put("cpid", stringOr(context, "cpid", stringOr(context, "patientCpid", "")));
+                    pseudo.put("facilityId", stringOr(context, "facilityId", "tuso:unknown"));
+                }
+                items.add(toCoreTransactionView(pseudo, "FACILITY_WALK_IN"));
+            }
+        } catch (Exception ex) {
+            log.debug("Workflow instance bridge skipped: {}", ex.getMessage());
+            failures.add("WORKFLOW_INSTANCES_UNAVAILABLE");
+        }
     }
 
     private void appendDeliveryTransactions(ArrayNode items, ArrayNode failures, String state, String type) {

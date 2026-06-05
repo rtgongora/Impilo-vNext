@@ -1,6 +1,6 @@
 # vNext Experience Coherence Report
 
-> Generated: 2026-06-05T07:37:40.190Z
+> Generated: 2026-06-05T08:46:44.754Z
 
 | # | Metric | Value |
 |---|--------|------:|
@@ -9,8 +9,8 @@
 | 3 | Orphan routes | 93 |
 | 4 | Backend capabilities without journeys | 31 |
 | 5 | Mock/stub/placeholder routes | 9 |
-| 6 | Isolated pages | 39 |
-| 7 | Incomplete transaction journeys | 42 |
+| 6 | Isolated pages | 38 |
+| 7 | Incomplete transaction journeys | 40 |
 | 8 | Mobile surfaces disconnected | 45 |
 
 ## Top 20 coherence gaps
@@ -27,14 +27,14 @@
 10. **route:/account-deletion** — `isolated-page`: Account Deletion
 11. **route:/privacy/app-stores** — `unclear-intent`: hooks/queries/usePrivacyPreferences.ts
 12. **route:/clinical** — `missing-journey`: hooks/queries/useClinicalCuration.ts
-13. **route:/core-transaction** — `missing-journey`: Core Transaction
-14. **route:/client-journey** — `missing-journey`: Client Journey
-15. **route:/provider-workspace** — `missing-journey`: Provider Workspace
-16. **route:/platform-journey** — `missing-journey`: Platform Journey
-17. **route:/clinical-tools** — `missing-journey`: Clinical Tools
-18. **route:/clinical-tools/rules** — `missing-journey`: Rules Engine
-19. **route:/clinical-tools/forms** — `mock-stub`: Form Builder
-20. **route:/clinical/control-tower** — `missing-journey`: hooks/queries/useClinicalCuration.ts
+13. **route:/clinical-tools** — `missing-journey`: Clinical Tools
+14. **route:/clinical-tools/rules** — `missing-journey`: Rules Engine
+15. **route:/clinical-tools/forms** — `mock-stub`: Form Builder
+16. **route:/clinical/control-tower** — `missing-journey`: hooks/queries/useClinicalCuration.ts
+17. **route:/clinical/dictation** — `missing-journey`: hooks/queries/useClinicalCuration.ts
+18. **route:/clinical/emergency** — `missing-journey`: hooks/queries/useClinicalCuration.ts
+19. **route:/clinical/inpatient** — `missing-journey`: hooks/queries/useClinicalCuration.ts
+20. **route:/clinical/inpatient/admissions** — `missing-journey`: hooks/queries/useClinicalCuration.ts
 
 ## Recommended first orchestration-completion batch
 

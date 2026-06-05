@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-05T07:32:17.772Z",
+  "generatedAt": "2026-06-05T08:46:44.674Z",
   "journeyCount": 42,
   "journeys": [
     {
@@ -380,7 +380,7 @@
       "completionState": "CLINICAL_COMPLETION_PENDING",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "pathway execution orchestration partial",
-      "missingFrontendMobileWork": "core-transaction pages use fixtures",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "outpatient-consultation",
         "lab-order-result",
@@ -389,7 +389,7 @@
       "productOwnerAcceptanceTest": "Provider completes encounter end-to-end with real PCT data",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "frontend-route-exists-but-disconnected"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "outpatient-consultation",
@@ -2046,9 +2046,9 @@
       "trustSecurityChecks": "full trust stack",
       "auditRequirements": "transaction audit chain",
       "completionState": "COMPLETED",
-      "currentImplementationStatus": "partial",
-      "missingBackendWork": "BFF routes exist",
-      "missingFrontendMobileWork": "UI uses fixtures not live BFF",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
         "payment-billing-claim"
@@ -2056,7 +2056,7 @@
       "productOwnerAcceptanceTest": "Core transaction shell shows live timeline from BFF",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "MANAGE_STATE_MACHINE",
-      "completionClassification": "frontend-route-exists-but-disconnected"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "surveillance-outbreak",

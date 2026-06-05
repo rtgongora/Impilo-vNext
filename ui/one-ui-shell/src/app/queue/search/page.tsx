@@ -67,7 +67,33 @@ const SEARCH_WORKFLOW_COPY: Record<
 
 export default function PatientSearchPage() {
   const searchParams = useSearchParams();
+  const journeyId = searchParams.get("journey_id");
+  const transactionId = searchParams.get("transaction_id");
   const facility = useFacilityStore((state) => state.facility);
+
+  function chartHref(patientId: string): string {
+    const params = new URLSearchParams({ entry: "search" });
+    if (journeyId) params.set("journey_id", journeyId);
+    if (transactionId) params.set("transaction_id", transactionId);
+    return `/ehr/${patientId}?${params.toString()}`;
+  }
+
+  function correlatedWalkInHref(patientId: string): string {
+    const params = new URLSearchParams({ patientId });
+    if (journeyId) params.set("journey_id", journeyId);
+    if (transactionId) params.set("transaction_id", transactionId);
+    return `/queue/walk-in?${params.toString()}`;
+  }
+
+  function correlatedHref(patientId: string, path: string): string {
+    const [base, existing] = path.split("?");
+    const params = new URLSearchParams(existing ?? "");
+    if (journeyId) params.set("journey_id", journeyId);
+    if (transactionId) params.set("transaction_id", transactionId);
+    const resolved = base.replace("[patientId]", patientId).replace("{patientId}", patientId);
+    const query = params.toString();
+    return query ? `${resolved}?${query}` : resolved;
+  }
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
   const workflow = (searchParams.get("workflow") as SearchWorkflow | null) ?? "default";
@@ -182,13 +208,21 @@ export default function PatientSearchPage() {
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-2">
                           <Link
-                            href={workflowCopy.primaryActionHref(patient.id)}
+                            href={
+                              workflow === "default"
+                                ? chartHref(patient.id)
+                                : correlatedHref(patient.id, workflowCopy.primaryActionHref(patient.id))
+                            }
                             className="inline-block rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
                           >
                             {workflowCopy.primaryActionLabel}
                           </Link>
                           <Link
-                            href={workflowCopy.secondaryActionHref(patient.id)}
+                            href={
+                              workflow === "default"
+                                ? correlatedWalkInHref(patient.id)
+                                : correlatedHref(patient.id, workflowCopy.secondaryActionHref(patient.id))
+                            }
                             className="inline-block rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                           >
                             {workflowCopy.secondaryActionLabel}

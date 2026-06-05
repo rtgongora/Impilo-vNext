@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-06-05T07:37:40.190Z",
+  "generatedAt": "2026-06-05T08:46:44.754Z",
   "totalFrontendRoutes": 445,
   "routesMappedToActorContextIntentTransaction": 368,
   "orphanRoutes": 93,
   "backendCapabilitiesWithoutJourneys": 31,
   "mockStubPlaceholderRouteCount": 9,
-  "isolatedPages": 39,
-  "incompleteTransactionJourneys": 42,
+  "isolatedPages": 38,
+  "incompleteTransactionJourneys": 40,
   "mobileSurfacesDisconnected": 45,
   "orchestrationStatusCounts": {
-    "coherent": 104,
+    "coherent": 136,
     "partial": 135,
-    "isolated-page": 39,
+    "isolated-page": 38,
     "orphan-backend": 175,
     "orphan-frontend": 27,
     "mock-stub": 9,
-    "unclear-intent": 27,
-    "missing-journey": 356
+    "unclear-intent": 28,
+    "missing-journey": 324
   },
   "top20CoherenceGaps": [
     {
@@ -93,30 +93,6 @@
     },
     {
       "type": "route",
-      "id": "/core-transaction",
-      "status": "missing-journey",
-      "gap": "Core Transaction"
-    },
-    {
-      "type": "route",
-      "id": "/client-journey",
-      "status": "missing-journey",
-      "gap": "Client Journey"
-    },
-    {
-      "type": "route",
-      "id": "/provider-workspace",
-      "status": "missing-journey",
-      "gap": "Provider Workspace"
-    },
-    {
-      "type": "route",
-      "id": "/platform-journey",
-      "status": "missing-journey",
-      "gap": "Platform Journey"
-    },
-    {
-      "type": "route",
       "id": "/clinical-tools",
       "status": "missing-journey",
       "gap": "Clinical Tools"
@@ -136,6 +112,30 @@
     {
       "type": "route",
       "id": "/clinical/control-tower",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/dictation",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/emergency",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/inpatient",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/inpatient/admissions",
       "status": "missing-journey",
       "gap": "hooks/queries/useClinicalCuration.ts"
     }
