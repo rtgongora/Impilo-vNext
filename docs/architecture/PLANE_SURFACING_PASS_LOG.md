@@ -6,13 +6,23 @@
 
 | Plane | Evidence | Maturity delta |
 |-------|----------|----------------|
-| **Trust** | `TrustGovernanceStrip` on `/settings/security` — policies, break-glass, devices, audit chain + recent decisions | Partial → deeper operator+user |
-| **Registry** | `WorkspaceOpsHub` mounted on `/operations/facility-operations`; UBOMI verify tab product UI | Partial / Not Wired → Partial+ |
-| **Clinical** | `/home/results` citizen lab results via `useCitizenHealthSummary` | New live citizen journey |
+| **Trust** | `TrustGovernanceStrip` on `/settings/security`; registration role assignment hardened in BFF | Partial → deeper operator+user |
+| **Registry** | `WorkspaceOpsHub` on `/operations/facility-operations`; UBOMI verify tab product UI | Partial / Not Wired → Partial+ |
+| **Clinical** | `/clinical/control-tower` live facility ops; `/home/results` citizen lab results | Partial → deeper |
 | **Data** | `/admin/data-governance` export eval success card (no QRP dump) | Partial → deeper |
 | **Integration** | `/operations/workflows` `WorkflowInstancesTable` with select-for-transition | Partial → deeper |
-| **Experience** | Workspace ops hub wiring; shared `DomainCollectionTable` | Partial → deeper |
-| **Enterprise** | Workspace-ops billing/stock/HR live toggles; payer-ops reviews table | Partial → deeper |
+| **Experience** | `SUPER_ADMIN` visibility parity; `WorkplaceSelectionHub` facility entry | Partial → deeper |
+| **Enterprise** | `/finance/payer-ops` + `/finance/workspace` typed entity panels (intent, attempts, invoices) | Partial → deeper |
+
+## Proper UI Surfacing pass (2026-06-05 batch 2)
+
+| Deliverable | Status |
+|-------------|--------|
+| Hotspot register (`UI_SURFACING_HOTSPOT_REGISTER.md`) | Live |
+| SUPER_ADMIN / platform override role gating (UI + BFF) | Live |
+| Citizen registration error semantics + role rollback | Live |
+| Finance payer-ops / workspace product tables | Partial+ (fraud flags QRP remains) |
+| Control tower + workplace hub | Live (prior pass, verified) |
 
 ## Golden path proofs
 
@@ -26,7 +36,7 @@
 
 ## Remaining (honest partial)
 
-- Finance payer-ops intent/receipts/attempts panels still use `QueryResultPanel` for operator JSON commands
+- Finance payer-ops fraud-flags panel still uses `QueryResultPanel`
 - Marketplace `/marketplace/ops` QRP density
 - ERP HR/GL QRP density
 - Mobile parity per capability (Phase F)

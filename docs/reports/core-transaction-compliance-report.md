@@ -1,8 +1,8 @@
 # Core Transaction Compliance Report
 
 - Total checks: **12**
-- Passed: **12**
-- Failed: **0**
+- Passed: **11**
+- Failed: **1**
 
 ## Check Results
 
@@ -11,7 +11,7 @@
 - **PASS** `checklist-artifacts` - Checklist artifacts exist (All required files exist)
 - **PASS** `bff-dual-surface` - Experience BFF dual-surface routes (Internal + alias routes found)
 - **PASS** `ci-core-transaction-jobs` - CI includes core transaction gates (All core transaction jobs present)
-- **PASS** `checklist-complete` - Checklist matrix is complete and strict-core services have event mappings (Validated 109 service checklist entries)
+- **FAIL** `checklist-service-coverage` - Checklist coverage for all active services (Missing checklist entries: llm-orchestration-service, ndila-service, nhume-service)
 - **PASS** `dual-emit-pct-service` - pct-service dual-emits core.transaction.events (Publisher + config present)
 - **PASS** `dual-emit-costing-engine-service` - costing-engine-service dual-emits core.transaction.events (Publisher + config present)
 - **PASS** `dual-emit-oros-service` - oros-service dual-emits core.transaction.events (Publisher + config present)

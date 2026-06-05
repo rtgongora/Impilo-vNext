@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 12,
-    "passed": 12,
-    "failed": 0
+    "passed": 11,
+    "failed": 1
   },
   "checks": [
     {
@@ -36,10 +36,10 @@
       "details": "All core transaction jobs present"
     },
     {
-      "id": "checklist-complete",
-      "description": "Checklist matrix is complete and strict-core services have event mappings",
-      "status": "pass",
-      "details": "Validated 109 service checklist entries"
+      "id": "checklist-service-coverage",
+      "description": "Checklist coverage for all active services",
+      "status": "fail",
+      "details": "Missing checklist entries: llm-orchestration-service, ndila-service, nhume-service"
     },
     {
       "id": "dual-emit-pct-service",
