@@ -134,6 +134,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/medications", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Medications", navLabel: "Medications", navZone: "life" },
   { path: "/home/conditions", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Conditions", navLabel: "Conditions", navZone: "life" },
   { path: "/home/allergies", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Allergies", navLabel: "Allergies", navZone: "life" },
+  { path: "/home/results", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Results", navLabel: "Results", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
   { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
@@ -612,7 +613,7 @@ export const ROUTES: RouteDefinition[] = [
 // Combined with upstream additions on this branch the canonical total is 370.
 // GAP-010 post-merge (2026-05-28): registered 21 shadow routes (social, wallet, communication hub,
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
-export const EXPECTED_ROUTE_COUNT = 417;
+export const EXPECTED_ROUTE_COUNT = 418;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

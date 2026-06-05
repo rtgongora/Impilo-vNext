@@ -29,6 +29,10 @@ export function useCitizenHealthSummary() {
   const summary = (query.data?.data ?? {}) as AnyRecord;
   const conditions = useMemo(() => asList(summary.conditions), [summary.conditions]);
   const allergies = useMemo(() => asList(summary.allergies), [summary.allergies]);
+  const results = useMemo(
+    () => asList(summary.results ?? summary.labs ?? summary.observations),
+    [summary.results, summary.labs, summary.observations],
+  );
 
-  return { ...query, summary, conditions, allergies };
+  return { ...query, summary, conditions, allergies, results };
 }
