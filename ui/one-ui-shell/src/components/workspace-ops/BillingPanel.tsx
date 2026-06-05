@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   FileText, CreditCard, AlertCircle, CheckCircle2,
-  Clock, Receipt, Send, BarChart3,
+  Clock, Receipt, Send, BarChart3, Loader2,
 } from 'lucide-react';
+import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { useCoverageClaimsList, useCoverageRemittances } from '@/hooks/queries/useCoverage';
 
 // ─── Types ───
 
@@ -76,13 +78,40 @@ function getStatusBadge(status: string) {
 
 // ─── Component ───
 
-export function BillingPanel() {
+interface BillingPanelProps {
+  facilityId?: string | null;
+}
+
+export function BillingPanel({ facilityId }: BillingPanelProps) {
   const [activeTab, setActiveTab] = useState<BillingTab>('overview');
+  const [preferLive, setPreferLive] = useState(true);
+  const liveClaimsQ = useCoverageClaimsList({ facilityId });
+  const liveRemittancesQ = useCoverageRemittances();
+  const liveClaims = liveClaimsQ.data ?? [];
+  const hasLiveClaims = liveClaims.length > 0;
+  const dataSource = preferLive && hasLiveClaims ? 'live' : preferLive && liveClaimsQ.isLoading ? 'mixed' : 'demo';
 
   const totalUnbilled = UNBILLED_CHARGES.reduce((s, c) => s + c.amount, 0);
   const totalOutstanding = INVOICES.filter(i => ['sent', 'overdue', 'partial'].includes(i.status)).reduce((s, i) => s + i.amount - i.paidAmount, 0);
   const todayCollected = RECENT_PAYMENTS.reduce((s, p) => s + p.amount, 0);
-  const claimsPending = CLAIMS.filter(c => c.status === 'submitted').length;
+  const displayClaims = useMemo(() => {
+    if (preferLive && liveClaims.length > 0) {
+      return liveClaims.map((cl) => ({
+        id: cl.claimNumber || cl.id,
+        patient: cl.facilityId || 'Member',
+        scheme: cl.claimType || 'Coverage',
+        amount: cl.totalAmount,
+        status: cl.status,
+        submittedAt: cl.createdAt?.slice(0, 10) ?? '—',
+        approvedAmount: undefined as number | undefined,
+        rejectReason: undefined as string | undefined,
+        live: true,
+      }));
+    }
+    return CLAIMS.map((cl) => ({ ...cl, live: false }));
+  }, [preferLive, liveClaims]);
+
+  const claimsPending = displayClaims.filter((c) => c.status === 'submitted').length;
 
   const tabConfig: { key: BillingTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { key: 'overview', label: 'Overview', icon: BarChart3 },
@@ -94,6 +123,28 @@ export function BillingPanel() {
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <LiveDataSourceBadge source={dataSource} />
+        <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={preferLive}
+            onChange={(e) => setPreferLive(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          Prefer live coverage data
+        </label>
+        {preferLive && liveClaimsQ.isLoading ? (
+          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+            <Loader2 className="h-3 w-3 animate-spin" /> Loading claims…
+          </span>
+        ) : null}
+      </div>
+      {preferLive && liveRemittancesQ.data && liveRemittancesQ.data.length > 0 ? (
+        <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-100 rounded px-2 py-1">
+          {liveRemittancesQ.data.length} live remittance(s) from coverage-service
+        </p>
+      ) : null}
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
@@ -226,7 +277,7 @@ export function BillingPanel() {
       {/* Claims Tab */}
       {activeTab === 'claims' && (
         <div className="space-y-2 max-h-[400px] overflow-auto">
-          {CLAIMS.map(cl => (
+          {displayClaims.map(cl => (
             <div key={cl.id} className={`bg-white border border-gray-200 rounded-lg py-3 px-4 ${cl.status === 'rejected' ? 'border-l-4 border-l-red-500' : ''}`}>
               <div className="flex items-center justify-between">
                 <div>

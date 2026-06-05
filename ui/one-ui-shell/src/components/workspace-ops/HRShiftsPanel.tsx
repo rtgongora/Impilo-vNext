@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { useStaffingRosterWeek } from '@/hooks/queries/useStaffing';
 import {
   Users, Clock, Calendar, UserCheck, Coffee,
   AlertTriangle, ArrowRightLeft, FileText, Shield, Sun, Moon,
@@ -71,11 +74,45 @@ function getRoleColor(role: string) {
 
 // ─── Component ───
 
-export function HRShiftsPanel() {
+function weekStartIso(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
+
+interface HRShiftsPanelProps {
+  facilityId?: string | null;
+}
+
+export function HRShiftsPanel({ facilityId }: HRShiftsPanelProps) {
   const [activeTab, setActiveTab] = useState<HRTab>('roster');
-  const onShift = STAFF_ROSTER.filter(s => s.status === 'on_shift').length;
-  const onBreak = STAFF_ROSTER.filter(s => s.status === 'on_break').length;
-  const overtime = STAFF_ROSTER.filter(s => s.overtime).length;
+  const [preferLive, setPreferLive] = useState(true);
+  const rosterQ = useStaffingRosterWeek({
+    facilityId: facilityId ?? undefined,
+    weekStartISO: weekStartIso(),
+  });
+  const liveRoster = useMemo(() => {
+    const rows = rosterQ.data?.data ?? [];
+    return rows.map((shift, index) => ({
+      id: shift.id ?? String(index),
+      name: shift.attributes.staff_display_name,
+      role: 'staff',
+      department: shift.attributes.workspace_id ?? 'Workspace',
+      status: shift.attributes.status === 'ACTIVE' ? 'on_shift' : 'off_shift',
+      shiftType: 'day',
+      hours: `${shift.attributes.started_at?.slice(11, 16) ?? '—'}-${shift.attributes.ended_at?.slice(11, 16) ?? '—'}`,
+      overtime: false,
+    }));
+  }, [rosterQ.data]);
+  const displayRoster = preferLive && liveRoster.length > 0 ? liveRoster : STAFF_ROSTER;
+  const dataSource =
+    preferLive && liveRoster.length > 0 ? 'live' : preferLive && rosterQ.isLoading ? 'mixed' : 'demo';
+  const onShift = displayRoster.filter(s => s.status === 'on_shift').length;
+  const onBreak = displayRoster.filter(s => s.status === 'on_break').length;
+  const overtime = displayRoster.filter(s => s.overtime).length;
 
   const tabs: { key: HRTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { key: 'roster', label: 'Staff Roster', icon: Users },
@@ -86,6 +123,23 @@ export function HRShiftsPanel() {
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <LiveDataSourceBadge source={dataSource} />
+        <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={preferLive}
+            onChange={(e) => setPreferLive(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          Prefer live staffing roster
+        </label>
+        {preferLive && rosterQ.isLoading ? (
+          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+            <Loader2 className="h-3 w-3 animate-spin" /> Loading roster…
+          </span>
+        ) : null}
+      </div>
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
@@ -131,7 +185,7 @@ export function HRShiftsPanel() {
       {/* Roster Tab */}
       {activeTab === 'roster' && (
         <div className="space-y-1 max-h-[420px] overflow-auto">
-          {STAFF_ROSTER.map(staff => (
+          {displayRoster.map(staff => (
             <div key={staff.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-semibold ${getRoleColor(staff.role)}`}>

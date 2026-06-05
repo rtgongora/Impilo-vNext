@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { LiveDataSourceBadge } from '@/components/common/LiveDataSourceBadge';
+import { useInventoryOnHand, useInventoryStockouts } from '@/hooks/queries/useInventory';
 import {
   Package, ShoppingCart, Truck, ClipboardCheck, AlertTriangle,
   Plus, Search, ArrowRightLeft, Calendar, TrendingDown,
@@ -79,20 +82,64 @@ function getStatusBadge(status: string) {
 
 // ─── Component ───
 
-export function StockManagementPanel() {
+function asInventoryRows(payload: unknown): InventoryItem[] {
+  const raw = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === 'object'
+      ? (Array.isArray((payload as { data?: unknown }).data)
+          ? (payload as { data: unknown[] }).data
+          : Array.isArray((payload as { items?: unknown }).items)
+            ? (payload as { items: unknown[] }).items
+            : [])
+      : [];
+  return raw.map((row, index) => {
+    const r = row as Record<string, unknown>;
+    const attrs = (r.attributes as Record<string, unknown> | undefined) ?? r;
+    const onHand = Number(attrs.onHand ?? attrs.quantity ?? attrs.on_hand ?? 0);
+    const reorder = Number(attrs.reorderLevel ?? attrs.reorder_level ?? 0);
+    let status: InventoryItem['status'] = 'ok';
+    if (onHand <= 0) status = 'out';
+    else if (onHand <= reorder) status = 'low';
+    return {
+      id: String(r.id ?? index),
+      name: String(attrs.itemName ?? attrs.name ?? attrs.item_code ?? 'Item'),
+      code: String(attrs.itemCode ?? attrs.item_code ?? attrs.sku ?? '—'),
+      category: String(attrs.category ?? 'Supplies'),
+      onHand,
+      reorderLevel: reorder,
+      unit: String(attrs.unit ?? 'ea'),
+      expiry: attrs.expiryDate ? String(attrs.expiryDate) : null,
+      location: String(attrs.location ?? attrs.storeName ?? 'Store'),
+      status,
+    };
+  });
+}
+
+interface StockManagementPanelProps {
+  facilityId?: string | null;
+}
+
+export function StockManagementPanel({ facilityId }: StockManagementPanelProps) {
   const [activeTab, setActiveTab] = useState<StockTab>('inventory');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const [preferLive, setPreferLive] = useState(true);
+  const onHandQ = useInventoryOnHand(facilityId, { size: 50 });
+  const stockoutsQ = useInventoryStockouts(facilityId);
+  const liveItems = useMemo(() => asInventoryRows(onHandQ.data), [onHandQ.data]);
+  const displayInventory = preferLive && liveItems.length > 0 ? liveItems : INVENTORY_ITEMS;
+  const dataSource =
+    preferLive && liveItems.length > 0 ? 'live' : preferLive && onHandQ.isLoading ? 'mixed' : 'demo';
 
-  const filteredItems = INVENTORY_ITEMS.filter(item => {
+  const filteredItems = displayInventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  const lowStockCount = INVENTORY_ITEMS.filter(i => i.status === 'low' || i.status === 'out').length;
-  const expiringCount = INVENTORY_ITEMS.filter(i => i.status === 'expiring').length;
+  const lowStockCount = displayInventory.filter(i => i.status === 'low' || i.status === 'out').length;
+  const expiringCount = displayInventory.filter(i => i.status === 'expiring').length;
 
   const tabs: { key: StockTab; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number }[] = [
     { key: 'inventory', label: 'Inventory', icon: Package },
@@ -104,11 +151,33 @@ export function StockManagementPanel() {
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <LiveDataSourceBadge source={dataSource} />
+        <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={preferLive}
+            onChange={(e) => setPreferLive(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          Prefer live inventory data
+        </label>
+        {preferLive && onHandQ.isLoading ? (
+          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+            <Loader2 className="h-3 w-3 animate-spin" /> Loading on-hand…
+          </span>
+        ) : null}
+      </div>
+      {preferLive && stockoutsQ.data ? (
+        <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded px-2 py-1">
+          Stockout probe armed for facility {facilityId ?? '—'}
+        </p>
+      ) : null}
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="bg-white border border-gray-200 rounded-lg pt-3 pb-2 px-3">
           <div className="flex items-center gap-2"><Package className="h-4 w-4 text-impilo-400" /><span className="text-xs text-gray-500">Total Items</span></div>
-          <p className="text-lg font-bold">{INVENTORY_ITEMS.length}</p>
+          <p className="text-lg font-bold">{displayInventory.length}</p>
         </div>
         <div className={`bg-white border rounded-lg pt-3 pb-2 px-3 ${lowStockCount > 0 ? 'border-amber-300' : 'border-gray-200'}`}>
           <div className="flex items-center gap-2"><TrendingDown className="h-4 w-4 text-amber-500" /><span className="text-xs text-gray-500">Low/Out</span></div>
@@ -306,7 +375,7 @@ export function StockManagementPanel() {
       {/* Alerts Tab */}
       {activeTab === 'alerts' && (
         <div className="space-y-2">
-          {INVENTORY_ITEMS.filter(i => i.status !== 'ok').map(item => (
+          {displayInventory.filter(i => i.status !== 'ok').map(item => (
             <div
               key={item.id}
               className={`bg-white border-l-4 border rounded-lg py-3 px-4 ${

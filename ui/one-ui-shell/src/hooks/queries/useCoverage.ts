@@ -220,6 +220,21 @@ export function useCoverageClaims(coverageId?: string | null) {
   });
 }
 
+/** Workspace/facility claims list — BFF GET /internal/v1/coverage/claims */
+export function useCoverageClaimsList(opts?: { facilityId?: string | null }) {
+  const facilityId = opts?.facilityId;
+  return useQuery({
+    queryKey: ["coverage-claims-list", facilityId ?? "all"],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (facilityId) params.set("facility_id", facilityId);
+      const qs = params.toString() ? `?${params.toString()}` : "";
+      const response = await apiClient.get<{ data: unknown[] }>(`/internal/v1/coverage/claims${qs}`);
+      return asArray(response.data).map(normalizeClaim);
+    },
+  });
+}
+
 export function useCoverageRemittances() {
   return useQuery({
     queryKey: ["coverage-remittances"],

@@ -14,6 +14,7 @@ import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { filterFacilityOpsNavCards } from "@/lib/operations/facilityOperationsNav";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { WorkspaceOpsHub } from "@/components/workspace-ops/WorkspaceOpsHub";
 
 export default function FacilityOperationsHubPage() {
   const facility = useFacilityStore((s) => s.facility);
@@ -76,6 +77,20 @@ export default function FacilityOperationsHubPage() {
             <Link href="/clinical/control-tower" className="mt-3 inline-block text-xs font-semibold text-emerald-800 underline">
               Open control tower
             </Link>
+          </section>
+        ) : null}
+
+        {facility ? (
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 min-h-[480px]">
+            <h2 className="text-sm font-semibold text-slate-900 mb-1">Workspace operations hub</h2>
+            <p className="text-xs text-slate-500 mb-4">
+              Billing, inventory, and staffing for the active facility — live data when BFF paths are available.
+            </p>
+            <WorkspaceOpsHub
+              workspaceName={`${facility.name} — Operations`}
+              workspaceType="clinical"
+              facilityName={facility.name}
+            />
           </section>
         ) : null}
 

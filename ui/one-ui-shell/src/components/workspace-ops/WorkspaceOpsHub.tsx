@@ -119,9 +119,9 @@ export function WorkspaceOpsHub({
       {/* Tab content */}
       <div className="flex-1 overflow-auto mt-3">
         {activeTab === 'dashboard' && <WorkspaceDashboardPanel facilityId={facilityId} />}
-        {activeTab === 'stock' && <StockManagementPanel />}
-        {activeTab === 'hr-shifts' && <HRShiftsPanel />}
-        {activeTab === 'billing' && <BillingPanel />}
+        {activeTab === 'stock' && <StockManagementPanel facilityId={facilityId} />}
+        {activeTab === 'hr-shifts' && <HRShiftsPanel facilityId={facilityId} />}
+        {activeTab === 'billing' && <BillingPanel facilityId={facilityId} />}
         {activeTab === 'settings' && (
           <div className="text-center py-12 text-gray-400 text-sm">
             Workspace settings coming soon
