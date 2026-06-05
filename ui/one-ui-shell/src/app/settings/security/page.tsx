@@ -21,6 +21,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { TrustGovernanceStrip } from "@/components/trust/TrustGovernanceStrip";
 
 interface SessionResource {
   id: string;
@@ -279,6 +280,8 @@ export default function SecuritySettingsPage() {
                 </div>
               )}
             </div>
+
+            <TrustGovernanceStrip />
           </div>
         )}
       </PageShell>
