@@ -1,6 +1,6 @@
 # Mobile parity matrix
 
-> Generated: 2026-05-31. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-05. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Apps: **citizen-app**, **provider-app** (Expo, pnpm workspace). See [MOBILE_APP_INVENTORY.md](./MOBILE_APP_INVENTORY.md).
 
@@ -8,7 +8,7 @@ Tier matrices: `docs/mobile/full-mobile-parity-matrix.md` (from `node tools/pari
 
 | capability | domain | backend | webRoute | android | ios | mobileClient | realData | parity | gate | remediation |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Trust admin (policies, break-glass, devices, audit) | TSHEPO | /internal/v1/admin/trust/* | /admin/trust, /settings/security | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Expand trust context panel on settings + admin |
+| Trust admin (policies, break-glass, devices, audit) | TSHEPO | /internal/v1/admin/trust/* | /admin/trust, /settings/security | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Trust governance strip on settings; deepen device admin |
 | Client search, register, profile, Health ID | VITO | /internal/v1/identity/*, /internal/v1/registry/* | /id-services, /registry/* | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Registry hub depth + mobile health-id parity |
 | Provider registry, licenses, privileges, CPD | VARAPI | /internal/v1/registry/* | /registry/providers/* | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Verification workflow screens |
 | Facility/workspace registry, bookings | TUSO | /internal/v1/facilities, /internal/v1/registry/* | /facility/*, /registry/facilities/* | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Facility operating model detail pages |
@@ -24,11 +24,11 @@ Tier matrices: `docs/mobile/full-mobile-parity-matrix.md` (from `node tools/pari
 | Payments, claims, billing, tariffs | MusheX / COSTA | /internal/v1/finance/*, /internal/v1/wallet/* | /finance/*, /wallet | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Finance journey mobile parity |
 | LMS courses, studio, certificates | Fundo | /internal/v1/learning/v11/* | /learning/* | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Fundo mobile module depth |
 | Timeline, communities, pages | Social | /internal/v1/social/* | /social, /communities, /pages | screens (citizen/provider) | planned (Expo/EAS) | apps/mobile/packages/mobile-* | yes | complete | advisory | Moderation workflow surfacing |
-| CRVS births/deaths | UBOMI | ubomi-service /v1/births | /ubomi | missing | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | intentionally deferred | advisory | BFF bridge + honest Not wired until live |
+| CRVS births/deaths | UBOMI | ubomi-service /v1/births | /ubomi | missing | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | intentionally deferred | advisory | UBOMI births/deaths/verify live when service up; mobile parity |
 | Terminology governance | ZIBO | /v1/artifacts, /v1/packs | ui/zibo-web | missing | not supported by platform | apps/mobile/packages/mobile-* | partial | intentionally deferred | advisory | Shell link + maturity on terminology nav |
 | Guidance, LLM chat, core-transaction assist | Nompilo | /internal/v1/guidance/*, /internal/v1/llm/* | /ask, global command bar | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Context query params + fallback label |
 | Routes, dead letters, dispatch | Integration Hub | /internal/v1/integration-hub/* | /admin/integration-status, /settings/integrations | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Integration admin depth |
-| Workflow definitions, instances, dispatch tasks | Workflow / Dispatch | /internal/v1/workflows/*, /internal/v1/dispatch/* | /operations/workflows, /operations/dispatch | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Guided workflow/dispatch detail |
+| Workflow definitions, instances, dispatch tasks | Workflow / Dispatch | /internal/v1/workflows/*, /internal/v1/dispatch/* | /operations/workflows, /operations/dispatch | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Workflow instance table + dispatch guided detail |
 | Users, tenants, roles, audit, feature flags | Admin / Governance | /internal/v1/admin/* | /admin/*, /organization-admin/* | partial screens | planned (Expo/EAS) | apps/mobile/packages/mobile-* | partial | partial | advisory | Document Blocked surfaces explicitly |
 
 ## Required domains (classification)

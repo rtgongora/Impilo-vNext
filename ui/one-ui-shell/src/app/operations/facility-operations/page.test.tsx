@@ -84,7 +84,8 @@ describe("FacilityOperationsHubPage", () => {
     roleState.isAdmin = false;
     renderPage();
 
-    expect(screen.getByText("Test Facility")).toBeInTheDocument();
+    expect(screen.getAllByText(/Test Facility/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: /Workspace operations hub/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Facility Control Tower/ })).toHaveAttribute(
       "href",
       "/clinical/control-tower",
