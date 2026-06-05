@@ -1,5 +1,9 @@
 # Product Truth Recovery Map
 
+## Phase 4 completion update (2026-06-05)
+
+First transaction journey batch shipped: **Provider Patient Encounter** — web encounter page + mobile encounter screen now resolve live core-transaction composition by `encounter_id`. See [`FIRST_COMPLETION_BATCH_PLAN.md`](./FIRST_COMPLETION_BATCH_PLAN.md).
+
 > Generated: 2026-06-05T07:16:38.491Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Regenerate: `node scripts/product/generate-product-truth-recovery.mjs`

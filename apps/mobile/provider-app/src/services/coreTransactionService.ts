@@ -14,10 +14,15 @@ function normalizeItems(value: unknown): CoreTransactionRecord[] {
   return [];
 }
 
-export async function listCoreTransactions(filters?: { state?: string; type?: string }) {
+export async function listCoreTransactions(filters?: {
+  state?: string;
+  type?: string;
+  encounterId?: string;
+}) {
   const params = new URLSearchParams();
   if (filters?.state) params.set("state", filters.state);
   if (filters?.type) params.set("type", filters.type);
+  if (filters?.encounterId) params.set("encounter_id", filters.encounterId);
   const qs = params.toString();
   const path = qs ? `/internal/v1/core-transactions?${qs}` : "/internal/v1/core-transactions";
   const response = await apiClient.get<{ data?: unknown }>(path);

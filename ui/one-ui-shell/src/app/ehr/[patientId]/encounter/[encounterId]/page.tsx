@@ -32,6 +32,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
+import { EncounterOrchestrationRail } from "@/components/encounter/EncounterOrchestrationRail";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
 import {
   ActiveDataEntryLayout,
@@ -412,6 +413,10 @@ export default function EncounterPage() {
             {!structuredFormFocus && <ClinicalAlerts alerts={clinicalAlerts} />}
 
             {!structuredFormFocus && <PatientJourneyContextPanel patientId={patientId} variant="compact" />}
+
+            {!structuredFormFocus && (
+              <EncounterOrchestrationRail encounterId={encounterId} patientId={patientId} />
+            )}
 
             <ClinicalReviewHeader
               badge="Encounter closure"

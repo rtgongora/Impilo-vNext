@@ -1,5 +1,11 @@
 # vNext Experience Orchestration Map
 
+## Phase 4 completion update (2026-06-05)
+
+- `/ehr/[patientId]/encounter/[encounterId]` — **orchestration-linked** via `EncounterOrchestrationRail` + `useEncounterCoreTransaction` (BFF `GET /internal/v1/core-transactions?encounter_id=`).
+- Mobile `EncounterScreen` — transaction context card (read-only parity).
+
+
 > Generated: 2026-06-05T07:37:40.190Z
 > Entries: **872**
 

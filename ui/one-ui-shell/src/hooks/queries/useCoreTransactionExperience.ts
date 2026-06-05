@@ -142,13 +142,26 @@ function normalizeCollection(raw: unknown): AnyRecord[] {
   return [];
 }
 
-export function useCoreTransactionList(filters?: { state?: string; type?: string }) {
+export interface CoreTransactionListFilters {
+  state?: string;
+  type?: string;
+  encounterId?: string;
+}
+
+export function useCoreTransactionList(filters?: CoreTransactionListFilters) {
   return useQuery({
-    queryKey: ["core-transaction", "list", filters?.state ?? "", filters?.type ?? ""],
+    queryKey: [
+      "core-transaction",
+      "list",
+      filters?.state ?? "",
+      filters?.type ?? "",
+      filters?.encounterId ?? "",
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters?.state) params.set("state", filters.state);
       if (filters?.type) params.set("type", filters.type);
+      if (filters?.encounterId) params.set("encounter_id", filters.encounterId);
       const query = params.toString();
       const url = query
         ? `/internal/v1/core-transactions?${query}`
@@ -156,6 +169,22 @@ export function useCoreTransactionList(filters?: { state?: string; type?: string
       return apiClient.get<ApiResponse<CoreTransactionListData>>(url);
     },
   });
+}
+
+/** Resolve the FACILITY_WALK_IN core transaction linked to an active encounter. */
+export function useEncounterCoreTransaction(encounterId: string) {
+  const query = useCoreTransactionList({
+    type: "FACILITY_WALK_IN",
+    encounterId,
+  });
+  const transaction = useMemo(() => {
+    const items = asArray(query.data?.data.items)
+      .map((item) => item as unknown as CoreTransactionBffView)
+      .map(toCoreTransactionView);
+    return items[0] ?? null;
+  }, [query.data?.data.items]);
+
+  return { ...query, transaction };
 }
 
 export function useCoreTransactionFeed(filters?: { state?: string; type?: string }) {

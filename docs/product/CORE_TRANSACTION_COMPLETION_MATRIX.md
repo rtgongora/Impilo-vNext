@@ -1,5 +1,9 @@
 # Core Transaction Completion Matrix
 
+## Phase 4 completion update (2026-06-05)
+
+**Provider Patient Encounter** — orchestration linked on encounter page via `EncounterOrchestrationRail` and BFF `encounter_id` filter. Classification moves from `frontend-route-exists-but-disconnected` toward **orchestration-linked** (journey not yet fully `transaction-complete` until queue→transaction correlation ships).
+
 > Generated: 2026-06-05T07:32:17.772Z
 > Journeys: **42** | Transaction-complete: **0**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
@@ -33,7 +37,7 @@
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 2 | 56 | digital readiness dashboards thin |
 | Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 7 | 1 | — |
-| Provider Patient Encounter | FACILITY_WALK_IN | frontend-route-exists-but-disconnected | 3 | 1 | core-transaction pages use fixtures |
+| Provider Patient Encounter | FACILITY_WALK_IN | orchestration-linked (Phase 4) | 3 | 1 | queue→transaction_id correlation pending |
 | Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | EHR orders not yet writable via typed BFF command |
 | Inpatient Admission Workflow | EMERGENCY | backend-partial | 36 | 2 | inpatient UX partial vs backend |
 | Telemedicine Encounter | TELEMEDICINE | backend-ready-but-frontend-incomplete | 3 | 3 | real-time media transport blocked |

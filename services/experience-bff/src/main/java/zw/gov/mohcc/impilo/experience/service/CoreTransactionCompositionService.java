@@ -39,6 +39,10 @@ public class CoreTransactionCompositionService {
     }
 
     public ObjectNode listCoreTransactions(String state, String type) {
+        return listCoreTransactions(state, type, null);
+    }
+
+    public ObjectNode listCoreTransactions(String state, String type, String encounterId) {
         ObjectNode envelope = objectMapper.createObjectNode();
         ArrayNode items = objectMapper.createArrayNode();
         ArrayNode failures = objectMapper.createArrayNode();
@@ -60,6 +64,17 @@ public class CoreTransactionCompositionService {
         }
 
         appendDeliveryTransactions(items, failures, state, type);
+
+        if (encounterId != null && !encounterId.isBlank()) {
+            ArrayNode filtered = objectMapper.createArrayNode();
+            for (JsonNode item : items) {
+                String linkedEncounter = item.path("clinicalContext").path("encounterId").asText("");
+                if (encounterId.equals(linkedEncounter)) {
+                    filtered.add(item);
+                }
+            }
+            items = filtered;
+        }
 
         envelope.set("items", items);
         envelope.set("failureModes", failures);

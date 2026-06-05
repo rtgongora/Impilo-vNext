@@ -16,7 +16,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | backend-ready-but-frontend-incomplete |
 | Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | backend-ready-but-frontend-incomplete |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | backend-ready-but-frontend-incomplete |
-| Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | frontend-route-exists-but-disconnected |
+| Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | orchestration-linked (Phase 4) |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | backend-ready-but-frontend-incomplete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | backend-partial |
 | Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-ready-but-frontend-incomplete |

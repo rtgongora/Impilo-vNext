@@ -28,10 +28,11 @@ public class CoreTransactionController {
     public ResponseEntity<Map<String, Object>> listCoreTransactions(
             @RequestParam(required = false) String state,
             @RequestParam(required = false) String type,
+            @RequestParam(name = "encounter_id", required = false) String encounterId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            ObjectNode data = compositionService.listCoreTransactions(state, type);
+            ObjectNode data = compositionService.listCoreTransactions(state, type, encounterId);
             return ResponseEntity.ok(Map.of(
                     "data", data,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
