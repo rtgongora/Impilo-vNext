@@ -1,6 +1,13 @@
 "use client";
 import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { PayerOpsReviewsTable } from "@/components/finance/PayerOpsReviewsTable";
+import {
+  PayerOpsAdaptersTable,
+  PayerOpsAttemptsTable,
+  PayerOpsIntentPanel,
+  PayerOpsReceiptsTable,
+  PayerOpsSettlementsTable,
+} from "@/components/finance/PayerOpsEntityPanels";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -185,7 +192,13 @@ export default function FinancePayerOpsPage() {
               ) : settlementsQ.isError ? (
                 <p className="mt-1 text-red-700">Linked settlement lookup failed.</p>
               ) : settlementsQ.data != null ? (
-                <QueryResultPanel title="Settlements Q" isPending={settlementsQ.isPending} isLoading={settlementsQ.isPending} isError={settlementsQ.isError} error={settlementsQ.error} data={settlementsQ.data} />
+                <div className="mt-3">
+                  <PayerOpsSettlementsTable
+                    data={settlementsQ.data}
+                    isLoading={settlementsQ.isPending}
+                    error={settlementsQ.error as Error | null}
+                  />
+                </div>
               ) : (
                 <p className="mt-1">No linked settlement data returned yet.</p>
               )
@@ -246,7 +259,11 @@ export default function FinancePayerOpsPage() {
             ) : intentQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Intent request failed.</p>
             ) : intentQ.data ? (
-              <QueryResultPanel title="Intent Q" isPending={intentQ.isPending} isLoading={intentQ.isPending} isError={intentQ.isError} error={intentQ.error} data={intentQ.data} />
+              <PayerOpsIntentPanel
+                data={intentQ.data}
+                isLoading={intentQ.isPending}
+                error={intentQ.error as Error | null}
+              />
             ) : (
               <p className="mt-3 text-xs text-slate-500">Load an intent to continue.</p>
             )}
@@ -263,7 +280,13 @@ export default function FinancePayerOpsPage() {
             ) : receiptsQ.isError ? (
               <p className="mt-2 text-sm text-red-700">Receipts request failed.</p>
             ) : receiptsQ.data ? (
-              <QueryResultPanel title="Receipts Q" isPending={receiptsQ.isPending} isLoading={receiptsQ.isPending} isError={receiptsQ.isError} error={receiptsQ.error} data={receiptsQ.data} />
+              <div className="mt-2">
+                <PayerOpsReceiptsTable
+                  data={receiptsQ.data}
+                  isLoading={receiptsQ.isPending}
+                  error={receiptsQ.error as Error | null}
+                />
+              </div>
             ) : (
               <p className="mt-2 text-xs text-slate-500">Uses the same intent id after load.</p>
             )}
@@ -362,7 +385,9 @@ export default function FinancePayerOpsPage() {
               <p className="mt-2 text-xs text-red-700">Initiate attempt request failed.</p>
             ) : null}
             {initiateM.data != null ? (
-              <QueryResultPanel title="Initiate M" isPending={initiateM.isPending} isLoading={initiateM.isPending} isError={initiateM.isError} error={initiateM.error} data={initiateM.data} />
+              <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Payment attempt initiated. Refresh attempts history to inspect status.
+              </p>
             ) : null}
 
             <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -407,7 +432,9 @@ export default function FinancePayerOpsPage() {
               <p className="mt-2 text-xs text-red-700">Reselect request failed.</p>
             ) : null}
             {reselectM.data != null ? (
-              <QueryResultPanel title="Reselect M" isPending={reselectM.isPending} isLoading={reselectM.isPending} isError={reselectM.isError} error={reselectM.error} data={reselectM.data} />
+              <p className="mt-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+                Rail reselection recorded on intent metadata.
+              </p>
             ) : null}
 
             <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -424,7 +451,13 @@ export default function FinancePayerOpsPage() {
             ) : attemptsQ.isError ? (
               <p className="mt-2 text-sm text-red-700">Attempts request failed.</p>
             ) : attemptsQ.data ? (
-              <QueryResultPanel title="Attempts Q" isPending={attemptsQ.isPending} isLoading={attemptsQ.isPending} isError={attemptsQ.isError} error={attemptsQ.error} data={attemptsQ.data} />
+              <div className="mt-2">
+                <PayerOpsAttemptsTable
+                  data={attemptsQ.data}
+                  isLoading={attemptsQ.isPending}
+                  error={attemptsQ.error as Error | null}
+                />
+              </div>
             ) : (
               <p className="mt-2 text-xs text-slate-500">Load an intent to see its attempts.</p>
             )}
@@ -462,7 +495,9 @@ export default function FinancePayerOpsPage() {
               {claimM.isPending ? "Posting…" : "Post claim"}
             </button>
             {claimM.data != null ? (
-              <QueryResultPanel title="Claim M" isPending={claimM.isPending} isLoading={claimM.isPending} isError={claimM.isError} error={claimM.error} data={claimM.data} />
+              <p className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Remittance claim accepted. Continue with attempts and settlement reconciliation.
+              </p>
             ) : null}
           </section>
 
@@ -483,7 +518,13 @@ export default function FinancePayerOpsPage() {
             ) : adaptersQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Failed to load adapters.</p>
             ) : adaptersQ.data != null ? (
-              <QueryResultPanel title="Adapters Q" isPending={adaptersQ.isPending} isLoading={adaptersQ.isPending} isError={adaptersQ.isError} error={adaptersQ.error} data={adaptersQ.data} />
+              <div className="mt-3">
+                <PayerOpsAdaptersTable
+                  data={adaptersQ.data}
+                  isLoading={adaptersQ.isPending}
+                  error={adaptersQ.error as Error | null}
+                />
+              </div>
             ) : null}
           </section>
 

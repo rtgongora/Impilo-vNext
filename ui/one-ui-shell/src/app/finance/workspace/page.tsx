@@ -1,5 +1,9 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import {
+  FinanceChargesTable,
+  FinanceInvoicePanel,
+  FinanceWalletsTable,
+} from "@/components/finance/FinanceWorkspacePanels";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Building2, FileSpreadsheet, Loader2 } from "lucide-react";
@@ -65,7 +69,11 @@ export default function FinanceWorkspacePage() {
             ) : invQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load invoice.</p>
             ) : invQ.data != null ? (
-              <QueryResultPanel title="Inv Q" isPending={invQ.isPending} isLoading={invQ.isPending} isError={invQ.isError} error={invQ.error} data={invQ.data} />
+              <FinanceInvoicePanel
+                data={invQ.data}
+                isLoading={invQ.isPending}
+                error={invQ.error as Error | null}
+              />
             ) : (
               <p className="mt-3 text-xs text-slate-500">Load an invoice to inspect COSTA lifecycle JSON.</p>
             )}
@@ -97,7 +105,13 @@ export default function FinanceWorkspacePage() {
             ) : chQ.isError ? (
               <p className="mt-2 text-sm text-red-700">Could not load charges.</p>
             ) : chQ.data != null ? (
-              <QueryResultPanel title="Ch Q" isPending={chQ.isPending} isLoading={chQ.isPending} isError={chQ.isError} error={chQ.error} data={chQ.data} />
+              <div className="mt-2">
+                <FinanceChargesTable
+                  data={chQ.data}
+                  isLoading={chQ.isPending}
+                  error={chQ.error as Error | null}
+                />
+              </div>
             ) : null}
           </section>
 
@@ -129,7 +143,13 @@ export default function FinanceWorkspacePage() {
             ) : wQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load wallets.</p>
             ) : wQ.data != null ? (
-              <QueryResultPanel title="W Q" isPending={wQ.isPending} isLoading={wQ.isPending} isError={wQ.isError} error={wQ.error} data={wQ.data} />
+              <div className="mt-3">
+                <FinanceWalletsTable
+                  data={wQ.data}
+                  isLoading={wQ.isPending}
+                  error={wQ.error as Error | null}
+                />
+              </div>
             ) : (
               <p className="mt-3 text-xs text-slate-500">Enter an owner ref to list custodial wallets.</p>
             )}
