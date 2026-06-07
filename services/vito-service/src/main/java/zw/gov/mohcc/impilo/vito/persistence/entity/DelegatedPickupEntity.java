@@ -43,6 +43,9 @@ public class DelegatedPickupEntity {
     @Column(name = "facility_id")
     private UUID facilityId;
 
+    @Column(name = "facility_name")
+    private String facilityName;
+
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
 
@@ -99,6 +102,8 @@ public class DelegatedPickupEntity {
     public void setDelegateIdRef(String delegateIdRef) { this.delegateIdRef = delegateIdRef; }
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }
+    public String getFacilityName() { return facilityName; }
+    public void setFacilityName(String facilityName) { this.facilityName = facilityName; }
     public OffsetDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(OffsetDateTime expiresAt) { this.expiresAt = expiresAt; }
     public PickupStatus getStatus() { return status; }

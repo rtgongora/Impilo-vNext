@@ -271,12 +271,11 @@ export default function IssuanceQueuePage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {items.map((item) => (
-                  <Link
+                  <div
                     key={item.id}
-                    href={`/operations/vito/issuance/${item.id}`}
-                    className="flex items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50"
+                    className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 hover:bg-gray-50"
                   >
-                    <div className="min-w-0 flex-1">
+                    <Link href={`/operations/vito/issuance/${item.id}`} className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-medium text-gray-900 truncate">{item.healthId}</p>
                         <span
@@ -294,9 +293,32 @@ export default function IssuanceQueuePage() {
                       {item.notes && (
                         <p className="mt-1 text-xs text-gray-400 truncate">{item.notes}</p>
                       )}
+                    </Link>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      {(item.state === "APPROVED" || item.state === "ISSUED") && (
+                        <Link
+                          href="/operations/vito/print"
+                          className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700 hover:border-gray-300"
+                        >
+                          Print
+                        </Link>
+                      )}
+                      {item.state === "ISSUED" && (
+                        <Link
+                          href="/operations/vito/cards/pickup"
+                          className="rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800 hover:border-sky-300"
+                        >
+                          Pickup
+                        </Link>
+                      )}
+                      <Link
+                        href={`/operations/vito/issuance/${item.id}`}
+                        className="text-xs text-gray-400 hover:text-gray-700"
+                      >
+                        View →
+                      </Link>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-400">View →</span>
-                  </Link>
+                  </div>
                 ))}
               </div>
             )}

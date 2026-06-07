@@ -55,7 +55,7 @@ public class DelegatedPickupService {
     @Transactional
     public PickupPackage create(UUID tenantId, Long issuanceRequestId, String delegateName,
                                  String delegateContact, String delegateIdRef,
-                                 UUID facilityId, int expiryHours) {
+                                 UUID facilityId, String facilityName, int expiryHours) {
         // Generate pickup token (UUID for QR) and 6-digit OTP
         String pickupToken = UUID.randomUUID().toString();
         String otp = generateOtp();
@@ -73,6 +73,7 @@ public class DelegatedPickupService {
         pickup.setDelegateContact(delegateContact != null ? delegateContact : "{}");
         pickup.setDelegateIdRef(delegateIdRef);
         pickup.setFacilityId(facilityId);
+        pickup.setFacilityName(facilityName != null ? facilityName.trim() : null);
         pickup.setExpiresAt(OffsetDateTime.now().plusHours(expiryHours));
         pickup.setStatus(PickupStatus.ACTIVE);
         pickup = pickupRepo.save(pickup);
@@ -94,6 +95,7 @@ public class DelegatedPickupService {
         return new PickupVerification(
                 pickup.getDelegateName(),
                 pickup.getFacilityId(),
+                pickup.getFacilityName(),
                 pickup.getIssuanceRequestId(),
                 pickup.getExpiresAt());
     }
@@ -190,6 +192,7 @@ public class DelegatedPickupService {
     public record PickupVerification(
             String delegateName,
             UUID facilityId,
+            String facilityName,
             Long issuanceRequestId,
             OffsetDateTime expiresAt) {}
 }

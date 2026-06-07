@@ -46,6 +46,7 @@ class DelegatedPickupServiceTest {
         pickup.setIssuanceRequestId(42L);
         pickup.setDelegateName("Jane Delegate");
         pickup.setFacilityId(facilityId);
+        pickup.setFacilityName("Harare Central Hospital");
         pickup.setExpiresAt(OffsetDateTime.now().plusHours(2));
         pickup.setStatus(PickupStatus.ACTIVE);
         pickup.setOtpHash("hash");
@@ -65,6 +66,7 @@ class DelegatedPickupServiceTest {
 
         assertEquals("Jane Delegate", result.delegateName());
         assertEquals(facilityId, result.facilityId());
+        assertEquals("Harare Central Hospital", result.facilityName());
         assertEquals(42L, result.issuanceRequestId());
         assertEquals(PickupStatus.ACTIVE, pickup.getStatus());
         assertEquals(0, pickup.getAttempts());

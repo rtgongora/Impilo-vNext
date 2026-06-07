@@ -14,7 +14,9 @@ import {
   useRejectIssuance,
   type IssuanceState,
 } from "@/hooks/queries/useVitoIssuance";
-import { FileText } from "lucide-react";
+import { useCreateDelegatedPickup } from "@/hooks/queries/useVitoDelegatedPickup";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { FileText, Printer, PackageCheck } from "lucide-react";
 
 const STATE_STYLES: Record<IssuanceState, string> = {
   SUBMITTED: "bg-blue-50 text-blue-700 border-blue-100",
@@ -60,9 +62,13 @@ export default function IssuanceDetailPage() {
   const issue = useIssue();
   const deliverIssuance = useDeliverIssuance();
   const rejectIssuance = useRejectIssuance();
+  const createPickup = useCreateDelegatedPickup();
+  const facility = useFacilityStore((s) => s.facility);
 
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [delegateName, setDelegateName] = useState("");
+  const [pickupResult, setPickupResult] = useState<{ pickupToken: string; otp: string; expiresAt: string } | null>(null);
 
   const item = request.data?.data;
   const state = item?.state;
@@ -90,6 +96,27 @@ export default function IssuanceDetailPage() {
           setRejectReason("");
         },
       }
+    );
+  }
+
+  function handleCreatePickup() {
+    if (!requestId || !delegateName.trim() || !facility?.id) return;
+    const numericRequestId = Number.parseInt(requestId, 10);
+    if (Number.isNaN(numericRequestId)) return;
+    createPickup.mutate(
+      {
+        issuanceRequestId: numericRequestId,
+        delegateName: delegateName.trim(),
+        facilityId: facility.id,
+        facilityName: facility.name,
+      },
+      {
+        onSuccess: (res) => {
+          if (res?.pickupToken && res?.otp) {
+            setPickupResult({ pickupToken: res.pickupToken, otp: res.otp, expiresAt: res.expiresAt });
+          }
+        },
+      },
     );
   }
 
@@ -263,6 +290,98 @@ export default function IssuanceDetailPage() {
                   </p>
                 )}
               </div>
+
+              {(state === "APPROVED" || state === "ISSUED" || state === "DELIVERED") && (
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+                  <h2 className="text-sm font-semibold text-gray-900">Card operations</h2>
+                  <p className="text-sm text-gray-500">
+                    Continue the Health ID card journey after approval — print the card, verify delegate pickup, or review
+                    slips.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {(state === "APPROVED" || state === "ISSUED" || state === "DELIVERED") && (
+                      <Link
+                        href="/operations/vito/print"
+                        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:border-gray-300"
+                      >
+                        <Printer className="h-4 w-4 text-impilo-600" />
+                        Print &amp; slips
+                      </Link>
+                    )}
+                    {(state === "ISSUED" || state === "DELIVERED") && (
+                      <Link
+                        href="/operations/vito/cards/pickup"
+                        className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 hover:border-sky-300"
+                      >
+                        <PackageCheck className="h-4 w-4" />
+                        Card pickup verify
+                      </Link>
+                    )}
+                    <Link
+                      href="/operations/vito/cards"
+                      className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:border-gray-300"
+                    >
+                      Card registry
+                    </Link>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Health ID: <span className="font-mono text-gray-700">{item.healthId}</span>
+                  </p>
+                </div>
+              )}
+
+              {(state === "ISSUED" || state === "DELIVERED") && (
+                <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-4">
+                  <h2 className="text-sm font-semibold text-gray-900">Delegated pickup package</h2>
+                  <p className="text-sm text-gray-500">
+                    Create a pickup token and OTP for delegate handover at{" "}
+                    {facility?.name ?? "the active facility context"}.
+                  </p>
+                  {!facility?.id && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      Select a facility context before creating a pickup package.
+                    </p>
+                  )}
+                  <label className="flex flex-col gap-1 text-xs text-gray-600">
+                    Delegate name
+                    <input
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      value={delegateName}
+                      onChange={(e) => setDelegateName(e.target.value)}
+                      placeholder="Person collecting the card"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={!delegateName.trim() || !facility?.id || createPickup.isPending}
+                    onClick={handleCreatePickup}
+                    className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-medium text-sky-800 hover:border-sky-300 disabled:opacity-40"
+                  >
+                    {createPickup.isPending ? "Creating…" : "Create pickup package"}
+                  </button>
+                  {pickupResult && (
+                    <div className="rounded-xl border border-green-100 bg-green-50 p-4 text-sm space-y-2">
+                      <p className="font-medium text-green-900">Pickup package ready</p>
+                      <p>
+                        Token: <span className="font-mono">{pickupResult.pickupToken}</span>
+                      </p>
+                      <p>
+                        OTP: <span className="font-mono tracking-widest">{pickupResult.otp}</span>
+                      </p>
+                      <p className="text-xs text-green-800">Expires {formatDatetime(pickupResult.expiresAt)}</p>
+                      <Link
+                        href="/operations/vito/cards/pickup"
+                        className="inline-flex text-sm font-medium text-green-900 underline underline-offset-2"
+                      >
+                        Open pickup verify →
+                      </Link>
+                    </div>
+                  )}
+                  {createPickup.isError && (
+                    <p className="text-sm text-red-600">Failed to create pickup package. Check BFF/VITO availability.</p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

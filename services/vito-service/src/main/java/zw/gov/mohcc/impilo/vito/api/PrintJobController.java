@@ -117,13 +117,14 @@ public class PrintJobController {
                     .filter(r -> r.getTenantId().equals(ctx.tenantId()))
                     .orElseThrow(() -> new IllegalArgumentException("Issuance request not found"));
             String cardId = issuance.getCardId() != null ? issuance.getCardId().toString() : "";
-            String facilityName = verification.facilityId() != null
-                    ? verification.facilityId().toString()
-                    : "";
+            String facilityName = firstNonBlank(
+                    verification.facilityName(),
+                    verification.facilityId() != null ? verification.facilityId().toString() : "");
             return ResponseEntity.ok(Map.of(
                     "valid", true,
                     "delegateName", verification.delegateName(),
                     "facilityName", facilityName,
+                    "facilityId", verification.facilityId() != null ? verification.facilityId().toString() : "",
                     "cardId", cardId,
                     "expiresAt", verification.expiresAt().toString()));
         } catch (IllegalArgumentException | IllegalStateException ex) {
@@ -179,5 +180,14 @@ public class PrintJobController {
             }
         }
         return null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
     }
 }

@@ -72,7 +72,7 @@ class PrintJobControllerPickupTest {
         OffsetDateTime expiresAt = OffsetDateTime.now().plusHours(1);
         when(pickupService.verifyPickup("token-1", "123456"))
                 .thenReturn(new DelegatedPickupService.PickupVerification(
-                        "Jane Delegate", facilityId, 42L, expiresAt));
+                        "Jane Delegate", facilityId, "Harare Central Hospital", 42L, expiresAt));
 
         IssuanceRequestEntity issuance = new IssuanceRequestEntity();
         issuance.setId(42L);
@@ -88,6 +88,7 @@ class PrintJobControllerPickupTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valid").value(true))
                 .andExpect(jsonPath("$.delegateName").value("Jane Delegate"))
+                .andExpect(jsonPath("$.facilityName").value("Harare Central Hospital"))
                 .andExpect(jsonPath("$.cardId").value("99"));
     }
 
