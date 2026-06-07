@@ -7,9 +7,10 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
+import zw.gov.mohcc.impilo.experience.pharmacy.PharmacyFiveRightsVerifier;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -243,9 +244,38 @@ public class MobileProviderExtendedController {
 
     @PostMapping("/pharmacy/verify-five-rights")
     public ResponseEntity<Map<String, Object>> verifyFiveRights(@RequestBody Map<String, Object> body) {
-        // 5 rights: right patient, right drug, right dose, right route, right time
-        return ResponseEntity.ok(Map.of("verified", true, "rights", Map.of(
-                "rightPatient", true, "rightDrug", true, "rightDose", true, "rightRoute", true, "rightTime", true)));
+        Object rawId = body.get("prescriptionId");
+        if (rawId == null) {
+            rawId = body.get("prescription_id");
+        }
+        if (rawId == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "MISSING_PRESCRIPTION_ID", "message", "prescriptionId is required")));
+        }
+        String expectedPatient = body.get("patient_id") != null
+                ? body.get("patient_id").toString()
+                : body.get("patientId") != null ? body.get("patientId").toString() : null;
+        try {
+            JsonNode rx = pharmacyClient.getPrescription(rawId.toString());
+            if (rx == null) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "verified", false,
+                        "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", "Prescription not returned")));
+            }
+            PharmacyFiveRightsVerifier.Result result = PharmacyFiveRightsVerifier.evaluate(rx, expectedPatient);
+            return ResponseEntity.ok(Map.of(
+                    "verified", result.verified(),
+                    "rights", result.rights()));
+        } catch (IllegalArgumentException badId) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "INVALID_PRESCRIPTION_ID", "message", "prescriptionId must be a UUID")));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", e.getMessage())));
+        }
     }
 
     // ── Charges / Billing ───────────────────────────────────────────

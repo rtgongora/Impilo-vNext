@@ -28,4 +28,16 @@ describe("prescription dispense golden thread", () => {
     expect(controller).toContain("pharmacyClient.getWorklist");
     expect(mobileService).toContain("/pharmacy/pending");
   });
+
+  it("verifies five-rights against pharmacy prescriptions in mobile BFF", () => {
+    const controller = readFileSync(
+      resolve(
+        repoRoot,
+        "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      ),
+      "utf8",
+    );
+    expect(controller).toContain("PharmacyFiveRightsVerifier.evaluate");
+    expect(controller).toContain("pharmacyClient.getPrescription");
+  });
 });

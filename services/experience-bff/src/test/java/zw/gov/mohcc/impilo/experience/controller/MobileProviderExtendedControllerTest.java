@@ -51,6 +51,18 @@ class MobileProviderExtendedControllerTest {
         assertEquals(1, ((java.util.List<?>) response.getBody().get("data")).size());
     }
 
+    @Test
+    void pharmacyVerifyFiveRightsUsesPrescriptionPayload() {
+        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+                new StubPctClient(), new StubVitoClient(), new PrescriptionPharmacyClient(), new StubCostaClient(), new StubOrosClient());
+
+        ResponseEntity<Map<String, Object>> response = controller.verifyFiveRights(
+                Map.of("prescriptionId", "550e8400-e29b-41d4-a716-446655440000", "patient_id", "cpid-1"));
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(true, response.getBody().get("verified"));
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -79,6 +91,26 @@ class MobileProviderExtendedControllerTest {
                     .put("medication_name", "Amoxicillin")
                     .put("patient_id", "cpid-1");
             return rows;
+        }
+    }
+
+    private static final class PrescriptionPharmacyClient extends PharmacyServiceClient {
+        PrescriptionPharmacyClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode getPrescription(String prescriptionId) {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode attrs = mapper.createObjectNode();
+            attrs.put("patient_id", "cpid-1");
+            attrs.put("medication_name", "Amoxicillin");
+            attrs.put("dosage", "500mg");
+            attrs.put("route", "PO");
+            attrs.put("frequency", "TDS");
+            attrs.put("status", "ACTIVE");
+            return mapper.createObjectNode()
+                    .put("id", prescriptionId)
+                    .put("type", "prescription")
+                    .set("attributes", attrs);
         }
     }
 
