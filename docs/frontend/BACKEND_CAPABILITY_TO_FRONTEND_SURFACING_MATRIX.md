@@ -6,7 +6,7 @@
 
 | Maturity | Count |
 |----------|-------|
-| Live | 11 |
+| Live | 12 |
 | Partial | 20 |
 | Fixture | 0 |
 | Not Wired | 0 |
@@ -46,6 +46,7 @@
 | Clinical | MADI | Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | contracts/openapi/madi.openapi.yaml | /madi/transfusion/* | useMadi.ts | Live | Live | partial | Live | HIGH | — | VITO biometric + barcode bedside verify on web and mobile |
 | Clinical | MADI | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | contracts/openapi/madi.openapi.yaml | /madi/haemovigilance | useMadi.ts | Live | Live | no | Live | HIGH | — | National roll-up at /madi/haemovigilance/national |
 | Clinical | MADI | Central blood bank coordination | /internal/v1/madi/central-bank/* | contracts/openapi/madi.openapi.yaml | /madi/central-bank | useMadi.ts | Live | no | no | Live | MEDIUM | — | Emergency redistribution request + approve on /madi/central-bank |
+| Experience | Impilo Live | Live events, webinars, broadcasts | /internal/v1/live/* | contracts/openapi/impilo-live.openapi.yaml | /live, /live/discover, /live/event/[eventId] | useLive.ts | yes | yes | yes | Live | MEDIUM | Host controls on mobile partial | Deepen provider host/moderator mobile controls |
 | Clinical | MADI | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | contracts/openapi/madi.openapi.yaml | /madi/dashboard | useMadi.ts | Live | no | partial | Live | MEDIUM | — | 30-day forecast table on /madi/dashboard from order + stock signals |
 
 ## Trust headers (all BFF paths)

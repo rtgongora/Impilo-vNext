@@ -1,6 +1,6 @@
 # Frontend route inventory
 
-> Generated from `ui/one-ui-shell/src/lib/routes.ts` (452 routes)
+> Generated from `ui/one-ui-shell/src/lib/routes.ts` (467 routes)
 
 - `/`
 - `/access`
@@ -202,4 +202,4 @@
 - `/lab/results`
 - `/lab/worklist`
 - `/learning`
-- … and 252 more
+- … and 267 more

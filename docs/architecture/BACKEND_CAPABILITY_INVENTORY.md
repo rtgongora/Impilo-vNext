@@ -36,6 +36,7 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | MADI | Clinical | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | yes | /madi/transfusion/* | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | yes | /madi/haemovigilance | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/central-bank/* | Central blood bank coordination | /internal/v1/madi/central-bank/* | yes | /madi/central-bank | yes | fully surfaced |
+| Impilo Live | Experience | /internal/v1/live/* | Live events, webinars, broadcasts | /internal/v1/live/* | yes | /live, /live/discover, /live/event/[eventId] | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/dashboard | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | yes | /madi/dashboard | yes | fully surfaced |
 
 ## Internal / non-user-facing

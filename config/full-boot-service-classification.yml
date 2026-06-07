@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-06-07T05:16:17.808Z'
+  generated_at: '2026-06-07T05:59:48.581Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 143
+  total_entries: 146
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -212,13 +212,13 @@ classifications:
     run_not_applicable_reason: External or contract-only dependency
   - id: booking-service
     canonical_name: booking-service
-    plane: experience
-    domain: workflow-orchestration
+    plane: integration
+    domain: platform-ops
     component_type: backend_service
     full_boot_classification: optional_full_boot
     classification: optional_full_boot
     runtime_kind: kubernetes_service
-    deploy_order_group: experience_layer
+    deploy_order_group: platform_services
     build_required: true
     image_required: false
     runtime_image_required: false
@@ -242,7 +242,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/booking-service
     build_tool: maven
-    default_http_port: 8265
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -2430,6 +2430,46 @@ classifications:
     deployment_lane: doctrine_only
     run_applicable: false
     run_not_applicable_reason: External or contract-only dependency
+  - id: live-service
+    canonical_name: live-service
+    plane: experience
+    domain: live-events-broadcast
+    component_type: backend_service
+    full_boot_classification: optional_full_boot
+    classification: optional_full_boot
+    runtime_kind: kubernetes_service
+    deploy_order_group: experience_layer
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: build-runtime-image-from-jar.sh live-service
+    image_name: impilo/live-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: null
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/live-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/live-service
+    build_tool: maven
+    default_http_port: 8380
+    priority: P2
+    blocker: null
+    reason: Java service — default shared JRE template after mvn install
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: llm-orchestration-service
     canonical_name: llm-orchestration-service
     plane: integration
@@ -2474,13 +2514,13 @@ classifications:
     run_not_applicable_reason: null
   - id: madi-service
     canonical_name: madi-service
-    plane: clinical
-    domain: blood-bank-transfusion
+    plane: integration
+    domain: platform-ops
     component_type: backend_service
     full_boot_classification: optional_full_boot
     classification: optional_full_boot
     runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
+    deploy_order_group: platform_services
     build_required: true
     image_required: false
     runtime_image_required: false
@@ -2504,7 +2544,7 @@ classifications:
     doctrine_compliance_required: false
     source_path: services/madi-service
     build_tool: maven
-    default_http_port: 8300
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
@@ -2592,6 +2632,46 @@ classifications:
     deployment_lane: doctrine_only
     run_applicable: false
     run_not_applicable_reason: External or contract-only dependency
+  - id: msika-apps-service
+    canonical_name: msika-apps-service
+    plane: enterprise
+    domain: marketplace
+    component_type: backend_service
+    full_boot_classification: optional_full_boot
+    classification: optional_full_boot
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/msika-apps-service/Dockerfile OR build-runtime-image-from-jar.sh msika-apps-service
+    image_name: impilo/msika-apps-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/msika-apps-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/msika-apps-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/msika-apps-service
+    build_tool: maven
+    default_http_port: null
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: msika-flow-ops
     canonical_name: msika-flow-ops
     plane: experience
@@ -4271,6 +4351,46 @@ classifications:
     source_path: services/reporting-service
     build_tool: maven
     default_http_port: 8176
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
+  - id: rtc-gateway-service
+    canonical_name: rtc-gateway-service
+    plane: integration
+    domain: platform-ops
+    component_type: backend_service
+    full_boot_classification: optional_full_boot
+    classification: optional_full_boot
+    runtime_kind: kubernetes_service
+    deploy_order_group: platform_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/rtc-gateway-service/Dockerfile OR build-runtime-image-from-jar.sh rtc-gateway-service
+    image_name: impilo/rtc-gateway-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/rtc-gateway-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/rtc-gateway-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/rtc-gateway-service
+    build_tool: maven
+    default_http_port: null
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template

@@ -11,11 +11,11 @@
 |---|---|---|---|
 | trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 7 |
-| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 19 |
+| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 18 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
-| integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 45 |
+| integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 48 |
 | experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 30 |
-| enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 15 |
+| enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 16 |
 
 ## Trust, Identity Assurance & Governance
 
@@ -67,7 +67,6 @@ Evidence: [`docs/architecture/planes/03-clinical-execution-shared-health-record.
 | `inpatient-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `inventory-elmis-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `inventory-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
-| `madi-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `oros-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `pacs-adapter-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `pct-service` | backend_service | required_full_boot | image_strategy_defined | certain |
@@ -104,6 +103,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `analytics-pipeline-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `asset-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `audit-ledger-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `booking-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `card-print-agent` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `channels-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `connector-fhir-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
@@ -121,6 +121,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `landela-adapter-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `lims` | external_dependency | external_dependency | no_runtime_image_required | high |
 | `llm-orchestration-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `madi-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `minio` | infrastructure | required_full_boot | image_strategy_defined | certain |
 | `ndila-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `nhume-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
@@ -133,6 +134,7 @@ Evidence: [`docs/architecture/planes/05-integration-interoperability-edge.md`](d
 | `postgres` | infrastructure | required_full_boot | deployed_and_healthy | certain |
 | `redis` | infrastructure | required_full_boot | deployed_and_healthy | certain |
 | `referral-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `rtc-gateway-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `schema-registry-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `security-baseline` | library | internal_package | no_runtime_image_required | certain |
 | `security-hardening-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
@@ -153,7 +155,6 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
-| `booking-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `butano-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `citizen-app` | mobile_app | optional_full_boot | no_runtime_image_required | certain |
 | `community-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
@@ -164,6 +165,7 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `inventory-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `knowledge-admin` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `learning-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `live-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `msika-flow-ops` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `msika-flow-portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `msika-flow-vendor` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
@@ -196,6 +198,7 @@ Evidence: [`docs/architecture/planes/07-enterprise-resource-market-operations.md
 | `credential-verification-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `general-ledger-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `hr-payroll-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `msika-apps-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `msika-flow-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `msika-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `mushe-wallet-service` | backend_service | optional_full_boot | image_strategy_defined | certain |

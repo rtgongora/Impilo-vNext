@@ -6,6 +6,7 @@
 - `analytics-pipeline.openapi.yaml`
 - `asset-registry.openapi.yaml`
 - `audit-ledger.openapi.yaml`
+- `booking.openapi.yaml`
 - `butano-fhir.openapi.yaml`
 - `butano.custom.openapi.yaml`
 - `campaigns.openapi.yaml`
@@ -36,6 +37,7 @@
 - `hr-payroll.openapi.yaml`
 - `identity-assurance.openapi.yaml`
 - `imaging-viewer-launch.openapi.yaml`
+- `impilo-live.openapi.yaml`
 - `indawo.openapi.yaml`
 - `inpatient.openapi.yaml`
 - `integration-hub.openapi.yaml`
@@ -46,6 +48,7 @@
 - `jobs.openapi.yaml`
 - `landela-adapter.openapi.yaml`
 - `learning.openapi.yaml`
+- `madi.openapi.yaml`
 - `mobile-citizen.openapi.yaml`
 - `mobile-provider.openapi.yaml`
 - `monitoring.openapi.yaml`
@@ -79,6 +82,3 @@
 - `security-hardening.openapi.yaml`
 - `share-slip.openapi.yaml`
 - `simba.openapi.yaml`
-- `social.openapi.yaml`
-- `support.openapi.yaml`
-- `surveillance.openapi.yaml`

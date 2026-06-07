@@ -2,7 +2,7 @@
 
 > OpenAPI under `contracts/openapi/`. Extend with BFF route map and controller scan.
 
-**OpenAPI files:** 97
+**OpenAPI files:** 98
 
 | Contract | Plane | Path | Provider | Web consumer | Mobile consumer | Tests | Deployed |
 |---|---|---|---|---|---|---|---|
@@ -41,6 +41,7 @@
 | `hr-payroll.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `identity-assurance.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `imaging-viewer-launch.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
+| `impilo-live.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `indawo.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `inpatient.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
 | `integration-hub.openapi.yaml` | see contract | contracts/openapi | BFF + services | one-ui-shell hooks | mobile clients | partial | not_deployed |
