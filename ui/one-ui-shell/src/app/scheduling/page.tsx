@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   CalendarDays,
@@ -36,6 +36,12 @@ import { OrganizationPlaneContextBar } from "@/components/experience/Organizatio
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import {
+  useCancelAppointment,
+  useCheckInAppointment,
+  useConfirmAppointment,
+  useCreateAppointment,
+} from "@/hooks/queries/useAppointments";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
@@ -108,10 +114,29 @@ function getMonday(d: Date): Date {
 }
 
 export default function SchedulingPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const fromOrgAdmin = searchParams.get("from") === "organization-admin";
   const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user?.actorType === "CITIZEN") {
+      router.replace("/home/appointments");
+    }
+  }, [router, user?.actorType]);
   const facility = useFacilityStore((s) => s.facility);
+  const createAppointment = useCreateAppointment();
+  const confirmAppointment = useConfirmAppointment();
+  const cancelAppointment = useCancelAppointment();
+  const checkInAppointment = useCheckInAppointment({
+    onCheckedIn: (meta) => {
+      const { patient_id: patientId, journey_id: journeyId, core_transaction_id: transactionId } = meta;
+      if (patientId && journeyId && transactionId) {
+        const params = new URLSearchParams({ journey_id: journeyId, transaction_id: transactionId });
+        router.push(`/ehr/${patientId}/encounters?${params.toString()}`);
+      }
+    },
+  });
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [activeTab, setActiveTab] = useState<TabFilter>("all");
   const [appointments, setAppointments] = useState<AppointmentResource[]>([]);
@@ -219,7 +244,7 @@ export default function SchedulingPage() {
     try {
       const scheduledAt = `${form.date}T${form.time}:00Z`;
       const endAt = new Date(new Date(scheduledAt).getTime() + 30 * 60000).toISOString();
-      await apiClient.post("/internal/v1/appointments", {
+      await createAppointment.mutateAsync({
         patient_id: selectedPatient.id,
         facility_id: facility.id,
         provider_id: user?.id ?? null,
@@ -248,7 +273,7 @@ export default function SchedulingPage() {
   async function handleConfirm(id: string) {
     setActionPending(id);
     try {
-      await apiClient.post(`/internal/v1/appointments/${id}/confirm`);
+      await confirmAppointment.mutateAsync(id);
       fetchAppointments();
     } catch { /* handled */ } finally { setActionPending(null); }
   }
@@ -256,8 +281,18 @@ export default function SchedulingPage() {
   async function handleCancel(id: string) {
     setActionPending(id);
     try {
-      await apiClient.post(`/internal/v1/appointments/${id}/cancel`, { reason: "Cancelled by provider" });
+      await cancelAppointment.mutateAsync({ id, reason: "Cancelled by provider" });
       fetchAppointments();
+    } catch { /* handled */ } finally { setActionPending(null); }
+  }
+
+  async function handleCheckIn(id: string, patientId?: string | null) {
+    setActionPending(id);
+    try {
+      await checkInAppointment.mutateAsync(id);
+      if (!patientId) {
+        fetchAppointments();
+      }
     } catch { /* handled */ } finally { setActionPending(null); }
   }
 
@@ -657,6 +692,15 @@ export default function SchedulingPage() {
                     {/* Actions */}
                     {isActionable && (
                       <div className="flex gap-2 shrink-0">
+                        {(a.status === "SCHEDULED" || a.status === "CONFIRMED") && (
+                          <button
+                            onClick={() => handleCheckIn(appt.id, a.patient_id)}
+                            disabled={actionPending === appt.id}
+                            className="px-3 py-1.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-lg hover:bg-emerald-200 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          >
+                            <CheckCircle2 className="w-3 h-3" /> Check in
+                          </button>
+                        )}
                         {a.status === "SCHEDULED" && (
                           <button
                             onClick={() => handleConfirm(appt.id)}

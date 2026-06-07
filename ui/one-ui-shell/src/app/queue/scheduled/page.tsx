@@ -12,8 +12,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import {
+  useAppointments,
+  useCancelAppointment,
+  useCheckInAppointment,
+  useConfirmAppointment,
+} from "@/hooks/queries/useAppointments";
 import {
   formatQueueDateTime,
   getAppointmentPatientId,
@@ -25,42 +29,15 @@ import {
   QUEUE_STATUS_STYLES,
 } from "@/lib/queue-workflows";
 
-type AppointmentResource = {
-  id: string;
-  type: string;
-  attributes: Record<string, unknown>;
-};
-
 export default function ScheduledQueuePage() {
   const router = useRouter();
   const facility = useFacilityStore((state) => state.facility);
-  const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery<ApiResponse<AppointmentResource[]>>({
-    queryKey: ["appointments", { facilityId: facility?.id }],
-    queryFn: () =>
-      apiClient.get<ApiResponse<AppointmentResource[]>>(`/internal/v1/appointments?facility_id=${facility?.id}`),
-    enabled: !!facility?.id,
-  });
-  const confirmAppointment = useMutation({
-    mutationFn: (appointmentId: string) => apiClient.post(`/internal/v1/appointments/${appointmentId}/confirm`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
-  });
-  const cancelAppointment = useMutation({
-    mutationFn: (appointmentId: string) =>
-      apiClient.post(`/internal/v1/appointments/${appointmentId}/cancel`, { reason: "Cancelled from scheduled queue" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
-  });
-  const checkInAppointment = useMutation({
-    mutationFn: (appointmentId: string) =>
-      apiClient.post<ApiResponse<{ journey_id?: string; status?: string }>>(
-        `/internal/v1/appointments/${appointmentId}/check-in`,
-      ),
-    onSuccess: (response) => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      const meta = response.meta as Record<string, string | undefined> | undefined;
-      const patientId = meta?.patient_id;
-      const journeyId = meta?.journey_id ?? response.meta?.journey_id;
-      const transactionId = meta?.core_transaction_id ?? response.meta?.core_transaction_id;
+  const { data, isLoading, error } = useAppointments(facility?.id);
+  const confirmAppointment = useConfirmAppointment();
+  const cancelAppointment = useCancelAppointment();
+  const checkInAppointment = useCheckInAppointment({
+    onCheckedIn: (meta) => {
+      const { patient_id: patientId, journey_id: journeyId, core_transaction_id: transactionId } = meta;
       if (patientId && journeyId && transactionId) {
         const params = new URLSearchParams({ journey_id: journeyId, transaction_id: transactionId });
         router.push(`/ehr/${patientId}/encounters?${params.toString()}`);
@@ -197,7 +174,12 @@ export default function ScheduledQueuePage() {
                           {status !== "CANCELLED" ? (
                             <button
                               type="button"
-                              onClick={() => cancelAppointment.mutate(entry.id)}
+                              onClick={() =>
+                                cancelAppointment.mutate({
+                                  id: entry.id,
+                                  reason: "Cancelled from scheduled queue",
+                                })
+                              }
                               disabled={cancelAppointment.isPending}
                               className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
                             >
