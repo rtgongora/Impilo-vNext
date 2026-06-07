@@ -18,6 +18,11 @@ vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({ user: { id: "provider-1" } }),
 }));
 
+const push = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+}));
+
 describe("EncounterDischargePanel", () => {
   beforeEach(() => {
     mutateAsync.mockReset();

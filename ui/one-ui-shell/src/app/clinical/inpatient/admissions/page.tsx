@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Loader2, Plus } from "lucide-react";
 import { PlaneWorkspaceShell } from "@/components/workspace/PlaneWorkspaceShell";
 import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState";
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
+import { InpatientAdmissionHandoffBanner } from "@/components/inpatient/InpatientAdmissionHandoffBanner";
 import { useAdmissions } from "@/hooks/queries/useInpatient";
 
 const INPATIENT_TABS = [
@@ -30,6 +32,11 @@ function extractAdmissionRows(payload: unknown): Record<string, unknown>[] {
 }
 
 export default function InpatientAdmissionsPage() {
+  const searchParams = useSearchParams();
+  const patientId = searchParams.get("patientId");
+  const encounterId = searchParams.get("encounterId");
+  const transactionId = searchParams.get("transaction_id");
+  const source = searchParams.get("source");
   const { data, isLoading, isError, error } = useAdmissions();
   const rows = extractAdmissionRows(data);
 
@@ -46,6 +53,12 @@ export default function InpatientAdmissionsPage() {
       ]}
     >
       <TrustContextBanner purposeOfUse="INPATIENT_CARE" />
+      <InpatientAdmissionHandoffBanner
+        patientId={patientId}
+        encounterId={encounterId}
+        transactionId={transactionId}
+        source={source}
+      />
 
       <div className="flex justify-end">
         <Link

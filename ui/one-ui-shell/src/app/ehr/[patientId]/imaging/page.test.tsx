@@ -4,7 +4,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ImagingPage from "./page";
 
-vi.mock("next/navigation", () => ({ useParams: () => ({ patientId: "patient-1" }) }));
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ patientId: "patient-1" }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 vi.mock("@/components/EHRLayout", () => ({ EHRLayout: ({ children }: { children: ReactNode }) => <div>{children}</div> }));
 vi.mock("@/components/PageShell", () => ({ PageShell: ({ children, title }: { children: ReactNode; title: string }) => <div><h1>{title}</h1>{children}</div> }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
@@ -42,7 +45,11 @@ vi.mock("@tanstack/react-query", async (importOriginal) => {
     },
   };
 });
-vi.mock("@/lib/api-client", () => ({ apiClient: { get: vi.fn() } }));
+vi.mock("@/hooks/queries/useImaging", () => ({
+  useImagingStudies: () => ({ data: { data: [] } }),
+  useSyncImagingHierarchy: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCorrelateStudy: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });

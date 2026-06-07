@@ -34,6 +34,7 @@ export function EncounterImagingOrdersPanel({
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [lastOrderId, setLastOrderId] = useState<string | null>(null);
 
   const encounterOrders = useMemo(() => {
     return (data?.data ?? []).filter((order) => {
@@ -65,7 +66,7 @@ export function EncounterImagingOrdersPanel({
     }
 
     try {
-      await createOrder.mutateAsync({
+      const response = await createOrder.mutateAsync({
         patientId,
         encounterId,
         testName: studyName.trim(),
@@ -79,11 +80,13 @@ export function EncounterImagingOrdersPanel({
         patientCpid,
         pctEncounterRef: encounterId,
       });
+      const createdId = response.data?.id ?? null;
+      setLastOrderId(createdId);
       setStudyName("");
       setModality("XRAY");
       setPriority("ROUTINE");
       setClinicalNotes("");
-      setSuccess("Imaging order submitted for this encounter.");
+      setSuccess("Imaging order submitted — correlate to PACS study when available.");
     } catch {
       setError("Failed to place imaging order. Verify BFF and OROS availability.");
     }
@@ -129,7 +132,15 @@ export function EncounterImagingOrdersPanel({
               return (
                 <li key={order.id} className="flex justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2">
                   <span>{name}</span>
-                  <span className="text-xs font-medium uppercase text-slate-500">{status}</span>
+                  <span className="flex items-center gap-2">
+                    <Link
+                      href={`/ehr/${patientId}/imaging/viewer?orderId=${encodeURIComponent(order.id)}`}
+                      className="text-xs font-medium text-impilo-600 hover:underline"
+                    >
+                      View study
+                    </Link>
+                    <span className="text-xs font-medium uppercase text-slate-500">{status}</span>
+                  </span>
                 </li>
               );
             })
@@ -204,6 +215,14 @@ export function EncounterImagingOrdersPanel({
 
           {error ? <p className="text-xs text-red-600">{error}</p> : null}
           {success ? <p className="text-xs text-emerald-700">{success}</p> : null}
+          {lastOrderId ? (
+            <Link
+              href={`/ehr/${patientId}/imaging?orderId=${encodeURIComponent(lastOrderId)}`}
+              className="inline-flex text-xs font-medium text-impilo-600 hover:underline"
+            >
+              Correlate order to PACS study →
+            </Link>
+          ) : null}
 
           <button
             type="submit"

@@ -57,6 +57,7 @@ export function useDischargeEncounter() {
       queryClient.invalidateQueries({
         queryKey: ["encounter", variables.encounterId],
       });
+      queryClient.invalidateQueries({ queryKey: ["core-transaction"] });
     },
   });
 }

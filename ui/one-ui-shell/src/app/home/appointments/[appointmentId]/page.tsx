@@ -22,6 +22,7 @@ import {
   useRescheduleAppointment,
 } from "@/hooks/queries/useAppointments";
 import { APPOINTMENT_STATUS_STYLES } from "@/lib/booking-bff";
+import { buildPostCheckInRoute } from "@/lib/appointment-check-in-routing";
 
 function formatWhen(iso?: string): string {
   if (!iso) return "To be confirmed";
@@ -39,7 +40,10 @@ export default function AppointmentDetailPage() {
 
   const { data: appointment, isLoading, error } = useAppointment(appointmentId);
   const checkIn = useCheckInAppointment({
-    onCheckedIn: () => router.push("/queue"),
+    onCheckedIn: (meta) => {
+      const route = buildPostCheckInRoute(meta);
+      router.push(route ?? "/queue");
+    },
   });
   const cancelAppointment = useCancelAppointment();
   const reschedule = useRescheduleAppointment();

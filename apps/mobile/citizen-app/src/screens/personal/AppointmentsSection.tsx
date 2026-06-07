@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Button,
@@ -7,7 +7,11 @@ import {
   LoadingSpinner,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { fetchAppointments, cancelAppointment } from "../../services/appointmentService";
+import {
+  fetchAppointments,
+  cancelAppointment,
+  checkInAppointment,
+} from "../../services/appointmentService";
 import type { Appointment } from "../../types";
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -45,6 +49,23 @@ export function AppointmentsSection() {
   const handleCancel = useCallback(async (id: string) => {
     try {
       await cancelAppointment(id);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [load]);
+
+  const handleCheckIn = useCallback(async (id: string) => {
+    try {
+      const result = await checkInAppointment(id);
+      const encounterId = result.meta.encounter_id ?? result.data.encounter_id;
+      const transactionId = result.meta.core_transaction_id;
+      Alert.alert(
+        "Checked in",
+        encounterId
+          ? `Encounter ${encounterId} is ready.${transactionId ? ` Transaction ${transactionId}.` : ""}`
+          : "Your appointment is checked in. Proceed to the facility queue.",
+      );
       load();
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -112,13 +133,22 @@ export function AppointmentsSection() {
                     <Text style={styles.reasonText}>{appt.reason}</Text>
                   ) : null}
                   {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
-                    <Button
-                      title="Cancel Appointment"
-                      variant="ghost"
-                      size="sm"
-                      onPress={() => handleCancel(appt.id)}
-                      testID={`cancel-appointment-${appt.id}`}
-                    />
+                    <View style={styles.actionRow}>
+                      <Button
+                        title="Check in"
+                        variant="default"
+                        size="sm"
+                        onPress={() => handleCheckIn(appt.id)}
+                        testID={`check-in-appointment-${appt.id}`}
+                      />
+                      <Button
+                        title="Cancel Appointment"
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => handleCancel(appt.id)}
+                        testID={`cancel-appointment-${appt.id}`}
+                      />
+                    </View>
                   ) : null}
                 </View>
               </View>
@@ -243,5 +273,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 2,
+  },
+  actionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 8,
   },
 });

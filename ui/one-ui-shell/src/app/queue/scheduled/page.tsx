@@ -28,6 +28,7 @@ import {
   getAppointmentType,
   QUEUE_STATUS_STYLES,
 } from "@/lib/queue-workflows";
+import { buildPostCheckInRoute } from "@/lib/appointment-check-in-routing";
 
 export default function ScheduledQueuePage() {
   const router = useRouter();
@@ -37,10 +38,9 @@ export default function ScheduledQueuePage() {
   const cancelAppointment = useCancelAppointment();
   const checkInAppointment = useCheckInAppointment({
     onCheckedIn: (meta) => {
-      const { patient_id: patientId, journey_id: journeyId, core_transaction_id: transactionId } = meta;
-      if (patientId && journeyId && transactionId) {
-        const params = new URLSearchParams({ journey_id: journeyId, transaction_id: transactionId });
-        router.push(`/ehr/${patientId}/encounters?${params.toString()}`);
+      const route = buildPostCheckInRoute(meta);
+      if (route) {
+        router.push(route);
       }
     },
   });

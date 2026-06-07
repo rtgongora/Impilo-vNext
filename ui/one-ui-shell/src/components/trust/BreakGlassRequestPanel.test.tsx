@@ -49,5 +49,9 @@ describe("BreakGlassRequestPanel", () => {
         }),
       ),
     );
+    expect(screen.getByRole("link", { name: /open break-glass review log/i })).toHaveAttribute(
+      "href",
+      "/admin/break-glass?requestId=bg-1",
+    );
   });
 });

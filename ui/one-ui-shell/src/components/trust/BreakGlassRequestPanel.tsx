@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, Loader2, ShieldAlert } from "lucide-react";
 import { useRequestBreakGlass } from "@/hooks/queries/useTrustBreakGlass";
@@ -23,6 +24,7 @@ export function BreakGlassRequestPanel({
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -35,13 +37,15 @@ export function BreakGlassRequestPanel({
     }
 
     try {
-      await requestBreakGlass.mutateAsync({
+      const response = await requestBreakGlass.mutateAsync({
         reason: reason.trim(),
         resourceType,
         resourceId: patientId,
         patientId,
       });
-      setSuccess("Break-glass request submitted. Retry the protected action with purpose BREAK_GLASS after step-up if required.");
+      const submittedId = response.data?.id ?? null;
+      setRequestId(submittedId);
+      setSuccess("Break-glass request submitted and queued for supervisor review.");
       setReason("");
       onSuccess?.();
     } catch {
@@ -84,7 +88,17 @@ export function BreakGlassRequestPanel({
             {error}
           </p>
         ) : null}
-        {success ? <p className="text-xs text-emerald-800">{success}</p> : null}
+        {success ? (
+          <div className="space-y-1">
+            <p className="text-xs text-emerald-800">{success}</p>
+            <Link
+              href={requestId ? `/admin/break-glass?requestId=${encodeURIComponent(requestId)}` : "/admin/break-glass"}
+              className="text-xs font-medium text-red-900 underline"
+            >
+              Open break-glass review log
+            </Link>
+          </div>
+        ) : null}
         <button
           type="submit"
           disabled={requestBreakGlass.isPending}

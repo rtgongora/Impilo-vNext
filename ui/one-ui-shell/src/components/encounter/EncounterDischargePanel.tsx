@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useDischargeEncounter } from "@/hooks/queries/useDischarge";
@@ -17,6 +18,7 @@ export function EncounterDischargePanel({
   encounterId,
   disabled = false,
 }: EncounterDischargePanelProps) {
+  const router = useRouter();
   const { user } = useAuthStore();
   const dischargeMutation = useDischargeEncounter();
 
@@ -40,7 +42,7 @@ export function EncounterDischargePanel({
     }
 
     try {
-      await dischargeMutation.mutateAsync({
+      const response = await dischargeMutation.mutateAsync({
         encounterId,
         discharge_type: dischargeType,
         discharge_diagnosis: diagnosis.trim(),
@@ -49,6 +51,17 @@ export function EncounterDischargePanel({
         discharged_by: user?.id ?? "current-user",
       });
       setSuccess("Discharge instructions captured and journey discharge started.");
+      if (dischargeType === "ADMIT") {
+        const transactionId = (response.meta as { core_transaction_id?: string } | undefined)?.core_transaction_id;
+        const params = new URLSearchParams({
+          encounterId,
+          source: "outpatient-discharge",
+        });
+        if (transactionId) {
+          params.set("transaction_id", transactionId);
+        }
+        router.push(`/clinical/inpatient/admissions?patientId=${encodeURIComponent(patientId)}&${params.toString()}`);
+      }
     } catch {
       setError("Discharge failed — verify encounter is active and BFF/PCT is available.");
     }

@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ArrowLeft, Loader2, AlertTriangle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
@@ -38,6 +39,8 @@ function readAttr(
 }
 
 export default function BreakGlassPage() {
+  const searchParams = useSearchParams();
+  const highlightRequestId = searchParams.get("requestId")?.trim() ?? "";
   const { data, isLoading, error } = useBreakGlassReviews();
   const reviewBreakGlass = useReviewBreakGlass();
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
@@ -101,8 +104,16 @@ export default function BreakGlassPage() {
                     reviewStatus.toUpperCase().includes("PENDING") ||
                     reviewStatus === "PENDING_REVIEW";
 
+                  const isHighlighted = highlightRequestId !== "" && event.id === highlightRequestId;
+
                   return (
-                    <tr key={event.id} className="hover:bg-gray-50 transition-colors align-top">
+                    <tr
+                      key={event.id}
+                      className={`hover:bg-gray-50 transition-colors align-top ${
+                        isHighlighted ? "bg-yellow-50 ring-2 ring-inset ring-yellow-300" : ""
+                      }`}
+                      data-testid={isHighlighted ? "break-glass-highlighted-row" : undefined}
+                    >
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                         {grantedAt ? new Date(grantedAt).toLocaleString() : "—"}
                       </td>

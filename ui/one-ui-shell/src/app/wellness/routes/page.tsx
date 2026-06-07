@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MapPin, Search, Star } from "lucide-react";
+import Link from "next/link";
+import { Loader2, MapPin, Search, Star } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWellnessDiscoverServices, type WellnessDiscoverService } from "@/lib/citizen-wellness-api";
+import { useAuthStore } from "@/hooks/useAuthStore";
+import { useLogWellnessActivity } from "@/hooks/queries/useCitizenWellness";
 
 /** Routes & Places — surfaces only fields returned by the wellness discover API. */
 export default function RoutesPage() {
@@ -118,7 +121,7 @@ export default function RoutesPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filtered.map((service) => (
-            <ServiceCard key={service.id} service={service} />
+            <WellnessRouteServiceCard key={service.id} service={service} />
           ))}
           {!discoverQ.isLoading && filtered.length === 0 ? (
             <p className="col-span-full text-center text-gray-400 py-8">No services match your filters</p>
@@ -129,13 +132,26 @@ export default function RoutesPage() {
   );
 }
 
-function ServiceCard({ service }: { service: WellnessDiscoverService }) {
+function WellnessRouteServiceCard({ service }: { service: WellnessDiscoverService }) {
+  const { user } = useAuthStore();
+  const patientId = user?.id;
+  const logActivity = useLogWellnessActivity(patientId);
+  const [logged, setLogged] = useState(false);
   const priceLabel =
     service.price != null && service.currency
       ? `${service.currency} ${service.price.toFixed(2)}`
       : service.price != null
         ? String(service.price)
         : null;
+
+  async function handleLogVisit() {
+    if (!patientId) return;
+    await logActivity.mutateAsync({
+      patientId,
+      activeMinutes: 30,
+    });
+    setLogged(true);
+  }
 
   return (
     <article className="rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
@@ -166,7 +182,7 @@ function ServiceCard({ service }: { service: WellnessDiscoverService }) {
           <p className="text-sm text-gray-400 mb-3 italic">No description provided.</p>
         )}
 
-        <div className="flex flex-wrap items-center gap-3 text-sm">
+        <div className="flex flex-wrap items-center gap-3 text-sm mb-3">
           {service.rating != null ? (
             <span className="inline-flex items-center gap-1 text-gray-800">
               <Star className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden />
@@ -178,6 +194,24 @@ function ServiceCard({ service }: { service: WellnessDiscoverService }) {
           {priceLabel ? (
             <span className="text-xs font-medium text-gray-700">{priceLabel}</span>
           ) : null}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void handleLogVisit()}
+            disabled={!patientId || logActivity.isPending || logged}
+            className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {logActivity.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            {logged ? "Visit logged" : "Log planned visit"}
+          </button>
+          <Link
+            href="/wellness/dashboard"
+            className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Open wellness dashboard
+          </Link>
         </div>
       </div>
     </article>
