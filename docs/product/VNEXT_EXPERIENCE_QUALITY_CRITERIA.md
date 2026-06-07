@@ -1,6 +1,6 @@
 # vNext Experience Quality Criteria
 
-> Generated: 2026-06-05T07:37:40.190Z
+> Generated: 2026-06-07T08:44:44.353Z
 
 Assess **journeys**, not isolated pages.
 

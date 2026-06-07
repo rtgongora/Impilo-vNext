@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T05:12:18.731Z",
+  "generatedAt": "2026-06-07T08:46:04.574Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -45,7 +45,7 @@
       "productOwnerAcceptanceTest": "Citizen completes registration, receives Health ID, sees next-step guidance",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "provider-login",
@@ -134,7 +134,7 @@
       "productOwnerAcceptanceTest": "Provider selects workspace/shift; subsequent requests carry trust context",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "facility-context-selection",
@@ -162,6 +162,7 @@
         "apps/mobile/provider-app/src/screens/provider/AssistedCommunicationPreferencesScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/BedManagementScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/BillingScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/BookingRequestsScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/CarePlanDetailScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/ClinicalToolsScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/CoreTransactionJourneyShellScreen.tsx",
@@ -602,7 +603,7 @@
       "productOwnerAcceptanceTest": "Teleconsult created, consented, referral persisted without RTC",
       "coreTransactionType": "TELEMEDICINE",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "lab-order-result",
@@ -717,7 +718,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "",
+      "missingFrontendMobileWork": "order compose from encounter incomplete",
       "relatedJourneys": [
         "lab-order-result",
         "document-upload"
@@ -804,7 +805,7 @@
       "completionState": "REFERRED_OUT",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "",
+      "missingFrontendMobileWork": "incoming-referrals handoff UX thin",
       "relatedJourneys": [
         "telemedicine-encounter",
         "appointment-scheduling"
@@ -834,9 +835,12 @@
       "frontendRoutes": [
         "/queue/scheduled",
         "/scheduling",
+        "/scheduling/booking-requests",
+        "/scheduling/bookings/config",
         "/scheduling/noticeboard",
         "/scheduling/on-call",
-        "/scheduling/roster"
+        "/scheduling/roster",
+        "/scheduling/today"
       ],
       "mobileScreens": [
         "apps/mobile/citizen-app/src/screens/personal/AppointmentsSection.tsx",
@@ -895,7 +899,7 @@
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "remote-session template parity partial",
-      "missingFrontendMobileWork": "admin workflow parity",
+      "missingFrontendMobileWork": "admin workflow parity vs mvumo templates",
       "relatedJourneys": [
         "telemedicine-encounter",
         "citizen-onboarding"
@@ -903,7 +907,7 @@
       "productOwnerAcceptanceTest": "Consent captured, enforced on subsequent clinical access",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "payment-billing-claim",
@@ -974,7 +978,7 @@
       "productOwnerAcceptanceTest": "Bill generated, payment or claim completed with audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "FINANCIAL_SETTLEMENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "document-upload",
@@ -1005,7 +1009,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "scanning pipeline depth",
-      "missingFrontendMobileWork": "indexing UX partial",
+      "missingFrontendMobileWork": "indexing UX partial vs document-service",
       "relatedJourneys": [
         "imaging-order-result",
         "provider-patient-encounter"
@@ -1115,7 +1119,7 @@
       "productOwnerAcceptanceTest": "Notification sent and delivery status visible",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "INSTRUCTIONS_AND_NOTIFICATIONS",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "fundo-learning",
@@ -1248,6 +1252,7 @@
         "/reports/operational"
       ],
       "mobileScreens": [
+        "apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/OpsReportsHubScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/ReportsScreen.tsx"
       ],
@@ -1341,7 +1346,7 @@
       "productOwnerAcceptanceTest": "Registry admin reconciles record with full audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "integration-sync-replay",
@@ -1563,6 +1568,7 @@
         "apps/mobile/citizen-app/src/screens/marketplace/FundoLearningScreen.tsx",
         "apps/mobile/citizen-app/src/screens/marketplace/HealthOsAppsScreen.tsx",
         "apps/mobile/citizen-app/src/screens/marketplace/MarketplaceScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiOrdersScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx",
         "apps/mobile/provider-app/src/screens/provider/MarketplaceOpsScreen.tsx"
       ],
@@ -1581,7 +1587,7 @@
       "productOwnerAcceptanceTest": "Citizen places order and tracks fulfilment",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "SERVICE_SELECTION",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "wellness-journey",
@@ -1633,7 +1639,7 @@
       "productOwnerAcceptanceTest": "Citizen tracks wellness activity with real backend",
       "coreTransactionType": "WELLNESS",
       "lifecycleStage": "ACCESS_SERVICE",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "social-community",
@@ -1660,6 +1666,7 @@
         "/social/saved"
       ],
       "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/madi/DonorFeedbackScreen.tsx",
         "apps/mobile/citizen-app/src/screens/social/ClubsScreen.tsx",
         "apps/mobile/citizen-app/src/screens/social/CommunitiesScreen.tsx",
         "apps/mobile/citizen-app/src/screens/social/CrowdfundingScreen.tsx",
@@ -1829,7 +1836,7 @@
       "productOwnerAcceptanceTest": "Citizen enrolls in coverage plan",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "COST_AND_COVERAGE",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "wallet-payment",
@@ -2157,7 +2164,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "route context not always passed",
+      "missingFrontendMobileWork": "route context not always passed to guidance BFF",
       "relatedJourneys": [
         "provider-patient-encounter",
         "wellness-journey"
@@ -2202,7 +2209,7 @@
       "productOwnerAcceptanceTest": "Credential verified and reflected in provider standing",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "backend-ready-but-frontend-incomplete"
     },
     {
       "journeyId": "provider-registry-onboarding",
@@ -2262,7 +2269,7 @@
       "productOwnerAcceptanceTest": "Provider onboarded with valid licensure",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "backend-partial"
     },
     {
       "journeyId": "citizen-monitoring",
@@ -2299,7 +2306,7 @@
       "completionState": "FOLLOW_UP_ACTIVE",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "monitoring depth",
+      "missingFrontendMobileWork": "monitoring depth vs wellness BFF",
       "relatedJourneys": [
         "wellness-journey",
         "chronic-care"
@@ -2387,7 +2394,7 @@
       "productOwnerAcceptanceTest": "Chronic care plan active with follow-up scheduling",
       "coreTransactionType": "CHRONIC_CARE",
       "lifecycleStage": "FOLLOW_UP_CONTINUITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "backend-ready-but-frontend-incomplete"
     },
     {
       "journeyId": "blood-donation",
@@ -2406,8 +2413,29 @@
         "experience-bff"
       ],
       "apis": "/internal/v1/madi/donors/*, /internal/v1/madi/drives/*, /internal/v1/mobile/citizen/madi/*",
-      "frontendRoutes": [],
-      "mobileScreens": [],
+      "frontendRoutes": [
+        "/madi/donor",
+        "/madi/donor/drives",
+        "/madi/donor/feedback",
+        "/madi/donor/history",
+        "/madi/donor/preferences",
+        "/madi/donor/profile",
+        "/madi/donor/register",
+        "/madi/donor/screening"
+      ],
+      "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/madi/BecomeDonorScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonationDrivesScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorFeedbackScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorHistoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorScreeningScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/MadiDonorHubScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiOrdersScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiTransfusionScreen.tsx"
+      ],
       "dataReadWritten": "donor profiles; screening; drive registrations",
       "eventsEmitted": "madi.donor.*; madi.drive.*",
       "trustSecurityChecks": "citizen scope; donor consent",
@@ -2441,8 +2469,22 @@
         "experience-bff"
       ],
       "apis": "/internal/v1/madi/orders/*",
-      "frontendRoutes": [],
+      "frontendRoutes": [
+        "/madi/orders",
+        "/madi/orders/[orderId]"
+      ],
       "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/madi/BecomeDonorScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonationDrivesScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorFeedbackScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorHistoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorScreeningScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/MadiDonorHubScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiOrdersScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiTransfusionScreen.tsx",
         "apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx"
       ],
       "dataReadWritten": "orders; crossmatch; unit reservation",
@@ -2478,8 +2520,23 @@
         "experience-bff"
       ],
       "apis": "/internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/*",
-      "frontendRoutes": [],
-      "mobileScreens": [],
+      "frontendRoutes": [
+        "/madi/transfusion",
+        "/madi/transfusion/[episodeId]"
+      ],
+      "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/madi/BecomeDonorScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonationDrivesScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorFeedbackScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorHistoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorScreeningScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/MadiDonorHubScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiOrdersScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiTransfusionScreen.tsx"
+      ],
       "dataReadWritten": "episodes; observations; verify events",
       "eventsEmitted": "madi.transfusion.*",
       "trustSecurityChecks": "bedside verify; patient match",
@@ -2514,8 +2571,23 @@
         "experience-bff"
       ],
       "apis": "/internal/v1/madi/haemovigilance/*",
-      "frontendRoutes": [],
-      "mobileScreens": [],
+      "frontendRoutes": [
+        "/madi/haemovigilance",
+        "/madi/haemovigilance/national"
+      ],
+      "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/madi/BecomeDonorScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonationDrivesScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorFeedbackScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorHistoryScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorProfileScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/DonorScreeningScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/madi/MadiDonorHubScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiDriveCaptureScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiOrdersScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiReactionReportScreen.tsx",
+        "apps/mobile/provider-app/src/screens/madi/MadiTransfusionScreen.tsx"
+      ],
       "dataReadWritten": "reactions; cases; national aggregates",
       "eventsEmitted": "madi.haemovigilance.*",
       "trustSecurityChecks": "facility + national scope",
@@ -2831,6 +2903,7 @@
     "analytics-pipeline-service",
     "asset-registry-service",
     "audit-ledger-service",
+    "booking-service",
     "butano-fhir",
     "clinical-knowledge-platform-service",
     "data-access-governance-service",
@@ -2844,6 +2917,8 @@
     "inventory-elmis-adapter",
     "inventory-service",
     "jobs-service",
+    "live-service",
+    "msika-apps-service",
     "national-data-repository-service",
     "ndr-service",
     "observability-service",

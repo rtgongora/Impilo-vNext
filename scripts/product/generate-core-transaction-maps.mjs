@@ -29,6 +29,120 @@ const COMPLETION_STATUSES = [
 
 /** Authority for the completion bar — see docs/frontend/GAP_CLOSURE_RULES.md */
 const GAP_CLOSURE_AUTHORITY = "docs/frontend/GAP_CLOSURE_RULES.md";
+const PHASE_4_BAR = "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md";
+
+/**
+ * PO gap notes preserved when classification is derived (not asserted).
+ * Keys mirror journey ids; values override missingBackend/missingFrontend in reports.
+ */
+const JOURNEY_GAP_OVERRIDES = {
+  "citizen-onboarding": { missingFrontend: "card ops / pickup verification thin" },
+  "provider-login": { missingFrontend: "device block UX admin-only" },
+  "workspace-context-selection": { missingFrontend: "workspace settings coming-soon stub" },
+  "facility-context-selection": { missingFrontend: "digital readiness dashboards thin" },
+  "provider-patient-encounter": { missingBackend: "pathway execution orchestration partial" },
+  "outpatient-consultation": { missingFrontend: "discharge instructions orchestration and imaging write lanes still partial" },
+  "inpatient-admission": { missingFrontend: "inpatient UX partial vs backend" },
+  "telemedicine-encounter": { missingFrontend: "real-time media transport blocked" },
+  "imaging-order-result": { missingFrontend: "order compose from encounter incomplete" },
+  "prescription-dispense": { missingFrontend: "mobile prescribing depth" },
+  "referral-create": { missingFrontend: "incoming-referrals handoff UX thin" },
+  "appointment-scheduling": { missingFrontend: "citizen booking UX thin" },
+  "consent-capture": { missingFrontend: "admin workflow parity vs mvumo templates" },
+  "payment-billing-claim": { missingFrontend: "payer-ops stubs; MusheX raw paths not in browser" },
+  "document-upload": { missingFrontend: "indexing UX partial vs document-service" },
+  "dispatch-delivery": { missingFrontend: "dispatch detail + offline queue UX" },
+  "notification-comms": { missingFrontend: "campaign admin thin" },
+  "fundo-learning": { missingFrontend: "mobile learning shell shallow" },
+  "reporting-dashboard": { missingFrontend: "Ndila map dashboards incomplete" },
+  "registry-administration": { missingFrontend: "issuance/card ops not fully surfaced" },
+  "integration-sync-replay": { missingFrontend: "integration status partial" },
+  "device-system-event": { missingFrontend: "no direct citizen UI (by design)" },
+  "health-id-issuance": { missingFrontend: "card pickup page blocked" },
+  "marketplace-order": { missingFrontend: "booking list unavailable" },
+  "wellness-journey": { missingFrontend: "routes map coming-soon" },
+  "social-community": { missingFrontend: "public health alerts placeholder in rail" },
+  "public-health-outreach": { missingFrontend: "field ops mobile thinner than web" },
+  "crvs-ubomi": { missingFrontend: "mobile CRVS parity missing" },
+  "coverage-enrollment": { missingFrontend: "intelligence surfaces partial" },
+  "offline-clinical-queue": { missingFrontend: "offline conflict UX" },
+  "emergency-encounter": { missingFrontend: "ED flow depth vs backend" },
+  "surveillance-outbreak": { missingFrontend: "Ndila map dashboards incomplete" },
+  "ai-guidance-nompilo": { missingFrontend: "route context not always passed to guidance BFF" },
+  "credential-verification": { missingFrontend: "verification workflow screens thin" },
+  "provider-registry-onboarding": { missingFrontend: "reconciliation queue thin" },
+  "citizen-monitoring": { missingFrontend: "monitoring depth vs wellness BFF" },
+  "chronic-care": { missingFrontend: "care plan UX depth" },
+  "haemovigilance-report": { missingFrontend: "national dashboard web-only by policy" },
+};
+
+/** Journeys where measured signals cannot override PO-reviewed classification. */
+const JOURNEY_CLASSIFICATION_HINTS = {
+  "emergency-encounter": "trust-security-incomplete",
+  "public-health-outreach": "mobile-missing",
+  "crvs-ubomi": "mobile-missing",
+};
+
+/** Stale hard-coded baseline (pre-Phase 4.0) for rebaseline delta reporting. */
+const STALE_BASELINE_CLASSIFICATIONS = {
+  "citizen-onboarding": "backend-ready-but-frontend-incomplete",
+  "provider-login": "backend-ready-but-frontend-incomplete",
+  "workspace-context-selection": "backend-ready-but-frontend-incomplete",
+  "facility-context-selection": "backend-ready-but-frontend-incomplete",
+  "patient-search-selection": "backend-ready-but-frontend-incomplete",
+  "queue-walk-in": "transaction-complete",
+  "provider-patient-encounter": "transaction-complete",
+  "outpatient-consultation": "backend-ready-but-frontend-incomplete",
+  "inpatient-admission": "backend-partial",
+  "telemedicine-encounter": "backend-ready-but-frontend-incomplete",
+  "lab-order-result": "transaction-complete",
+  "imaging-order-result": "backend-ready-but-frontend-incomplete",
+  "prescription-dispense": "backend-ready-but-frontend-incomplete",
+  "referral-create": "backend-ready-but-frontend-incomplete",
+  "appointment-scheduling": "backend-partial",
+  "consent-capture": "backend-ready-but-frontend-incomplete",
+  "payment-billing-claim": "backend-ready-but-frontend-incomplete",
+  "document-upload": "backend-partial",
+  "dispatch-delivery": "backend-partial",
+  "notification-comms": "backend-ready-but-frontend-incomplete",
+  "fundo-learning": "backend-ready-but-frontend-incomplete",
+  "reporting-dashboard": "backend-partial",
+  "registry-administration": "backend-ready-but-frontend-incomplete",
+  "integration-sync-replay": "backend-partial",
+  "device-system-event": "backend-partial",
+  "health-id-issuance": "backend-partial",
+  "marketplace-order": "backend-ready-but-frontend-incomplete",
+  "wellness-journey": "backend-ready-but-frontend-incomplete",
+  "social-community": "backend-ready-but-frontend-incomplete",
+  "public-health-outreach": "mobile-missing",
+  "crvs-ubomi": "mobile-missing",
+  "coverage-enrollment": "backend-ready-but-frontend-incomplete",
+  "wallet-payment": "backend-ready-but-frontend-incomplete",
+  "offline-clinical-queue": "backend-partial",
+  "emergency-encounter": "trust-security-incomplete",
+  "core-transaction-orchestration": "transaction-complete",
+  "surveillance-outbreak": "backend-ready-but-frontend-incomplete",
+  "ai-guidance-nompilo": "backend-ready-but-frontend-incomplete",
+  "credential-verification": "backend-partial",
+  "provider-registry-onboarding": "backend-ready-but-frontend-incomplete",
+  "citizen-monitoring": "backend-ready-but-frontend-incomplete",
+  "chronic-care": "backend-partial",
+  "blood-donation": "transaction-complete",
+  "blood-order": "transaction-complete",
+  "transfusion-episode": "transaction-complete",
+  "haemovigilance-report": "transaction-complete",
+};
+
+/** Journeys where mobile parity is expected when web routes exist. */
+const MOBILE_PARITY_EXPECTED = new Set([
+  "prescription-dispense",
+  "wellness-journey",
+  "social-community",
+  "citizen-monitoring",
+  "coverage-enrollment",
+  "wallet-payment",
+  "appointment-scheduling",
+]);
 
 /**
  * Evidence-gated completion registry.
@@ -209,6 +323,174 @@ function screensMatching(...parts) {
     .sort();
 }
 
+function loadContractSignals() {
+  const contractPath = path.join(OUT_REPORTS, "contract-implementation-matrix.json");
+  const missingByModule = new Map();
+  const eventGapsByModule = new Map();
+  if (!fs.existsSync(contractPath)) {
+    return { missingByModule, eventGapsByModule };
+  }
+  const contract = JSON.parse(fs.readFileSync(contractPath, "utf8"));
+  for (const op of contract.openApiOperations || []) {
+    if (op.implStatus === "missing" || op.implStatus === "partial") {
+      for (const mod of op.modules || []) {
+        missingByModule.set(mod, (missingByModule.get(mod) || 0) + 1);
+      }
+    }
+  }
+  for (const ch of contract.asyncChannels || []) {
+    if (ch.implStatus === "missing" || ch.implStatus === "partial") {
+      for (const mod of ch.modules || []) {
+        eventGapsByModule.set(mod, (eventGapsByModule.get(mod) || 0) + 1);
+      }
+    }
+  }
+  return { missingByModule, eventGapsByModule };
+}
+
+function buildRouteStubSignals() {
+  const appDir = path.join(ROOT, "ui/one-ui-shell/src/app");
+  const stubRoutes = new Set();
+  const fixtureRoutes = new Set();
+
+  function walk(dir, prefix = "") {
+    if (!fs.existsSync(dir)) return;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith(".")) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        const seg = entry.name.startsWith("[") ? `[${entry.name.slice(1, -1)}]` : entry.name;
+        walk(full, `${prefix}/${seg}`);
+      } else if (entry.name === "page.tsx") {
+        const route = prefix || "/";
+        const content = fs.readFileSync(full, "utf8");
+        if (/coming soon|under construction|placeholder page|TODO: implement|will be rendered/i.test(content)) {
+          stubRoutes.add(route);
+        }
+        if (/Mock Data|MOCK_|fixture/i.test(content)) {
+          fixtureRoutes.add(route);
+        }
+      }
+    }
+  }
+
+  walk(appDir);
+  return { stubRoutes, fixtureRoutes };
+}
+
+function routeMatchesStub(route, stubRoutes) {
+  if (stubRoutes.has(route)) return true;
+  for (const stub of stubRoutes) {
+    if (route === stub || route.startsWith(`${stub}/`) || stub.startsWith(`${route}/`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function journeyHasStubRoutes(journey, signals) {
+  const allStub = new Set([...signals.stubRoutes, ...signals.fixtureRoutes]);
+  return journey.frontendRoutes.some((r) => routeMatchesStub(r, allStub));
+}
+
+function journeyHasContractGaps(journey, missingByModule) {
+  return journey.backendServices
+    .filter((s) => s !== "experience-bff")
+    .some((s) => missingByModule.has(s));
+}
+
+function journeyHasEventGaps(journey, eventGapsByModule) {
+  return journey.backendServices
+    .filter((s) => s !== "experience-bff")
+    .some((s) => eventGapsByModule.has(s));
+}
+
+function journeyHasBffChain(journey) {
+  return journey.backendServices.includes("experience-bff") && /\/internal/i.test(journey.apis || "");
+}
+
+function resolveGapFields(journey) {
+  const override = JOURNEY_GAP_OVERRIDES[journey.id] || {};
+  return {
+    missingBackend: override.missingBackend ?? journey.missingBackend ?? "",
+    missingFrontend: override.missingFrontend ?? journey.missingFrontend ?? "",
+  };
+}
+
+/**
+ * Derive completionClassification from code signals — never assert transaction-complete
+ * outside COMPLETION_EVIDENCE (enforced separately).
+ */
+function classifyJourneyCompletion(journey, signals) {
+  if (COMPLETION_EVIDENCE[journey.id]) {
+    return "transaction-complete";
+  }
+
+  const hint = JOURNEY_CLASSIFICATION_HINTS[journey.id];
+  if (hint) {
+    return hint;
+  }
+
+  const gaps = resolveGapFields(journey);
+  const hasBackendGap =
+    journeyHasContractGaps(journey, signals.missingByModule) || Boolean(gaps.missingBackend);
+  const hasEventGap = journeyHasEventGaps(journey, signals.eventGapsByModule);
+  const hasFrontendGap = Boolean(gaps.missingFrontend) || journeyHasStubRoutes(journey, signals);
+  const hasRoutes = journey.frontendRoutes.length > 0;
+  const hasMobile = journey.mobileScreens.length > 0;
+
+  if (hasEventGap && !hasBackendGap && !hasFrontendGap) {
+    return "event-data-incomplete";
+  }
+
+  if (hasBackendGap) {
+    return "backend-partial";
+  }
+
+  if (hasRoutes && !journeyHasBffChain(journey)) {
+    return "frontend-route-exists-but-disconnected";
+  }
+
+  if (
+    MOBILE_PARITY_EXPECTED.has(journey.id) &&
+    hasRoutes &&
+    !hasMobile
+  ) {
+    return "mobile-missing";
+  }
+
+  if (hasFrontendGap || journey.implStatus === "partial") {
+    return "backend-ready-but-frontend-incomplete";
+  }
+
+  if (hasRoutes) {
+    return "backend-ready-but-frontend-incomplete";
+  }
+
+  return "unknown-needs-review";
+}
+
+function applyMeasuredClassification(journeys, signals) {
+  const rebaseline = [];
+  for (const journey of journeys) {
+    const previous = STALE_BASELINE_CLASSIFICATIONS[journey.id];
+    const derived = classifyJourneyCompletion(journey, signals);
+    journey.completionClassification = derived;
+    const gaps = resolveGapFields(journey);
+    journey.missingBackend = gaps.missingBackend;
+    journey.missingFrontend = gaps.missingFrontend;
+    if (previous && previous !== derived) {
+      rebaseline.push({ id: journey.id, journeyName: journey.journeyName, previous, derived });
+    }
+  }
+  return rebaseline;
+}
+
+const classificationSignals = {
+  ...loadContractSignals(),
+  ...buildRouteStubSignals(),
+};
+
 // ── Journey registry (discovered + minimum required set) ────────────────────
 const JOURNEYS = [
   {
@@ -237,7 +519,6 @@ const JOURNEYS = [
     missingFrontend: "card ops / pickup verification thin",
     relatedJourneys: ["consent-capture", "health-id-issuance"],
     poAcceptanceTest: "Citizen completes registration, receives Health ID, sees next-step guidance",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "provider-login",
@@ -265,7 +546,6 @@ const JOURNEYS = [
     missingFrontend: "device block UX admin-only",
     relatedJourneys: ["workspace-context-selection", "facility-context-selection"],
     poAcceptanceTest: "Provider signs in with Provider ID, activates role, lands in workspace",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "workspace-context-selection",
@@ -293,7 +573,6 @@ const JOURNEYS = [
     missingFrontend: "workspace settings coming-soon stub",
     relatedJourneys: ["facility-context-selection", "provider-patient-encounter"],
     poAcceptanceTest: "Provider selects workspace/shift; subsequent requests carry trust context",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "facility-context-selection",
@@ -321,7 +600,6 @@ const JOURNEYS = [
     missingFrontend: "digital readiness dashboards thin",
     relatedJourneys: ["workspace-context-selection", "queue-walk-in"],
     poAcceptanceTest: "Provider selects facility; queue and EHR routes become available",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "patient-search-selection",
@@ -349,7 +627,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["queue-walk-in", "provider-patient-encounter"],
     poAcceptanceTest: "Provider searches patient, selects, opens chart with correct CPID",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "queue-walk-in",
@@ -377,7 +654,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["patient-search-selection", "outpatient-consultation"],
     poAcceptanceTest: "Walk-in registered, appears in queue, provider can call",
-    completionClassification: "transaction-complete",
   },
   {
     id: "provider-patient-encounter",
@@ -405,7 +681,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["outpatient-consultation", "lab-order-result", "prescription-dispense"],
     poAcceptanceTest: "Provider completes encounter end-to-end with real PCT data",
-    completionClassification: "transaction-complete",
   },
   {
     id: "outpatient-consultation",
@@ -433,7 +708,6 @@ const JOURNEYS = [
     missingFrontend: "discharge instructions orchestration and imaging write lanes still partial",
     relatedJourneys: ["provider-patient-encounter", "prescription-dispense", "lab-order-result"],
     poAcceptanceTest: "Outpatient consult documented with vitals, note, and next steps",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "inpatient-admission",
@@ -461,7 +735,6 @@ const JOURNEYS = [
     missingFrontend: "inpatient UX partial vs backend",
     relatedJourneys: ["provider-patient-encounter", "emergency-encounter"],
     poAcceptanceTest: "Patient admitted, bed assigned, visible in ward worklist",
-    completionClassification: "backend-partial",
   },
   {
     id: "telemedicine-encounter",
@@ -489,7 +762,6 @@ const JOURNEYS = [
     missingFrontend: "real-time media transport blocked",
     relatedJourneys: ["consent-capture", "referral-create"],
     poAcceptanceTest: "Teleconsult created, consented, referral persisted without RTC",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "lab-order-result",
@@ -517,7 +789,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["provider-patient-encounter", "outpatient-consultation", "imaging-order-result"],
     poAcceptanceTest: "Lab ordered and result returned to provider worklist",
-    completionClassification: "transaction-complete",
   },
   {
     id: "imaging-order-result",
@@ -545,7 +816,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["lab-order-result", "document-upload"],
     poAcceptanceTest: "Imaging study visible in viewer with audit trail",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "prescription-dispense",
@@ -573,7 +843,6 @@ const JOURNEYS = [
     missingFrontend: "mobile prescribing depth",
     relatedJourneys: ["outpatient-consultation", "lab-order-result"],
     poAcceptanceTest: "Prescription created, dispensed, visible in patient meds",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "referral-create",
@@ -601,7 +870,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["telemedicine-encounter", "appointment-scheduling"],
     poAcceptanceTest: "Referral created, routed, visible at destination facility",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "appointment-scheduling",
@@ -629,7 +897,6 @@ const JOURNEYS = [
     missingFrontend: "citizen booking UX thin",
     relatedJourneys: ["queue-walk-in", "citizen-onboarding"],
     poAcceptanceTest: "Appointment booked and appears in facility schedule",
-    completionClassification: "backend-partial",
   },
   {
     id: "consent-capture",
@@ -657,7 +924,6 @@ const JOURNEYS = [
     missingFrontend: "admin workflow parity",
     relatedJourneys: ["telemedicine-encounter", "citizen-onboarding"],
     poAcceptanceTest: "Consent captured, enforced on subsequent clinical access",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "payment-billing-claim",
@@ -685,7 +951,6 @@ const JOURNEYS = [
     missingFrontend: "payer-ops stubs; MusheX raw paths not in browser",
     relatedJourneys: ["wallet-payment", "coverage-enrollment"],
     poAcceptanceTest: "Bill generated, payment or claim completed with audit",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "document-upload",
@@ -713,7 +978,6 @@ const JOURNEYS = [
     missingFrontend: "indexing UX partial",
     relatedJourneys: ["imaging-order-result", "provider-patient-encounter"],
     poAcceptanceTest: "Document uploaded, indexed, retrievable in chart",
-    completionClassification: "backend-partial",
   },
   {
     id: "dispatch-delivery",
@@ -741,7 +1005,6 @@ const JOURNEYS = [
     missingFrontend: "dispatch detail + offline queue UX",
     relatedJourneys: ["marketplace-order", "notification-comms"],
     poAcceptanceTest: "Courier completes delivery run with POD",
-    completionClassification: "backend-partial",
   },
   {
     id: "notification-comms",
@@ -769,7 +1032,6 @@ const JOURNEYS = [
     missingFrontend: "campaign admin thin",
     relatedJourneys: ["consent-capture", "appointment-scheduling"],
     poAcceptanceTest: "Notification sent and delivery status visible",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "fundo-learning",
@@ -797,7 +1059,6 @@ const JOURNEYS = [
     missingFrontend: "mobile learning shell shallow",
     relatedJourneys: ["provider-login", "credential-verification"],
     poAcceptanceTest: "Provider enrols, completes module, CPD reflected",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "reporting-dashboard",
@@ -825,7 +1086,6 @@ const JOURNEYS = [
     missingFrontend: "Ndila map dashboards incomplete",
     relatedJourneys: ["public-health-outreach", "surveillance-outbreak"],
     poAcceptanceTest: "Analyst runs report with correct scope and audit",
-    completionClassification: "backend-partial",
   },
   {
     id: "registry-administration",
@@ -853,7 +1113,6 @@ const JOURNEYS = [
     missingFrontend: "issuance/card ops not fully surfaced",
     relatedJourneys: ["health-id-issuance", "provider-registry-onboarding"],
     poAcceptanceTest: "Registry admin reconciles record with full audit",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "integration-sync-replay",
@@ -881,7 +1140,6 @@ const JOURNEYS = [
     missingFrontend: "integration status partial",
     relatedJourneys: ["device-system-event", "offline-clinical-queue"],
     poAcceptanceTest: "Integration message processed or dead-lettered with replay",
-    completionClassification: "backend-partial",
   },
   {
     id: "device-system-event",
@@ -909,7 +1167,6 @@ const JOURNEYS = [
     missingFrontend: "no direct citizen UI (by design)",
     relatedJourneys: ["health-id-issuance", "integration-sync-replay"],
     poAcceptanceTest: "Device event ingested and auditable",
-    completionClassification: "backend-partial",
   },
   {
     id: "health-id-issuance",
@@ -937,7 +1194,6 @@ const JOURNEYS = [
     missingFrontend: "card pickup page blocked",
     relatedJourneys: ["citizen-onboarding", "registry-administration"],
     poAcceptanceTest: "Health ID issued, card printed, pickup verified",
-    completionClassification: "backend-partial",
   },
   {
     id: "marketplace-order",
@@ -965,7 +1221,6 @@ const JOURNEYS = [
     missingFrontend: "booking list unavailable",
     relatedJourneys: ["wallet-payment", "dispatch-delivery"],
     poAcceptanceTest: "Citizen places order and tracks fulfilment",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "wellness-journey",
@@ -993,7 +1248,6 @@ const JOURNEYS = [
     missingFrontend: "routes map coming-soon",
     relatedJourneys: ["citizen-monitoring", "fundo-learning"],
     poAcceptanceTest: "Citizen tracks wellness activity with real backend",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "social-community",
@@ -1021,7 +1275,6 @@ const JOURNEYS = [
     missingFrontend: "public health alerts placeholder in rail",
     relatedJourneys: ["notification-comms", "public-health-outreach"],
     poAcceptanceTest: "Citizen posts to feed with real BFF backing",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "public-health-outreach",
@@ -1049,7 +1302,6 @@ const JOURNEYS = [
     missingFrontend: "field ops mobile thinner than web",
     relatedJourneys: ["surveillance-outbreak", "reporting-dashboard"],
     poAcceptanceTest: "CHW records outreach visit on mobile",
-    completionClassification: "mobile-missing",
   },
   {
     id: "crvs-ubomi",
@@ -1077,7 +1329,6 @@ const JOURNEYS = [
     missingFrontend: "mobile CRVS parity missing",
     relatedJourneys: ["registry-administration", "citizen-onboarding"],
     poAcceptanceTest: "Vital event registered with certificate issuance",
-    completionClassification: "mobile-missing",
   },
   {
     id: "coverage-enrollment",
@@ -1105,7 +1356,6 @@ const JOURNEYS = [
     missingFrontend: "intelligence surfaces partial",
     relatedJourneys: ["payment-billing-claim"],
     poAcceptanceTest: "Citizen enrolls in coverage plan",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "wallet-payment",
@@ -1133,7 +1383,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["marketplace-order", "payment-billing-claim"],
     poAcceptanceTest: "Citizen pays from wallet with typed fail-close",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "offline-clinical-queue",
@@ -1161,7 +1410,6 @@ const JOURNEYS = [
     missingFrontend: "offline conflict UX",
     relatedJourneys: ["provider-patient-encounter", "integration-sync-replay"],
     poAcceptanceTest: "Provider works offline, syncs without data loss",
-    completionClassification: "backend-partial",
   },
   {
     id: "emergency-encounter",
@@ -1189,7 +1437,6 @@ const JOURNEYS = [
     missingFrontend: "ED flow depth vs backend",
     relatedJourneys: ["inpatient-admission", "provider-patient-encounter"],
     poAcceptanceTest: "Emergency encounter with break-glass audit if used",
-    completionClassification: "trust-security-incomplete",
   },
   {
     id: "core-transaction-orchestration",
@@ -1217,7 +1464,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["provider-patient-encounter", "payment-billing-claim"],
     poAcceptanceTest: "Core transaction shell shows live timeline from BFF",
-    completionClassification: "transaction-complete",
   },
   {
     id: "surveillance-outbreak",
@@ -1245,7 +1491,6 @@ const JOURNEYS = [
     missingFrontend: "Ndila map dashboards incomplete",
     relatedJourneys: ["public-health-outreach", "reporting-dashboard"],
     poAcceptanceTest: "Outbreak signal investigated with campaign linkage",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "ai-guidance-nompilo",
@@ -1273,7 +1518,6 @@ const JOURNEYS = [
     missingFrontend: "route context not always passed",
     relatedJourneys: ["provider-patient-encounter", "wellness-journey"],
     poAcceptanceTest: "Nompilo explains next step with route context",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "credential-verification",
@@ -1301,7 +1545,6 @@ const JOURNEYS = [
     missingFrontend: "verification workflow screens thin",
     relatedJourneys: ["provider-registry-onboarding", "fundo-learning"],
     poAcceptanceTest: "Credential verified and reflected in provider standing",
-    completionClassification: "backend-partial",
   },
   {
     id: "provider-registry-onboarding",
@@ -1329,7 +1572,6 @@ const JOURNEYS = [
     missingFrontend: "reconciliation queue thin",
     relatedJourneys: ["provider-login", "credential-verification"],
     poAcceptanceTest: "Provider onboarded with valid licensure",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "citizen-monitoring",
@@ -1357,7 +1599,6 @@ const JOURNEYS = [
     missingFrontend: "monitoring depth",
     relatedJourneys: ["wellness-journey", "chronic-care"],
     poAcceptanceTest: "Citizen records monitoring obs visible to care team",
-    completionClassification: "backend-ready-but-frontend-incomplete",
   },
   {
     id: "chronic-care",
@@ -1385,7 +1626,6 @@ const JOURNEYS = [
     missingFrontend: "care plan UX depth",
     relatedJourneys: ["citizen-monitoring", "prescription-dispense"],
     poAcceptanceTest: "Chronic care plan active with follow-up scheduling",
-    completionClassification: "backend-partial",
   },
   {
     id: "blood-donation",
@@ -1413,7 +1653,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["blood-order", "transfusion-episode"],
     poAcceptanceTest: "Citizen registers as donor, completes pre-screening, and books a drive",
-    completionClassification: "transaction-complete",
   },
   {
     id: "blood-order",
@@ -1441,7 +1680,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["transfusion-episode", "provider-patient-encounter"],
     poAcceptanceTest: "Provider creates blood order and issues matched unit",
-    completionClassification: "transaction-complete",
   },
   {
     id: "transfusion-episode",
@@ -1469,7 +1707,6 @@ const JOURNEYS = [
     missingFrontend: "",
     relatedJourneys: ["blood-order", "haemovigilance-report"],
     poAcceptanceTest: "Provider pre-verifies patient and unit before transfusion observations",
-    completionClassification: "transaction-complete",
   },
   {
     id: "haemovigilance-report",
@@ -1497,9 +1734,10 @@ const JOURNEYS = [
     missingFrontend: "national dashboard web-only by policy",
     relatedJourneys: ["transfusion-episode"],
     poAcceptanceTest: "Adverse reaction reported and visible on facility and national dashboards",
-    completionClassification: "transaction-complete",
   },
 ];
+
+const classificationRebaseline = applyMeasuredClassification(JOURNEYS, classificationSignals);
 
 // ── Map backend services to journeys ────────────────────────────────────────
 const serviceToJourneys = new Map();
@@ -1570,6 +1808,24 @@ if (CHECK_ONLY) {
 // ── Write JSON/CSV ──────────────────────────────────────────────────────────
 fs.mkdirSync(OUT_DOCS, { recursive: true });
 fs.mkdirSync(OUT_REPORTS, { recursive: true });
+
+fs.writeFileSync(
+  path.join(OUT_REPORTS, "classification-rebaseline.json"),
+  JSON.stringify(
+    {
+      generatedAt: DATE,
+      authority: PHASE_4_BAR,
+      staleBaseline: STALE_BASELINE_CLASSIFICATIONS,
+      deltas: classificationRebaseline,
+      measuredCounts: completionRows.reduce((acc, r) => {
+        acc[r.classification] = (acc[r.classification] || 0) + 1;
+        return acc;
+      }, {}),
+    },
+    null,
+    2,
+  ),
+);
 
 const journeyFields = [
   "journeyName", "initiatingActor", "respondingActor", "transactionObject", "context",

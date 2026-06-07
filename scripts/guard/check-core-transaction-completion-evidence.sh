@@ -33,7 +33,7 @@ if git rev-parse --verify "${BASE}^{commit}" >/dev/null 2>&1; then
   fi
 fi
 
-# Source registry size must match runtime count of transaction-complete literals.
+# Source registry size must match runtime transaction-complete count from --check-only.
 REGISTRY_SIZE="$(node -e "
 const fs=require('fs');
 const src=fs.readFileSync('$GENERATOR','utf8');
@@ -42,13 +42,19 @@ if(!m) { console.log(0); process.exit(0); }
 const keys=[...m[0].matchAll(/\"([a-z0-9-]+)\":\\s*\\{/g)].map(x=>x[1]);
 console.log(keys.length);
 ")"
-COMPLETE_LITERALS="$(grep -c 'completionClassification: "transaction-complete"' "$GENERATOR" || true)"
 
-if [[ "$REGISTRY_SIZE" != "$COMPLETE_LITERALS" ]]; then
-  guard_fail "generator has ${COMPLETE_LITERALS} transaction-complete journeys but ${REGISTRY_SIZE} evidence entries"
+if ! node "$GENERATOR" --check-only >/tmp/core-tx-check-only.out 2>&1; then
+  cat /tmp/core-tx-check-only.out
+  guard_fail "completion evidence --check-only failed"
   FAIL=1
 else
-  guard_pass "evidence registry size matches transaction-complete journey count (${REGISTRY_SIZE})"
+  COMPLETE_RUNTIME="$(grep -oP 'Transaction-complete: \K[0-9]+' /tmp/core-tx-check-only.out || echo 0)"
+  if [[ "$REGISTRY_SIZE" != "$COMPLETE_RUNTIME" ]]; then
+    guard_fail "evidence registry (${REGISTRY_SIZE}) != runtime transaction-complete (${COMPLETE_RUNTIME})"
+    FAIL=1
+  else
+    guard_pass "evidence registry matches runtime transaction-complete count (${REGISTRY_SIZE})"
+  fi
 fi
 
 if [[ "$FAIL" -ne 0 ]]; then

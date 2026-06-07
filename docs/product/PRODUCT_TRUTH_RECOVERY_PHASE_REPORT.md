@@ -1,6 +1,6 @@
 # Product Truth Recovery — Phase Report
 
-> Generated: 2026-06-05T07:16:38.491Z
+> Generated: 2026-06-07T08:41:38.419Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **1 — Discovery & Documentation Only**
 
@@ -8,42 +8,42 @@
 
 | Domain | Paths scanned |
 |--------|---------------|
-| Backend services | `services/*` (86 registry services, 653 controllers) |
-| Experience BFF | `services/experience-bff` (216 controllers, 195 route prefixes) |
-| API contracts | `contracts/openapi/` (95), `contracts/asyncapi/` (12) |
+| Backend services | `services/*` (91 registry services, 711 controllers) |
+| Experience BFF | `services/experience-bff` (231 controllers, 209 route prefixes) |
+| API contracts | `contracts/openapi/` (98), `contracts/asyncapi/` (13) |
 | Web experience | `ui/one-ui-shell/src/app/`, `routes.ts`, `hooks/queries/` |
 | Mobile | `apps/mobile/citizen-app`, `apps/mobile/provider-app`, `apps/mobile/packages/` |
 | Registry & doctrine | `docs/registry/`, `docs/doctrine/`, `docs/product/`, `CLAUDE.md`, `AGENTS.md` |
-| Infrastructure | Dockerfiles (90), `deploy/helm/`, `.github/workflows/` |
-| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (22 capabilities) |
-| Database | Flyway migrations across 84 service modules |
+| Infrastructure | Dockerfiles (93), `deploy/helm/`, `.github/workflows/` |
+| Canonical capabilities | `scripts/frontend/generate-parity-docs.mjs` (32 capabilities) |
+| Database | Flyway migrations across 87 service modules |
 
 ## 2. Total components discovered
 
-**2303** entries in the Product Truth Recovery Map.
+**2503** entries in the Product Truth Recovery Map.
 
 ## 3. Total backend capabilities
 
-- **86** registry backend services
+- **91** registry backend services
 - **12** shared libraries
-- **653** backend REST controllers
-- **216** BFF controllers composing sovereign services
+- **711** backend REST controllers
+- **231** BFF controllers composing sovereign services
 
 ## 4. Total APIs/contracts
 
-- **95** OpenAPI specifications
-- **12** AsyncAPI event contracts
-- **107** total API/event contracts
+- **98** OpenAPI specifications
+- **13** AsyncAPI event contracts
+- **111** total API/event contracts
 
 ## 5. Total frontend routes
 
-- **418** registered routes in `routes.ts`
+- **467** registered routes in `routes.ts`
 - **27** on-disk pages not in registry (guard/sidebar gap)
-- **163** TanStack Query hooks
+- **168** TanStack Query hooks
 
 ## 6. Total mobile screens
 
-- **146** mobile screens (citizen + provider apps)
+- **162** mobile screens (citizen + provider apps)
 
 ## 7. Major hidden backend capability areas
 
@@ -51,7 +51,7 @@ Backend-rich domains with partial or missing experience surfacing (from canonica
 
 _None flagged as Not Wired/Fixture._
 
-Additional signal: BFF implements ~195 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
+Additional signal: BFF implements ~209 route prefixes but `experience-bff.openapi.yaml` documents only a baseline subset — significant contract-runtime drift.
 
 ## 8. Major frontend/mobile visibility gaps
 
@@ -76,12 +76,18 @@ Additional signal: BFF implements ~195 route prefixes but `experience-bff.openap
 - Integration Hub: web=partial mobile=partial gap=Adapter template admin thin
 - Workflow / Dispatch: web=partial mobile=partial gap=Dispatch detail + offline queue UX
 - Admin / Governance: web=partial mobile=partial gap=Keys/federation blocked
+- MADI: web=Live mobile=Live gap=—
+- MADI: web=Live mobile=Live gap=—
+- MADI: web=Live mobile=no gap=—
+- MADI: web=Live mobile=no gap=—
 
+
+_…and 5 more in rollups JSON._
 
 
 ## 9. Unknown-needs-review items
 
-**98** entries classified `unknown-needs-review`, primarily:
+**100** entries classified `unknown-needs-review`, primarily:
 - Unregistered frontend pages (27)
 - Query hooks without detected BFF paths
 - Non-canonical UI workspaces

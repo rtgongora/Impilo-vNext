@@ -7,7 +7,7 @@
 | Maturity | Count |
 |----------|-------|
 | Live | 12 |
-| Partial | 20 |
+| Partial | 22 |
 | Fixture | 0 |
 | Not Wired | 0 |
 | Blocked | 0 |
@@ -47,6 +47,8 @@
 | Clinical | MADI | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | contracts/openapi/madi.openapi.yaml | /madi/haemovigilance | useMadi.ts | Live | Live | no | Live | HIGH | — | National roll-up at /madi/haemovigilance/national |
 | Clinical | MADI | Central blood bank coordination | /internal/v1/madi/central-bank/* | contracts/openapi/madi.openapi.yaml | /madi/central-bank | useMadi.ts | Live | no | no | Live | MEDIUM | — | Emergency redistribution request + approve on /madi/central-bank |
 | Experience | Impilo Live | Live events, webinars, broadcasts | /internal/v1/live/* | contracts/openapi/impilo-live.openapi.yaml | /live, /live/discover, /live/event/[eventId] | useLive.ts | yes | yes | yes | Live | MEDIUM | Host controls on mobile partial | Deepen provider host/moderator mobile controls |
+| Experience | Health OS Launcher | Role/facility-aware app launcher + marketplace tiles | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | contracts/openapi/experience-bff.openapi.yaml | ShellStartMenu (Start menu) | useHealthOsLauncher.ts | yes | partial | no | Partial | HIGH | Mobile launcher parity | Shell Start menu uses BFF launcher/apps contract surface |
+| Experience | Wellness / Monitoring | Citizen remote monitoring device pair/list/sync | /internal/v1/mobile/citizen/monitoring/devices | contracts/openapi/experience-bff.openapi.yaml | /monitoring/devices | useCitizenMonitoring.ts, citizen-monitoring-api.ts | yes | yes | no | Partial | MEDIUM | Readings timeline depth | BFF explicit proxy to wellness-service; web + citizen mobile wired |
 | Clinical | MADI | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | contracts/openapi/madi.openapi.yaml | /madi/dashboard | useMadi.ts | Live | no | partial | Live | MEDIUM | — | 30-day forecast table on /madi/dashboard from order + stock signals |
 
 ## Trust headers (all BFF paths)

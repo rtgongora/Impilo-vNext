@@ -1,7 +1,7 @@
 # vNext Experience Orchestration Map
 
-> Generated: 2026-06-05T08:46:44.754Z
-> Entries: **872**
+> Generated: 2026-06-07T08:44:44.353Z
+> Entries: **956**
 
 JSON: [experience-orchestration-map.json](../../reports/product/experience-orchestration-map.json)
 
@@ -9,14 +9,14 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 
 | Status | Count |
 |--------|------:|
-| coherent | 136 |
-| partial | 135 |
-| isolated-page | 38 |
-| orphan-backend | 175 |
+| coherent | 165 |
+| partial | 144 |
+| isolated-page | 43 |
+| orphan-backend | 188 |
 | orphan-frontend | 27 |
 | mock-stub | 9 |
-| unclear-intent | 28 |
-| missing-journey | 324 |
+| unclear-intent | 54 |
+| missing-journey | 326 |
 
 | route | actor | journey | status |
 | --- | --- | --- | --- |

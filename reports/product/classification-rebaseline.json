@@ -1,0 +1,139 @@
+{
+  "generatedAt": "2026-06-07T08:46:04.574Z",
+  "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
+  "staleBaseline": {
+    "citizen-onboarding": "backend-ready-but-frontend-incomplete",
+    "provider-login": "backend-ready-but-frontend-incomplete",
+    "workspace-context-selection": "backend-ready-but-frontend-incomplete",
+    "facility-context-selection": "backend-ready-but-frontend-incomplete",
+    "patient-search-selection": "backend-ready-but-frontend-incomplete",
+    "queue-walk-in": "transaction-complete",
+    "provider-patient-encounter": "transaction-complete",
+    "outpatient-consultation": "backend-ready-but-frontend-incomplete",
+    "inpatient-admission": "backend-partial",
+    "telemedicine-encounter": "backend-ready-but-frontend-incomplete",
+    "lab-order-result": "transaction-complete",
+    "imaging-order-result": "backend-ready-but-frontend-incomplete",
+    "prescription-dispense": "backend-ready-but-frontend-incomplete",
+    "referral-create": "backend-ready-but-frontend-incomplete",
+    "appointment-scheduling": "backend-partial",
+    "consent-capture": "backend-ready-but-frontend-incomplete",
+    "payment-billing-claim": "backend-ready-but-frontend-incomplete",
+    "document-upload": "backend-partial",
+    "dispatch-delivery": "backend-partial",
+    "notification-comms": "backend-ready-but-frontend-incomplete",
+    "fundo-learning": "backend-ready-but-frontend-incomplete",
+    "reporting-dashboard": "backend-partial",
+    "registry-administration": "backend-ready-but-frontend-incomplete",
+    "integration-sync-replay": "backend-partial",
+    "device-system-event": "backend-partial",
+    "health-id-issuance": "backend-partial",
+    "marketplace-order": "backend-ready-but-frontend-incomplete",
+    "wellness-journey": "backend-ready-but-frontend-incomplete",
+    "social-community": "backend-ready-but-frontend-incomplete",
+    "public-health-outreach": "mobile-missing",
+    "crvs-ubomi": "mobile-missing",
+    "coverage-enrollment": "backend-ready-but-frontend-incomplete",
+    "wallet-payment": "backend-ready-but-frontend-incomplete",
+    "offline-clinical-queue": "backend-partial",
+    "emergency-encounter": "trust-security-incomplete",
+    "core-transaction-orchestration": "transaction-complete",
+    "surveillance-outbreak": "backend-ready-but-frontend-incomplete",
+    "ai-guidance-nompilo": "backend-ready-but-frontend-incomplete",
+    "credential-verification": "backend-partial",
+    "provider-registry-onboarding": "backend-ready-but-frontend-incomplete",
+    "citizen-monitoring": "backend-ready-but-frontend-incomplete",
+    "chronic-care": "backend-partial",
+    "blood-donation": "transaction-complete",
+    "blood-order": "transaction-complete",
+    "transfusion-episode": "transaction-complete",
+    "haemovigilance-report": "transaction-complete"
+  },
+  "deltas": [
+    {
+      "id": "citizen-onboarding",
+      "journeyName": "Citizen / Client Onboarding",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "workspace-context-selection",
+      "journeyName": "Workspace / Shift Context Selection",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "telemedicine-encounter",
+      "journeyName": "Telemedicine Encounter",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "consent-capture",
+      "journeyName": "Consent Capture",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "payment-billing-claim",
+      "journeyName": "Payment / Billing / Exemption / Claim",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "notification-comms",
+      "journeyName": "Notification & Communications",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "registry-administration",
+      "journeyName": "Registry Administration",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "marketplace-order",
+      "journeyName": "Marketplace Order",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "wellness-journey",
+      "journeyName": "Wellness & Lifestyle Journey",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "coverage-enrollment",
+      "journeyName": "Coverage Enrollment",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "credential-verification",
+      "journeyName": "Credential Verification",
+      "previous": "backend-partial",
+      "derived": "backend-ready-but-frontend-incomplete"
+    },
+    {
+      "id": "provider-registry-onboarding",
+      "journeyName": "Provider Registry Onboarding",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "backend-partial"
+    },
+    {
+      "id": "chronic-care",
+      "journeyName": "Chronic Care Management",
+      "previous": "backend-partial",
+      "derived": "backend-ready-but-frontend-incomplete"
+    }
+  ],
+  "measuredCounts": {
+    "backend-partial": 20,
+    "backend-ready-but-frontend-incomplete": 15,
+    "transaction-complete": 8,
+    "mobile-missing": 2,
+    "trust-security-incomplete": 1
+  }
+}

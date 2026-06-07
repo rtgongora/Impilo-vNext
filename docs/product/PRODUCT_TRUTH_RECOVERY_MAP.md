@@ -1,10 +1,6 @@
 # Product Truth Recovery Map
 
-## Phase 4 completion update (2026-06-05)
-
-First transaction journey batch shipped: **Provider Patient Encounter** — web encounter page + mobile encounter screen now resolve live core-transaction composition by `encounter_id`. See [`FIRST_COMPLETION_BATCH_PLAN.md`](./FIRST_COMPLETION_BATCH_PLAN.md).
-
-> Generated: 2026-06-05T07:16:38.491Z
+> Generated: 2026-06-07T08:41:38.419Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Regenerate: `node scripts/product/generate-product-truth-recovery.mjs`
 
@@ -13,7 +9,7 @@ First transaction journey batch shipped: **Provider Patient Encounter** — web 
 Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backend controllers, web routes, mobile screens, hooks, events, migrations, doctrine, and infrastructure into one product-truth inventory.
 
 **Exhaustive machine-readable exports:**
-- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2303 entries
+- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2503 entries
 - [product-truth-recovery-map.csv](../../reports/product/product-truth-recovery-map.csv) — same data, CSV
 - [product-truth-rollups.md](../../reports/product/product-truth-rollups.md) — summary counts
 
@@ -21,13 +17,13 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 
 | Dimension | Discovered |
 |-----------|----------:|
-| Total items | 2303 |
-| Backend services | 86 |
-| APIs/contracts | 107 |
-| Frontend routes | 418 |
-| Mobile screens | 146 |
-| BFF route prefixes | 195 |
-| Unknown-needs-review | 98 |
+| Total items | 2503 |
+| Backend services | 91 |
+| APIs/contracts | 111 |
+| Frontend routes | 467 |
+| Mobile screens | 162 |
+| BFF route prefixes | 209 |
+| Unknown-needs-review | 100 |
 
 ## Canonical capabilities (embedded registry)
 
@@ -55,6 +51,16 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | Integration Hub: Routes, dead letters, dispatch | Integration/Integration Hub | partial | partial | Partial | Adapter template admin thin |
 | Workflow / Dispatch: Workflow definitions, instances, dispatch tasks | Platform/Workflow / Dispatch | partial | partial | Partial | Dispatch detail + offline queue UX |
 | Admin / Governance: Users, tenants, roles, audit, feature flags | Platform/Admin / Governance | partial | partial | Partial | Keys/federation blocked |
+| MADI: Donor engagement (register, profile, eligibility, feedback) | Clinical/MADI | Live | Live | Live | — |
+| MADI: Donation drive scheduling and field capture | Clinical/MADI | Live | Live | Live | — |
+| MADI: Blood processing and component labelling | Clinical/MADI | Live | no | Live | — |
+| MADI: Blood bank stock and inventory balance | Clinical/MADI | Live | no | Live | — |
+| MADI: Clinical blood order (crossmatch, reserve, issue) | Clinical/MADI | Live | Live | Live | — |
+| MADI: Transfusion episode and observation capture | Clinical/MADI | Live | Live | Live | — |
+| MADI: Haemovigilance (adverse reaction reporting) | Clinical/MADI | Live | Live | Live | — |
+| MADI: Central blood bank coordination | Clinical/MADI | Live | no | Live | — |
+| Impilo Live: Live events, webinars, broadcasts | Experience/Impilo Live | yes | yes | Live | Host controls on mobile partial |
+| MADI: MADI dashboards and programme KPIs | Clinical/MADI | Live | no | Live | — |
 
 ## Backend services (registry)
 
@@ -64,6 +70,7 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | analytics-pipeline-service | integration/platform-ops | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/analytics-pipeline.openapi.yaml; | partial |  |
 | asset-registry-service | integration/platform-ops | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/asset-registry.openapi.yaml; sta | partial |  |
 | audit-ledger-service | integration/platform-ops | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/audit-ledger.openapi.yaml; statu | partial |  |
+| booking-service | experience/workflow-orchestration | production=baseline-assessed; impl=implemented-or-partial; frontend=wired | contract: contracts/openapi/booking.openapi.yaml; status=par | yes |  |
 | butano-fhir | clinical/care-delivery | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/butano-fhir.openapi.yaml; status | partial | Mobile conditions/allergies TODO |
 | butano-service | clinical/care-delivery | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | no-matched-openapi; status=partial | partial | Mobile conditions/allergies TODO |
 | campaigns-service | data/public-health-campaigns | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/campaigns.openapi.yaml; status=p | partial |  |
@@ -99,9 +106,8 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | jobs-service | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/jobs.openapi.yaml; status=partia | partial |  |
 | landela-adapter-service | integration/interoperability | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | contract: contracts/openapi/landela-adapter.openapi.yaml; st | partial |  |
 | learning-service | experience/workflow-orchestration | production=baseline-assessed; impl=implemented-or-partial; frontend=wired | contract: contracts/openapi/learning.openapi.yaml; status=pa | yes |  |
-| llm-orchestration-service | integration/platform-ops | production=baseline-assessed; impl=implemented-or-partial; frontend=unknown-or-p | no-matched-openapi; status=partial | partial |  |
 
-_…and 46 more rows in JSON/CSV._
+_…and 51 more rows in JSON/CSV._
 
 
 ## Unregistered frontend pages (needs review)

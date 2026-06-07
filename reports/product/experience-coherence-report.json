@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-06-05T08:46:44.754Z",
-  "totalFrontendRoutes": 445,
-  "routesMappedToActorContextIntentTransaction": 368,
-  "orphanRoutes": 93,
-  "backendCapabilitiesWithoutJourneys": 31,
+  "generatedAt": "2026-06-07T08:44:44.353Z",
+  "totalFrontendRoutes": 494,
+  "routesMappedToActorContextIntentTransaction": 386,
+  "orphanRoutes": 124,
+  "backendCapabilitiesWithoutJourneys": 34,
   "mockStubPlaceholderRouteCount": 9,
-  "isolatedPages": 38,
-  "incompleteTransactionJourneys": 40,
-  "mobileSurfacesDisconnected": 45,
+  "isolatedPages": 43,
+  "incompleteTransactionJourneys": 38,
+  "mobileSurfacesDisconnected": 49,
   "orchestrationStatusCounts": {
-    "coherent": 136,
-    "partial": 135,
-    "isolated-page": 38,
-    "orphan-backend": 175,
+    "coherent": 165,
+    "partial": 144,
+    "isolated-page": 43,
+    "orphan-backend": 188,
     "orphan-frontend": 27,
     "mock-stub": 9,
-    "unclear-intent": 28,
-    "missing-journey": 324
+    "unclear-intent": 54,
+    "missing-journey": 326
   },
   "top20CoherenceGaps": [
     {

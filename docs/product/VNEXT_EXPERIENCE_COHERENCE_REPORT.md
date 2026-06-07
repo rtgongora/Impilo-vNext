@@ -1,17 +1,17 @@
 # vNext Experience Coherence Report
 
-> Generated: 2026-06-05T08:46:44.754Z
+> Generated: 2026-06-07T08:44:44.353Z
 
 | # | Metric | Value |
 |---|--------|------:|
-| 1 | Total frontend routes | 445 |
-| 2 | Routes mapped to actor/context/intent/transaction | 368 |
-| 3 | Orphan routes | 93 |
-| 4 | Backend capabilities without journeys | 31 |
+| 1 | Total frontend routes | 494 |
+| 2 | Routes mapped to actor/context/intent/transaction | 386 |
+| 3 | Orphan routes | 124 |
+| 4 | Backend capabilities without journeys | 34 |
 | 5 | Mock/stub/placeholder routes | 9 |
-| 6 | Isolated pages | 38 |
-| 7 | Incomplete transaction journeys | 40 |
-| 8 | Mobile surfaces disconnected | 45 |
+| 6 | Isolated pages | 43 |
+| 7 | Incomplete transaction journeys | 38 |
+| 8 | Mobile surfaces disconnected | 49 |
 
 ## Top 20 coherence gaps
 
