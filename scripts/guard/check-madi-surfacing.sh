@@ -69,6 +69,24 @@ if ! grep -q 'path: "/madi"' ui/one-ui-shell/src/lib/routes.ts; then
   FAIL=1
 fi
 
+# 8. Gap-closure surfaces (wave 2)
+for f in \
+  ui/one-ui-shell/src/components/madi/MadiDonorAssistPanel.tsx \
+  ui/one-ui-shell/src/components/madi/MadiBedsideVerifyPanel.tsx \
+  ui/one-ui-shell/src/app/madi/blood-bank/fridges/page.tsx \
+  ui/one-ui-shell/src/app/madi/haemovigilance/national/page.tsx \
+  services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MadiDonorAssistController.java; do
+  if [[ ! -f "$f" ]]; then
+    echo "FAIL: MADI gap-closure surface missing: $f"
+    FAIL=1
+  fi
+done
+
+if ! grep -q 'pre-screening' contracts/openapi/madi.openapi.yaml; then
+  echo "FAIL: madi.openapi.yaml missing pre-screening paths"
+  FAIL=1
+fi
+
 if [[ "$FAIL" -ne 0 ]]; then
   echo "MADI-SURFACING: BLOCKED"
   exit 1

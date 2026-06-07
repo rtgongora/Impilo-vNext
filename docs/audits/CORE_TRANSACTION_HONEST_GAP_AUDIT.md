@@ -1,14 +1,14 @@
 # Core Transaction Honest Gap Audit
 
-> **Generated:** 2026-06-05 (post-recovery)  
-> **Baseline:** evidence-gated generator — **4/42 transaction-complete** (after outpatient orders batch)  
+> **Generated:** 2026-06-07 (MADI governance wave)  
+> **Baseline:** evidence-gated generator — **8/46 transaction-complete** (4 prior + 4 MADI journeys)  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md)
 
 ## Summary
 
 | Classification | Count | Meaning |
 |----------------|------:|---------|
-| transaction-complete | 3 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
+| transaction-complete | 8 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
 | backend-ready-but-frontend-incomplete | 25 | Sovereign/BFF capability exists; UI/mobile write or orchestration gap |
 | backend-partial | 11 | Backend depth or BFF proxy incomplete |
 | mobile-missing | 2 | Web exists; mobile journey not productised |
@@ -22,6 +22,10 @@
 | Provider Patient Encounter | `/ehr/.../encounter/[id]` → `useEncounterCoreTransaction` → BFF `encounter-{id}` composition |
 | Core Transaction Orchestration Shell | `/core-transaction` → `useCoreTransactionFeed` → BFF `/internal/v1/core-transactions` |
 | Lab Order & Result | `EncounterLabOrdersPanel` / orders page → `useCreateLabOrder` → `POST /internal/v1/lab-orders` → OROS `placeOrder` |
+| Blood Donation & Donor Engagement | `/madi/donor/*` + citizen mobile → `madiApi` → BFF `/internal/v1/madi/donors` → `DonorPreScreeningTest` |
+| Blood Order & Crossmatch | `/madi/orders/[orderId]` → `bloodOrderDetail` → BFF `/internal/v1/madi/orders` → `BloodOrderServiceTest` |
+| Transfusion Episode & Bedside Verify | `/madi/transfusion/[episodeId]` → `preVerifyTransfusion` → BFF + provider mobile → `TransfusionPreVerifyTest` |
+| Haemovigilance Report & Investigation | `/madi/haemovigilance/*` → `reportReaction` / national dashboard → `HaemovigilanceServiceTest` |
 
 ## Chain template (per incomplete journey)
 

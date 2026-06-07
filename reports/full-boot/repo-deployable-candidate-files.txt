@@ -2,6 +2,7 @@ contracts/openapi/ai-model-registry.openapi.yaml
 contracts/openapi/analytics-pipeline.openapi.yaml
 contracts/openapi/asset-registry.openapi.yaml
 contracts/openapi/audit-ledger.openapi.yaml
+contracts/openapi/booking.openapi.yaml
 contracts/openapi/butano-fhir.openapi.yaml
 contracts/openapi/butano.custom.openapi.yaml
 contracts/openapi/campaigns.openapi.yaml
@@ -42,6 +43,7 @@ contracts/openapi/iot-ingestion.openapi.yaml
 contracts/openapi/jobs.openapi.yaml
 contracts/openapi/landela-adapter.openapi.yaml
 contracts/openapi/learning.openapi.yaml
+contracts/openapi/madi.openapi.yaml
 contracts/openapi/mobile-citizen.openapi.yaml
 contracts/openapi/mobile-provider.openapi.yaml
 contracts/openapi/monitoring.openapi.yaml
@@ -101,6 +103,8 @@ services/asset-registry-service/Dockerfile
 services/asset-registry-service/pom.xml
 services/audit-ledger-service/Dockerfile
 services/audit-ledger-service/pom.xml
+services/booking-service/Dockerfile
+services/booking-service/pom.xml
 services/butano-fhir/Dockerfile
 services/butano-fhir/pom.xml
 services/butano-service/Dockerfile
@@ -173,6 +177,8 @@ services/learning-service/Dockerfile
 services/learning-service/pom.xml
 services/llm-orchestration-service/Dockerfile
 services/llm-orchestration-service/pom.xml
+services/madi-service/Dockerfile
+services/madi-service/pom.xml
 services/msika-apps-service/Dockerfile
 services/msika-apps-service/pom.xml
 services/msika-flow-service/Dockerfile

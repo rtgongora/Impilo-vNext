@@ -1,7 +1,7 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-05T11:18:38.306Z
-> Journeys discovered: **42**
+> Generated: 2026-06-07T05:12:18.731Z
+> Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md) for spine doctrine.
@@ -52,6 +52,10 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | backend-ready-but-frontend-incomplete |
 | Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | backend-ready-but-frontend-incomplete |
 | Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | backend-partial |
+| Blood Donation & Donor Engagement | BLOOD_DONATION | citizen | /madi/donor | wired | transaction-complete |
+| Blood Order & Crossmatch | BLOOD_ORDER | provider | /madi/orders | wired | transaction-complete |
+| Transfusion Episode & Bedside Verify | TRANSFUSION | provider | /madi/transfusion | wired | transaction-complete |
+| Haemovigilance Report & Investigation | HAEMOVIGILANCE | provider | /madi/haemovigilance | wired | transaction-complete |
 
 ## Journey detail (sample — full data in JSON/CSV)
 
@@ -136,4 +140,4 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **PO acceptance test:** Provider searches patient, selects, opens chart with correct CPID
 
 
-_Full 42 journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._
+_Full 46 journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._

@@ -76,6 +76,22 @@ export interface DonorFeedbackInput {
   comments?: string;
 }
 
+export interface DonorPreScreeningResult {
+  screening_id?: string;
+  donor_id?: string;
+  outcome?: string;
+  safe_message?: string;
+  created_at?: string;
+}
+
+export interface DonorAssistResponse {
+  content?: string | string[];
+  steps?: string[];
+  questions?: Array<{ id: string; label: string; help?: string }>;
+  disclaimer?: string;
+  fallback_used?: boolean;
+}
+
 interface ApiEnvelope<T> {
   data: T;
 }
@@ -179,6 +195,50 @@ export async function fetchDonorHistory(): Promise<DonorHistory> {
 export async function fetchNextEligibility(): Promise<DonorEligibility | null> {
   try {
     const response = await apiClient.get<ApiEnvelope<DonorEligibility>>(`${MADI_BASE}/next-eligibility`);
+    return response.data.data;
+  } catch {
+    return null;
+  }
+}
+
+/** Guided wellness check before visiting a drive (session-scoped). */
+export async function submitDonorPreScreening(
+  answers: Record<string, boolean>,
+): Promise<DonorPreScreeningResult | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<DonorPreScreeningResult>>(
+      `${MADI_BASE}/pre-screening`,
+      { answers },
+    );
+    return response.data.data;
+  } catch {
+    return null;
+  }
+}
+
+/** Latest session pre-screening outcome. */
+export async function fetchLatestDonorPreScreening(): Promise<DonorPreScreeningResult | null> {
+  try {
+    const response = await apiClient.get<ApiEnvelope<DonorPreScreeningResult>>(
+      `${MADI_BASE}/pre-screening/latest`,
+    );
+    return response.data.data;
+  } catch {
+    return null;
+  }
+}
+
+/** Nompilo donor assist — guided explanations with offline-safe fallback. */
+export async function requestDonorAssist(params: {
+  op: string;
+  context?: Record<string, unknown>;
+  language?: string;
+}): Promise<DonorAssistResponse | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<DonorAssistResponse>>(
+      "/internal/v1/madi/donor/assist",
+      { language: params.language ?? "en", op: params.op, context: params.context ?? {} },
+    );
     return response.data.data;
   } catch {
     return null;

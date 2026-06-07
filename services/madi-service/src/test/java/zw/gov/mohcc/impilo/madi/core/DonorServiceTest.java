@@ -28,6 +28,7 @@ class DonorServiceTest {
     @Mock private DonorDeferralRepository deferralRepository;
     @Mock private DonorCommunicationPreferenceRepository preferenceRepository;
     @Mock private DonorFeedbackRepository feedbackRepository;
+    @Mock private DonorPreScreeningRepository preScreeningRepository;
     @Mock private MadiEventEmitter eventEmitter;
 
     private DonorService donorService;
@@ -36,7 +37,7 @@ class DonorServiceTest {
     @BeforeEach
     void setUp() {
         donorService = new DonorService(donorProfileRepository, screeningRepository, deferralRepository,
-                preferenceRepository, feedbackRepository, eventEmitter);
+                preferenceRepository, feedbackRepository, preScreeningRepository, eventEmitter);
     }
 
     @Test

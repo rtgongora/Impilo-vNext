@@ -82,6 +82,64 @@ export interface MadiDashboardMetrics {
   [key: string]: unknown;
 }
 
+export interface MadiForecastRow {
+  bloodGroup?: string;
+  componentType?: string;
+  currentAvailable?: number;
+  baselineDemand30d?: number;
+  projectedDemand30d?: number;
+  projectedSupply30d?: number;
+  epidemiologyMultiplier?: number;
+  netGap?: number;
+  risk?: "LOW" | "MEDIUM" | "HIGH" | string;
+}
+
+export interface MadiThirtyDayForecast {
+  horizonDays?: number;
+  generatedAt?: string;
+  facilityId?: string;
+  epidemiologyMultiplier?: number;
+  epidemiologySignals?: Array<Record<string, unknown>>;
+  rows?: MadiForecastRow[];
+}
+
+export interface MadiZiboComponentPins {
+  jurisdiction?: string;
+  releaseTrain?: string;
+  defaultJurisdiction?: string;
+  components?: Record<string, {
+    label?: string;
+    canonical_url?: string;
+    canonicalUrl?: string;
+    pinned_version?: string;
+    pinnedVersion?: string;
+    code?: string;
+  }>;
+}
+
+export interface EmergencyRedistribution {
+  redistributionId?: string;
+  sourceFacilityId?: string;
+  targetFacilityId?: string;
+  bloodGroup?: string;
+  componentType?: string;
+  unitsRequested?: number;
+  unitsAllocated?: number;
+  priority?: string;
+  status?: string;
+  reason?: string;
+  requestedBy?: string;
+  approvedBy?: string;
+  requestedAt?: string;
+  approvedAt?: string;
+  fulfilledAt?: string;
+  nhumeDeliveryId?: string;
+  handoffStatus?: string;
+  handoffAt?: string;
+  handoffError?: string;
+  nhumeDeepLinkPath?: string;
+}
+
 export interface DonorHistory {
   donations?: Array<Record<string, unknown>>;
   screenings?: Array<Record<string, unknown>>;
@@ -306,11 +364,92 @@ export interface CloseCasePayload {
   notes?: string;
 }
 
+export interface DonorPreScreeningPayload {
+  answers: Record<string, boolean>;
+}
+
+export interface DonorPreScreeningResult {
+  screeningId?: string;
+  donorId?: string;
+  outcome?: string;
+  safeMessage?: string;
+  answersJson?: Record<string, unknown>;
+  createdAt?: string;
+}
+
+export interface PreVerifyTransfusionPayload {
+  patient_cpid: string;
+  blood_unit_id: string;
+  patient_method: string;
+  patient_biometric_ref?: string;
+  unit_method: string;
+  unit_scan_ref?: string;
+  verified_by?: string;
+}
+
+export interface BloodFridge {
+  fridgeId?: string;
+  fridgeCode?: string;
+  temperatureC?: number;
+  alarmStatus?: string;
+  lastReadingAt?: string;
+  iotDeviceRef?: string;
+  targetTempMinC?: number;
+  targetTempMaxC?: number;
+  status?: string;
+  bloodBankId?: string;
+}
+
+export interface BloodFridgeReading {
+  readingId?: string;
+  temperatureC?: number;
+  alarmStatus?: string;
+  recordedAt?: string;
+  iotReadingRef?: string;
+}
+
+export interface BloodOrderDetail {
+  order?: Record<string, unknown>;
+  orosDeepLinkPath?: string | null;
+  butanoServiceRequestHint?: string | null;
+}
+
+export interface NationalHaemovigilanceDashboard {
+  reactionsByType?: Record<string, number>;
+  reactionsBySeverity?: Record<string, number>;
+  casesByStatus?: Record<string, number>;
+  casesByFacility?: Record<string, number>;
+  openCases?: number;
+  closedCases30d?: number;
+  trendIndicator?: "UP" | "DOWN" | "STABLE" | string;
+}
+
+export interface SyncConflictPayload {
+  drive_id: string;
+  local_op_id: string;
+  local_state?: Record<string, unknown>;
+  server_state?: Record<string, unknown>;
+}
+
+export interface ResolveSyncConflictPayload {
+  drive_id: string;
+  resolution: "KEEP_LOCAL" | "USE_SERVER" | "MERGE";
+  resolved_by?: string;
+}
+
 // ============================================================================
 // Client surface
 // ============================================================================
 
 const BASE = "/internal/v1/madi";
+
+/** Unwrap BFF `{ data, meta }` envelopes from MADI proxy routes. */
+export function unwrapMadiData<T>(response: unknown): T {
+  if (response && typeof response === "object" && "data" in response) {
+    return (response as { data: T }).data;
+  }
+  return response as T;
+}
 
 export const madiApi = {
   // Dashboard
@@ -329,6 +468,56 @@ export const madiApi = {
 
   centralBankMetrics: () =>
     apiClient.get<MadiDashboardMetrics>(`${BASE}/central-bank/metrics`),
+
+  dashboardForecast: async (facilityId?: string) =>
+    unwrapMadiData<MadiThirtyDayForecast>(
+      await apiClient.get(
+        `${BASE}/dashboard/forecast${facilityId ? `?facility_id=${encodeURIComponent(facilityId)}` : ""}`,
+      ),
+    ),
+
+  listEmergencyRedistributions: async () =>
+    unwrapMadiData<EmergencyRedistribution[]>(
+      await apiClient.get(`${BASE}/central-bank/emergency-redistributions`),
+    ),
+
+  requestEmergencyRedistribution: async (body: {
+    source_facility_id: string;
+    target_facility_id: string;
+    blood_group: string;
+    component_type: string;
+    units_requested: number;
+    reason?: string;
+    requested_by?: string;
+    priority?: string;
+  }) =>
+    unwrapMadiData<EmergencyRedistribution>(
+      await apiClient.post(`${BASE}/central-bank/emergency-redistributions`, body),
+    ),
+
+  approveEmergencyRedistribution: async (
+    redistributionId: string,
+    body: { approved_by: string; units_allocated?: number; status?: string },
+  ) =>
+    unwrapMadiData<EmergencyRedistribution>(
+      await apiClient.post(
+        `${BASE}/central-bank/emergency-redistributions/${encodeURIComponent(redistributionId)}/approve`,
+        body,
+      ),
+    ),
+
+  initiateEmergencyHandoff: async (redistributionId: string, body?: { initiated_by?: string }) =>
+    unwrapMadiData<EmergencyRedistribution>(
+      await apiClient.post(
+        `${BASE}/central-bank/emergency-redistributions/${encodeURIComponent(redistributionId)}/handoff`,
+        body ?? {},
+      ),
+    ),
+
+  componentTerminologyPins: async (jurisdiction = "ZW") =>
+    unwrapMadiData<MadiZiboComponentPins>(
+      await apiClient.get(`${BASE}/terminology/component-pins?jurisdiction=${encodeURIComponent(jurisdiction)}`),
+    ),
 
   // Donors
   registerDonor: (body: RegisterDonorPayload) =>
@@ -356,6 +545,16 @@ export const madiApi = {
 
   donorNextEligibility: (donorId: string) =>
     apiClient.get<DonorEligibility>(`${BASE}/donors/${donorId}/next-eligibility`),
+
+  submitDonorPreScreening: async (donorId: string, body: DonorPreScreeningPayload) =>
+    unwrapMadiData<DonorPreScreeningResult>(
+      await apiClient.post(`${BASE}/donors/${donorId}/pre-screening`, body),
+    ),
+
+  latestDonorPreScreening: async (donorId: string) =>
+    unwrapMadiData<DonorPreScreeningResult | null>(
+      await apiClient.get(`${BASE}/donors/${donorId}/pre-screening/latest`),
+    ),
 
   drivesNearMe: (ndilaSiteRef: string, radiusKm = 25) =>
     apiClient.get<Array<Record<string, unknown>>>(
@@ -402,6 +601,21 @@ export const madiApi = {
   recordReturn: (bloodBankId: string, body: ReturnPayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/blood-banks/${bloodBankId}/returns`, body),
 
+  listBloodFridges: async (bloodBankId: string) =>
+    unwrapMadiData<BloodFridge[]>(
+      await apiClient.get(`${BASE}/blood-banks/fridges?blood_bank_id=${encodeURIComponent(bloodBankId)}`),
+    ),
+
+  fridgeReadings: async (fridgeId: string) =>
+    unwrapMadiData<BloodFridgeReading[]>(
+      await apiClient.get(`${BASE}/blood-banks/fridges/${fridgeId}/readings`),
+    ),
+
+  syncFridgeIot: async (fridgeId: string) =>
+    unwrapMadiData<BloodFridge>(
+      await apiClient.post(`${BASE}/blood-banks/fridges/${fridgeId}/sync-iot`, {}),
+    ),
+
   // Blood orders
   createBloodOrder: (body: CreateBloodOrderPayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/orders`, body),
@@ -421,9 +635,20 @@ export const madiApi = {
   issueOrderUnit: (orderId: string, body: IssueUnitPayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/orders/${orderId}/issue`, body),
 
+  bloodOrderDetail: async (orderId: string) =>
+    unwrapMadiData<BloodOrderDetail>(await apiClient.get(`${BASE}/orders/${orderId}`)),
+
   // Transfusions
   startTransfusion: (body: StartTransfusionPayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/transfusions`, body),
+
+  transfusionEpisode: async (episodeId: string) =>
+    unwrapMadiData<Record<string, unknown>>(await apiClient.get(`${BASE}/transfusions/${episodeId}`)),
+
+  preVerifyTransfusion: async (episodeId: string, body: PreVerifyTransfusionPayload) =>
+    unwrapMadiData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/transfusions/${episodeId}/pre-verify`, body),
+    ),
 
   recordTransfusionObservation: (episodeId: string, body: TransfusionObservationPayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/transfusions/${episodeId}/observations`, body),
@@ -462,4 +687,19 @@ export const madiApi = {
 
   closeHaemovigilanceCase: (caseId: string, body?: CloseCasePayload) =>
     apiClient.post<Record<string, unknown>>(`${BASE}/haemovigilance/cases/${caseId}/close`, body ?? {}),
+
+  nationalHaemovigilanceDashboard: async () =>
+    unwrapMadiData<NationalHaemovigilanceDashboard>(
+      await apiClient.get(`${BASE}/haemovigilance/national-dashboard`),
+    ),
+
+  recordDriveSyncConflict: async (body: SyncConflictPayload) =>
+    unwrapMadiData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/drives/sync-conflicts`, body),
+    ),
+
+  resolveDriveSyncConflict: async (conflictId: string, body: ResolveSyncConflictPayload) =>
+    unwrapMadiData<Record<string, unknown>>(
+      await apiClient.post(`${BASE}/drives/sync-conflicts/${conflictId}/resolve`, body),
+    ),
 };

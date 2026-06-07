@@ -23,6 +23,7 @@ public class DonationDriveService {
     private final BloodCollectionRepository collectionRepository;
     private final DonorProfileRepository donorProfileRepository;
     private final DonorService donorService;
+    private final DonationDriveSyncConflictRepository syncConflictRepository;
     private final MadiEventEmitter eventEmitter;
 
     public DonationDriveService(DonationDriveRepository driveRepository,
@@ -31,6 +32,7 @@ public class DonationDriveService {
                                 BloodCollectionRepository collectionRepository,
                                 DonorProfileRepository donorProfileRepository,
                                 DonorService donorService,
+                                DonationDriveSyncConflictRepository syncConflictRepository,
                                 MadiEventEmitter eventEmitter) {
         this.driveRepository = driveRepository;
         this.slotRepository = slotRepository;
@@ -38,6 +40,7 @@ public class DonationDriveService {
         this.collectionRepository = collectionRepository;
         this.donorProfileRepository = donorProfileRepository;
         this.donorService = donorService;
+        this.syncConflictRepository = syncConflictRepository;
         this.eventEmitter = eventEmitter;
     }
 
@@ -133,6 +136,45 @@ public class DonationDriveService {
         DonationDriveEntity saved = driveRepository.save(drive);
         eventEmitter.emit("DONATION_DRIVE", driveId.toString(), "DRIVE_CLOSED", "DONATION_DRIVE",
                 driveId.toString(), Map.of(), tenantId);
+        return saved;
+    }
+
+    @Transactional
+    public DonationDriveSyncConflictEntity recordSyncConflict(UUID tenantId, UUID driveId, String localOpId,
+                                                              Map<String, Object> localState,
+                                                              Map<String, Object> serverState) {
+        requireDrive(tenantId, driveId);
+        DonationDriveSyncConflictEntity conflict = new DonationDriveSyncConflictEntity();
+        conflict.setTenantId(tenantId);
+        conflict.setDriveId(driveId);
+        conflict.setLocalOpId(localOpId);
+        conflict.setLocalState(localState != null ? localState : Map.of());
+        conflict.setServerState(serverState);
+        DonationDriveSyncConflictEntity saved = syncConflictRepository.save(conflict);
+        eventEmitter.emit("DONATION_DRIVE", driveId.toString(), "SYNC_CONFLICT_RECORDED", "DONATION_DRIVE",
+                saved.getConflictId().toString(), Map.of("localOpId", localOpId), tenantId);
+        return saved;
+    }
+
+    @Transactional
+    public DonationDriveSyncConflictEntity resolveSyncConflict(UUID tenantId, UUID driveId, UUID conflictId,
+                                                               String resolution, String resolvedBy) {
+        requireDrive(tenantId, driveId);
+        DonationDriveSyncConflictEntity conflict = syncConflictRepository
+                .findByConflictIdAndDriveIdAndTenantId(conflictId, driveId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Sync conflict not found"));
+        if (conflict.getResolution() != null) {
+            throw new IllegalStateException("Sync conflict already resolved");
+        }
+        if (!List.of("KEEP_LOCAL", "USE_SERVER", "MERGE").contains(resolution)) {
+            throw new IllegalArgumentException("Invalid resolution: " + resolution);
+        }
+        conflict.setResolution(resolution);
+        conflict.setResolvedBy(resolvedBy);
+        conflict.setResolvedAt(OffsetDateTime.now());
+        DonationDriveSyncConflictEntity saved = syncConflictRepository.save(conflict);
+        eventEmitter.emit("DONATION_DRIVE", driveId.toString(), "SYNC_CONFLICT_RESOLVED", "DONATION_DRIVE",
+                conflictId.toString(), Map.of("resolution", resolution), tenantId);
         return saved;
     }
 

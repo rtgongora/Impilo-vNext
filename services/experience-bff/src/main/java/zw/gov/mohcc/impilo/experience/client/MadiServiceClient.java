@@ -91,6 +91,14 @@ public class MadiServiceClient {
         return get(url, "drivesNearMe");
     }
 
+    public JsonNode submitPreScreening(String donorId, Map<String, Object> body) {
+        return post(baseUrl + API + "/donors/" + donorId + "/pre-screening", body, "submitPreScreening");
+    }
+
+    public JsonNode latestPreScreening(String donorId) {
+        return get(baseUrl + API + "/donors/" + donorId + "/pre-screening/latest", "latestPreScreening");
+    }
+
     // ── Donation drives ──────────────────────────────────────────────
 
     public JsonNode createDrive(Map<String, Object> body) {
@@ -119,6 +127,14 @@ public class MadiServiceClient {
 
     public JsonNode closeDrive(String driveId) {
         return post(baseUrl + API + "/drives/" + driveId + "/close", Map.of(), "closeDrive");
+    }
+
+    public JsonNode recordSyncConflict(Map<String, Object> body) {
+        return post(baseUrl + API + "/drives/sync-conflicts", body, "recordSyncConflict");
+    }
+
+    public JsonNode resolveSyncConflict(String conflictId, Map<String, Object> body) {
+        return post(baseUrl + API + "/drives/sync-conflicts/" + conflictId + "/resolve", body, "resolveSyncConflict");
     }
 
     // ── Processing ───────────────────────────────────────────────────
@@ -169,10 +185,40 @@ public class MadiServiceClient {
         return post(baseUrl + API + "/blood-banks/" + bloodBankId + "/returns", body, "bloodBankReturn");
     }
 
+    public JsonNode listFridges(String bloodBankId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/blood-banks/fridges")
+                .queryParam("blood_bank_id", bloodBankId)
+                .toUriString();
+        return get(url, "listFridges");
+    }
+
+    public JsonNode fridgeReadings(String fridgeId) {
+        return get(baseUrl + API + "/blood-banks/fridges/" + fridgeId + "/readings", "fridgeReadings");
+    }
+
+    public JsonNode syncFridgeIot(String fridgeId) {
+        return post(baseUrl + API + "/blood-banks/fridges/" + fridgeId + "/sync-iot", Map.of(), "syncFridgeIot");
+    }
+
     // ── Orders ───────────────────────────────────────────────────────
+
+    public JsonNode listOrders(String status, String patientCpid) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/orders");
+        if (status != null && !status.isBlank()) {
+            builder.queryParam("status", status);
+        }
+        if (patientCpid != null && !patientCpid.isBlank()) {
+            builder.queryParam("patient_cpid", patientCpid);
+        }
+        return get(builder.toUriString(), "listOrders");
+    }
 
     public JsonNode createOrder(Map<String, Object> body) {
         return post(baseUrl + API + "/orders", body, "createOrder");
+    }
+
+    public JsonNode getOrder(String orderId) {
+        return get(baseUrl + API + "/orders/" + orderId, "getOrder");
     }
 
     public JsonNode submitOrder(String orderId) {
@@ -197,8 +243,27 @@ public class MadiServiceClient {
 
     // ── Transfusions ─────────────────────────────────────────────────
 
+    public JsonNode listTransfusions(String status, String patientCpid) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + API + "/transfusions");
+        if (status != null && !status.isBlank()) {
+            builder.queryParam("status", status);
+        }
+        if (patientCpid != null && !patientCpid.isBlank()) {
+            builder.queryParam("patient_cpid", patientCpid);
+        }
+        return get(builder.toUriString(), "listTransfusions");
+    }
+
     public JsonNode startTransfusion(Map<String, Object> body) {
         return post(baseUrl + API + "/transfusions", body, "startTransfusion");
+    }
+
+    public JsonNode getTransfusionEpisode(String episodeId) {
+        return get(baseUrl + API + "/transfusions/" + episodeId, "getTransfusionEpisode");
+    }
+
+    public JsonNode preVerifyTransfusion(String episodeId, Map<String, Object> body) {
+        return post(baseUrl + API + "/transfusions/" + episodeId + "/pre-verify", body, "preVerifyTransfusion");
     }
 
     public JsonNode transfusionObservation(String episodeId, Map<String, Object> body) {
@@ -231,10 +296,48 @@ public class MadiServiceClient {
         return post(baseUrl + API + "/haemovigilance/cases/" + caseId + "/close", body != null ? body : Map.of(), "closeCase");
     }
 
+    public JsonNode nationalHaemovigilanceDashboard() {
+        return get(baseUrl + API + "/haemovigilance/national-dashboard", "nationalHaemovigilanceDashboard");
+    }
+
     // ── Central bank ─────────────────────────────────────────────────
 
     public JsonNode centralBankMetrics() {
         return get(baseUrl + API + "/central-bank/metrics", "centralBankMetrics");
+    }
+
+    public JsonNode listEmergencyRedistributions() {
+        return get(baseUrl + API + "/central-bank/emergency-redistributions", "listEmergencyRedistributions");
+    }
+
+    public JsonNode requestEmergencyRedistribution(Map<String, Object> body) {
+        return post(baseUrl + API + "/central-bank/emergency-redistributions", body, "requestEmergencyRedistribution");
+    }
+
+    public JsonNode approveEmergencyRedistribution(String redistributionId, Map<String, Object> body) {
+        return post(baseUrl + API + "/central-bank/emergency-redistributions/" + redistributionId + "/approve",
+                body != null ? body : Map.of(), "approveEmergencyRedistribution");
+    }
+
+    public JsonNode dashboardForecast(String facilityId) {
+        String url = baseUrl + API + "/dashboard/forecast";
+        if (facilityId != null && !facilityId.isBlank()) {
+            url += "?facility_id=" + facilityId;
+        }
+        return get(url, "dashboardForecast");
+    }
+
+    public JsonNode componentTerminologyPins(String jurisdiction) {
+        String url = baseUrl + API + "/terminology/component-pins";
+        if (jurisdiction != null && !jurisdiction.isBlank()) {
+            url += "?jurisdiction=" + jurisdiction;
+        }
+        return get(url, "componentTerminologyPins");
+    }
+
+    public JsonNode initiateEmergencyHandoff(String redistributionId, Map<String, Object> body) {
+        return post(baseUrl + API + "/central-bank/emergency-redistributions/" + redistributionId + "/handoff",
+                body != null ? body : Map.of(), "initiateEmergencyHandoff");
     }
 
     private JsonNode get(String url, String operation) {

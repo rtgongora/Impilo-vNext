@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.madi.persistence.entity.TransfusionEpisodeEntity;
 import zw.gov.mohcc.impilo.madi.persistence.entity.TransfusionObservationEntity;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,6 +21,15 @@ public class MadiTransfusionController {
 
     public MadiTransfusionController(TransfusionService transfusionService) {
         this.transfusionService = transfusionService;
+    }
+
+    @GetMapping
+    public List<TransfusionEpisodeEntity> list(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) UUID facilityId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid) {
+        return transfusionService.listEpisodes(tenantId, facilityId, status, patientCpid);
     }
 
     @PostMapping
@@ -64,6 +74,31 @@ public class MadiTransfusionController {
             @PathVariable UUID episodeId,
             @RequestBody Map<String, Object> body) {
         return transfusionService.verify(tenantId, episodeId, str(body, "verified_by"));
+    }
+
+    @PostMapping("/{episodeId}/pre-verify")
+    public TransfusionEpisodeEntity preVerify(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID episodeId,
+            @RequestBody Map<String, Object> body) {
+        return transfusionService.verifyPreTransfusion(
+                tenantId, episodeId,
+                required(body, "patient_cpid"),
+                UUID.fromString(required(body, "blood_unit_id")),
+                required(body, "patient_method"),
+                str(body, "patient_biometric_ref"),
+                required(body, "unit_method"),
+                str(body, "unit_scan_ref"),
+                str(body, "verified_by"));
+    }
+
+    @GetMapping("/{episodeId}")
+    public ResponseEntity<TransfusionEpisodeEntity> getEpisode(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID episodeId) {
+        return transfusionService.getEpisode(tenantId, episodeId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     private static String required(Map<String, Object> body, String key) {

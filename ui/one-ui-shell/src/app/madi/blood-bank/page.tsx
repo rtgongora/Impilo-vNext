@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/madi/blood-bank/orders", label: "Bank orders" },
   { href: "/madi/blood-bank/crossmatch", label: "Crossmatch" },
   { href: "/madi/blood-bank/issue", label: "Issue units" },
+  { href: "/madi/blood-bank/fridges", label: "Fridge IoT monitoring" },
 ];
 
 export default function BloodBankHubPage() {

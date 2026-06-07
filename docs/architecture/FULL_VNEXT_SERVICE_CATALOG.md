@@ -3,7 +3,7 @@
 > **Source of truth:** [`docs/registry/services-registry.yaml`](../registry/services-registry.yaml)
 > Runtime images: see [`RUNTIME_IMAGE_STRATEGY_DOCTRINE.md`](../environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md).
 
-**Total components:** 141
+**Total components:** 143
 
 | Name | Type | Plane | Domain | Path | Stack | Image strategy | Reclass | Strategy status | Port | Full-boot class | Status | Blocker | Next action |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -12,6 +12,7 @@
 | `asset-registry-service` | backend_service | integration | platform-ops | `services/asset-registry-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8310 | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `audit-ledger-service` | backend_service | integration | platform-ops | `services/audit-ledger-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8350 | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `banking-rails` | external_dependency | enterprise | finance | `external` | n/a | not-required-generated-client | not-required-generated-client | not_required | — | external_dependency | no_runtime_image_required | — | External or contract-only dependency |
+| `booking-service` | backend_service | experience | workflow-orchestration | `services/booking-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8265 | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `butano-fhir` | backend_service | clinical | care-delivery | `services/butano-fhir` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8289 | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `butano-service` | backend_service | clinical | care-delivery | `services/butano-service` | maven | jib | jib-candidate | valid | 8090 | required_full_boot | image_strategy_defined | not_deployed_in_preview | Deploy in impilo-full-preview when authorized |
 | `butano-web` | frontend_app | experience | ui-workspace | `ui/butano-web` | npm | buildpacks | buildpack-candidate | not_required | — | optional_full_boot | no_runtime_image_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
@@ -67,6 +68,7 @@
 | `learning-service` | backend_service | experience | workflow-orchestration | `services/learning-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | — | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `lims` | external_dependency | integration | integration | `external` | n/a | not-required-generated-client | not-required-generated-client | not_required | — | external_dependency | no_runtime_image_required | — | External or contract-only dependency |
 | `llm-orchestration-service` | backend_service | integration | platform-ops | `services/llm-orchestration-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | — | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
+| `madi-service` | backend_service | clinical | blood-bank-transfusion | `services/madi-service` | maven | shared-dockerfile-template | shared-template-candidate | valid | 8300 | optional_full_boot | image_strategy_defined | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | `minio` | infrastructure | integration | infrastructure | `docker-compose.yml` | image-only | official-helm-chart | official-image-candidate | valid | 9000 | required_full_boot | image_strategy_defined | not_deployed_in_preview | Deploy in impilo-full-preview when authorized |
 | `mosip` | external_dependency | trust_governance | assurance | `external` | n/a | not-required-generated-client | not-required-generated-client | not_required | — | external_dependency | no_runtime_image_required | — | External or contract-only dependency |
 | `msika-flow-ops` | frontend_app | experience | ui-workspace | `ui/msika-flow-ops` | npm | buildpacks | buildpack-candidate | not_required | — | optional_full_boot | no_runtime_image_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |

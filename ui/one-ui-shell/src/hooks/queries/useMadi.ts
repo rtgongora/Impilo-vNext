@@ -8,7 +8,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   madiApi,
+  unwrapMadiData,
   type CloseCasePayload,
+  type DonorProfile,
   type CollectSamplePayload,
   type CompleteTransfusionPayload,
   type CreateBloodOrderPayload,
@@ -16,6 +18,7 @@ import {
   type CrossmatchPayload,
   type DonorDeferralPayload,
   type DonorFeedbackPayload,
+  type DonorPreScreeningPayload,
   type DonorPreferencesPayload,
   type DonorScreeningPayload,
   type DriveRegisterPayload,
@@ -23,7 +26,10 @@ import {
   type InvestigateCasePayload,
   type IssueUnitPayload,
   type OpenHaemovigilanceCasePayload,
+  type PreVerifyTransfusionPayload,
   type PrepareComponentPayload,
+  type ResolveSyncConflictPayload,
+  type SyncConflictPayload,
   type ProcessingQuarantinePayload,
   type ProcessingReceivePayload,
   type ProcessingReleasePayload,
@@ -47,6 +53,9 @@ export const madiQueryKeys = {
   dashboard: (params?: Record<string, unknown>) =>
     [...madiQueryKeys.all, "dashboard", params ?? {}] as const,
   centralBank: () => [...madiQueryKeys.all, "central-bank"] as const,
+  forecast: (facilityId?: string) => [...madiQueryKeys.all, "forecast", facilityId ?? "all"] as const,
+  emergencyRedistributions: () => [...madiQueryKeys.all, "emergency-redistributions"] as const,
+  ziboPins: (jurisdiction: string) => [...madiQueryKeys.all, "zibo-pins", jurisdiction] as const,
   drives: () => [...madiQueryKeys.all, "drives"] as const,
   driveMetrics: (driveId: string) => [...madiQueryKeys.all, "drive-metrics", driveId] as const,
   donorByPerson: (cpid: string) => [...madiQueryKeys.all, "donor", "person", cpid] as const,
@@ -57,6 +66,17 @@ export const madiQueryKeys = {
     [...madiQueryKeys.all, "drives-near-me", siteRef, radiusKm ?? 25] as const,
   bloodBankStock: (bloodBankId: string) =>
     [...madiQueryKeys.all, "blood-bank", bloodBankId, "stock"] as const,
+  bloodFridges: (bloodBankId: string) =>
+    [...madiQueryKeys.all, "blood-bank", bloodBankId, "fridges"] as const,
+  fridgeReadings: (fridgeId: string) =>
+    [...madiQueryKeys.all, "fridge", fridgeId, "readings"] as const,
+  bloodOrderDetail: (orderId: string) =>
+    [...madiQueryKeys.all, "order", orderId] as const,
+  transfusionEpisode: (episodeId: string) =>
+    [...madiQueryKeys.all, "transfusion", episodeId] as const,
+  nationalHaemovigilance: () => [...madiQueryKeys.all, "haemovigilance", "national"] as const,
+  donorPreScreening: (donorId: string) =>
+    [...madiQueryKeys.all, "donor", donorId, "pre-screening"] as const,
 };
 
 function invalidateMadi(qc: ReturnType<typeof useQueryClient>) {
@@ -96,6 +116,77 @@ export function useMadiCentralBankMetrics() {
   });
 }
 
+export function useMadiThirtyDayForecast(facilityId?: string) {
+  return useQuery({
+    queryKey: madiQueryKeys.forecast(facilityId),
+    queryFn: () => madiApi.dashboardForecast(facilityId),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useEmergencyRedistributions() {
+  return useQuery({
+    queryKey: madiQueryKeys.emergencyRedistributions(),
+    queryFn: () => madiApi.listEmergencyRedistributions(),
+    staleTime: 15_000,
+  });
+}
+
+export function useRequestEmergencyRedistribution() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: madiApi.requestEmergencyRedistribution,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: madiQueryKeys.emergencyRedistributions() });
+      qc.invalidateQueries({ queryKey: madiQueryKeys.centralBank() });
+    },
+  });
+}
+
+export function useApproveEmergencyRedistribution() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      redistributionId,
+      ...body
+    }: {
+      redistributionId: string;
+      approved_by: string;
+      units_allocated?: number;
+      status?: string;
+    }) => madiApi.approveEmergencyRedistribution(redistributionId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: madiQueryKeys.emergencyRedistributions() });
+      qc.invalidateQueries({ queryKey: madiQueryKeys.centralBank() });
+    },
+  });
+}
+
+export function useInitiateEmergencyHandoff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      redistributionId,
+      ...body
+    }: {
+      redistributionId: string;
+      initiated_by?: string;
+    }) => madiApi.initiateEmergencyHandoff(redistributionId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: madiQueryKeys.emergencyRedistributions() });
+    },
+  });
+}
+
+export function useMadiZiboComponentPins(jurisdiction = "ZW") {
+  return useQuery({
+    queryKey: madiQueryKeys.ziboPins(jurisdiction),
+    queryFn: () => madiApi.componentTerminologyPins(jurisdiction),
+    staleTime: 300_000,
+  });
+}
+
 // ---- Donors --------------------------------------------------------------
 
 export function useDonorByPerson(personCpid: string | undefined) {
@@ -103,7 +194,11 @@ export function useDonorByPerson(personCpid: string | undefined) {
     queryKey: personCpid
       ? madiQueryKeys.donorByPerson(personCpid)
       : ["madi", "donor", "_disabled"],
-    queryFn: () => (personCpid ? madiApi.donorByPerson(personCpid) : Promise.resolve(null)),
+    queryFn: async () => {
+      if (!personCpid) return null;
+      const res = await madiApi.donorByPerson(personCpid);
+      return unwrapMadiData<DonorProfile | null>(res);
+    },
     enabled: Boolean(personCpid),
     staleTime: 30_000,
     retry: false,
@@ -185,6 +280,29 @@ export function useSubmitDonorFeedback(donorId: string) {
   return useMutation({
     mutationFn: (body: DonorFeedbackPayload) => madiApi.submitDonorFeedback(donorId, body),
     onSuccess: () => invalidateMadi(qc),
+  });
+}
+
+export function useSubmitDonorPreScreening(donorId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: DonorPreScreeningPayload) => madiApi.submitDonorPreScreening(donorId, body),
+    onSuccess: () => {
+      invalidateMadi(qc);
+      qc.invalidateQueries({ queryKey: madiQueryKeys.donorPreScreening(donorId) });
+    },
+  });
+}
+
+export function useLatestDonorPreScreening(donorId: string | undefined) {
+  return useQuery({
+    queryKey: donorId
+      ? madiQueryKeys.donorPreScreening(donorId)
+      : ["madi", "donor", "_disabled", "pre-screening"],
+    queryFn: () => (donorId ? madiApi.latestDonorPreScreening(donorId) : Promise.resolve(null)),
+    enabled: Boolean(donorId),
+    staleTime: 30_000,
+    retry: false,
   });
 }
 
@@ -311,6 +429,41 @@ export function useRecordBloodReturn(bloodBankId: string) {
   });
 }
 
+export function useBloodFridges(bloodBankId: string | undefined) {
+  return useQuery({
+    queryKey: bloodBankId
+      ? madiQueryKeys.bloodFridges(bloodBankId)
+      : ["madi", "blood-bank", "_disabled", "fridges"],
+    queryFn: () => (bloodBankId ? madiApi.listBloodFridges(bloodBankId) : Promise.resolve([])),
+    enabled: Boolean(bloodBankId),
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useFridgeReadings(fridgeId: string | undefined) {
+  return useQuery({
+    queryKey: fridgeId
+      ? madiQueryKeys.fridgeReadings(fridgeId)
+      : ["madi", "fridge", "_disabled", "readings"],
+    queryFn: () => (fridgeId ? madiApi.fridgeReadings(fridgeId) : Promise.resolve([])),
+    enabled: Boolean(fridgeId),
+    staleTime: 10_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useSyncFridgeIot(fridgeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => madiApi.syncFridgeIot(fridgeId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: madiQueryKeys.fridgeReadings(fridgeId) });
+      invalidateMadi(qc);
+    },
+  });
+}
+
 // ---- Orders --------------------------------------------------------------
 
 export function useCreateBloodOrder() {
@@ -361,6 +514,15 @@ export function useIssueOrderUnit(orderId: string) {
   });
 }
 
+export function useBloodOrderDetail(orderId: string | undefined) {
+  return useQuery({
+    queryKey: orderId ? madiQueryKeys.bloodOrderDetail(orderId) : ["madi", "order", "_disabled"],
+    queryFn: () => (orderId ? madiApi.bloodOrderDetail(orderId) : Promise.resolve(null)),
+    enabled: Boolean(orderId),
+    staleTime: 15_000,
+  });
+}
+
 // ---- Transfusions --------------------------------------------------------
 
 export function useStartTransfusion() {
@@ -368,6 +530,28 @@ export function useStartTransfusion() {
   return useMutation({
     mutationFn: (body: StartTransfusionPayload) => madiApi.startTransfusion(body),
     onSuccess: () => invalidateMadi(qc),
+  });
+}
+
+export function useTransfusionEpisode(episodeId: string | undefined) {
+  return useQuery({
+    queryKey: episodeId
+      ? madiQueryKeys.transfusionEpisode(episodeId)
+      : ["madi", "transfusion", "_disabled"],
+    queryFn: () => (episodeId ? madiApi.transfusionEpisode(episodeId) : Promise.resolve(null)),
+    enabled: Boolean(episodeId),
+    staleTime: 10_000,
+  });
+}
+
+export function usePreVerifyTransfusion(episodeId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: PreVerifyTransfusionPayload) => madiApi.preVerifyTransfusion(episodeId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: madiQueryKeys.transfusionEpisode(episodeId) });
+      invalidateMadi(qc);
+    },
   });
 }
 
@@ -469,6 +653,31 @@ export function useCloseHaemovigilanceCase(caseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body?: CloseCasePayload) => madiApi.closeHaemovigilanceCase(caseId, body),
+    onSuccess: () => invalidateMadi(qc),
+  });
+}
+
+export function useNationalHaemovigilanceDashboard() {
+  return useQuery({
+    queryKey: madiQueryKeys.nationalHaemovigilance(),
+    queryFn: () => madiApi.nationalHaemovigilanceDashboard(),
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useRecordDriveSyncConflict() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SyncConflictPayload) => madiApi.recordDriveSyncConflict(body),
+    onSuccess: () => invalidateMadi(qc),
+  });
+}
+
+export function useResolveDriveSyncConflict(conflictId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ResolveSyncConflictPayload) => madiApi.resolveDriveSyncConflict(conflictId, body),
     onSuccess: () => invalidateMadi(qc),
   });
 }

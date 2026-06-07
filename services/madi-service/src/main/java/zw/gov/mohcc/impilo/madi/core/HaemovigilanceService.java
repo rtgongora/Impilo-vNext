@@ -12,8 +12,8 @@ import zw.gov.mohcc.impilo.madi.persistence.repository.HaemovigilanceCaseReposit
 import zw.gov.mohcc.impilo.madi.persistence.repository.TransfusionEpisodeRepository;
 
 import java.time.OffsetDateTime;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class HaemovigilanceService {
@@ -102,6 +102,55 @@ public class HaemovigilanceService {
         eventEmitter.emit("HAEMOVIGILANCE", caseId.toString(), "CASE_CLOSED", "HAEMOVIGILANCE",
                 caseId.toString(), Map.of(), tenantId);
         return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> nationalDashboard(UUID tenantId) {
+        List<AdverseTransfusionReactionEntity> reactions =
+                reactionRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        List<HaemovigilanceCaseEntity> cases = caseRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+
+        Map<String, Long> reactionsByType = reactions.stream()
+                .collect(Collectors.groupingBy(AdverseTransfusionReactionEntity::getReactionType, Collectors.counting()));
+        Map<String, Long> reactionsBySeverity = reactions.stream()
+                .filter(r -> r.getSeverity() != null)
+                .collect(Collectors.groupingBy(AdverseTransfusionReactionEntity::getSeverity, Collectors.counting()));
+        Map<String, Long> casesByStatus = cases.stream()
+                .collect(Collectors.groupingBy(HaemovigilanceCaseEntity::getStatus, Collectors.counting()));
+        Map<String, Long> casesByFacility = reactions.stream()
+                .filter(r -> r.getFacilityId() != null)
+                .collect(Collectors.groupingBy(r -> r.getFacilityId().toString(), Collectors.counting()));
+
+        long openCases = cases.stream()
+                .filter(c -> !HaemovigilanceCaseStatus.CLOSED.name().equals(c.getStatus()))
+                .count();
+        OffsetDateTime thirtyDaysAgo = OffsetDateTime.now().minusDays(30);
+        long closedCases30d = cases.stream()
+                .filter(c -> HaemovigilanceCaseStatus.CLOSED.name().equals(c.getStatus()))
+                .filter(c -> c.getClosedAt() != null && c.getClosedAt().isAfter(thirtyDaysAgo))
+                .count();
+
+        OffsetDateTime now = OffsetDateTime.now();
+        long recentReactions = reactions.stream()
+                .filter(r -> r.getReportedAt() != null && r.getReportedAt().isAfter(now.minusDays(30)))
+                .count();
+        long priorReactions = reactions.stream()
+                .filter(r -> r.getReportedAt() != null
+                        && r.getReportedAt().isAfter(now.minusDays(60))
+                        && r.getReportedAt().isBefore(now.minusDays(30)))
+                .count();
+        String trendIndicator = recentReactions > priorReactions ? "UP"
+                : recentReactions < priorReactions ? "DOWN" : "STABLE";
+
+        Map<String, Object> dashboard = new LinkedHashMap<>();
+        dashboard.put("reactionsByType", reactionsByType);
+        dashboard.put("reactionsBySeverity", reactionsBySeverity);
+        dashboard.put("casesByStatus", casesByStatus);
+        dashboard.put("casesByFacility", casesByFacility);
+        dashboard.put("openCases", openCases);
+        dashboard.put("closedCases30d", closedCases30d);
+        dashboard.put("trendIndicator", trendIndicator);
+        return dashboard;
     }
 
     private HaemovigilanceCaseEntity requireCase(UUID tenantId, UUID caseId) {

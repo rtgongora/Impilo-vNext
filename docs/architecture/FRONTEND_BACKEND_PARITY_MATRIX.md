@@ -1,6 +1,6 @@
 # Frontend ↔ backend parity matrix
 
-> Generated: 2026-06-05. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-07. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 | capability | endpoint | webRoute | webClient | realData | mockRisk | parity | priority | remediation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -26,3 +26,12 @@
 | Integration Hub: Routes, dead letters, dispatch | /internal/v1/integration-hub/* | /admin/integration-status, /settings/integrations | useIntegrationHub.ts | partial | no | partial | MEDIUM | Integration admin depth | advisory |
 | Workflow / Dispatch: Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | /operations/workflows, /operations/dispatch | useDispatchOps.ts | partial | no | partial | HIGH | Workflow instance table + dispatch guided detail | advisory |
 | Admin / Governance: Users, tenants, roles, audit, feature flags | /internal/v1/admin/* | /admin/*, /organization-admin/* | useAdminUsers.ts, useTrustAdmin.ts | partial | no | partial | MEDIUM | Document Blocked surfaces explicitly | advisory |
+| MADI: Donor engagement (register, profile, eligibility, feedback) | /internal/v1/madi/donors/*, /internal/v1/mobile/citizen/madi/* | /madi/donor/* | useMadi.ts | yes | no | complete | HIGH | Guided pre-screening + Nompilo assist on web and citizen mobile | existing |
+| MADI: Donation drive scheduling and field capture | /internal/v1/madi/drives/*, /internal/v1/mobile/provider/madi/drives/* | /madi/drives/* | useMadi.ts | yes | no | complete | HIGH | Offline queue + sync-conflict resolution on provider mobile | existing |
+| MADI: Blood processing and component labelling | /internal/v1/madi/processing/* | /madi/processing | useMadi.ts | yes | no | complete | MEDIUM | ZIBO SNOMED deep-links on /madi/processing component selector | existing |
+| MADI: Blood bank stock and inventory balance | /internal/v1/madi/blood-banks/* | /madi/blood-bank/* | useMadi.ts | yes | no | complete | HIGH | IoT fridge monitoring at /madi/blood-bank/fridges | existing |
+| MADI: Clinical blood order (crossmatch, reserve, issue) | /internal/v1/madi/orders/*, /internal/v1/mobile/provider/madi/orders/* | /madi/orders/* | useMadi.ts | yes | no | complete | HIGH | OROS lab worklist deep-link on order detail | existing |
+| MADI: Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | /madi/transfusion/* | useMadi.ts | yes | no | complete | HIGH | VITO biometric + barcode bedside verify on web and mobile | existing |
+| MADI: Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | /madi/haemovigilance | useMadi.ts | yes | no | complete | HIGH | National roll-up at /madi/haemovigilance/national | existing |
+| MADI: Central blood bank coordination | /internal/v1/madi/central-bank/* | /madi/central-bank | useMadi.ts | yes | no | complete | MEDIUM | Emergency redistribution request + approve on /madi/central-bank | existing |
+| MADI: MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | /madi/dashboard | useMadi.ts | yes | no | complete | MEDIUM | 30-day forecast table on /madi/dashboard from order + stock signals | existing |

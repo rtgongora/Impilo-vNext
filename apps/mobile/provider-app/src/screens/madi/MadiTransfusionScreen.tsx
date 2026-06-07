@@ -4,6 +4,7 @@ import { Screen, Header, Button, TextField, Select, LoadingSpinner, EmptyState, 
 import {
   fetchTransfusionEpisodes,
   startTransfusion,
+  preVerifyTransfusion,
   recordTransfusionObservation,
   completeTransfusion,
   type TransfusionEpisode,
@@ -26,6 +27,13 @@ export function MadiTransfusionScreen() {
   const [obsValue, setObsValue] = useState("");
   const [outcome, setOutcome] = useState("COMPLETED");
   const [busy, setBusy] = useState(false);
+  const [verifyPatientCpid, setVerifyPatientCpid] = useState("");
+  const [bloodUnitId, setBloodUnitId] = useState("");
+  const [patientMethod, setPatientMethod] = useState("BIOMETRIC");
+  const [unitMethod, setUnitMethod] = useState("BARCODE_SCAN");
+  const [biometricRef, setBiometricRef] = useState("");
+  const [unitScanRef, setUnitScanRef] = useState("");
+  const [verified, setVerified] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,8 +61,23 @@ export function MadiTransfusionScreen() {
     setBusy(false);
   }
 
+  async function handlePreVerify() {
+    if (!selectedEpisode || !verifyPatientCpid.trim() || !bloodUnitId.trim()) return;
+    setBusy(true);
+    const ok = await preVerifyTransfusion(selectedEpisode, {
+      patient_cpid: verifyPatientCpid.trim(),
+      blood_unit_id: bloodUnitId.trim(),
+      patient_method: patientMethod,
+      patient_biometric_ref: biometricRef.trim() || undefined,
+      unit_method: unitMethod,
+      unit_scan_ref: unitScanRef.trim() || undefined,
+    });
+    setVerified(!!ok);
+    setBusy(false);
+  }
+
   async function handleObservation() {
-    if (!selectedEpisode || !obsValue.trim()) return;
+    if (!selectedEpisode || !obsValue.trim() || !verified) return;
     setBusy(true);
     await recordTransfusionObservation(selectedEpisode, {
       observation_type: obsType,
@@ -101,6 +124,22 @@ export function MadiTransfusionScreen() {
         )}
         {selectedEpisode ? (
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Bedside verification</Text>
+            <TextField label="Patient CPID" value={verifyPatientCpid} onChange={setVerifyPatientCpid} placeholder="Confirm patient" />
+            <TextField label="Blood unit ID" value={bloodUnitId} onChange={setBloodUnitId} placeholder="Unit UUID" />
+            <Select label="Patient method" value={patientMethod} onChange={setPatientMethod} options={[
+              { label: "Biometric", value: "BIOMETRIC" },
+              { label: "Wristband barcode", value: "BARCODE_SCAN" },
+              { label: "Manual (two staff)", value: "MANUAL_GOVERNED" },
+              { label: "Emergency override", value: "EMERGENCY_OVERRIDE" },
+            ]} />
+            <TextField label="Biometric / override ref" value={biometricRef} onChange={setBiometricRef} placeholder="Optional capture reference" />
+            <Select label="Unit method" value={unitMethod} onChange={setUnitMethod} options={[
+              { label: "Bag barcode", value: "BARCODE_SCAN" },
+              { label: "Manual label check", value: "MANUAL_GOVERNED" },
+            ]} />
+            <TextField label="Unit scan ref" value={unitScanRef} onChange={setUnitScanRef} placeholder="Barcode value" />
+            <Button title={verified ? "Verified ✓" : "Verify patient + unit"} variant={verified ? "outline" : "primary"} onPress={handlePreVerify} disabled={busy} />
             <Text style={styles.sectionTitle}>Record observation</Text>
             <Select label="Type" value={obsType} onChange={setObsType} options={[
               { label: "Temperature", value: "TEMPERATURE" },
@@ -108,7 +147,7 @@ export function MadiTransfusionScreen() {
               { label: "Blood pressure", value: "BP" },
             ]} />
             <TextField label="Value" value={obsValue} onChange={setObsValue} placeholder="Numeric value" keyboardType="numeric" />
-            <Button title="Record" variant="outline" onPress={handleObservation} disabled={busy} />
+            <Button title="Record" variant="outline" onPress={handleObservation} disabled={busy || !verified} />
             <Select label="Outcome" value={outcome} onChange={setOutcome} options={OUTCOMES} />
             <Button title="Complete episode" variant="primary" onPress={handleComplete} disabled={busy} />
           </View>

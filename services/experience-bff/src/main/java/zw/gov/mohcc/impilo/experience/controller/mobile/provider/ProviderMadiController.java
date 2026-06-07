@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.MadiServiceClient;
@@ -35,6 +36,20 @@ public class ProviderMadiController {
     }
 
     // ── Orders ───────────────────────────────────────────────────────
+
+    @GetMapping("/orders")
+    public ResponseEntity<Map<String, Object>> listOrders(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(envelope(client.listOrders(status, patientCpid), requestId, correlationId));
+        } catch (Exception e) {
+            log.warn("provider madi list orders failed: {}", e.getMessage());
+            return ResponseEntity.ok(envelope(Collections.emptyList(), requestId, correlationId));
+        }
+    }
 
     @PostMapping("/orders")
     public ResponseEntity<Map<String, Object>> createOrder(
@@ -90,6 +105,20 @@ public class ProviderMadiController {
 
     // ── Transfusions ─────────────────────────────────────────────────
 
+    @GetMapping("/transfusions")
+    public ResponseEntity<Map<String, Object>> listTransfusions(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(envelope(client.listTransfusions(status, patientCpid), requestId, correlationId));
+        } catch (Exception e) {
+            log.warn("provider madi list transfusions failed: {}", e.getMessage());
+            return ResponseEntity.ok(envelope(Collections.emptyList(), requestId, correlationId));
+        }
+    }
+
     @PostMapping("/transfusions")
     public ResponseEntity<Map<String, Object>> startTransfusion(
             @RequestBody Map<String, Object> body,
@@ -123,6 +152,15 @@ public class ProviderMadiController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return forward(() -> client.verifyTransfusion(episodeId, body), requestId, correlationId);
+    }
+
+    @PostMapping("/transfusions/{episodeId}/pre-verify")
+    public ResponseEntity<Map<String, Object>> preVerify(
+            @PathVariable String episodeId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> client.preVerifyTransfusion(episodeId, body), requestId, correlationId);
     }
 
     // ── Donation drives (operational) ────────────────────────────────
@@ -189,6 +227,23 @@ public class ProviderMadiController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return forward(() -> client.closeDrive(driveId), requestId, correlationId);
+    }
+
+    @PostMapping("/drives/sync-conflicts")
+    public ResponseEntity<Map<String, Object>> recordSyncConflict(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.recordSyncConflict(body), requestId, correlationId);
+    }
+
+    @PostMapping("/drives/sync-conflicts/{conflictId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveSyncConflict(
+            @PathVariable String conflictId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> client.resolveSyncConflict(conflictId, body), requestId, correlationId);
     }
 
     // ── Haemovigilance ─────────────────────────────────────────────

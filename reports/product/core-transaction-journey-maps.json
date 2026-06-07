@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-05T11:18:38.306Z",
-  "journeyCount": 42,
+  "generatedAt": "2026-06-07T05:12:18.731Z",
+  "journeyCount": 46,
   "journeys": [
     {
       "journeyId": "citizen-onboarding",
@@ -2388,6 +2388,149 @@
       "coreTransactionType": "CHRONIC_CARE",
       "lifecycleStage": "FOLLOW_UP_CONTINUITY",
       "completionClassification": "backend-partial"
+    },
+    {
+      "journeyId": "blood-donation",
+      "journeyName": "Blood Donation & Donor Engagement",
+      "initiatingActor": "citizen",
+      "respondingActor": "madi-service",
+      "transactionObject": "Donor ID + donation drive registration",
+      "context": "donor hub / mobile citizen",
+      "entryPoint": "/madi/donor",
+      "startState": "DONOR_REGISTERED",
+      "steps": "register → pre-screen → drive booking → screen → donate → feedback",
+      "backendServices": [
+        "madi-service",
+        "ndila-service",
+        "llm-orchestration-service",
+        "experience-bff"
+      ],
+      "apis": "/internal/v1/madi/donors/*, /internal/v1/madi/drives/*, /internal/v1/mobile/citizen/madi/*",
+      "frontendRoutes": [],
+      "mobileScreens": [],
+      "dataReadWritten": "donor profiles; screening; drive registrations",
+      "eventsEmitted": "madi.donor.*; madi.drive.*",
+      "trustSecurityChecks": "citizen scope; donor consent",
+      "auditRequirements": "donor screening audit",
+      "completionState": "DONATION_RECORDED",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
+      "relatedJourneys": [
+        "blood-order",
+        "transfusion-episode"
+      ],
+      "productOwnerAcceptanceTest": "Citizen registers as donor, completes pre-screening, and books a drive",
+      "coreTransactionType": "BLOOD_DONATION",
+      "lifecycleStage": "COMMUNITY_WELLNESS",
+      "completionClassification": "transaction-complete"
+    },
+    {
+      "journeyId": "blood-order",
+      "journeyName": "Blood Order & Crossmatch",
+      "initiatingActor": "provider",
+      "respondingActor": "madi-service",
+      "transactionObject": "Blood Order ID",
+      "context": "facility blood bank workbench",
+      "entryPoint": "/madi/orders",
+      "startState": "ORDER_DRAFT",
+      "steps": "create → submit → sample → crossmatch → reserve → issue",
+      "backendServices": [
+        "madi-service",
+        "oros-service",
+        "experience-bff"
+      ],
+      "apis": "/internal/v1/madi/orders/*",
+      "frontendRoutes": [],
+      "mobileScreens": [
+        "apps/mobile/provider-app/src/screens/provider/LabOrderPanel.tsx"
+      ],
+      "dataReadWritten": "orders; crossmatch; unit reservation",
+      "eventsEmitted": "madi.order.*",
+      "trustSecurityChecks": "facility scope; prescribing authz",
+      "auditRequirements": "order lifecycle audit",
+      "completionState": "ORDER_ISSUED",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
+      "relatedJourneys": [
+        "transfusion-episode",
+        "provider-patient-encounter"
+      ],
+      "productOwnerAcceptanceTest": "Provider creates blood order and issues matched unit",
+      "coreTransactionType": "BLOOD_ORDER",
+      "lifecycleStage": "ORDERS_AND_ANCILLARY",
+      "completionClassification": "transaction-complete"
+    },
+    {
+      "journeyId": "transfusion-episode",
+      "journeyName": "Transfusion Episode & Bedside Verify",
+      "initiatingActor": "provider",
+      "respondingActor": "madi-service",
+      "transactionObject": "Transfusion Episode ID",
+      "context": "bedside transfusion / provider mobile",
+      "entryPoint": "/madi/transfusion",
+      "startState": "EPISODE_STARTED",
+      "steps": "start → pre-verify patient+unit → observe → complete",
+      "backendServices": [
+        "madi-service",
+        "vito-service",
+        "experience-bff"
+      ],
+      "apis": "/internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/*",
+      "frontendRoutes": [],
+      "mobileScreens": [],
+      "dataReadWritten": "episodes; observations; verify events",
+      "eventsEmitted": "madi.transfusion.*",
+      "trustSecurityChecks": "bedside verify; patient match",
+      "auditRequirements": "transfusion verify audit",
+      "completionState": "TRANSFUSION_COMPLETED",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
+      "relatedJourneys": [
+        "blood-order",
+        "haemovigilance-report"
+      ],
+      "productOwnerAcceptanceTest": "Provider pre-verifies patient and unit before transfusion observations",
+      "coreTransactionType": "TRANSFUSION",
+      "lifecycleStage": "CLINICAL_EXECUTION",
+      "completionClassification": "transaction-complete"
+    },
+    {
+      "journeyId": "haemovigilance-report",
+      "journeyName": "Haemovigilance Report & Investigation",
+      "initiatingActor": "provider",
+      "respondingActor": "madi-service",
+      "transactionObject": "Adverse Reaction ID + Case ID",
+      "context": "facility + national haemovigilance dashboard",
+      "entryPoint": "/madi/haemovigilance",
+      "startState": "REACTION_REPORTED",
+      "steps": "report reaction → open case → investigate → close → national roll-up",
+      "backendServices": [
+        "madi-service",
+        "nhume-service",
+        "surveillance-service",
+        "experience-bff"
+      ],
+      "apis": "/internal/v1/madi/haemovigilance/*",
+      "frontendRoutes": [],
+      "mobileScreens": [],
+      "dataReadWritten": "reactions; cases; national aggregates",
+      "eventsEmitted": "madi.haemovigilance.*",
+      "trustSecurityChecks": "facility + national scope",
+      "auditRequirements": "adverse event audit",
+      "completionState": "CASE_CLOSED",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "national dashboard web-only by policy",
+      "relatedJourneys": [
+        "transfusion-episode"
+      ],
+      "productOwnerAcceptanceTest": "Adverse reaction reported and visible on facility and national dashboards",
+      "coreTransactionType": "HAEMOVIGILANCE",
+      "lifecycleStage": "SAFETY_SURVEILLANCE",
+      "completionClassification": "transaction-complete"
     }
   ],
   "serviceToJourneys": {
@@ -2397,7 +2540,8 @@
       "queue-walk-in",
       "registry-administration",
       "health-id-issuance",
-      "crvs-ubomi"
+      "crvs-ubomi",
+      "transfusion-episode"
     ],
     "tshepo-identity-service": [
       "citizen-onboarding",
@@ -2451,7 +2595,11 @@
       "credential-verification",
       "provider-registry-onboarding",
       "citizen-monitoring",
-      "chronic-care"
+      "chronic-care",
+      "blood-donation",
+      "blood-order",
+      "transfusion-episode",
+      "haemovigilance-report"
     ],
     "tshepo-authz-service": [
       "provider-login",
@@ -2506,7 +2654,8 @@
       "outpatient-consultation",
       "lab-order-result",
       "imaging-order-result",
-      "dispatch-delivery"
+      "dispatch-delivery",
+      "blood-order"
     ],
     "pharmacy-service": [
       "outpatient-consultation",
@@ -2570,7 +2719,8 @@
       "dispatch-delivery"
     ],
     "nhume-service": [
-      "dispatch-delivery"
+      "dispatch-delivery",
+      "haemovigilance-report"
     ],
     "channels-service": [
       "notification-comms"
@@ -2592,7 +2742,8 @@
     "surveillance-service": [
       "reporting-dashboard",
       "public-health-outreach",
-      "surveillance-outbreak"
+      "surveillance-outbreak",
+      "haemovigilance-report"
     ],
     "product-registry-service": [
       "registry-administration"
@@ -2641,7 +2792,8 @@
     ],
     "llm-orchestration-service": [
       "social-community",
-      "ai-guidance-nompilo"
+      "ai-guidance-nompilo",
+      "blood-donation"
     ],
     "campaigns-service": [
       "public-health-outreach",
@@ -2657,7 +2809,8 @@
       "core-transaction-orchestration"
     ],
     "ndila-service": [
-      "surveillance-outbreak"
+      "surveillance-outbreak",
+      "blood-donation"
     ],
     "search-service": [
       "ai-guidance-nompilo"
@@ -2665,6 +2818,12 @@
     "credential-verification-service": [
       "credential-verification",
       "provider-registry-onboarding"
+    ],
+    "madi-service": [
+      "blood-donation",
+      "blood-order",
+      "transfusion-episode",
+      "haemovigilance-report"
     ]
   },
   "unmappedServices": [

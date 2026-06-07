@@ -11,10 +11,10 @@
 |---|---|---|---|
 | trust | Trust, Identity Assurance & Governance | `docs/architecture/planes/01-trust-identity-assurance-governance.md` | 12 |
 | registry | Registry & Sovereign Identity Spine | `docs/architecture/planes/02-registry-sovereign-identity-spine.md` | 7 |
-| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 18 |
+| clinical | Clinical Execution & Shared Health Record | `docs/architecture/planes/03-clinical-execution-shared-health-record.md` | 19 |
 | data | Data, Intelligence & Public Health | `docs/architecture/planes/04-data-intelligence-public-health.md` | 12 |
 | integration | Integration, Interoperability & Edge | `docs/architecture/planes/05-integration-interoperability-edge.md` | 45 |
-| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 29 |
+| experience | Experience, Workflow & Orchestration | `docs/architecture/planes/06-experience-workflow-orchestration.md` | 30 |
 | enterprise | Enterprise Resource & Market Operations | `docs/architecture/planes/07-enterprise-resource-market-operations.md` | 15 |
 
 ## Trust, Identity Assurance & Governance
@@ -67,6 +67,7 @@ Evidence: [`docs/architecture/planes/03-clinical-execution-shared-health-record.
 | `inpatient-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `inventory-elmis-adapter` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `inventory-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
+| `madi-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `oros-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `pacs-adapter-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `pct-service` | backend_service | required_full_boot | image_strategy_defined | certain |
@@ -152,6 +153,7 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 
 | Component | Type | Classification | Status | Confidence |
 |---|---|---|---|---|
+| `booking-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `butano-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `citizen-app` | mobile_app | optional_full_boot | no_runtime_image_required | certain |
 | `community-service` | backend_service | optional_full_boot | image_strategy_defined | certain |

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T18:23:58.915Z",
+  "generated_at": "2026-06-07T05:16:14.195Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -84,6 +84,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/audit-ledger-service/Dockerfile OR build-runtime-image-from-jar.sh audit-ledger-service",
       "image_name": "impilo/audit-ledger-service"
+    },
+    {
+      "id": "booking-service",
+      "path": "services/booking-service",
+      "component_name": "booking-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/booking-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/booking-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/booking-service/Dockerfile OR build-runtime-image-from-jar.sh booking-service",
+      "image_name": "impilo/booking-service"
     },
     {
       "id": "butano-fhir",
@@ -1050,6 +1071,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/llm-orchestration-service/Dockerfile OR build-runtime-image-from-jar.sh llm-orchestration-service",
       "image_name": "impilo/llm-orchestration-service"
+    },
+    {
+      "id": "madi-service",
+      "path": "services/madi-service",
+      "component_name": "madi-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/madi-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/madi-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/madi-service/Dockerfile OR build-runtime-image-from-jar.sh madi-service",
+      "image_name": "impilo/madi-service"
     },
     {
       "id": "minio",

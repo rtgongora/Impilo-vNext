@@ -34,6 +34,21 @@ public class BloodFridgeEntity {
 @Column(name = "status")
     private String status;
 
+@Column(name = "iot_device_ref")
+    private String iotDeviceRef;
+
+@Column(name = "target_temp_min_c")
+    private BigDecimal targetTempMinC;
+
+@Column(name = "target_temp_max_c")
+    private BigDecimal targetTempMaxC;
+
+@Column(name = "last_reading_at")
+    private OffsetDateTime lastReadingAt;
+
+@Column(name = "alarm_status")
+    private String alarmStatus;
+
 @Column(name = "facility_id")
     private UUID facilityId;
 
@@ -77,6 +92,21 @@ public class BloodFridgeEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getIotDeviceRef() { return iotDeviceRef; }
+    public void setIotDeviceRef(String iotDeviceRef) { this.iotDeviceRef = iotDeviceRef; }
+
+    public BigDecimal getTargetTempMinC() { return targetTempMinC; }
+    public void setTargetTempMinC(BigDecimal targetTempMinC) { this.targetTempMinC = targetTempMinC; }
+
+    public BigDecimal getTargetTempMaxC() { return targetTempMaxC; }
+    public void setTargetTempMaxC(BigDecimal targetTempMaxC) { this.targetTempMaxC = targetTempMaxC; }
+
+    public OffsetDateTime getLastReadingAt() { return lastReadingAt; }
+    public void setLastReadingAt(OffsetDateTime lastReadingAt) { this.lastReadingAt = lastReadingAt; }
+
+    public String getAlarmStatus() { return alarmStatus; }
+    public void setAlarmStatus(String alarmStatus) { this.alarmStatus = alarmStatus; }
 
     public UUID getFacilityId() { return facilityId; }
     public void setFacilityId(UUID facilityId) { this.facilityId = facilityId; }

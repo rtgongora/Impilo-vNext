@@ -6,11 +6,20 @@ import { FlaskConical, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import {
+  useMadiZiboComponentPins,
   usePrepareComponent,
   useQuarantineProcessingBatch,
   useReceiveProcessingBatch,
   useReleaseProcessingBatch,
 } from "@/hooks/queries/useMadi";
+import {
+  MADI_COMPONENT_ZIBO_ARTIFACTS,
+  resolveZiboArtifact,
+  ziboTerminologyHref,
+} from "@/lib/madiComponentTerminology";
+import type { ComponentType } from "@/lib/madi";
+
+const JURISDICTIONS = ["ZW", "MW"] as const;
 
 export default function ProcessingPage() {
   const receive = useReceiveProcessingBatch();
@@ -18,6 +27,9 @@ export default function ProcessingPage() {
   const [unitId, setUnitId] = useState("");
   const [batchId, setBatchId] = useState("");
   const [componentType, setComponentType] = useState("RED_CELLS");
+  const [jurisdiction, setJurisdiction] = useState<(typeof JURISDICTIONS)[number]>("ZW");
+  const ziboPins = useMadiZiboComponentPins(jurisdiction);
+  const artifact = resolveZiboArtifact(componentType as ComponentType, jurisdiction);
   const quarantine = useQuarantineProcessingBatch(batchId);
   const release = useReleaseProcessingBatch(batchId);
 
@@ -55,11 +67,32 @@ export default function ProcessingPage() {
 
           <section className="rounded-2xl border border-gray-200 bg-white p-5 space-y-3">
             <h2 className="text-sm font-semibold text-gray-900">Prepare component</h2>
+            <div className="flex flex-wrap gap-3">
+              <select value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value as (typeof JURISDICTIONS)[number])} className="rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
+                {JURISDICTIONS.map((j) => <option key={j} value={j}>{j} jurisdiction</option>)}
+              </select>
+              <span className="text-xs text-gray-500 self-center">
+                Release train: {ziboPins.data?.releaseTrain ?? artifact.releaseTrain}
+              </span>
+            </div>
             <select value={componentType} onChange={(e) => setComponentType(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm bg-white">
-              {["WHOLE_BLOOD", "RED_CELLS", "PLATELETS", "PLASMA", "CRYOPRECIPITATE"].map((c) => (
-                <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
+              {(["WHOLE_BLOOD", "RED_CELLS", "PLATELETS", "PLASMA", "CRYOPRECIPITATE"] as ComponentType[]).map((c) => (
+                <option key={c} value={c}>{MADI_COMPONENT_ZIBO_ARTIFACTS[c].label}</option>
               ))}
             </select>
+            <p className="text-xs text-gray-600">
+              ZIBO catalogue ({jurisdiction}, v{artifact.pinnedVersion}):{" "}
+              <Link
+                href={ziboTerminologyHref(componentType as ComponentType, jurisdiction)}
+                className="text-rose-600 hover:underline font-mono"
+              >
+                SNOMED {artifact.code}
+              </Link>
+              {" · "}
+              <Link href="/registry/terminology" className="text-rose-600 hover:underline">
+                Terminology resolver
+              </Link>
+            </p>
             <button
               type="button"
               onClick={() => prepare.mutate({ unit_id: unitId, component_type: componentType, volume_ml: 250 })}

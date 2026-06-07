@@ -25,7 +25,7 @@ BASE="$(resolve_base_ref)"
 if git rev-parse --verify "${BASE}^{commit}" >/dev/null 2>&1; then
   if git diff "${BASE}" -- "$GENERATOR" | grep -E '^\+.*completionClassification: "transaction-complete"' | wc -l | grep -qv '^0$'; then
     ADDED_COMPLETE="$(git diff "${BASE}" -- "$GENERATOR" | grep -c '^\+.*completionClassification: "transaction-complete"' || true)"
-    ADDED_EVIDENCE="$(git diff "${BASE}" -- "$GENERATOR" | grep -c '^\+.*"' | grep -c 'bffEndpoints\|COMPLETION_EVIDENCE' || true)"
+    ADDED_EVIDENCE="$(git diff "${BASE}" -- "$GENERATOR" | grep -E '^\+.*(bffEndpoints|COMPLETION_EVIDENCE|"tests":)' | wc -l | tr -d ' ')"
     if [[ "${ADDED_COMPLETE:-0}" -gt 3 ]] && [[ "${ADDED_EVIDENCE:-0}" -eq 0 ]]; then
       guard_fail "suspected blanket completionClassification flip (+${ADDED_COMPLETE} without evidence registry changes)"
       FAIL=1

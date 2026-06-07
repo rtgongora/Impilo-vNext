@@ -111,6 +111,28 @@ public class MadiDonorController {
         return donorService.nextEligibility(tenantId, donorId);
     }
 
+    @PostMapping("/{donorId}/pre-screening")
+    public ResponseEntity<DonorPreScreeningEntity> preScreening(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) UUID facilityId,
+            @PathVariable UUID donorId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> answers = body.get("answers") instanceof Map<?, ?> raw
+                ? (Map<String, Object>) raw : body;
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                donorService.submitPreScreening(tenantId, donorId, answers, facilityId));
+    }
+
+    @GetMapping("/{donorId}/pre-screening/latest")
+    public ResponseEntity<DonorPreScreeningEntity> latestPreScreening(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID donorId) {
+        return donorService.getLatestPreScreening(tenantId, donorId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/drives-near-me")
     public List<Map<String, Object>> drivesNearMe(
             @RequestParam("ndila_site_ref") String ndilaSiteRef,

@@ -100,6 +100,37 @@ public class MadiDonationDriveController {
         return driveService.close(tenantId, driveId);
     }
 
+    @PostMapping("/sync-conflicts")
+    public ResponseEntity<DonationDriveSyncConflictEntity> recordSyncConflict(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestBody Map<String, Object> body) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> localState = body.get("local_state") instanceof Map<?, ?> rawLocal
+                ? (Map<String, Object>) rawLocal : Map.of();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> serverState = body.get("server_state") instanceof Map<?, ?> rawServer
+                ? (Map<String, Object>) rawServer : null;
+        return ResponseEntity.status(HttpStatus.CREATED).body(driveService.recordSyncConflict(
+                tenantId,
+                UUID.fromString(required(body, "drive_id")),
+                required(body, "local_op_id"),
+                localState,
+                serverState));
+    }
+
+    @PostMapping("/sync-conflicts/{conflictId}/resolve")
+    public DonationDriveSyncConflictEntity resolveSyncConflict(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID conflictId,
+            @RequestBody Map<String, Object> body) {
+        return driveService.resolveSyncConflict(
+                tenantId,
+                UUID.fromString(required(body, "drive_id")),
+                conflictId,
+                required(body, "resolution"),
+                str(body, "resolved_by"));
+    }
+
     private static String required(Map<String, Object> body, String key) {
         Object v = body.get(key);
         if (v == null || v.toString().isBlank()) {

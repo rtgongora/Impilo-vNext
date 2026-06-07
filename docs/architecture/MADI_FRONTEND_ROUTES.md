@@ -10,10 +10,13 @@
 | `DonationDrivesScreen` | Hub → Donation Drives | `GET …/drives/near-me`, `POST …/drives/{id}/register` |
 | `DonorHistoryScreen` | Hub → Donation History | `GET …/history` |
 | `DonorFeedbackScreen` | Hub → Give Feedback | `POST …/feedback` |
+| `DonorScreeningScreen` | Hub → Wellness Check | `POST …/donors/{id}/pre-screening`, Nompilo assist |
 
 Service module: `citizen-app/src/services/madiService.ts`
 
 Base: `/internal/v1/mobile/citizen/madi`
+
+Session-scoped mobile paths (`/register`, `/profile`, `/history`, etc.) resolve donor context from `X-Actor-ID`.
 
 ## Mobile — Provider (`apps/mobile/provider-app`)
 
@@ -28,19 +31,21 @@ Service module: `provider-app/src/services/madiService.ts`
 
 Base: `/internal/v1/mobile/provider/madi`
 
-## Web — Planned (`ui/one-ui-shell`)
+## Web — Live (`ui/one-ui-shell`)
 
-| Route (planned) | Capability |
-|-----------------|------------|
-| `/madi/donors` | Donor registry search (operator) |
-| `/madi/drives` | Drive planning and publish |
-| `/madi/orders` | Blood order workbench |
-| `/madi/transfusions` | Ward transfusion console |
-| `/madi/stock` | Blood bank inventory |
-| `/madi/haemovigilance` | Reaction queue and cases |
-| `/madi/dashboards` | Programme KPIs |
+| Route | Capability |
+|-------|------------|
+| `/madi/donor/*` | Donor self-service + Nompilo pre-screening |
+| `/madi/drives/*` | Drive planning and field ops |
+| `/madi/orders/*` | Blood order workbench + OROS deep-link |
+| `/madi/transfusion/*` | Ward transfusion + VITO bedside verify |
+| `/madi/blood-bank/*` | Stock, issue, crossmatch |
+| `/madi/blood-bank/fridges` | IoT cold-chain monitoring |
+| `/madi/haemovigilance` | Facility reaction reporting |
+| `/madi/haemovigilance/national` | National supervisory roll-up |
+| `/madi/dashboard` | Programme KPIs |
 
-Web clients (planned): `useMadiDonor.ts`, `useMadiOrders.ts`, etc.
+Web client: `useMadi.ts` + `madi.ts`
 
 ## Parity matrix reference
 

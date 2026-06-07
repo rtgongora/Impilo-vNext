@@ -3,6 +3,7 @@ ai-model-registry-service		services/ai-model-registry-service	optional_full_boot
 analytics-pipeline-service		services/analytics-pipeline-service	optional_full_boot
 asset-registry-service		services/asset-registry-service	optional_full_boot
 audit-ledger-service		services/audit-ledger-service	optional_full_boot
+booking-service		services/booking-service	optional_full_boot
 butano-fhir		services/butano-fhir	optional_full_boot
 butano-service		services/butano-service	required_full_boot
 butano-web		ui/butano-web	optional_full_boot
@@ -45,6 +46,7 @@ knowledge-admin		ui/knowledge-admin	optional_full_boot
 landela-adapter-service		services/landela-adapter-service	optional_full_boot
 learning-service		services/learning-service	optional_full_boot
 llm-orchestration-service		services/llm-orchestration-service	optional_full_boot
+madi-service		services/madi-service	optional_full_boot
 msika-flow-ops		ui/msika-flow-ops	optional_full_boot
 msika-flow-portal		ui/msika-flow-portal	optional_full_boot
 msika-flow-service		services/msika-flow-service	optional_full_boot

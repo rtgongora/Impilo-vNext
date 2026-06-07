@@ -114,6 +114,23 @@ public class MadiController {
         return proxy(() -> client.donorNextEligibility(donorId), requestId, correlationId, false);
     }
 
+    @PostMapping("/donors/{donorId}/pre-screening")
+    public ResponseEntity<Map<String, Object>> submitPreScreening(
+            @PathVariable String donorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.submitPreScreening(donorId, body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/donors/{donorId}/pre-screening/latest")
+    public ResponseEntity<Map<String, Object>> latestPreScreening(
+            @PathVariable String donorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.latestPreScreening(donorId), requestId, correlationId, false);
+    }
+
     @GetMapping("/donors/drives-near-me")
     public ResponseEntity<Map<String, Object>> drivesNearMe(
             @RequestParam("ndila_site_ref") String ndilaSiteRef,
@@ -277,12 +294,53 @@ public class MadiController {
         return proxy(() -> client.bloodBankReturn(bloodBankId, body), requestId, correlationId, true);
     }
 
+    @GetMapping("/blood-banks/fridges")
+    public ResponseEntity<Map<String, Object>> listFridges(
+            @RequestParam(name = "blood_bank_id") String bloodBankId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listFridges(bloodBankId), requestId, correlationId, false);
+    }
+
+    @GetMapping("/blood-banks/fridges/{fridgeId}/readings")
+    public ResponseEntity<Map<String, Object>> fridgeReadings(
+            @PathVariable String fridgeId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.fridgeReadings(fridgeId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/blood-banks/fridges/{fridgeId}/sync-iot")
+    public ResponseEntity<Map<String, Object>> syncFridgeIot(
+            @PathVariable String fridgeId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.syncFridgeIot(fridgeId), requestId, correlationId, false);
+    }
+
+    @GetMapping("/orders")
+    public ResponseEntity<Map<String, Object>> listOrders(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listOrders(status, patientCpid), requestId, correlationId, false);
+    }
+
     @PostMapping("/orders")
     public ResponseEntity<Map<String, Object>> createOrder(
             @RequestBody Map<String, Object> body,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> client.createOrder(body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/orders/{orderId}")
+    public ResponseEntity<Map<String, Object>> getOrder(
+            @PathVariable String orderId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getOrder(orderId), requestId, correlationId, false);
     }
 
     @PostMapping("/orders/{orderId}/submit")
@@ -329,12 +387,38 @@ public class MadiController {
         return proxy(() -> client.issueOrder(orderId, body), requestId, correlationId, true);
     }
 
+    @GetMapping("/transfusions")
+    public ResponseEntity<Map<String, Object>> listTransfusions(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listTransfusions(status, patientCpid), requestId, correlationId, false);
+    }
+
     @PostMapping("/transfusions")
     public ResponseEntity<Map<String, Object>> startTransfusion(
             @RequestBody Map<String, Object> body,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> client.startTransfusion(body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/transfusions/{episodeId}")
+    public ResponseEntity<Map<String, Object>> getTransfusionEpisode(
+            @PathVariable String episodeId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getTransfusionEpisode(episodeId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/transfusions/{episodeId}/pre-verify")
+    public ResponseEntity<Map<String, Object>> preVerifyTransfusion(
+            @PathVariable String episodeId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.preVerifyTransfusion(episodeId, body), requestId, correlationId, false);
     }
 
     @PostMapping("/transfusions/{episodeId}/observations")
@@ -398,11 +482,84 @@ public class MadiController {
         return proxy(() -> client.closeCase(caseId, body), requestId, correlationId, false);
     }
 
+    @GetMapping("/haemovigilance/national-dashboard")
+    public ResponseEntity<Map<String, Object>> nationalHaemovigilanceDashboard(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.nationalHaemovigilanceDashboard(), requestId, correlationId, false);
+    }
+
+    @PostMapping("/drives/sync-conflicts")
+    public ResponseEntity<Map<String, Object>> recordSyncConflict(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.recordSyncConflict(body), requestId, correlationId, true);
+    }
+
+    @PostMapping("/drives/sync-conflicts/{conflictId}/resolve")
+    public ResponseEntity<Map<String, Object>> resolveSyncConflict(
+            @PathVariable String conflictId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.resolveSyncConflict(conflictId, body), requestId, correlationId, false);
+    }
+
     @GetMapping("/central-bank/metrics")
     public ResponseEntity<Map<String, Object>> centralBankMetrics(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> client.centralBankMetrics(), requestId, correlationId, false);
+    }
+
+    @GetMapping("/dashboard/forecast")
+    public ResponseEntity<Map<String, Object>> dashboardForecast(
+            @RequestParam(name = "facility_id", required = false) String facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.dashboardForecast(facilityId), requestId, correlationId, false);
+    }
+
+    @GetMapping("/central-bank/emergency-redistributions")
+    public ResponseEntity<Map<String, Object>> listEmergencyRedistributions(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listEmergencyRedistributions(), requestId, correlationId, false);
+    }
+
+    @PostMapping("/central-bank/emergency-redistributions")
+    public ResponseEntity<Map<String, Object>> requestEmergencyRedistribution(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.requestEmergencyRedistribution(body), requestId, correlationId, true);
+    }
+
+    @PostMapping("/central-bank/emergency-redistributions/{redistributionId}/approve")
+    public ResponseEntity<Map<String, Object>> approveEmergencyRedistribution(
+            @PathVariable String redistributionId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.approveEmergencyRedistribution(redistributionId, body), requestId, correlationId, false);
+    }
+
+    @PostMapping("/central-bank/emergency-redistributions/{redistributionId}/handoff")
+    public ResponseEntity<Map<String, Object>> initiateEmergencyHandoff(
+            @PathVariable String redistributionId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.initiateEmergencyHandoff(redistributionId, body), requestId, correlationId, false);
+    }
+
+    @GetMapping("/terminology/component-pins")
+    public ResponseEntity<Map<String, Object>> componentTerminologyPins(
+            @RequestParam(value = "jurisdiction", required = false, defaultValue = "ZW") String jurisdiction,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.componentTerminologyPins(jurisdiction), requestId, correlationId, false);
     }
 
     @FunctionalInterface

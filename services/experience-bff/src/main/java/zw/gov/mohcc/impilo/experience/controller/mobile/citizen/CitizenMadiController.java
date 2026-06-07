@@ -36,6 +36,99 @@ public class CitizenMadiController {
         this.client = client;
     }
 
+    /** Session-scoped donor registration (mobile client uses X-Actor-ID as person CPID). */
+    @PostMapping("/register")
+    public ResponseEntity<Map<String, Object>> registerSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        body.put("person_cpid", actorId);
+        return forwardPost(() -> client.registerDonor(body), requestId, correlationId);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<Map<String, Object>> profileSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet(() -> client.donorByPerson(actorId), requestId, correlationId);
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<Map<String, Object>> historySession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet(() -> client.donorHistory(requireDonorId(actorId)), requestId, correlationId);
+    }
+
+    @GetMapping("/next-eligibility")
+    public ResponseEntity<Map<String, Object>> nextEligibilitySession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet(() -> client.donorNextEligibility(requireDonorId(actorId)), requestId, correlationId);
+    }
+
+    @PutMapping("/preferences")
+    public ResponseEntity<Map<String, Object>> preferencesSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPut(() -> client.donorPreferences(requireDonorId(actorId), body), requestId, correlationId);
+    }
+
+    @PostMapping("/feedback")
+    public ResponseEntity<Map<String, Object>> feedbackSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.donorFeedback(requireDonorId(actorId), body), requestId, correlationId);
+    }
+
+    @PostMapping("/pre-screening")
+    public ResponseEntity<Map<String, Object>> preScreeningSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.submitPreScreening(requireDonorId(actorId), body), requestId, correlationId);
+    }
+
+    @GetMapping("/pre-screening/latest")
+    public ResponseEntity<Map<String, Object>> latestPreScreeningSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet(() -> client.latestPreScreening(requireDonorId(actorId)), requestId, correlationId);
+    }
+
+    @PostMapping("/screenings")
+    public ResponseEntity<Map<String, Object>> screeningSession(
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.screenDonor(requireDonorId(actorId), body), requestId, correlationId);
+    }
+
+    @PostMapping("/drives/{driveId}/register")
+    public ResponseEntity<Map<String, Object>> registerForDriveSession(
+            @PathVariable String driveId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> {
+            Map<String, Object> payload = body != null ? new LinkedHashMap<>(body) : new LinkedHashMap<>();
+            payload.putIfAbsent("donor_id", requireDonorId(actorId));
+            return client.registerAtDrive(driveId, payload);
+        }, requestId, correlationId);
+    }
+
     @PostMapping("/donors/register")
     public ResponseEntity<Map<String, Object>> register(
             @RequestBody Map<String, Object> body,
@@ -102,6 +195,37 @@ public class CitizenMadiController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return forwardGet(() -> client.donorNextEligibility(donorId), requestId, correlationId);
+    }
+
+    @PostMapping("/donors/{donorId}/pre-screening")
+    public ResponseEntity<Map<String, Object>> preScreening(
+            @PathVariable String donorId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.submitPreScreening(donorId, body), requestId, correlationId);
+    }
+
+    @GetMapping("/donors/{donorId}/pre-screening/latest")
+    public ResponseEntity<Map<String, Object>> latestPreScreening(
+            @PathVariable String donorId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardGet(() -> client.latestPreScreening(donorId), requestId, correlationId);
+    }
+
+    private String requireDonorId(String personCpid) throws Exception {
+        JsonNode donor = client.donorByPerson(personCpid);
+        if (donor == null || donor.isNull() || donor.isMissingNode()) {
+            throw new IllegalStateException("Donor profile not found for signed-in person");
+        }
+        if (donor.has("donorId")) {
+            return donor.get("donorId").asText();
+        }
+        if (donor.has("donor_id")) {
+            return donor.get("donor_id").asText();
+        }
+        throw new IllegalStateException("Donor profile missing donor identifier");
     }
 
     @FunctionalInterface

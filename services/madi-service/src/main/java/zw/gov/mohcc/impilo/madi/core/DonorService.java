@@ -12,6 +12,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 
+import zw.gov.mohcc.impilo.madi.domain.PreScreeningOutcome;
+
 @Service
 public class DonorService {
 
@@ -20,6 +22,7 @@ public class DonorService {
     private final DonorDeferralRepository deferralRepository;
     private final DonorCommunicationPreferenceRepository preferenceRepository;
     private final DonorFeedbackRepository feedbackRepository;
+    private final DonorPreScreeningRepository preScreeningRepository;
     private final MadiEventEmitter eventEmitter;
 
     public DonorService(DonorProfileRepository donorProfileRepository,
@@ -27,12 +30,14 @@ public class DonorService {
                         DonorDeferralRepository deferralRepository,
                         DonorCommunicationPreferenceRepository preferenceRepository,
                         DonorFeedbackRepository feedbackRepository,
+                        DonorPreScreeningRepository preScreeningRepository,
                         MadiEventEmitter eventEmitter) {
         this.donorProfileRepository = donorProfileRepository;
         this.screeningRepository = screeningRepository;
         this.deferralRepository = deferralRepository;
         this.preferenceRepository = preferenceRepository;
         this.feedbackRepository = feedbackRepository;
+        this.preScreeningRepository = preScreeningRepository;
         this.eventEmitter = eventEmitter;
     }
 
@@ -181,6 +186,64 @@ public class DonorService {
     @Transactional(readOnly = true)
     public Optional<DonorProfileEntity> findByPersonCpid(UUID tenantId, String personCpid) {
         return donorProfileRepository.findByPersonCpidAndTenantId(personCpid, tenantId);
+    }
+
+    @Transactional
+    public DonorPreScreeningEntity submitPreScreening(UUID tenantId, UUID donorId, Map<String, Object> answers,
+                                                      UUID facilityId) {
+        requireDonor(tenantId, donorId);
+        Map<String, Object> normalizedAnswers = answers != null ? new LinkedHashMap<>(answers) : Map.of();
+        PreScreeningOutcome outcome = evaluatePreScreeningOutcome(normalizedAnswers);
+        DonorPreScreeningEntity screening = new DonorPreScreeningEntity();
+        screening.setTenantId(tenantId);
+        screening.setDonorId(donorId);
+        screening.setAnswersJson(normalizedAnswers);
+        screening.setOutcome(outcome.name());
+        screening.setSafeMessage(safeMessageFor(outcome));
+        screening.setFacilityId(facilityId);
+        DonorPreScreeningEntity saved = preScreeningRepository.save(screening);
+        eventEmitter.emit("DONOR", donorId.toString(), "DONOR_PRE_SCREENED", "DONOR", donorId.toString(),
+                Map.of("outcome", outcome.name()), tenantId);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<DonorPreScreeningEntity> getLatestPreScreening(UUID tenantId, UUID donorId) {
+        requireDonor(tenantId, donorId);
+        return preScreeningRepository.findFirstByTenantIdAndDonorIdOrderByCreatedAtDesc(tenantId, donorId);
+    }
+
+    static PreScreeningOutcome evaluatePreScreeningOutcome(Map<String, Object> answers) {
+        if (isAffirmative(answers.get("pregnant_or_recent_birth"))) {
+            return PreScreeningOutcome.CONTACT_STAFF;
+        }
+        if (isAffirmative(answers.get("recent_illness"))
+                || isAffirmative(answers.get("on_antibiotics"))
+                || isAffirmative(answers.get("low_hemoglobin_symptoms"))
+                || isAffirmative(answers.get("recent_travel_malaria"))
+                || isAffirmative(answers.get("recent_tattoo"))) {
+            return PreScreeningOutcome.DEFER_SAFELY;
+        }
+        return PreScreeningOutcome.PROCEED_TO_DRIVE;
+    }
+
+    private static boolean isAffirmative(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        String normalized = value.toString().trim().toLowerCase(Locale.ROOT);
+        return "true".equals(normalized) || "yes".equals(normalized) || "1".equals(normalized);
+    }
+
+    private static String safeMessageFor(PreScreeningOutcome outcome) {
+        return switch (outcome) {
+            case PROCEED_TO_DRIVE -> "You may proceed to the donation drive check-in. Staff will confirm eligibility on site.";
+            case DEFER_SAFELY -> "Based on your answers, please defer donating today and contact the drive team if you need guidance.";
+            case CONTACT_STAFF -> "Please speak with donation drive staff before continuing. This is not a clinical diagnosis.";
+        };
     }
 
     private DonorProfileEntity requireDonor(UUID tenantId, UUID donorId) {

@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface BloodOrderItemRepository extends JpaRepository<BloodOrderItemEntity, Long> {
     Optional<BloodOrderItemEntity> findByItemIdAndTenantId(UUID itemId, UUID tenantId);
     List<BloodOrderItemEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<BloodOrderItemEntity> findByOrderIdAndTenantId(UUID orderId, UUID tenantId);
 }

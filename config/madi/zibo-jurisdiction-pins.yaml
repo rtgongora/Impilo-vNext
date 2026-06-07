@@ -1,0 +1,60 @@
+# ZIBO artefact version pins for MADI blood-component catalogue (per jurisdiction release train).
+version: 1
+default_jurisdiction: ZW
+jurisdictions:
+  ZW:
+    release_train: ZW-MADI-2026.04
+    components:
+      WHOLE_BLOOD:
+        canonical_url: http://snomed.info/sct/333922001
+        pinned_version: "20260401"
+        code: "333922001"
+        label: Whole blood product
+      RED_CELLS:
+        canonical_url: http://snomed.info/sct/431069004
+        pinned_version: "20260401"
+        code: "431069004"
+        label: Packed red blood cells
+      PLATELETS:
+        canonical_url: http://snomed.info/sct/346447007
+        pinned_version: "20260401"
+        code: "346447007"
+        label: Platelet product
+      PLASMA:
+        canonical_url: http://snomed.info/sct/346075003
+        pinned_version: "20260401"
+        code: "346075003"
+        label: Fresh frozen plasma
+      CRYOPRECIPITATE:
+        canonical_url: http://snomed.info/sct/346074004
+        pinned_version: "20260401"
+        code: "346074004"
+        label: Cryoprecipitate product
+  MW:
+    release_train: MW-MADI-2026.01
+    components:
+      WHOLE_BLOOD:
+        canonical_url: http://snomed.info/sct/333922001
+        pinned_version: "20260115"
+        code: "333922001"
+        label: Whole blood product
+      RED_CELLS:
+        canonical_url: http://snomed.info/sct/431069004
+        pinned_version: "20260115"
+        code: "431069004"
+        label: Packed red blood cells
+      PLATELETS:
+        canonical_url: http://snomed.info/sct/346447007
+        pinned_version: "20260115"
+        code: "346447007"
+        label: Platelet product
+      PLASMA:
+        canonical_url: http://snomed.info/sct/346075003
+        pinned_version: "20260115"
+        code: "346075003"
+        label: Fresh frozen plasma
+      CRYOPRECIPITATE:
+        canonical_url: http://snomed.info/sct/346074004
+        pinned_version: "20260115"
+        code: "346074004"
+        label: Cryoprecipitate product

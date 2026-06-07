@@ -7,12 +7,14 @@ import { DonorProfileScreen } from "./DonorProfileScreen";
 import { DonationDrivesScreen } from "./DonationDrivesScreen";
 import { DonorHistoryScreen } from "./DonorHistoryScreen";
 import { DonorFeedbackScreen } from "./DonorFeedbackScreen";
+import { DonorScreeningScreen } from "./DonorScreeningScreen";
 
-type MadiHubTab = "hub" | "register" | "profile" | "drives" | "history" | "feedback";
+type MadiHubTab = "hub" | "register" | "profile" | "screening" | "drives" | "history" | "feedback";
 
 const HUB_ACTIONS: Array<{ id: MadiHubTab; label: string; icon: React.ComponentProps<typeof Ionicons>["name"]; description: string }> = [
   { id: "register", label: "Become a Donor", icon: "heart", description: "Register your blood group and join the donor registry" },
   { id: "profile", label: "My Donor Profile", icon: "person-circle", description: "View status, preferences and eligibility" },
+  { id: "screening", label: "Wellness Check", icon: "clipboard", description: "Guided pre-screening with Nompilo before you donate" },
   { id: "drives", label: "Donation Drives", icon: "location", description: "Find drives near you and register to donate" },
   { id: "history", label: "Donation History", icon: "time", description: "Past donations, screenings and deferrals" },
   { id: "feedback", label: "Give Feedback", icon: "chatbubble-ellipses", description: "Share your experience after a drive" },
@@ -26,6 +28,9 @@ export function MadiDonorHubScreen() {
   }
   if (tab === "profile") {
     return <DonorProfileScreen onBack={() => setTab("hub")} />;
+  }
+  if (tab === "screening") {
+    return <DonorScreeningScreen onBack={() => setTab("hub")} />;
   }
   if (tab === "drives") {
     return <DonationDrivesScreen onBack={() => setTab("hub")} />;

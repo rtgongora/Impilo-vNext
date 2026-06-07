@@ -67,4 +67,57 @@ class MadiControllerTest {
         assertEquals(200, response.getStatusCode().value());
         verify(client).donorByPerson(eq("CPID-001"));
     }
+
+    @Test
+    void getOrder_delegatesToMadiService() {
+        MadiServiceClient client = mock(MadiServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode order = mapper.createObjectNode();
+        order.put("order_id", "o1000000-0000-0000-0000-000000000001");
+        when(client.getOrder("o1000000-0000-0000-0000-000000000001")).thenReturn(order);
+
+        MadiController controller = new MadiController(client);
+
+        var response = controller.getOrder(
+                "o1000000-0000-0000-0000-000000000001", "req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(client).getOrder(eq("o1000000-0000-0000-0000-000000000001"));
+    }
+
+    @Test
+    void preVerifyTransfusion_delegatesToMadiService() {
+        MadiServiceClient client = mock(MadiServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode verified = mapper.createObjectNode();
+        verified.put("verified", true);
+        when(client.preVerifyTransfusion(any(), any())).thenReturn(verified);
+
+        MadiController controller = new MadiController(client);
+
+        var response = controller.preVerifyTransfusion(
+                "e1000000-0000-0000-0000-000000000001",
+                Map.of("patient_cpid", "CPID-001", "blood_unit_id", "UNIT-001"),
+                "req-1",
+                "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(client).preVerifyTransfusion(eq("e1000000-0000-0000-0000-000000000001"), any());
+    }
+
+    @Test
+    void nationalHaemovigilanceDashboard_delegatesToMadiService() {
+        MadiServiceClient client = mock(MadiServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode dashboard = mapper.createObjectNode();
+        dashboard.put("open_cases", 2);
+        when(client.nationalHaemovigilanceDashboard()).thenReturn(dashboard);
+
+        MadiController controller = new MadiController(client);
+
+        var response = controller.nationalHaemovigilanceDashboard("req-1", "corr-1");
+
+        assertEquals(200, response.getStatusCode().value());
+        verify(client).nationalHaemovigilanceDashboard();
+    }
 }

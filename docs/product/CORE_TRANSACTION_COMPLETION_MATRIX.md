@@ -1,14 +1,14 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-05T11:18:38.306Z
-> Journeys: **42** | Transaction-complete: **4**
+> Generated: 2026-06-07T05:12:18.731Z
+> Journeys: **46** | Transaction-complete: **8**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 4 |
+| transaction-complete | 8 |
 | backend-ready-but-frontend-incomplete | 24 |
 | backend-partial | 11 |
 | mobile-missing | 2 |
@@ -18,7 +18,7 @@
 
 | Metric | Count |
 |--------|------:|
-| Backend services mapped to journeys | 56 |
+| Backend services mapped to journeys | 57 |
 | Backend services unmapped | 31 |
 | Unmapped user-facing (needs review) | 0 |
 | Frontend routes mapped to journeys | 349 |
@@ -69,6 +69,12 @@
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 19 | 4 | reconciliation queue thin |
 | Citizen Remote Monitoring | CHRONIC_CARE | backend-ready-but-frontend-incomplete | 6 | 1 | monitoring depth |
 | Chronic Care Management | CHRONIC_CARE | backend-partial | 40 | 1 | care plan UX depth |
+| Blood Donation & Donor Engagement | BLOOD_DONATION | transaction-complete | 0 | 0 | — |
+| Blood Order & Crossmatch | BLOOD_ORDER | transaction-complete | 0 | 1 | — |
+| Transfusion Episode & Bedside Verify | TRANSFUSION | transaction-complete | 0 | 0 | — |
+
+_…and 1 more in JSON/CSV._
+
 
 ## Recommended first completion batch
 

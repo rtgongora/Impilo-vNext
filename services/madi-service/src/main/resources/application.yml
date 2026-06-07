@@ -61,11 +61,15 @@ madi:
     inventory:
       base-url: ${INVENTORY_BASE_URL:http://localhost:8108}
     nhume:
-      base-url: ${NHUME_BASE_URL:http://localhost:8176}
+      base-url: ${NHUME_BASE_URL:http://localhost:8210}
+    surveillance:
+      base-url: ${SURVEILLANCE_BASE_URL:http://localhost:8180}
     butano:
       base-url: ${BUTANO_BASE_URL:http://localhost:8090}
     ndila:
       base-url: ${NDILA_BASE_URL:http://localhost:8150}
+    iot:
+      base-url: ${IOT_BASE_URL:http://localhost:8211}
 
 management:
   endpoints:

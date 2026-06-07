@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-05T11:18:38.306Z",
-  "journeyCount": 42,
-  "transactionComplete": 4,
+  "generatedAt": "2026-06-07T05:12:18.731Z",
+  "journeyCount": 46,
+  "transactionComplete": 8,
   "classificationCounts": {
-    "transaction-complete": 4,
+    "transaction-complete": 8,
     "backend-ready-but-frontend-incomplete": 24,
     "backend-partial": 11,
     "frontend-route-exists-but-disconnected": 0,
@@ -13,7 +13,7 @@
     "unclear-intent": 0,
     "unknown-needs-review": 0
   },
-  "mappedBackendServices": 56,
+  "mappedBackendServices": 57,
   "unmappedBackendServices": 31,
   "unmappedUserFacingServices": [],
   "mappedFrontendRoutes": 349,
@@ -563,6 +563,58 @@
       "frontendRouteCount": 40,
       "mobileScreenCount": 1,
       "poAcceptanceTest": "Chronic care plan active with follow-up scheduling"
+    },
+    {
+      "journeyId": "blood-donation",
+      "journeyName": "Blood Donation & Donor Engagement",
+      "coreTransactionType": "BLOOD_DONATION",
+      "classification": "transaction-complete",
+      "implStatus": "wired",
+      "missingBackend": "",
+      "missingFrontend": "",
+      "backendServices": "madi-service; ndila-service; llm-orchestration-service; experience-bff",
+      "frontendRouteCount": 0,
+      "mobileScreenCount": 0,
+      "poAcceptanceTest": "Citizen registers as donor, completes pre-screening, and books a drive"
+    },
+    {
+      "journeyId": "blood-order",
+      "journeyName": "Blood Order & Crossmatch",
+      "coreTransactionType": "BLOOD_ORDER",
+      "classification": "transaction-complete",
+      "implStatus": "wired",
+      "missingBackend": "",
+      "missingFrontend": "",
+      "backendServices": "madi-service; oros-service; experience-bff",
+      "frontendRouteCount": 0,
+      "mobileScreenCount": 1,
+      "poAcceptanceTest": "Provider creates blood order and issues matched unit"
+    },
+    {
+      "journeyId": "transfusion-episode",
+      "journeyName": "Transfusion Episode & Bedside Verify",
+      "coreTransactionType": "TRANSFUSION",
+      "classification": "transaction-complete",
+      "implStatus": "wired",
+      "missingBackend": "",
+      "missingFrontend": "",
+      "backendServices": "madi-service; vito-service; experience-bff",
+      "frontendRouteCount": 0,
+      "mobileScreenCount": 0,
+      "poAcceptanceTest": "Provider pre-verifies patient and unit before transfusion observations"
+    },
+    {
+      "journeyId": "haemovigilance-report",
+      "journeyName": "Haemovigilance Report & Investigation",
+      "coreTransactionType": "HAEMOVIGILANCE",
+      "classification": "transaction-complete",
+      "implStatus": "wired",
+      "missingBackend": "",
+      "missingFrontend": "national dashboard web-only by policy",
+      "backendServices": "madi-service; nhume-service; surveillance-service; experience-bff",
+      "frontendRouteCount": 0,
+      "mobileScreenCount": 0,
+      "poAcceptanceTest": "Adverse reaction reported and visible on facility and national dashboards"
     }
   ]
 }

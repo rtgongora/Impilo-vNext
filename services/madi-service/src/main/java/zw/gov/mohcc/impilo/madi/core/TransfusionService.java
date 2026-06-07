@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.madi.core;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.madi.domain.TransfusionStatus;
+import zw.gov.mohcc.impilo.madi.domain.VerificationMethod;
 import zw.gov.mohcc.impilo.madi.events.MadiEventEmitter;
 import zw.gov.mohcc.impilo.madi.integration.ButanoIntegration;
 import zw.gov.mohcc.impilo.madi.persistence.entity.TransfusionEpisodeEntity;
@@ -14,7 +15,9 @@ import zw.gov.mohcc.impilo.madi.persistence.repository.TransfusionOutcomeReposit
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -65,7 +68,8 @@ public class TransfusionService {
                                                           String observationType, BigDecimal valueNumeric,
                                                           String valueText, String unit, String observedBy,
                                                           UUID facilityId) {
-        requireEpisode(tenantId, episodeId);
+        TransfusionEpisodeEntity episode = requireEpisode(tenantId, episodeId);
+        requirePreVerification(episode);
         TransfusionObservationEntity obs = new TransfusionObservationEntity();
         obs.setTenantId(tenantId);
         obs.setEpisodeId(episodeId);
@@ -116,6 +120,76 @@ public class TransfusionService {
         eventEmitter.emit("TRANSFUSION", episodeId.toString(), "TRANSFUSION_VERIFIED", "TRANSFUSION",
                 episodeId.toString(), Map.of(), tenantId);
         return saved;
+    }
+
+    @Transactional
+    public TransfusionEpisodeEntity verifyPreTransfusion(UUID tenantId, UUID episodeId, String patientCpid,
+                                                           UUID bloodUnitId, String patientMethod,
+                                                           String patientBiometricRef, String unitMethod,
+                                                           String unitScanRef, String verifiedBy) {
+        TransfusionEpisodeEntity episode = requireEpisode(tenantId, episodeId);
+        if (!TransfusionStatus.IN_PROGRESS.name().equals(episode.getStatus())) {
+            throw new IllegalStateException("Pre-transfusion verification only allowed for IN_PROGRESS episodes");
+        }
+        if (!patientCpid.equals(episode.getPatientCpid())) {
+            throw new IllegalArgumentException("Patient CPID does not match transfusion episode");
+        }
+        VerificationMethod patientVerification = parseVerificationMethod(patientMethod);
+        VerificationMethod unitVerification = parseVerificationMethod(unitMethod);
+        OffsetDateTime now = OffsetDateTime.now();
+
+        episode.setBloodUnitId(bloodUnitId);
+        episode.setPatientVerified(true);
+        episode.setPatientVerificationMethod(patientVerification.name());
+        episode.setPatientBiometricRef(patientBiometricRef);
+        episode.setPatientVerifiedAt(now);
+        episode.setPatientVerifiedBy(verifiedBy);
+        episode.setUnitVerified(true);
+        episode.setUnitVerificationMethod(unitVerification.name());
+        episode.setUnitScanRef(unitScanRef);
+        episode.setUnitVerifiedAt(now);
+        episode.setUnitVerifiedBy(verifiedBy);
+        episode.setPreTransfusionChecksJson(Map.of(
+                "patientCpid", patientCpid,
+                "bloodUnitId", bloodUnitId.toString(),
+                "patientMethod", patientVerification.name(),
+                "unitMethod", unitVerification.name(),
+                "verifiedAt", now.toString()));
+        episode.setUpdatedAt(now);
+        TransfusionEpisodeEntity saved = episodeRepository.save(episode);
+        eventEmitter.emit("TRANSFUSION", episodeId.toString(), "PRE_TRANSFUSION_VERIFIED", "TRANSFUSION",
+                episodeId.toString(), Map.of("bloodUnitId", bloodUnitId.toString()), tenantId);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<TransfusionEpisodeEntity> getEpisode(UUID tenantId, UUID episodeId) {
+        return episodeRepository.findByEpisodeIdAndTenantId(episodeId, tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransfusionEpisodeEntity> listEpisodes(UUID tenantId, UUID facilityId,
+                                                         String status, String patientCpid) {
+        return episodeRepository.findByTenantIdOrderByCreatedAtDesc(tenantId).stream()
+                .filter(e -> facilityId == null || facilityId.equals(e.getFacilityId()))
+                .filter(e -> status == null || status.isBlank() || status.equalsIgnoreCase(e.getStatus()))
+                .filter(e -> patientCpid == null || patientCpid.isBlank()
+                        || patientCpid.equalsIgnoreCase(e.getPatientCpid()))
+                .toList();
+    }
+
+    private static VerificationMethod parseVerificationMethod(String method) {
+        try {
+            return VerificationMethod.valueOf(method);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid verification method: " + method);
+        }
+    }
+
+    private static void requirePreVerification(TransfusionEpisodeEntity episode) {
+        if (!Boolean.TRUE.equals(episode.getPatientVerified()) || !Boolean.TRUE.equals(episode.getUnitVerified())) {
+            throw new IllegalStateException("Pre-transfusion verification required before observations");
+        }
     }
 
     private TransfusionEpisodeEntity requireEpisode(UUID tenantId, UUID episodeId) {

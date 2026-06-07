@@ -3,7 +3,8 @@
  * BFF: /internal/v1/mobile/provider/madi/**
  */
 
-import { apiClient } from "@impilo/mobile-api-client";
+import { ApiError, apiClient } from "@impilo/mobile-api-client";
+import { queueClinicalCreateOnRetryableError } from "./offlineClinicalQueue";
 
 const MADI_BASE = "/internal/v1/mobile/provider/madi";
 
@@ -69,9 +70,24 @@ export interface HaemovigilanceReaction {
   reported_at?: string;
 }
 
+export interface DriveSyncConflict {
+  conflict_id?: string;
+  drive_id?: string;
+  local_op_id?: string;
+  local_state?: Record<string, unknown>;
+  server_state?: Record<string, unknown>;
+  resolution?: string;
+}
+
+export type DriveCaptureResult =
+  | { ok: true; queued?: boolean; recordId?: string }
+  | { ok: false; conflict?: DriveSyncConflict; message?: string };
+
 interface ApiEnvelope<T> {
   data: T;
 }
+
+const DRIVE_CAPTURE_COLLECTION = "madi_drive_capture";
 
 /** List blood orders for the active facility context. */
 export async function fetchBloodOrders(params: {
@@ -203,12 +219,23 @@ export async function fetchOperationalDrives(): Promise<DonationDriveOperational
 export async function screenDonorAtDrive(
   driveId: string,
   params: { donor_id: string; result: string; notes?: string },
-): Promise<boolean> {
+): Promise<DriveCaptureResult> {
+  const path = `${MADI_BASE}/drives/${encodeURIComponent(driveId)}/screen`;
+  const payload = { ...params, drive_id: driveId, op: "screen" };
   try {
-    await apiClient.post(`${MADI_BASE}/drives/${encodeURIComponent(driveId)}/screen`, params);
-    return true;
-  } catch {
-    return false;
+    await apiClient.post(path, params);
+    return { ok: true };
+  } catch (error) {
+    const conflict = await maybeRecordDriveConflict(driveId, payload, error);
+    if (conflict) return { ok: false, conflict };
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: DRIVE_CAPTURE_COLLECTION,
+      path,
+      payload,
+      operationType: "CREATE",
+    });
+    if (offline) return { ok: true, queued: true, recordId: offline.recordId };
+    return { ok: false, message: error instanceof Error ? error.message : "Screening failed" };
   }
 }
 
@@ -216,13 +243,104 @@ export async function screenDonorAtDrive(
 export async function recordDriveDonation(
   driveId: string,
   params: { donor_id: string; bag_number: string; volume_ml?: number },
+): Promise<DriveCaptureResult> {
+  const path = `${MADI_BASE}/drives/${encodeURIComponent(driveId)}/donations`;
+  const payload = { ...params, drive_id: driveId, op: "donation" };
+  try {
+    await apiClient.post(path, params);
+    return { ok: true };
+  } catch (error) {
+    const conflict = await maybeRecordDriveConflict(driveId, payload, error);
+    if (conflict) return { ok: false, conflict };
+    const offline = await queueClinicalCreateOnRetryableError(error, {
+      collection: DRIVE_CAPTURE_COLLECTION,
+      path,
+      payload,
+      operationType: "CREATE",
+    });
+    if (offline) return { ok: true, queued: true, recordId: offline.recordId };
+    return { ok: false, message: error instanceof Error ? error.message : "Donation capture failed" };
+  }
+}
+
+/** Record a drive sync conflict for operator resolution. */
+export async function recordDriveSyncConflict(params: {
+  drive_id: string;
+  local_op_id: string;
+  local_state: Record<string, unknown>;
+  server_state?: Record<string, unknown>;
+}): Promise<DriveSyncConflict | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<DriveSyncConflict>>(
+      `${MADI_BASE}/drives/sync-conflicts`,
+      params,
+    );
+    return response.data.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Resolve a recorded drive sync conflict. */
+export async function resolveDriveSyncConflict(
+  conflictId: string,
+  params: {
+    drive_id: string;
+    resolution: "KEEP_LOCAL" | "USE_SERVER" | "MERGE";
+    resolved_by?: string;
+  },
 ): Promise<boolean> {
   try {
-    await apiClient.post(`${MADI_BASE}/drives/${encodeURIComponent(driveId)}/donations`, params);
+    await apiClient.post(`${MADI_BASE}/drives/sync-conflicts/${encodeURIComponent(conflictId)}/resolve`, params);
     return true;
   } catch {
     return false;
   }
+}
+
+/** Bedside patient + unit verification before transfusion. */
+export async function preVerifyTransfusion(
+  episodeId: string,
+  params: {
+    patient_cpid: string;
+    blood_unit_id: string;
+    patient_method: string;
+    patient_biometric_ref?: string;
+    unit_method: string;
+    unit_scan_ref?: string;
+    verified_by?: string;
+  },
+): Promise<TransfusionEpisode | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<TransfusionEpisode>>(
+      `${MADI_BASE}/transfusions/${encodeURIComponent(episodeId)}/pre-verify`,
+      params,
+    );
+    return response.data.data;
+  } catch {
+    return null;
+  }
+}
+
+async function maybeRecordDriveConflict(
+  driveId: string,
+  localState: Record<string, unknown>,
+  error: unknown,
+): Promise<DriveSyncConflict | null> {
+  if (!(error instanceof ApiError) || error.status !== 409) {
+    return null;
+  }
+  const serverState =
+    error.details && typeof error.details === "object"
+      ? (error.details as Record<string, unknown>)
+      : { message: error.message };
+  const localOpId = String(localState.local_op_id ?? `op-${Date.now()}`);
+  return recordDriveSyncConflict({
+    drive_id: driveId,
+    local_op_id: localOpId,
+    local_state: { ...localState, local_op_id: localOpId },
+    server_state: serverState,
+  });
 }
 
 /** Report an adverse transfusion reaction (haemovigilance). */

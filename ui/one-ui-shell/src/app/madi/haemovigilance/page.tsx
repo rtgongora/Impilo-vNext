@@ -89,7 +89,12 @@ export default function HaemovigilancePage() {
           </div>
         )}
 
-        <Link href="/madi/transfusion" className="mt-4 inline-block text-sm text-rose-600">← Transfusion workspace</Link>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <Link href="/madi/transfusion" className="text-rose-600 hover:underline">← Transfusion workspace</Link>
+          <Link href="/madi/haemovigilance/national" className="text-gray-700 hover:text-rose-600">
+            National supervisory dashboard →
+          </Link>
+        </div>
       </PageShell>
     </AppLayout>
   );

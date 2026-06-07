@@ -67,15 +67,68 @@ bash scripts/pipeline/cursor-local-feedback.sh
 
 ## Acceptance checklist (mobile wave)
 
-- [ ] Citizen hub reachable from Personal → Blood Donor
-- [ ] Provider tools reachable from Clinical Tools MADI tabs
-- [ ] `madiService` tests pass in both apps
-- [ ] BFF mobile routes proxy to `madi-service` (BFF implementation wave)
-- [ ] No production mocks on MADI mobile paths
-- [ ] Trust headers present on all mobile API calls
+- [x] Citizen hub reachable from Personal → Blood Donor (`MadiDonorHubScreen`, `/internal/v1/mobile/citizen/madi/*`)
+- [x] Provider tools reachable from Clinical Tools MADI tabs (`MadiProviderHubScreen`, provider `madiService`)
+- [x] `madiService` tests pass in both apps (`citizen-app` + `provider-app` vitest)
+- [x] BFF mobile routes proxy to `madi-service` (`CitizenMadiController`, `ProviderMadiController`)
+- [x] No production mocks on MADI mobile paths (real BFF proxy; graceful offline sync only on drives)
+- [x] Trust headers present on all mobile API calls (`mobile-api-client` companion headers)
 
-## Known gaps (honest)
+### Intentionally web-only (not mobile parity gaps)
 
-- Web `/madi/*` routes not yet in `one-ui-shell` route registry
-- BFF mobile `/internal/v1/mobile/*/madi/*` controllers may require separate BFF wave — mobile clients are ready
-- Processing, central bank, and dashboard capabilities are web/ops-first; mobile marked `no` in parity matrix
+| Capability | Rationale |
+|------------|-----------|
+| Blood processing / ZIBO pins | Lab workstation; jurisdiction terminology admin |
+| Central bank emergency redistribution | National ops console |
+| National haemovigilance dashboard | Aggregated national surveillance view |
+
+## Golden-thread E2E
+
+| Layer | Evidence |
+|-------|----------|
+| Web unit | `ui/one-ui-shell/src/lib/__tests__/madi-golden-thread.test.ts` |
+| Playwright | `ui/one-ui-shell/e2e/madi-flow.spec.ts` |
+| BFF | `MadiControllerTest.java` |
+| Backend | `DonorPreScreeningTest`, `BloodOrderServiceTest`, `TransfusionPreVerifyTest`, `HaemovigilanceServiceTest` |
+| Core transaction | `COMPLETION_EVIDENCE` entries: `blood-donation`, `blood-order`, `transfusion-episode`, `haemovigilance-report` |
+
+Run Playwright (with dev server or `PLAYWRIGHT_SKIP_WEBSERVER=1` against preview):
+
+```bash
+cd ui/one-ui-shell && npm run e2e -- e2e/madi-flow.spec.ts
+```
+
+## Runtime integration smoke (preview)
+
+After authorized preview deploy:
+
+```bash
+bash scripts/test/smoke-madi-preview-integration.sh
+```
+
+Records live vs graceful-skip for NHUME handoff surfaces, surveillance-tuned forecast, and national haemovigilance when optional services are up.
+
+## Full-boot validation
+
+`madi-service` is listed in `config/full-boot-waves.yml`. Full-boot preview (`impilo-full-preview`) requires `FULL_BOOT_PASS` from `scripts/guard/check-full-boot-runtime-completeness.sh` before `AUTHORIZE FULL BOOT PREVIEW DEPLOY`. MADI is validated as part of the clinical wave when the full stack boots.
+
+## Gap-closure wave (2026-06)
+
+| Capability | Surface |
+|------------|---------|
+| Nompilo donor assist + pre-screening | Web `/madi/donor/screening`, citizen `DonorScreeningScreen`, BFF `MadiDonorAssistController` |
+| Bedside biometric/barcode verify | Web `MadiBedsideVerifyPanel`, mobile `MadiTransfusionScreen` pre-verify |
+| IoT fridge monitoring | Web `/madi/blood-bank/fridges`, `IotIntegration` → telemetry service |
+| National haemovigilance | Web `/madi/haemovigilance/national` |
+| OROS deep-link | Web `/madi/orders/[orderId]` → `/lab?orderId=` |
+| Offline drive conflicts | Provider `MadiDriveCaptureScreen` + sync-conflicts API |
+
+## Remaining honest gaps (lower priority)
+
+Maturity gaps (2026-06 follow-up) — implemented:
+
+| Capability | Surface |
+|------------|---------|
+| NHUME physical handoff | Auto on emergency approve/fulfil → `NhumeIntegration.createBloodRedistributionDelivery`; retry via `POST .../handoff`; track at `/nhume/deliveries/[id]` |
+| Epidemiology-tuned forecast | `SurveillanceIntegration` pulls counters/alerts; multiplier on `/madi/dashboard` forecast table |
+| ZIBO jurisdiction pins | `config/madi/zibo-jurisdiction-pins.yaml` + `GET /madi/terminology/component-pins`; processing UI jurisdiction selector |

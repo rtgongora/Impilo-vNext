@@ -11,6 +11,7 @@ import zw.gov.mohcc.impilo.madi.persistence.entity.*;
 import zw.gov.mohcc.impilo.madi.persistence.repository.*;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -181,6 +182,36 @@ public class BloodOrderService {
         eventEmitter.emit("BLOOD_ORDER", orderId.toString(), "BLOOD_ISSUED", "BLOOD_ORDER",
                 orderId.toString(), Map.of("unitId", unitId.toString()), tenantId);
         return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<BloodOrderEntity> listOrders(UUID tenantId, UUID facilityId, String status, String patientCpid) {
+        List<BloodOrderEntity> rows = facilityId != null
+                ? orderRepository.findByTenantIdAndFacilityIdOrderByCreatedAtDesc(tenantId, facilityId)
+                : orderRepository.findByTenantIdOrderByCreatedAtDesc(tenantId);
+        return rows.stream()
+                .filter(o -> status == null || status.isBlank() || status.equalsIgnoreCase(o.getStatus()))
+                .filter(o -> patientCpid == null || patientCpid.isBlank()
+                        || patientCpid.equalsIgnoreCase(o.getPatientCpid()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getOrderDetail(UUID tenantId, UUID orderId) {
+        BloodOrderEntity order = requireOrder(tenantId, orderId);
+        List<BloodOrderItemEntity> items = itemRepository.findByOrderIdAndTenantId(orderId, tenantId);
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("order", order);
+        detail.put("items", items);
+        if (order.getOrosOrderRef() != null && !order.getOrosOrderRef().isBlank()) {
+            detail.put("orosDeepLinkPath", "/lab?orderId=" + order.getOrosOrderRef());
+            detail.put("butanoServiceRequestHint",
+                    "/internal/v1/fhir/ServiceRequest?identifier=" + order.getOrosOrderRef());
+        } else {
+            detail.put("orosDeepLinkPath", null);
+            detail.put("butanoServiceRequestHint", null);
+        }
+        return detail;
     }
 
     private BloodOrderEntity requireOrder(UUID tenantId, UUID orderId) {

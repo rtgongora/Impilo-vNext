@@ -59,6 +59,12 @@ public class MadiHaemovigilanceController {
         return haemovigilanceService.closeCase(tenantId, caseId, str(body, "notes"));
     }
 
+    @GetMapping("/national-dashboard")
+    public Map<String, Object> nationalDashboard(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId) {
+        return haemovigilanceService.nationalDashboard(tenantId);
+    }
+
     private static String required(Map<String, Object> body, String key) {
         Object v = body.get(key);
         if (v == null || v.toString().isBlank()) {

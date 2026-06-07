@@ -607,12 +607,14 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/madi/blood-bank/stock", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Stock", navLabel: "Blood Stock", navZone: "work" },
   { path: "/madi/blood-bank/crossmatch", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Crossmatch", navLabel: "Crossmatch", navZone: "work" },
   { path: "/madi/blood-bank/issue", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Issue Blood", navLabel: "Issue Blood", navZone: "work" },
+  { path: "/madi/blood-bank/fridges", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Fridge Monitoring", navLabel: "Fridge IoT", navZone: "work" },
   { path: "/madi/central-bank", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Central Blood Bank", navLabel: "Central Bank", navZone: "work" },
   { path: "/madi/orders", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Order Blood", navLabel: "Order Blood", navZone: "work" },
   { path: "/madi/orders/[orderId]", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Order Detail", navLabel: "Order Detail", navZone: "work" },
   { path: "/madi/transfusion", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Record Transfusion", navLabel: "Transfusion", navZone: "work" },
   { path: "/madi/transfusion/[episodeId]", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Transfusion Episode", navLabel: "Transfusion Episode", navZone: "work" },
   { path: "/madi/haemovigilance", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Haemovigilance", navLabel: "Haemovigilance", navZone: "work" },
+  { path: "/madi/haemovigilance/national", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "National Haemovigilance", navLabel: "National Haemovigilance", navZone: "work" },
   { path: "/madi/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Madi Dashboard", navLabel: "Madi Dashboard", navZone: "work" },
   { path: "/madi/processing", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Processing", navLabel: "Processing", navZone: "work" },
   { path: "/madi/logistics", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Logistics", navLabel: "Blood Logistics", navZone: "work" },
@@ -652,7 +654,7 @@ export const ROUTES: RouteDefinition[] = [
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
 // Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
 // haemovigilance (services/madi-service). New canonical total is 452.
-export const EXPECTED_ROUTE_COUNT = 452;
+export const EXPECTED_ROUTE_COUNT = 454;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

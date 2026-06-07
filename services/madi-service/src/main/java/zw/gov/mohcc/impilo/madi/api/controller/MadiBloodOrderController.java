@@ -23,6 +23,15 @@ public class MadiBloodOrderController {
         this.bloodOrderService = bloodOrderService;
     }
 
+    @GetMapping
+    public List<BloodOrderEntity> list(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) UUID facilityId,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "patient_cpid", required = false) String patientCpid) {
+        return bloodOrderService.listOrders(tenantId, facilityId, status, patientCpid);
+    }
+
     @PostMapping
     public ResponseEntity<BloodOrderEntity> create(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
@@ -51,6 +60,13 @@ public class MadiBloodOrderController {
             }
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(bloodOrderService.createOrder(order, items));
+    }
+
+    @GetMapping("/{orderId}")
+    public Map<String, Object> getOrder(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID orderId) {
+        return bloodOrderService.getOrderDetail(tenantId, orderId);
     }
 
     @PostMapping("/{orderId}/submit")

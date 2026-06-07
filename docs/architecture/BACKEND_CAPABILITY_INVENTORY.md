@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-06-05. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-07. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 
@@ -28,6 +28,15 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | Integration Hub | Integration | /internal/v1/integration-hub/* | Routes, dead letters, dispatch | /internal/v1/integration-hub/* | yes | /admin/integration-status, /settings/integrations | yes | partially surfaced |
 | Workflow / Dispatch | Platform | /internal/v1/workflows/*, /internal/v1/dispatch/* | Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | yes | /operations/workflows, /operations/dispatch | yes | partially surfaced |
 | Admin / Governance | Platform | /internal/v1/admin/* | Users, tenants, roles, audit, feature flags | /internal/v1/admin/* | yes | /admin/*, /organization-admin/* | partial | partially surfaced |
+| MADI | Clinical | /internal/v1/madi/donors/*, /internal/v1/mobile/citizen/madi/* | Donor engagement (register, profile, eligibility, feedback) | /internal/v1/madi/donors/*, /internal/v1/mobile/citizen/madi/* | yes | /madi/donor/* | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/drives/*, /internal/v1/mobile/provider/madi/drives/* | Donation drive scheduling and field capture | /internal/v1/madi/drives/*, /internal/v1/mobile/provider/madi/drives/* | yes | /madi/drives/* | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/processing/* | Blood processing and component labelling | /internal/v1/madi/processing/* | yes | /madi/processing | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/blood-banks/* | Blood bank stock and inventory balance | /internal/v1/madi/blood-banks/* | yes | /madi/blood-bank/* | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/orders/*, /internal/v1/mobile/provider/madi/orders/* | Clinical blood order (crossmatch, reserve, issue) | /internal/v1/madi/orders/*, /internal/v1/mobile/provider/madi/orders/* | yes | /madi/orders/* | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | yes | /madi/transfusion/* | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | yes | /madi/haemovigilance | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/central-bank/* | Central blood bank coordination | /internal/v1/madi/central-bank/* | yes | /madi/central-bank | yes | fully surfaced |
+| MADI | Clinical | /internal/v1/madi/dashboard | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | yes | /madi/dashboard | yes | fully surfaced |
 
 ## Internal / non-user-facing
 

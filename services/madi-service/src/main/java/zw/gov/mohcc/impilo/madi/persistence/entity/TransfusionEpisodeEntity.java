@@ -1,7 +1,11 @@
 package zw.gov.mohcc.impilo.madi.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -47,6 +51,43 @@ public class TransfusionEpisodeEntity {
 
 @Column(name = "completed_at")
     private OffsetDateTime completedAt;
+
+@Column(name = "blood_unit_id")
+    private UUID bloodUnitId;
+
+@Column(name = "patient_verified", nullable = false)
+    private Boolean patientVerified = false;
+
+@Column(name = "patient_verification_method")
+    private String patientVerificationMethod;
+
+@Column(name = "patient_biometric_ref")
+    private String patientBiometricRef;
+
+@Column(name = "patient_verified_at")
+    private OffsetDateTime patientVerifiedAt;
+
+@Column(name = "patient_verified_by")
+    private String patientVerifiedBy;
+
+@Column(name = "unit_verified", nullable = false)
+    private Boolean unitVerified = false;
+
+@Column(name = "unit_verification_method")
+    private String unitVerificationMethod;
+
+@Column(name = "unit_scan_ref")
+    private String unitScanRef;
+
+@Column(name = "unit_verified_at")
+    private OffsetDateTime unitVerifiedAt;
+
+@Column(name = "unit_verified_by")
+    private String unitVerifiedBy;
+
+@JdbcTypeCode(SqlTypes.JSON)
+@Column(name = "pre_transfusion_checks_json", columnDefinition = "jsonb")
+    private Map<String, Object> preTransfusionChecksJson;
 
 @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
@@ -100,6 +141,48 @@ public class TransfusionEpisodeEntity {
 
     public OffsetDateTime getCompletedAt() { return completedAt; }
     public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
+
+    public UUID getBloodUnitId() { return bloodUnitId; }
+    public void setBloodUnitId(UUID bloodUnitId) { this.bloodUnitId = bloodUnitId; }
+
+    public Boolean getPatientVerified() { return patientVerified; }
+    public void setPatientVerified(Boolean patientVerified) { this.patientVerified = patientVerified; }
+
+    public String getPatientVerificationMethod() { return patientVerificationMethod; }
+    public void setPatientVerificationMethod(String patientVerificationMethod) {
+        this.patientVerificationMethod = patientVerificationMethod;
+    }
+
+    public String getPatientBiometricRef() { return patientBiometricRef; }
+    public void setPatientBiometricRef(String patientBiometricRef) { this.patientBiometricRef = patientBiometricRef; }
+
+    public OffsetDateTime getPatientVerifiedAt() { return patientVerifiedAt; }
+    public void setPatientVerifiedAt(OffsetDateTime patientVerifiedAt) { this.patientVerifiedAt = patientVerifiedAt; }
+
+    public String getPatientVerifiedBy() { return patientVerifiedBy; }
+    public void setPatientVerifiedBy(String patientVerifiedBy) { this.patientVerifiedBy = patientVerifiedBy; }
+
+    public Boolean getUnitVerified() { return unitVerified; }
+    public void setUnitVerified(Boolean unitVerified) { this.unitVerified = unitVerified; }
+
+    public String getUnitVerificationMethod() { return unitVerificationMethod; }
+    public void setUnitVerificationMethod(String unitVerificationMethod) {
+        this.unitVerificationMethod = unitVerificationMethod;
+    }
+
+    public String getUnitScanRef() { return unitScanRef; }
+    public void setUnitScanRef(String unitScanRef) { this.unitScanRef = unitScanRef; }
+
+    public OffsetDateTime getUnitVerifiedAt() { return unitVerifiedAt; }
+    public void setUnitVerifiedAt(OffsetDateTime unitVerifiedAt) { this.unitVerifiedAt = unitVerifiedAt; }
+
+    public String getUnitVerifiedBy() { return unitVerifiedBy; }
+    public void setUnitVerifiedBy(String unitVerifiedBy) { this.unitVerifiedBy = unitVerifiedBy; }
+
+    public Map<String, Object> getPreTransfusionChecksJson() { return preTransfusionChecksJson; }
+    public void setPreTransfusionChecksJson(Map<String, Object> preTransfusionChecksJson) {
+        this.preTransfusionChecksJson = preTransfusionChecksJson;
+    }
 
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(OffsetDateTime updatedAt) { this.updatedAt = updatedAt; }

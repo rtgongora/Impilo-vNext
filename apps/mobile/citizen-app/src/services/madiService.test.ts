@@ -19,6 +19,7 @@ import {
   submitDonorFeedback,
   fetchDonorHistory,
   fetchNextEligibility,
+  submitDonorPreScreening,
 } from "./madiService";
 
 const BASE = "/internal/v1/mobile/citizen/madi";
@@ -86,6 +87,17 @@ describe("citizen madiService", () => {
     const history = await fetchDonorHistory();
 
     expect(history).toEqual({});
+  });
+
+  it("submitDonorPreScreening posts session-scoped pre-screening", async () => {
+    mockPost.mockResolvedValue({
+      data: { data: { outcome: "PROCEED_TO_DRIVE", safe_message: "You may visit a drive" } },
+    });
+
+    const result = await submitDonorPreScreening({ recent_illness: false });
+
+    expect(mockPost).toHaveBeenCalledWith(`${BASE}/pre-screening`, { answers: { recent_illness: false } });
+    expect(result?.outcome).toBe("PROCEED_TO_DRIVE");
   });
 
   it("fetchNextEligibility reads eligibility endpoint", async () => {

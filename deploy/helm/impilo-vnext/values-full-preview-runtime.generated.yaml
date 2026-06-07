@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 84 | enabled: 84 (all waves)
+# Microservices: 86 | enabled: 86 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -18,6 +18,10 @@ fullBootServices:
     enabled: true
     port: 8350
     database: audit_ledger
+  booking-service:
+    enabled: true
+    port: 8265
+    database: booking
   butano-fhir:
     enabled: true
     port: 8289
@@ -171,6 +175,10 @@ fullBootServices:
     enabled: true
     port: 8265
     database: llm_orchestration
+  madi-service:
+    enabled: true
+    port: 8300
+    database: madi
   msika-flow-service:
     enabled: true
     port: 8100
@@ -368,6 +376,7 @@ postgres:
     - analytics_pipeline
     - asset_registry
     - audit_ledger
+    - booking
     - butano
     - butano_fhir
     - campaigns
@@ -404,6 +413,7 @@ postgres:
     - landela_adapter
     - learning
     - llm_orchestration
+    - madi
     - msika
     - msika_flow
     - mushe_wallet

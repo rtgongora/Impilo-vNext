@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.madi.core.BloodBankService;
+import zw.gov.mohcc.impilo.madi.core.BloodFridgeMonitoringService;
 import zw.gov.mohcc.impilo.madi.persistence.entity.*;
 
 import java.util.List;
@@ -16,9 +17,12 @@ import java.util.UUID;
 public class MadiBloodBankController {
 
     private final BloodBankService bloodBankService;
+    private final BloodFridgeMonitoringService fridgeMonitoringService;
 
-    public MadiBloodBankController(BloodBankService bloodBankService) {
+    public MadiBloodBankController(BloodBankService bloodBankService,
+                                   BloodFridgeMonitoringService fridgeMonitoringService) {
         this.bloodBankService = bloodBankService;
+        this.fridgeMonitoringService = fridgeMonitoringService;
     }
 
     @PostMapping
@@ -85,7 +89,28 @@ public class MadiBloodBankController {
             @RequestBody Map<String, Object> body) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bloodBankService.recordReturn(
                 tenantId, UUID.fromString(required(body, "unit_id")), bloodBankId,
-                required(body, "reason_code"), str(body, "returned_by"), facilityId));
+                required(body, "reason_code"),                 str(body, "returned_by"), facilityId));
+    }
+
+    @GetMapping("/fridges")
+    public List<BloodFridgeEntity> fridges(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestParam(name = "blood_bank_id", required = false) UUID bloodBankId) {
+        return fridgeMonitoringService.listFridges(tenantId, bloodBankId);
+    }
+
+    @GetMapping("/fridges/{fridgeId}/readings")
+    public List<BloodFridgeReadingEntity> fridgeReadings(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID fridgeId) {
+        return fridgeMonitoringService.listReadings(tenantId, fridgeId);
+    }
+
+    @PostMapping("/fridges/{fridgeId}/sync-iot")
+    public BloodFridgeEntity syncFridgeIot(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID fridgeId) {
+        return fridgeMonitoringService.syncFridgeFromIot(tenantId, fridgeId);
     }
 
     private static String required(Map<String, Object> body, String key) {

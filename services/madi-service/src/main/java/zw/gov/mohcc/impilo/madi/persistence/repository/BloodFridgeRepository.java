@@ -12,4 +12,5 @@ import java.util.UUID;
 public interface BloodFridgeRepository extends JpaRepository<BloodFridgeEntity, Long> {
     Optional<BloodFridgeEntity> findByFridgeIdAndTenantId(UUID fridgeId, UUID tenantId);
     List<BloodFridgeEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId);
+    List<BloodFridgeEntity> findByTenantIdAndBloodBankIdOrderByCreatedAtDesc(UUID tenantId, UUID bloodBankId);
 }

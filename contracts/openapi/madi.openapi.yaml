@@ -5,7 +5,7 @@ openapi: "3.0.3"
 
 info:
   title: MADI Service API
-  version: "1.1.0"
+  version: "1.2.0"
   description: |
     Blood donation orchestration, donor management, blood bank inventory,
     crossmatch, issue/dispatch, transfusion episodes, and haemovigilance.
@@ -892,6 +892,323 @@ paths:
       responses:
         "200":
           description: Central bank metrics
+
+  /internal/v1/madi/dashboard/forecast:
+    get:
+      operationId: madiDashboardForecast
+      tags: [Dashboard]
+      summary: Thirty-day blood demand and supply forecast
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: facility_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Forecast rows by blood group and component type
+
+  /internal/v1/madi/central-bank/emergency-redistributions:
+    get:
+      operationId: madiListEmergencyRedistributions
+      tags: [CentralBank]
+      summary: List emergency redistribution requests
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: Redistribution list
+    post:
+      operationId: madiRequestEmergencyRedistribution
+      tags: [CentralBank]
+      summary: Request emergency blood redistribution between facilities
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_facility_id, target_facility_id, blood_group, component_type, units_requested]
+              properties:
+                source_facility_id: { type: string, format: uuid }
+                target_facility_id: { type: string, format: uuid }
+                blood_group: { type: string }
+                component_type: { type: string }
+                units_requested: { type: integer, minimum: 1 }
+                reason: { type: string }
+                requested_by: { type: string }
+                priority: { type: string }
+      responses:
+        "201":
+          description: Redistribution requested
+
+  /internal/v1/madi/central-bank/emergency-redistributions/{redistributionId}/handoff:
+    post:
+      operationId: madiInitiateEmergencyHandoff
+      tags: [CentralBank]
+      summary: Initiate or retry NHUME physical transfer handoff
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: redistributionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                initiated_by: { type: string }
+      responses:
+        "200":
+          description: Handoff updated with NHUME delivery reference
+
+  /internal/v1/madi/terminology/component-pins:
+    get:
+      operationId: madiComponentTerminologyPins
+      tags: [Processing]
+      summary: ZIBO artefact version pins per jurisdiction
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: jurisdiction
+          in: query
+          schema:
+            type: string
+            default: ZW
+      responses:
+        "200":
+          description: Jurisdiction-pinned component catalogue metadata
+
+  /internal/v1/madi/central-bank/emergency-redistributions/{redistributionId}/approve:
+    post:
+      operationId: madiApproveEmergencyRedistribution
+      tags: [CentralBank]
+      summary: Approve or fulfil an emergency redistribution
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: redistributionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [approved_by]
+              properties:
+                approved_by: { type: string }
+                units_allocated: { type: integer, minimum: 1 }
+                status: { type: string }
+      responses:
+        "200":
+          description: Redistribution updated
+
+  /internal/v1/madi/donors/{donorId}/pre-screening:
+    post:
+      operationId: madiSubmitPreScreening
+      tags: [Donors]
+      summary: Guided donor wellness pre-screening
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/DonorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answers:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "201":
+          description: Pre-screening recorded
+
+  /internal/v1/madi/donors/{donorId}/pre-screening/latest:
+    get:
+      operationId: madiLatestPreScreening
+      tags: [Donors]
+      summary: Latest donor pre-screening outcome
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/DonorId"
+      responses:
+        "200":
+          description: Latest pre-screening
+
+  /internal/v1/madi/blood-banks/fridges:
+    get:
+      operationId: madiListFridges
+      tags: [BloodBanks]
+      summary: List blood fridges for IoT monitoring
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: blood_bank_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Fridge list
+
+  /internal/v1/madi/blood-banks/fridges/{fridgeId}/readings:
+    get:
+      operationId: madiFridgeReadings
+      tags: [BloodBanks]
+      summary: Temperature readings for a fridge
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: fridgeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Reading history
+
+  /internal/v1/madi/blood-banks/fridges/{fridgeId}/sync-iot:
+    post:
+      operationId: madiSyncFridgeIot
+      tags: [BloodBanks]
+      summary: Pull latest IoT temperature into MADI
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: fridgeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Fridge synced
+
+  /internal/v1/madi/orders:
+    get:
+      operationId: madiListOrders
+      tags: [Orders]
+      summary: List blood orders for facility context
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/FacilityId"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: patient_cpid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Order list
+
+  /internal/v1/madi/transfusions:
+    get:
+      operationId: madiListTransfusions
+      tags: [Transfusions]
+      summary: List transfusion episodes
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/FacilityId"
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: patient_cpid
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Episode list
+
+  /internal/v1/madi/transfusions/{episodeId}/pre-verify:
+    post:
+      operationId: madiPreVerifyTransfusion
+      tags: [Transfusions]
+      summary: Bedside patient and unit verification
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - $ref: "#/components/parameters/EpisodeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Pre-transfusion verification recorded
+
+  /internal/v1/madi/haemovigilance/national-dashboard:
+    get:
+      operationId: madiNationalHaemovigilanceDashboard
+      tags: [Haemovigilance]
+      summary: National haemovigilance supervisory roll-up
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      responses:
+        "200":
+          description: National dashboard metrics
+
+  /internal/v1/madi/drives/sync-conflicts:
+    post:
+      operationId: madiRecordDriveSyncConflict
+      tags: [Drives]
+      summary: Record offline drive capture sync conflict
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "201":
+          description: Conflict recorded
+
+  /internal/v1/madi/drives/sync-conflicts/{conflictId}/resolve:
+    post:
+      operationId: madiResolveDriveSyncConflict
+      tags: [Drives]
+      summary: Resolve offline drive capture conflict
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: conflictId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: Conflict resolved
 
 components:
   securitySchemes:

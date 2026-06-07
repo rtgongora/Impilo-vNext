@@ -45,6 +45,7 @@ waves:
       - forms-service
       - guidance-service
       - inpatient-service
+      - madi-service
       - inventory-elmis-adapter
       - inventory-service
       - oros-service

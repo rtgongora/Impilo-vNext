@@ -40,4 +40,11 @@ public class MadiDashboardController {
             default -> dashboardService.localMetrics(tenantId);
         };
     }
+
+    @GetMapping("/forecast")
+    public Map<String, Object> forecast(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestParam(value = "facility_id", required = false) UUID facilityId) {
+        return dashboardService.thirtyDayForecast(tenantId, facilityId);
+    }
 }
