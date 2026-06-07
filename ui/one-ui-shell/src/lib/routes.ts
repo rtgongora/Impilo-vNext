@@ -587,6 +587,35 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/nhume/custody/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chain of Custody", navLabel: "Chain of Custody", navZone: "work" },
   // Citizen-facing track page (privacy-safe, role-aware).
   { path: "/nhume/track/[deliveryId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Delivery", navLabel: "Track Delivery", navZone: "life" },
+
+  // ── Zone: Madi — Blood Donation, Transfusion & Haemovigilance ──
+  // Backend: services/madi-service at /internal/v1/madi
+  { path: "/madi", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Madi Blood Services", navLabel: "Madi", navZone: "work" },
+  { path: "/madi/donor", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Donor Hub", navLabel: "Blood Donation", navZone: "life" },
+  { path: "/madi/donor/register", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Become a Donor", navLabel: "Register as Donor", navZone: "life" },
+  { path: "/madi/donor/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Profile", navLabel: "Donor Profile", navZone: "life" },
+  { path: "/madi/donor/screening", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Screening", navLabel: "Screening", navZone: "life" },
+  { path: "/madi/donor/drives", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donation Drives Near Me", navLabel: "Nearby Drives", navZone: "life" },
+  { path: "/madi/donor/history", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donation History", navLabel: "Donation History", navZone: "life" },
+  { path: "/madi/donor/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Feedback", navLabel: "Donor Feedback", navZone: "life" },
+  { path: "/madi/donor/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Preferences", navLabel: "Donor Preferences", navZone: "life" },
+  { path: "/madi/drives", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Donation Drives", navLabel: "Donation Drives", navZone: "work" },
+  { path: "/madi/drives/new", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "New Donation Drive", navLabel: "New Drive", navZone: "work" },
+  { path: "/madi/drives/[driveId]", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Drive Detail", navLabel: "Drive", navZone: "work" },
+  { path: "/madi/blood-bank", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Local Blood Bank", navLabel: "Blood Bank", navZone: "work" },
+  { path: "/madi/blood-bank/orders", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Bank Orders", navLabel: "Bank Orders", navZone: "work" },
+  { path: "/madi/blood-bank/stock", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Stock", navLabel: "Blood Stock", navZone: "work" },
+  { path: "/madi/blood-bank/crossmatch", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Crossmatch", navLabel: "Crossmatch", navZone: "work" },
+  { path: "/madi/blood-bank/issue", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Issue Blood", navLabel: "Issue Blood", navZone: "work" },
+  { path: "/madi/central-bank", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Central Blood Bank", navLabel: "Central Bank", navZone: "work" },
+  { path: "/madi/orders", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Order Blood", navLabel: "Order Blood", navZone: "work" },
+  { path: "/madi/orders/[orderId]", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Order Detail", navLabel: "Order Detail", navZone: "work" },
+  { path: "/madi/transfusion", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Record Transfusion", navLabel: "Transfusion", navZone: "work" },
+  { path: "/madi/transfusion/[episodeId]", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Transfusion Episode", navLabel: "Transfusion Episode", navZone: "work" },
+  { path: "/madi/haemovigilance", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Haemovigilance", navLabel: "Haemovigilance", navZone: "work" },
+  { path: "/madi/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Madi Dashboard", navLabel: "Madi Dashboard", navZone: "work" },
+  { path: "/madi/processing", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Processing", navLabel: "Processing", navZone: "work" },
+  { path: "/madi/logistics", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Logistics", navLabel: "Blood Logistics", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -621,7 +650,9 @@ export const ROUTES: RouteDefinition[] = [
 // Combined with upstream additions on this branch the canonical total is 370.
 // GAP-010 post-merge (2026-05-28): registered 21 shadow routes (social, wallet, communication hub,
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
-export const EXPECTED_ROUTE_COUNT = 426;
+// Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
+// haemovigilance (services/madi-service). New canonical total is 452.
+export const EXPECTED_ROUTE_COUNT = 452;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

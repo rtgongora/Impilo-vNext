@@ -19,6 +19,7 @@ import {
   Stethoscope,
   Save,
   TestTube2,
+  Droplet,
   type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -529,7 +530,32 @@ export default function OrdersPage() {
                 <Link href={`/ehr/${patientId}/procedures`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
                   Procedure lane
                 </Link>
+                <Link
+                  href={`/madi/orders?patientId=${encodeURIComponent(patientCpid || patientId)}`}
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-rose-800 hover:bg-rose-100 inline-flex items-center gap-1"
+                  data-testid="ehr-order-blood-link"
+                >
+                  <Droplet className="h-3.5 w-3.5" />
+                  Order blood (Madi)
+                </Link>
               </div>
+            </div>
+
+            <div className="rounded-3xl border border-rose-200 bg-rose-50/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-rose-700">
+                Blood products
+              </p>
+              <p className="mt-2 text-sm text-rose-900">
+                Order crossmatched blood for this patient through Madi — sample collection, crossmatch, issue and transfusion are tracked in the blood bank workspace.
+              </p>
+              <Link
+                href={`/madi/orders?patientId=${encodeURIComponent(patientCpid || patientId)}`}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700"
+                data-testid="ehr-order-blood-card"
+              >
+                <Droplet className="h-4 w-4" />
+                Order blood for patient
+              </Link>
             </div>
 
             <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-4">

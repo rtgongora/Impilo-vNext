@@ -17,7 +17,7 @@ import {
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
-  Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
+  Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog, Droplet,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
   Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble,
 } from "lucide-react";
@@ -1727,6 +1727,30 @@ export default function HomePage() {
                 </div>
               </div>
 
+              {/* Blood donation — My Life */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Droplet className="w-5 h-5 text-rose-600" /> Give blood
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <Link href="/madi/donor/drives" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-rose-50 border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                    <Droplet className="w-6 h-6 text-rose-600" />
+                    <span className="text-xs font-medium text-gray-900">Donate blood</span>
+                    <span className="text-[11px] text-gray-500">Find a drive near you</span>
+                  </Link>
+                  <Link href="/madi/donor/register" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                    <Heart className="w-6 h-6 text-rose-500" />
+                    <span className="text-xs font-medium text-gray-900">Become a blood donor</span>
+                    <span className="text-[11px] text-gray-500">Voluntary registration</span>
+                  </Link>
+                  <Link href="/madi/donor" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-gray-200 hover:border-rose-300 transition-colors text-center">
+                    <User className="w-6 h-6 text-gray-500" />
+                    <span className="text-xs font-medium text-gray-900">My donor hub</span>
+                    <span className="text-[11px] text-gray-500">History & preferences</span>
+                  </Link>
+                </div>
+              </div>
+
               {/* Personal Links */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
@@ -1951,6 +1975,7 @@ function CitizenHome({
               { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
               { href: "/home/bookings", label: "My Bookings", icon: Calendar, badge: null },
               { href: "/home/appointments", label: "My Appointments", icon: Calendar, badge: null },
+              { href: "/madi/donor", label: "Blood donation", icon: Droplet, badge: null },
               { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
             ].map((item) => {
               const Icon = item.icon;

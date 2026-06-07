@@ -18,6 +18,7 @@ import {
   ClipboardList,
   Code2,
   CreditCard,
+  Droplet,
   FileBarChart2,
   FileText,
   FolderOpen,
@@ -127,6 +128,7 @@ const ZONES: SidebarZone[] = [
       { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
       // Absorbed sidecars: oros-web → /lab
       { href: "/lab", label: "Laboratory", icon: FlaskConical, requiredRoles: CLINICAL_ROLES },
+      { href: "/madi", label: "Madi", icon: Droplet, requiredRoles: CLINICAL_ROLES },
     ],
   },
   {
@@ -169,6 +171,7 @@ const ZONES: SidebarZone[] = [
         { href: "/wallet", label: "My Wallet", icon: Wallet },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
+        { href: "/madi/donor", label: "Blood donation", icon: Droplet },
         // Health OS §4: Caregiving — delegated care, family, dependants
         { href: "/caregiving", label: "Caregiving", icon: HeartHandshake },
         // Health OS §2: Remote monitoring — devices, chronic care, readings
