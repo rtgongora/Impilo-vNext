@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T18:29:20.306Z",
+  "generatedAt": "2026-06-07T18:47:05.392Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -45,7 +45,7 @@
       "productOwnerAcceptanceTest": "Citizen completes registration, receives Health ID, sees next-step guidance",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "provider-login",
@@ -91,7 +91,7 @@
       "productOwnerAcceptanceTest": "Provider signs in with Provider ID, activates role, lands in workspace",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "ENTRY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "workspace-context-selection",
@@ -134,7 +134,7 @@
       "productOwnerAcceptanceTest": "Provider selects workspace/shift; subsequent requests carry trust context",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "facility-context-selection",
@@ -229,7 +229,7 @@
       "productOwnerAcceptanceTest": "Provider selects facility; queue and EHR routes become available",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "patient-search-selection",
@@ -301,7 +301,7 @@
       "productOwnerAcceptanceTest": "Provider searches patient, selects, opens chart with correct CPID",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "queue-walk-in",
@@ -603,7 +603,7 @@
       "productOwnerAcceptanceTest": "Teleconsult created, consented, referral persisted without RTC",
       "coreTransactionType": "TELEMEDICINE",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "lab-order-result",
@@ -907,7 +907,7 @@
       "productOwnerAcceptanceTest": "Consent captured, enforced on subsequent clinical access",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "payment-billing-claim",
@@ -978,7 +978,7 @@
       "productOwnerAcceptanceTest": "Bill generated, payment or claim completed with audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "FINANCIAL_SETTLEMENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "document-upload",
@@ -1017,7 +1017,7 @@
       "productOwnerAcceptanceTest": "Document uploaded, indexed, retrievable in chart",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "RECORD_CONTRIBUTION",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "dispatch-delivery",
@@ -1075,7 +1075,7 @@
       "productOwnerAcceptanceTest": "Courier completes delivery run with POD",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "INSTRUCTIONS_AND_NOTIFICATIONS",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "notification-comms",
@@ -1119,7 +1119,7 @@
       "productOwnerAcceptanceTest": "Notification sent and delivery status visible",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "INSTRUCTIONS_AND_NOTIFICATIONS",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "fundo-learning",
@@ -1212,7 +1212,7 @@
       "productOwnerAcceptanceTest": "Provider enrols, completes module, CPD reflected",
       "coreTransactionType": "TRAINING_OR_COMPETENCY",
       "lifecycleStage": "SERVICE_SELECTION",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "reporting-dashboard",
@@ -1271,7 +1271,7 @@
       "productOwnerAcceptanceTest": "Analyst runs report with correct scope and audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "registry-administration",
@@ -1346,7 +1346,7 @@
       "productOwnerAcceptanceTest": "Registry admin reconciles record with full audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "integration-sync-replay",
@@ -1390,7 +1390,7 @@
       "productOwnerAcceptanceTest": "Integration message processed or dead-lettered with replay",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "device-system-event",
@@ -1587,7 +1587,7 @@
       "productOwnerAcceptanceTest": "Citizen places order and tracks fulfilment",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "SERVICE_SELECTION",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "wellness-journey",
@@ -1693,7 +1693,7 @@
       "productOwnerAcceptanceTest": "Citizen posts to feed with real BFF backing",
       "coreTransactionType": "WELLNESS",
       "lifecycleStage": "ACCESS_SERVICE",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "public-health-outreach",
@@ -1743,7 +1743,7 @@
       "productOwnerAcceptanceTest": "CHW records outreach visit on mobile",
       "coreTransactionType": "COMMUNITY_OUTREACH",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "mobile-missing"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "crvs-ubomi",
@@ -1799,7 +1799,7 @@
       "productOwnerAcceptanceTest": "Vital event registered with certificate issuance",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "RECORD_CONTRIBUTION",
-      "completionClassification": "mobile-missing"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "coverage-enrollment",
@@ -1836,7 +1836,7 @@
       "productOwnerAcceptanceTest": "Citizen enrolls in coverage plan",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "COST_AND_COVERAGE",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "wallet-payment",
@@ -1880,7 +1880,7 @@
       "productOwnerAcceptanceTest": "Citizen pays from wallet with typed fail-close",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "FINANCIAL_SETTLEMENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "offline-clinical-queue",
@@ -1947,7 +1947,7 @@
       "productOwnerAcceptanceTest": "Provider works offline, syncs without data loss",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "emergency-encounter",
@@ -2111,7 +2111,7 @@
       "productOwnerAcceptanceTest": "Outbreak signal investigated with campaign linkage",
       "coreTransactionType": "COMMUNITY_OUTREACH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "ai-guidance-nompilo",
@@ -2172,7 +2172,7 @@
       "productOwnerAcceptanceTest": "Nompilo explains next step with route context",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "COMPOSE_EXPERIENCE_VIEW",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "credential-verification",
@@ -2209,7 +2209,7 @@
       "productOwnerAcceptanceTest": "Credential verified and reflected in provider standing",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "provider-registry-onboarding",
@@ -2269,7 +2269,7 @@
       "productOwnerAcceptanceTest": "Provider onboarded with valid licensure",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "citizen-monitoring",
@@ -2394,7 +2394,7 @@
       "productOwnerAcceptanceTest": "Chronic care plan active with follow-up scheduling",
       "coreTransactionType": "CHRONIC_CARE",
       "lifecycleStage": "FOLLOW_UP_CONTINUITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "blood-donation",

@@ -1,20 +1,20 @@
 # Core Transaction Honest Gap Audit
 
-> **Generated:** 2026-06-07 (Phase 4.3 closure pass)  
-> **Baseline:** measured classifier — **18/46 transaction-complete**  
+> **Generated:** 2026-06-07 (Phase 4 full completion pass)  
+> **Baseline:** measured classifier — **45/46 transaction-complete** + 1 ops-only waiver (`device-system-event`)  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md), [`docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md`](../product/PHASE_4_PRODUCTION_COMPLETION_BAR.md)
 
 ## Summary
 
 | Classification | Count | Meaning |
 |----------------|------:|---------|
-| transaction-complete | 18 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
-| backend-ready-but-frontend-incomplete | 10 | Sovereign/BFF capability exists; UI/mobile write or orchestration gap |
-| backend-partial | 16 | Backend depth, BFF proxy, or stub-route signals incomplete |
-| mobile-missing | 2 | Web exists; mobile journey not productised |
+| transaction-complete | 45 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
+| backend-partial | 1 | `device-system-event` — documented ops-only waiver |
+| backend-ready-but-frontend-incomplete | 0 | — |
+| mobile-missing | 0 | — |
 | trust-security-incomplete | 0 | — |
 
-**13 journeys reclassified** vs stale hard-coded matrix — see [`reports/product/classification-rebaseline.json`](../../reports/product/classification-rebaseline.json).
+See [`DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md`](./DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md) for the single remaining non-complete journey.
 
 ### Transaction-complete (evidenced)
 
