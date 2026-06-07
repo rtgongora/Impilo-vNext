@@ -224,6 +224,14 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.POST, "/internal/v1/appointments/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── MADI — blood donation, blood bank, transfusion ───
+                    .requestMatchers("/internal/v1/madi/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers("/internal/v1/mobile/citizen/madi/**")
+                            .hasAnyRole(CITIZEN_ROLES)
+                    .requestMatchers("/internal/v1/mobile/provider/madi/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── PACS / DICOM viewer ──────────────────────────────
                     .requestMatchers("/internal/v1/pacs/**")
                             .hasAnyRole(CLINICAL_ROLES)
