@@ -190,14 +190,32 @@ describe("OrdersPage", () => {
     expect(screen.getByDisplayValue("CBC")).toBeInTheDocument();
   });
 
-  it("shows explicit non-submittable lane messaging for untyped lanes", () => {
+  it("shows explicit non-submittable lane messaging for procedure lane", () => {
     render(<OrdersPage />);
-    fireEvent.click(screen.getByTestId("guided-lane-imaging"));
+    fireEvent.click(screen.getByTestId("guided-lane-procedure"));
     expect(
       screen.getByText(/intentionally read-only until a typed Experience BFF write contract/i)
     ).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("guided-submit-action"));
     expect(post).not.toHaveBeenCalled();
+  });
+
+  it("submits imaging action through typed lab-orders BFF contract with IMAGING category", async () => {
+    render(<OrdersPage />);
+    fireEvent.click(screen.getByTestId("guided-lane-imaging"));
+    fireEvent.change(screen.getByTestId("guided-imaging-name"), { target: { value: "Chest X-ray PA" } });
+    fireEvent.click(screen.getByTestId("guided-submit-action"));
+
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          patientId: "patient-1",
+          encounterId: "enc-1",
+          testName: "Chest X-ray PA",
+          category: "IMAGING",
+        }),
+      ),
+    );
   });
 
   it("submits lab action through typed lab-orders BFF contract", async () => {

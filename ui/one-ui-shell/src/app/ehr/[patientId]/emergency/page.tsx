@@ -10,6 +10,7 @@ import { usePatientSummary } from "@/hooks/queries/useSummary";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPanel";
 import { maskName, displayCpid } from "@/lib/pii-mask";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 
@@ -122,9 +123,7 @@ export default function EmergencyPatientViewPage() {
                   </li>
                 )}
               </ul>
-              <p className="mt-2 text-[10px] text-amber-900/80">
-                Emergency override and break-glass are policy-gated in the host shell — not shown here.
-              </p>
+              <BreakGlassRequestPanel patientId={patientId} resourceType="EMERGENCY_PATIENT_RECORD" />
             </div>
 
             <div className="rounded-lg border border-red-100 bg-red-50/30 p-4">

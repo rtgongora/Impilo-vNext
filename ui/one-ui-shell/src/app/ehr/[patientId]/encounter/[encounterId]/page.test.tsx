@@ -25,6 +25,12 @@ vi.mock("@/components/encounter/EncounterOrchestrationRail", () => ({
 vi.mock("@/components/encounter/EncounterLabOrdersPanel", () => ({
   EncounterLabOrdersPanel: () => <div data-testid="encounter-lab-orders-panel">Lab orders</div>,
 }));
+vi.mock("@/components/encounter/EncounterImagingOrdersPanel", () => ({
+  EncounterImagingOrdersPanel: () => <div data-testid="encounter-imaging-orders-panel">Imaging orders</div>,
+}));
+vi.mock("@/components/encounter/EncounterDischargePanel", () => ({
+  EncounterDischargePanel: () => <div data-testid="encounter-discharge-panel">Discharge</div>,
+}));
 vi.mock("@/hooks/useClinicalAlerts", () => ({ useClinicalAlerts: () => [] }));
 vi.mock("@/hooks/useFacilityStore", () => ({ useFacilityStore: (selector: (state: { facility: { id: string; name: string } }) => unknown) => selector({ facility: { id: "facility-1", name: "Harare Central Hospital" } }) }));
 vi.mock("@/hooks/useAuthStore", () => ({ useAuthStore: () => ({ user: { id: "user-1", displayName: "Dr. Moyo" } }) }));

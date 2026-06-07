@@ -6,19 +6,41 @@
  */
 
 import Link from "next/link";
-import { ArrowLeft, Loader2, AlertTriangle, AlertCircle } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Loader2, AlertTriangle, AlertCircle, CheckCircle2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useBreakGlassReviews } from "@/hooks/queries/useTrustAdmin";
+import { useBreakGlassReviews, useReviewBreakGlass, type BreakGlassReviewResource } from "@/hooks/queries/useTrustAdmin";
 
 const REVIEW_STYLES: Record<string, string> = {
   PENDING_REVIEW: "bg-yellow-100 text-yellow-700",
+  PENDING: "bg-yellow-100 text-yellow-700",
   REVIEWED: "bg-green-100 text-green-700",
+  APPROVED: "bg-green-100 text-green-700",
   FLAGGED: "bg-red-100 text-red-700",
+  ESCALATED: "bg-orange-100 text-orange-700",
 };
+
+function readAttr(
+  event: BreakGlassReviewResource,
+  key: string,
+  alt?: string,
+): string {
+  const record = event as BreakGlassReviewResource & Record<string, unknown>;
+  const attrs = record.attributes ?? {};
+  const direct = record[key] ?? attrs[key];
+  if (direct != null && String(direct) !== "") return String(direct);
+  if (alt) {
+    const altVal = record[alt] ?? attrs[alt];
+    if (altVal != null && String(altVal) !== "") return String(altVal);
+  }
+  return "";
+}
 
 export default function BreakGlassPage() {
   const { data, isLoading, error } = useBreakGlassReviews();
+  const reviewBreakGlass = useReviewBreakGlass();
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
 
   const events = data?.data ?? [];
 
@@ -58,41 +80,100 @@ export default function BreakGlassPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-gray-50">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Timestamp</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">User</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">When</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Actor</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Reason</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Patient Accessed</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Duration</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Review Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Resource</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Review</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {events.map((event) => {
+                  const reviewStatus =
+                    readAttr(event, "reviewStatus", "review_status") || "PENDING_REVIEW";
                   const reviewStyle =
-                    REVIEW_STYLES[event.attributes.reviewStatus] ?? "bg-gray-100 text-gray-600";
+                    REVIEW_STYLES[reviewStatus] ?? "bg-gray-100 text-gray-600";
+                  const grantedAt =
+                    readAttr(event, "grantedAt", "granted_at") ||
+                    readAttr(event, "timestamp");
+                  const isPending =
+                    reviewStatus.toUpperCase().includes("PENDING") ||
+                    reviewStatus === "PENDING_REVIEW";
+
                   return (
-                    <tr key={event.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={event.id} className="hover:bg-gray-50 transition-colors align-top">
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                        {new Date(event.attributes.timestamp).toLocaleString()}
+                        {grantedAt ? new Date(grantedAt).toLocaleString() : "—"}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {event.attributes.actorName ?? event.attributes.actorId}
+                        {readAttr(event, "actorName", "actor_name") ||
+                          readAttr(event, "actorId", "actor_id")}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
-                        {event.attributes.reason}
+                      <td className="px-4 py-3 text-gray-600 max-w-xs">
+                        {readAttr(event, "reason")}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {event.attributes.patientId}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {event.attributes.duration}
+                        {readAttr(event, "resourceId", "resource_id") ||
+                          readAttr(event, "patientId", "patient_id") ||
+                          "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block px-2 py-0.5 text-xs rounded-full ${reviewStyle}`}
                         >
-                          {event.attributes.reviewStatus}
+                          {reviewStatus}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {isPending ? (
+                          <div className="space-y-2 min-w-[12rem]">
+                            <input
+                              value={reviewNotes[event.id] ?? ""}
+                              onChange={(e) =>
+                                setReviewNotes((prev) => ({
+                                  ...prev,
+                                  [event.id]: e.target.value,
+                                }))
+                              }
+                              placeholder="Review notes (optional)"
+                              className="w-full rounded border border-gray-200 px-2 py-1 text-xs"
+                            />
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                disabled={reviewBreakGlass.isPending}
+                                onClick={() =>
+                                  reviewBreakGlass.mutate({
+                                    id: event.id,
+                                    decision: "APPROVED",
+                                    notes: reviewNotes[event.id] ?? "",
+                                  })
+                                }
+                                className="inline-flex items-center gap-1 rounded bg-green-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                              >
+                                <CheckCircle2 className="h-3 w-3" />
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                disabled={reviewBreakGlass.isPending}
+                                onClick={() =>
+                                  reviewBreakGlass.mutate({
+                                    id: event.id,
+                                    decision: "FLAGGED",
+                                    notes: reviewNotes[event.id] ?? "",
+                                  })
+                                }
+                                className="rounded bg-red-600 px-2 py-1 text-[11px] font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                              >
+                                Flag
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Reviewed</span>
+                        )}
                       </td>
                     </tr>
                   );

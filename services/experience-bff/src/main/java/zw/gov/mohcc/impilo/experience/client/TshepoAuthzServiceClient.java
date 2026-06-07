@@ -61,6 +61,17 @@ public class TshepoAuthzServiceClient {
     }
 
     /**
+     * Request break-glass emergency access.
+     */
+    public JsonNode requestBreakGlass(Map<String, Object> request) {
+        String url = baseUrl + "/v1/break-glass";
+        log.info("TSHEPO-AUTHZ: Requesting break-glass for actor={}", request.get("actorId"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(request), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
      * Get pending break-glass access reviews.
      */
     public JsonNode getPendingBreakGlassReviews() {

@@ -34,6 +34,8 @@ import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
 import { EncounterOrchestrationRail } from "@/components/encounter/EncounterOrchestrationRail";
 import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrdersPanel";
+import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
+import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
 import {
   ActiveDataEntryLayout,
@@ -420,12 +422,25 @@ export default function EncounterPage() {
             )}
 
             {!structuredFormFocus && isActive && isClinical && (
-              <EncounterLabOrdersPanel
-                patientId={patientId}
-                encounterId={encounterId}
-                patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
-                disabled={!isActive}
-              />
+              <>
+                <EncounterLabOrdersPanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
+                  disabled={!isActive}
+                />
+                <EncounterImagingOrdersPanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
+                  disabled={!isActive}
+                />
+                <EncounterDischargePanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  disabled={!isActive}
+                />
+              </>
             )}
 
             <ClinicalReviewHeader

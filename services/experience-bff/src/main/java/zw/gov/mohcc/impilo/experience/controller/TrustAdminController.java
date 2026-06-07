@@ -10,7 +10,10 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuthzServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
+import zw.gov.mohcc.impilo.experience.trust.TrustBreakGlassResourceMapper;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -105,8 +108,9 @@ public class TrustAdminController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode data = authzClient.getPendingBreakGlassReviews();
+            List<Map<String, Object>> resources = TrustBreakGlassResourceMapper.toReviewResources(data);
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : new Object[0],
+                    "data", resources,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Trust admin: list break-glass reviews failed: {}", e.getMessage());
@@ -123,19 +127,48 @@ public class TrustAdminController {
     public ResponseEntity<Map<String, Object>> reviewBreakGlass(
             @PathVariable UUID id,
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode data = authzClient.reviewBreakGlass(id.toString(), body);
+            Map<String, Object> upstream = new LinkedHashMap<>();
+            upstream.put("tenantId", UUID.fromString(tenantId));
+            upstream.put("reviewerId", resolveReviewerId(body, actorId));
+            upstream.put("approved", resolveApproved(body));
+            JsonNode data = authzClient.reviewBreakGlass(id.toString(), upstream);
             return ResponseEntity.ok(Map.of(
-                    "data", data != null ? data : Map.of(),
+                    "data", TrustBreakGlassResourceMapper.toReviewResources(data).stream().findFirst().orElse(Map.of()),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         } catch (Exception e) {
             log.error("Trust admin: break-glass review failed for id={}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                     "error", Map.of("code", "REVIEW_FAILED", "message", e.getMessage())));
         }
+    }
+
+    private static String resolveReviewerId(Map<String, Object> body, String actorId) {
+        if (actorId != null && !actorId.isBlank()) {
+            return actorId;
+        }
+        Object reviewer = body.get("reviewerId");
+        if (reviewer == null) {
+            reviewer = body.get("reviewer_id");
+        }
+        return reviewer != null ? String.valueOf(reviewer) : "system";
+    }
+
+    private static boolean resolveApproved(Map<String, Object> body) {
+        Object approved = body.get("approved");
+        if (approved instanceof Boolean b) {
+            return b;
+        }
+        Object decision = body.get("decision");
+        if (decision != null) {
+            String normalized = String.valueOf(decision).toUpperCase();
+            return "APPROVED".equals(normalized) || "APPROVE".equals(normalized);
+        }
+        return false;
     }
 
     // ── Device Trust ────────────────────────────────────────────────

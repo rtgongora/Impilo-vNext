@@ -29,6 +29,7 @@ import {
   useLogEmergencyAction,
   type EmergencyActivationRow,
 } from "@/hooks/queries/useEmergency";
+import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
@@ -173,6 +174,12 @@ export default function EmergencyDepartmentPage() {
               Patient search
             </Link>
           </div>
+
+          <BreakGlassRequestPanel
+            resourceType="EMERGENCY_DEPARTMENT"
+            title="ED break-glass override"
+            description="Use when an emergency protocol requires immediate access outside normal policy. Supervisor review is mandatory."
+          />
 
           {error && (
             <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
