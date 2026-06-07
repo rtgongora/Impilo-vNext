@@ -1,22 +1,22 @@
 # Core Transaction Honest Gap Audit
 
 > **Generated:** 2026-06-07 (product-truth skeptical pass)  
-> **Baseline:** measured classifier — **21/46 transaction-complete** + 1 ops-only waiver (`device-system-event`)  
+> **Baseline:** measured classifier — **26/46 transaction-complete** + 1 ops-only waiver (`device-system-event`)  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md), [`PRODUCT_TRUTH_SKEPTICAL_AUDIT.md`](./PRODUCT_TRUTH_SKEPTICAL_AUDIT.md)
 
 ## Summary
 
 | Classification | Count | Meaning |
 |----------------|------:|---------|
-| transaction-complete | 21 | Full chain + runtime tests + `COMPLETION_EVIDENCE` registry entry |
-| backend-ready-but-frontend-incomplete | 10 | BFF wired; UX depth or parity gaps |
+| transaction-complete | 26 | Full chain + runtime tests + `COMPLETION_EVIDENCE` registry entry |
+| backend-ready-but-frontend-incomplete | 5 | BFF wired; UX depth or parity gaps |
 | backend-partial | 14 | Sovereign or BFF depth incomplete |
 | mobile-missing | 2 | Web exists; mobile parity missing |
 | trust-security-incomplete | 0 | — |
 
 See [`DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md`](./DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md) for the ops-only waiver journey.
 
-### Transaction-complete (evidenced — 21)
+### Transaction-complete (evidenced — 26)
 
 | Journey | Chain proof |
 |---------|-------------|
@@ -36,6 +36,11 @@ See [`DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md`](./DEVICE_SYSTEM_EVENT_JOURNEY_WAIV
 | Wallet Payment | `WalletControllerTest` + Playwright e2e |
 | Coverage Enrollment | `CoverageControllerTest` + hook test + Playwright e2e |
 | Document Upload / Scan / Index | multipart BFF upload IT + documents page test |
+| Patient Search & Selection | `PatientSearchOrchestrationRail` + `PatientControllerTest` + search page/e2e tests |
+| Consent Capture | Mvumo admin hooks + `MvumoAdminControllerTest` + teleconsult consent IT |
+| Payment / Billing / Claim | `PayerOpsControllerTest` + payer-ops SANDBOX rail UX + e2e |
+| Facility Context Selection | `FacilityControllerTest` + context-selection e2e |
+| Workspace / Shift Context | `WorkspaceControllerTest` + `ShiftControllerTest` + handover BFF + settings panel |
 
 ## Downgraded from false 45/46 (24 journeys)
 
@@ -49,13 +54,12 @@ Removed from `COMPLETION_EVIDENCE` after skeptical audit — see [`PRODUCT_TRUTH
 Each row records the **true gap** on:  
 `route/screen → hook → BFF → sovereign service → contract → test`
 
-### backend-ready-but-frontend-incomplete (10)
+### backend-ready-but-frontend-incomplete (9)
 
 | Journey | True gap |
 |---------|----------|
 | Provider Login & Role Activation | Device-block admin UX only |
 | Facility Context Selection | Digital readiness dashboards thin |
-| Patient Search & Selection | Orchestration rail not on search surface |
 | Fundo / Learning Journey | Mobile learning shell shallow |
 | Social / Community / Timeline | Public-health alerts placeholder in rail |
 | Surveillance / Outbreak Response | Ndila map dashboards incomplete |

@@ -24,6 +24,7 @@ import {
   ArrowRightLeft,
   Video,
 } from "lucide-react";
+import { PatientSearchOrchestrationRail } from "@/components/encounter/PatientSearchOrchestrationRail";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { usePatient } from "@/hooks/queries/usePatients";
@@ -80,6 +81,9 @@ export default function PatientChartPage() {
     (e) => e.attributes.status === "ACTIVE" || e.attributes.status === "IN_PROGRESS",
   );
   const queueEntry = searchParams.get("entry") === "queue";
+  const searchEntry = searchParams.get("entry") === "search";
+  const journeyFromSearch = searchParams.get("journey_id");
+  const transactionFromSearch = searchParams.get("transaction_id");
 
   const coordinationPulse = useMemo(() => {
     const closureReady = referrals.filter((referral) => referral.attributes.status === "RESPONDED").length;
@@ -126,6 +130,16 @@ export default function PatientChartPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {searchEntry && transactionFromSearch ? (
+              <PatientSearchOrchestrationRail
+                transactionId={transactionFromSearch}
+                journeyId={journeyFromSearch}
+                selectedPatientId={patientId}
+                selectedPatientLabel={patient.attributes.displayName}
+                compact
+              />
+            ) : null}
+
             {activeEncounter && (
               <div className="bg-gradient-to-r from-green-50 via-white to-blue-50 border border-green-200 rounded-xl p-5">
                 <div className="flex items-start justify-between gap-4">

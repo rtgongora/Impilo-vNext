@@ -107,8 +107,8 @@ export interface InitiateAttemptArgs {
 
 /**
  * Phase 3 — initiate a payment attempt for an existing intent. The MusheX safety gate
- * (config + adapter.liveCapable()) ensures no real money moves until both an operator
- * opt-in and a real provider integration are in place; today every adapter is a stub.
+ * (config + adapter.liveCapable()) ensures no real money moves until operator opt-in and
+ * provider readiness; SANDBOX is always permitted for governed preview settlement.
  */
 export function usePayerOpsInitiateAttempt() {
   const qc = useQueryClient();

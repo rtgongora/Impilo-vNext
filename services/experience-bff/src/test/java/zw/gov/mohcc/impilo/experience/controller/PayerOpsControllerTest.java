@@ -106,6 +106,19 @@ class PayerOpsControllerTest {
     }
 
     @Test
+    void claimRemittanceForwardsBody() {
+        ClaimCapturingClient capturing = new ClaimCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.claimRemittance(
+                "{\"slipId\":\"REM-9\",\"tenantId\":\"tenant-1\"}", "req-9", "corr-9");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"slipId\":\"REM-9\",\"tenantId\":\"tenant-1\"}", capturing.body);
+        assertEquals("{\"status\":\"CLAIMED\"}", response.getBody());
+    }
+
+    @Test
     void listPaymentIntentsBySourceForwardsQuery() {
         SourceIntentCapturingClient capturing = new SourceIntentCapturingClient();
         PayerOpsController controller = new PayerOpsController(capturing);
@@ -189,6 +202,20 @@ class PayerOpsControllerTest {
             this.body = requestBody;
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"success\":true,\"data\":{\"intentId\":\"" + intentId + "\"}}");
+        }
+    }
+
+    private static final class ClaimCapturingClient extends MushexServiceClient {
+        String body;
+
+        private ClaimCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> claimRemittance(String requestBody) {
+            this.body = requestBody;
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"status\":\"CLAIMED\"}");
         }
     }
 

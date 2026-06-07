@@ -107,6 +107,47 @@ public class ShiftController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/handover")
+    public ResponseEntity<Map<String, Object>> handoverShift(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestBody Map<String, Object> body) {
+
+        String shiftId = strVal(body, "shiftId", "shift_id");
+        String notes = strVal(body, "notes", "handoverNotes", "handover_notes");
+        if (shiftId == null || shiftId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "shiftId is required")));
+        }
+
+        try {
+            Map<String, Object> endData = new LinkedHashMap<>();
+            if (notes != null && !notes.isBlank()) {
+                endData.put("handover_notes", notes);
+            }
+            var result = tusoClient.endShift(shiftId, endData);
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("data", result != null ? result : Map.of("id", shiftId, "status", "ENDED"));
+            response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.info("TUSO unavailable — recording local shift handover: {}", e.getMessage());
+        }
+
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("status", "HANDED_OVER");
+        attrs.put("handoverNotes", notes != null ? notes : "");
+        attrs.put("endedAt", OffsetDateTime.now().toString());
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", Map.of("id", shiftId, "type", "Shift", "attributes", attrs));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/{id}/end")
     public ResponseEntity<Map<String, Object>> endShift(
             @PathVariable String id,

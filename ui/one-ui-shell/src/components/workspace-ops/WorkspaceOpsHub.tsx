@@ -10,6 +10,7 @@ import { WorkspaceDashboardPanel } from './WorkspaceDashboardPanel';
 import { StockManagementPanel } from './StockManagementPanel';
 import { HRShiftsPanel } from './HRShiftsPanel';
 import { BillingPanel } from './BillingPanel';
+import { WorkspaceContextSettingsPanel } from './WorkspaceContextSettingsPanel';
 
 export type WorkspaceOpsType = 'clinical' | 'admin' | 'support' | 'pharmacy' | 'lab' | 'radiology';
 
@@ -122,11 +123,7 @@ export function WorkspaceOpsHub({
         {activeTab === 'stock' && <StockManagementPanel facilityId={facilityId} />}
         {activeTab === 'hr-shifts' && <HRShiftsPanel facilityId={facilityId} />}
         {activeTab === 'billing' && <BillingPanel facilityId={facilityId} />}
-        {activeTab === 'settings' && (
-          <div className="text-center py-12 text-gray-400 text-sm">
-            Workspace settings coming soon
-          </div>
-        )}
+        {activeTab === 'settings' && <WorkspaceContextSettingsPanel />}
       </div>
     </div>
   );

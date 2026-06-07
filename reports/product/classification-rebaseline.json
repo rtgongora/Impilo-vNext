@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T23:09:09.857Z",
+  "generatedAt": "2026-06-07T23:40:23.440Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -60,7 +60,19 @@
       "id": "workspace-context-selection",
       "journeyName": "Workspace / Shift Context Selection",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "facility-context-selection",
+      "journeyName": "Facility Context Selection",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "patient-search-selection",
+      "journeyName": "Patient Search & Selection",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
     },
     {
       "id": "outpatient-consultation",
@@ -108,13 +120,13 @@
       "id": "consent-capture",
       "journeyName": "Consent Capture",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "payment-billing-claim",
       "journeyName": "Payment / Billing / Exemption / Claim",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "document-upload",
@@ -196,9 +208,9 @@
     }
   ],
   "measuredCounts": {
-    "backend-partial": 14,
-    "backend-ready-but-frontend-incomplete": 9,
-    "transaction-complete": 21,
+    "backend-partial": 11,
+    "backend-ready-but-frontend-incomplete": 7,
+    "transaction-complete": 26,
     "mobile-missing": 2
   }
 }

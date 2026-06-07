@@ -8,7 +8,7 @@
 
 | Metric | Before skeptical pass | After downgrade |
 |--------|----------------------:|----------------:|
-| `transaction-complete` | 45 | **21** |
+| `transaction-complete` | 45 | **22** (after patient-search re-promotion) |
 | Ops-only waiver | 1 (`device-system-event`) | 1 |
 | Honest completion rate | 98% (misleading) | **46%** |
 

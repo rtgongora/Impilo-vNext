@@ -38,6 +38,37 @@ class MvumoAdminControllerTest {
         assertNotNull(response.getBody());
     }
 
+    @Test
+    void updateTemplate_returns200() {
+        MvumoAdminController controller = new MvumoAdminController(new StubMvumoClient());
+        ResponseEntity<Map<String, Object>> response = controller.updateTemplate(
+                "registry-assisted-consent",
+                "req-3",
+                "corr-3",
+                Map.of("title", "Updated registry consent"));
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void createConsentRequest_returns201() {
+        MvumoAdminController controller = new MvumoAdminController(new StubMvumoClient());
+        ResponseEntity<Map<String, Object>> response = controller.createConsentRequest(
+                "req-4",
+                "corr-4",
+                Map.of("subjectPatientRef", "pat-001", "templateKey", "registry-assisted-consent"));
+        assertEquals(201, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
+    }
+
+    @Test
+    void listTemplates_unavailable_returns502() {
+        MvumoAdminController controller = new MvumoAdminController(new FailingMvumoClient());
+        ResponseEntity<Map<String, Object>> response = controller.listTemplates("req-5", "corr-5");
+        assertEquals(502, response.getStatusCode().value());
+        assertEquals("MVUMO_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
     private static final class StubMvumoClient extends MvumoServiceClient {
         StubMvumoClient() {
             super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
@@ -53,6 +84,29 @@ class MvumoAdminControllerTest {
         @Override
         public JsonNode createTemplate(Map<String, Object> body) {
             return mapper.createObjectNode().put("templateKey", body.get("templateKey").toString());
+        }
+
+        @Override
+        public JsonNode updateTemplate(String templateId, Map<String, Object> body) {
+            return mapper.createObjectNode().put("templateKey", templateId).put("title", body.get("title").toString());
+        }
+
+        @Override
+        public JsonNode createConsentRequest(Map<String, Object> body) {
+            return mapper.createObjectNode()
+                    .put("id", "cr-001")
+                    .put("subjectPatientRef", body.get("subjectPatientRef").toString());
+        }
+    }
+
+    private static final class FailingMvumoClient extends MvumoServiceClient {
+        FailingMvumoClient() {
+            super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
+        }
+
+        @Override
+        public JsonNode listTemplates() {
+            throw new RuntimeException("mvumo down");
         }
     }
 }

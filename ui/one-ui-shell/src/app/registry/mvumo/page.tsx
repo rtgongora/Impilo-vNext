@@ -1,137 +1,246 @@
 "use client";
+
 import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import Link from "next/link";
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileCheck, Shield } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckCircle2, FileCheck, Loader2, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import {
+  useCreateMvumoConsentRequest,
+  useCreateMvumoTemplate,
+  useMvumoAdminTemplates,
+  useUpdateMvumoTemplate,
+} from "@/hooks/queries/useMvumoAdmin";
 
-/**
- * Mvumo — product surface for the national digital consent orchestration service.
- * APIs live on mvumo-service; trust-layer FHIR/evaluation remains on tshepo-consent-service.
- */
+function templateKeyOf(row: Record<string, unknown>): string {
+  const key = row.templateKey ?? row.template_key ?? row.id;
+  return typeof key === "string" ? key : "";
+}
+
 export default function MvumoRegistryPage() {
-  const queryClient = useQueryClient();
   const [templateForm, setTemplateForm] = useState({
     templateKey: "registry-assisted-consent",
     consentType: "DIGITAL",
     title: "Registry assisted consent",
     bodyMarkdown: "I consent to the requested registry action.",
   });
-
-  const templates = useQuery({
-    queryKey: ["mvumo-admin", "templates"],
-    queryFn: () => apiClient.get<ApiResponse<unknown>>("/internal/v1/mvumo-admin/templates"),
+  const [selectedTemplateKey, setSelectedTemplateKey] = useState("");
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [consentForm, setConsentForm] = useState({
+    subjectPatientRef: "",
+    templateKey: "registry-assisted-consent",
+    workflowRef: "registry-assisted-intake",
+    consentType: "DIGITAL",
+    channel: "FACILITY_ASSISTED",
   });
+  const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
 
-  const createTemplate = useMutation({
-    mutationFn: () => apiClient.post<ApiResponse<unknown>>("/internal/v1/mvumo-admin/templates", templateForm),
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["mvumo-admin", "templates"] }),
-  });
+  const templates = useMvumoAdminTemplates();
+  const createTemplate = useCreateMvumoTemplate();
+  const updateTemplate = useUpdateMvumoTemplate();
+  const createConsentRequest = useCreateMvumoConsentRequest();
+
+  const templateRows = useMemo(() => {
+    const raw = templates.data?.data;
+    if (Array.isArray(raw)) return raw.filter((row): row is Record<string, unknown> => typeof row === "object" && row !== null);
+    if (raw && typeof raw === "object") return [raw as Record<string, unknown>];
+    return [];
+  }, [templates.data?.data]);
 
   return (
     <AppLayout>
       <PageShell
         title="Mvumo"
-        subtitle="Adaptive digital consent — not a checkbox, not PDF-only, not a single signature channel"
+        subtitle="Adaptive digital consent — templates, requests, and remote-session orchestration"
         icon={<Shield className="h-6 w-6 text-impilo-600" />}
       >
         <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
           <p>
-            <strong>Mvumo</strong> orchestrates consent <em>requests</em>, <em>templates</em>,{" "}
-            <em>remote sessions</em>, and <em>adaptive assurance</em> across portals, tokens, OTP, PIN, USSD,
-            assisted facility capture, offline sync, paper-to-digital proof, witnessed flows, and break-glass
-            acknowledgement — as policy allows.
-          </p>
-          <p>
-            Enforcement and FHIR <code className="rounded bg-gray-100 px-1">Consent</code> evaluation remain in{" "}
-            <strong>tshepo-consent-service</strong>. See repository docs:{" "}
-            <code className="rounded bg-gray-100 px-1">docs/architecture/mvumo-consent-architecture.md</code>.
-          </p>
-          <div className="flex flex-wrap gap-3 not-prose">
-            <Link
-              href="https://github.com/rtgongora/Impilo-vNext/blob/claude/staging-ux-orchestration-remediation-Yypyl/docs/architecture/mvumo-consent-architecture.md"
-              className="inline-flex items-center gap-2 rounded-lg border border-impilo-200 bg-impilo-50 px-4 py-2 text-sm font-medium text-impilo-800 hover:bg-impilo-100"
-            >
-              <FileCheck className="h-4 w-4" /> Architecture doc
+            <strong>Mvumo</strong> orchestrates consent requests and templates. FHIR evaluation remains in{" "}
+            <strong>tshepo-consent-service</strong>. Platform policy acceptance lives at{" "}
+            <Link href="/consent" className="text-impilo-600 hover:underline">
+              /consent
             </Link>
-            <Link
-              href="https://github.com/rtgongora/Impilo-vNext/blob/claude/staging-ux-orchestration-remediation-Yypyl/docs/audits/mvumo-consent-current-state-audit.md"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Current-state audit
+            ; trust directive reads at{" "}
+            <Link href="/admin/consent" className="text-impilo-600 hover:underline">
+              /admin/consent
             </Link>
-          </div>
+            .
+          </p>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-pink-100 bg-white p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-pink-600">Typed admin contract</p>
-              <h2 className="mt-1 text-lg font-semibold text-gray-900">Mvumo template governance</h2>
-              <p className="mt-1 max-w-3xl text-sm text-gray-600">
-                Uses <code>/internal/v1/mvumo-admin/templates</code>, a typed Experience BFF contract over the sovereign
-                Mvumo service. The broad <code>/internal/v1/mvumo/**</code> proxy remains available for lower-level
-                pass-throughs, but this registry page no longer stays documentation-only.
-              </p>
-            </div>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              live typed BFF
-            </span>
-          </div>
+        <div className="mt-6 space-y-6">
+          <section className="rounded-2xl border border-pink-100 bg-white p-5">
+            <h2 className="text-lg font-semibold text-gray-900">Template governance</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Typed BFF: <code>/internal/v1/mvumo-admin/templates</code>
+            </p>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 p-4">
-              <h3 className="text-sm font-semibold text-gray-900">Create template</h3>
-              <div className="mt-3 grid gap-3">
-                {[
-                  ["templateKey", "Template key"],
-                  ["consentType", "Consent type"],
-                  ["title", "Title"],
-                ].map(([key, label]) => (
-                  <label key={key} className="text-xs font-medium text-gray-600">
-                    {label}
-                    <input
-                      value={templateForm[key as keyof typeof templateForm]}
-                      onChange={(event) => setTemplateForm({ ...templateForm, [key]: event.target.value })}
-                      className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold text-gray-900">Create template</h3>
+                <div className="mt-3 grid gap-3">
+                  {[
+                    ["templateKey", "Template key"],
+                    ["consentType", "Consent type"],
+                    ["title", "Title"],
+                  ].map(([key, label]) => (
+                    <label key={key} className="text-xs font-medium text-gray-600">
+                      {label}
+                      <input
+                        value={templateForm[key as keyof typeof templateForm]}
+                        onChange={(event) => setTemplateForm({ ...templateForm, [key]: event.target.value })}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </label>
+                  ))}
+                  <label className="text-xs font-medium text-gray-600">
+                    Body markdown
+                    <textarea
+                      value={templateForm.bodyMarkdown}
+                      onChange={(event) => setTemplateForm({ ...templateForm, bodyMarkdown: event.target.value })}
+                      className="mt-1 h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                     />
                   </label>
-                ))}
-                <label className="text-xs font-medium text-gray-600">
-                  Body markdown
-                  <textarea
-                    value={templateForm.bodyMarkdown}
-                    onChange={(event) => setTemplateForm({ ...templateForm, bodyMarkdown: event.target.value })}
-                    className="mt-1 h-24 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                </div>
+                <button
+                  type="button"
+                  disabled={createTemplate.isPending || !templateForm.templateKey.trim()}
+                  onClick={() => createTemplate.mutate(templateForm)}
+                  className="mt-3 rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700 disabled:opacity-50"
+                >
+                  {createTemplate.isPending ? "Creating..." : "Create template"}
+                </button>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 p-4">
+                <h3 className="text-sm font-semibold text-gray-900">Update template</h3>
+                <label className="mt-3 block text-xs font-medium text-gray-600">
+                  Select template
+                  <select
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                    value={selectedTemplateKey}
+                    onChange={(e) => {
+                      setSelectedTemplateKey(e.target.value);
+                      const row = templateRows.find((t) => templateKeyOf(t) === e.target.value);
+                      const title = row?.title;
+                      setUpdateTitle(typeof title === "string" ? title : "");
+                    }}
+                  >
+                    <option value="">Choose template</option>
+                    {templateRows.map((row) => {
+                      const key = templateKeyOf(row);
+                      return (
+                        <option key={key} value={key}>
+                          {key}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
+                <label className="mt-3 block text-xs font-medium text-gray-600">
+                  Revised title
+                  <input
+                    value={updateTitle}
+                    onChange={(e) => setUpdateTitle(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                   />
                 </label>
+                <button
+                  type="button"
+                  disabled={updateTemplate.isPending || !selectedTemplateKey || !updateTitle.trim()}
+                  onClick={() =>
+                    updateTemplate.mutate({
+                      templateId: selectedTemplateKey,
+                      body: { title: updateTitle.trim() },
+                    })
+                  }
+                  className="mt-3 rounded-lg border border-pink-300 bg-pink-50 px-4 py-2 text-sm font-medium text-pink-800 hover:bg-pink-100 disabled:opacity-50"
+                >
+                  {updateTemplate.isPending ? "Saving..." : "Update template"}
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={createTemplate.isPending || !templateForm.templateKey.trim() || !templateForm.title.trim()}
-                onClick={() => createTemplate.mutate()}
-                className="mt-3 rounded-lg bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700 disabled:opacity-50"
-              >
-                {createTemplate.isPending ? "Creating..." : "Create template"}
-              </button>
-              {createTemplate.isError ? (
-                <p className="mt-2 text-xs text-red-600">Template creation failed. Verify Mvumo service availability.</p>
-              ) : null}
             </div>
 
-            <div className="rounded-xl border border-gray-200 p-4">
+            <div className="mt-4 rounded-xl border border-gray-200 p-4">
               <h3 className="text-sm font-semibold text-gray-900">Template inventory</h3>
-              {templates.isLoading ? <p className="mt-3 text-sm text-gray-500">Loading templates...</p> : null}
-              {templates.isError ? (
-                <p className="mt-3 text-sm text-red-600">Mvumo templates unavailable.</p>
-              ) : (
-                <QueryResultPanel title="Templates" isPending={templates.isPending} isLoading={templates.isPending} isError={templates.isError} error={templates.error} data={templates.data?.data ?? []} />
-              )}
+              <QueryResultPanel
+                title="Templates"
+                isPending={templates.isPending}
+                isLoading={templates.isPending}
+                isError={templates.isError}
+                error={templates.error}
+                data={templateRows}
+              />
             </div>
-          </div>
+          </section>
+
+          <section className="rounded-2xl border border-emerald-100 bg-white p-5">
+            <h2 className="text-lg font-semibold text-gray-900">Consent request initiation</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              POST <code>/internal/v1/mvumo-admin/consent-requests</code> — binds a subject to a governed template.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                ["subjectPatientRef", "Subject patient ref (CPID/Health ID)"],
+                ["templateKey", "Template key"],
+                ["workflowRef", "Workflow ref"],
+                ["consentType", "Consent type"],
+                ["channel", "Channel"],
+              ].map(([key, label]) => (
+                <label key={key} className="text-xs font-medium text-gray-600">
+                  {label}
+                  <input
+                    value={consentForm[key as keyof typeof consentForm]}
+                    onChange={(event) => setConsentForm({ ...consentForm, [key]: event.target.value })}
+                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  />
+                </label>
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={
+                createConsentRequest.isPending ||
+                !consentForm.subjectPatientRef.trim() ||
+                !consentForm.templateKey.trim()
+              }
+              onClick={() =>
+                createConsentRequest.mutate(consentForm, {
+                  onSuccess: (res) => {
+                    const raw = res.data;
+                    const id =
+                      raw && typeof raw === "object" && "id" in raw && typeof raw.id === "string" ? raw.id : null;
+                    setCreatedRequestId(id);
+                  },
+                })
+              }
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {createConsentRequest.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Create consent request
+            </button>
+            {createdRequestId ? (
+              <p className="mt-3 text-sm text-emerald-800">
+                Consent request created. Review Tshepo directives at{" "}
+                <Link
+                  href={`/admin/consent?subjectId=${encodeURIComponent(consentForm.subjectPatientRef)}`}
+                  className="font-medium underline"
+                >
+                  /admin/consent
+                </Link>
+                .
+              </p>
+            ) : null}
+          </section>
+
+          <Link
+            href="https://github.com/rtgongora/Impilo-vNext/blob/claude/staging-ux-orchestration-remediation-Yypyl/docs/architecture/mvumo-consent-architecture.md"
+            className="inline-flex items-center gap-2 rounded-lg border border-impilo-200 bg-impilo-50 px-4 py-2 text-sm font-medium text-impilo-800 hover:bg-impilo-100"
+          >
+            <FileCheck className="h-4 w-4" /> Architecture doc
+          </Link>
         </div>
       </PageShell>
     </AppLayout>

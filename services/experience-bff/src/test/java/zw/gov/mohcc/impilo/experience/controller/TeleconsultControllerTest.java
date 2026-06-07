@@ -28,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 class TeleconsultControllerTest {
 
     private PctServiceClient pctClient;
+    private MvumoServiceClient mvumoClient;
     private CostaServiceClient costaClient;
     private AnalyticsPipelineServiceClient analyticsClient;
     private NotificationServiceClient notificationClient;
@@ -40,7 +41,7 @@ class TeleconsultControllerTest {
     void setUp() {
         objectMapper = new ObjectMapper();
         pctClient = Mockito.mock(PctServiceClient.class);
-        MvumoServiceClient mvumoClient = Mockito.mock(MvumoServiceClient.class);
+        mvumoClient = Mockito.mock(MvumoServiceClient.class);
         DocumentServiceClient documentClient = Mockito.mock(DocumentServiceClient.class);
         VarapiServiceClient varapiClient = Mockito.mock(VarapiServiceClient.class);
         TusoServiceClient tusoClient = Mockito.mock(TusoServiceClient.class);
@@ -150,5 +151,28 @@ class TeleconsultControllerTest {
                 "TELECONSULT_COMPLETED".equals(event.get("eventType"))
                         && "ref-001".equals(event.get("sessionId"))
                         && "CPID-1".equals(event.get("patientId"))));
+    }
+
+    @Test
+    void recordConsent_createsMvumoRequestAndUpdatesReferral() throws Exception {
+        ObjectNode mvumo = objectMapper.createObjectNode();
+        mvumo.put("id", "consent-77");
+        mvumo.put("tshepoConsentId", "tshepo-88");
+        Mockito.when(mvumoClient.createConsentRequest(any())).thenReturn(mvumo);
+        Mockito.when(pctClient.updateReferralConsent(eq("ref-consent"), any())).thenReturn(objectMapper.createObjectNode());
+
+        var response = controller.recordConsent(
+                "ref-consent",
+                "req-consent",
+                "corr-consent",
+                Map.of("patientId", "pat-001", "consentType", "TELEHEALTH"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("consent-77", data.get("consentReference"));
+        Mockito.verify(mvumoClient).createConsentRequest(Mockito.argThat(body ->
+                "pat-001".equals(body.get("subjectPatientRef"))
+                        && "referral:ref-consent".equals(body.get("workflowRef"))));
+        Mockito.verify(pctClient).updateReferralConsent(eq("ref-consent"), any());
     }
 }

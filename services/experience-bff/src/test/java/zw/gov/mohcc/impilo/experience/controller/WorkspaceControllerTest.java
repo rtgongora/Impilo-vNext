@@ -22,9 +22,19 @@ class WorkspaceControllerTest {
     void listWorkspaces_returnsSeededFallbackWhenTusoUnavailable() {
         WorkspaceController controller = new WorkspaceController(new StubTusoClient());
         ResponseEntity<Map<String, Object>> response =
-                controller.listWorkspaces("tenant-1", "req-1", "corr-1", "fac-hch");
+                controller.listWorkspaces("tenant-1", "req-1", "corr-1", "fac-pgh");
         assertEquals(200, response.getStatusCode().value());
         assertFalse(((java.util.List<?>) response.getBody().get("data")).isEmpty());
+    }
+
+    @Test
+    void getWorkspace_returnsSeededWorkspaceById() {
+        WorkspaceController controller = new WorkspaceController(new StubTusoClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.getWorkspace("ws-pgh-opd", "tenant-1", "req-2", "corr-2");
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("ws-pgh-opd", data.get("id"));
     }
 
     private static final class StubTusoClient extends TusoServiceClient {

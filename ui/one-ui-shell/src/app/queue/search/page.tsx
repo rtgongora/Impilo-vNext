@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRightLeft, Loader2, Scan, Search, TestTube2, User, UserPlus } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { PatientSearchOrchestrationRail } from "@/components/encounter/PatientSearchOrchestrationRail";
 import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
 import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
@@ -94,8 +95,21 @@ export default function PatientSearchPage() {
     const query = params.toString();
     return query ? `${resolved}?${query}` : resolved;
   }
+
+  function withJourneyCorrelation(href: string): string {
+    if (!journeyId && !transactionId) return href;
+    const [path, existing] = href.split("?");
+    const params = new URLSearchParams(existing ?? "");
+    if (journeyId) params.set("journey_id", journeyId);
+    if (transactionId) params.set("transaction_id", transactionId);
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
+  }
+
   const [searchTerm, setSearchTerm] = useState("");
   const [searchSubmitted, setSearchSubmitted] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedPatientLabel, setSelectedPatientLabel] = useState<string | null>(null);
   const workflow = (searchParams.get("workflow") as SearchWorkflow | null) ?? "default";
   const workflowCopy = SEARCH_WORKFLOW_COPY[workflow] ?? SEARCH_WORKFLOW_COPY.default;
 
@@ -123,10 +137,10 @@ export default function PatientSearchPage() {
             actions={[
               { href: "/queue", label: "Queue Workboard", icon: ArrowRightLeft },
               ...(workflow === "default"
-                ? [{ href: "/queue/walk-in", label: "Walk-in Registration", icon: UserPlus, tone: "secondary" as const }]
+                ? [{ href: withJourneyCorrelation("/queue/walk-in"), label: "Walk-in Registration", icon: UserPlus, tone: "secondary" as const }]
                 : workflow === "lims"
-                  ? [{ href: "/queue/search?workflow=pacs", label: "Imaging / PACS", icon: Scan, tone: "secondary" as const }]
-                  : [{ href: "/queue/search?workflow=lims", label: "Laboratory / LIMS", icon: TestTube2, tone: "secondary" as const }]),
+                  ? [{ href: withJourneyCorrelation("/queue/search?workflow=pacs"), label: "Imaging / PACS", icon: Scan, tone: "secondary" as const }]
+                  : [{ href: withJourneyCorrelation("/queue/search?workflow=lims"), label: "Laboratory / LIMS", icon: TestTube2, tone: "secondary" as const }]),
             ]}
             metrics={[
               {
@@ -142,6 +156,13 @@ export default function PatientSearchPage() {
           </Link>
 
           <div className="max-w-4xl space-y-6">
+          <PatientSearchOrchestrationRail
+            transactionId={transactionId}
+            journeyId={journeyId}
+            selectedPatientId={selectedPatientId}
+            selectedPatientLabel={selectedPatientLabel}
+          />
+
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <form onSubmit={handleSearch} className="flex gap-2">
               <div className="relative flex-1">
@@ -190,7 +211,16 @@ export default function PatientSearchPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {patients.map((patient: PatientResource) => (
-                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={patient.id}
+                      className={`transition-colors ${
+                        selectedPatientId === patient.id ? "bg-impilo-50" : "hover:bg-gray-50"
+                      }`}
+                      onClick={() => {
+                        setSelectedPatientId(patient.id);
+                        setSelectedPatientLabel(getPatientDisplayName(patient));
+                      }}
+                    >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-impilo-100 flex items-center justify-center">
@@ -213,6 +243,11 @@ export default function PatientSearchPage() {
                                 ? chartHref(patient.id)
                                 : correlatedHref(patient.id, workflowCopy.primaryActionHref(patient.id))
                             }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedPatientId(patient.id);
+                              setSelectedPatientLabel(getPatientDisplayName(patient));
+                            }}
                             className="inline-block rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600"
                           >
                             {workflowCopy.primaryActionLabel}
@@ -223,6 +258,7 @@ export default function PatientSearchPage() {
                                 ? correlatedWalkInHref(patient.id)
                                 : correlatedHref(patient.id, workflowCopy.secondaryActionHref(patient.id))
                             }
+                            onClick={(event) => event.stopPropagation()}
                             className="inline-block rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                           >
                             {workflowCopy.secondaryActionLabel}

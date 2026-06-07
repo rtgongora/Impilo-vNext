@@ -163,7 +163,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-Dnet.bytebuddy.experimental=true -Djava.net.useSystemProxies=false</argLine>
+                    <argLine>-Dnet.bytebuddy.experimental=true -Djava.net.useSystemProxies=false -XX:+EnableDynamicAgentLoading</argLine>
                     <environmentVariables>
                         <NO_PROXY>localhost,127.0.0.1,::1,*.docker.internal,docker.for.win.localhost,docker.for.mac.localhost</NO_PROXY>
                         <!-- Deterministic auth fallback in tests (ROPC hits closed port, not a real Keycloak 401). -->

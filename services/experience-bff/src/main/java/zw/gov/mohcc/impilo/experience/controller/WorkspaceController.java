@@ -6,6 +6,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 
 import java.util.*;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -69,6 +70,43 @@ public class WorkspaceController {
         attrs.put("description", ws.has("description") && !ws.get("description").isNull() ? ws.get("description").asText() : null);
         attrs.put("status", ws.has("active") && ws.get("active").asBoolean() ? "ACTIVE" : "INACTIVE");
         return Map.of("id", id, "type", "workspace", "attributes", attrs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getWorkspace(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+
+        try {
+            java.util.UUID workspaceUuid = java.util.UUID.fromString(id);
+            com.fasterxml.jackson.databind.JsonNode tusoWs = tusoClient.getWorkspace(workspaceUuid);
+            if (tusoWs != null) {
+                String facilityId = tusoWs.has("facilityId") ? tusoWs.get("facilityId").asText() : "";
+                return ResponseEntity.ok(Map.of(
+                        "data", mapTusoWorkspace(tusoWs, facilityId),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+        } catch (IllegalArgumentException ignored) {
+            // non-UUID ids fall through to seeded lookup
+        } catch (Exception e) {
+            // fall through to seeded lookup
+        }
+
+        Optional<Map<String, Object>> seeded = SEEDED.stream()
+                .filter(w -> id.equals(w.get("id")))
+                .findFirst();
+
+        if (seeded.isPresent()) {
+            return ResponseEntity.ok(Map.of(
+                    "data", seeded.get(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(Map.of(
+                "error", Map.of("code", "NOT_FOUND", "message", "Workspace not found"),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @PostMapping("/{id}/activate")

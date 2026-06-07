@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T23:09:09.857Z",
+  "generatedAt": "2026-06-07T23:40:23.440Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -125,8 +125,8 @@
       "auditRequirements": "context switch audit",
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "control-tower dashboards thin",
-      "missingFrontendMobileWork": "workspace settings coming-soon stub",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "control-tower dashboards thin",
       "relatedJourneys": [
         "facility-context-selection",
         "provider-patient-encounter"
@@ -134,7 +134,7 @@
       "productOwnerAcceptanceTest": "Provider selects workspace/shift; subsequent requests carry trust context",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "facility-context-selection",
@@ -229,7 +229,7 @@
       "productOwnerAcceptanceTest": "Provider selects facility; queue and EHR routes become available",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "patient-search-selection",
@@ -301,7 +301,7 @@
       "productOwnerAcceptanceTest": "Provider searches patient, selects, opens chart with correct CPID",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "queue-walk-in",
@@ -880,7 +880,9 @@
       ],
       "apis": "/internal/v1/consent/*, /internal/v1/mvumo/*",
       "frontendRoutes": [
+        "/admin/consent",
         "/consent",
+        "/registry/mvumo",
         "/settings",
         "/settings/account",
         "/settings/display",
@@ -898,8 +900,8 @@
       "auditRequirements": "consent audit mandatory",
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "wired",
-      "missingBackendWork": "remote-session template parity partial",
-      "missingFrontendMobileWork": "admin workflow parity vs mvumo templates",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "remote-session admin depth",
       "relatedJourneys": [
         "telemedicine-encounter",
         "citizen-onboarding"
@@ -907,7 +909,7 @@
       "productOwnerAcceptanceTest": "Consent captured, enforced on subsequent clinical access",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "payment-billing-claim",
@@ -970,7 +972,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "long-tail finance routes",
-      "missingFrontendMobileWork": "payer-ops stubs; MusheX raw paths not in browser",
+      "missingFrontendMobileWork": "production live-rail operator depth",
       "relatedJourneys": [
         "wallet-payment",
         "coverage-enrollment"
@@ -978,7 +980,7 @@
       "productOwnerAcceptanceTest": "Bill generated, payment or claim completed with audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "FINANCIAL_SETTLEMENT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "document-upload",

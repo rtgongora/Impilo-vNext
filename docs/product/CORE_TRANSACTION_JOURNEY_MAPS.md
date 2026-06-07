@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-07T23:09:09.857Z
+> Generated: 2026-06-07T23:40:23.440Z
 > Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -12,9 +12,9 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | --- | --- | --- | --- | --- | --- |
 | Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | citizen | /auth/register | partial | backend-partial |
 | Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | provider | /auth/login/provider-id | wired | backend-ready-but-frontend-incomplete |
-| Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | provider | /workspace | partial | backend-partial |
-| Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | backend-ready-but-frontend-incomplete |
-| Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | backend-ready-but-frontend-incomplete |
+| Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | provider | /workspace | partial | transaction-complete |
+| Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | transaction-complete |
+| Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | transaction-complete |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | transaction-complete |
 | Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | transaction-complete |
@@ -25,8 +25,8 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | transaction-complete |
 | Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | transaction-complete |
 | Appointment Scheduling | APPOINTMENT | citizen | /queue/scheduled | partial | transaction-complete |
-| Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | backend-partial |
-| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | backend-partial |
+| Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | transaction-complete |
+| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | transaction-complete |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | provider | /ehr/[patientId]/documents | partial | transaction-complete |
 | Dispatch / Delivery (NHUME) | MARKETPLACE | courier | /operations/dispatch | partial | backend-partial |
 | Notification & Communications | ADMINISTRATIVE_HEALTH | platform | /communication | wired | backend-partial |
@@ -104,7 +104,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **Web routes:** /facility, /facility/[id], /shift, /shift/active, /shift/handover…
 - **Mobile screens:** none mapped
 - **Completion state:** TRUST_CONTEXT_ESTABLISHED
-- **Status:** partial — backend-partial
+- **Status:** partial — transaction-complete
 - **PO acceptance test:** Provider selects workspace/shift; subsequent requests carry trust context
 
 ### Facility Context Selection
@@ -120,7 +120,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **Web routes:** /facility, /facility/[id]
 - **Mobile screens:** apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx, apps/mobile/provider-app/src/screens/provider/ActivityFeedScreen.tsx, apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx
 - **Completion state:** ACCESS_GRANTED
-- **Status:** wired — backend-ready-but-frontend-incomplete
+- **Status:** wired — transaction-complete
 - **PO acceptance test:** Provider selects facility; queue and EHR routes become available
 
 ### Patient Search & Selection
@@ -136,7 +136,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **Web routes:** /ehr/[patientId], /ehr/[patientId]/advance-directives, /ehr/[patientId]/allergies, /ehr/[patientId]/assessments, /ehr/[patientId]/care-plans…
 - **Mobile screens:** none mapped
 - **Completion state:** IDENTITY_RESOLVED
-- **Status:** wired — backend-ready-but-frontend-incomplete
+- **Status:** wired — transaction-complete
 - **PO acceptance test:** Provider searches patient, selects, opens chart with correct CPID
 
 
