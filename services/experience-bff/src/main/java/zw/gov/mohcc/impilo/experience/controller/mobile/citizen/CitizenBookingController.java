@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile.citizen;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -14,6 +17,7 @@ import java.util.UUID;
  * Citizen booking transaction endpoints (distinct from confirmed appointments).
  * GET  /internal/v1/mobile/citizen/bookings
  * GET  /internal/v1/mobile/citizen/bookings/{id}
+ * POST /internal/v1/mobile/citizen/bookings
  * POST /internal/v1/mobile/citizen/bookings/{id}/cancel
  */
 @RestController
@@ -24,6 +28,39 @@ public class CitizenBookingController {
 
     public CitizenBookingController(BookingServiceClient bookingServiceClient) {
         this.bookingServiceClient = bookingServiceClient;
+    }
+
+    public record CreateBookingBody(
+            @NotBlank String facilityId,
+            @NotBlank String appointmentType,
+            @NotBlank String preferredDate,
+            String reason
+    ) {}
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> create(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId,
+            @Valid @RequestBody CreateBookingBody body) {
+
+        Map<String, Object> bookingData = new LinkedHashMap<>();
+        bookingData.put("facilityId", body.facilityId());
+        bookingData.put("appointmentType", body.appointmentType());
+        bookingData.put("bookingType", body.appointmentType());
+        bookingData.put("preferredDate", body.preferredDate());
+        bookingData.put("preferredStartTime", body.preferredDate());
+        bookingData.put("reason", body.reason());
+        bookingData.put("reasonForBooking", body.reason());
+
+        JsonNode result = bookingServiceClient.createCitizenBooking(actorId, bookingData);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", result);
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping

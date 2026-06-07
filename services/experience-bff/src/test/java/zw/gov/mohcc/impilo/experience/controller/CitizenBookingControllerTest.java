@@ -36,6 +36,21 @@ class CitizenBookingControllerTest {
     }
 
     @Test
+    void create_delegatesToBookingClient() {
+        BookingServiceClient bookingClient = mock(BookingServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode created = mapper.createObjectNode().put("id", "bk-new").put("bookingStatus", "REQUESTED");
+        when(bookingClient.createCitizenBooking(eq("actor-citizen-1"), any())).thenReturn(created);
+
+        CitizenBookingController controller = new CitizenBookingController(bookingClient);
+        var body = new CitizenBookingController.CreateBookingBody("fac-1", "GENERAL", "2026-06-10", "Check-up");
+        var response = controller.create("tenant", "pod", "req-1", "corr-1", "actor-citizen-1", body);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        verify(bookingClient).createCitizenBooking(eq("actor-citizen-1"), any());
+    }
+
+    @Test
     void cancel_delegatesToBookingClient() {
         BookingServiceClient bookingClient = mock(BookingServiceClient.class);
         ObjectMapper mapper = new ObjectMapper();

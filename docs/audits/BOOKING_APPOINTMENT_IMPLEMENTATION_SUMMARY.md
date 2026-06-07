@@ -22,7 +22,8 @@
 - `EXPECTED_ROUTE_COUNT`: 426
 
 ### Mobile
-- Citizen: `BookingsSection` + `bookingService.ts` (My Bookings vs Appointments)
+- Citizen: `BookingsSection` (book service wizard + Mvumo hint) vs `AppointmentsSection` (confirmed only)
+- Citizen: `bookingService.ts` + `facilityService.ts`; `CitizenBookingController` POST create
 - Provider: `BookingRequestsScreen` in Clinical Tools
 
 ## What was preserved

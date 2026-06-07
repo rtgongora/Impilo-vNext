@@ -50,3 +50,14 @@ export async function fetchBooking(id: string): Promise<CitizenBooking> {
 export async function cancelBooking(id: string, reason?: string): Promise<void> {
   await apiClient.post(`${V1}/${encodeURIComponent(id)}/cancel`, { reason });
 }
+
+/** Creates a booking REQUESTED transaction (not a confirmed appointment). */
+export async function createBookingRequest(params: {
+  facilityId: string;
+  appointmentType: string;
+  preferredDate: string;
+  reason?: string;
+}): Promise<CitizenBooking> {
+  const response = await apiClient.post<{ data: CitizenBooking }>(V1, params);
+  return response.data.data;
+}
