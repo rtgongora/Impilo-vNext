@@ -179,6 +179,22 @@ const DOCTRINE_OVERRIDES = new Map(
       },
     ],
     [
+      "booking-service",
+      {
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "workflow-orchestration",
+        frontend_wiring_status: "wired",
+      },
+    ],
+    [
+      "madi-service",
+      {
+        primary_plane: "clinical",
+        frontend_wiring_status: "wired",
+      },
+    ],
+    [
       "live-service",
       {
         primary_plane: "experience",
