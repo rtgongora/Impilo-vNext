@@ -648,9 +648,9 @@ function getWorkerSnapshotCards(args: {
         tone: args.queueInService > 0 ? "impilo" : "slate",
       },
       {
-        label: "Today's bookings",
+        label: "Today's appointments",
         value: String(args.appointmentsCount),
-        detail: "Planned arrivals and follow-ups that may convert into active encounters.",
+        detail: "Confirmed scheduled arrivals — pending booking requests are in Booking Requests.",
         tone: args.appointmentsCount > 0 ? "emerald" : "slate",
       },
       {
@@ -1949,7 +1949,8 @@ function CitizenHome({
               { href: "/home/profile", label: "Profile", icon: User, badge: null },
               { href: "/home/medications", label: "Medications", icon: Pill, badge: null },
               { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
-              { href: "/scheduling", label: "Appointments", icon: Calendar, badge: null },
+              { href: "/home/bookings", label: "My Bookings", icon: Calendar, badge: null },
+              { href: "/home/appointments", label: "My Appointments", icon: Calendar, badge: null },
               { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
             ].map((item) => {
               const Icon = item.icon;
@@ -2040,22 +2041,22 @@ function CitizenHome({
             </div>
           </Link>
 
-          {/* Upcoming — live appointments from BFF when the session can see them */}
+          {/* Upcoming appointments — confirmed scheduled events only */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming
+              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming appointments
             </h3>
             {citizenAppointmentsLoading && (
               <p className="text-xs text-gray-500">Loading appointments…</p>
             )}
             {!citizenAppointmentsLoading && citizenAppointmentsError && (
               <p className="text-xs text-gray-500 leading-relaxed">
-                Appointments could not be loaded. Open Scheduling to book or manage visits.
+                Appointments could not be loaded. Book a service or check My Bookings for pending requests.
               </p>
             )}
             {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length === 0 && (
               <p className="text-xs text-gray-500 leading-relaxed">
-                No upcoming visits in the scheduling feed for this account yet. Book or manage visits in Scheduling.
+                No confirmed appointments yet. Booking requests appear under My Bookings until confirmed.
               </p>
             )}
             {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length > 0 && (
@@ -2075,9 +2076,17 @@ function CitizenHome({
                 })}
               </ul>
             )}
-            <Link href="/scheduling" className="mt-3 block text-center text-xs font-medium text-impilo-600 hover:underline">
-              Open scheduling →
-            </Link>
+            <div className="mt-3 flex flex-col gap-1 text-center text-xs font-medium">
+              <Link href="/home/bookings/new" className="text-impilo-600 hover:underline">
+                Book a service →
+              </Link>
+              <Link href="/home/bookings" className="text-gray-500 hover:underline">
+                My Bookings (pending requests)
+              </Link>
+              <Link href="/home/appointments" className="text-gray-500 hover:underline">
+                My Appointments (confirmed)
+              </Link>
+            </div>
           </div>
 
           {/* Quick health actions */}

@@ -6,6 +6,108 @@ info:
 servers:
   - url: /internal/v1/mvumo
 paths:
+  /consent-requests:
+    post:
+      summary: Create a consent request (booking, telemedicine, referral, etc.)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConsentRequest'
+      responses:
+        '200':
+          description: Consent request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /consent-requests/{id}:
+    get:
+      summary: Get consent request by ID
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ConsentRequestIdPath'
+      responses:
+        '200':
+          description: Consent request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /consent-requests/{id}/grant:
+    post:
+      summary: Grant consent (gates booking confirmation when required)
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ConsentRequestIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Consent granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /consent-requests/{id}/refuse:
+    post:
+      summary: Refuse consent
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ConsentRequestIdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string }
+      responses:
+        '200':
+          description: Consent refused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
+
+  /consent-requests/{id}/withdraw:
+    post:
+      summary: Withdraw previously granted consent
+      parameters:
+        - $ref: '#/components/parameters/TenantIdHeader'
+        - $ref: '#/components/parameters/ActorIdHeader'
+        - $ref: '#/components/parameters/CorrelationIdHeader'
+        - $ref: '#/components/parameters/ConsentRequestIdPath'
+      responses:
+        '200':
+          description: Consent withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
+
   /evaluate:
     post:
       summary: Evaluate consent decision through TSHEPO consent
@@ -215,6 +317,13 @@ components:
       schema:
         type: string
         format: uuid
+    ConsentRequestIdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     BadRequest:
       description: Validation or trust-context error
@@ -289,4 +398,33 @@ components:
           properties:
             code: { type: string }
             message: { type: string }
+        requestId: { type: string }
+    CreateConsentRequest:
+      type: object
+      required: [subjectPatientRef, consentType]
+      properties:
+        subjectPatientRef: { type: string }
+        consentType: { type: string, description: "CONSENT | AGREEMENT | AUTHORISATION | ACKNOWLEDGEMENT" }
+        templateId: { type: string, format: uuid }
+        workflowRef: { type: string, description: "e.g. booking:{uuid}" }
+        encounterRef: { type: string }
+        context: { type: object, additionalProperties: true }
+    ConsentRequestView:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        state: { type: string }
+        subjectPatientRef: { type: string }
+        consentType: { type: string }
+        workflowRef: { type: string }
+        tshepoConsentId: { type: string }
+        refusedReason: { type: string }
+        expiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    ApiEnvelopeConsentRequest:
+      type: object
+      properties:
+        success: { type: boolean }
+        data:
+          $ref: '#/components/schemas/ConsentRequestView'
         requestId: { type: string }

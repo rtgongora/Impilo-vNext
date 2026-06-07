@@ -241,6 +241,50 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: booking-service
+    maven_module: booking-service
+    primary_plane: experience
+    plane: experience
+    domain: workflow-orchestration
+    secondary_planes: []
+    sovereign: true
+    sovereign_group: BOOKING
+    primary_protocol: rest
+    default_http_port: 8265
+    product_names:
+      - Booking
+      - Appointments
+    owner_team: TBD
+    system_of_record_for:
+      - booking transaction container
+      - appointment scheduled events
+      - booking-to-appointment conversion lifecycle
+    consumes_from:
+      - tshepo-authz-service
+      - varapi-service
+      - tuso-service
+      - mvumo-service
+      - mushex-service
+      - costing-engine-service
+      - pct-service
+      - oros-service
+      - nhume-service
+      - learning-service
+      - community-service
+      - coverage-service
+    exposes_to:
+      - experience-bff
+      - web-mobile-experience
+    forbidden_responsibilities:
+      - must-not-act-as-facility-registry-source-of-record
+      - must-not-act-as-identity-source-of-record
+      - must-not-duplicate-clinical-encounter-truth
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: campaigns-service
     maven_module: campaigns-service
     primary_plane: data

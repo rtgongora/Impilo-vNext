@@ -114,6 +114,8 @@ public class ServiceClientConfig {
             String workforceGovernanceBaseUrl,
             /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
             String schedulingServiceBaseUrl,
+            /** booking-service — sovereign Booking + Appointment aggregates (port 8265) */
+            String bookingBaseUrl,
             /** msika-apps-service — Health OS Capability Marketplace (Msika Apps). */
             String msikaAppsBaseUrl,
             /** Ndila — geospatial intelligence, routing, tiles (port 8155). */
@@ -184,6 +186,7 @@ public class ServiceClientConfig {
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8125";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
+            if (bookingBaseUrl == null) bookingBaseUrl = "http://localhost:8265";
             if (msikaAppsBaseUrl == null) msikaAppsBaseUrl = "http://localhost:8181";
             if (ndilaBaseUrl == null) ndilaBaseUrl = "http://localhost:8155";
             if (nhumeBaseUrl == null) nhumeBaseUrl = "http://localhost:8210";
@@ -202,7 +205,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null
+                null, null, null, null, null
         );
     }
 
@@ -222,7 +225,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
     }
 

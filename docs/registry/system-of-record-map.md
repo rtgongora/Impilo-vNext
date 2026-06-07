@@ -6,6 +6,7 @@
 | `analytics-pipeline-service` | integration | Analytics Pipeline canonical records |
 | `asset-registry-service` | integration | Asset Registry canonical records |
 | `audit-ledger-service` | integration | Audit Ledger canonical records |
+| `booking-service` | experience | booking transaction container, appointment scheduled events, booking-to-appointment conversion lifecycle, Mvumo-gated booking orchestration links |
 | `butano-fhir` | clinical | Butano Fhir canonical records |
 | `butano-service` | clinical | Butano canonical records |
 | `campaigns-service` | data | public-health campaign definitions, campaign outreach plans and schedules, campaign execution state and coverage metrics |

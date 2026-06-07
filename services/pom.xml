@@ -90,6 +90,7 @@
         <module>msika-apps-service</module>
         <!-- BUTANO — Shared Health Record (HAPI FHIR JPA) -->
         <module>butano-service</module>
+        <module>booking-service</module>
         <!-- BUTANO FHIR — FHIR Resource Access & Orchestration -->
         <module>butano-fhir</module>
         <!-- Search Service — Enterprise Search -->

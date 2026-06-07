@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Screen, Header } from "@impilo/mobile-design-system";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
+import { BookingsSection } from "./BookingsSection";
 import { PrescriptionsSection } from "./PrescriptionsSection";
 import { ResultsSection } from "./ResultsSection";
 import { CoverageSection } from "./CoverageSection";
@@ -49,6 +50,7 @@ type PersonalTab =
   | "referrals"
   | "discover-providers"
   | "care-plans"
+  | "bookings"
   | "appointments"
   | "prescriptions"
   | "results"
@@ -91,6 +93,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "referrals", label: "Referrals", icon: "people" },
   { id: "discover-providers", label: "Find Provider", icon: "search" },
   { id: "care-plans", label: "Care Plans", icon: "clipboard" },
+  { id: "bookings", label: "My Bookings", icon: "document-text" },
   { id: "appointments", label: "Appointments", icon: "calendar" },
   { id: "prescriptions", label: "Prescriptions", icon: "receipt" },
   { id: "results", label: "Results", icon: "flask" },
@@ -132,6 +135,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   referrals: ReferralsSection,
   "discover-providers": ProviderDiscoveryScreen,
   "care-plans": CarePlansSection,
+  bookings: BookingsSection,
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,
   results: ResultsSection,

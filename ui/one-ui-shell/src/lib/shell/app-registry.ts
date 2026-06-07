@@ -496,6 +496,38 @@ export const SHELL_COMMANDS: ShellCommand[] = [
     requiredRole: "CLINICAL",
   },
   {
+    id: "cmd-book-service",
+    label: "Book a service",
+    keywords: ["book", "booking", "request visit", "self book", "citizen booking"],
+    action: { type: "navigate", href: "/home/bookings/new" },
+  },
+  {
+    id: "cmd-my-bookings",
+    label: "My Bookings",
+    keywords: ["bookings", "pending booking", "booking status", "mvumo"],
+    action: { type: "navigate", href: "/home/bookings" },
+  },
+  {
+    id: "cmd-my-appointments",
+    label: "My Appointments",
+    keywords: ["appointments", "confirmed visit", "scheduled visit", "check in"],
+    action: { type: "navigate", href: "/home/appointments" },
+  },
+  {
+    id: "cmd-booking-requests",
+    label: "Booking requests inbox",
+    keywords: ["booking requests", "triage", "approve booking", "convert booking"],
+    action: { type: "navigate", href: "/scheduling/booking-requests" },
+    requiredRole: "CLINICAL",
+  },
+  {
+    id: "cmd-today-appointments",
+    label: "Today's appointments",
+    keywords: ["today", "appointments today", "daily schedule"],
+    action: { type: "navigate", href: "/scheduling/today" },
+    requiredRole: "CLINICAL",
+  },
+  {
     id: "cmd-pharmacy",
     label: "Pharmacy",
     keywords: ["pharmacy", "dispensing", "prescriptions", "rx"],

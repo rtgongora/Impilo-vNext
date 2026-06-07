@@ -180,6 +180,8 @@ const ZONES: SidebarZone[] = [
         { href: "/home/profile", label: "Profile", icon: User },
         { href: "/home/preferences", label: "Preferences", icon: Heart },
         { href: "/home/medications", label: "Medications", icon: Pill },
+        { href: "/home/bookings", label: "My Bookings", icon: Calendar },
+        { href: "/home/appointments", label: "My Appointments", icon: Calendar },
         { href: "/home/documents", label: "Documents", icon: FileText },
         { href: "/shell/file-manager", label: "File manager", icon: FolderOpen },
         { href: "/shell/task-manager", label: "Task manager", icon: Layers },

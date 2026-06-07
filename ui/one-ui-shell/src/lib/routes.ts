@@ -135,6 +135,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/conditions", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Conditions", navLabel: "Conditions", navZone: "life" },
   { path: "/home/allergies", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Allergies", navLabel: "Allergies", navZone: "life" },
   { path: "/home/results", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Results", navLabel: "Results", navZone: "life" },
+  { path: "/home/bookings", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Bookings", navLabel: "My Bookings", navZone: "life" },
+  { path: "/home/bookings/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Book a Service", navLabel: "Book a Service", navZone: "life" },
+  { path: "/home/bookings/[bookingId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Booking Details", navLabel: "Booking", navZone: "life" },
+  { path: "/home/appointments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Appointments", navLabel: "My Appointments", navZone: "life" },
+  { path: "/home/appointments/[appointmentId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Appointment Details", navLabel: "Appointment", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
   { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
@@ -163,6 +168,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/roster", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Staff Roster", navLabel: "Roster", navZone: "work" },
   { path: "/scheduling/on-call", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "On-Call Schedule", navLabel: "On-Call", navZone: "work" },
   { path: "/scheduling/noticeboard", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Provider Noticeboard", navLabel: "Noticeboard", navZone: "work" },
+  { path: "/scheduling/booking-requests", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Requests", navLabel: "Booking Requests", navZone: "work" },
+  { path: "/scheduling/today", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Today's Appointments", navLabel: "Today", navZone: "work" },
+  { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Hub", navLabel: "Communication", navZone: "work" },
@@ -613,7 +621,7 @@ export const ROUTES: RouteDefinition[] = [
 // Combined with upstream additions on this branch the canonical total is 370.
 // GAP-010 post-merge (2026-05-28): registered 21 shadow routes (social, wallet, communication hub,
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
-export const EXPECTED_ROUTE_COUNT = 418;
+export const EXPECTED_ROUTE_COUNT = 426;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

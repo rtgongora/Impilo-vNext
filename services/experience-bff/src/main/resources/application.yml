@@ -168,6 +168,7 @@ impilo:
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
     scheduling-service-base-url: ${SCHEDULING_SERVICE_BASE_URL:http://localhost:8128}
+    booking-base-url: ${BOOKING_BASE_URL:http://localhost:8265}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}

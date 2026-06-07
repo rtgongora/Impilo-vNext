@@ -23,6 +23,7 @@ import { PharmacyHubScreen } from "./PharmacyHubScreen";
 import { LabHubScreen } from "./LabHubScreen";
 import { MarketplaceOpsScreen } from "./MarketplaceOpsScreen";
 import { ScheduleScreen } from "./ScheduleScreen";
+import { BookingRequestsScreen } from "./BookingRequestsScreen";
 import { AdminRegistryHubScreen } from "./AdminRegistryHubScreen";
 import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
 import { DeveloperHubScreen } from "./DeveloperHubScreen";
@@ -55,6 +56,7 @@ type ToolTab =
   | "reports"
   | "finance"
   | "schedule"
+  | "booking_requests"
   | "pharmacy"
   | "lab"
   | "marketplace"
@@ -80,6 +82,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "reports", label: "Reports" },
   { id: "finance", label: "Finance" }, { id: "billing", label: "Billing" }, { id: "pacs", label: "PACS" },
   { id: "schedule", label: "Schedule" },
+  { id: "booking_requests", label: "Bookings" },
   { id: "pharmacy", label: "Pharmacy" },
   { id: "lab", label: "Lab" },
   { id: "marketplace", label: "Market Ops" },
@@ -140,6 +143,7 @@ export function ClinicalToolsScreen() {
         {tab === "billing" && <BillingScreen />}
         {tab === "pacs" && <PACSViewerScreen />}
         {tab === "schedule" && <ScheduleScreen />}
+        {tab === "booking_requests" && <BookingRequestsScreen />}
         {tab === "pharmacy" && <PharmacyHubScreen />}
         {tab === "lab" && <LabHubScreen />}
         {tab === "marketplace" && <MarketplaceOpsScreen />}
