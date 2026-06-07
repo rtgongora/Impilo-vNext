@@ -38,6 +38,7 @@ import { MadiOrdersScreen } from "../madi/MadiOrdersScreen";
 import { MadiTransfusionScreen } from "../madi/MadiTransfusionScreen";
 import { MadiDriveCaptureScreen } from "../madi/MadiDriveCaptureScreen";
 import { MadiReactionReportScreen } from "../madi/MadiReactionReportScreen";
+import { ProviderLiveHubScreen } from "../live/ProviderLiveHubScreen";
 import { TriageScreen } from "./TriageScreen";
 import { BillingScreen } from "./BillingScreen";
 import { PACSViewerScreen } from "./PACSViewerScreen";
@@ -81,7 +82,8 @@ type ToolTab =
   | "madi_orders"
   | "madi_transfusion"
   | "madi_drives"
-  | "madi_reactions";
+  | "madi_reactions"
+  | "impilo_live";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -97,6 +99,7 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "madi_transfusion", label: "Transfusion" },
   { id: "madi_drives", label: "Blood Drives" },
   { id: "madi_reactions", label: "Haemovig." },
+  { id: "impilo_live", label: "Impilo Live" },
   { id: "marketplace", label: "Market Ops" },
   { id: "admin", label: "Admin" },
   { id: "ops_reports", label: "Ops+" },
@@ -162,6 +165,7 @@ export function ClinicalToolsScreen() {
         {tab === "madi_transfusion" && <MadiTransfusionScreen />}
         {tab === "madi_drives" && <MadiDriveCaptureScreen />}
         {tab === "madi_reactions" && <MadiReactionReportScreen />}
+        {tab === "impilo_live" && <ProviderLiveHubScreen />}
         {tab === "marketplace" && <MarketplaceOpsScreen />}
         {tab === "admin" && <AdminRegistryHubScreen />}
         {tab === "ops_reports" && <OpsReportsHubScreen />}
