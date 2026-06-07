@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.companion.context.RequestContext;
 import zw.gov.mohcc.impilo.companion.context.RequestContextHolder;
 import zw.gov.mohcc.impilo.learning.core.LearningV11NativeService;
+import zw.gov.mohcc.impilo.learning.fundo.FundoLiveCompletionService;
 
 @RestController
 @RequestMapping("/internal/v1/learning/v11")
@@ -24,9 +25,12 @@ public class FundoStudioController {
     private static final UUID DEFAULT_TENANT = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     private final LearningV11NativeService service;
+    private final FundoLiveCompletionService liveCompletionService;
 
-    public FundoStudioController(LearningV11NativeService service) {
+    public FundoStudioController(LearningV11NativeService service,
+                                 FundoLiveCompletionService liveCompletionService) {
         this.service = service;
+        this.liveCompletionService = liveCompletionService;
     }
 
     @GetMapping("/studio/dashboard")
@@ -146,6 +150,11 @@ public class FundoStudioController {
     @GetMapping("/sessions")
     public ResponseEntity<Map<String, Object>> listSessions(@RequestParam(defaultValue = "50") int limit) {
         return ok(service.listScheduledSessions(tenantId(), limit));
+    }
+
+    @PostMapping("/sessions/live-completion")
+    public ResponseEntity<Map<String, Object>> recordLiveCompletion(@RequestBody Map<String, Object> body) {
+        return ok(liveCompletionService.recordLiveCompletion(tenantId(), body));
     }
 
     private ResponseEntity<Map<String, Object>> ok(Object data) {

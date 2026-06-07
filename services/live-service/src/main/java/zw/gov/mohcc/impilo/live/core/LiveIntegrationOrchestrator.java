@@ -76,7 +76,14 @@ public class LiveIntegrationOrchestrator {
         body.put("source", "IMPILO_LIVE");
         body.put("liveEventId", event.getId().toString());
         body.put("cpdPoints", event.getCpdPoints());
-        fundoClient.recordLiveCompletion(ctx, body);
+        Map<String, Object> result = fundoClient.recordLiveCompletion(ctx, body);
+        if (result.isEmpty()) {
+            log.warn("Fundo live-completion returned empty for event={} participant={}",
+                    event.getId(), participantId);
+        } else {
+            log.info("Fundo live-completion synced event={} enrolment={} certificateIssued={}",
+                    event.getId(), result.get("enrolmentId"), result.get("certificateIssued"));
+        }
     }
 
     public Map<String, Object> resolveMadiDrive(LiveEventEntity event) {

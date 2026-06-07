@@ -45,8 +45,10 @@ jobs-service		services/jobs-service	optional_full_boot
 knowledge-admin		ui/knowledge-admin	optional_full_boot
 landela-adapter-service		services/landela-adapter-service	optional_full_boot
 learning-service		services/learning-service	optional_full_boot
+live-service		services/live-service	optional_full_boot
 llm-orchestration-service		services/llm-orchestration-service	optional_full_boot
 madi-service		services/madi-service	optional_full_boot
+msika-apps-service		services/msika-apps-service	optional_full_boot
 msika-flow-ops		ui/msika-flow-ops	optional_full_boot
 msika-flow-portal		ui/msika-flow-portal	optional_full_boot
 msika-flow-service		services/msika-flow-service	optional_full_boot
@@ -83,6 +85,7 @@ procurement-service		services/procurement-service	optional_full_boot
 product-registry-service		services/product-registry-service	optional_full_boot
 referral-service		services/referral-service	optional_full_boot
 reporting-service		services/reporting-service	optional_full_boot
+rtc-gateway-service		services/rtc-gateway-service	optional_full_boot
 rules-service		services/rules-service	optional_full_boot
 scheduling-service		services/scheduling-service	optional_full_boot
 schema-registry-service		services/schema-registry-service	optional_full_boot

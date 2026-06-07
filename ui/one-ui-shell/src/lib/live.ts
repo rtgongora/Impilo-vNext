@@ -17,6 +17,8 @@ export type LiveEventStatus =
   | "SCHEDULED"
   | "LIVE"
   | "ENDED"
+  | "PROCESSING_REPLAY"
+  | "PUBLISHED_REPLAY"
   | "CANCELLED"
   | string;
 
@@ -67,6 +69,32 @@ export interface LiveRoomSession {
   startedAt?: string;
   endedAt?: string;
   recordingRef?: string;
+  playbackUrlRef?: string;
+}
+
+export interface LiveReplayInfo {
+  eventId: string;
+  status: LiveEventStatus;
+  replayAllowed: boolean;
+  recordingAllowed: boolean;
+  sessionId?: string;
+  recordingRef?: string | null;
+  playbackUrl?: string | null;
+  providerType?: string;
+  replayRoomUrl?: string;
+  replayAccessToken?: string;
+}
+
+export interface LiveMediaHealth {
+  providerType: string;
+  productionReady: boolean;
+  eventStatus: LiveEventStatus;
+  recordingAllowed: boolean;
+  replayAllowed: boolean;
+  healthStatus?: string;
+  mediaHealth?: string;
+  mediaHealthy?: boolean;
+  mediaNote?: string;
 }
 
 export interface LiveQuestion {
@@ -347,6 +375,18 @@ export const liveApi = {
 
   startRecording: async (eventId: string) =>
     unwrapLiveData<LiveRoomSession>(await apiClient.post(`${BASE}/room/${eventId}/record`, {})),
+
+  getMediaHealth: async (eventId: string) =>
+    unwrapLiveData<LiveMediaHealth>(await apiClient.get(`${BASE}/room/${eventId}/media-health`)),
+
+  getReplay: async (eventId: string) =>
+    unwrapLiveData<LiveReplayInfo>(await apiClient.get(`${BASE}/room/${eventId}/replay`)),
+
+  processReplay: async (eventId: string) =>
+    unwrapLiveData<LiveReplayInfo>(await apiClient.post(`${BASE}/room/${eventId}/process-replay`, {})),
+
+  publishReplay: async (eventId: string) =>
+    unwrapLiveData<LiveReplayInfo>(await apiClient.post(`${BASE}/room/${eventId}/publish-replay`, {})),
 
   // Interactions
   submitQuestion: async (eventId: string, body: LiveQuestionPayload) =>

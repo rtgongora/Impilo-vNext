@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-07T05:16:14.195Z",
+  "generated_at": "2026-06-07T06:23:09.910Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -646,6 +646,20 @@
       "classification_confidence": "certain"
     },
     {
+      "id": "live-service",
+      "path": "services/live-service",
+      "component_name": "live-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
       "id": "llm-orchestration-service",
       "path": "services/llm-orchestration-service",
       "component_name": "llm-orchestration-service",
@@ -665,6 +679,20 @@
       "component_name": "madi-service",
       "type": "backend_service",
       "plane": "clinical",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "msika-apps-service",
+      "path": "services/msika-apps-service",
+      "component_name": "msika-apps-service",
+      "type": "backend_service",
+      "plane": "enterprise",
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,
@@ -1169,6 +1197,20 @@
       "component_name": "reporting-service",
       "type": "backend_service",
       "plane": "data",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain"
+    },
+    {
+      "id": "rtc-gateway-service",
+      "path": "services/rtc-gateway-service",
+      "component_name": "rtc-gateway-service",
+      "type": "backend_service",
+      "plane": "integration",
       "classification": "optional_full_boot",
       "build_required": true,
       "image_required": false,

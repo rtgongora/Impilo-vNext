@@ -116,6 +116,14 @@ public class RtcGatewayMediaProvider implements LiveMediaProvider {
         log.info("Recording stopped roomId={} ref={}", roomId, recordingRef);
     }
 
+    @Override
+    public String getPlaybackUrl(String roomId, String recordingRef) {
+        if (recordingRef == null || recordingRef.isBlank()) {
+            return null;
+        }
+        return "replay://" + roomId + "/" + recordingRef;
+    }
+
     private static String str(Map<String, Object> map, String key, String fallback) {
         Object v = map.get(key);
         return v != null ? v.toString() : fallback;

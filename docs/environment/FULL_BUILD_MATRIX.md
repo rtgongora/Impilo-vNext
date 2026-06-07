@@ -8,7 +8,7 @@
 | analytics-pipeline-service | integration | services/analytics-pipeline-service | maven | cd services/analytics-pipeline-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | asset-registry-service | integration | services/asset-registry-service | maven | cd services/asset-registry-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | audit-ledger-service | integration | services/audit-ledger-service | maven | cd services/audit-ledger-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
-| booking-service | integration | services/booking-service | maven | cd services/booking-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| booking-service | experience | services/booking-service | maven | cd services/booking-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | butano-fhir | clinical | services/butano-fhir | maven | cd services/butano-fhir && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | butano-service | clinical | services/butano-service | maven | cd services/butano-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | butano-web | experience | ui/butano-web | npm | cd ui/butano-web && npm run build | jar\|dist | not_run | — | — |
@@ -55,7 +55,7 @@
 | learning-service | experience | services/learning-service | maven | cd services/learning-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | live-service | experience | services/live-service | maven | cd services/live-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | llm-orchestration-service | integration | services/llm-orchestration-service | maven | cd services/llm-orchestration-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
-| madi-service | integration | services/madi-service | maven | cd services/madi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
+| madi-service | clinical | services/madi-service | maven | cd services/madi-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-apps-service | enterprise | services/msika-apps-service | maven | cd services/msika-apps-service && ./mvnw -q package -DskipTests | jar\|dist | not_run | — | — |
 | msika-flow-ops | experience | ui/msika-flow-ops | npm | cd ui/msika-flow-ops && npm run build | jar\|dist | not_run | — | — |
 | msika-flow-portal | experience | ui/msika-flow-portal | npm | cd ui/msika-flow-portal && npm run build | jar\|dist | not_run | — | — |

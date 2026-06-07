@@ -7,7 +7,7 @@
 | asset-registry-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | audit-ledger-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | banking-rails | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| booking-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| booking-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | butano-fhir | clinical | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
 | butano-service | clinical | yes | chart_in_helm/ | required | partially_deployable | — | add subchart or impilo-vnext template |
 | butano-web | experience | yes | chart_in_helm/ | optional | partially_deployable | — | add subchart or impilo-vnext template |
@@ -64,7 +64,7 @@
 | lims | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | live-service | experience | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | llm-orchestration-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
-| madi-service | integration | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
+| madi-service | clinical | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | minio | integration | no | none | required | not_deployable | no chart | add subchart or impilo-vnext template |
 | mosip | trust_governance | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |
 | msika-apps-service | enterprise | no | none | optional | not_deployable | no chart | add subchart or impilo-vnext template |

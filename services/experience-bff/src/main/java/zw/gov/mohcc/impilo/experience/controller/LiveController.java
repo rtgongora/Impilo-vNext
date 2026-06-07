@@ -178,6 +178,38 @@ public class LiveController {
         return proxy(() -> client.recordRoom(eventId), requestId, correlationId, false);
     }
 
+    @GetMapping("/room/{eventId}/media-health")
+    public ResponseEntity<Map<String, Object>> mediaHealth(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.mediaHealth(eventId), requestId, correlationId, false);
+    }
+
+    @GetMapping("/room/{eventId}/replay")
+    public ResponseEntity<Map<String, Object>> getReplay(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.getReplay(eventId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/room/{eventId}/process-replay")
+    public ResponseEntity<Map<String, Object>> processReplay(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.processReplay(eventId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/room/{eventId}/publish-replay")
+    public ResponseEntity<Map<String, Object>> publishReplay(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.publishReplay(eventId), requestId, correlationId, false);
+    }
+
     // ── Interactions ─────────────────────────────────────────────────
 
     @PostMapping("/interactions/{eventId}/questions")
@@ -266,6 +298,23 @@ public class LiveController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         return proxy(() -> client.submitFeedback(eventId, body), requestId, correlationId, true);
+    }
+
+    @GetMapping("/interactions/{eventId}/resources")
+    public ResponseEntity<Map<String, Object>> listResources(
+            @PathVariable String eventId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.listResources(eventId), requestId, correlationId, false);
+    }
+
+    @PostMapping("/interactions/{eventId}/resources")
+    public ResponseEntity<Map<String, Object>> addResource(
+            @PathVariable String eventId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return proxy(() -> client.addResource(eventId, body), requestId, correlationId, true);
     }
 
     // ── Moderation ───────────────────────────────────────────────────

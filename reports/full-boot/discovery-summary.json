@@ -1,16 +1,16 @@
 {
-  "total": 143,
+  "total": 146,
   "by_plane": {
     "trust": 12,
     "registry": 7,
     "clinical": 19,
     "data": 12,
-    "integration": 45,
-    "experience": 30,
-    "enterprise": 15
+    "integration": 46,
+    "experience": 31,
+    "enterprise": 16
   },
   "by_classification": {
-    "optional_full_boot": 99,
+    "optional_full_boot": 102,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
@@ -18,7 +18,7 @@
   },
   "image_strategy": {
     "dockerfile": 1,
-    "shared-dockerfile-template": 67,
+    "shared-dockerfile-template": 70,
     "jib": 20,
     "buildpacks": 23,
     "official-upstream-image": 0,
@@ -32,7 +32,7 @@
   },
   "runtime_image_required_count": 22,
   "dockerfile_count": 1,
-  "shared_template_count": 67,
+  "shared_template_count": 70,
   "jib_count": 20,
   "buildpacks_count": 23,
   "official_image_count": 0,

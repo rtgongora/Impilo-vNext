@@ -37,6 +37,19 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 19 | MADI — transfusion `/madi/transfusion` | | |
 | 20 | MADI — haemovigilance `/madi/haemovigilance` | | |
 | 21 | MADI — central bank `/madi/central-bank` | | National/regional view |
+| 22 | Impilo Live hub `/live` loads (discover, replays, saved) | | My Life / Work nav |
+| 23 | Impilo Live — professional CPD webinar journey | | `/live/discover` → register → room → attendance → CPD cert |
+| 24 | Impilo Live — citizen health talk + Madi donor pathway | | `/live/discover` (CITIZEN) → Madi drive link → replay |
+| 25 | Impilo Live — organiser manage + analytics | | `/live/manage` → moderation → `/live/event/{id}/analytics` |
+| 26 | Impilo Live — resources tab in live room | | Host adds resource; attendees see list (no 404 on `/resources`) |
+| 27 | Impilo Live — replay after event ends | | Status `PUBLISHED_REPLAY`; replay page tracks watch minutes |
+
+## Impilo Live smoke notes
+
+- Seed events: CPD webinar (PROFESSIONAL), citizen health talk, Madi-linked donor drive (see `live-service` `V002__live_seed.sql`).
+- Media health: `GET /internal/v1/live/room/{eventId}/media-health` — `productionReady: false` in dev (`LOCAL_DEV` provider).
+- Fundo CPD bridge: attendance certificate flow posts to `learning-service` `/internal/v1/learning/v11/sessions/live-completion`.
+- Preview deploy required before browser verification; confirm commit via `/health/version`.
 
 ## Error Capture
 

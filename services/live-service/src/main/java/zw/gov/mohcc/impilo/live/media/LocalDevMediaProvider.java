@@ -74,4 +74,9 @@ public class LocalDevMediaProvider implements LiveMediaProvider {
     public void stopRecording(String roomId, String recordingRef) {
         // no-op for local dev
     }
+
+    @Override
+    public String getPlaybackUrl(String roomId, String recordingRef) {
+        return "dev-replay://localhost/live/" + roomId + "/" + recordingRef;
+    }
 }

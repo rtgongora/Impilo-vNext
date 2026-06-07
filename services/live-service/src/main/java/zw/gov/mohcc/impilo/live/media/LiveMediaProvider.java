@@ -20,4 +20,6 @@ public interface LiveMediaProvider {
     String startRecording(String roomId);
 
     void stopRecording(String roomId, String recordingRef);
+
+    String getPlaybackUrl(String roomId, String recordingRef);
 }

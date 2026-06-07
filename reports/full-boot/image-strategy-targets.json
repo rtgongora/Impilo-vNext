@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-07T05:16:14.195Z",
+  "generated_at": "2026-06-07T06:23:09.910Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -1052,6 +1052,27 @@
       "image_name": "impilo/learning-service"
     },
     {
+      "id": "live-service",
+      "path": "services/live-service",
+      "component_name": "live-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/live-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/live-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/live-service/Dockerfile OR build-runtime-image-from-jar.sh live-service",
+      "image_name": "impilo/live-service"
+    },
+    {
       "id": "llm-orchestration-service",
       "path": "services/llm-orchestration-service",
       "component_name": "llm-orchestration-service",
@@ -1113,6 +1134,27 @@
       "official_chart": "minio/minio",
       "image_build_command": "no local build \u2014 pull/chart deploy",
       "image_name": "minio/minio:latest"
+    },
+    {
+      "id": "msika-apps-service",
+      "path": "services/msika-apps-service",
+      "component_name": "msika-apps-service",
+      "type": "backend_service",
+      "plane": "enterprise",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/msika-apps-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/msika-apps-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/msika-apps-service/Dockerfile OR build-runtime-image-from-jar.sh msika-apps-service",
+      "image_name": "impilo/msika-apps-service"
     },
     {
       "id": "msika-flow-ops",
@@ -1932,6 +1974,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/reporting-service/Dockerfile OR build-runtime-image-from-jar.sh reporting-service",
       "image_name": "impilo/reporting-service"
+    },
+    {
+      "id": "rtc-gateway-service",
+      "path": "services/rtc-gateway-service",
+      "component_name": "rtc-gateway-service",
+      "type": "backend_service",
+      "plane": "integration",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/rtc-gateway-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/rtc-gateway-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/rtc-gateway-service/Dockerfile OR build-runtime-image-from-jar.sh rtc-gateway-service",
+      "image_name": "impilo/rtc-gateway-service"
     },
     {
       "id": "rules-service",

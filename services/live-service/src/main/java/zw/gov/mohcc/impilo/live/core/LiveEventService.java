@@ -115,6 +115,26 @@ public class LiveEventService {
         return saved;
     }
 
+    @Transactional
+    public LiveEventEntity beginReplayProcessing(UUID tenantId, UUID eventId, String updatedBy) {
+        LiveEventEntity event = get(tenantId, eventId);
+        stateMachine.transition(event, LiveEventStatus.PROCESSING_REPLAY, updatedBy);
+        event.setUpdatedAt(OffsetDateTime.now());
+        LiveEventEntity saved = eventRepository.save(event);
+        emitEvent(saved, "impilo.live.replay.processing.v1");
+        return saved;
+    }
+
+    @Transactional
+    public LiveEventEntity publishReplay(UUID tenantId, UUID eventId, String updatedBy) {
+        LiveEventEntity event = get(tenantId, eventId);
+        stateMachine.transition(event, LiveEventStatus.PUBLISHED_REPLAY, updatedBy);
+        event.setUpdatedAt(OffsetDateTime.now());
+        LiveEventEntity saved = eventRepository.save(event);
+        emitEvent(saved, "impilo.live.replay.published.v1");
+        return saved;
+    }
+
     @Transactional(readOnly = true)
     public List<LiveEventEntity> listByStatus(UUID tenantId, String status) {
         return eventRepository.findByTenantIdAndStatusOrderByStartTimeAsc(tenantId, status);

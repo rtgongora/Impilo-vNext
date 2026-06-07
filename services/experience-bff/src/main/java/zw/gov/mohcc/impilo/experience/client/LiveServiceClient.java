@@ -114,6 +114,22 @@ public class LiveServiceClient {
         return post(baseUrl + API + "/room/" + eventId + "/record", Map.of(), "recordRoom");
     }
 
+    public JsonNode mediaHealth(String eventId) {
+        return get(baseUrl + API + "/room/" + eventId + "/media-health", "mediaHealth");
+    }
+
+    public JsonNode getReplay(String eventId) {
+        return get(baseUrl + API + "/room/" + eventId + "/replay", "getReplay");
+    }
+
+    public JsonNode processReplay(String eventId) {
+        return post(baseUrl + API + "/room/" + eventId + "/process-replay", Map.of(), "processReplay");
+    }
+
+    public JsonNode publishReplay(String eventId) {
+        return post(baseUrl + API + "/room/" + eventId + "/publish-replay", Map.of(), "publishReplay");
+    }
+
     // ── Interactions ─────────────────────────────────────────────────
 
     public JsonNode submitQuestion(String eventId, Map<String, Object> body) {
@@ -157,6 +173,14 @@ public class LiveServiceClient {
 
     public JsonNode submitFeedback(String eventId, Map<String, Object> body) {
         return post(baseUrl + API + "/interactions/" + eventId + "/feedback", body, "submitFeedback");
+    }
+
+    public JsonNode listResources(String eventId) {
+        return get(baseUrl + API + "/interactions/" + eventId + "/resources", "listResources");
+    }
+
+    public JsonNode addResource(String eventId, Map<String, Object> body) {
+        return post(baseUrl + API + "/interactions/" + eventId + "/resources", body, "addResource");
     }
 
     // ── Moderation ───────────────────────────────────────────────────

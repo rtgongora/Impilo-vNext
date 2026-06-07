@@ -176,6 +176,7 @@ services/landela-adapter-service/Dockerfile
 services/landela-adapter-service/pom.xml
 services/learning-service/Dockerfile
 services/learning-service/pom.xml
+services/live-service/Dockerfile
 services/live-service/pom.xml
 services/llm-orchestration-service/Dockerfile
 services/llm-orchestration-service/pom.xml

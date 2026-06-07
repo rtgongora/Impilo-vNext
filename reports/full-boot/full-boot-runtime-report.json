@@ -1,10 +1,10 @@
 {
-  "total_discovered": 143,
+  "total_discovered": 146,
   "by_plane": {
     "data": 12,
-    "integration": 45,
-    "enterprise": 15,
-    "experience": 30,
+    "integration": 46,
+    "enterprise": 16,
+    "experience": 31,
     "clinical": 19,
     "registry_spine": 1,
     "trust": 12,
@@ -12,14 +12,14 @@
     "registry": 7
   },
   "by_classification": {
-    "optional_full_boot": 99,
+    "optional_full_boot": 102,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
     "deprecated_retired": 1
   },
   "by_image_strategy": {
-    "shared-dockerfile-template": 67,
+    "shared-dockerfile-template": 70,
     "not-required-generated-client": 9,
     "jib": 20,
     "buildpacks": 23,

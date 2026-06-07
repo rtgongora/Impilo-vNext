@@ -12,7 +12,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total discovered | 143 |
+| Total discovered | 146 |
 | Required full boot | 22 |
 | Image pass / fail | 86 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |

@@ -1,6 +1,6 @@
 # AUTO-GENERATED — do not edit by hand.
 # Regenerate: node scripts/full-boot/generate-full-preview-runtime-values.mjs
-# Microservices: 86 | enabled: 86 (all waves)
+# Microservices: 89 | enabled: 89 (all waves)
 fullBootServices:
   ai-model-registry-service:
     enabled: true
@@ -171,6 +171,10 @@ fullBootServices:
     enabled: true
     port: 8235
     database: learning
+  live-service:
+    enabled: true
+    port: 8380
+    database: live
   llm-orchestration-service:
     enabled: true
     port: 8265
@@ -179,6 +183,10 @@ fullBootServices:
     enabled: true
     port: 8300
     database: madi
+  msika-apps-service:
+    enabled: true
+    port: 8181
+    database: msika_apps
   msika-flow-service:
     enabled: true
     port: 8100
@@ -271,6 +279,10 @@ fullBootServices:
     enabled: true
     port: 8176
     database: reporting
+  rtc-gateway-service:
+    enabled: true
+    port: 8195
+    database: rtc_gateway
   rules-service:
     enabled: true
     port: 8241
@@ -412,9 +424,11 @@ postgres:
     - jobs
     - landela_adapter
     - learning
+    - live
     - llm_orchestration
     - madi
     - msika
+    - msika_apps
     - msika_flow
     - mushe_wallet
     - mushex
@@ -436,6 +450,7 @@ postgres:
     - product_registry
     - referral
     - reporting
+    - rtc_gateway
     - rules
     - scheduling
     - schema_registry

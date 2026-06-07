@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-07T05:59:48.581Z'
+  generated_at: '2026-06-07T06:23:13.531Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 146
@@ -212,13 +212,13 @@ classifications:
     run_not_applicable_reason: External or contract-only dependency
   - id: booking-service
     canonical_name: booking-service
-    plane: integration
-    domain: platform-ops
+    plane: experience
+    domain: workflow-orchestration
     component_type: backend_service
     full_boot_classification: optional_full_boot
     classification: optional_full_boot
     runtime_kind: kubernetes_service
-    deploy_order_group: platform_services
+    deploy_order_group: experience_layer
     build_required: true
     image_required: false
     runtime_image_required: false
@@ -2445,11 +2445,11 @@ classifications:
     image_strategy: shared-dockerfile-template
     image_strategy_reclass: shared-template-candidate
     image_strategy_status: valid
-    image_build_command: build-runtime-image-from-jar.sh live-service
+    image_build_command: docker build -f services/live-service/Dockerfile OR build-runtime-image-from-jar.sh live-service
     image_name: impilo/live-service
     official_image: null
     official_chart: null
-    dockerfile_path: null
+    dockerfile_path: services/live-service/Dockerfile
     shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
     jib_module: services/live-service
     buildpack_builder: null
@@ -2465,7 +2465,7 @@ classifications:
     default_http_port: 8380
     priority: P2
     blocker: null
-    reason: Java service — default shared JRE template after mvn install
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
@@ -2514,13 +2514,13 @@ classifications:
     run_not_applicable_reason: null
   - id: madi-service
     canonical_name: madi-service
-    plane: integration
+    plane: clinical
     domain: platform-ops
     component_type: backend_service
     full_boot_classification: optional_full_boot
     classification: optional_full_boot
     runtime_kind: kubernetes_service
-    deploy_order_group: platform_services
+    deploy_order_group: domain_services
     build_required: true
     image_required: false
     runtime_image_required: false

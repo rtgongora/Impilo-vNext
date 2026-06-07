@@ -9,7 +9,10 @@ import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventSessionEntity;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventSessionRepository;
 
+import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
+
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,15 +23,18 @@ public class LiveRoomService {
     private final AttendanceService attendanceService;
     private final LiveEventSessionRepository sessionRepository;
     private final LiveMediaProvider mediaProvider;
+    private final ReplayService replayService;
 
     public LiveRoomService(LiveEventService eventService,
                            AttendanceService attendanceService,
                            LiveEventSessionRepository sessionRepository,
-                           LiveMediaProvider mediaProvider) {
+                           LiveMediaProvider mediaProvider,
+                           ReplayService replayService) {
         this.eventService = eventService;
         this.attendanceService = attendanceService;
         this.sessionRepository = sessionRepository;
         this.mediaProvider = mediaProvider;
+        this.replayService = replayService;
     }
 
     @Transactional
@@ -90,7 +96,34 @@ public class LiveRoomService {
         if (session.getProviderRoomId() != null) {
             mediaProvider.endSession(session.getProviderRoomId());
         }
-        return sessionRepository.save(session);
+        LiveEventSessionEntity saved = sessionRepository.save(session);
+        replayService.onSessionEnd(tenantId, eventId, updatedBy, saved);
+        return saved;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> mediaHealth(UUID tenantId, UUID eventId) {
+        LiveEventEntity event = eventService.get(tenantId, eventId);
+        Map<String, Object> health = new LinkedHashMap<>();
+        health.put("providerType", mediaProvider.providerType());
+        health.put("productionReady", !"LOCAL_DEV".equals(mediaProvider.providerType()));
+        health.put("eventStatus", event.getStatus());
+        health.put("recordingAllowed", event.isRecordingAllowed());
+        health.put("replayAllowed", event.isReplayAllowed());
+        sessionRepository.findFirstByEventIdAndEndedAtIsNullOrderByCreatedAtDesc(eventId)
+                .or(() -> sessionRepository.findByEventIdOrderByCreatedAtDesc(eventId).stream().findFirst())
+                .ifPresentOrElse(session -> {
+                    health.put("sessionId", session.getId().toString());
+                    health.put("healthStatus", session.getHealthStatus());
+                    health.put("providerRoomId", session.getProviderRoomId());
+                    if (session.getProviderRoomId() != null) {
+                        var status = mediaProvider.checkHealth(session.getProviderRoomId());
+                        health.put("mediaHealth", status.status());
+                        health.put("mediaHealthy", status.healthy());
+                        health.put("mediaNote", status.message());
+                    }
+                }, () -> health.put("healthStatus", "NO_SESSION"));
+        return health;
     }
 
     @Transactional

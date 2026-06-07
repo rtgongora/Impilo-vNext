@@ -18,4 +18,10 @@ public interface LiveEventAttendanceRepository extends JpaRepository<LiveEventAt
     List<LiveEventAttendanceEntity> findByParticipantId(String participantId);
 
     long countByEventIdAndEligibleForCpdTrue(UUID eventId);
+
+    long countByEventIdAndReplayWatchMinutesGreaterThan(UUID eventId, int minutes);
+
+    long countByEventIdAndCompletionStatus(UUID eventId, String completionStatus);
+
+    long countByEventIdAndParticipantType(UUID eventId, String participantType);
 }

@@ -44,6 +44,8 @@ export const liveQueryKeys = {
   analytics: (eventId: string) => [...liveQueryKeys.all, "analytics", eventId] as const,
   roomToken: (eventId: string, participantId: string) =>
     [...liveQueryKeys.all, "room-token", eventId, participantId] as const,
+  replay: (eventId: string) => [...liveQueryKeys.all, "replay", eventId] as const,
+  mediaHealth: (eventId: string) => [...liveQueryKeys.all, "media-health", eventId] as const,
 };
 
 function invalidateLive(qc: ReturnType<typeof useQueryClient>) {
@@ -214,6 +216,49 @@ export function useLiveEndRoom() {
   return useMutation({
     mutationFn: (eventId: string) => liveApi.endRoom(eventId),
     onSuccess: (_data, eventId) => {
+      qc.invalidateQueries({ queryKey: liveQueryKeys.event(eventId) });
+      qc.invalidateQueries({ queryKey: liveQueryKeys.replay(eventId) });
+    },
+  });
+}
+
+export function useLiveReplay(eventId: string) {
+  return useQuery({
+    queryKey: liveQueryKeys.replay(eventId),
+    queryFn: () => liveApi.getReplay(eventId),
+    enabled: Boolean(eventId),
+    staleTime: 15_000,
+    refetchInterval: (query) =>
+      query.state.data?.status === "PROCESSING_REPLAY" ? 5_000 : false,
+  });
+}
+
+export function useLiveMediaHealth(eventId: string) {
+  return useQuery({
+    queryKey: liveQueryKeys.mediaHealth(eventId),
+    queryFn: () => liveApi.getMediaHealth(eventId),
+    enabled: Boolean(eventId),
+    staleTime: 30_000,
+  });
+}
+
+export function useLiveProcessReplay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) => liveApi.processReplay(eventId),
+    onSuccess: (_data, eventId) => {
+      qc.invalidateQueries({ queryKey: liveQueryKeys.replay(eventId) });
+      qc.invalidateQueries({ queryKey: liveQueryKeys.event(eventId) });
+    },
+  });
+}
+
+export function useLivePublishReplay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (eventId: string) => liveApi.publishReplay(eventId),
+    onSuccess: (_data, eventId) => {
+      qc.invalidateQueries({ queryKey: liveQueryKeys.replay(eventId) });
       qc.invalidateQueries({ queryKey: liveQueryKeys.event(eventId) });
     },
   });

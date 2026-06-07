@@ -99,6 +99,28 @@ public class LiveInteractionController {
         return interactionService.listPolls(tenantId, eventId);
     }
 
+    @GetMapping("/{eventId}/resources")
+    public List<LiveEventResourceEntity> listResources(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId) {
+        return interactionService.listResources(tenantId, eventId);
+    }
+
+    @PostMapping("/{eventId}/resources")
+    public ResponseEntity<LiveEventResourceEntity> addResource(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId,
+            @RequestBody java.util.Map<String, Object> body) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                interactionService.addResource(
+                        tenantId,
+                        eventId,
+                        String.valueOf(body.getOrDefault("title", "Resource")),
+                        String.valueOf(body.getOrDefault("resourceType", "DOCUMENT")),
+                        body.get("fileId") != null ? String.valueOf(body.get("fileId")) : null,
+                        body.get("visibility") != null ? String.valueOf(body.get("visibility")) : "ATTENDEES"));
+    }
+
     @PostMapping("/{eventId}/feedback")
     public ResponseEntity<LiveEventFeedbackEntity> submitFeedback(
             @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.live.api.dto.LiveDtos;
 import zw.gov.mohcc.impilo.live.core.LiveRoomService;
+import zw.gov.mohcc.impilo.live.core.ReplayService;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventSessionEntity;
 
 import java.util.LinkedHashMap;
@@ -17,9 +18,11 @@ import java.util.UUID;
 public class LiveRoomController {
 
     private final LiveRoomService roomService;
+    private final ReplayService replayService;
 
-    public LiveRoomController(LiveRoomService roomService) {
+    public LiveRoomController(LiveRoomService roomService, ReplayService replayService) {
         this.roomService = roomService;
+        this.replayService = replayService;
     }
 
     @PostMapping("/{eventId}/join")
@@ -70,6 +73,37 @@ public class LiveRoomController {
         return sessionMap(roomService.startRecording(tenantId, eventId));
     }
 
+    @GetMapping("/{eventId}/media-health")
+    public Map<String, Object> mediaHealth(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @PathVariable UUID eventId) {
+        return roomService.mediaHealth(tenantId, eventId);
+    }
+
+    @GetMapping("/{eventId}/replay")
+    public Map<String, Object> getReplay(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID eventId) {
+        return replayService.getReplay(tenantId, eventId, actorId != null ? actorId : "anonymous");
+    }
+
+    @PostMapping("/{eventId}/process-replay")
+    public Map<String, Object> processReplay(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID eventId) {
+        return replayService.processReplay(tenantId, eventId, actorId != null ? actorId : "system");
+    }
+
+    @PostMapping("/{eventId}/publish-replay")
+    public Map<String, Object> publishReplay(
+            @RequestHeader(CompanionHeaders.TENANT_ID) UUID tenantId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @PathVariable UUID eventId) {
+        return replayService.publishReplay(tenantId, eventId, actorId != null ? actorId : "system");
+    }
+
     private Map<String, Object> sessionMap(LiveEventSessionEntity session) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("sessionId", session.getId());
@@ -80,6 +114,7 @@ public class LiveRoomController {
         m.put("startedAt", session.getStartedAt());
         m.put("endedAt", session.getEndedAt());
         m.put("recordingRef", session.getRecordingRef());
+        m.put("playbackUrlRef", session.getPlaybackUrlRef());
         return m;
     }
 }

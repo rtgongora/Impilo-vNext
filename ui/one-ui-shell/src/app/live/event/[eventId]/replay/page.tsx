@@ -9,35 +9,23 @@ import { PageShell } from "@/components/PageShell";
 import { LiveKitConsultRoom, normalizeLiveKitServerUrl } from "@/components/telemedicine/LiveKitConsultRoom";
 import {
   useLiveEvent,
-  useLiveJoinRoom,
   useLiveParticipant,
-  useLiveRoomToken,
+  useLiveReplay,
   useLiveTrackMinutes,
 } from "@/hooks/queries/useLive";
 
 export default function LiveEventReplayPage() {
   const params = useParams();
   const eventId = params.eventId as string;
-  const { data: event, isLoading } = useLiveEvent(eventId);
-  const { participantId, participantType, role } = useLiveParticipant();
-  const joinRoom = useLiveJoinRoom();
+  const { data: event, isLoading: eventLoading } = useLiveEvent(eventId);
+  const { participantId } = useLiveParticipant();
+  const { data: replay, isLoading: replayLoading } = useLiveReplay(eventId);
   const trackMinutes = useLiveTrackMinutes();
-  const [joined, setJoined] = useState(false);
   const [watchStartedAt] = useState(() => Date.now());
-
-  const { data: roomToken, isLoading: tokenLoading } = useLiveRoomToken(eventId, joined);
-
-  useEffect(() => {
-    if (!eventId || !participantId || joined) return;
-    joinRoom.mutate(
-      { eventId, body: { participantId, participantType, role: "ATTENDEE" } },
-      { onSuccess: () => setJoined(true) },
-    );
-  }, [eventId, participantId, participantType, joined, joinRoom]);
 
   useEffect(() => {
     return () => {
-      if (!joined) return;
+      if (!replay || replay.status !== "PUBLISHED_REPLAY") return;
       const minutes = Math.max(1, Math.round((Date.now() - watchStartedAt) / 60_000));
       void trackMinutes.mutate({
         eventId,
@@ -46,9 +34,16 @@ export default function LiveEventReplayPage() {
         replayMinutes: minutes,
       });
     };
-  }, [joined, eventId, participantId, trackMinutes, watchStartedAt]);
+  }, [replay, eventId, participantId, trackMinutes, watchStartedAt]);
 
-  const replayUrl = roomToken?.roomUrl ? normalizeLiveKitServerUrl(roomToken.roomUrl) : "";
+  const isPublished = replay?.status === "PUBLISHED_REPLAY";
+  const isProcessing = replay?.status === "PROCESSING_REPLAY" || replay?.status === "ENDED";
+  const liveKitUrl = replay?.replayRoomUrl
+    ? normalizeLiveKitServerUrl(replay.replayRoomUrl)
+    : replay?.playbackUrl?.startsWith("ws")
+      ? normalizeLiveKitServerUrl(replay.playbackUrl)
+      : "";
+  const hasLiveKitReplay = Boolean(isPublished && liveKitUrl && replay?.replayAccessToken);
 
   return (
     <AppLayout>
@@ -63,23 +58,34 @@ export default function LiveEventReplayPage() {
           </Link>
         </div>
 
-        {isLoading || joinRoom.isPending || tokenLoading ? (
+        {eventLoading || replayLoading ? (
           <div className="flex items-center gap-2 py-12 text-sm text-gray-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             Preparing replay…
           </div>
-        ) : event?.status !== "ENDED" ? (
-          <p className="text-sm text-amber-700">
-            This session has not ended yet. Join the live room when broadcasting starts.
-          </p>
-        ) : roomToken ? (
+        ) : hasLiveKitReplay && replay?.replayAccessToken ? (
           <div className="rounded-2xl border border-gray-200 overflow-hidden min-h-[420px] bg-gray-950">
             <LiveKitConsultRoom
-              serverUrl={replayUrl}
-              token={roomToken.accessToken}
+              serverUrl={liveKitUrl}
+              token={replay.replayAccessToken}
               videoEnabled
             />
           </div>
+        ) : isPublished && replay?.playbackUrl ? (
+          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-6">
+            <p className="text-sm font-medium text-violet-900">Replay is ready</p>
+            <p className="mt-2 text-sm text-violet-800">
+              Playback reference: <code className="text-xs">{replay.playbackUrl}</code>
+            </p>
+            <p className="mt-3 text-xs text-violet-700">
+              Replay watch minutes are tracked while this page is open. Production LiveKit replay uses
+              rtc-gateway when <code>LIVE_MEDIA_PROVIDER=rtc-gateway</code> is configured.
+            </p>
+          </div>
+        ) : isProcessing ? (
+          <p className="text-sm text-amber-700">
+            Recording is being processed. Refresh in a moment once the organiser publishes the replay.
+          </p>
         ) : (
           <p className="text-sm text-gray-500">
             Replay media is not available for this event yet. Check back after recording processing completes.
