@@ -5,7 +5,10 @@ import EncountersPage from "./page";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ patientId: "patient-1" }),
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => ({
+    get: () => null,
+  }),
 }));
 
 vi.mock("@/components/EHRLayout", () => ({

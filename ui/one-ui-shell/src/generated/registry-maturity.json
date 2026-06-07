@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-04T18:14:42.132Z",
+  "generatedAt": "2026-06-07T03:20:58.410Z",
   "services": {
     "tech-companion-mock": "unknown-or-partial",
     "ops-instrumentation": "unknown-or-partial",
@@ -11,6 +11,7 @@
     "audit-ledger-service": "unknown-or-partial",
     "butano-fhir": "unknown-or-partial",
     "butano-service": "unknown-or-partial",
+    "booking-service": "wired",
     "campaigns-service": "unknown-or-partial",
     "card-print-agent": "unknown-or-partial",
     "channels-service": "unknown-or-partial",

@@ -101,6 +101,7 @@ waves:
     name: optional-experience
     plane: experience
     services:
+      - booking-service
       - butano-web
       - community-service
       - costa-console
