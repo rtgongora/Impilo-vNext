@@ -40,6 +40,7 @@ import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
+import { MadiDonorHubScreen } from "../madi/MadiDonorHubScreen";
 
 type PersonalTab =
   | "profile"
@@ -80,7 +81,8 @@ type PersonalTab =
   | "terms"
   | "consent"
   | "support"
-  | "prod-ready";
+  | "prod-ready"
+  | "madi-donor";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -101,6 +103,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "reminders", label: "Reminders", icon: "alarm" },
   { id: "timeline", label: "Timeline", icon: "time" },
   { id: "wellness", label: "Wellness", icon: "fitness" },
+  { id: "madi-donor", label: "Blood Donor", icon: "heart" },
   { id: "prod-ready", label: "Prod Ready", icon: "rocket" },
   { id: "finance", label: "Finance", icon: "cash" },
   { id: "challenges", label: "Challenges", icon: "trophy" },
@@ -143,6 +146,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   reminders: RemindersScreen,
   timeline: HealthTimelineScreen,
   wellness: WellnessSection,
+  "madi-donor": MadiDonorHubScreen,
   finance: FinanceSection,
   challenges: ChallengesScreen,
   programs: ProgramsScreen,
