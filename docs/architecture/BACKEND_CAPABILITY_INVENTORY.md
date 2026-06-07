@@ -18,6 +18,8 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | Nhume | Enterprise | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | yes | /nhume/*, /operations/dispatch | yes | partially surfaced |
 | Comms Hub | Experience | /internal/v1/omnichannel/*, /internal/v1/communication/* | Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | yes | /communication, /omnichannel | yes | partially surfaced |
 | Telemedicine | Clinical | /internal/v1/teleconsult/* | Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | yes | /telemedicine/* | yes | partially surfaced |
+| Telemedicine analytics | Data | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | yes | /telemedicine/analytics | yes | fully surfaced |
+| Break-glass (provider request) | Trust | POST /internal/v1/trust/break-glass | Emergency access override request from clinical/emergency shells | POST /internal/v1/trust/break-glass | yes | /clinical/emergency, /ehr/[patientId]/emergency | yes | fully surfaced |
 | Msika / Msika Flow | Enterprise | /internal/v1/marketplace/*, /internal/v1/commerce/* | Catalog, orders, marketplace | /internal/v1/marketplace/*, /internal/v1/commerce/* | yes | /marketplace/* | yes | partially surfaced |
 | MusheX / COSTA | Enterprise | /internal/v1/finance/*, /internal/v1/wallet/* | Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | yes | /finance/*, /wallet | yes | partially surfaced |
 | Fundo | Experience | /internal/v1/learning/v11/* | LMS courses, studio, certificates | /internal/v1/learning/v11/* | yes | /learning/* | yes | partially surfaced |
@@ -37,6 +39,8 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | MADI | Clinical | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | yes | /madi/haemovigilance | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/central-bank/* | Central blood bank coordination | /internal/v1/madi/central-bank/* | yes | /madi/central-bank | yes | fully surfaced |
 | Impilo Live | Experience | /internal/v1/live/* | Live events, webinars, broadcasts | /internal/v1/live/* | yes | /live, /live/discover, /live/event/[eventId] | yes | fully surfaced |
+| Health OS Launcher | Experience | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | Role/facility-aware app launcher + marketplace tiles | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | yes | ShellStartMenu (Start menu) | yes | fully surfaced |
+| Wellness / Monitoring | Experience | /internal/v1/mobile/citizen/monitoring/devices | Citizen remote monitoring device pair/list/sync | /internal/v1/mobile/citizen/monitoring/devices | yes | /monitoring/devices | yes | fully surfaced |
 | MADI | Clinical | /internal/v1/madi/dashboard | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | yes | /madi/dashboard | yes | fully surfaced |
 
 ## Internal / non-user-facing

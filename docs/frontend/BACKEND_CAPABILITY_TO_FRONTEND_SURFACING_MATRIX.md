@@ -7,7 +7,7 @@
 | Maturity | Count |
 |----------|-------|
 | Live | 12 |
-| Partial | 22 |
+| Partial | 24 |
 | Fixture | 0 |
 | Not Wired | 0 |
 | Blocked | 0 |
@@ -28,6 +28,8 @@
 | Enterprise | Nhume | Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | nhume-service controllers | /nhume/*, /operations/dispatch | lib/nhume.ts, useDispatchOps.ts | partial | partial | partial | Partial | HIGH | Dual path: nhume vs dispatch BFF | Unified operator UX + maturity labels |
 | Experience | Comms Hub | Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | contracts/openapi/channels.openapi.yaml | /communication, /omnichannel | useOmnichannel.ts, useCommunication.ts | partial | partial | partial | Partial | MEDIUM | Template/campaign admin depth | Comms dashboard actionable tasks |
 | Clinical | Telemedicine | Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | experience-bff.openapi.yaml | /telemedicine/* | useTelemedicine.ts | partial | partial | partial | Partial | HIGH | RTC media intentionally blocked | Label Blocked for RTC; live scheduling/records |
+| Data | Telemedicine analytics | Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | analytics-pipeline-service (internal) | /telemedicine/analytics | useTelemedicineAnalytics.ts | yes | no | no | Partial | MEDIUM | Mobile analytics dashboard | BFF proxy + web SLA dashboard |
+| Trust | Break-glass (provider request) | Emergency access override request from clinical/emergency shells | POST /internal/v1/trust/break-glass | tshepo-authz /v1/break-glass | /clinical/emergency, /ehr/[patientId]/emergency | useTrustBreakGlass.ts, BreakGlassRequestPanel.tsx | yes | partial | no | Partial | HIGH | Mobile provider break-glass still uses legacy mobile BFF stubs | Provider break-glass panel on ED + EHR emergency views |
 | Enterprise | Msika / Msika Flow | Catalog, orders, marketplace | /internal/v1/marketplace/*, /internal/v1/commerce/* | contracts/openapi/msika-flow.openapi.yaml | /marketplace/* | useMarketplace.ts, useCommerceFlow.ts | partial | partial | no | Partial | MEDIUM | Order list routes 501 on some paths | Honest blocked states on list routes |
 | Enterprise | MusheX / COSTA | Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | contracts/openapi/mushex.openapi.yaml, costa.openapi.yaml | /finance/*, /wallet | useMusheWallet.ts, useFinanceBillingWorkspace.ts | partial | partial | no | Partial | HIGH | No raw /mushex/v1 in browser | Finance journey mobile parity |
 | Experience | Fundo | LMS courses, studio, certificates | /internal/v1/learning/v11/* | contracts/openapi/learning.openapi.yaml | /learning/* | useFundoLms.ts, useFundoStudio.ts | partial | partial | partial | Partial | MEDIUM | Mobile learning shell shallow | Fundo mobile module depth |

@@ -52,6 +52,14 @@ if [[ -n "$NEW_BFF" ]]; then
     git grep -q '/internal/v1/mobile/citizen/monitoring' -- 'ui/one-ui-shell/src/' 'apps/mobile/' \
       || ON_DISK_SURFACED=0
   fi
+  if echo "$NEW_BFF" | grep -q 'TelemedicineAnalyticsController'; then
+    git grep -q '/internal/v1/telemedicine/sla' -- 'ui/one-ui-shell/src/' \
+      || ON_DISK_SURFACED=0
+  fi
+  if echo "$NEW_BFF" | grep -q 'TrustProviderController'; then
+    git grep -q '/internal/v1/trust/break-glass' -- 'ui/one-ui-shell/src/' 'apps/mobile/' \
+      || ON_DISK_SURFACED=0
+  fi
   if [[ "$SAME_COMMIT_UI" -eq 0 && "$ON_DISK_SURFACED" -eq 0 ]]; then
     guard_fail "new BFF controller without frontend surface/docs update"
     echo "$NEW_BFF"
