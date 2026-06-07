@@ -43,6 +43,18 @@ public class AdmissionController {
     }
 
     /**
+     * Active admissions for a patient at a facility (ward transfer / discharge correlation).
+     */
+    @GetMapping("/active")
+    public ResponseEntity<List<AdmissionEntity>> findActiveAdmissions(
+            @RequestParam(name = "subject_cpid") String subjectCpid,
+            @RequestParam(name = "facility_id") UUID facilityId) {
+        List<AdmissionEntity> admissions =
+                admissionService.findActiveAdmissionsForPatientAtFacility(subjectCpid, facilityId);
+        return ResponseEntity.ok(admissions);
+    }
+
+    /**
      * Get a single admission by its unique reference.
      */
     @GetMapping("/{admissionRef}")

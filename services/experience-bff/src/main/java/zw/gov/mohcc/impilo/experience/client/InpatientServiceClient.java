@@ -50,6 +50,19 @@ public class InpatientServiceClient {
         return extractData(response);
     }
 
+    public JsonNode getActiveAdmissions(String subjectCpid, String facilityId) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/admissions/active")
+                .queryParam("subject_cpid", subjectCpid)
+                .queryParam("facility_id", facilityId)
+                .encode()
+                .toUriString();
+        log.info("INPATIENT: getActiveAdmissions operation [subjectCpid={}, facilityId={}]",
+                subjectCpid != null ? subjectCpid.substring(0, Math.min(8, subjectCpid.length())) + "..." : null,
+                facilityId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     public JsonNode dischargeAdmission(String id, Map<String, Object> request) {
         String url = baseUrl + "/internal/v1/admissions/" + id + "/discharge";
         log.info("INPATIENT: dischargeAdmission operation [id={}]", id);

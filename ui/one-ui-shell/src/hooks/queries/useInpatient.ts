@@ -22,6 +22,21 @@ export function useAdmissions(patientCpid?: string) {
   });
 }
 
+export function useActiveAdmission(subjectCpid?: string, facilityId?: string) {
+  return useQuery<AdmissionDetailResponse>({
+    queryKey: ["inpatient-active-admission", subjectCpid ?? null, facilityId ?? null],
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      if (subjectCpid) searchParams.set("subject_cpid", subjectCpid);
+      if (facilityId) searchParams.set("facility_id", facilityId);
+      return apiClient.get<AdmissionDetailResponse>(
+        `/internal/v1/inpatient/admissions/active?${searchParams.toString()}`,
+      );
+    },
+    enabled: !!subjectCpid && !!facilityId,
+  });
+}
+
 export function useAdmission(id?: string | number | null) {
   return useQuery<AdmissionDetailResponse>({
     queryKey: ["inpatient-admission", id],
@@ -66,6 +81,8 @@ export function useDischargeAdmission() {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admissions"] });
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admission", variables.id] });
+      void queryClient.invalidateQueries({ queryKey: ["core-transaction"] });
+      void queryClient.invalidateQueries({ queryKey: ["beds"] });
     },
   });
 }
@@ -83,6 +100,7 @@ export function useTransferPatient() {
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admissions"] });
       void queryClient.invalidateQueries({ queryKey: ["inpatient-admission", variables.id] });
       void queryClient.invalidateQueries({ queryKey: ["inpatient-ward-rounds", variables.id] });
+      void queryClient.invalidateQueries({ queryKey: ["beds"] });
     },
   });
 }

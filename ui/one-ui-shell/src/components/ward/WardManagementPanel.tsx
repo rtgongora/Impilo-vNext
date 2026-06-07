@@ -6,7 +6,9 @@ import {
   User, Clock, RefreshCw, ChevronRight, LogOut,
   Heart, Eye, ArrowLeft, X, Loader2,
 } from 'lucide-react';
-import { useBeds, useWards, type BedResource } from '@/hooks/queries/useBeds';
+import { useBeds, useWards, useDischargeBed, type BedResource } from '@/hooks/queries/useBeds';
+import { useDischargeAdmission, useTransferPatient } from '@/hooks/queries/useInpatient';
+import { apiClient } from '@/lib/api-client';
 import { useFacilityStore } from '@/hooks/useFacilityStore';
 
 // ─── Types ───
@@ -116,6 +118,39 @@ export function WardManagementPanel() {
   const [transferTargetBed, setTransferTargetBed] = useState('');
   const [transferReason, setTransferReason] = useState('');
   const [dischargeConfirm, setDischargeConfirm] = useState<BedData | null>(null);
+  const [wardActionError, setWardActionError] = useState<string | null>(null);
+  const [wardActionPending, setWardActionPending] = useState(false);
+
+  const transferPatient = useTransferPatient();
+  const dischargeAdmission = useDischargeAdmission();
+  const dischargeBed = useDischargeBed();
+
+  async function resolveAdmissionRef(patientMrn: string): Promise<string | null> {
+    if (!patientMrn || !facilityId) return null;
+    try {
+      const searchParams = new URLSearchParams({
+        subject_cpid: patientMrn,
+        facility_id: facilityId,
+      });
+      const resp = await apiClient.get<{ data?: Record<string, unknown> }>(
+        `/internal/v1/inpatient/admissions/active?${searchParams.toString()}`,
+      );
+      const payload = resp.data as Record<string, unknown> | undefined;
+      if (!payload) return null;
+      const attrs = (payload.attributes as Record<string, unknown> | undefined) ?? payload;
+      const ref = String(
+        attrs.admissionRef ??
+          attrs.admission_ref ??
+          payload.admissionRef ??
+          payload.admission_ref ??
+          payload.id ??
+          '',
+      );
+      return ref || null;
+    } catch {
+      return null;
+    }
+  }
 
   if (bedsLoading) {
     return (
@@ -154,19 +189,72 @@ export function WardManagementPanel() {
     setPatientDetailBed(null);
   };
 
-  const handleTransferConfirm = () => {
-    if (!transferBed || !transferTargetBed) return;
-    setTransferDialogOpen(false);
-    setTransferBed(null);
+  const handleTransferConfirm = async () => {
+    if (!transferBed || !transferTargetBed || !transferTargetWard) return;
+    setWardActionError(null);
+    setWardActionPending(true);
+    try {
+      const patient = transferBed.patient;
+      if (!patient) {
+        setWardActionError('No patient linked to this bed.');
+        return;
+      }
+      if (!patient.mrn?.trim()) {
+        setWardActionError('Patient CPID/MRN is required for admission correlation.');
+        return;
+      }
+      const admissionRef = await resolveAdmissionRef(patient.mrn);
+      if (!admissionRef) {
+        setWardActionError('No active admission found for this patient — transfer requires admission correlation.');
+        return;
+      }
+      await transferPatient.mutateAsync({
+        id: admissionRef,
+        body: {
+          toWardId: transferTargetWard,
+          toBedId: transferTargetBed,
+          reason: transferReason.trim() || null,
+        },
+      });
+      setTransferDialogOpen(false);
+      setTransferBed(null);
+    } catch {
+      setWardActionError('Transfer failed — verify inpatient BFF and admission state.');
+    } finally {
+      setWardActionPending(false);
+    }
   };
 
   const handleDischarge = (bed: BedData) => {
     setDischargeConfirm(bed);
     setPatientDetailBed(null);
+    setWardActionError(null);
   };
 
-  const handleDischargeConfirm = () => {
-    setDischargeConfirm(null);
+  const handleDischargeConfirm = async () => {
+    if (!dischargeConfirm?.patient) return;
+    setWardActionError(null);
+    setWardActionPending(true);
+    try {
+      const patient = dischargeConfirm.patient;
+      if (!patient.mrn?.trim()) {
+        setWardActionError('Patient CPID/MRN is required for admission discharge correlation.');
+        return;
+      }
+      const admissionRef = await resolveAdmissionRef(patient.mrn);
+      if (admissionRef) {
+        await dischargeAdmission.mutateAsync({
+          id: admissionRef,
+          body: { reason: 'WARD_DISCHARGE', source: 'ward_management_panel' },
+        });
+      }
+      await dischargeBed.mutateAsync(dischargeConfirm.id);
+      setDischargeConfirm(null);
+    } catch {
+      setWardActionError('Discharge failed — verify inpatient BFF and bed state.');
+    } finally {
+      setWardActionPending(false);
+    }
   };
 
   const availableTargetBeds = beds.filter(
@@ -506,6 +594,9 @@ export function WardManagementPanel() {
                 </div>
               </div>
 
+              {wardActionError && transferDialogOpen ? (
+                <p className="text-xs text-red-600">{wardActionError}</p>
+              ) : null}
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setTransferDialogOpen(false)}
@@ -514,11 +605,11 @@ export function WardManagementPanel() {
                   Cancel
                 </button>
                 <button
-                  onClick={handleTransferConfirm}
-                  disabled={!transferTargetBed}
+                  onClick={() => void handleTransferConfirm()}
+                  disabled={!transferTargetBed || wardActionPending}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-impilo-500 text-white rounded-lg hover:bg-impilo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                  {wardActionPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
                   Confirm Transfer
                 </button>
               </div>
@@ -535,6 +626,9 @@ export function WardManagementPanel() {
               <p className="text-sm text-gray-600">
                 Discharge <span className="font-medium">{dischargeConfirm.patient?.name}</span> from Bed {dischargeConfirm.bedNumber}?
               </p>
+              {wardActionError && dischargeConfirm ? (
+                <p className="text-xs text-red-600">{wardActionError}</p>
+              ) : null}
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setDischargeConfirm(null)}
@@ -543,9 +637,11 @@ export function WardManagementPanel() {
                   Cancel
                 </button>
                 <button
-                  onClick={handleDischargeConfirm}
-                  className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  onClick={() => void handleDischargeConfirm()}
+                  disabled={wardActionPending}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
                 >
+                  {wardActionPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                   Discharge
                 </button>
               </div>
