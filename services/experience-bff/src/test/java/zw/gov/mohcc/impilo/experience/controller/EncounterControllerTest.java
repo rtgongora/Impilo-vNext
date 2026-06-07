@@ -108,6 +108,8 @@ class EncounterControllerTest {
         assertEquals("Rest and fluids", meta.get("patient_instructions"));
         assertEquals("Acute bronchitis", pct.lastDischargeBody.get("dischargeDiagnosis"));
         assertEquals("Review in 7 days", pct.lastDischargeBody.get("followUpInstructions"));
+        assertEquals("encounter-1", meta.get("core_transaction_id"));
+        assertEquals("1", meta.get("encounter_id"));
     }
 
     @Test

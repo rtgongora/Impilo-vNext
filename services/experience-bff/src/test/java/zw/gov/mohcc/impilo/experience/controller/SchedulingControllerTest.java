@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -83,9 +84,14 @@ class SchedulingControllerTest {
 
         ObjectNode checkedIn = mapper.createObjectNode();
         checkedIn.put("status", "CHECKED_IN");
-        checkedIn.put("encounter_id", "enc-9001");
+        checkedIn.put("encounter_id", "9001");
         checkedIn.put("queue_token_id", "22222222-2222-2222-2222-222222222222");
         when(bookingClient.checkInAppointment(appointmentId.toString(), queueId.toString())).thenReturn(checkedIn);
+
+        ObjectNode encounterNode = mapper.createObjectNode();
+        encounterNode.put("id", 9001);
+        encounterNode.put("journeyId", "journey-9001");
+        when(pctClient.getEncounter(9001L)).thenReturn(encounterNode);
 
         SchedulingController controller = newController(bookingClient, pctClient);
 
@@ -102,8 +108,9 @@ class SchedulingControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> meta = (Map<String, Object>) response.getBody().get("meta");
-        assertEquals("enc-9001", meta.get("encounter_id"));
-        assertEquals("encounter-enc-9001", meta.get("core_transaction_id"));
+        assertEquals("9001", meta.get("encounter_id"));
+        assertEquals("encounter-9001", meta.get("core_transaction_id"));
+        assertEquals("journey-9001", meta.get("journey_id"));
         assertEquals("patient-1", meta.get("patient_id"));
         assertEquals(appointmentId.toString(), meta.get("appointment_id"));
         assertEquals("CHECKED_IN", meta.get("booking_status"));
@@ -153,11 +160,8 @@ class SchedulingControllerTest {
     }
 
     private static SchedulingController newController(BookingServiceClient bookingClient) {
-        return new SchedulingController(
-                bookingClient,
-                mock(TusoServiceClient.class),
-                mock(SchedulingServiceClient.class),
-                mock(PctServiceClient.class));
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        return newController(bookingClient, pctClient);
     }
 
     private static SchedulingController newController(BookingServiceClient bookingClient, PctServiceClient pctClient) {
@@ -165,6 +169,7 @@ class SchedulingControllerTest {
                 bookingClient,
                 mock(TusoServiceClient.class),
                 mock(SchedulingServiceClient.class),
-                pctClient);
+                pctClient,
+                new AppointmentCheckInService(bookingClient, pctClient));
     }
 }

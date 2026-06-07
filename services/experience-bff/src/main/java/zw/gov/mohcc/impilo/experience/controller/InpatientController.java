@@ -168,9 +168,12 @@ public class InpatientController {
             JsonNode data = requirePayload(
                     inpatientClient.dischargeAdmission(admissionRef, body),
                     "Inpatient dischargeAdmission");
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("admission_ref", admissionRef);
+            meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -188,9 +191,12 @@ public class InpatientController {
             JsonNode data = requirePayload(
                     inpatientClient.transferPatient(admissionRef, normalizeTransferBody(body)),
                     "Inpatient transferPatient");
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("admission_ref", admissionRef);
+            meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {

@@ -260,6 +260,8 @@ public class EncounterController {
             meta.put("request_id", requestId);
             meta.put("correlation_id", correlationId);
             meta.put("journey_id", journeyId);
+            meta.put("encounter_id", id.trim());
+            meta.put("core_transaction_id", CoreTransactionCompositionService.encounterTransactionId(id.trim()));
             if (body != null) {
                 copyIfPresent(body, meta, "discharge_diagnosis", "dischargeDiagnosis");
                 copyIfPresent(body, meta, "follow_up_instructions", "followUpInstructions");

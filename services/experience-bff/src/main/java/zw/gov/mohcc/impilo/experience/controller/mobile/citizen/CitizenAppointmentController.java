@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
+import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 
 import java.util.*;
 
@@ -17,15 +18,19 @@ import java.util.*;
  * GET  /internal/v1/mobile/citizen/appointments/{id}
  * POST /internal/v1/mobile/citizen/appointments
  * POST /internal/v1/mobile/citizen/appointments/{id}/cancel
+ * POST /internal/v1/mobile/citizen/appointments/{id}/check-in
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/citizen/appointments")
 public class CitizenAppointmentController {
 
     private final BookingServiceClient bookingServiceClient;
+    private final AppointmentCheckInService appointmentCheckInService;
 
-    public CitizenAppointmentController(BookingServiceClient bookingServiceClient) {
+    public CitizenAppointmentController(BookingServiceClient bookingServiceClient,
+                                        AppointmentCheckInService appointmentCheckInService) {
         this.bookingServiceClient = bookingServiceClient;
+        this.appointmentCheckInService = appointmentCheckInService;
     }
 
     public record RequestAppointmentBody(
@@ -115,6 +120,42 @@ public class CitizenAppointmentController {
         response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<Map<String, Object>> checkIn(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId) {
+
+        JsonNode appointment = bookingServiceClient.getAppointment(id.toString());
+        if (appointment == null || appointment.isNull()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", Map.of("code", "APPOINTMENT_NOT_FOUND", "message", "Appointment not found"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+
+        String patientId = firstNonBlank(
+                textOr(appointment, "patientId"),
+                textOr(appointment, "patient_id"),
+                textOr(appointment.path("attributes"), "patientId"));
+        String patientCpid = firstNonBlank(
+                textOr(appointment, "patientCpid"),
+                textOr(appointment, "patient_cpid"),
+                textOr(appointment.path("attributes"), "cpid"));
+
+        boolean actorMatches = actorId != null
+                && (actorId.equals(patientId) || actorId.equals(patientCpid));
+        if (!actorMatches) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", Map.of("code", "APPOINTMENT_FORBIDDEN", "message", "Appointment does not belong to actor"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+
+        return appointmentCheckInService.checkIn(id, requestId, correlationId);
     }
 
     private static Object enrichAppointmentWithBookingId(JsonNode appointment) {

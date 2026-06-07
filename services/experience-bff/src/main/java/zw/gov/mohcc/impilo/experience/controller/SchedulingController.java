@@ -14,6 +14,7 @@ import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -33,6 +34,7 @@ public class SchedulingController {
     private final TusoServiceClient tusoClient;
     private final SchedulingServiceClient schedulingServiceClient;
     private final PctServiceClient pctClient;
+    private final AppointmentCheckInService appointmentCheckInService;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
     private boolean useRemoteSlots;
@@ -40,11 +42,13 @@ public class SchedulingController {
     public SchedulingController(BookingServiceClient bookingServiceClient,
                                 TusoServiceClient tusoClient,
                                 SchedulingServiceClient schedulingServiceClient,
-                                PctServiceClient pctClient) {
+                                PctServiceClient pctClient,
+                                AppointmentCheckInService appointmentCheckInService) {
         this.bookingServiceClient = bookingServiceClient;
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
         this.pctClient = pctClient;
+        this.appointmentCheckInService = appointmentCheckInService;
     }
 
     public record CreateAppointmentRequest(
@@ -140,103 +144,7 @@ public class SchedulingController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestBody(required = false) Map<String, Object> body) {
-        try {
-            JsonNode appointment = bookingServiceClient.getAppointment(id.toString());
-            if (appointment == null || appointment.isNull()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                        "error", Map.of("code", "APPOINTMENT_NOT_FOUND", "message", "Appointment not found"),
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-            }
-
-            String patientCpid = firstNonBlank(
-                    textOr(appointment, "patientCpid"),
-                    textOr(appointment, "patient_cpid"),
-                    textOr(appointment.path("attributes"), "cpid"));
-            String facilityId = firstNonBlank(
-                    textOr(appointment, "facilityId"),
-                    textOr(appointment, "facility_id"),
-                    textOr(appointment.path("attributes"), "facilityId"));
-            String patientId = firstNonBlank(
-                    textOr(appointment, "patientId"),
-                    textOr(appointment, "patient_id"),
-                    textOr(appointment.path("attributes"), "patientId"));
-
-            if (facilityId == null || facilityId.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of(
-                        "error", Map.of("code", "VALIDATION", "message", "facility_id is required on appointment"),
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-            }
-
-            UUID facilityUuid = UUID.fromString(facilityId.trim());
-
-            JsonNode queues = pctClient.listQueues(facilityUuid, null);
-            UUID queueUuid = findScheduledQueueId(queues);
-
-            JsonNode checkedIn;
-            try {
-                checkedIn = bookingServiceClient.checkInAppointment(
-                        id.toString(),
-                        queueUuid != null ? queueUuid.toString() : null);
-                if (checkedIn == null || checkedIn.isNull()) {
-                    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                            "error", Map.of(
-                                    "code", "BOOKING_CHECK_IN_FAILED",
-                                    "message", "Booking-service did not persist CHECKED_IN"),
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                }
-            } catch (Exception bookingEx) {
-                log.warn("Booking-service check-in failed for appointment {}: {}", id, bookingEx.getMessage());
-                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                        "error", Map.of(
-                                "code", "BOOKING_CHECK_IN_FAILED",
-                                "message", "Appointment check-in failed: " + bookingEx.getMessage()),
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-            }
-
-            String encounterId = firstNonBlank(
-                    textOr(checkedIn, "encounterId"),
-                    textOr(checkedIn, "encounter_id"));
-            String queueTokenId = firstNonBlank(
-                    textOr(checkedIn, "queueTokenId"),
-                    textOr(checkedIn, "queue_token_id"));
-
-            Map<String, Object> meta = new LinkedHashMap<>();
-            meta.put("request_id", requestId);
-            meta.put("correlation_id", correlationId);
-            meta.put("appointment_id", id.toString());
-            if (patientId != null) {
-                meta.put("patient_id", patientId);
-            }
-            meta.put("booking_status", textOr(checkedIn, "status"));
-            if (encounterId != null) {
-                meta.put("encounter_id", encounterId);
-                meta.put("core_transaction_id", "encounter-" + encounterId);
-            }
-            if (queueTokenId != null) {
-                meta.put("queue_token_id", queueTokenId);
-            }
-            if (queueUuid != null) {
-                meta.put("queue_id", queueUuid.toString());
-            }
-
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("data", Map.of(
-                    "appointment_id", id.toString(),
-                    "status", "CHECKED_IN",
-                    "encounter_id", encounterId != null ? encounterId : "",
-                    "queue_token_id", queueTokenId != null ? queueTokenId : ""));
-            response.put("meta", meta);
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", Map.of("code", "VALIDATION", "message", ex.getMessage()),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-        } catch (Exception ex) {
-            log.warn("Appointment check-in failed for {}: {}", id, ex.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                    "error", Map.of("code", "CHECK_IN_FAILED", "message", "Appointment check-in failed"),
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-        }
+        return appointmentCheckInService.checkIn(id, requestId, correlationId);
     }
 
     @PostMapping("/{id}/cancel")
