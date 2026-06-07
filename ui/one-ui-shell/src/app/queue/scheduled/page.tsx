@@ -78,6 +78,11 @@ export default function ScheduledQueuePage() {
                 detail: "Appointments due today and likely to convert into live queue work.",
               },
               {
+                label: "Check-in chain",
+                value: "BFF",
+                detail: "Check-in posts to scheduling BFF → booking CHECKED_IN + PCT journey enqueue for chart handoff.",
+              },
+              {
                 label: "Teleconsults",
                 value: String(teleconsultCount),
                 detail: "Scheduled virtual visits that may need consult continuity.",

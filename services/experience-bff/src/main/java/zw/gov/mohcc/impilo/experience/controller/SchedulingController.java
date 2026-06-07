@@ -14,8 +14,6 @@ import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
-
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -170,41 +168,63 @@ public class SchedulingController {
             }
 
             UUID facilityUuid = UUID.fromString(facilityId.trim());
-            String subjectRef = patientCpid != null && !patientCpid.isBlank()
-                    ? patientCpid.trim()
-                    : (patientId != null ? patientId : id.toString());
 
-            JsonNode journeyData = pctClient.startJourney(subjectRef, facilityUuid, null, null);
-            if (journeyData == null || !journeyData.has("journeyId")) {
+            JsonNode queues = pctClient.listQueues(facilityUuid, null);
+            UUID queueUuid = findScheduledQueueId(queues);
+
+            JsonNode checkedIn;
+            try {
+                checkedIn = bookingServiceClient.checkInAppointment(
+                        id.toString(),
+                        queueUuid != null ? queueUuid.toString() : null);
+                if (checkedIn == null || checkedIn.isNull()) {
+                    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                            "error", Map.of(
+                                    "code", "BOOKING_CHECK_IN_FAILED",
+                                    "message", "Booking-service did not persist CHECKED_IN"),
+                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                }
+            } catch (Exception bookingEx) {
+                log.warn("Booking-service check-in failed for appointment {}: {}", id, bookingEx.getMessage());
                 return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
-                        "error", Map.of("code", "PCT_UNAVAILABLE", "message", "Could not start PCT journey for check-in"),
+                        "error", Map.of(
+                                "code", "BOOKING_CHECK_IN_FAILED",
+                                "message", "Appointment check-in failed: " + bookingEx.getMessage()),
                         "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
             }
 
-            String journeyId = journeyData.get("journeyId").asText();
-            JsonNode queues = pctClient.listQueues(facilityUuid, null);
-            UUID queueUuid = findScheduledQueueId(queues);
-            JsonNode queueItem = null;
-            if (queueUuid != null) {
-                queueItem = pctClient.enqueue(queueUuid, journeyId, 0);
-            }
+            String encounterId = firstNonBlank(
+                    textOr(checkedIn, "encounterId"),
+                    textOr(checkedIn, "encounter_id"));
+            String queueTokenId = firstNonBlank(
+                    textOr(checkedIn, "queueTokenId"),
+                    textOr(checkedIn, "queue_token_id"));
 
             Map<String, Object> meta = new LinkedHashMap<>();
             meta.put("request_id", requestId);
             meta.put("correlation_id", correlationId);
             meta.put("appointment_id", id.toString());
-            meta.put("journey_id", journeyId);
-            meta.put("core_transaction_id", CoreTransactionCompositionService.journeyTransactionId(journeyId));
             if (patientId != null) {
                 meta.put("patient_id", patientId);
+            }
+            meta.put("booking_status", textOr(checkedIn, "status"));
+            if (encounterId != null) {
+                meta.put("encounter_id", encounterId);
+                meta.put("core_transaction_id", "encounter-" + encounterId);
+            }
+            if (queueTokenId != null) {
+                meta.put("queue_token_id", queueTokenId);
+            }
+            if (queueUuid != null) {
+                meta.put("queue_id", queueUuid.toString());
             }
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", Map.of(
                     "appointment_id", id.toString(),
                     "status", "CHECKED_IN",
-                    "journey_id", journeyId,
-                    "queue_item", queueItem != null ? queueItem : Map.of()));
+                    "encounter_id", encounterId != null ? encounterId : "",
+                    "queue_token_id", queueTokenId != null ? queueTokenId : ""));
             response.put("meta", meta);
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException ex) {

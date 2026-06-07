@@ -121,6 +121,7 @@ class BookingServiceTest {
                         Instant.parse("2026-06-15T09:00:00Z"), Instant.parse("2026-06-15T09:00:00Z"),
                         Instant.parse("2026-06-15T09:30:00Z"), Instant.parse("2026-06-15T09:30:00Z"),
                         "reason", null, null, null, BOOKING_ID, BOOKING_ID,
+                        null, null, null, null, null, null,
                         Instant.now(), Instant.now()));
         when(bookingRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 

@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -67,25 +68,24 @@ class SchedulingControllerTest {
         ObjectMapper mapper = new ObjectMapper();
 
         UUID appointmentId = UUID.fromString("a1000000-0000-0000-0000-000000000099");
+        UUID queueId = UUID.fromString("11111111-1111-1111-1111-111111111111");
         ObjectNode appointment = mapper.createObjectNode();
         appointment.put("patient_id", "patient-1");
         appointment.put("facility_id", "f1000000-0000-0000-0000-000000000001");
         appointment.put("bookingId", "b1000000-0000-0000-0000-000000000001");
         when(bookingClient.getAppointment(appointmentId.toString())).thenReturn(appointment);
 
-        ObjectNode journey = mapper.createObjectNode();
-        journey.put("journeyId", "42");
-        when(pctClient.startJourney(anyString(), any(UUID.class), any(), any())).thenReturn(journey);
-
         var queueArray = mapper.createArrayNode();
         var queueDef = queueArray.addObject();
         queueDef.put("queueType", "WALK_IN");
-        queueDef.put("queueId", "11111111-1111-1111-1111-111111111111");
+        queueDef.put("queueId", queueId.toString());
         when(pctClient.listQueues(any(UUID.class), any())).thenReturn(queueArray);
 
-        ObjectNode item = mapper.createObjectNode();
-        item.put("id", "22222222-2222-2222-2222-222222222222");
-        when(pctClient.enqueue(any(UUID.class), anyString(), anyInt())).thenReturn(item);
+        ObjectNode checkedIn = mapper.createObjectNode();
+        checkedIn.put("status", "CHECKED_IN");
+        checkedIn.put("encounter_id", "enc-9001");
+        checkedIn.put("queue_token_id", "22222222-2222-2222-2222-222222222222");
+        when(bookingClient.checkInAppointment(appointmentId.toString(), queueId.toString())).thenReturn(checkedIn);
 
         SchedulingController controller = newController(bookingClient, pctClient);
 
@@ -102,10 +102,32 @@ class SchedulingControllerTest {
         assertNotNull(response.getBody());
         @SuppressWarnings("unchecked")
         Map<String, Object> meta = (Map<String, Object>) response.getBody().get("meta");
-        assertEquals("42", meta.get("journey_id"));
-        assertEquals("journey-42", meta.get("core_transaction_id"));
+        assertEquals("enc-9001", meta.get("encounter_id"));
+        assertEquals("encounter-enc-9001", meta.get("core_transaction_id"));
         assertEquals("patient-1", meta.get("patient_id"));
         assertEquals(appointmentId.toString(), meta.get("appointment_id"));
+        assertEquals("CHECKED_IN", meta.get("booking_status"));
+        verify(bookingClient).checkInAppointment(appointmentId.toString(), queueId.toString());
+        verify(pctClient, never()).startJourney(anyString(), any(UUID.class), any(), any());
+    }
+
+    @Test
+    void checkInAppointment_failsBeforePctWhenBookingCheckInFails() {
+        BookingServiceClient bookingClient = mock(BookingServiceClient.class);
+        PctServiceClient pctClient = mock(PctServiceClient.class);
+        ObjectMapper mapper = new ObjectMapper();
+        UUID appointmentId = UUID.fromString("a1000000-0000-0000-0000-000000000099");
+        ObjectNode appointment = mapper.createObjectNode();
+        appointment.put("facility_id", "f1000000-0000-0000-0000-000000000001");
+        when(bookingClient.getAppointment(appointmentId.toString())).thenReturn(appointment);
+        when(bookingClient.checkInAppointment(anyString(), any())).thenReturn(null);
+
+        SchedulingController controller = newController(bookingClient, pctClient);
+        var response = controller.checkInAppointment(
+                appointmentId, "tenant-1", "pod-1", "req-1", "corr-1", null);
+
+        assertEquals(502, response.getStatusCode().value());
+        verify(pctClient, never()).startJourney(anyString(), any(UUID.class), any(), any());
     }
 
     @Test

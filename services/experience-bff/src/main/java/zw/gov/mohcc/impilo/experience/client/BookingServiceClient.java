@@ -171,8 +171,15 @@ public class BookingServiceClient {
     }
 
     public JsonNode checkInAppointment(String appointmentId) {
+        return checkInAppointment(appointmentId, null);
+    }
+
+    public JsonNode checkInAppointment(String appointmentId, String queueId) {
         String url = baseUrl + "/v1/appointments/" + appointmentId + "/check-in";
-        log.info("Booking: check-in appointment={}", appointmentId);
+        if (queueId != null && !queueId.isBlank()) {
+            url += "?queueId=" + queueId;
+        }
+        log.info("Booking: check-in appointment={} queueId={}", appointmentId, queueId);
         return extractData(restTemplate.postForEntity(url, null, JsonNode.class));
     }
 

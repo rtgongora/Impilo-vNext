@@ -36,6 +36,12 @@ public record AppointmentResponse(
         @JsonProperty("resourceId") UUID resourceIdAlias,
         @JsonProperty("booking_id") UUID bookingId,
         @JsonProperty("bookingId") UUID bookingIdAlias,
+        @JsonProperty("encounter_id") UUID encounterId,
+        @JsonProperty("encounterId") UUID encounterIdAlias,
+        @JsonProperty("queue_token_id") UUID queueTokenId,
+        @JsonProperty("queueTokenId") UUID queueTokenIdAlias,
+        @JsonProperty("check_in_status") String checkInStatus,
+        @JsonProperty("checkInStatus") String checkInStatusAlias,
         @JsonProperty("created_at") Instant createdAt,
         @JsonProperty("createdAt") Instant createdAtAlias
 ) {
@@ -56,6 +62,9 @@ public record AppointmentResponse(
                 entity.getNotes(),
                 entity.getResourceId(), entity.getResourceId(),
                 entity.getBookingId(), entity.getBookingId(),
+                entity.getEncounterId(), entity.getEncounterId(),
+                entity.getQueueTokenId(), entity.getQueueTokenId(),
+                entity.getCheckInStatus(), entity.getCheckInStatus(),
                 entity.getCreatedAt(), entity.getCreatedAt());
     }
 }
