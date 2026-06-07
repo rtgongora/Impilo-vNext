@@ -16,7 +16,8 @@ tags:
 paths:
   /internal/v1/rtc/sessions:
     post:
-      tags: [RtcSessions]
+      tags:
+        - RtcSessions
       operationId: provisionRtcSession
       summary: Provision a media room and initial participant token
       parameters:
@@ -42,7 +43,8 @@ paths:
           $ref: '#/components/responses/ProviderUnavailable'
   /internal/v1/rtc/sessions/{sessionId}:
     get:
-      tags: [RtcSessions]
+      tags:
+        - RtcSessions
       operationId: getRtcSession
       summary: Return media session status and capabilities
       parameters:
@@ -61,7 +63,8 @@ paths:
           $ref: '#/components/responses/NotFound'
   /internal/v1/rtc/sessions/{sessionId}/participants/token:
     post:
-      tags: [RtcSessions]
+      tags:
+        - RtcSessions
       operationId: issueRtcParticipantToken
       summary: Issue a role-scoped participant token
       parameters:
@@ -86,7 +89,8 @@ paths:
           $ref: '#/components/responses/NotFound'
   /internal/v1/rtc/sessions/{sessionId}/end:
     post:
-      tags: [RtcSessions]
+      tags:
+        - RtcSessions
       operationId: endRtcSession
       summary: End or seal a media room
       parameters:
@@ -114,6 +118,43 @@ paths:
                 $ref: '#/components/schemas/RtcSessionEnvelope'
         '404':
           $ref: '#/components/responses/NotFound'
+  /sessions:
+    post:
+      operationId: rtcgateway_post__sessions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rtc-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sessions/{sessionId}:
+    get:
+      operationId: rtcgateway_get__sessions_sessionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rtc-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sessions/{sessionId}/participants/token:
+    post:
+      operationId: rtcgateway_post__sessions_sessionId_participants_token
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rtc-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sessions/{sessionId}/end:
+    post:
+      operationId: rtcgateway_post__sessions_sessionId_end
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rtc-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
 components:
   parameters:
     TenantId:

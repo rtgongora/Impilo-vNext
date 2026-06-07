@@ -53,3 +53,210 @@ paths:
       responses:
         '200':
           description: Facility summary returned
+  /organisations:
+    post:
+      operationId: workforcegovernance_post__organisations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: workforcegovernance_get__organisations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /organisations/{id}:
+    get:
+      operationId: workforcegovernance_get__organisations_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /organisations/{id}/status:
+    patch:
+      operationId: workforcegovernance_patch__organisations_id_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /org-units:
+    post:
+      operationId: workforcegovernance_post__org_units
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: workforcegovernance_get__org_units
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /jurisdictions:
+    post:
+      operationId: workforcegovernance_post__jurisdictions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: workforcegovernance_get__jurisdictions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /jurisdiction-links:
+    post:
+      operationId: workforcegovernance_post__jurisdiction_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /role-definitions:
+    post:
+      operationId: workforcegovernance_post__role_definitions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility-links:
+    post:
+      operationId: workforcegovernance_post__facility_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /site-links:
+    post:
+      operationId: workforcegovernance_post__site_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /multi-site-groups:
+    post:
+      operationId: workforcegovernance_post__multi_site_groups
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /multi-site-groups/{id}/members:
+    post:
+      operationId: workforcegovernance_post__multi_site_groups_id_members
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments:
+    post:
+      operationId: workforcegovernance_post__assignments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments/{id}/transition:
+    post:
+      operationId: workforcegovernance_post__assignments_id_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments/search:
+    get:
+      operationId: workforcegovernance_get__assignments_search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments/{id}/history:
+    get:
+      operationId: workforcegovernance_get__assignments_id_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /onboarding/single-facility:
+    post:
+      operationId: workforcegovernance_post__onboarding_single_facility
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /onboarding/multi-facility:
+    post:
+      operationId: workforcegovernance_post__onboarding_multi_facility
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /scope/evaluate-facility:
+    post:
+      operationId: workforcegovernance_post__scope_evaluate_facility
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summaries/organisation/{id}:
+    get:
+      operationId: workforcegovernance_get__summaries_organisation_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summaries/facility/{facilityId}:
+    get:
+      operationId: workforcegovernance_get__summaries_facility_facilityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workforce-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  schemas: {}

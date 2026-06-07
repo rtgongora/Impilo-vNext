@@ -32,10 +32,11 @@ paths:
   /internal/v1/hr/employees:
     get:
       operationId: hrListEmployees
-      tags: [HR]
+      tags:
+        - HR
       summary: List employees
       responses:
-        "200":
+        '200':
           description: Employees
           content:
             application/json:
@@ -46,7 +47,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: hrCreateEmployee
-      tags: [HR]
+      tags:
+        - HR
       summary: Create employee
       requestBody:
         required: true
@@ -56,7 +58,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Created
           content:
             application/json:
@@ -66,7 +68,8 @@ paths:
   /internal/v1/hr/contracts:
     get:
       operationId: hrListContracts
-      tags: [HR]
+      tags:
+        - HR
       summary: Contracts for employee
       parameters:
         - name: employee_id
@@ -76,7 +79,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Contracts
           content:
             application/json:
@@ -85,13 +88,22 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_contracts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/hr/leave/types:
     get:
       operationId: hrLeaveTypes
-      tags: [HR]
+      tags:
+        - HR
       summary: Leave type catalog
       responses:
-        "200":
+        '200':
           description: Types
           content:
             application/json:
@@ -100,10 +112,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_leave_types
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/hr/leave/requests:
     get:
       operationId: hrLeaveRequests
-      tags: [HR]
+      tags:
+        - HR
       summary: Leave requests for employee
       parameters:
         - name: employee_id
@@ -113,7 +134,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Requests
           content:
             application/json:
@@ -122,10 +143,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_leave_requests
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/hr/attendance:
     get:
       operationId: hrAttendance
-      tags: [HR]
+      tags:
+        - HR
       summary: Attendance for employee
       parameters:
         - name: employee_id
@@ -135,7 +165,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Attendance rows
           content:
             application/json:
@@ -144,13 +174,22 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_attendance
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/hr/payroll/runs:
     get:
       operationId: hrPayrollRuns
-      tags: [Payroll]
+      tags:
+        - Payroll
       summary: Payroll runs
       responses:
-        "200":
+        '200':
           description: Runs
           content:
             application/json:
@@ -159,10 +198,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_payroll_runs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/hr/payroll/payslips:
     get:
       operationId: hrPayslips
-      tags: [Payroll]
+      tags:
+        - Payroll
       summary: Payslips for a run
       parameters:
         - name: run_id
@@ -172,7 +220,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Payslips
           content:
             application/json:
@@ -184,10 +232,11 @@ paths:
   /internal/v1/hr/deductions:
     get:
       operationId: hrDeductionTypes
-      tags: [Payroll]
+      tags:
+        - Payroll
       summary: Deduction type catalog
       responses:
-        "200":
+        '200':
           description: Deduction types
           content:
             application/json:
@@ -196,6 +245,67 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_deductions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/health:
+    get:
+      operationId: hrpayroll_get__internal_v1_health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/hr/employees/{id}:
+    get:
+      operationId: hrpayroll_get__internal_v1_hr_employees_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/hr/leave/balances:
+    get:
+      operationId: hrpayroll_get__internal_v1_hr_leave_balances
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_leave_balances
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/hr/payroll/runs/{id}/calculate:
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_payroll_runs_id_calculate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/hr/payroll/runs/{id}/pay:
+    post:
+      operationId: hrpayroll_post__internal_v1_hr_payroll_runs_id_pay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from hr-payroll-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

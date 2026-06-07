@@ -59,7 +59,8 @@ tags:
 paths:
   /v1/catalogs:
     post:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Create a new catalog
       operationId: createCatalog
       parameters:
@@ -79,7 +80,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
     get:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: List catalogs
       operationId: listCatalogs
       parameters:
@@ -99,10 +101,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PagedCatalogResponse'
-
   /v1/catalogs/{catalogId}:
     get:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Get catalog by ID
       operationId: getCatalog
       parameters:
@@ -116,10 +118,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
-
   /v1/catalogs/{catalogId}/submit-review:
     post:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Submit catalog for review
       operationId: submitCatalogForReview
       parameters:
@@ -133,10 +135,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
-
   /v1/catalogs/{catalogId}/approve:
     post:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Approve catalog
       operationId: approveCatalog
       parameters:
@@ -150,10 +152,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
-
   /v1/catalogs/{catalogId}/publish:
     post:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Publish catalog (requires step-up auth)
       operationId: publishCatalog
       parameters:
@@ -167,10 +169,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
-
   /v1/catalogs/{catalogId}/rollback/{version}:
     post:
-      tags: [Catalogs]
+      tags:
+        - Catalogs
       summary: Rollback to a previously published version
       operationId: rollbackCatalog
       parameters:
@@ -189,10 +191,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogResponse'
-
   /v1/catalogs/{catalogId}/items:
     post:
-      tags: [Items]
+      tags:
+        - Items
       summary: Add item to catalog
       operationId: createItem
       parameters:
@@ -213,7 +215,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ItemResponse'
     get:
-      tags: [Items]
+      tags:
+        - Items
       summary: List items in catalog
       operationId: listItems
       parameters:
@@ -233,10 +236,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PagedItemResponse'
-
   /v1/items/{itemId}:
     get:
-      tags: [Items]
+      tags:
+        - Items
       summary: Get item by ID
       operationId: getItem
       parameters:
@@ -255,7 +258,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ItemResponse'
     put:
-      tags: [Items]
+      tags:
+        - Items
       summary: Update item
       operationId: updateItem
       parameters:
@@ -279,10 +283,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ItemResponse'
-
   /v1/search:
     get:
-      tags: [Search]
+      tags:
+        - Search
       summary: Full-text search across published catalogs
       operationId: searchItems
       parameters:
@@ -323,10 +327,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PagedItemResponse'
-
   /v1/packs/orderables:
     get:
-      tags: [Packs]
+      tags:
+        - Packs
       summary: Get orderables pack for OROS
       operationId: getOrderablesPack
       parameters:
@@ -348,10 +352,10 @@ paths:
                 $ref: '#/components/schemas/PackResponse'
         '304':
           description: Not modified (ETag match)
-
   /v1/packs/item-master:
     get:
-      tags: [Packs]
+      tags:
+        - Packs
       summary: Get item master pack for Inventory/Pharmacy
       operationId: getItemMasterPack
       parameters:
@@ -373,10 +377,10 @@ paths:
                 $ref: '#/components/schemas/PackResponse'
         '304':
           description: Not modified
-
   /v1/packs/chargeables:
     get:
-      tags: [Packs]
+      tags:
+        - Packs
       summary: Get chargeables pack for costing/billing/MUSHEX
       operationId: getChargeablesPack
       parameters:
@@ -392,10 +396,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-
   /v1/packs/capabilities/facility:
     get:
-      tags: [Packs]
+      tags:
+        - Packs
       summary: Get facility capabilities pack for TUSO
       operationId: getFacilityCapabilitiesPack
       parameters:
@@ -411,10 +415,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-
   /v1/packs/capabilities/provider:
     get:
-      tags: [Packs]
+      tags:
+        - Packs
       summary: Get provider capabilities pack for VARAPI
       operationId: getProviderCapabilitiesPack
       parameters:
@@ -430,10 +434,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-
   /v1/import/csv:
     post:
-      tags: [Import]
+      tags:
+        - Import
       summary: Import items from CSV file
       operationId: importCsv
       parameters:
@@ -461,10 +465,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJobResponse'
-
   /v1/import/sources:
     post:
-      tags: [Import]
+      tags:
+        - Import
       summary: Create external import source
       operationId: createImportSource
       parameters:
@@ -483,10 +487,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope'
-
   /v1/import/sources/{sourceId}/run:
     post:
-      tags: [Import]
+      tags:
+        - Import
       summary: Trigger import from external source
       operationId: runSourceImport
       parameters:
@@ -504,10 +508,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJobResponse'
-
   /v1/import/jobs/{jobId}:
     get:
-      tags: [Import]
+      tags:
+        - Import
       summary: Get import job status
       operationId: getImportJob
       parameters:
@@ -525,10 +529,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJobResponse'
-
   /v1/mappings/pending:
     get:
-      tags: [Mappings]
+      tags:
+        - Mappings
       summary: List pending external mappings
       operationId: getPendingMappings
       parameters:
@@ -543,10 +547,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope'
-
   /v1/mappings/{mappingId}/approve:
     post:
-      tags: [Mappings]
+      tags:
+        - Mappings
       summary: Approve mapping (requires step-up)
       operationId: approveMapping
       parameters:
@@ -564,10 +568,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope'
-
   /v1/mappings/{mappingId}/reject:
     post:
-      tags: [Mappings]
+      tags:
+        - Mappings
       summary: Reject mapping
       operationId: rejectMapping
       parameters:
@@ -585,10 +589,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelope'
-
   /v1/validate/item:
     post:
-      tags: [Validation]
+      tags:
+        - Validation
       summary: Validate an item definition
       operationId: validateItem
       parameters:
@@ -607,10 +611,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationResponse'
-
   /v1/validate/pack:
     post:
-      tags: [Validation]
+      tags:
+        - Validation
       summary: Validate pack integrity
       operationId: validatePack
       parameters:
@@ -631,6 +635,316 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationResponse'
+  /:
+    post:
+      operationId: msika_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msika_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{catalogId}:
+    get:
+      operationId: msika_get__catalogId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{catalogId}/submit-review:
+    post:
+      operationId: msika_post__catalogId_submit_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{catalogId}/approve:
+    post:
+      operationId: msika_post__catalogId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{catalogId}/publish:
+    post:
+      operationId: msika_post__catalogId_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{catalogId}/rollback/{version}:
+    post:
+      operationId: msika_post__catalogId_rollback_version_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{policyId}:
+    patch:
+      operationId: msika_patch__policyId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msika_get__policyId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /records:
+    post:
+      operationId: msika_post__records
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /records/{recordId}/review:
+    post:
+      operationId: msika_post__records_recordId_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /targets/{targetType}/{targetId}:
+    get:
+      operationId: msika_get__targets_targetType_targetId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queue:
+    get:
+      operationId: msika_get__queue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /csv:
+    post:
+      operationId: msika_post__csv
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources:
+    post:
+      operationId: msika_post__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources/{sourceId}/run:
+    post:
+      operationId: msika_post__sources_sourceId_run
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /jobs/{jobId}:
+    get:
+      operationId: msika_get__jobs_jobId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /catalogs/{catalogId}/items:
+    post:
+      operationId: msika_post__catalogs_catalogId_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msika_get__catalogs_catalogId_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /items/{itemId}:
+    put:
+      operationId: msika_put__items_itemId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msika_get__items_itemId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pending:
+    get:
+      operationId: msika_get__pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{mappingId}/approve:
+    post:
+      operationId: msika_post__mappingId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{mappingId}/reject:
+    post:
+      operationId: msika_post__mappingId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{offeringId}:
+    patch:
+      operationId: msika_patch__offeringId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msika_get__offeringId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orderables:
+    get:
+      operationId: msika_get__orderables
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /item-master:
+    get:
+      operationId: msika_get__item_master
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /chargeables:
+    get:
+      operationId: msika_get__chargeables
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /capabilities/facility:
+    get:
+      operationId: msika_get__capabilities_facility
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /capabilities/provider:
+    get:
+      operationId: msika_get__capabilities_provider
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /catalogs:
+    get:
+      operationId: msika_get__catalogs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /catalogs/emit:
+    post:
+      operationId: msika_post__catalogs_emit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /item:
+    post:
+      operationId: msika_post__item
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pack:
+    post:
+      operationId: msika_post__pack
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -27,7 +27,6 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
-
   /consent-requests/{id}:
     get:
       summary: Get consent request by ID
@@ -43,7 +42,6 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /consent-requests/{id}/grant:
     post:
       summary: Grant consent (gates booking confirmation when required)
@@ -67,7 +65,6 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
         '400':
           $ref: '#/components/responses/BadRequest'
-
   /consent-requests/{id}/refuse:
     post:
       summary: Refuse consent
@@ -83,7 +80,8 @@ paths:
             schema:
               type: object
               properties:
-                reason: { type: string }
+                reason:
+                  type: string
       responses:
         '200':
           description: Consent refused
@@ -91,7 +89,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
-
   /consent-requests/{id}/withdraw:
     post:
       summary: Withdraw previously granted consent
@@ -107,7 +104,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeConsentRequest'
-
   /evaluate:
     post:
       summary: Evaluate consent decision through TSHEPO consent
@@ -133,7 +129,6 @@ paths:
           $ref: '#/components/responses/Denied'
         '503':
           $ref: '#/components/responses/DependencyUnavailable'
-
   /remote-sessions/{id}/verify:
     post:
       summary: Verify a remote consent session token
@@ -149,7 +144,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [token]
+              required:
+                - token
               properties:
                 token:
                   type: string
@@ -166,7 +162,6 @@ paths:
           $ref: '#/components/responses/Denied'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /remote-sessions/{id}/grant:
     post:
       summary: Grant consent through a verified remote session
@@ -193,7 +188,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '503':
           $ref: '#/components/responses/DependencyUnavailable'
-
   /remote-sessions/{id}/refuse:
     post:
       summary: Refuse consent through a verified remote session
@@ -220,7 +214,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '503':
           $ref: '#/components/responses/DependencyUnavailable'
-
   /remote-sessions/{id}/withdraw:
     post:
       summary: Withdraw consent through a verified remote session
@@ -247,7 +240,6 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '503':
           $ref: '#/components/responses/DependencyUnavailable'
-
   /templates:
     post:
       summary: Create a new consent template version
@@ -259,19 +251,35 @@ paths:
           application/json:
             schema:
               type: object
-              required: [templateKey, consentType, title, bodyMarkdown]
+              required:
+                - templateKey
+                - consentType
+                - title
+                - bodyMarkdown
               properties:
-                templateKey: { type: string }
-                version: { type: integer, minimum: 1 }
-                language: { type: string }
-                consentType: { type: string }
-                requiredAssurance: { type: string }
-                title: { type: string }
-                bodyMarkdown: { type: string }
-                allowedMethodsJson: { type: string }
-                ziboConceptCode: { type: string }
-                remoteAllowed: { type: boolean }
-                offlineAllowed: { type: boolean }
+                templateKey:
+                  type: string
+                version:
+                  type: integer
+                  minimum: 1
+                language:
+                  type: string
+                consentType:
+                  type: string
+                requiredAssurance:
+                  type: string
+                title:
+                  type: string
+                bodyMarkdown:
+                  type: string
+                allowedMethodsJson:
+                  type: string
+                ziboConceptCode:
+                  type: string
+                remoteAllowed:
+                  type: boolean
+                offlineAllowed:
+                  type: boolean
       responses:
         '200':
           description: Template created
@@ -281,6 +289,237 @@ paths:
                 $ref: '#/components/schemas/ApiEnvelopeMap'
         '400':
           $ref: '#/components/responses/BadRequest'
+    get:
+      operationId: mvumo_get__templates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/consents:
+    get:
+      operationId: mvumo_get__patients_patientId_consents
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-summary:
+    get:
+      operationId: mvumo_get__consent_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/communication-preferences:
+    get:
+      operationId: mvumo_get__patients_patientId_communication_preferences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: mvumo_put__patients_patientId_communication_preferences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/communication-preferences/history:
+    get:
+      operationId: mvumo_get__patients_patientId_communication_preferences_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/communication-preferences/{id}:
+    patch:
+      operationId: mvumo_patch__patients_patientId_communication_preferences_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/communication-preferences/{id}/withdraw:
+    post:
+      operationId: mvumo_post__patients_patientId_communication_preferences_id_withdraw
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patients/{patientId}/communication-preferences/{id}/reenable:
+    post:
+      operationId: mvumo_post__patients_patientId_communication_preferences_id_reenable
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communication-preferences/evaluate:
+    post:
+      operationId: mvumo_post__communication_preferences_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communication-preferences/offline-sync:
+    post:
+      operationId: mvumo_post__communication_preferences_offline_sync
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /encounters/{encounterId}/consents:
+    get:
+      operationId: mvumo_get__encounters_encounterId_consents
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/explanation:
+    post:
+      operationId: mvumo_post__consent_requests_id_explanation
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/verify-identity:
+    post:
+      operationId: mvumo_post__consent_requests_id_verify_identity
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/partial-grant:
+    post:
+      operationId: mvumo_post__consent_requests_id_partial_grant
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/renew:
+    post:
+      operationId: mvumo_post__consent_requests_id_renew
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/supersede:
+    post:
+      operationId: mvumo_post__consent_requests_id_supersede
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consent-requests/{id}/verify-proof:
+    post:
+      operationId: mvumo_post__consent_requests_id_verify_proof
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /requirements/evaluate:
+    post:
+      operationId: mvumo_post__requirements_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /remote-sessions:
+    post:
+      operationId: mvumo_post__remote_sessions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /remote-sessions/{id}:
+    get:
+      operationId: mvumo_get__remote_sessions_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /offline-sync:
+    post:
+      operationId: mvumo_post__offline_sync
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /templates/{id}:
+    get:
+      operationId: mvumo_get__templates_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: mvumo_put__templates_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /audit/{consentId}:
+    get:
+      operationId: mvumo_get__audit_consentId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consents/{id}/proof:
+    get:
+      operationId: mvumo_get__consents_id_proof
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mvumo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   parameters:

@@ -49,44 +49,45 @@ paths:
   /internal/v1/health:
     get:
       operationId: musheHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/wallets:
     post:
       operationId: createWallet
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Create a new wallet (individual, merchant, or institutional)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateWalletRequest"
+              $ref: '#/components/schemas/CreateWalletRequest'
       responses:
-        "201":
+        '201':
           description: Wallet created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/{walletId}:
     get:
       operationId: getWallet
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Get wallet by ID
       parameters:
         - name: walletId
@@ -96,17 +97,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Wallet details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/by-owner:
     get:
       operationId: getWalletByOwner
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Get wallet by owner type and reference
       parameters:
         - name: owner_type
@@ -114,24 +115,27 @@ paths:
           required: true
           schema:
             type: string
-            enum: [INDIVIDUAL, MERCHANT, INSTITUTIONAL]
+            enum:
+              - INDIVIDUAL
+              - MERCHANT
+              - INSTITUTIONAL
         - name: owner_ref
           in: query
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Wallet details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/{walletId}/balance:
     get:
       operationId: getBalance
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Get wallet balance
       parameters:
         - name: walletId
@@ -141,17 +145,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Balance
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/{walletId}/transactions:
     get:
       operationId: getTransactions
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: List wallet transactions (paginated)
       parameters:
         - name: walletId
@@ -171,17 +175,17 @@ paths:
             type: integer
             default: 20
       responses:
-        "200":
+        '200':
           description: Transaction list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/{walletId}/credit:
     post:
       operationId: creditWallet
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Credit wallet (deposit money)
       parameters:
         - name: walletId
@@ -195,19 +199,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreditWalletRequest"
+              $ref: '#/components/schemas/CreditWalletRequest'
       responses:
-        "200":
+        '200':
           description: Transaction created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/{walletId}/debit:
     post:
       operationId: debitWallet
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Debit wallet (withdraw money)
       parameters:
         - name: walletId
@@ -221,57 +225,57 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DebitWalletRequest"
+              $ref: '#/components/schemas/DebitWalletRequest'
       responses:
-        "200":
+        '200':
           description: Transaction created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/wallets/transfer:
     post:
       operationId: transfer
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Transfer between wallets
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransferRequest"
+              $ref: '#/components/schemas/TransferRequest'
       responses:
-        "200":
+        '200':
           description: Transfer completed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/merchants:
     post:
       operationId: registerMerchant
-      tags: [Merchant]
+      tags:
+        - Merchant
       summary: Register provider as merchant (Provider Number = Merchant ID)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterMerchantRequest"
+              $ref: '#/components/schemas/RegisterMerchantRequest'
       responses:
-        "201":
+        '201':
           description: Merchant registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/merchants/{merchantId}:
     get:
       operationId: getMerchant
-      tags: [Merchant]
+      tags:
+        - Merchant
       summary: Get merchant by ID
       parameters:
         - name: merchantId
@@ -281,17 +285,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Merchant details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/merchants/by-provider:
     get:
       operationId: getMerchantByProvider
-      tags: [Merchant]
+      tags:
+        - Merchant
       summary: Get merchant by provider number
       parameters:
         - name: provider_number
@@ -300,55 +304,55 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Merchant details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/merchants/pay:
     post:
       operationId: payMerchant
-      tags: [Merchant]
+      tags:
+        - Merchant
       summary: Pay a merchant from individual wallet
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PayMerchantRequest"
+              $ref: '#/components/schemas/PayMerchantRequest'
       responses:
-        "200":
+        '200':
           description: Payment completed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/holds:
     post:
       operationId: placeHold
-      tags: [Hold]
+      tags:
+        - Hold
       summary: Place authorization hold on wallet funds
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlaceHoldRequest"
+              $ref: '#/components/schemas/PlaceHoldRequest'
       responses:
-        "201":
+        '201':
           description: Hold placed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/holds/{holdId}/capture:
     post:
       operationId: captureHold
-      tags: [Hold]
+      tags:
+        - Hold
       summary: Capture held funds (convert to debit)
       parameters:
         - name: holdId
@@ -358,17 +362,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Hold captured
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/holds/{holdId}/release:
     post:
       operationId: releaseHold
-      tags: [Hold]
+      tags:
+        - Hold
       summary: Release held funds back to available balance
       parameters:
         - name: holdId
@@ -378,17 +382,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Hold released
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/funding/{walletId}/sources:
     post:
       operationId: addFundingSource
-      tags: [Funding]
+      tags:
+        - Funding
       summary: Add a funding source (bank, mobile money)
       parameters:
         - name: walletId
@@ -402,17 +406,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AddFundingSourceRequest"
+              $ref: '#/components/schemas/AddFundingSourceRequest'
       responses:
-        "201":
+        '201':
           description: Source added
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listFundingSources
-      tags: [Funding]
+      tags:
+        - Funding
       summary: List funding sources for wallet
       parameters:
         - name: walletId
@@ -422,17 +427,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Source list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/funding/{walletId}/deposit:
     post:
       operationId: deposit
-      tags: [Funding]
+      tags:
+        - Funding
       summary: Deposit from linked funding source
       parameters:
         - name: walletId
@@ -446,19 +451,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DepositRequest"
+              $ref: '#/components/schemas/DepositRequest'
       responses:
-        "200":
+        '200':
           description: Deposit completed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/funding/{walletId}/cash-deposit:
     post:
       operationId: cashDeposit
-      tags: [Funding]
+      tags:
+        - Funding
       summary: Cash deposit at health facility
       parameters:
         - name: walletId
@@ -472,19 +477,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CashDepositRequest"
+              $ref: '#/components/schemas/CashDepositRequest'
       responses:
-        "200":
+        '200':
           description: Cash deposit recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards:
     post:
       operationId: issueCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Issue smart card (Java Card dual-interface — health + payment)
       requestBody:
         required: true
@@ -492,31 +497,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [walletId]
+              required:
+                - walletId
               properties:
                 walletId:
                   type: string
                   format: uuid
                 cardType:
                   type: string
-                  enum: [DUAL, PAYMENT_ONLY, HEALTH_ONLY]
+                  enum:
+                    - DUAL
+                    - PAYMENT_ONLY
+                    - HEALTH_ONLY
                   default: DUAL
                 cardNetwork:
                   type: string
-                  enum: [VISA, ZIMSWITCH, DUAL_NETWORK]
+                  enum:
+                    - VISA
+                    - ZIMSWITCH
+                    - DUAL_NETWORK
                   default: ZIMSWITCH
       responses:
-        "201":
+        '201':
           description: Card issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}:
     get:
       operationId: getCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Get card details (card number masked)
       parameters:
         - name: cardId
@@ -526,17 +538,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Card details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/activate:
     post:
       operationId: activateCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Activate card with PIN
       parameters:
         - name: cardId
@@ -551,22 +563,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [pin]
+              required:
+                - pin
               properties:
                 pin:
                   type: string
       responses:
-        "200":
+        '200':
           description: Card activated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/block:
     post:
       operationId: blockCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Block card
       parameters:
         - name: cardId
@@ -581,22 +594,23 @@ paths:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Card blocked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/unblock:
     post:
       operationId: unblockCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Unblock card
       parameters:
         - name: cardId
@@ -606,17 +620,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Card unblocked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/replace:
     post:
       operationId: replaceCard
-      tags: [Card]
+      tags:
+        - Card
       summary: Replace card (blocks old, issues new linked to same wallet)
       parameters:
         - name: cardId
@@ -626,17 +640,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "201":
+        '201':
           description: New card issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/health-data:
     get:
       operationId: getCardHealthData
-      tags: [Card]
+      tags:
+        - Card
       summary: Get health data status on card (metadata only — not encrypted content)
       parameters:
         - name: cardId
@@ -646,17 +660,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Health data metadata
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/health-data/sync:
     post:
       operationId: syncHealthData
-      tags: [Card]
+      tags:
+        - Card
       summary: Trigger health data update (fetches from BUTANO, encrypts, queues for card)
       parameters:
         - name: cardId
@@ -666,17 +680,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "202":
+        '202':
           description: Sync queued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/{cardId}/pending-updates:
     get:
       operationId: getPendingUpdates
-      tags: [Card]
+      tags:
+        - Card
       summary: List pending card updates
       parameters:
         - name: cardId
@@ -686,17 +700,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Pending updates
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/cards/by-wallet/{walletId}:
     get:
       operationId: listCardsByWallet
-      tags: [Card]
+      tags:
+        - Card
       summary: List cards for a wallet
       parameters:
         - name: walletId
@@ -706,12 +720,290 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Card list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
+  /{walletId}/sources:
+    post:
+      operationId: mushewallet_post__walletId_sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: mushewallet_get__walletId_sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/deposit:
+    post:
+      operationId: mushewallet_post__walletId_deposit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/cash-deposit:
+    post:
+      operationId: mushewallet_post__walletId_cash_deposit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: mushewallet_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{holdId}/capture:
+    post:
+      operationId: mushewallet_post__holdId_capture
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{holdId}/release:
+    post:
+      operationId: mushewallet_post__holdId_release
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{merchantId}:
+    get:
+      operationId: mushewallet_get__merchantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-provider:
+    get:
+      operationId: mushewallet_get__by_provider
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pay:
+    post:
+      operationId: mushewallet_post__pay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: mushewallet_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: mushewallet_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}:
+    get:
+      operationId: mushewallet_get__walletId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-owner:
+    get:
+      operationId: mushewallet_get__by_owner
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/balance:
+    get:
+      operationId: mushewallet_get__walletId_balance
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/transactions:
+    get:
+      operationId: mushewallet_get__walletId_transactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/credit:
+    post:
+      operationId: mushewallet_post__walletId_credit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/debit:
+    post:
+      operationId: mushewallet_post__walletId_debit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /transfer:
+    post:
+      operationId: mushewallet_post__transfer
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/activate:
+    post:
+      operationId: mushewallet_post__cardId_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/block:
+    post:
+      operationId: mushewallet_post__cardId_block
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/unblock:
+    post:
+      operationId: mushewallet_post__cardId_unblock
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/replace:
+    post:
+      operationId: mushewallet_post__cardId_replace
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/verify-pin:
+    post:
+      operationId: mushewallet_post__cardId_verify_pin
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/change-pin:
+    put:
+      operationId: mushewallet_put__cardId_change_pin
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/reset-pin:
+    post:
+      operationId: mushewallet_post__cardId_reset_pin
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}:
+    get:
+      operationId: mushewallet_get__cardId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-wallet/{walletId}:
+    get:
+      operationId: mushewallet_get__by_wallet_walletId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/health-data:
+    get:
+      operationId: mushewallet_get__cardId_health_data
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/health-data/sync:
+    post:
+      operationId: mushewallet_post__cardId_health_data_sync
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/pending-updates:
+    get:
+      operationId: mushewallet_get__cardId_pending_updates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushe-wallet-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -22,33 +22,49 @@ paths:
     post:
       operationId: uploadDocument
       summary: Upload a document (multipart)
-      tags: [Documents]
+      tags:
+        - Documents
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [file, subjectType, subjectId]
+              required:
+                - file
+                - subjectType
+                - subjectId
               properties:
                 file:
                   type: string
                   format: binary
                 subjectType:
                   type: string
-                  enum: [CLIENT, PROVIDER, FACILITY, ENCOUNTER, REFERRAL, OTHER]
+                  enum:
+                    - CLIENT
+                    - PROVIDER
+                    - FACILITY
+                    - ENCOUNTER
+                    - REFERRAL
+                    - OTHER
                 subjectId:
                   type: string
                 documentTypeCode:
                   type: string
                 source:
                   type: string
-                  enum: [scanned, uploaded, generated]
+                  enum:
+                    - scanned
+                    - uploaded
+                    - generated
                   default: uploaded
                 issuer:
                   type: string
                 confidentiality:
                   type: string
-                  enum: [NORMAL, RESTRICTED, HIGHLY_RESTRICTED]
+                  enum:
+                    - NORMAL
+                    - RESTRICTED
+                    - HIGHLY_RESTRICTED
                   default: NORMAL
                 retentionPolicyId:
                   type: string
@@ -67,7 +83,8 @@ paths:
     get:
       operationId: searchDocuments
       summary: Search documents by metadata
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - name: subjectType
           in: query
@@ -102,12 +119,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponsePagedDocumentResponse'
-
   /v1/internal/documents/{documentId}:
     get:
       operationId: getDocumentMetadata
       summary: Get document metadata
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       responses:
@@ -119,12 +136,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseDocumentResponse'
         '404':
           description: Document not found
-
   /v1/internal/documents/{documentId}/signed-url:
     get:
       operationId: generateSignedUrl
       summary: Generate time-limited signed download URL
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       responses:
@@ -134,12 +151,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseSignedUrlResponse'
-
   /v1/internal/documents/{documentId}/download:
     get:
       operationId: downloadDocument
       summary: Proxy download (streams binary)
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       responses:
@@ -150,12 +167,12 @@ paths:
               schema:
                 type: string
                 format: binary
-
   /v1/internal/documents/{documentId}/metadata:
     patch:
       operationId: updateDocumentMetadata
       summary: Update document tags and type code
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       requestBody:
@@ -175,12 +192,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseDocumentResponse'
-
   /v1/internal/documents/{documentId}/lifecycle:
     post:
       operationId: lifecycleAction
       summary: Archive, revoke, supersede, or soft-delete a document
-      tags: [Documents]
+      tags:
+        - Documents
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       requestBody:
@@ -195,29 +212,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseDocumentResponse'
-
   /v1/internal/documents/{documentId}/audit:
     get:
       operationId: getDocumentAudit
       summary: Get document audit trail
-      tags: [Audit]
+      tags:
+        - Audit
       parameters:
         - $ref: '#/components/parameters/DocumentId'
       responses:
         '200':
           description: Audit trail
-
   /v1/internal/documentreference/push:
     post:
       operationId: pushDocumentReference
       summary: Push FHIR DocumentReference to BUTANO
-      tags: [FHIR Integration]
+      tags:
+        - FHIR Integration
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required: [documentId]
+              required:
+                - documentId
               properties:
                 documentId:
                   type: string
@@ -225,6 +243,104 @@ paths:
       responses:
         '201':
           description: DocumentReference created in BUTANO
+  /{documentId}/audit:
+    get:
+      operationId: landelaadapter_get__documentId_audit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: landelaadapter_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: landelaadapter_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}:
+    get:
+      operationId: landelaadapter_get__documentId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}/signed-url:
+    get:
+      operationId: landelaadapter_get__documentId_signed_url
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}/download:
+    get:
+      operationId: landelaadapter_get__documentId_download
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}/metadata:
+    patch:
+      operationId: landelaadapter_patch__documentId_metadata
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}/lifecycle:
+    post:
+      operationId: landelaadapter_post__documentId_lifecycle
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{documentId}/fhir-push:
+    post:
+      operationId: landelaadapter_post__documentId_fhir_push
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: landelaadapter_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: landelaadapter_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from landela-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

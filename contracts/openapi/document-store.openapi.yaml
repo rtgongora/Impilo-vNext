@@ -19,13 +19,15 @@ paths:
     post:
       operationId: storeObject
       summary: Store a binary object (multipart upload)
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       requestBody:
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [file]
+              required:
+                - file
               properties:
                 file:
                   type: string
@@ -40,12 +42,12 @@ paths:
       responses:
         '201':
           description: Object stored
-
   /v1/internal/objects/{objectId}:
     get:
       operationId: getObjectMetadata
       summary: Get object metadata
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -59,7 +61,8 @@ paths:
     delete:
       operationId: deleteObject
       summary: Soft-delete an object
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -70,12 +73,12 @@ paths:
       responses:
         '204':
           description: Object deleted
-
   /v1/internal/objects/{objectId}/signed-url:
     get:
       operationId: generateSignedUrl
       summary: Generate pre-signed download URL
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -86,13 +89,13 @@ paths:
       responses:
         '200':
           description: Signed URL
-
   /v1/internal/objects/{objectId}/preview:
     get:
       operationId: generatePreviewUrl
       summary: Generate inline preview payload
       description: Returns a signed URL with MIME/disposition hints for inline-safe preview clients.
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -103,13 +106,13 @@ paths:
       responses:
         '200':
           description: Preview payload
-
   /v1/internal/objects/{objectId}/ocr:
     post:
       operationId: requestOcrExtraction
       summary: Request OCR extraction
       description: Runs OCR using configured provider abstraction and returns latest OCR job payload.
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -123,7 +126,8 @@ paths:
     get:
       operationId: getLatestOcrExtraction
       summary: Get latest OCR extraction payload
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -134,13 +138,13 @@ paths:
       responses:
         '200':
           description: OCR job payload
-
   /v1/internal/objects/{objectId}/signature:
     post:
       operationId: requestDocumentSignature
       summary: Request document signature
       description: Runs signature workflow using configured provider abstraction and returns latest signature job payload.
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -154,7 +158,8 @@ paths:
     get:
       operationId: getLatestDocumentSignature
       summary: Get latest signature job payload
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -165,12 +170,12 @@ paths:
       responses:
         '200':
           description: Signature job payload
-
   /v1/internal/objects/signatures/{jobId}/verify:
     get:
       operationId: verifyDocumentSignature
       summary: Verify signature evidence for a job
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: jobId
           in: path
@@ -181,12 +186,12 @@ paths:
       responses:
         '200':
           description: Signature verification payload
-
   /v1/internal/objects/{objectId}/download:
     get:
       operationId: downloadObject
       summary: Proxy download
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: objectId
           in: path
@@ -202,12 +207,12 @@ paths:
               schema:
                 type: string
                 format: binary
-
   /v1/internal/objects/by-hash/{sha256}:
     get:
       operationId: getObjectByHash
       summary: Find object by SHA-256 hash
-      tags: [Object Storage]
+      tags:
+        - Object Storage
       parameters:
         - name: sha256
           in: path
@@ -219,6 +224,129 @@ paths:
           description: Object metadata
         '404':
           description: Object not found
+  /:
+    post:
+      operationId: document_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}:
+    get:
+      operationId: document_get__objectId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: document_delete__objectId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}/signed-url:
+    get:
+      operationId: document_get__objectId_signed_url
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}/preview:
+    get:
+      operationId: document_get__objectId_preview
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}/download:
+    get:
+      operationId: document_get__objectId_download
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-hash/{sha256}:
+    get:
+      operationId: document_get__by_hash_sha256_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}/ocr:
+    post:
+      operationId: document_post__objectId_ocr
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: document_get__objectId_ocr
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{objectId}/signature:
+    post:
+      operationId: document_post__objectId_signature
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: document_get__objectId_signature
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /signatures/{jobId}/verify:
+    get:
+      operationId: document_get__signatures_jobId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: document_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: document_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from document-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

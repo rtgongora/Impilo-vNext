@@ -35,7 +35,8 @@ paths:
   /internal/v1/campaigns:
     get:
       operationId: campaignsList
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: List campaigns (paged)
       parameters:
         - name: page
@@ -51,7 +52,7 @@ paths:
             minimum: 1
             default: 50
       responses:
-        "200":
+        '200':
           description: Paged campaigns (`ApiResponse` of `PagedResponse`)
           content:
             application/json:
@@ -60,7 +61,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: campaignsCreate
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: Create campaign
       requestBody:
         required: true
@@ -70,18 +72,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/campaigns/{id}:
     get:
       operationId: campaignsGet
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: Get campaign by id
       parameters:
         - name: id
@@ -90,18 +92,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Campaign payload
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/campaigns/{id}/close:
     post:
       operationId: campaignsClose
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: Close campaign
       parameters:
         - name: id
@@ -110,18 +112,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Campaign closed
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/campaigns/{id}/enroll:
     post:
       operationId: campaignsEnroll
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: Enroll participant in campaign
       parameters:
         - name: id
@@ -137,18 +139,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Enrollment response
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/campaigns/{id}/dispatch:
     post:
       operationId: campaignsDispatch
-      tags: [Internal-Campaigns]
+      tags:
+        - Internal-Campaigns
       summary: Dispatch campaign to target channels
       parameters:
         - name: id
@@ -157,13 +159,66 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Dispatch accepted
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    post:
+      operationId: campaigns_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: campaigns_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: campaigns_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/close:
+    post:
+      operationId: campaigns_post__id_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/enroll:
+    post:
+      operationId: campaigns_post__id_enroll
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/dispatch:
+    post:
+      operationId: campaigns_post__id_dispatch
+      tags:
+        - Generated-From-Handler
+      summary: Documented from campaigns-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

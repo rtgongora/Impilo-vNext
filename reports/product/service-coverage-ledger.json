@@ -1,0 +1,2509 @@
+{
+  "generatedAt": "2026-06-07T08:11:35.964Z",
+  "counts": {
+    "total": 129,
+    "surfacedLive": 7,
+    "floating": 2,
+    "stubbed": 0,
+    "unsurfaced": 108,
+    "internalOnly": 12,
+    "unmappedServices": 26,
+    "unregisteredPages": 27
+  },
+  "rows": [
+    {
+      "entity": "ai-model-registry-service",
+      "mavenModule": "ai-model-registry-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "analytics-pipeline-service",
+      "mavenModule": "analytics-pipeline-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "asset-registry-service",
+      "mavenModule": "asset-registry-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "audit-ledger-service",
+      "mavenModule": "audit-ledger-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "booking-service",
+      "mavenModule": "booking-service",
+      "serviceClass": "B",
+      "surfaceStatus": "floating",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "butano-fhir",
+      "mavenModule": "butano-fhir",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "butano-service",
+      "mavenModule": "butano-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "provider-patient-encounter",
+        "outpatient-consultation",
+        "lab-order-result",
+        "emergency-encounter",
+        "chronic-care"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "campaigns-service",
+      "mavenModule": "campaigns-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "public-health-outreach",
+        "surveillance-outbreak"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "card-print-agent",
+      "mavenModule": "card-print-agent",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "device-system-event",
+        "health-id-issuance"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "channels-service",
+      "mavenModule": "channels-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "notification-comms"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "clinical-knowledge-platform-service",
+      "mavenModule": "clinical-knowledge-platform-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "community-service",
+      "mavenModule": "community-service",
+      "serviceClass": "B",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "notification-comms",
+        "social-community",
+        "public-health-outreach"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "connector-fhir-adapter",
+      "mavenModule": "connector-fhir-adapter",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "integration-sync-replay"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "costing-engine-service",
+      "mavenModule": "costing-engine-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "payment-billing-claim",
+        "core-transaction-orchestration"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "coverage-service",
+      "mavenModule": "coverage-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "payment-billing-claim",
+        "coverage-enrollment"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "credential-verification-service",
+      "mavenModule": "credential-verification-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "credential-verification",
+        "provider-registry-onboarding"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "data-access-governance-service",
+      "mavenModule": "data-access-governance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "data-governance-service",
+      "mavenModule": "data-governance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "data-ingestion-service",
+      "mavenModule": "data-ingestion-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "data-pipeline-service",
+      "mavenModule": "data-pipeline-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "data-warehouse-service",
+      "mavenModule": "data-warehouse-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "reporting-dashboard"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "developer-portal-service",
+      "mavenModule": "developer-portal-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "dispatch-service",
+      "mavenModule": "dispatch-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "dispatch-delivery"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "document-service",
+      "mavenModule": "document-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "imaging-order-result",
+        "document-upload"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "experience-bff",
+      "mavenModule": "experience-bff",
+      "serviceClass": "C",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "citizen-onboarding",
+        "provider-login",
+        "workspace-context-selection",
+        "facility-context-selection",
+        "patient-search-selection",
+        "queue-walk-in",
+        "provider-patient-encounter",
+        "outpatient-consultation",
+        "inpatient-admission",
+        "telemedicine-encounter",
+        "lab-order-result",
+        "imaging-order-result",
+        "prescription-dispense",
+        "referral-create",
+        "appointment-scheduling",
+        "consent-capture",
+        "payment-billing-claim",
+        "document-upload",
+        "dispatch-delivery",
+        "notification-comms",
+        "fundo-learning",
+        "reporting-dashboard",
+        "registry-administration",
+        "integration-sync-replay",
+        "health-id-issuance",
+        "marketplace-order",
+        "wellness-journey",
+        "social-community",
+        "public-health-outreach",
+        "crvs-ubomi",
+        "coverage-enrollment",
+        "wallet-payment",
+        "offline-clinical-queue",
+        "emergency-encounter",
+        "core-transaction-orchestration",
+        "surveillance-outbreak",
+        "ai-guidance-nompilo",
+        "credential-verification",
+        "provider-registry-onboarding",
+        "citizen-monitoring",
+        "chronic-care",
+        "blood-donation",
+        "blood-order",
+        "transfusion-episode",
+        "haemovigilance-report"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "fhir-gateway-service",
+      "mavenModule": "fhir-gateway-service",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "integration-sync-replay"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "forms-service",
+      "mavenModule": "forms-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "general-ledger-service",
+      "mavenModule": "general-ledger-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "guidance-service",
+      "mavenModule": "guidance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "provider-patient-encounter",
+        "wellness-journey",
+        "ai-guidance-nompilo"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "hr-payroll-service",
+      "mavenModule": "hr-payroll-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "identity-assurance-service",
+      "mavenModule": "identity-assurance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "citizen-onboarding"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "indawo-service",
+      "mavenModule": "indawo-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "public-health-outreach"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "inpatient-service",
+      "mavenModule": "inpatient-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "inpatient-admission",
+        "emergency-encounter"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "integration-hub",
+      "mavenModule": "integration-hub",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "integration-sync-replay"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "inventory-elmis-adapter",
+      "mavenModule": "inventory-elmis-adapter",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "inventory-service",
+      "mavenModule": "inventory-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "iot-ingestion-service",
+      "mavenModule": "iot-ingestion-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "device-system-event",
+        "citizen-monitoring"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "jobs-service",
+      "mavenModule": "jobs-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "landela-adapter-service",
+      "mavenModule": "landela-adapter-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "document-upload"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "learning-service",
+      "mavenModule": "learning-service",
+      "serviceClass": "B",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "fundo-learning"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "live-service",
+      "mavenModule": "live-service",
+      "serviceClass": "A",
+      "surfaceStatus": "floating",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "llm-orchestration-service",
+      "mavenModule": "llm-orchestration-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "social-community",
+        "ai-guidance-nompilo",
+        "blood-donation"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "madi-service",
+      "mavenModule": "madi-service",
+      "serviceClass": "B",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [
+        "blood-donation",
+        "blood-order",
+        "transfusion-episode",
+        "haemovigilance-report"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "msika-apps-service",
+      "mavenModule": "msika-apps-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "msika-flow-service",
+      "mavenModule": "msika-flow-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "marketplace-order"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "msika-service",
+      "mavenModule": "msika-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "marketplace-order"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "mushe-wallet-service",
+      "mavenModule": "mushe-wallet-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "payment-billing-claim",
+        "marketplace-order",
+        "wallet-payment"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "mushex-service",
+      "mavenModule": "mushex-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "payment-billing-claim",
+        "wallet-payment"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "mvumo-service",
+      "mavenModule": "mvumo-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "telemedicine-encounter",
+        "consent-capture"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "national-data-repository-service",
+      "mavenModule": "national-data-repository-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "ndila-service",
+      "mavenModule": "ndila-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "surveillance-outbreak",
+        "blood-donation"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "ndr-service",
+      "mavenModule": "ndr-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "nhume-service",
+      "mavenModule": "nhume-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "dispatch-delivery",
+        "haemovigilance-report"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "notification-service",
+      "mavenModule": "notification-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "appointment-scheduling",
+        "notification-comms",
+        "citizen-monitoring"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "observability-service",
+      "mavenModule": "observability-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "offline-edge-service",
+      "mavenModule": "offline-edge-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "device-system-event",
+        "offline-clinical-queue"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "offline-sync-service",
+      "mavenModule": "offline-sync-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "integration-sync-replay",
+        "offline-clinical-queue"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "oros-service",
+      "mavenModule": "oros-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "outpatient-consultation",
+        "lab-order-result",
+        "imaging-order-result",
+        "dispatch-delivery",
+        "blood-order"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "pacs-adapter-service",
+      "mavenModule": "pacs-adapter-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "imaging-order-result"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "pct-service",
+      "mavenModule": "pct-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "patient-search-selection",
+        "queue-walk-in",
+        "provider-patient-encounter",
+        "outpatient-consultation",
+        "inpatient-admission",
+        "telemedicine-encounter",
+        "lab-order-result",
+        "prescription-dispense",
+        "referral-create",
+        "offline-clinical-queue",
+        "emergency-encounter",
+        "core-transaction-orchestration",
+        "chronic-care"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "pharmacy-elmis-adapter",
+      "mavenModule": "pharmacy-elmis-adapter",
+      "serviceClass": "D",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "pharmacy-service",
+      "mavenModule": "pharmacy-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "outpatient-consultation",
+        "prescription-dispense",
+        "chronic-care"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "procurement-service",
+      "mavenModule": "procurement-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "product-registry-service",
+      "mavenModule": "product-registry-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "registry-administration"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "referral-service",
+      "mavenModule": "referral-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "referral-create"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "reporting-service",
+      "mavenModule": "reporting-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "reporting-dashboard"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "rtc-gateway-service",
+      "mavenModule": "rtc-gateway-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "telemedicine-encounter"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "rules-service",
+      "mavenModule": "rules-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "scheduling-service",
+      "mavenModule": "scheduling-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "appointment-scheduling"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "schema-registry-service",
+      "mavenModule": "schema-registry-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "search-service",
+      "mavenModule": "search-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "ai-guidance-nompilo"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "security-hardening-service",
+      "mavenModule": "security-hardening-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "share-slip-service",
+      "mavenModule": "share-slip-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "health-id-issuance"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "simba-service",
+      "mavenModule": "simba-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "wellness-journey"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "support-service",
+      "mavenModule": "support-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "surveillance-service",
+      "mavenModule": "surveillance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "reporting-dashboard",
+        "public-health-outreach",
+        "surveillance-outbreak",
+        "haemovigilance-report"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-audit-service",
+      "mavenModule": "tshepo-audit-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-authz-service",
+      "mavenModule": "tshepo-authz-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "provider-login",
+        "device-system-event",
+        "emergency-encounter"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-consent-service",
+      "mavenModule": "tshepo-consent-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "citizen-onboarding",
+        "consent-capture"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-identity-service",
+      "mavenModule": "tshepo-identity-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "citizen-onboarding",
+        "provider-login"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-keys-service",
+      "mavenModule": "tshepo-keys-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-offline-service",
+      "mavenModule": "tshepo-offline-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-service",
+      "mavenModule": "tshepo-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "tuso-service",
+      "mavenModule": "tuso-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "workspace-context-selection",
+        "facility-context-selection",
+        "queue-walk-in",
+        "inpatient-admission",
+        "referral-create",
+        "appointment-scheduling",
+        "registry-administration"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "ubomi-service",
+      "mavenModule": "ubomi-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "crvs-ubomi"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "varapi-service",
+      "mavenModule": "varapi-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "provider-login",
+        "referral-create",
+        "fundo-learning",
+        "registry-administration",
+        "credential-verification",
+        "provider-registry-onboarding"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "vito-service",
+      "mavenModule": "vito-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "citizen-onboarding",
+        "patient-search-selection",
+        "queue-walk-in",
+        "registry-administration",
+        "health-id-issuance",
+        "crvs-ubomi",
+        "transfusion-episode"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "wellness-service",
+      "mavenModule": "wellness-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "wellness-journey",
+        "citizen-monitoring",
+        "chronic-care"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "workflow-service",
+      "mavenModule": "workflow-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "core-transaction-orchestration"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "workforce-governance-service",
+      "mavenModule": "workforce-governance-service",
+      "serviceClass": "B",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "zibo-service",
+      "mavenModule": "zibo-service",
+      "serviceClass": "A",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [
+        "prescription-dispense",
+        "registry-administration"
+      ],
+      "webRoutes": [],
+      "mobileScreens": [],
+      "bffEndpoints": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      }
+    },
+    {
+      "entity": "shared-kernel-java",
+      "mavenModule": "shared-kernel-java",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "security-baseline",
+      "mavenModule": "security-baseline",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "shared-core",
+      "mavenModule": "shared-core",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-contracts",
+      "mavenModule": "tshepo-contracts",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "tshepo-sdk",
+      "mavenModule": "tshepo-sdk",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "tech-companion",
+      "mavenModule": "tech-companion",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "federation-connector",
+      "mavenModule": "federation-connector",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "tech-companion-harness",
+      "mavenModule": "tech-companion-harness",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "tech-companion-mock",
+      "mavenModule": "tech-companion-mock",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "ops-instrumentation",
+      "mavenModule": "ops-instrumentation",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "offline-sdk",
+      "mavenModule": "offline-sdk",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "contract-tests",
+      "mavenModule": "contract-tests",
+      "serviceClass": "G",
+      "surfaceStatus": "internal-only",
+      "journeyIds": [],
+      "internalOnlyReason": "shared library — no runtime surface",
+      "layerStatus": {
+        "L0": "pending"
+      }
+    },
+    {
+      "entity": "butano-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "costa-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "developer-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "ehr",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "inventory-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "knowledge-admin",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "msika-flow-ops",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "msika-flow-portal",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "msika-flow-vendor",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "msika-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "mushex-finance-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "mushex-ops-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "mushex-payer-portal",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "one-ui-shell",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [],
+      "internalOnlyReason": null,
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "ops-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "ops-docs",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "oros-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "pct-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "pharmacy-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "portal",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "self-service",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "shared-ui",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "support-console",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "zibo-web",
+      "mavenModule": null,
+      "serviceClass": "E",
+      "surfaceStatus": "unsurfaced",
+      "journeyIds": [],
+      "internalOnlyReason": "secondary UI workspace — consolidate into one-ui-shell or document",
+      "layerStatus": {
+        "L0": "pending",
+        "L3": "pending"
+      }
+    },
+    {
+      "entity": "citizen-app",
+      "serviceClass": "F",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [],
+      "layerStatus": {
+        "L0": "pending",
+        "L4": "pending"
+      }
+    },
+    {
+      "entity": "provider-app",
+      "serviceClass": "F",
+      "surfaceStatus": "surfaced-live",
+      "journeyIds": [],
+      "layerStatus": {
+        "L0": "pending",
+        "L4": "pending"
+      }
+    }
+  ]
+}

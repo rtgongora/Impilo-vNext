@@ -83,13 +83,31 @@ public class CatalogController {
     }
 
     /**
-     * Look up a single catalog item by code.
+     * Look up a single catalog item by code (path param alias).
      */
     @GetMapping("/{code}")
     public ResponseEntity<ApiResponse<CatalogItemResponse>> lookupItem(@PathVariable String code) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         CatalogItemEntity item = catalogService.lookupItem(code);
+        return ResponseEntity.ok(ApiResponse.ok(CatalogItemResponse.from(item), correlationId));
+    }
+
+    /**
+     * Contract-aligned lookup by query parameter.
+     */
+    @GetMapping("/lookup")
+    public ResponseEntity<ApiResponse<CatalogItemResponse>> lookupItemByQuery(
+            @RequestParam String code,
+            @RequestParam(required = false) String system) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        CatalogItemEntity item = catalogService.lookupItem(code);
+        if (system != null && !system.isBlank()
+                && item.getZiboCanonical() != null
+                && !system.equalsIgnoreCase(item.getZiboCanonical())) {
+            return ResponseEntity.status(404)
+                    .body(ApiResponse.error("OROS_CATALOG_NOT_FOUND", "Catalog item not found for system", 404, correlationId));
+        }
         return ResponseEntity.ok(ApiResponse.ok(CatalogItemResponse.from(item), correlationId));
     }
 

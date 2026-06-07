@@ -35,11 +35,12 @@ paths:
   /internal/v1/clinical/assistant/ask:
     post:
       operationId: ckpAssistantAsk
-      tags: [Internal-Clinical]
+      tags:
+        - Internal-Clinical
       summary: Clinical assistant question
       parameters:
-        - $ref: "#/components/parameters/TenantIdLower"
-        - $ref: "#/components/parameters/ActorIdLower"
+        - $ref: '#/components/parameters/TenantIdLower'
+        - $ref: '#/components/parameters/ActorIdLower'
       requestBody:
         required: true
         content:
@@ -60,7 +61,7 @@ paths:
                   type: string
                   default: PROVIDER
       responses:
-        "200":
+        '200':
           description: Assistant payload under `data`
           content:
             application/json:
@@ -70,11 +71,11 @@ paths:
                   data:
                     type: object
                     additionalProperties: true
-
   /internal/v1/clinical/assistant/traces/{id}:
     get:
       operationId: ckpAssistantTrace
-      tags: [Internal-Clinical]
+      tags:
+        - Internal-Clinical
       summary: Fetch recommendation trace JSON
       parameters:
         - name: id
@@ -84,13 +85,148 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Trace JSON under `data` or not-found envelope
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /assistant/ask:
+    post:
+      operationId: clinicalknowledgeplatform_post__assistant_ask
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assistant/traces/{id}:
+    get:
+      operationId: clinicalknowledgeplatform_get__assistant_traces_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /prescribing/evaluate:
+    post:
+      operationId: clinicalknowledgeplatform_post__prescribing_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rules/evaluate:
+    post:
+      operationId: clinicalknowledgeplatform_post__rules_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pathways:
+    get:
+      operationId: clinicalknowledgeplatform_get__pathways
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pathways/{id}:
+    get:
+      operationId: clinicalknowledgeplatform_get__pathways_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pathways/sessions:
+    post:
+      operationId: clinicalknowledgeplatform_post__pathways_sessions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pathways/sessions/{sessionId}/advance:
+    post:
+      operationId: clinicalknowledgeplatform_post__pathways_sessions_sessionId_advance
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /nudges/evaluate:
+    post:
+      operationId: clinicalknowledgeplatform_post__nudges_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /audit/overrides:
+    post:
+      operationId: clinicalknowledgeplatform_post__audit_overrides
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /review-items:
+    get:
+      operationId: clinicalknowledgeplatform_get__review_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /review-items/{id}/decision:
+    post:
+      operationId: clinicalknowledgeplatform_post__review_items_id_decision
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /documents/{documentId}/ingest-pdf:
+    post:
+      operationId: clinicalknowledgeplatform_post__documents_documentId_ingest_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /documents/{documentId}/ingestion-summary:
+    get:
+      operationId: clinicalknowledgeplatform_get__documents_documentId_ingestion_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /edliz-default-document-id:
+    get:
+      operationId: clinicalknowledgeplatform_get__edliz_default_document_id
+      tags:
+        - Generated-From-Handler
+      summary: Documented from clinical-knowledge-platform-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

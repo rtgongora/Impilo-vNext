@@ -72,6 +72,9 @@ public class LiveOutboxPublisher extends CompanionOutboxPublisher {
 
     @Override
     protected String resolveLegacyTopic(OutboxRow row) {
+        if (row.eventType() != null && row.eventType().startsWith("impilo.live.")) {
+            return row.eventType();
+        }
         return switch (row.aggregateType()) {
             case "LIVE_EVENT" -> "live.events";
             case "LIVE_REGISTRATION" -> "live.registrations";

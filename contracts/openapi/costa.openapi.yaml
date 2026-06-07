@@ -51,35 +51,35 @@ tags:
     description: Bill-level audit trail aggregation
 
 paths:
-
   /internal/v1/health:
     get:
       operationId: costaInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: costaInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -88,578 +88,1298 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /costa/v1/bills:
     get:
       operationId: costaListBills
-      tags: [Bills]
+      tags:
+        - Bills
       summary: List bills (paged)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Paged bill headers
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedBillHeader"
-
+                $ref: '#/components/schemas/ApiResponsePagedBillHeader'
   /costa/v1/bills/draft:
     post:
       operationId: costaCreateBillDraft
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Create a draft bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BillDraftRequest"
+              $ref: '#/components/schemas/BillDraftRequest'
       responses:
-        "201":
+        '201':
           description: Draft created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillHeader"
-
+                $ref: '#/components/schemas/ApiResponseBillHeader'
   /costa/v1/bills/{id}:
     get:
       operationId: costaGetBill
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Get bill with lines and parties
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Bill aggregate
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillAggregate"
-
+                $ref: '#/components/schemas/ApiResponseBillAggregate'
   /costa/v1/bills/{id}/lines:
     post:
       operationId: costaPostBillLine
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Post a bill line
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PostLineRequest"
+              $ref: '#/components/schemas/PostLineRequest'
       responses:
-        "200":
+        '200':
           description: No line created (noop)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillLineNullable"
-        "201":
+                $ref: '#/components/schemas/ApiResponseBillLineNullable'
+        '201':
           description: Line created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillLine"
-
+                $ref: '#/components/schemas/ApiResponseBillLine'
   /costa/v1/bills/{id}/recompute:
     post:
       operationId: costaRecomputeBill
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Recompute bill totals
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Updated bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillHeader"
-
+                $ref: '#/components/schemas/ApiResponseBillHeader'
   /costa/v1/bills/{id}/submit-approval:
     post:
       operationId: costaSubmitBillApproval
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Submit bill for approval
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillHeader"
-
+                $ref: '#/components/schemas/ApiResponseBillHeader'
   /costa/v1/bills/{id}/approve:
     post:
       operationId: costaApproveBill
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Approve bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApprovalRequest"
+              $ref: '#/components/schemas/ApprovalRequest'
       responses:
-        "200":
+        '200':
           description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillHeader"
-
+                $ref: '#/components/schemas/ApiResponseBillHeader'
   /costa/v1/bills/{id}/finalize:
     post:
       operationId: costaFinalizeBill
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Finalize bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Bill header
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillHeader"
-
+                $ref: '#/components/schemas/ApiResponseBillHeader'
   /costa/v1/bills/{id}/issue-invoice:
     post:
       operationId: costaIssueInvoice
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Issue invoice for bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "201":
+        '201':
           description: Invoice created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseInvoice"
-
+                $ref: '#/components/schemas/ApiResponseInvoice'
   /costa/v1/bills/{id}/create-payment-intent:
     post:
       operationId: costaCreatePaymentIntent
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Create payment intent for bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PaymentIntentRequest"
+              $ref: '#/components/schemas/PaymentIntentRequest'
       responses:
-        "201":
+        '201':
           description: Payment intent
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePayment"
-
+                $ref: '#/components/schemas/ApiResponsePayment'
   /costa/v1/bills/{id}/refunds:
     get:
       operationId: costaListBillRefunds
-      tags: [Bills]
+      tags:
+        - Bills
       summary: List refunds for bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Refunds
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseRefundList"
-
+                $ref: '#/components/schemas/ApiResponseRefundList'
   /costa/v1/bills/{id}/refund:
     post:
       operationId: costaCreateRefund
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Create refund for bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RefundRequest"
+              $ref: '#/components/schemas/RefundRequest'
       responses:
-        "201":
+        '201':
           description: Refund created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseRefund"
-
+                $ref: '#/components/schemas/ApiResponseRefund'
   /costa/v1/bills/{id}/payments:
     get:
       operationId: costaListBillPayments
-      tags: [Bills]
+      tags:
+        - Bills
       summary: List payments for bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Payments
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePaymentList"
-
+                $ref: '#/components/schemas/ApiResponsePaymentList'
   /costa/v1/bills/{id}/payments/{paymentId}/cancel:
     post:
       operationId: costaCancelPayment
-      tags: [Bills]
+      tags:
+        - Bills
       summary: Cancel a payment on a bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
         - name: paymentId
           in: path
           required: true
-          schema: { type: integer, format: int64 }
+          schema:
+            type: integer
+            format: int64
       responses:
-        "200":
+        '200':
           description: Payment updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePayment"
-
+                $ref: '#/components/schemas/ApiResponsePayment'
   /costa/v1/claims:
     get:
       operationId: costaListClaims
-      tags: [Claims]
+      tags:
+        - Claims
       summary: List claim packs
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
-        "200":
+        '200':
           description: Paged claims
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedClaimPack"
-
+                $ref: '#/components/schemas/ApiResponsePagedClaimPack'
   /costa/v1/claims/{id}:
     get:
       operationId: costaGetClaim
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Get claim pack by id
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: integer, format: int64 }
+          schema:
+            type: integer
+            format: int64
       responses:
-        "200":
+        '200':
           description: Claim pack
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseClaimPack"
-
+                $ref: '#/components/schemas/ApiResponseClaimPack'
   /costa/v1/payments:
     get:
       operationId: costaListPayments
-      tags: [Payments]
+      tags:
+        - Payments
       summary: List payments across bills
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
-        "200":
+        '200':
           description: Paged payments
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedPayment"
-
+                $ref: '#/components/schemas/ApiResponsePagedPayment'
   /costa/v1/estimate:
     post:
       operationId: costaCreateEstimate
-      tags: [Estimates]
+      tags:
+        - Estimates
       summary: Run costing estimate
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EstimateRequest"
+              $ref: '#/components/schemas/EstimateRequest'
       responses:
-        "200":
+        '200':
           description: Estimate result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseEstimateResult"
-
+                $ref: '#/components/schemas/ApiResponseEstimateResult'
   /costa/v1/tariffs:
     get:
       operationId: costaListTariffs
-      tags: [Tariffs]
+      tags:
+        - Tariffs
       summary: List tariffs
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
-        "200":
+        '200':
           description: Paged tariffs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedTariff"
-
+                $ref: '#/components/schemas/ApiResponsePagedTariff'
   /costa/v1/tariffs/import:
     post:
       operationId: costaImportTariffsCsv
-      tags: [Tariffs]
+      tags:
+        - Tariffs
       summary: Import tariffs from CSV
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [file]
+              required:
+                - file
               properties:
                 file:
                   type: string
                   format: binary
       responses:
-        "200":
+        '200':
           description: Imported tariffs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseTariffList"
-        "400":
+                $ref: '#/components/schemas/ApiResponseTariffList'
+        '400':
           description: Import failed
-
   /costa/v1/rulesets:
     get:
       operationId: costaListRulesets
-      tags: [Rulesets]
+      tags:
+        - Rulesets
       summary: List charging rulesets
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
-        "200":
+        '200':
           description: Paged rulesets
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedRuleset"
-
+                $ref: '#/components/schemas/ApiResponsePagedRuleset'
   /costa/v1/rulesets/{id}/publish:
     post:
       operationId: costaPublishRuleset
-      tags: [Rulesets]
+      tags:
+        - Rulesets
       summary: Publish a ruleset
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: integer, format: int64 }
+          schema:
+            type: integer
+            format: int64
       responses:
-        "200":
+        '200':
           description: Published ruleset
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseRuleset"
-
+                $ref: '#/components/schemas/ApiResponseRuleset'
   /costa/v1/audit/bill/{id}:
     get:
       operationId: costaAuditBill
-      tags: [Audit]
+      tags:
+        - Audit
       summary: Aggregate audit view for a bill
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Audit bundle
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseBillAudit"
+                $ref: '#/components/schemas/ApiResponseBillAudit'
+  /bill/{id}:
+    get:
+      operationId: costingengine_get__bill_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    get:
+      operationId: costingengine_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: costingengine_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /draft:
+    post:
+      operationId: costingengine_post__draft
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: costingengine_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/lines:
+    post:
+      operationId: costingengine_post__id_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/recompute:
+    post:
+      operationId: costingengine_post__id_recompute
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/submit-approval:
+    post:
+      operationId: costingengine_post__id_submit_approval
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/approve:
+    post:
+      operationId: costingengine_post__id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/finalize:
+    post:
+      operationId: costingengine_post__id_finalize
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/issue-invoice:
+    post:
+      operationId: costingengine_post__id_issue_invoice
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/create-payment-intent:
+    post:
+      operationId: costingengine_post__id_create_payment_intent
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/refunds:
+    get:
+      operationId: costingengine_get__id_refunds
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/refund:
+    post:
+      operationId: costingengine_post__id_refund
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/payments:
+    get:
+      operationId: costingengine_get__id_payments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/payments/{paymentId}/cancel:
+    post:
+      operationId: costingengine_post__id_payments_paymentId_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/spend:
+    put:
+      operationId: costingengine_put__id_spend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /generate:
+    post:
+      operationId: costingengine_post__generate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /revenue-summary:
+    get:
+      operationId: costingengine_get__revenue_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claims-expenditure:
+    get:
+      operationId: costingengine_get__claims_expenditure
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider-payments:
+    get:
+      operationId: costingengine_get__provider_payments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /debt-aging:
+    get:
+      operationId: costingengine_get__debt_aging
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /budget-vs-actual:
+    get:
+      operationId: costingengine_get__budget_vs_actual
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /close-period:
+    post:
+      operationId: costingengine_post__close_period
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cpid}:
+    get:
+      operationId: costingengine_get__cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cpid}/transactions:
+    get:
+      operationId: costingengine_get__cpid_transactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cpid}/outstanding:
+    get:
+      operationId: costingengine_get__cpid_outstanding
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cpid}/payments:
+    post:
+      operationId: costingengine_post__cpid_payments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/pay:
+    put:
+      operationId: costingengine_put__id_pay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/publish:
+    post:
+      operationId: costingengine_post__id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /import:
+    post:
+      operationId: costingengine_post__import
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-libraries:
+    get:
+      operationId: costingengine_get__tariff_libraries
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-lists:
+    get:
+      operationId: costingengine_get__tariff_lists
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-lists/{id}:
+    get:
+      operationId: costingengine_get__tariff_lists_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cost-estimate:
+    post:
+      operationId: costingengine_post__cost_estimate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /billing-decisions/{id}:
+    get:
+      operationId: costingengine_get__billing_decisions_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /charge-sheets:
+    post:
+      operationId: costingengine_post__charge_sheets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /charge-sheets/{id}:
+    get:
+      operationId: costingengine_get__charge_sheets_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /charge-sheets/{id}/submit:
+    post:
+      operationId: costingengine_post__charge_sheets_id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /charge-sheets/{id}/verify:
+    post:
+      operationId: costingengine_post__charge_sheets_id_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /invoices/from-cost-estimate:
+    post:
+      operationId: costingengine_post__invoices_from_cost_estimate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claims/from-invoice:
+    post:
+      operationId: costingengine_post__claims_from_invoice
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /payment-handoff:
+    post:
+      operationId: costingengine_post__payment_handoff
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-lists/{id}/approve:
+    post:
+      operationId: costingengine_post__tariff_lists_id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-lists/{id}/retire:
+    post:
+      operationId: costingengine_post__tariff_lists_id_retire
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload:
+    post:
+      operationId: costingengine_post__tariff_upload
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}:
+    get:
+      operationId: costingengine_get__tariff_upload_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}/rows:
+    get:
+      operationId: costingengine_get__tariff_upload_id_rows
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}/column-mapping:
+    put:
+      operationId: costingengine_put__tariff_upload_id_column_mapping
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}/validate:
+    post:
+      operationId: costingengine_post__tariff_upload_id_validate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}/submit:
+    post:
+      operationId: costingengine_post__tariff_upload_id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tariff-upload/{id}/approve-import:
+    post:
+      operationId: costingengine_post__tariff_upload_id_approve_import
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cost-events:
+    post:
+      operationId: costingengine_post__cost_events
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: costingengine_get__cost_events
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /open:
+    post:
+      operationId: costingengine_post__open
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cashupId}/collection:
+    put:
+      operationId: costingengine_put__cashupId_collection
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cashupId}/close:
+    put:
+      operationId: costingengine_put__cashupId_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summary/budget-vs-actual:
+    get:
+      operationId: costingengine_get__summary_budget_vs_actual
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{centerId}:
+    get:
+      operationId: costingengine_get__centerId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: costingengine_put__centerId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: costingengine_delete__centerId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{centerId}/expenses:
+    post:
+      operationId: costingengine_post__centerId_expenses
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /invoices:
+    get:
+      operationId: costingengine_get__invoices
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /subsidies:
+    get:
+      operationId: costingengine_get__subsidies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /invoices/{invoiceId}:
+    get:
+      operationId: costingengine_get__invoices_invoiceId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /invoices/{invoiceId}/lines:
+    get:
+      operationId: costingengine_get__invoices_invoiceId_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /invoices/{invoiceId}/allocations:
+    get:
+      operationId: costingengine_get__invoices_invoiceId_allocations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /charges:
+    post:
+      operationId: costingengine_post__charges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: costingengine_get__charges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /debtor-outstanding:
+    get:
+      operationId: costingengine_get__debtor_outstanding
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /write-off:
+    post:
+      operationId: costingengine_post__write_off
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /payments:
+    put:
+      operationId: costingengine_put__payments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summary:
+    get:
+      operationId: costingengine_get__summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-department:
+    get:
+      operationId: costingengine_get__by_department
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: costingengine_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: costingengine_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from costing-engine-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

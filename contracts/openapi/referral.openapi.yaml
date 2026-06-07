@@ -8,7 +8,8 @@ paths:
     get:
       summary: Referral service health probe
       operationId: getReferralHealth
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service healthy
@@ -17,12 +18,12 @@ paths:
               schema:
                 type: string
                 example: ok
-
   /internal/v1/referrals:
     get:
       summary: List referrals for a patient
       operationId: listReferrals
-      tags: [Referral]
+      tags:
+        - Referral
       parameters:
         - name: patientId
           in: query
@@ -40,7 +41,8 @@ paths:
     post:
       summary: Create referral
       operationId: createReferral
-      tags: [Referral]
+      tags:
+        - Referral
       requestBody:
         required: true
         content:
@@ -56,12 +58,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/referrals/{id}:
     get:
       summary: Get referral by id
       operationId: getReferral
-      tags: [Referral]
+      tags:
+        - Referral
       parameters:
         - name: id
           in: path
@@ -76,12 +78,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/referrals/{id}/accept:
     post:
       summary: Accept referral
       operationId: acceptReferral
-      tags: [Referral]
+      tags:
+        - Referral
       parameters:
         - name: id
           in: path
@@ -96,12 +98,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/referrals/{id}/respond:
     post:
       summary: Respond to referral
       operationId: respondReferral
-      tags: [Referral]
+      tags:
+        - Referral
       parameters:
         - name: id
           in: path
@@ -123,12 +125,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/referrals/{id}/complete:
     post:
       summary: Complete referral
       operationId: completeReferral
-      tags: [Referral]
+      tags:
+        - Referral
       parameters:
         - name: id
           in: path
@@ -150,3 +152,42 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /{id}:
+    get:
+      operationId: referral_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from referral-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/accept:
+    post:
+      operationId: referral_post__id_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from referral-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/respond:
+    post:
+      operationId: referral_post__id_respond
+      tags:
+        - Generated-From-Handler
+      summary: Documented from referral-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/complete:
+    post:
+      operationId: referral_post__id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from referral-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  schemas: {}

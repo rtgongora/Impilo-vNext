@@ -44,31 +44,32 @@ paths:
   /internal/v1/health:
     get:
       operationId: ubomiInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: ubomiInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -77,23 +78,23 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/births:
     get:
       operationId: ubomiListBirths
-      tags: [Birth]
+      tags:
+        - Birth
       summary: List birth notifications (paginated)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: page
           in: query
           schema:
@@ -108,23 +109,23 @@ paths:
             maximum: 200
             default: 50
       responses:
-        "200":
+        '200':
           description: Page of birth notifications (ApiResponse envelope)
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
     post:
       operationId: ubomiSubmitBirth
-      tags: [Birth]
+      tags:
+        - Birth
       summary: Submit a birth notification
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
@@ -134,13 +135,58 @@ paths:
               description: BirthNotificationEntity — align with service DTO in later revision
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Stored notification
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /{notificationId}/approve:
+    post:
+      operationId: ubomi_post__notificationId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ubomi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{notificationId}/certify:
+    post:
+      operationId: ubomi_post__notificationId_certify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ubomi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{registrationNumber}:
+    get:
+      operationId: ubomi_get__registrationNumber_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ubomi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: ubomi_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ubomi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: ubomi_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ubomi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -30,10 +30,11 @@ paths:
   /internal/v1/procurement/suppliers:
     get:
       operationId: procSuppliers
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List suppliers
       responses:
-        "200":
+        '200':
           description: Suppliers
           content:
             application/json:
@@ -42,13 +43,22 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_suppliers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/procurement/requisitions:
     get:
       operationId: procRequisitions
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List requisitions
       responses:
-        "200":
+        '200':
           description: Requisitions
           content:
             application/json:
@@ -57,13 +67,22 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_requisitions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/procurement/purchase-orders:
     get:
       operationId: procPurchaseOrders
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List purchase orders
       responses:
-        "200":
+        '200':
           description: POs
           content:
             application/json:
@@ -72,13 +91,22 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_purchase_orders
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/procurement/grn:
     get:
       operationId: procListGrn
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List goods received notes
       responses:
-        "200":
+        '200':
           description: GRNs
           content:
             application/json:
@@ -89,7 +117,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: procCreateGrn
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: Record GRN (emits procurement.grn.received)
       requestBody:
         required: true
@@ -99,7 +128,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: GRN created
           content:
             application/json:
@@ -109,10 +138,11 @@ paths:
   /internal/v1/procurement/invoices:
     get:
       operationId: procInvoices
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List supplier invoices
       responses:
-        "200":
+        '200':
           description: Invoices
           content:
             application/json:
@@ -121,10 +151,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_invoices
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/procurement/invoices/{id}/match:
     post:
       operationId: procMatchInvoice
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: Attempt three-way match
       parameters:
         - name: id
@@ -134,7 +173,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Invoice after match attempt
           content:
             application/json:
@@ -144,7 +183,8 @@ paths:
   /internal/v1/procurement/invoices/{id}/pay:
     post:
       operationId: procPayInvoice
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: Mark invoice paid
       parameters:
         - name: id
@@ -154,7 +194,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Updated invoice
           content:
             application/json:
@@ -164,10 +204,11 @@ paths:
   /internal/v1/procurement/rfqs:
     get:
       operationId: procRfqs
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: List RFQs
       responses:
-        "200":
+        '200':
           description: RFQs
           content:
             application/json:
@@ -176,10 +217,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_rfqs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/procurement/rfqs/{id}/responses:
     get:
       operationId: procRfqResponses
-      tags: [Procurement]
+      tags:
+        - Procurement
       summary: RFQ supplier responses
       parameters:
         - name: id
@@ -189,7 +239,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Responses
           content:
             application/json:
@@ -198,6 +248,57 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+    post:
+      operationId: procurement_post__internal_v1_procurement_rfqs_id_responses
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/procurement/requisitions/{id}/lines:
+    get:
+      operationId: procurement_get__internal_v1_procurement_requisitions_id_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: procurement_post__internal_v1_procurement_requisitions_id_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/procurement/purchase-orders/{id}/lines:
+    get:
+      operationId: procurement_get__internal_v1_procurement_purchase_orders_id_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: procurement_post__internal_v1_procurement_purchase_orders_id_lines
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/health:
+    get:
+      operationId: procurement_get__internal_v1_health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from procurement-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

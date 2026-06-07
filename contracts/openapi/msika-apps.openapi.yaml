@@ -30,27 +30,36 @@ tags:
 paths:
   /internal/v1/marketplace/apps:
     get:
-      tags: [Marketplace Items]
+      tags:
+        - Marketplace Items
       summary: List marketplace items
       parameters:
         - in: query
           name: type
-          schema: { $ref: '#/components/schemas/CapabilityType' }
+          schema:
+            $ref: '#/components/schemas/CapabilityType'
         - in: query
           name: category
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: visibility
-          schema: { $ref: '#/components/schemas/MarketplaceVisibility' }
+          schema:
+            $ref: '#/components/schemas/MarketplaceVisibility'
         - in: query
           name: search
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: facilityId
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: rolesAvailable
-          schema: { type: array, items: { type: string } }
+          schema:
+            type: array
+            items:
+              type: string
           style: form
           explode: true
       responses:
@@ -60,29 +69,32 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/MarketplaceItem' }
-
+                items:
+                  $ref: '#/components/schemas/MarketplaceItem'
   /internal/v1/marketplace/apps/{itemId}:
     get:
-      tags: [Marketplace Items]
+      tags:
+        - Marketplace Items
       summary: Get marketplace item detail
       parameters:
         - in: path
           name: itemId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MarketplaceItem' }
+              schema:
+                $ref: '#/components/schemas/MarketplaceItem'
         '404':
           description: Not found
-
   /internal/v1/marketplace/publishers:
     get:
-      tags: [Publishers]
+      tags:
+        - Publishers
       summary: List publishers
       responses:
         '200':
@@ -91,19 +103,22 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Publisher' }
-
+                items:
+                  $ref: '#/components/schemas/Publisher'
   /internal/v1/marketplace/activation-requests:
     get:
-      tags: [Activation Requests]
+      tags:
+        - Activation Requests
       summary: List activation requests
       parameters:
         - in: query
           name: status
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: itemId
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -111,78 +126,91 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/ActivationRequest' }
+                items:
+                  $ref: '#/components/schemas/ActivationRequest'
     post:
-      tags: [Activation Requests]
+      tags:
+        - Activation Requests
       summary: Create an activation request
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ActivationRequestCreate' }
+            schema:
+              $ref: '#/components/schemas/ActivationRequestCreate'
       responses:
         '201':
           description: Created
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ActivationRequest' }
-
+              schema:
+                $ref: '#/components/schemas/ActivationRequest'
   /internal/v1/marketplace/activation-requests/{requestId}/approve:
     post:
-      tags: [Activation Requests]
+      tags:
+        - Activation Requests
       summary: Approve an activation request (creates an installation)
       parameters:
         - in: path
           name: requestId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/ApprovalDecision' }
+            schema:
+              $ref: '#/components/schemas/ApprovalDecision'
       responses:
         '200':
           description: Approved
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Installation' }
-
+              schema:
+                $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/activation-requests/{requestId}/reject:
     post:
-      tags: [Activation Requests]
+      tags:
+        - Activation Requests
       summary: Reject an activation request
       parameters:
         - in: path
           name: requestId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/RejectionDecision' }
+            schema:
+              $ref: '#/components/schemas/RejectionDecision'
       responses:
         '200':
           description: Rejected
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ActivationRequest' }
-
+              schema:
+                $ref: '#/components/schemas/ActivationRequest'
   /internal/v1/marketplace/installations:
     get:
-      tags: [Installations]
+      tags:
+        - Installations
       summary: List installations
       parameters:
         - in: query
           name: tenantId
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: facilityId
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: itemId
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -190,33 +218,37 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/Installation' }
-
+                items:
+                  $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/installations/{installationId}:
     get:
-      tags: [Installations]
+      tags:
+        - Installations
       summary: Get installation detail
       parameters:
         - in: path
           name: installationId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Installation' }
-
+              schema:
+                $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/installations/{installationId}/configure:
     post:
-      tags: [Installations]
+      tags:
+        - Installations
       summary: Update installation configuration
       parameters:
         - in: path
           name: installationId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -224,69 +256,82 @@ paths:
             schema:
               type: object
               properties:
-                configuration: { type: object, additionalProperties: true }
+                configuration:
+                  type: object
+                  additionalProperties: true
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Installation' }
-
+              schema:
+                $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/installations/{installationId}/suspend:
     post:
-      tags: [Installations]
+      tags:
+        - Installations
       summary: Suspend an installation
       parameters:
         - in: path
           name: installationId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
-                reason: { type: string }
+                reason:
+                  type: string
       responses:
         '200':
           description: Suspended
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Installation' }
-
+              schema:
+                $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/installations/{installationId}/reinstate:
     post:
-      tags: [Installations]
+      tags:
+        - Installations
       summary: Reinstate a suspended installation
       parameters:
         - in: path
           name: installationId
           required: true
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: Reinstated
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Installation' }
-
+              schema:
+                $ref: '#/components/schemas/Installation'
   /internal/v1/marketplace/audit-events:
     get:
-      tags: [Marketplace Audit]
+      tags:
+        - Marketplace Audit
       summary: List marketplace audit events
       parameters:
         - in: query
           name: itemId
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: installationId
-          schema: { type: string }
+          schema:
+            type: string
         - in: query
           name: limit
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
         '200':
           description: OK
@@ -294,7 +339,142 @@ paths:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/MarketplaceAuditEvent' }
+                items:
+                  $ref: '#/components/schemas/MarketplaceAuditEvent'
+  /:
+    get:
+      operationId: msikaapps_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: msikaapps_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: msikaapps_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/decision:
+    post:
+      operationId: msikaapps_post__id_decision
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/configure:
+    post:
+      operationId: msikaapps_post__id_configure
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/activate:
+    post:
+      operationId: msikaapps_post__id_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/suspend:
+    post:
+      operationId: msikaapps_post__id_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reinstate:
+    post:
+      operationId: msikaapps_post__id_reinstate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /installations/{installationId}:
+    get:
+      operationId: msikaapps_get__installations_installationId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /installations/{installationId}/configure:
+    post:
+      operationId: msikaapps_post__installations_installationId_configure
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /installations/{installationId}/suspend:
+    post:
+      operationId: msikaapps_post__installations_installationId_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /installations/{installationId}/reinstate:
+    post:
+      operationId: msikaapps_post__installations_installationId_reinstate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemId}:
+    get:
+      operationId: msikaapps_get__itemId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/approve:
+    post:
+      operationId: msikaapps_post__requestId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/reject:
+    post:
+      operationId: msikaapps_post__requestId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-apps-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas:

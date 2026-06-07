@@ -18,7 +18,8 @@ servers:
 paths:
   /mushex/v1/payment-intents:
     get:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: List payment intents by source (Phase 5 follow-on)
       operationId: listPaymentIntentsBySource
       parameters:
@@ -47,7 +48,8 @@ paths:
         '400':
           description: '`VALIDATION_ERROR` — missing or invalid source filters.'
     post:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: Create a payment intent
       operationId: createPaymentIntent
       requestBody:
@@ -63,10 +65,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_PaymentIntent'
-
   /mushex/v1/payment-intents/{id}:
     get:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: Get payment intent by ID
       operationId: getPaymentIntent
       parameters:
@@ -82,10 +84,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_PaymentIntent'
-
   /mushex/v1/payment-intents/{id}/cancel:
     post:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: Cancel a payment intent
       operationId: cancelPaymentIntent
       parameters:
@@ -97,15 +99,14 @@ paths:
       responses:
         '200':
           description: Intent cancelled
-
   /mushex/v1/payment-intents/{id}/attempts:
     get:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: List payment attempts persisted against an intent (Phase 3 follow-on)
       description: >
-        Chronological (ascending by `requestedAt`) read endpoint. Returns the empty list
-        if the intent exists but has no attempts; returns `404 INTENT_NOT_FOUND` if the
-        intent does not exist.
+        Chronological (ascending by `requestedAt`) read endpoint. Returns the empty list if the intent exists but has no
+        attempts; returns `404 INTENT_NOT_FOUND` if the intent does not exist.
       operationId: listPaymentAttempts
       parameters:
         - name: id
@@ -119,20 +120,17 @@ paths:
         '404':
           description: '`INTENT_NOT_FOUND` — no intent for the given id.'
     post:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: Initiate a payment attempt against an existing intent (Phase 3 — attempt-time rail enforcement)
       description: >
-        Creates a payment attempt for the named intent and applies the rail-enforcement
-        contract documented in
-        `docs/design/phase-3-attempt-time-rail-enforcement-implementation.md`.
-        The effective rail is read from the intent's persisted
-        `metadata.rail_selection.effective_rail`. A three-leg safety gate
-        (`mushex.adapters.<rail>.{enabled,credentials-configured}` *and*
-        `PaymentRailAdapter.liveCapable()`) prevents real-money adapters from being
-        called unless an operator has explicitly opted in *and* a real provider client
-        is wired in. Blocked attempts are still persisted with
-        `enforcement_metadata.safety_gate` set to either `BLOCKED_PRE_LIVE` (config
-        flags off) or `BLOCKED_NOT_LIVE_CAPABLE` (adapter is a stub).
+        Creates a payment attempt for the named intent and applies the rail-enforcement contract documented in
+        `docs/design/phase-3-attempt-time-rail-enforcement-implementation.md`. The effective rail is read from the
+        intent's persisted `metadata.rail_selection.effective_rail`. A three-leg safety gate
+        (`mushex.adapters.<rail>.{enabled,credentials-configured}` *and* `PaymentRailAdapter.liveCapable()`) prevents
+        real-money adapters from being called unless an operator has explicitly opted in *and* a real provider client is
+        wired in. Blocked attempts are still persisted with `enforcement_metadata.safety_gate` set to either
+        `BLOCKED_PRE_LIVE` (config flags off) or `BLOCKED_NOT_LIVE_CAPABLE` (adapter is a stub).
       operationId: initiatePaymentAttempt
       parameters:
         - name: id
@@ -143,7 +141,9 @@ paths:
         - name: X-Idempotency-Key
           in: header
           required: false
-          description: Optional caller-supplied idempotency key. Body field `idempotencyKey` (when non-blank) takes precedence over this header.
+          description: >-
+            Optional caller-supplied idempotency key. Body field `idempotencyKey` (when non-blank) takes precedence over
+            this header.
           schema:
             type: string
       requestBody:
@@ -159,16 +159,15 @@ paths:
           description: '`INTENT_NOT_FOUND` — no intent for the given id.'
         '422':
           description: '`INTENT_NOT_PAYABLE` or `RAIL_ADAPTER_UNAVAILABLE_AT_ATTEMPT`.'
-
   /mushex/v1/payment-intents/{id}/attempts/reselect:
     post:
-      tags: [Payments]
+      tags:
+        - Payments
       summary: Re-run rail selection for an existing intent (Phase 3 follow-on)
       description: >
-        Re-runs `RailSelectionPolicy` against the persisted intent and writes the new
-        decision to `metadata.rail_selection`. The previous decision is preserved on
-        `metadata.rail_selection.history[]` (an array of snapshots). No adapter is
-        called and no money moves. Emits an `ATTEMPT_RESELECTED` outbox event on
+        Re-runs `RailSelectionPolicy` against the persisted intent and writes the new decision to
+        `metadata.rail_selection`. The previous decision is preserved on `metadata.rail_selection.history[]` (an array
+        of snapshots). No adapter is called and no money moves. Emits an `ATTEMPT_RESELECTED` outbox event on
         `mushex.payment.attempt.reselected`.
       operationId: reselectRail
       parameters:
@@ -188,10 +187,10 @@ paths:
           description: Intent updated with new rail-selection decision; previous decision preserved on history[].
         '404':
           description: '`INTENT_NOT_FOUND` — no intent for the given id.'
-
   /mushex/v1/payment-intents/{id}/issue-remittance-slip:
     post:
-      tags: [Remittance]
+      tags:
+        - Remittance
       summary: Issue a remittance slip (OTP/QR) for delegated payment
       operationId: issueRemittanceSlip
       parameters:
@@ -203,10 +202,10 @@ paths:
       responses:
         '201':
           description: Slip issued with token and OTP
-
   /mushex/v1/payment-intents/{id}/refund:
     post:
-      tags: [Refunds]
+      tags:
+        - Refunds
       summary: Request a refund for a paid intent
       operationId: requestRefund
       parameters:
@@ -224,10 +223,10 @@ paths:
       responses:
         '201':
           description: Refund requested
-
   /mushex/v1/payment-intents/{id}/receipts:
     get:
-      tags: [Receipts]
+      tags:
+        - Receipts
       summary: Get receipts for a payment intent
       operationId: getReceipts
       parameters:
@@ -239,10 +238,10 @@ paths:
       responses:
         '200':
           description: Receipts found
-
   /mushex/v1/remittance/claim:
     post:
-      tags: [Remittance]
+      tags:
+        - Remittance
       summary: Claim a remittance slip using token and OTP
       operationId: claimRemittance
       requestBody:
@@ -254,10 +253,10 @@ paths:
       responses:
         '200':
           description: Remittance claimed
-
   /mushex/v1/remittance-transfers/{transferId}:
     get:
-      tags: [Remittance]
+      tags:
+        - Remittance
       summary: Fetch a remittance transfer by id (Phase 4 follow-on)
       operationId: getRemittanceTransferById
       parameters:
@@ -271,10 +270,10 @@ paths:
           description: Remittance transfer found.
         '404':
           description: '`PLATFORM_RECORD_NOT_FOUND` — transfer id is unknown for this tenant.'
-
   /mushex/v1/platform/wallets/{walletId}:
     get:
-      tags: [Platform]
+      tags:
+        - Platform
       summary: Fetch a custodial wallet by id (Phase 4 follow-on)
       operationId: getPlatformWalletById
       parameters:
@@ -288,10 +287,10 @@ paths:
           description: Wallet found.
         '404':
           description: '`PLATFORM_RECORD_NOT_FOUND` — wallet id is unknown for this tenant.'
-
   /mushex/v1/platform/card-profiles/{cardProfileId}:
     get:
-      tags: [Platform]
+      tags:
+        - Platform
       summary: Fetch a card profile by id (Phase 4 follow-on)
       operationId: getCardProfileById
       parameters:
@@ -305,10 +304,10 @@ paths:
           description: Card profile found.
         '404':
           description: '`PLATFORM_RECORD_NOT_FOUND` — card profile id is unknown for this tenant.'
-
   /mushex/v1/platform/reversals/{reversalId}:
     get:
-      tags: [Platform]
+      tags:
+        - Platform
       summary: Fetch a reversal record by id (Phase 4 follow-on)
       operationId: getReversalById
       parameters:
@@ -322,10 +321,10 @@ paths:
           description: Reversal found.
         '404':
           description: '`PLATFORM_RECORD_NOT_FOUND` — reversal id is unknown for this tenant.'
-
   /mushex/v1/adapters/{adapterType}/webhook:
     post:
-      tags: [Adapters]
+      tags:
+        - Adapters
       summary: Receive payment webhook callback (internal only)
       operationId: adapterWebhook
       parameters:
@@ -348,10 +347,10 @@ paths:
       responses:
         '200':
           description: Webhook acknowledged
-
   /mushex/v1/claims:
     post:
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Create a claim
       operationId: createClaim
       requestBody:
@@ -363,10 +362,10 @@ paths:
       responses:
         '201':
           description: Claim created
-
   /mushex/v1/claims/{id}:
     get:
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Get claim by ID
       operationId: getClaim
       parameters:
@@ -378,10 +377,10 @@ paths:
       responses:
         '200':
           description: Claim found
-
   /mushex/v1/claims/{id}/submit:
     post:
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Submit claim to insurer
       operationId: submitClaim
       parameters:
@@ -393,10 +392,10 @@ paths:
       responses:
         '200':
           description: Claim submitted
-
   /mushex/v1/claims/{id}/adjudication:
     post:
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Record adjudication from insurer (callback)
       operationId: recordAdjudication
       parameters:
@@ -414,10 +413,10 @@ paths:
       responses:
         '200':
           description: Adjudication recorded
-
   /mushex/v1/claims/{id}/dispute:
     post:
-      tags: [Claims]
+      tags:
+        - Claims
       summary: Dispute a claim decision
       operationId: disputeClaim
       parameters:
@@ -435,10 +434,10 @@ paths:
       responses:
         '200':
           description: Dispute filed
-
   /mushex/v1/settlements:
     get:
-      tags: [Settlements]
+      tags:
+        - Settlements
       summary: List settlements, optionally filtered by intent linkage (Phase 5 follow-on)
       operationId: listSettlements
       parameters:
@@ -459,10 +458,10 @@ paths:
       responses:
         '200':
           description: Settlements returned (possibly empty).
-
   /mushex/v1/settlements/run:
     post:
-      tags: [Settlements]
+      tags:
+        - Settlements
       summary: Run settlement computation for a period
       operationId: runSettlement
       requestBody:
@@ -474,10 +473,10 @@ paths:
       responses:
         '201':
           description: Settlement created
-
   /mushex/v1/settlements/{id}:
     get:
-      tags: [Settlements]
+      tags:
+        - Settlements
       summary: Get settlement details
       operationId: getSettlement
       parameters:
@@ -489,10 +488,10 @@ paths:
       responses:
         '200':
           description: Settlement found
-
   /mushex/v1/settlements/{id}/release-payouts:
     post:
-      tags: [Settlements]
+      tags:
+        - Settlements
       summary: Release settlement payouts (step-up required)
       operationId: releasePayouts
       parameters:
@@ -504,10 +503,10 @@ paths:
       responses:
         '200':
           description: Payouts released
-
   /mushex/v1/recon/import-statement:
     post:
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Import bank statement lines for reconciliation
       operationId: importStatement
       requestBody:
@@ -521,10 +520,10 @@ paths:
       responses:
         '201':
           description: Statement imported
-
   /mushex/v1/recon/unmatched:
     get:
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: List unmatched reconciliation entries
       operationId: getUnmatched
       parameters:
@@ -541,10 +540,10 @@ paths:
       responses:
         '200':
           description: Unmatched entries
-
   /mushex/v1/recon/match:
     post:
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Match a reconciliation entry to a payment intent
       operationId: matchReconEntry
       parameters:
@@ -562,10 +561,10 @@ paths:
       responses:
         '200':
           description: Entry matched
-
   /mushex/v1/ops/reviews/pending:
     get:
-      tags: [Operations]
+      tags:
+        - Operations
       summary: List pending ops reviews
       operationId: getPendingReviews
       parameters:
@@ -582,10 +581,10 @@ paths:
       responses:
         '200':
           description: Pending reviews
-
   /mushex/v1/ops/reviews/{id}/approve:
     post:
-      tags: [Operations]
+      tags:
+        - Operations
       summary: Approve an ops review
       operationId: approveReview
       parameters:
@@ -597,10 +596,10 @@ paths:
       responses:
         '200':
           description: Review approved
-
   /mushex/v1/fraud/flags:
     get:
-      tags: [Fraud]
+      tags:
+        - Fraud
       summary: List fraud flags
       operationId: getFraudFlags
       parameters:
@@ -617,10 +616,10 @@ paths:
       responses:
         '200':
           description: Fraud flags
-
   /mushex/v1/ledger/entries:
     get:
-      tags: [Ledger]
+      tags:
+        - Ledger
       summary: List ledger entries
       operationId: getLedgerEntries
       parameters:
@@ -637,6 +636,391 @@ paths:
       responses:
         '200':
           description: Ledger entries
+  /:
+    get:
+      operationId: mushex_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: mushex_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{adapterType}/webhook:
+    post:
+      operationId: mushex_post__adapterType_webhook
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardProfileId}:
+    get:
+      operationId: mushex_get__cardProfileId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/ack:
+    post:
+      operationId: mushex_post__id_ack
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/eligibility-check:
+    post:
+      operationId: mushex_post__id_eligibility_check
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/preauthorize:
+    post:
+      operationId: mushex_post__id_preauthorize
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/approve:
+    post:
+      operationId: mushex_post__id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/remit:
+    post:
+      operationId: mushex_post__id_remit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/mark-paid:
+    post:
+      operationId: mushex_post__id_mark_paid
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/settle:
+    post:
+      operationId: mushex_post__id_settle
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reconcile:
+    post:
+      operationId: mushex_post__id_reconcile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: mushex_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/submit:
+    post:
+      operationId: mushex_post__id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/adjudication:
+    post:
+      operationId: mushex_post__id_adjudication
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/dispute:
+    post:
+      operationId: mushex_post__id_dispute
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/attachments:
+    post:
+      operationId: mushex_post__id_attachments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /flags:
+    get:
+      operationId: mushex_get__flags
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/appeal-resubmit:
+    post:
+      operationId: mushex_post__id_appeal_resubmit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /entries:
+    get:
+      operationId: mushex_get__entries
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews/pending:
+    get:
+      operationId: mushex_get__reviews_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews/{id}/approve:
+    post:
+      operationId: mushex_post__reviews_id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/attempts:
+    post:
+      operationId: mushex_post__id_attempts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: mushex_get__id_attempts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/attempts/reselect:
+    post:
+      operationId: mushex_post__id_attempts_reselect
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/cancel:
+    post:
+      operationId: mushex_post__id_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/issue-remittance-slip:
+    post:
+      operationId: mushex_post__id_issue_remittance_slip
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/refund:
+    post:
+      operationId: mushex_post__id_refund
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/receipts:
+    get:
+      operationId: mushex_get__id_receipts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /import-statement:
+    post:
+      operationId: mushex_post__import_statement
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /unmatched:
+    get:
+      operationId: mushex_get__unmatched
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /match:
+    post:
+      operationId: mushex_post__match
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claim:
+    post:
+      operationId: mushex_post__claim
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{transferId}:
+    get:
+      operationId: mushex_get__transferId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{reversalId}:
+    get:
+      operationId: mushex_get__reversalId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /run:
+    post:
+      operationId: mushex_post__run
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/release-payouts:
+    post:
+      operationId: mushex_post__id_release_payouts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}:
+    get:
+      operationId: mushex_get__walletId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/credit:
+    post:
+      operationId: mushex_post__walletId_credit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/debit:
+    post:
+      operationId: mushex_post__walletId_debit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/transactions:
+    get:
+      operationId: mushex_get__walletId_transactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: mushex_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: mushex_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from mushex-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas:

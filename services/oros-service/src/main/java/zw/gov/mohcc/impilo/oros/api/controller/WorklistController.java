@@ -70,24 +70,29 @@ public class WorklistController {
     /**
      * Accept an order from the worklist.
      */
-    @PostMapping("/orders/{orderId}/accept")
-    public ResponseEntity<ApiResponse<OrderSummaryDto>> acceptOrder(@PathVariable String orderId) {
+    @PostMapping({"/orders/{orderId}/accept", "/worklists/{worklistItemId}/accept"})
+    public ResponseEntity<ApiResponse<OrderSummaryDto>> acceptOrder(
+            @PathVariable(required = false) String orderId,
+            @PathVariable(name = "worklistItemId", required = false) String worklistItemId) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
+        String targetOrderId = orderId != null ? orderId : worklistItemId;
 
-        OrderEntity order = worklistService.acceptOrder(orderId);
+        OrderEntity order = worklistService.acceptOrder(targetOrderId);
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 
     /**
      * Reject an order from the worklist with a reason.
      */
-    @PostMapping("/orders/{orderId}/reject")
+    @PostMapping({"/orders/{orderId}/reject", "/worklists/{worklistItemId}/reject"})
     public ResponseEntity<ApiResponse<OrderSummaryDto>> rejectOrder(
-            @PathVariable String orderId,
+            @PathVariable(required = false) String orderId,
+            @PathVariable(name = "worklistItemId", required = false) String worklistItemId,
             @Valid @RequestBody RejectRequest request) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
+        String targetOrderId = orderId != null ? orderId : worklistItemId;
 
-        OrderEntity order = worklistService.rejectOrder(orderId, request.reason());
+        OrderEntity order = worklistService.rejectOrder(targetOrderId, request.reason());
         return ResponseEntity.ok(ApiResponse.ok(OrderSummaryDto.from(order), correlationId));
     }
 }

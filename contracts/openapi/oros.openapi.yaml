@@ -72,9 +72,6 @@ tags:
 # Paths
 # ===========================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Orders
-  # -------------------------------------------------------------------------
   /v1/orders:
     get:
       operationId: listOrders
@@ -82,7 +79,8 @@ paths:
       description: |
         Returns a paginated list of orders filtered by type, status, priority,
         department, or patient CPID. Results are sorted by placedAt descending.
-      tags: [Order]
+      tags:
+        - Order
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -129,17 +127,16 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Paginated list of orders
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
     post:
       operationId: placeOrder
       summary: Place a new order
@@ -147,7 +144,8 @@ paths:
         Creates a new clinical order. The order is validated against the
         catalog, routed to the appropriate fulfillment department, and
         a worklist entry is created. Emits `oros.order.placed` via Kafka.
-      tags: [Order]
+      tags:
+        - Order
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -161,27 +159,27 @@ paths:
             schema:
               $ref: '#/components/schemas/PlaceOrderRequest'
       responses:
-        "201":
+        '201':
           description: Order placed successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "422":
+        '422':
           $ref: '#/components/responses/UnprocessableEntity'
-
   /v1/orders/{orderId}:
     get:
       operationId: getOrder
       summary: Get order by ID
       description: Returns full order details including items, routing info, and status history.
-      tags: [Order]
+      tags:
+        - Order
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -190,19 +188,18 @@ paths:
         - $ref: '#/components/parameters/X-Purpose-Of-Use'
         - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Order details
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/orders/{orderId}/cancel:
     post:
       operationId: cancelOrder
@@ -211,7 +208,8 @@ paths:
         Cancels an order that has not yet been completed. Only orders in
         PLACED, ACCEPTED, or IN_PROGRESS status can be cancelled.
         Emits `oros.order.cancelled` via Kafka.
-      tags: [Order]
+      tags:
+        - Order
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -226,23 +224,22 @@ paths:
             schema:
               $ref: '#/components/schemas/CancelOrderRequest'
       responses:
-        "200":
+        '200':
           description: Order cancelled
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/orders/patient/{patientCpid}:
     get:
       operationId: getPatientOrders
@@ -250,7 +247,8 @@ paths:
       description: |
         Returns all orders for a given patient CPID, optionally filtered
         by type and status. Results are sorted by placedAt descending.
-      tags: [Order]
+      tags:
+        - Order
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -274,20 +272,16 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Patient orders
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
-  # -------------------------------------------------------------------------
-  # Worklists
-  # -------------------------------------------------------------------------
   /v1/worklists:
     get:
       operationId: listWorklists
@@ -296,7 +290,8 @@ paths:
         Returns worklist entries for the specified department, filtered by
         order type, priority, and status. Used by lab techs, radiologists,
         and pharmacists to view pending work.
-      tags: [Worklist]
+      tags:
+        - Worklist
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -322,21 +317,25 @@ paths:
           description: Filter by worklist item status
           schema:
             type: string
-            enum: [PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, REJECTED]
+            enum:
+              - PENDING
+              - ACCEPTED
+              - IN_PROGRESS
+              - COMPLETED
+              - REJECTED
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Worklist entries
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorklistResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
   /v1/worklists/{worklistItemId}/accept:
     post:
       operationId: acceptWorklistItem
@@ -344,7 +343,8 @@ paths:
       description: |
         Marks a worklist item as accepted by the current actor. Transitions the
         associated order to ACCEPTED status. Emits `oros.worklist.accepted` via Kafka.
-      tags: [Worklist]
+      tags:
+        - Worklist
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -365,21 +365,20 @@ paths:
             schema:
               $ref: '#/components/schemas/AcceptWorklistRequest'
       responses:
-        "200":
+        '200':
           description: Worklist item accepted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorklistItemResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/worklists/{worklistItemId}/reject:
     post:
       operationId: rejectWorklistItem
@@ -387,7 +386,8 @@ paths:
       description: |
         Rejects a worklist item with a reason. The order may be re-routed
         or cancelled depending on configuration. Emits `oros.worklist.rejected`.
-      tags: [Worklist]
+      tags:
+        - Worklist
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -408,26 +408,22 @@ paths:
             schema:
               $ref: '#/components/schemas/RejectWorklistRequest'
       responses:
-        "200":
+        '200':
           description: Worklist item rejected
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorklistItemResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Worksteps
-  # -------------------------------------------------------------------------
   /v1/worksteps:
     get:
       operationId: listWorksteps
@@ -436,7 +432,8 @@ paths:
         Returns the ordered list of worksteps for a given order. Worksteps
         represent granular processing steps (e.g., specimen collection,
         analysis, verification, reporting).
-      tags: [Workstep]
+      tags:
+        - Workstep
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -451,19 +448,18 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: List of worksteps
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkstepListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/worksteps/{workstepId}/start:
     post:
       operationId: startWorkstep
@@ -472,7 +468,8 @@ paths:
         Marks a workstep as started. The workstep must be in PENDING status
         and its predecessor (if any) must be completed.
         Emits `oros.workstep.started`.
-      tags: [Workstep]
+      tags:
+        - Workstep
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -493,21 +490,20 @@ paths:
             schema:
               $ref: '#/components/schemas/StartWorkstepRequest'
       responses:
-        "200":
+        '200':
           description: Workstep started
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkstepResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/worksteps/{workstepId}/complete:
     post:
       operationId: completeWorkstep
@@ -515,7 +511,8 @@ paths:
       description: |
         Marks a workstep as completed. If this is the final workstep,
         the order transitions to COMPLETED. Emits `oros.workstep.completed`.
-      tags: [Workstep]
+      tags:
+        - Workstep
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -536,24 +533,20 @@ paths:
             schema:
               $ref: '#/components/schemas/CompleteWorkstepRequest'
       responses:
-        "200":
+        '200':
           description: Workstep completed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkstepResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Results
-  # -------------------------------------------------------------------------
   /v1/orders/{orderId}/results:
     post:
       operationId: postResult
@@ -562,7 +555,8 @@ paths:
         Posts a clinical result (lab values, imaging report, pharmacy dispense
         confirmation) against an order. Emits `oros.result.posted`. If the
         result is flagged as critical, emits `oros.result.critical` as well.
-      tags: [Result]
+      tags:
+        - Result
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -577,28 +571,28 @@ paths:
             schema:
               $ref: '#/components/schemas/PostResultRequest'
       responses:
-        "201":
+        '201':
           description: Result posted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "422":
+        '422':
           $ref: '#/components/responses/UnprocessableEntity'
-
     get:
       operationId: getResults
       summary: Get results for an order
       description: Returns all results posted against a specific order.
-      tags: [Result]
+      tags:
+        - Result
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -607,19 +601,18 @@ paths:
         - $ref: '#/components/parameters/X-Purpose-Of-Use'
         - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Results for order
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/orders/{orderId}/results/{resultId}/mark-critical:
     post:
       operationId: markResultCritical
@@ -627,7 +620,8 @@ paths:
       description: |
         Marks an existing result as critical, triggering urgent notification
         workflows. Emits `oros.result.critical` via Kafka.
-      tags: [Result]
+      tags:
+        - Result
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -649,24 +643,20 @@ paths:
             schema:
               $ref: '#/components/schemas/MarkCriticalRequest'
       responses:
-        "200":
+        '200':
           description: Result marked as critical
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResultResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Acknowledgement
-  # -------------------------------------------------------------------------
   /v1/orders/{orderId}/ack:
     post:
       operationId: acknowledgeResult
@@ -674,7 +664,8 @@ paths:
       description: |
         Records clinician acknowledgement of order results. This is a
         medico-legal requirement for critical results. Emits `oros.ack.recorded`.
-      tags: [Acknowledgement]
+      tags:
+        - Acknowledgement
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -689,26 +680,26 @@ paths:
             schema:
               $ref: '#/components/schemas/AcknowledgeRequest'
       responses:
-        "201":
+        '201':
           description: Acknowledgement recorded
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AckResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
     get:
       operationId: getAcknowledgements
       summary: Get acknowledgements for an order
       description: Returns all acknowledgement records for an order.
-      tags: [Acknowledgement]
+      tags:
+        - Acknowledgement
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -717,22 +708,18 @@ paths:
         - $ref: '#/components/parameters/X-Purpose-Of-Use'
         - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Acknowledgements for order
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AckListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Routes
-  # -------------------------------------------------------------------------
   /v1/routes:
     get:
       operationId: listRoutes
@@ -741,7 +728,8 @@ paths:
         Returns routing records showing how orders were dispatched to
         fulfillment departments or external adapters. Includes route
         status, attempt count, and failure reasons.
-      tags: [Route]
+      tags:
+        - Route
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -759,27 +747,36 @@ paths:
           description: Filter by route status
           schema:
             type: string
-            enum: [PENDING, DISPATCHED, DELIVERED, FAILED, RETRYING]
+            enum:
+              - PENDING
+              - DISPATCHED
+              - DELIVERED
+              - FAILED
+              - RETRYING
         - name: adapterType
           in: query
           description: Filter by adapter type
           schema:
             type: string
-            enum: [INTERNAL, LIS, RIS, PHARMACY, EXTERNAL]
+            enum:
+              - INTERNAL
+              - LIS
+              - RIS
+              - PHARMACY
+              - EXTERNAL
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Routing records
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RouteListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
   /v1/routes/{routeId}/retry:
     post:
       operationId: retryRoute
@@ -787,7 +784,8 @@ paths:
       description: |
         Retries delivery of a failed route. The route must be in FAILED status.
         Increments the attempt count and re-dispatches. Emits `oros.route.retried`.
-      tags: [Route]
+      tags:
+        - Route
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -802,24 +800,20 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Route retried
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RouteResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Reconciliation
-  # -------------------------------------------------------------------------
   /v1/reconcile/pending:
     get:
       operationId: getPendingReconciliations
@@ -828,7 +822,8 @@ paths:
         Returns unmatched results or orders that require manual reconciliation.
         Each item includes a confidence score indicating the likelihood of a
         match with candidate orders.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -845,22 +840,21 @@ paths:
           schema:
             type: number
             format: double
-            minimum: 0.0
-            maximum: 1.0
+            minimum: 0
+            maximum: 1
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Pending reconciliation items
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconcileListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
   /v1/reconcile/{reconcileId}/match:
     post:
       operationId: matchReconciliation
@@ -869,7 +863,8 @@ paths:
         Manually matches an unmatched result to a specific order. This
         links the result and updates the order status accordingly.
         Emits `oros.reconcile.matched`.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -890,23 +885,22 @@ paths:
             schema:
               $ref: '#/components/schemas/MatchReconcileRequest'
       responses:
-        "200":
+        '200':
           description: Reconciliation matched
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconcileItemResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/reconcile/{reconcileId}/resolve:
     post:
       operationId: resolveReconciliation
@@ -915,7 +909,8 @@ paths:
         Resolves an unmatched reconciliation item by marking it as
         manually resolved (e.g., duplicate, invalid, or orphaned result).
         Emits `oros.reconcile.resolved`.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -936,24 +931,20 @@ paths:
             schema:
               $ref: '#/components/schemas/ResolveReconcileRequest'
       responses:
-        "200":
+        '200':
           description: Reconciliation resolved
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconcileItemResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Catalog
-  # -------------------------------------------------------------------------
   /v1/catalog:
     get:
       operationId: listCatalogItems
@@ -962,7 +953,8 @@ paths:
         Returns the orderable-item catalog filtered by type, department,
         or search query. Catalog items define what can be ordered at a
         given facility.
-      tags: [Catalog]
+      tags:
+        - Catalog
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -993,17 +985,16 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Catalog items
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
   /v1/catalog/import:
     post:
       operationId: importCatalog
@@ -1011,7 +1002,8 @@ paths:
       description: |
         Bulk imports orderable items into the catalog. Existing items with
         matching codes are updated; new items are created.
-      tags: [Catalog]
+      tags:
+        - Catalog
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1025,21 +1017,20 @@ paths:
             schema:
               $ref: '#/components/schemas/CatalogImportRequest'
       responses:
-        "200":
+        '200':
           description: Import result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogImportResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "422":
+        '422':
           $ref: '#/components/responses/UnprocessableEntity'
-
   /v1/catalog/lookup:
     get:
       operationId: lookupCatalogItem
@@ -1047,7 +1038,8 @@ paths:
       description: |
         Resolves a specific catalog item by its code and optional system.
         Used during order placement to validate orderable items.
-      tags: [Catalog]
+      tags:
+        - Catalog
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1066,22 +1058,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Catalog item found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CatalogItemResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Internal endpoints
-  # -------------------------------------------------------------------------
   /v1/internal/butano/writeback:
     post:
       operationId: butanoWriteback
@@ -1092,7 +1080,8 @@ paths:
         reference payload. Uses CPID-only linkage (no direct PII fields).
         DiagnosticReport/Observation writeback remains a tracked follow-on
         integration item.
-      tags: [Internal]
+      tags:
+        - Internal
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1106,21 +1095,20 @@ paths:
             schema:
               $ref: '#/components/schemas/ButanoWritebackRequest'
       responses:
-        "200":
+        '200':
           description: Writeback successful
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ButanoWritebackResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "422":
+        '422':
           $ref: '#/components/responses/UnprocessableEntity'
-
   /v1/internal/pct/order-hook:
     post:
       operationId: pctOrderHook
@@ -1128,7 +1116,8 @@ paths:
       description: |
         Webhook called by PCT when a patient journey event requires order
         status updates (e.g., patient discharged, encounter closed).
-      tags: [Internal]
+      tags:
+        - Internal
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1142,19 +1131,18 @@ paths:
             schema:
               $ref: '#/components/schemas/PctOrderHookRequest'
       responses:
-        "200":
+        '200':
           description: Hook processed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
   /v1/internal/capabilities:
     get:
       operationId: listCapabilities
@@ -1162,7 +1150,8 @@ paths:
       description: |
         Returns the configured capabilities for a tenant/facility, including
         supported order types, adapter modes, and routing rules.
-      tags: [Internal]
+      tags:
+        - Internal
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1176,17 +1165,16 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Capability list
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CapabilityListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
     put:
       operationId: upsertCapability
       summary: Create or update a facility capability
@@ -1194,7 +1182,8 @@ paths:
         Creates or updates the OROS capability configuration for a specific
         tenant/facility. Defines supported order types, adapter mode
         (INTERNAL, ADAPTER, HYBRID), and routing preferences.
-      tags: [Internal]
+      tags:
+        - Internal
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1208,24 +1197,289 @@ paths:
             schema:
               $ref: '#/components/schemas/UpsertCapabilityRequest'
       responses:
-        "200":
+        '200':
           description: Capability upserted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CapabilityResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-        "422":
+        '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /:
+    post:
+      operationId: oros_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: oros_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /import:
+    post:
+      operationId: oros_post__import
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{code}:
+    get:
+      operationId: oros_get__code_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /lookup:
+    get:
+      operationId: oros_get__lookup
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /butano/writeback:
+    post:
+      operationId: oros_post__butano_writeback
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pct/hook:
+    post:
+      operationId: oros_post__pct_hook
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pct/order-hook:
+    post:
+      operationId: oros_post__pct_order_hook
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /capabilities:
+    get:
+      operationId: oros_get__capabilities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: oros_put__capabilities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}:
+    get:
+      operationId: oros_get__orderId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{cpid}:
+    get:
+      operationId: oros_get__patient_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/cancel:
+    post:
+      operationId: oros_post__orderId_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pending:
+    get:
+      operationId: oros_get__pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{recId}/match:
+    post:
+      operationId: oros_post__recId_match
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{recId}/resolve:
+    post:
+      operationId: oros_post__recId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{resultId}/mark-critical:
+    post:
+      operationId: oros_post__resultId_mark_critical
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /retry/{orderId}:
+    post:
+      operationId: oros_post__retry_orderId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{routeId}/retry:
+    post:
+      operationId: oros_post__routeId_retry
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worklists:
+    get:
+      operationId: oros_get__worklists
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orders/{orderId}/accept:
+    post:
+      operationId: oros_post__orders_orderId_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worklists/{worklistItemId}/accept:
+    post:
+      operationId: oros_post__worklists_worklistItemId_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orders/{orderId}/reject:
+    post:
+      operationId: oros_post__orders_orderId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worklists/{worklistItemId}/reject:
+    post:
+      operationId: oros_post__worklists_worklistItemId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orders/{orderId}/worksteps:
+    get:
+      operationId: oros_get__orders_orderId_worksteps
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worksteps:
+    get:
+      operationId: oros_get__worksteps
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worksteps/{workstepId}/start:
+    post:
+      operationId: oros_post__worksteps_workstepId_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worksteps/{workstepId}/complete:
+    post:
+      operationId: oros_post__worksteps_workstepId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: oros_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: oros_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from oros-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
-# ===========================================================================
-# Components
-# ===========================================================================
 components:
   # -------------------------------------------------------------------------
   # Security Schemes

@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,274 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /deliveries:
+    get:
+      operationId: dispatch_get__deliveries
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__deliveries
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /deliveries/{id}:
+    get:
+      operationId: dispatch_get__deliveries_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: dispatch_patch__deliveries_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /deliveries/{id}/{action}:
+    post:
+      operationId: dispatch_post__deliveries_id_action_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /deliveries/{id}/tracking:
+    get:
+      operationId: dispatch_get__deliveries_id_tracking
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard:
+    get:
+      operationId: dispatch_get__dashboard
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dispatcher-console:
+    get:
+      operationId: dispatch_get__dispatcher_console
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fleet:
+    get:
+      operationId: dispatch_get__fleet
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__fleet
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fleet/{id}:
+    get:
+      operationId: dispatch_get__fleet_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: dispatch_patch__fleet_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /couriers:
+    get:
+      operationId: dispatch_get__couriers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__couriers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /couriers/{id}:
+    get:
+      operationId: dispatch_get__couriers_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: dispatch_patch__couriers_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /zones:
+    get:
+      operationId: dispatch_get__zones
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__zones
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /policies:
+    get:
+      operationId: dispatch_get__policies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__policies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /integrations:
+    get:
+      operationId: dispatch_get__integrations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__integrations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /autonomous-missions:
+    get:
+      operationId: dispatch_get__autonomous_missions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: dispatch_post__autonomous_missions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /webhooks/{providerCode}:
+    post:
+      operationId: dispatch_post__webhooks_providerCode_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/dispatch/jobs:
+    post:
+      operationId: dispatch_post__internal_v1_dispatch_jobs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: dispatch_get__internal_v1_dispatch_jobs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/dispatch/jobs/{job_id}/assign:
+    post:
+      operationId: dispatch_post__internal_v1_dispatch_jobs_job_id_assign
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/dispatch/jobs/{job_id}/status:
+    post:
+      operationId: dispatch_post__internal_v1_dispatch_jobs_job_id_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/dispatch/jobs/{job_id}:
+    get:
+      operationId: dispatch_get__internal_v1_dispatch_jobs_job_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /jobs:
+    get:
+      operationId: dispatch_get__jobs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from dispatch-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

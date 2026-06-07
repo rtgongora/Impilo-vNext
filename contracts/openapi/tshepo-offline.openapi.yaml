@@ -55,35 +55,35 @@ tags:
     description: Offline action batch reconciliation
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoOfflineInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoOfflineInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -92,45 +92,44 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── Capability Tokens ─────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/offline/capabilities:
     post:
       operationId: issueCapabilityToken
-      tags: [Capability]
+      tags:
+        - Capability
       summary: Issue a new offline capability token
       description: |
         Validates actor facility access, determines capabilities based on
         configured allowed-offline-actions, and signs with Ed25519.
         Token is time-bounded (default 8h, max 72h) with a max encounter limit.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CapabilityTokenRequest"
+              $ref: '#/components/schemas/CapabilityTokenRequest'
       responses:
-        "201":
+        '201':
           description: Capability token issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CapabilityTokenResponse"
-
+                $ref: '#/components/schemas/CapabilityTokenResponse'
   /v1/offline/capabilities/{id}:
     get:
       operationId: getCapabilityToken
-      tags: [Capability]
+      tags:
+        - Capability
       summary: Retrieve a capability token by ID
       parameters:
         - name: id
@@ -139,17 +138,18 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Capability token details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CapabilityTokenResponse"
+                $ref: '#/components/schemas/CapabilityTokenResponse'
     delete:
       operationId: revokeCapabilityToken
-      tags: [Capability]
+      tags:
+        - Capability
       summary: Revoke an active capability token
       parameters:
         - name: id
@@ -158,17 +158,17 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "204":
+        '204':
           description: Capability token revoked
-
   /v1/offline/capabilities/verify:
     post:
       operationId: verifyCapabilityToken
-      tags: [Capability]
+      tags:
+        - Capability
       summary: Verify a signed capability token
       description: |
         Checks JWS signature (Ed25519), expiry, and revocation status.
@@ -177,48 +177,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CapabilityVerifyRequest"
+              $ref: '#/components/schemas/CapabilityVerifyRequest'
       responses:
-        "200":
+        '200':
           description: Verification result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CapabilityVerifyResponse"
-
-  # ── Offline Actions ───────────────────────────────────────────────────────
+                $ref: '#/components/schemas/CapabilityVerifyResponse'
   /v1/offline/actions:
     post:
       operationId: logOfflineAction
-      tags: [Action]
+      tags:
+        - Action
       summary: Log an offline action
       description: |
         Validates the action against the capability token and rules engine,
         issues O-CPID if required, and persists the action log.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OfflineActionRequest"
+              $ref: '#/components/schemas/OfflineActionRequest'
       responses:
-        "201":
+        '201':
           description: Offline action logged
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OfflineActionResponse"
+                $ref: '#/components/schemas/OfflineActionResponse'
     get:
       operationId: queryOfflineActions
-      tags: [Action]
+      tags:
+        - Action
       summary: Query offline actions by tenant and actor (paginated)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: page
           in: query
           required: false
@@ -238,44 +238,43 @@ paths:
             type: string
             default: performedAt
       responses:
-        "200":
+        '200':
           description: Paginated offline actions
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PagedOfflineActions"
-
-  # ── Offline Packs ─────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/PagedOfflineActions'
   /v1/offline/packs:
     post:
       operationId: generateOfflinePack
-      tags: [Pack]
+      tags:
+        - Pack
       summary: Generate a new offline pack for a facility
       description: |
         Snapshots policy rules, consent directives, and terminology codes
         for offline use. Packs have a configurable TTL (default 24h).
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/OfflinePackRequest"
+              $ref: '#/components/schemas/OfflinePackRequest'
       responses:
-        "201":
+        '201':
           description: Offline pack generated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OfflinePackResponse"
-
+                $ref: '#/components/schemas/OfflinePackResponse'
   /v1/offline/packs/{id}:
     get:
       operationId: getOfflinePack
-      tags: [Pack]
+      tags:
+        - Pack
       summary: Download a specific offline pack by ID
       parameters:
         - name: id
@@ -284,19 +283,19 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Offline pack
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OfflinePackResponse"
-
+                $ref: '#/components/schemas/OfflinePackResponse'
   /v1/offline/packs/facility/{facilityId}:
     get:
       operationId: getLatestPackForFacility
-      tags: [Pack]
+      tags:
+        - Pack
       summary: Get the latest offline pack for a facility
       parameters:
         - name: facilityId
@@ -305,46 +304,45 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Latest offline pack for the facility
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OfflinePackResponse"
-
-  # ── Reconciliation ────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/OfflinePackResponse'
   /v1/offline/reconcile:
     post:
       operationId: submitReconciliationBatch
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Submit a batch of offline actions for reconciliation
       description: |
         Actions are validated, O-CPIDs reconciled to canonical CPIDs,
         and records created in the reconciliation batch table.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReconciliationRequest"
+              $ref: '#/components/schemas/ReconciliationRequest'
       responses:
-        "201":
+        '201':
           description: Reconciliation batch submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReconciliationResponse"
-
+                $ref: '#/components/schemas/ReconciliationResponse'
   /v1/offline/reconcile/{batchId}:
     get:
       operationId: getReconciliationBatchStatus
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Get the status of a reconciliation batch
       parameters:
         - name: batchId
@@ -353,31 +351,102 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Batch reconciliation status
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReconciliationResponse"
-
+                $ref: '#/components/schemas/ReconciliationResponse'
   /v1/offline/reconcile/pending:
     get:
       operationId: listPendingReconciliationBatches
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: List pending reconciliation batches for the tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: List of pending reconciliation batches
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ReconciliationResponse"
+                  $ref: '#/components/schemas/ReconciliationResponse'
+  /{id}:
+    get:
+      operationId: tshepooffline_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: tshepooffline_delete__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify:
+    post:
+      operationId: tshepooffline_post__verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}:
+    get:
+      operationId: tshepooffline_get__facility_facilityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{batchId}:
+    get:
+      operationId: tshepooffline_get__batchId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pending:
+    get:
+      operationId: tshepooffline_get__pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepooffline_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepooffline_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-offline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

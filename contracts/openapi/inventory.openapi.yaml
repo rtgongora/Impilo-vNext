@@ -46,7 +46,6 @@ tags:
     description: Internal integration endpoints (capability refresh, consumption feeds, stores/bins)
 
 paths:
-  # ── Items ──────────────────────────────────────────────────────────────────
   /v1/items:
     post:
       operationId: createItem
@@ -54,34 +53,34 @@ paths:
       description: |
         Registers a new item in the inventory master. Each item has a unique
         item code within a tenant. Publishes inventory.item.created event.
-      tags: [Items]
+      tags:
+        - Items
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateItemRequest"
+              $ref: '#/components/schemas/CreateItemRequest'
       responses:
-        "201":
+        '201':
           description: Item created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Item"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Item'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/items/import:
     post:
       operationId: importItems
@@ -90,32 +89,32 @@ paths:
         Imports multiple items in a single operation. Items that already exist
         (by itemCode within the tenant) are updated; new items are created.
         Returns a summary of imported, updated, skipped, and errored rows.
-      tags: [Items]
+      tags:
+        - Items
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ItemImportRequest"
+              $ref: '#/components/schemas/ItemImportRequest'
       responses:
-        "200":
+        '200':
           description: Import completed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/ImportResult"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/ImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/items/lookup-by-barcode:
     get:
       operationId: lookupItemByBarcode
@@ -124,7 +123,8 @@ paths:
         Decodes a GS1/GTIN/EAN barcode and returns matching item details
         including batch number and expiry date extracted from the barcode.
         Used during receipt, count, and issue workflows.
-      tags: [Items]
+      tags:
+        - Items
       parameters:
         - name: code
           in: query
@@ -133,34 +133,34 @@ paths:
             type: string
           description: Barcode string (GS1, GTIN-14, GTIN-13, EAN, etc.)
       responses:
-        "200":
+        '200':
           description: Barcode decoded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/BarcodeResult"
-        "404":
+                        $ref: '#/components/schemas/BarcodeResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
           description: Barcode not recognized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/items/{itemCode}:
     get:
       operationId: getItem
       summary: Get item by code
       description: Returns the full item master record for the given item code.
-      tags: [Items]
+      tags:
+        - Items
       parameters:
         - name: itemCode
           in: path
@@ -169,25 +169,23 @@ paths:
             type: string
           description: Unique item code
       responses:
-        "200":
+        '200':
           description: Item found
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Item"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Stock On-Hand ──────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/Item'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/onhand:
     get:
       operationId: getOnHand
@@ -196,9 +194,10 @@ paths:
         Returns paginated stock-on-hand positions for the given facility/store.
         Each row represents a unique (itemCode, batchNumber, storeId, binId)
         combination. Supports filtering by item code, category, store, and bin.
-      tags: [Stock On-Hand]
+      tags:
+        - Stock On-Hand
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
@@ -220,25 +219,24 @@ paths:
           schema:
             type: boolean
           description: Only return items below reorder point
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: On-hand positions
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedOnHand"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PagedOnHand'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/onhand/near-expiry:
     get:
       operationId: getNearExpiry
@@ -247,9 +245,10 @@ paths:
         Returns items expiring within the configurable threshold (default 90 days).
         Sorted by expiry date ascending (soonest first). Used for FEFO compliance
         monitoring and wastage prevention.
-      tags: [Stock On-Hand]
+      tags:
+        - Stock On-Hand
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
@@ -262,25 +261,24 @@ paths:
             minimum: 1
             default: 90
           description: Number of days until expiry to consider near-expiry
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Near-expiry items
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedOnHand"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PagedOnHand'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/onhand/stockouts:
     get:
       operationId: getStockouts
@@ -289,9 +287,10 @@ paths:
         Returns items that are either stocked out (qty=0) or at risk of
         stockout based on average daily consumption and days-of-stock remaining.
         Sorted by days-of-stock ascending (most urgent first).
-      tags: [Stock On-Hand]
+      tags:
+        - Stock On-Hand
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
@@ -304,26 +303,24 @@ paths:
             minimum: 0
             default: 14
           description: Items with fewer days of stock than this are included
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Stockout risk items
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedStockoutRisk"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Ledger ─────────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/PagedStockoutRisk'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/ledger/receipt:
     post:
       operationId: postReceipt
@@ -331,32 +328,32 @@ paths:
       description: |
         Records receipt of goods into inventory. Increases on-hand quantity.
         Validates batch number and expiry. Publishes inventory.ledger.receipt event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReceiptRequest"
+              $ref: '#/components/schemas/ReceiptRequest'
       responses:
-        "201":
+        '201':
           description: Receipt recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/ledger/issue:
     post:
       operationId: postIssue
@@ -364,34 +361,34 @@ paths:
       description: |
         Records issue of goods from inventory. Decreases on-hand quantity.
         Validates sufficient stock available. Publishes inventory.ledger.issue event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IssueRequest"
+              $ref: '#/components/schemas/IssueRequest'
       responses:
-        "201":
+        '201':
           description: Issue recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/ledger/transfer:
     post:
       operationId: postTransfer
@@ -400,34 +397,34 @@ paths:
         Records a transfer of goods between stores or facilities. Decreases
         on-hand at source and increases at destination. Publishes
         inventory.ledger.transfer event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransferRequest"
+              $ref: '#/components/schemas/TransferRequest'
       responses:
-        "201":
+        '201':
           description: Transfer recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/ledger/adjust:
     post:
       operationId: postAdjust
@@ -436,32 +433,32 @@ paths:
         Records an inventory adjustment (positive or negative). Used for
         corrections, count reconciliation, and opening balances. Requires
         a reason. Publishes inventory.ledger.adjustment event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AdjustRequest"
+              $ref: '#/components/schemas/AdjustRequest'
       responses:
-        "201":
+        '201':
           description: Adjustment recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/ledger/wastage:
     post:
       operationId: postWastage
@@ -470,32 +467,32 @@ paths:
         Records wastage/disposal of expired, damaged, or contaminated stock.
         Decreases on-hand. Requires disposal method and optional witness for
         controlled items. Publishes inventory.ledger.wastage event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WastageRequest"
+              $ref: '#/components/schemas/WastageRequest'
       responses:
-        "201":
+        '201':
           description: Wastage recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/ledger/return:
     post:
       operationId: postReturn
@@ -504,32 +501,32 @@ paths:
         Records return of goods to supplier or return to stock from department.
         Increases on-hand if returned to stock; records supplier return for
         audit. Publishes inventory.ledger.return event.
-      tags: [Ledger]
+      tags:
+        - Ledger
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReturnRequest"
+              $ref: '#/components/schemas/ReturnRequest'
       responses:
-        "201":
+        '201':
           description: Return recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/LedgerEvent"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/LedgerEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/ledger:
     get:
       operationId: queryLedger
@@ -537,9 +534,10 @@ paths:
       description: |
         Returns paginated ledger events filtered by item, store, movement type,
         and date range. Events are sorted by timestamp descending (newest first).
-      tags: [Ledger]
+      tags:
+        - Ledger
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
@@ -552,7 +550,7 @@ paths:
         - name: movementType
           in: query
           schema:
-            $ref: "#/components/schemas/MovementType"
+            $ref: '#/components/schemas/MovementType'
         - name: from
           in: query
           schema:
@@ -565,26 +563,24 @@ paths:
             type: string
             format: date-time
           description: End of date range (inclusive)
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Ledger events
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedLedgerEvent"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── FEFO ───────────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/PagedLedgerEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/fefo/suggest:
     post:
       operationId: suggestFefo
@@ -593,37 +589,36 @@ paths:
         Returns the optimal batch(es) to pick for a given item and quantity
         using First-Expiry-First-Out logic. Each suggestion includes batch
         number, expiry date, available quantity, and bin location.
-      tags: [FEFO]
+      tags:
+        - FEFO
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FefoSuggestRequest"
+              $ref: '#/components/schemas/FefoSuggestRequest'
       responses:
-        "200":
+        '200':
           description: FEFO suggestions
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/FefoSuggestion"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Stock Counts ───────────────────────────────────────────────────────────
+                          $ref: '#/components/schemas/FefoSuggestion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/counts:
     post:
       operationId: createCount
@@ -632,61 +627,61 @@ paths:
         Creates a new stock count session for a store. The session is initialized
         with expected lines based on current on-hand positions. Status is DRAFT.
         Publishes inventory.count.created event.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateCountRequest"
+              $ref: '#/components/schemas/CreateCountRequest'
       responses:
-        "201":
+        '201':
           description: Count session created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/StockCount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/counts/{id}:
     get:
       operationId: getCount
       summary: Get stock count session
       description: Returns the full stock count session including all count lines with variances.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
       responses:
-        "200":
+        '200':
           description: Stock count detail
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/StockCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/counts/{id}/start:
     post:
       operationId: startCount
@@ -695,30 +690,30 @@ paths:
         Transitions the session from DRAFT to IN_PROGRESS. Snapshots current
         system-on-hand quantities as the expected values. Publishes
         inventory.count.started event.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
       responses:
-        "200":
+        '200':
           description: Count started
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/StockCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/counts/{id}/lines/{lineId}:
     post:
       operationId: recordCountLine
@@ -727,9 +722,10 @@ paths:
         Records the physical count for a specific line item. Includes the
         counted quantity and optional barcode scan. Calculates variance
         against expected quantity.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
         - name: lineId
           in: path
           required: true
@@ -742,30 +738,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecordCountLineRequest"
+              $ref: '#/components/schemas/RecordCountLineRequest'
       responses:
-        "200":
+        '200':
           description: Count line recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/CountLine"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/CountLine'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/counts/{id}/submit:
     post:
       operationId: submitCount
@@ -773,30 +768,30 @@ paths:
       description: |
         Transitions the session from IN_PROGRESS to SUBMITTED. All lines must
         have a counted value. Publishes inventory.count.submitted event.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
       responses:
-        "200":
+        '200':
           description: Count submitted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/StockCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/counts/{id}/approve:
     post:
       operationId: approveCount
@@ -805,35 +800,35 @@ paths:
         Approves the stock count, auto-generating ledger adjustments for each
         variance. Transitions to APPROVED. Publishes inventory.count.approved
         event.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApproveCountRequest"
+              $ref: '#/components/schemas/ApproveCountRequest'
       responses:
-        "200":
+        '200':
           description: Count approved
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/StockCount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/counts/{id}/reject:
     post:
       operationId: rejectCount
@@ -841,39 +836,38 @@ paths:
       description: |
         Rejects the stock count, requiring a re-count. Transitions to REJECTED.
         Publishes inventory.count.rejected event.
-      tags: [Stock Counts]
+      tags:
+        - Stock Counts
       parameters:
-        - $ref: "#/components/parameters/CountIdPath"
+        - $ref: '#/components/parameters/CountIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RejectCountRequest"
+              $ref: '#/components/schemas/RejectCountRequest'
       responses:
-        "200":
+        '200':
           description: Count rejected
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/StockCount"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Requisitions ───────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/StockCount'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/requisitions:
     post:
       operationId: createRequisition
@@ -882,32 +876,32 @@ paths:
         Creates a new requisition in DRAFT status. Requisitions request stock
         from a supplying facility or store. Includes line items with requested
         quantities. Publishes inventory.requisition.created event.
-      tags: [Requisitions]
+      tags:
+        - Requisitions
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateRequisitionRequest"
+              $ref: '#/components/schemas/CreateRequisitionRequest'
       responses:
-        "201":
+        '201':
           description: Requisition created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Requisition"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Requisition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/requisitions/{id}/submit:
     post:
       operationId: submitRequisition
@@ -915,30 +909,30 @@ paths:
       description: |
         Transitions the requisition from DRAFT to SUBMITTED. Publishes
         inventory.requisition.submitted event.
-      tags: [Requisitions]
+      tags:
+        - Requisitions
       parameters:
-        - $ref: "#/components/parameters/RequisitionIdPath"
+        - $ref: '#/components/parameters/RequisitionIdPath'
       responses:
-        "200":
+        '200':
           description: Requisition submitted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Requisition"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/requisitions/{id}/approve:
     post:
       operationId: approveRequisition
@@ -946,35 +940,35 @@ paths:
       description: |
         Approves the requisition with optional quantity adjustments per line.
         Transitions to APPROVED. Publishes inventory.requisition.approved event.
-      tags: [Requisitions]
+      tags:
+        - Requisitions
       parameters:
-        - $ref: "#/components/parameters/RequisitionIdPath"
+        - $ref: '#/components/parameters/RequisitionIdPath'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApproveRequisitionRequest"
+              $ref: '#/components/schemas/ApproveRequisitionRequest'
       responses:
-        "200":
+        '200':
           description: Requisition approved
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Requisition"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/requisitions/{id}/reject:
     post:
       operationId: rejectRequisition
@@ -982,38 +976,38 @@ paths:
       description: |
         Rejects the requisition with a reason. Transitions to REJECTED.
         Publishes inventory.requisition.rejected event.
-      tags: [Requisitions]
+      tags:
+        - Requisitions
       parameters:
-        - $ref: "#/components/parameters/RequisitionIdPath"
+        - $ref: '#/components/parameters/RequisitionIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RejectRequisitionRequest"
+              $ref: '#/components/schemas/RejectRequisitionRequest'
       responses:
-        "200":
+        '200':
           description: Requisition rejected
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Requisition"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Requisition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/requisitions/{id}/fulfill:
     post:
       operationId: fulfillRequisition
@@ -1022,39 +1016,38 @@ paths:
         Records fulfillment of an approved requisition. Specifies actual
         quantities shipped per line, batch numbers, and expiry dates.
         Transitions to FULFILLED. Publishes inventory.requisition.fulfilled event.
-      tags: [Requisitions]
+      tags:
+        - Requisitions
       parameters:
-        - $ref: "#/components/parameters/RequisitionIdPath"
+        - $ref: '#/components/parameters/RequisitionIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FulfillRequisitionRequest"
+              $ref: '#/components/schemas/FulfillRequisitionRequest'
       responses:
-        "200":
+        '200':
           description: Requisition fulfilled
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Requisition"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Handover ───────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/Requisition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/handover/start:
     post:
       operationId: startHandover
@@ -1063,34 +1056,34 @@ paths:
         Initiates a shift handover between outgoing and incoming operators.
         Snapshots current stock positions. Status is PENDING_OUTGOING_SIGN.
         Publishes inventory.handover.started event.
-      tags: [Handover]
+      tags:
+        - Handover
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StartHandoverRequest"
+              $ref: '#/components/schemas/StartHandoverRequest'
       responses:
-        "201":
+        '201':
           description: Handover started
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Handover"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Handover'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/handover/{id}/sign-outgoing:
     post:
       operationId: signOutgoing
@@ -1098,35 +1091,35 @@ paths:
       description: |
         Records the outgoing operator's confirmation. Transitions to
         PENDING_INCOMING_SIGN. Publishes inventory.handover.outgoing_signed event.
-      tags: [Handover]
+      tags:
+        - Handover
       parameters:
-        - $ref: "#/components/parameters/HandoverIdPath"
+        - $ref: '#/components/parameters/HandoverIdPath'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignHandoverRequest"
+              $ref: '#/components/schemas/SignHandoverRequest'
       responses:
-        "200":
+        '200':
           description: Outgoing signature recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Handover"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Handover'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/handover/{id}/sign-incoming:
     post:
       operationId: signIncoming
@@ -1134,43 +1127,44 @@ paths:
       description: |
         Records the incoming operator's confirmation. Transitions to COMPLETED.
         Publishes inventory.handover.completed event.
-      tags: [Handover]
+      tags:
+        - Handover
       parameters:
-        - $ref: "#/components/parameters/HandoverIdPath"
+        - $ref: '#/components/parameters/HandoverIdPath'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignHandoverRequest"
+              $ref: '#/components/schemas/SignHandoverRequest'
       responses:
-        "200":
+        '200':
           description: Incoming signature recorded, handover complete
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Handover"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/Handover'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/handover:
     get:
       operationId: listHandovers
       summary: List handover records
       description: Returns paginated handover records filtered by store and status.
-      tags: [Handover]
+      tags:
+        - Handover
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
@@ -1179,27 +1173,25 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: "#/components/schemas/HandoverStatus"
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+            $ref: '#/components/schemas/HandoverStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Handover records
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedHandover"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Reconciliation ─────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/PagedHandover'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/reconcile/pending:
     get:
       operationId: getReconcilePending
@@ -1208,33 +1200,33 @@ paths:
         Returns paginated list of stock variances between internal inventory
         and external eLMIS data. Items are ordered by variance magnitude
         descending. Includes confidence scores for auto-match suggestions.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: storeId
           in: query
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Pending reconciliation items
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedReconcileItem"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PagedReconcileItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/reconcile/{id}/resolve:
     post:
       operationId: resolveReconcile
@@ -1243,7 +1235,8 @@ paths:
         Resolves a stock variance by accepting internal count, accepting
         external count, or specifying a manual adjustment. Records resolution
         notes for audit. Publishes inventory.reconcile.resolved event.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - name: id
           in: path
@@ -1257,31 +1250,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveReconcileRequest"
+              $ref: '#/components/schemas/ResolveReconcileRequest'
       responses:
-        "200":
+        '200':
           description: Reconciliation resolved
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/ReconcileItem"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Internal ───────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/ReconcileItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/internal/capability/refresh:
     post:
       operationId: refreshCapability
@@ -1289,7 +1280,8 @@ paths:
       description: |
         Forces a reload of the eLMIS adapter mode and capability configuration
         for the given facility. Called by ops when adapter config changes.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
@@ -1303,15 +1295,14 @@ paths:
                   type: string
                   format: uuid
       responses:
-        "200":
+        '200':
           description: Capability refreshed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/consumption/pharmacy:
     post:
       operationId: recordPharmacyConsumption
@@ -1320,23 +1311,23 @@ paths:
         Internal endpoint called by the Pharmacy service after dispense
         completion. Decreases on-hand and records the consumption event
         against the dispensing context.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ConsumptionRequest"
+              $ref: '#/components/schemas/ConsumptionRequest'
       responses:
-        "200":
+        '200':
           description: Consumption recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/consumption/lab:
     post:
       operationId: recordLabConsumption
@@ -1344,23 +1335,23 @@ paths:
       description: |
         Internal endpoint called by OROS lab adapter when lab reagents/supplies
         are consumed during analysis. Decreases on-hand for consumed items.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ConsumptionRequest"
+              $ref: '#/components/schemas/ConsumptionRequest'
       responses:
-        "200":
+        '200':
           description: Consumption recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/consumption/clinical:
     post:
       operationId: recordClinicalConsumption
@@ -1368,23 +1359,23 @@ paths:
       description: |
         Internal endpoint for clinical supply consumption (e.g., wound
         dressings, gloves, syringes) used during patient encounters.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ConsumptionRequest"
+              $ref: '#/components/schemas/ConsumptionRequest'
       responses:
-        "200":
+        '200':
           description: Consumption recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/stores:
     post:
       operationId: createStore
@@ -1393,30 +1384,30 @@ paths:
         Creates a new inventory store (warehouse, pharmacy storeroom, ward
         cupboard) within a facility. Stores are the physical locations
         where stock is held.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateStoreRequest"
+              $ref: '#/components/schemas/CreateStoreRequest'
       responses:
-        "201":
+        '201':
           description: Store created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Store"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                        $ref: '#/components/schemas/Store'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/internal/stores/{storeId}/bins:
     post:
       operationId: createBin
@@ -1424,7 +1415,8 @@ paths:
       description: |
         Creates a new bin (shelf, rack, cold-chain unit, etc.) within a
         store. Bins are used for fine-grained location tracking within a store.
-      tags: [Internal]
+      tags:
+        - Internal
       parameters:
         - name: storeId
           in: path
@@ -1438,25 +1430,330 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateBinRequest"
+              $ref: '#/components/schemas/CreateBinRequest'
       responses:
-        "201":
+        '201':
           description: Bin created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/Bin"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
+                        $ref: '#/components/schemas/Bin'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /:
+    post:
+      operationId: inventory_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: inventory_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/start:
+    post:
+      operationId: inventory_post__id_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/lines/{lineId}:
+    post:
+      operationId: inventory_post__id_lines_lineId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/submit:
+    post:
+      operationId: inventory_post__id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/approve:
+    post:
+      operationId: inventory_post__id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reject:
+    post:
+      operationId: inventory_post__id_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: inventory_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /suggest:
+    post:
+      operationId: inventory_post__suggest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /start:
+    post:
+      operationId: inventory_post__start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/sign-outgoing:
+    post:
+      operationId: inventory_post__id_sign_outgoing
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/sign-incoming:
+    post:
+      operationId: inventory_post__id_sign_incoming
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /capability/refresh:
+    post:
+      operationId: inventory_post__capability_refresh
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consumption/pharmacy:
+    post:
+      operationId: inventory_post__consumption_pharmacy
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consumption/lab:
+    post:
+      operationId: inventory_post__consumption_lab
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /consumption/clinical:
+    post:
+      operationId: inventory_post__consumption_clinical
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stores:
+    post:
+      operationId: inventory_post__stores
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stores/{storeId}/bins:
+    post:
+      operationId: inventory_post__stores_storeId_bins
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /import:
+    post:
+      operationId: inventory_post__import
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /lookup-by-barcode:
+    get:
+      operationId: inventory_get__lookup_by_barcode
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemCode}:
+    get:
+      operationId: inventory_get__itemCode_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /receipt:
+    post:
+      operationId: inventory_post__receipt
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /issue:
+    post:
+      operationId: inventory_post__issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /transfer:
+    post:
+      operationId: inventory_post__transfer
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /adjust:
+    post:
+      operationId: inventory_post__adjust
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wastage:
+    post:
+      operationId: inventory_post__wastage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /return:
+    post:
+      operationId: inventory_post__return
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /near-expiry:
+    get:
+      operationId: inventory_get__near_expiry
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stockouts:
+    get:
+      operationId: inventory_get__stockouts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pending:
+    get:
+      operationId: inventory_get__pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/resolve:
+    post:
+      operationId: inventory_post__id_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/fulfill:
+    post:
+      operationId: inventory_post__id_fulfill
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: inventory_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: inventory_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inventory-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   # ── Security ─────────────────────────────────────────────────────────────

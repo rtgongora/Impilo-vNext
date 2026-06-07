@@ -46,124 +46,125 @@ paths:
   /internal/v1/health:
     get:
       operationId: dagsInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/policies:
     post:
       operationId: dagsCreatePolicy
-      tags: [Policies]
+      tags:
+        - Policies
       summary: Create a governance policy
       description: |
         Creates a new governance policy that controls access to resources of
         the specified type. The policy conditions are evaluated at access-request
         adjudication time.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePolicyRequest"
+              $ref: '#/components/schemas/CreatePolicyRequest'
       responses:
-        "201":
+        '201':
           description: Policy created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PolicyApiResponse"
-        "400":
+                $ref: '#/components/schemas/PolicyApiResponse'
+        '400':
           description: Invalid request body
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     get:
       operationId: dagsListPolicies
-      tags: [Policies]
+      tags:
+        - Policies
       summary: List governance policies
       description: |
         Returns all governance policies for the current tenant.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: List of policies
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PolicyListApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/PolicyListApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/access-requests:
     post:
       operationId: dagsSubmitAccessRequest
-      tags: [Access-Requests]
+      tags:
+        - Access-Requests
       summary: Submit an access request
       description: |
         Submits a formal request to access a protected resource. The request
         enters SUBMITTED status and awaits adjudication (approve/deny).
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SubmitAccessRequest"
+              $ref: '#/components/schemas/SubmitAccessRequest'
       responses:
-        "201":
+        '201':
           description: Access request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessRequestApiResponse"
-        "400":
+                $ref: '#/components/schemas/AccessRequestApiResponse'
+        '400':
           description: Invalid request body
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     get:
       operationId: dagsListAccessRequests
-      tags: [Access-Requests]
+      tags:
+        - Access-Requests
       summary: List access requests with optional status filter and pagination
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: status
           in: query
           required: false
           description: Filter by access request status
           schema:
-            $ref: "#/components/schemas/AccessRequestStatus"
+            $ref: '#/components/schemas/AccessRequestStatus'
         - name: page
           in: query
           required: false
@@ -182,30 +183,30 @@ paths:
             maximum: 200
           description: Page size
       responses:
-        "200":
+        '200':
           description: Paged list of access requests
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessRequestPagedApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/AccessRequestPagedApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/access-requests/{id}/approve:
     post:
       operationId: dagsApproveAccessRequest
-      tags: [Access-Requests]
+      tags:
+        - Access-Requests
       summary: Approve an access request
       description: |
         Approves the access request identified by `id`. An optional reason
         may be supplied for the audit trail.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: id
           in: path
           required: true
@@ -218,34 +219,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DecisionRequest"
+              $ref: '#/components/schemas/DecisionRequest'
       responses:
-        "200":
+        '200':
           description: Access request approved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessRequestApiResponse"
-        "404":
+                $ref: '#/components/schemas/AccessRequestApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Access request not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/access-requests/{id}/deny:
     post:
       operationId: dagsDenyAccessRequest
-      tags: [Access-Requests]
+      tags:
+        - Access-Requests
       summary: Deny an access request
       description: |
         Denies the access request identified by `id`. An optional reason
         may be supplied for the audit trail.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: id
           in: path
           required: true
@@ -258,18 +259,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DecisionRequest"
+              $ref: '#/components/schemas/DecisionRequest'
       responses:
-        "200":
+        '200':
           description: Access request denied
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AccessRequestApiResponse"
-        "404":
+                $ref: '#/components/schemas/AccessRequestApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Access request not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+  /:
+    post:
+      operationId: dataaccessgovernance_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-access-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: dataaccessgovernance_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-access-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/approve:
+    post:
+      operationId: dataaccessgovernance_post__id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-access-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/deny:
+    post:
+      operationId: dataaccessgovernance_post__id_deny
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-access-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

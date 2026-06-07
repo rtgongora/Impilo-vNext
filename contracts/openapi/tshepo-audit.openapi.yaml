@@ -57,35 +57,35 @@ tags:
     description: Hash chain tamper verification
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoAuditInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoAuditInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -94,18 +94,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── Audit Event Ingest ────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/audit/events:
     post:
       operationId: ingestAuditEvent
-      tags: [Ingest]
+      tags:
+        - Ingest
       summary: Append an audit event to the hash chain
       description: |
         Internal ingest endpoint called service-to-service behind Envoy.
@@ -116,21 +115,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AuditEventRequest"
+              $ref: '#/components/schemas/AuditEventRequest'
       responses:
-        "201":
+        '201':
           description: Audit event appended to chain
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAuditEvent"
+                $ref: '#/components/schemas/ApiResponseAuditEvent'
     get:
       operationId: queryAuditEvents
-      tags: [Query]
+      tags:
+        - Query
       summary: Paginated, filtered query of audit events
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: actorId
           in: query
           required: false
@@ -171,17 +171,17 @@ paths:
             type: integer
             default: 20
       responses:
-        "200":
+        '200':
           description: Paginated audit events
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedAuditEvents"
-
+                $ref: '#/components/schemas/ApiResponsePagedAuditEvents'
   /v1/audit/events/{id}:
     get:
       operationId: getAuditEvent
-      tags: [Query]
+      tags:
+        - Query
       summary: Retrieve a single audit event by ID
       parameters:
         - name: id
@@ -190,23 +190,22 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Audit event
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAuditEvent"
-        "404":
+                $ref: '#/components/schemas/ApiResponseAuditEvent'
+        '404':
           description: Audit event not found
-
-  # ── Access History (Patient Portal) ───────────────────────────────────────
   /v1/audit/access-history/{subjectRef}:
     get:
       operationId: getAccessHistory
-      tags: [Access-History]
+      tags:
+        - Access-History
       summary: Patient's redacted access history (portal-facing)
       description: |
         Returns a redacted view of audit events — no internal IDs, resource
@@ -219,8 +218,8 @@ paths:
           schema:
             type: string
           description: Patient's subject reference (CPID)
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
           required: false
@@ -235,42 +234,41 @@ paths:
             default: 20
             maximum: 100
       responses:
-        "200":
+        '200':
           description: Paginated redacted access history
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedAccessHistory"
-
-  # ── Export ────────────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponsePagedAccessHistory'
   /v1/audit/export:
     post:
       operationId: createAuditExport
-      tags: [Export]
+      tags:
+        - Export
       summary: Create a signed export bundle for a range of audit events
       description: |
         Ed25519-signed hash bundle for legal defensibility. The export
         captures a snapshot of events within a time range.
       parameters:
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AuditExportRequest"
+              $ref: '#/components/schemas/AuditExportRequest'
       responses:
-        "201":
+        '201':
           description: Export bundle created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAuditExport"
-
+                $ref: '#/components/schemas/ApiResponseAuditExport'
   /v1/audit/export/{id}:
     get:
       operationId: getAuditExport
-      tags: [Export]
+      tags:
+        - Export
       summary: Retrieve export bundle metadata
       parameters:
         - name: id
@@ -279,22 +277,22 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Export bundle metadata
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAuditExport"
-        "404":
+                $ref: '#/components/schemas/ApiResponseAuditExport'
+        '404':
           description: Export bundle not found
-
   /v1/audit/verify/{id}:
     get:
       operationId: verifyExport
-      tags: [Export]
+      tags:
+        - Export
       summary: Verify the integrity of a signed export bundle
       description: |
         Re-fetches events, recomputes the bundle hash, and compares against
@@ -306,53 +304,124 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Export bundle intact
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseExportVerification"
-        "409":
+                $ref: '#/components/schemas/ApiResponseExportVerification'
+        '409':
           description: Export bundle tampered — integrity check failed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseExportVerification"
-
-  # ── Chain Integrity ───────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseExportVerification'
   /v1/audit/verify-chain:
     post:
       operationId: verifyChain
-      tags: [Chain-Integrity]
+      tags:
+        - Chain-Integrity
       summary: Verify SHA-256 hash chain integrity for a tenant
       description: |
         Internal operations endpoint. Walks the full chain from sequence 1
         to head, recomputing each hash to detect any tampering.
         Returns 200 if intact, 409 if broken.
       parameters:
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ChainVerificationRequest"
+              $ref: '#/components/schemas/ChainVerificationRequest'
       responses:
-        "200":
+        '200':
           description: Chain intact
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseChainVerification"
-        "409":
+                $ref: '#/components/schemas/ApiResponseChainVerification'
+        '409':
           description: Chain broken — tamper detected
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseChainVerification"
+                $ref: '#/components/schemas/ApiResponseChainVerification'
+  /{subjectRef}:
+    get:
+      operationId: tshepoaudit_get__subjectRef_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /export:
+    post:
+      operationId: tshepoaudit_post__export
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /export/{id}:
+    get:
+      operationId: tshepoaudit_get__export_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify/{id}:
+    get:
+      operationId: tshepoaudit_get__verify_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: tshepoaudit_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify-chain:
+    post:
+      operationId: tshepoaudit_post__verify_chain
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepoaudit_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepoaudit_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-audit-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

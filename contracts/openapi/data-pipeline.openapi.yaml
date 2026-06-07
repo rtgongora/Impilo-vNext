@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,41 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /ingest:
+    post:
+      operationId: datapipeline_post__ingest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-pipeline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources:
+    post:
+      operationId: datapipeline_post__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-pipeline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: datapipeline_get__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-pipeline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /watermarks:
+    get:
+      operationId: datapipeline_get__watermarks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-pipeline-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

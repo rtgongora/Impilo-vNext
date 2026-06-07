@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.booking.api.dto.AppointmentResponse;
 import zw.gov.mohcc.impilo.booking.api.dto.BookingResponse;
+import zw.gov.mohcc.impilo.booking.core.BookingIntegrationService;
+import zw.gov.mohcc.impilo.booking.core.BookingMvumoService;
 import zw.gov.mohcc.impilo.booking.core.BookingService;
 import zw.gov.mohcc.impilo.booking.domain.*;
 import zw.gov.mohcc.impilo.shared.auth.TrustContext;
@@ -24,9 +26,15 @@ import java.util.UUID;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final BookingIntegrationService integrationService;
+    private final BookingMvumoService mvumoService;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService,
+                             BookingIntegrationService integrationService,
+                             BookingMvumoService mvumoService) {
         this.bookingService = bookingService;
+        this.integrationService = integrationService;
+        this.mvumoService = mvumoService;
     }
 
     public record CreateBookingBody(
@@ -103,13 +111,22 @@ public class BookingController {
     public ResponseEntity<ApiResponse<BookingResponse>> update(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
-        TrustContext ctx = TrustContextHolder.require();
-        BookingResponse updated = bookingService.update(id, new BookingService.UpdateBookingRequest(
+        return ResponseEntity.ok(ApiResponse.ok(updateBooking(id, body), TrustContextHolder.require().correlationId().toString()));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<BookingResponse>> replace(
+            @PathVariable UUID id,
+            @RequestBody Map<String, Object> body) {
+        return ResponseEntity.ok(ApiResponse.ok(updateBooking(id, body), TrustContextHolder.require().correlationId().toString()));
+    }
+
+    private BookingResponse updateBooking(UUID id, Map<String, Object> body) {
+        return bookingService.update(id, new BookingService.UpdateBookingRequest(
                 parseInstant(stringVal(body.get("preferred_start_at"), body.get("preferredStartAt"))),
                 parseInstant(stringVal(body.get("preferred_end_at"), body.get("preferredEndAt"))),
                 stringVal(body.get("reason")),
                 stringVal(body.get("notes"))));
-        return ResponseEntity.ok(ApiResponse.ok(updated, ctx.correlationId().toString()));
     }
 
     @PostMapping("/{id}/cancel")
@@ -182,6 +199,72 @@ public class BookingController {
     public ResponseEntity<ApiResponse<AppointmentResponse>> convertToAppointment(@PathVariable UUID id) {
         TrustContext ctx = TrustContextHolder.require();
         return ResponseEntity.ok(ApiResponse.ok(bookingService.convertToAppointment(id), ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/{id}/convert")
+    public ResponseEntity<ApiResponse<AppointmentResponse>> convert(@PathVariable UUID id) {
+        TrustContext ctx = TrustContextHolder.require();
+        AppointmentResponse appointment = bookingService.convertToAppointment(id);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(appointment, ctx.correlationId().toString()));
+    }
+
+    @PostMapping("/{id}/mvumo/request")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> requestMvumo(
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        MvumoType type = resolveMvumoType(body);
+        var entity = mvumoService.requestConsent(id, type);
+        Map<String, Object> payload = Map.of(
+                "bookingId", id.toString(),
+                "mvumoType", entity.getMvumoType().name(),
+                "status", entity.getStatus().name(),
+                "mvumoRecordId", entity.getMvumoRecordId());
+        return ResponseEntity.ok(ApiResponse.ok(payload, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/{id}/mvumo/status")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> mvumoStatus(@PathVariable UUID id) {
+        TrustContext ctx = TrustContextHolder.require();
+        Map<String, Object> payload = Map.of(
+                "bookingId", id.toString(),
+                "consent", mvumoService.status(id, MvumoType.CONSENT).name(),
+                "agreement", mvumoService.status(id, MvumoType.AGREEMENT).name(),
+                "authorisation", mvumoService.status(id, MvumoType.AUTHORISATION).name(),
+                "acknowledgement", mvumoService.status(id, MvumoType.ACKNOWLEDGEMENT).name());
+        return ResponseEntity.ok(ApiResponse.ok(payload, ctx.correlationId().toString()));
+    }
+
+    @GetMapping("/availability")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> availability(
+            @RequestParam String targetType,
+            @RequestParam String targetRef,
+            @RequestParam String date,
+            @RequestParam(required = false) Long facilityId,
+            @RequestParam(required = false) String resourceType) {
+        TrustContext ctx = TrustContextHolder.require();
+        Long resolvedFacility = facilityId;
+        if (resolvedFacility == null && targetType.equalsIgnoreCase("FACILITY")) {
+            resolvedFacility = Long.parseLong(targetRef);
+        }
+        String resource = resourceType != null ? resourceType : targetType;
+        List<Map<String, Object>> slots = integrationService.checkAvailability(ctx, resolvedFacility, date, resource);
+        return ResponseEntity.ok(ApiResponse.ok(slots, ctx.correlationId().toString()));
+    }
+
+    private static MvumoType resolveMvumoType(Map<String, Object> body) {
+        if (body == null) {
+            return MvumoType.CONSENT;
+        }
+        Object raw = body.get("mvumoType");
+        if (raw == null) {
+            raw = body.get("mvumo_type");
+        }
+        if (raw == null) {
+            return MvumoType.CONSENT;
+        }
+        return MvumoType.valueOf(raw.toString().toUpperCase());
     }
 
     private static Instant parseInstant(String raw) {

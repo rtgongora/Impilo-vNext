@@ -56,35 +56,35 @@ tags:
     description: Temporary compatibility proxy routes during tshepo-service retirement
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoAuthzInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoAuthzInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -93,38 +93,37 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── Authorize ─────────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/authorize:
     post:
       operationId: authorize
-      tags: [Authorize]
+      tags:
+        - Authorize
       summary: ext_authz HTTP check — evaluate access decision
       description: |
         Primary HTTP ext_authz endpoint. Envoy forwards the original request
         and trust headers. Returns ALLOW (200), DENY (403), or STEP_UP_REQUIRED (401)
         with obligation header mutations.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: ALLOW — request may proceed; obligation headers injected
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthzResponse"
-
+                $ref: '#/components/schemas/AuthzResponse'
   /v1/biometric-policy/evaluate:
     post:
       operationId: biometricPolicyEvaluateCompatibility
-      tags: [Legacy-Compatibility]
+      tags:
+        - Legacy-Compatibility
       summary: Temporary compatibility proxy for biometric policy evaluation
       deprecated: true
       description: |
@@ -138,20 +137,20 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Compatibility response from legacy policy evaluator
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "503":
+        '503':
           description: Legacy dependency unavailable
-
   /v1/patient-share-policy/evaluate:
     post:
       operationId: patientSharePolicyEvaluateCompatibility
-      tags: [Legacy-Compatibility]
+      tags:
+        - Legacy-Compatibility
       summary: Temporary compatibility proxy for patient-share policy evaluation
       deprecated: true
       description: |
@@ -165,20 +164,20 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Compatibility response from legacy policy evaluator
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "503":
+        '503':
           description: Legacy dependency unavailable
-
   /v1/council-regulatory/evaluate:
     post:
       operationId: councilRegulatoryEvaluateCompatibility
-      tags: [Legacy-Compatibility]
+      tags:
+        - Legacy-Compatibility
       summary: Temporary compatibility proxy for council-regulatory policy evaluation
       deprecated: true
       description: |
@@ -192,33 +191,32 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Compatibility response from legacy policy evaluator
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "503":
-          description: Legacy dependency unavailable
-        "401":
+        '401':
           description: STEP_UP_REQUIRED — client must complete step-up challenge
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthzResponse"
-        "403":
+                $ref: '#/components/schemas/AuthzResponse'
+        '403':
           description: DENY — request rejected
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthzResponse"
-
-  # ── Break-Glass ───────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/AuthzResponse'
+        '503':
+          description: Legacy dependency unavailable
   /v1/break-glass:
     post:
       operationId: requestBreakGlass
-      tags: [Break-Glass]
+      tags:
+        - Break-Glass
       summary: Request break-glass emergency access
       description: |
         Clinician requests emergency override access to patient data that would
@@ -228,36 +226,36 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BreakGlassCreateRequest"
+              $ref: '#/components/schemas/BreakGlassCreateRequest'
       responses:
-        "201":
+        '201':
           description: Break-glass request created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BreakGlassResponse"
-
+                $ref: '#/components/schemas/BreakGlassResponse'
   /v1/break-glass/review:
     get:
       operationId: getPendingBreakGlassReviews
-      tags: [Break-Glass]
+      tags:
+        - Break-Glass
       summary: List pending break-glass reviews for a tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: List of pending break-glass requests
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/BreakGlassResponse"
-
+                  $ref: '#/components/schemas/BreakGlassResponse'
   /v1/break-glass/review/{id}:
     post:
       operationId: reviewBreakGlass
-      tags: [Break-Glass]
+      tags:
+        - Break-Glass
       summary: Approve or reject a break-glass request
       parameters:
         - name: id
@@ -271,58 +269,58 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BreakGlassReviewRequest"
+              $ref: '#/components/schemas/BreakGlassReviewRequest'
       responses:
-        "200":
+        '200':
           description: Review decision recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BreakGlassResponse"
-        "404":
+                $ref: '#/components/schemas/BreakGlassResponse'
+        '404':
           description: Break-glass request not found
-        "409":
+        '409':
           description: Break-glass request already reviewed
-
-  # ── Policies ──────────────────────────────────────────────────────────────
   /v1/policies:
     get:
       operationId: listPolicyRules
-      tags: [Policy]
+      tags:
+        - Policy
       summary: List all policy rules for a tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: List of policy rules
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PolicyRuleResponse"
+                  $ref: '#/components/schemas/PolicyRuleResponse'
     post:
       operationId: createPolicyRule
-      tags: [Policy]
+      tags:
+        - Policy
       summary: Create a new policy rule
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PolicyRuleRequest"
+              $ref: '#/components/schemas/PolicyRuleRequest'
       responses:
-        "201":
+        '201':
           description: Policy rule created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PolicyRuleResponse"
-
+                $ref: '#/components/schemas/PolicyRuleResponse'
   /v1/policies/{id}:
     put:
       operationId: updatePolicyRule
-      tags: [Policy]
+      tags:
+        - Policy
       summary: Update an existing policy rule
       parameters:
         - name: id
@@ -336,21 +334,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PolicyRuleRequest"
+              $ref: '#/components/schemas/PolicyRuleRequest'
       responses:
-        "200":
+        '200':
           description: Policy rule updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PolicyRuleResponse"
-        "403":
+                $ref: '#/components/schemas/PolicyRuleResponse'
+        '403':
           description: Forbidden — tenant mismatch
-        "404":
+        '404':
           description: Policy rule not found
     delete:
       operationId: deletePolicyRule
-      tags: [Policy]
+      tags:
+        - Policy
       summary: Delete (deactivate) a policy rule
       parameters:
         - name: id
@@ -359,20 +358,19 @@ paths:
           schema:
             type: integer
             format: int64
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "204":
+        '204':
           description: Policy rule deleted
-        "403":
+        '403':
           description: Forbidden — tenant mismatch
-        "404":
+        '404':
           description: Policy rule not found
-
-  # ── Step-Up ───────────────────────────────────────────────────────────────
   /v1/step-up/challenge:
     post:
       operationId: issueStepUpChallenge
-      tags: [Step-Up]
+      tags:
+        - Step-Up
       summary: Issue a new step-up authentication challenge
       description: |
         Called after receiving a STEP_UP_REQUIRED verdict. Returns the challenge
@@ -382,42 +380,42 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StepUpChallengeRequest"
+              $ref: '#/components/schemas/StepUpChallengeRequest'
       responses:
-        "201":
+        '201':
           description: Step-up challenge issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StepUpChallengeResponse"
-
+                $ref: '#/components/schemas/StepUpChallengeResponse'
   /v1/step-up/verify:
     post:
       operationId: verifyStepUpChallenge
-      tags: [Step-Up]
+      tags:
+        - Step-Up
       summary: Verify (complete) a step-up challenge
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/StepUpVerifyRequest"
+              $ref: '#/components/schemas/StepUpVerifyRequest'
       responses:
-        "200":
+        '200':
           description: Step-up challenge verified
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StepUpChallengeResponse"
-        "400":
+                $ref: '#/components/schemas/StepUpChallengeResponse'
+        '400':
           description: Verification failed — invalid response
-        "403":
+        '403':
           description: Security error — challenge tampering detected
-
   /v1/step-up/status/{challengeId}:
     get:
       operationId: getStepUpStatus
-      tags: [Step-Up]
+      tags:
+        - Step-Up
       summary: Get the status of a step-up challenge
       parameters:
         - name: challengeId
@@ -426,22 +424,21 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Step-up challenge status
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StepUpChallengeResponse"
-        "404":
+                $ref: '#/components/schemas/StepUpChallengeResponse'
+        '404':
           description: Challenge not found
-
-  # ── Devices ───────────────────────────────────────────────────────────────
   /v1/devices/{fingerprint}:
     get:
       operationId: getDeviceProfile
-      tags: [Device]
+      tags:
+        - Device
       summary: Get a device profile by fingerprint
       parameters:
         - name: fingerprint
@@ -449,21 +446,21 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Device profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeviceProfileResponse"
-        "404":
+                $ref: '#/components/schemas/DeviceProfileResponse'
+        '404':
           description: Device not found
-
   /v1/devices/{fingerprint}/block:
     post:
       operationId: blockDevice
-      tags: [Device]
+      tags:
+        - Device
       summary: Block a device — immediate deny for all future requests
       parameters:
         - name: fingerprint
@@ -471,19 +468,20 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Device blocked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeviceProfileResponse"
-        "404":
+                $ref: '#/components/schemas/DeviceProfileResponse'
+        '404':
           description: Device not found
     delete:
       operationId: unblockDevice
-      tags: [Device]
+      tags:
+        - Device
       summary: Unblock a device — reset risk score
       parameters:
         - name: fingerprint
@@ -491,16 +489,176 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Device unblocked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeviceProfileResponse"
-        "404":
+                $ref: '#/components/schemas/DeviceProfileResponse'
+        '404':
           description: Device not found
+  /review:
+    get:
+      operationId: tshepoauthz_get__review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /review/{id}:
+    post:
+      operationId: tshepoauthz_post__review_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{fingerprint}:
+    get:
+      operationId: tshepoauthz_get__fingerprint_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{fingerprint}/block:
+    post:
+      operationId: tshepoauthz_post__fingerprint_block
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: tshepoauthz_delete__fingerprint_block
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /biometric-policy/evaluate:
+    post:
+      operationId: tshepoauthz_post__biometric_policy_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient-share-policy/evaluate:
+    post:
+      operationId: tshepoauthz_post__patient_share_policy_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /council-regulatory/evaluate:
+    post:
+      operationId: tshepoauthz_post__council_regulatory_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    put:
+      operationId: tshepoauthz_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: tshepoauthz_delete__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /challenge:
+    post:
+      operationId: tshepoauthz_post__challenge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify:
+    post:
+      operationId: tshepoauthz_post__verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /status/{challengeId}:
+    get:
+      operationId: tshepoauthz_get__status_challengeId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /requests:
+    post:
+      operationId: tshepoauthz_post__requests
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /requests/pending:
+    get:
+      operationId: tshepoauthz_get__requests_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /requests/{id}/review:
+    post:
+      operationId: tshepoauthz_post__requests_id_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepoauthz_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepoauthz_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-authz-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

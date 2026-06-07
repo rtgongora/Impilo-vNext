@@ -15,22 +15,30 @@ paths:
         - $ref: '#/components/parameters/TenantIdHeader'
         - name: clientId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: facilityId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: providerId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: bookingStatus
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 20 }
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           description: Booking list
@@ -56,7 +64,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}:
     get:
       summary: Get booking by ID
@@ -87,7 +94,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/cancel:
     post:
       summary: Cancel booking
@@ -100,7 +106,8 @@ paths:
             schema:
               type: object
               properties:
-                reason: { type: string }
+                reason:
+                  type: string
       responses:
         '200':
           description: Cancelled
@@ -108,7 +115,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/triage:
     post:
       summary: Record triage outcome
@@ -121,8 +127,10 @@ paths:
             schema:
               type: object
               properties:
-                triageStatus: { type: string }
-                notes: { type: string }
+                triageStatus:
+                  type: string
+                notes:
+                  type: string
       responses:
         '200':
           description: Triaged
@@ -130,7 +138,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/approve:
     post:
       summary: Approve booking (provider/facility/admin)
@@ -144,7 +151,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/reject:
     post:
       summary: Reject booking
@@ -157,7 +163,8 @@ paths:
             schema:
               type: object
               properties:
-                reason: { type: string }
+                reason:
+                  type: string
       responses:
         '200':
           description: Rejected
@@ -165,7 +172,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/assign:
     post:
       summary: Assign provider or resource to booking
@@ -178,8 +184,11 @@ paths:
             schema:
               type: object
               properties:
-                providerId: { type: string }
-                resourceId: { type: string, format: uuid }
+                providerId:
+                  type: string
+                resourceId:
+                  type: string
+                  format: uuid
       responses:
         '200':
           description: Assigned
@@ -187,7 +196,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/reserve:
     post:
       summary: Reserve TUSO resource slot for booking
@@ -201,7 +209,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/convert:
     post:
       summary: Convert approved booking to appointment
@@ -215,7 +222,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointment'
-
   /v1/bookings/{bookingId}/mvumo/request:
     post:
       summary: Request Mvumo consent/agreement/authorisation for booking
@@ -228,8 +234,15 @@ paths:
             schema:
               type: object
               properties:
-                mvumoType: { type: string, enum: [CONSENT, AGREEMENT, AUTHORISATION, ACKNOWLEDGEMENT] }
-                consentType: { type: string }
+                mvumoType:
+                  type: string
+                  enum:
+                    - CONSENT
+                    - AGREEMENT
+                    - AUTHORISATION
+                    - ACKNOWLEDGEMENT
+                consentType:
+                  type: string
       responses:
         '200':
           description: Mvumo request created
@@ -237,7 +250,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeBooking'
-
   /v1/bookings/{bookingId}/mvumo/status:
     get:
       summary: Mvumo status for booking
@@ -251,7 +263,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeMap'
-
   /v1/bookings/availability:
     get:
       summary: Check availability for booking target
@@ -260,18 +271,23 @@ paths:
         - name: targetType
           in: query
           required: true
-          schema: { type: string }
+          schema:
+            type: string
         - name: targetRef
           in: query
           required: true
-          schema: { type: string }
+          schema:
+            type: string
         - name: facilityId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: date
           in: query
           required: true
-          schema: { type: string, format: date }
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Available slots
@@ -279,7 +295,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeMap'
-
   /v1/appointments:
     get:
       summary: List appointments
@@ -287,19 +302,26 @@ paths:
         - $ref: '#/components/parameters/TenantIdHeader'
         - name: clientId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: facilityId
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: string
         - name: page
           in: query
-          schema: { type: integer, default: 0 }
+          schema:
+            type: integer
+            default: 0
         - name: size
           in: query
-          schema: { type: integer, default: 20 }
+          schema:
+            type: integer
+            default: 20
       responses:
         '200':
           description: Appointment list
@@ -307,7 +329,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointmentList'
-
   /v1/appointments/{appointmentId}:
     get:
       summary: Get appointment
@@ -321,7 +342,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointment'
-
   /v1/appointments/{appointmentId}/check-in:
     post:
       summary: Check in appointment (bridges to PCT queue)
@@ -335,7 +355,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeMap'
-
   /v1/appointments/{appointmentId}/complete:
     post:
       summary: Mark appointment completed
@@ -349,7 +368,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointment'
-
   /v1/appointments/{appointmentId}/no-show:
     post:
       summary: Mark appointment no-show
@@ -363,7 +381,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointment'
-
   /v1/appointments/{appointmentId}/reschedule:
     post:
       summary: Reschedule appointment (linked to original booking history)
@@ -376,8 +393,12 @@ paths:
             schema:
               type: object
               properties:
-                startTime: { type: string, format: date-time }
-                endTime: { type: string, format: date-time }
+                startTime:
+                  type: string
+                  format: date-time
+                endTime:
+                  type: string
+                  format: date-time
       responses:
         '200':
           description: Rescheduled
@@ -385,7 +406,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointment'
-
   /v1/appointments/citizen/{cpid}:
     get:
       summary: List citizen appointments
@@ -394,10 +414,12 @@ paths:
         - name: cpid
           in: path
           required: true
-          schema: { type: string }
+          schema:
+            type: string
         - name: status
           in: query
-          schema: { type: string }
+          schema:
+            type: string
       responses:
         '200':
           description: Citizen appointments
@@ -405,6 +427,218 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiEnvelopeAppointmentList'
+  /:
+    get:
+      operationId: booking_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: booking_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: booking_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: booking_patch__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: booking_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/confirm:
+    post:
+      operationId: booking_post__id_confirm
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/cancel:
+    post:
+      operationId: booking_post__id_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/check-in:
+    post:
+      operationId: booking_post__id_check_in
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/complete:
+    post:
+      operationId: booking_post__id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/no-show:
+    post:
+      operationId: booking_post__id_no_show
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reschedule:
+    post:
+      operationId: booking_post__id_reschedule
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /citizen/{cpid}:
+    get:
+      operationId: booking_get__citizen_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: booking_post__citizen_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/triage:
+    post:
+      operationId: booking_post__id_triage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/approve:
+    post:
+      operationId: booking_post__id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reject:
+    post:
+      operationId: booking_post__id_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/assign:
+    post:
+      operationId: booking_post__id_assign
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/redirect:
+    post:
+      operationId: booking_post__id_redirect
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reserve:
+    post:
+      operationId: booking_post__id_reserve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/convert-to-appointment:
+    post:
+      operationId: booking_post__id_convert_to_appointment
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/convert:
+    post:
+      operationId: booking_post__id_convert
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/mvumo/request:
+    post:
+      operationId: booking_post__id_mvumo_request
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/mvumo/status:
+    get:
+      operationId: booking_get__id_mvumo_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /availability:
+    get:
+      operationId: booking_get__availability
+      tags:
+        - Generated-From-Handler
+      summary: Documented from booking-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   parameters:

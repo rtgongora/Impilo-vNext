@@ -50,45 +50,43 @@ tags:
     description: Worker trigger for pending notification processing
 
 paths:
-  # ---------------------------------------------------------------------------
-  # Notify endpoints (existing)
-  # ---------------------------------------------------------------------------
   /internal/v1/notify:
     post:
       operationId: notificationEnqueue
-      tags: [Internal-Notify]
+      tags:
+        - Internal-Notify
       summary: Enqueue a notification for delivery
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotifyRequest"
+              $ref: '#/components/schemas/NotifyRequest'
       responses:
-        "201":
+        '201':
           description: Accepted for delivery
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NotifyResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/NotifyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/notifications:
     get:
       operationId: notificationList
-      tags: [Internal-Notify]
+      tags:
+        - Internal-Notify
       summary: Page notifications for tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: page
           in: query
           schema:
@@ -100,162 +98,159 @@ paths:
             type: integer
             minimum: 1
       responses:
-        "200":
+        '200':
           description: Spring Data page of notifications
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PagedNotificationResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Template endpoints (NEW)
-  # ---------------------------------------------------------------------------
+                $ref: '#/components/schemas/PagedNotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/templates:
     post:
       operationId: templateCreate
-      tags: [Template]
+      tags:
+        - Template
       summary: Create a new notification template (national federation required)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TemplateRequest"
+              $ref: '#/components/schemas/TemplateRequest'
       responses:
-        "201":
+        '201':
           description: Template created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TemplateResponse"
-        "403":
+                $ref: '#/components/schemas/TemplateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           description: Caller lacks national federation authority
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
     get:
       operationId: templateList
-      tags: [Template]
+      tags:
+        - Template
       summary: List all templates for the current tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Array of templates
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TemplateResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  $ref: '#/components/schemas/TemplateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/templates/{key}:
     get:
       operationId: templateGetByKey
-      tags: [Template]
+      tags:
+        - Template
       summary: Retrieve a template by its unique key
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: key
           in: path
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Template detail
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TemplateResponse"
-        "404":
+                $ref: '#/components/schemas/TemplateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Template not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/templates/{id}/publish:
     post:
       operationId: templatePublish
-      tags: [Template]
+      tags:
+        - Template
       summary: Publish a draft template (national federation required)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Template published
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TemplateResponse"
-        "403":
+                $ref: '#/components/schemas/TemplateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           description: Caller lacks national federation authority
-        "404":
+        '404':
           description: Template not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/templates/{id}/retire:
     post:
       operationId: templateRetire
-      tags: [Template]
+      tags:
+        - Template
       summary: Retire a published template (national federation required)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Template retired
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TemplateResponse"
-        "403":
+                $ref: '#/components/schemas/TemplateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           description: Caller lacks national federation authority
-        "404":
+        '404':
           description: Template not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/templates/{id}/versions:
     post:
       operationId: templateVersionCreate
-      tags: [Template]
+      tags:
+        - Template
       summary: Create a new version of a template (national federation required)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -266,91 +261,88 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TemplateVersionRequest"
+              $ref: '#/components/schemas/TemplateVersionRequest'
       responses:
-        "201":
+        '201':
           description: Template version created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TemplateVersionResponse"
-        "403":
+                $ref: '#/components/schemas/TemplateVersionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
           description: Caller lacks national federation authority
-        "404":
+        '404':
           description: Template not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
     get:
       operationId: templateVersionList
-      tags: [Template]
+      tags:
+        - Template
       summary: List all versions of a template
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Array of template versions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TemplateVersionResponse"
-        "404":
+                  $ref: '#/components/schemas/TemplateVersionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Template not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Delivery Receipt endpoints (NEW)
-  # ---------------------------------------------------------------------------
   /internal/v1/delivery-receipts:
     post:
       operationId: deliveryReceiptRecord
-      tags: [Delivery-Receipt]
+      tags:
+        - Delivery-Receipt
       summary: Record a delivery receipt from a channel provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DeliveryReceiptRequest"
+              $ref: '#/components/schemas/DeliveryReceiptRequest'
       responses:
-        "201":
+        '201':
           description: Receipt recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DeliveryReceiptResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/DeliveryReceiptResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     get:
       operationId: deliveryReceiptQuery
-      tags: [Delivery-Receipt]
+      tags:
+        - Delivery-Receipt
       summary: Query delivery receipts by notification ID or by status
       description: |
         Supports two query modes via mutually exclusive query parameters:
         - `notificationId` — returns all receipts for a specific notification
         - `status` — returns a paged list of receipts filtered by delivery status
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: notificationId
           in: query
           description: Filter receipts by notification ID (mutually exclusive with status)
@@ -376,7 +368,7 @@ paths:
             minimum: 1
             default: 20
       responses:
-        "200":
+        '200':
           description: |
             When queried by `notificationId`: array of DeliveryReceiptResponse.
             When queried by `status`: Spring Data page of DeliveryReceiptResponse.
@@ -386,24 +378,21 @@ paths:
                 oneOf:
                   - type: array
                     items:
-                      $ref: "#/components/schemas/DeliveryReceiptResponse"
-                  - $ref: "#/components/schemas/PagedDeliveryReceiptResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Worker endpoints (NEW)
-  # ---------------------------------------------------------------------------
+                      $ref: '#/components/schemas/DeliveryReceiptResponse'
+                  - $ref: '#/components/schemas/PagedDeliveryReceiptResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/worker/run:
     post:
       operationId: workerRun
-      tags: [Worker]
+      tags:
+        - Worker
       summary: Trigger processing of pending notifications
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: limit
           in: query
           description: Maximum number of pending notifications to process
@@ -412,14 +401,200 @@ paths:
             minimum: 1
             default: 10
       responses:
-        "200":
+        '200':
           description: Worker execution summary
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WorkerResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                $ref: '#/components/schemas/WorkerResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /:
+    post:
+      operationId: notification_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: notification_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notificationId:
+    get:
+      operationId: notification_get__notificationId
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /status:
+    get:
+      operationId: notification_get__status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notify:
+    post:
+      operationId: notification_post__notify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/send:
+    post:
+      operationId: notification_post__notifications_send
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications:
+    get:
+      operationId: notification_get__notifications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/inbox:
+    get:
+      operationId: notification_get__notifications_inbox
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/{id}/read:
+    patch:
+      operationId: notification_patch__notifications_id_read
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/inbox/{id}/read:
+    post:
+      operationId: notification_post__notifications_inbox_id_read
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/inbox/read-all:
+    post:
+      operationId: notification_post__notifications_inbox_read_all
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/read-all:
+    post:
+      operationId: notification_post__notifications_read_all
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/inbox/unread-count:
+    get:
+      operationId: notification_get__notifications_inbox_unread_count
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /notifications/preferences:
+    get:
+      operationId: notification_get__notifications_preferences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: notification_put__notifications_preferences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{key}:
+    get:
+      operationId: notification_get__key_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/publish:
+    post:
+      operationId: notification_post__id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/retire:
+    post:
+      operationId: notification_post__id_retire
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/versions:
+    post:
+      operationId: notification_post__id_versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: notification_get__id_versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /run:
+    post:
+      operationId: notification_post__run
+      tags:
+        - Generated-From-Handler
+      summary: Documented from notification-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

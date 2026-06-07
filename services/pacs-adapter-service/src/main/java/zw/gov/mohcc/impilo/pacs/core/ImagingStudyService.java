@@ -18,6 +18,7 @@ import zw.gov.mohcc.impilo.pacs.api.dto.LaunchViewerRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.OrderLinkRequest;
 import zw.gov.mohcc.impilo.pacs.api.dto.ReportLinkRequest;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
+import zw.gov.mohcc.impilo.pacs.events.ImagingPipelineKafkaContracts;
 import zw.gov.mohcc.impilo.pacs.events.PacsOutboxPublisher;
 import zw.gov.mohcc.impilo.pacs.integration.PacsBackendClient;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
@@ -201,6 +202,9 @@ public class ImagingStudyService {
         study = studyRepository.save(study);
 
         appendStudyAvailableOutbox(study);
+        if (study.getOrosOrderId() == null || study.getOrosOrderId().isBlank()) {
+            appendImagingPipelineOutbox(study, ImagingPipelineKafkaContracts.STUDY_UNMATCHED);
+        }
 
         log.info("Imaging study registered: studyUid={}, modality={}, patient={}",
                 study.getStudyUid(), study.getModality(), study.getPatientCpid());
@@ -305,6 +309,13 @@ public class ImagingStudyService {
         appendViewerLaunchedOutbox(study, session.getId(), request);
 
         return session;
+    }
+
+    @Transactional
+    public void recordViewerAccessDenied(Long studyId, String denialCode, String actorId, String actorType) {
+        ImagingStudyEntity study = getStudy(studyId);
+        recordAccess(study.getId(), null, null, actorId, actorType, "VIEWER_DENIED", denialCode);
+        appendImagingPipelineOutbox(study, ImagingPipelineKafkaContracts.VIEWER_ACCESS_DENIED);
     }
 
     public Map<String, Object> viewerLaunchContext(Long studyId, String requestedViewerType, String actorId, String actorType) {
@@ -433,6 +444,16 @@ public class ImagingStudyService {
 
         EventOutboxEntity refreshed = outboxRepository.findById(outboxId).orElse(row);
         String status = refreshed.getPublishedAt() != null ? "PUBLISHED" : "RETRY_QUEUED";
+        try {
+            studyRepository.findById(Long.parseLong(refreshed.getAggregateId())).ifPresent(study -> {
+                String outcome = refreshed.getPublishedAt() != null
+                        ? ImagingPipelineKafkaContracts.WRITEBACK_SUCCEEDED
+                        : ImagingPipelineKafkaContracts.WRITEBACK_FAILED;
+                appendImagingPipelineOutbox(study, outcome);
+            });
+        } catch (NumberFormatException ignored) {
+            // non-study outbox rows skip imaging writeback projection
+        }
 
         return Map.of(
                 "outboxId", outboxId,
@@ -635,6 +656,31 @@ public class ImagingStudyService {
             outboxRepository.save(row);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize pacs.study.correlated payload", e);
+        }
+    }
+
+    private void appendImagingPipelineOutbox(ImagingStudyEntity study, String eventType) {
+        try {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("study_id", study.getId());
+            payload.put("patient_cpid", study.getPatientCpid());
+            payload.put("tenant_id", study.getTenantId().toString());
+            payload.put("topic", eventType);
+
+            EventOutboxEntity row = new EventOutboxEntity();
+            row.setAggregateType(AGGREGATE_IMAGING_STUDY);
+            row.setAggregateId(String.valueOf(study.getId()));
+            row.setEventType(eventType);
+            row.setPayload(objectMapper.writeValueAsString(payload));
+            applyContext(row, study.getTenantId().toString());
+            row.setSubjectType(AGGREGATE_IMAGING_STUDY);
+            row.setSubjectId(String.valueOf(study.getId()));
+            row.setPartitionKey(study.getOrosOrderId() != null ? study.getOrosOrderId() : String.valueOf(study.getId()));
+            row.setOccurredAt(OffsetDateTime.now());
+            row.setSchemaVersion(1);
+            outboxRepository.save(row);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize imaging pipeline payload for " + eventType, e);
         }
     }
 

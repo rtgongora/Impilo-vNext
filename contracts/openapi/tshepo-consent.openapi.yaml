@@ -53,35 +53,35 @@ tags:
     description: Share link governance — short-lived delegated access
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoConsentInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoConsentInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -90,37 +90,36 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── Consent CRUD ──────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/consent:
     post:
       operationId: createConsent
-      tags: [Consent]
+      tags:
+        - Consent
       summary: Create a new consent directive from FHIR R4 Consent JSON
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateConsentRequest"
+              $ref: '#/components/schemas/CreateConsentRequest'
       responses:
-        "201":
+        '201':
           description: Consent directive created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDirective"
-
+                $ref: '#/components/schemas/ApiResponseConsentDirective'
   /v1/consent/{id}:
     get:
       operationId: getConsentById
-      tags: [Consent]
+      tags:
+        - Consent
       summary: Retrieve a consent directive by ID
       parameters:
         - name: id
@@ -130,15 +129,16 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Consent directive
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDirective"
+                $ref: '#/components/schemas/ApiResponseConsentDirective'
     put:
       operationId: updateConsent
-      tags: [Consent]
+      tags:
+        - Consent
       summary: Update an existing consent directive
       parameters:
         - name: id
@@ -152,17 +152,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateConsentRequest"
+              $ref: '#/components/schemas/UpdateConsentRequest'
       responses:
-        "200":
+        '200':
           description: Consent directive updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDirective"
+                $ref: '#/components/schemas/ApiResponseConsentDirective'
     delete:
       operationId: revokeConsent
-      tags: [Consent]
+      tags:
+        - Consent
       summary: Revoke a consent directive (soft delete)
       parameters:
         - name: id
@@ -176,19 +177,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RevokeConsentRequest"
+              $ref: '#/components/schemas/RevokeConsentRequest'
       responses:
-        "200":
+        '200':
           description: Consent directive revoked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDirective"
-
+                $ref: '#/components/schemas/ApiResponseConsentDirective'
   /v1/consent/patient/{patientRef}:
     get:
       operationId: findConsentsByPatient
-      tags: [Consent]
+      tags:
+        - Consent
       summary: List consent directives for a patient (paginated)
       parameters:
         - name: patientRef
@@ -221,18 +222,17 @@ paths:
             type: integer
             default: 20
       responses:
-        "200":
+        '200':
           description: Paginated list of consent directives
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedConsent"
-
-  # ── Consent Evaluation ────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponsePagedConsent'
   /v1/consent/evaluate:
     get:
       operationId: evaluateConsent
-      tags: [Evaluation]
+      tags:
+        - Evaluation
       summary: Evaluate consent for an access request (called by tshepo-authz)
       description: |
         Internal enforcement hook — returns PERMIT or DENY with obligations.
@@ -267,18 +267,17 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Consent decision (PERMIT or DENY with obligations)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDecision"
-
-  # ── Portal Self-Service ───────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseConsentDecision'
   /v1/consent/portal/my-consents:
     get:
       operationId: myConsents
-      tags: [Portal]
+      tags:
+        - Portal
       summary: List the authenticated patient's active consent directives
       description: |
         Patient identity is derived from trust context headers (x-actor-id).
@@ -296,17 +295,17 @@ paths:
             type: integer
             default: 20
       responses:
-        "200":
+        '200':
           description: Paginated list of active consents
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponsePagedConsent"
-
+                $ref: '#/components/schemas/ApiResponsePagedConsent'
   /v1/consent/portal/revoke/{id}:
     post:
       operationId: portalRevokeConsent
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Patient self-service consent revocation
       description: |
         Patient can only revoke their own consents (verified via trust context).
@@ -318,20 +317,19 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Consent revoked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseConsentDirective"
-        "403":
+                $ref: '#/components/schemas/ApiResponseConsentDirective'
+        '403':
           description: Cannot revoke consent belonging to another patient
-
-  # ── Share Links ───────────────────────────────────────────────────────────
   /v1/consent/share-links:
     post:
       operationId: createShareLink
-      tags: [Share-Link]
+      tags:
+        - Share-Link
       summary: Create a new share link — plaintext token returned exactly once
       description: |
         Share links are short-lived access tokens allowing patients to delegate
@@ -341,19 +339,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateShareLinkRequest"
+              $ref: '#/components/schemas/CreateShareLinkRequest'
       responses:
-        "201":
+        '201':
           description: Share link created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseShareLinkCreated"
-
+                $ref: '#/components/schemas/ApiResponseShareLinkCreated'
   /v1/consent/share-links/{token}:
     get:
       operationId: validateShareLink
-      tags: [Share-Link]
+      tags:
+        - Share-Link
       summary: Validate and consume a share link token
       parameters:
         - name: token
@@ -362,17 +360,17 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Share link validation result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseShareLinkValidation"
-
+                $ref: '#/components/schemas/ApiResponseShareLinkValidation'
   /v1/consent/share-links/{id}:
     delete:
       operationId: revokeShareLink
-      tags: [Share-Link]
+      tags:
+        - Share-Link
       summary: Revoke a share link by its ID
       parameters:
         - name: id
@@ -382,13 +380,101 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Share link revoked
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /{id}:
+    get:
+      operationId: tshepoconsent_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: tshepoconsent_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: tshepoconsent_delete__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{patientRef}:
+    get:
+      operationId: tshepoconsent_get__patient_patientRef_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /evaluate:
+    get:
+      operationId: tshepoconsent_get__evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /my-consents:
+    get:
+      operationId: tshepoconsent_get__my_consents
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /revoke/{id}:
+    post:
+      operationId: tshepoconsent_post__revoke_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{token}:
+    get:
+      operationId: tshepoconsent_get__token_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepoconsent_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepoconsent_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-consent-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

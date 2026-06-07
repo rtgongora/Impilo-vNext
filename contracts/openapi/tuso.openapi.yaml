@@ -55,36 +55,35 @@ tags:
     description: Full-state snapshot emit for downstream sync
 
 paths:
-
-  # ── Internal Probe ────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tusoInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tusoInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -93,23 +92,23 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /internal/v1/test-federation:
     post:
       operationId: tusoInternalTestFederation
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — federation authority
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -118,44 +117,43 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Federation proof
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeFederationBody"
-
-  # ── Facility CRUD ─────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeFederationBody'
   /v1/internal/facilities:
     post:
       operationId: createFacility
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Register a new facility in the national registry
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateFacilityRequest"
+              $ref: '#/components/schemas/CreateFacilityRequest'
       responses:
-        "201":
+        '201':
           description: Facility registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/search:
     post:
       operationId: searchFacilities
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Search facilities by criteria
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -173,72 +171,78 @@ paths:
                   type: string
                 level:
                   type: string
-                  enum: [TERTIARY, SECONDARY, PRIMARY, CLINIC]
+                  enum:
+                    - TERTIARY
+                    - SECONDARY
+                    - PRIMARY
+                    - CLINIC
                 status:
                   type: string
       responses:
-        "200":
+        '200':
           description: Search results
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{id}:
     get:
       operationId: getFacility
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Retrieve a facility by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       responses:
-        "200":
+        '200':
           description: Facility details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "404":
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
           description: Facility not found
     put:
       operationId: updateFacility
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Update facility details
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateFacilityRequest"
+              $ref: '#/components/schemas/UpdateFacilityRequest'
       responses:
-        "200":
+        '200':
           description: Facility updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{id}/merge:
     post:
       operationId: mergeFacility
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Merge duplicate facility into target
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [targetFacilityId]
+              required:
+                - targetFacilityId
               properties:
                 targetFacilityId:
                   type: integer
@@ -246,49 +250,49 @@ paths:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Facility merged
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{id}/close:
     post:
       operationId: closeFacility
-      tags: [Facility]
+      tags:
+        - Facility
       summary: Close/deactivate a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Facility closed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Public Directory ──────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/public/facilities/search:
     get:
       operationId: tusoPublicFacilitySearch
-      tags: [Public-Directory]
+      tags:
+        - Public-Directory
       summary: Search public facility directory
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: query
           in: query
           schema:
@@ -316,37 +320,36 @@ paths:
             type: integer
             default: 20
       responses:
-        "200":
+        '200':
           description: Paged facility summaries
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/public/facilities/{id}/profile:
     get:
       operationId: tusoPublicFacilityProfile
-      tags: [Public-Directory]
+      tags:
+        - Public-Directory
       summary: Get public facility profile (redacted)
       parameters:
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/FacilityId'
       responses:
-        "200":
+        '200':
           description: Public facility profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Workspace Management ──────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/workspaces:
     post:
       operationId: createWorkspace
-      tags: [Workspace]
+      tags:
+        - Workspace
       summary: Create a workspace (department, clinic, ward, theatre, service point)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: path
           required: true
@@ -359,29 +362,38 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, type]
+              required:
+                - name
+                - type
               properties:
                 name:
                   type: string
                 type:
                   type: string
-                  enum: [DEPARTMENT, CLINIC, WARD, THEATRE, SERVICE_POINT, STORE]
+                  enum:
+                    - DEPARTMENT
+                    - CLINIC
+                    - WARD
+                    - THEATRE
+                    - SERVICE_POINT
+                    - STORE
                 parentWorkspaceId:
                   type: integer
                   format: int64
       responses:
-        "201":
+        '201':
           description: Workspace created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listWorkspaces
-      tags: [Workspace]
+      tags:
+        - Workspace
       summary: List workspaces for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -389,20 +401,20 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Workspace list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/workspaces/{workspaceId}:
     get:
       operationId: getWorkspace
-      tags: [Workspace]
+      tags:
+        - Workspace
       summary: Get workspace by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: workspaceId
           in: path
           required: true
@@ -410,19 +422,20 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Workspace details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     put:
       operationId: updateWorkspace
-      tags: [Workspace]
+      tags:
+        - Workspace
       summary: Update workspace details
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: workspaceId
           in: path
           required: true
@@ -441,21 +454,21 @@ paths:
                 status:
                   type: string
       responses:
-        "200":
+        '200':
           description: Workspace updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/workspaces/{workspaceId}/override:
     post:
       operationId: overrideWorkspace
-      tags: [Workspace]
+      tags:
+        - Workspace
       summary: Override workspace settings (supervisor escalation)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: workspaceId
           in: path
           required: true
@@ -470,22 +483,21 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Override applied
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Resource & Booking Management ─────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/resources:
     post:
       operationId: createResource
-      tags: [Resource]
+      tags:
+        - Resource
       summary: Register a resource (equipment, room, bed)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: path
           required: true
@@ -498,7 +510,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, resourceType]
+              required:
+                - name
+                - resourceType
               properties:
                 name:
                   type: string
@@ -508,18 +522,19 @@ paths:
                   type: integer
                   format: int64
       responses:
-        "201":
+        '201':
           description: Resource registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listResources
-      tags: [Resource]
+      tags:
+        - Resource
       summary: List resources for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -527,21 +542,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Resource list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/resources/{resourceId}/bookings:
     post:
       operationId: createBooking
-      tags: [Resource]
+      tags:
+        - Resource
       summary: Book a resource (theatre, equipment, room)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: resourceId
           in: path
           required: true
@@ -554,7 +569,9 @@ paths:
           application/json:
             schema:
               type: object
-              required: [startTime, endTime]
+              required:
+                - startTime
+                - endTime
               properties:
                 startTime:
                   type: string
@@ -567,18 +584,19 @@ paths:
                 bookedBy:
                   type: string
       responses:
-        "201":
+        '201':
           description: Booking created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listBookings
-      tags: [Resource]
+      tags:
+        - Resource
       summary: List bookings for a resource
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: resourceId
           in: path
           required: true
@@ -586,20 +604,20 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Booking list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/bookings/{bookingId}:
     delete:
       operationId: cancelBooking
-      tags: [Resource]
+      tags:
+        - Resource
       summary: Cancel a booking
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: bookingId
           in: path
           required: true
@@ -607,16 +625,16 @@ paths:
             type: integer
             format: int64
       responses:
-        "204":
+        '204':
           description: Booking cancelled
-
   /v1/internal/facilities/{facilityId}/calendars/slots:
     get:
       operationId: getCalendarSlots
-      tags: [Resource]
+      tags:
+        - Resource
       summary: Get available calendar slots for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -633,21 +651,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Available slots
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Shift Management ──────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/start-shift/options:
     get:
       operationId: getShiftOptions
-      tags: [Shift]
+      tags:
+        - Shift
       summary: Get available shift start options for current user
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -655,21 +672,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Shift options
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/start-shift:
     post:
       operationId: startShift
-      tags: [Shift]
+      tags:
+        - Shift
       summary: Start a new shift at a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: path
           required: true
@@ -682,7 +699,8 @@ paths:
           application/json:
             schema:
               type: object
-              required: [workspaceId]
+              required:
+                - workspaceId
               properties:
                 workspaceId:
                   type: integer
@@ -690,21 +708,20 @@ paths:
                 shiftType:
                   type: string
       responses:
-        "201":
+        '201':
           description: Shift started
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Control Tower ─────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/telemetry/pct:
     post:
       operationId: ingestPctTelemetry
-      tags: [Control-Tower]
+      tags:
+        - Control-Tower
       summary: Ingest PCT telemetry (queue depth, wait times)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       requestBody:
         required: true
         content:
@@ -713,16 +730,16 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "202":
+        '202':
           description: Telemetry accepted
-
   /v1/internal/telemetry/oros:
     post:
       operationId: ingestOrosTelemetry
-      tags: [Control-Tower]
+      tags:
+        - Control-Tower
       summary: Ingest OROS telemetry (order turnaround times)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       requestBody:
         required: true
         content:
@@ -731,16 +748,16 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "202":
+        '202':
           description: Telemetry accepted
-
   /v1/internal/control-tower/facilities/{facilityId}/summary:
     get:
       operationId: getFacilitySummary
-      tags: [Control-Tower]
+      tags:
+        - Control-Tower
       summary: Get real-time operational summary for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -748,36 +765,35 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Facility operational summary
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/control-tower/alerts:
     get:
       operationId: getControlTowerAlerts
-      tags: [Control-Tower]
+      tags:
+        - Control-Tower
       summary: Get active operational alerts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Active alerts
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Facility Config ───────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/config/effective:
     get:
       operationId: getEffectiveConfig
-      tags: [Config]
+      tags:
+        - Config
       summary: Get effective (merged) configuration for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -785,21 +801,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Effective config
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/config:
     put:
       operationId: updateConfig
-      tags: [Config]
+      tags:
+        - Config
       summary: Update facility configuration
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: path
           required: true
@@ -814,20 +830,20 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Config updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/config/history:
     get:
       operationId: getConfigHistory
-      tags: [Config]
+      tags:
+        - Config
       summary: Get configuration change history for a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facilityId
           in: path
           required: true
@@ -835,21 +851,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Config history
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/facilities/{facilityId}/config/rollback:
     post:
       operationId: rollbackConfig
-      tags: [Config]
+      tags:
+        - Config
       summary: Rollback facility config to a previous version
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: path
           required: true
@@ -862,51 +878,548 @@ paths:
           application/json:
             schema:
               type: object
-              required: [targetVersion]
+              required:
+                - targetVersion
               properties:
                 targetVersion:
                   type: integer
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Config rolled back
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Snapshots ─────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/snapshots/facilities:
     get:
       operationId: getFacilitySnapshots
-      tags: [Snapshot]
+      tags:
+        - Snapshot
       summary: List facility snapshot watermarks
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Snapshot metadata
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/snapshots/facilities/emit:
     post:
       operationId: emitFacilitySnapshots
-      tags: [Snapshot]
+      tags:
+        - Snapshot
       summary: Trigger full-state snapshot emit for downstream sync
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "202":
+        '202':
           description: Snapshot emit accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
+  /{id}:
+    get:
+      operationId: tuso_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: tuso_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/confirm:
+    post:
+      operationId: tuso_post__id_confirm
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/cancel:
+    post:
+      operationId: tuso_post__id_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /citizen/{cpid}:
+    get:
+      operationId: tuso_get__citizen_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: tuso_post__citizen_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /effective:
+    get:
+      operationId: tuso_get__effective
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /history:
+    get:
+      operationId: tuso_get__history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rollback:
+    post:
+      operationId: tuso_post__rollback
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telemetry/pct:
+    post:
+      operationId: tuso_post__telemetry_pct
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telemetry/oros:
+    post:
+      operationId: tuso_post__telemetry_oros
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /control-tower/facilities/{facilityId}/summary:
+    get:
+      operationId: tuso_get__control_tower_facilities_facilityId_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /control-tower/alerts:
+    get:
+      operationId: tuso_get__control_tower_alerts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/status-summary:
+    get:
+      operationId: tuso_get__id_status_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /search:
+    post:
+      operationId: tuso_post__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: tuso_get__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/merge:
+    post:
+      operationId: tuso_post__id_merge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/close:
+    post:
+      operationId: tuso_post__id_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities:
+    get:
+      operationId: tuso_get__facilities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities/{facilityId}:
+    get:
+      operationId: tuso_get__facilities_facilityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications:
+    post:
+      operationId: tuso_post__applications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/submit:
+    post:
+      operationId: tuso_post__applications_applicationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/ready-for-inspection:
+    post:
+      operationId: tuso_post__applications_applicationId_ready_for_inspection
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /documents:
+    post:
+      operationId: tuso_post__documents
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /checklist-templates:
+    get:
+      operationId: tuso_get__checklist_templates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inspections:
+    post:
+      operationId: tuso_post__inspections
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inspections/{inspectionId}/record:
+    post:
+      operationId: tuso_post__inspections_inspectionId_record
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /compliance-actions/{actionId}:
+    post:
+      operationId: tuso_post__compliance_actions_actionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /committee-reviews:
+    post:
+      operationId: tuso_post__committee_reviews
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /enforcement-cases:
+    post:
+      operationId: tuso_post__enforcement_cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/summary:
+    get:
+      operationId: tuso_get__dashboard_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /proposals/pending:
+    get:
+      operationId: tuso_get__proposals_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /proposals:
+    post:
+      operationId: tuso_post__proposals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /proposals/{id}/approve:
+    post:
+      operationId: tuso_post__proposals_id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /proposals/{id}/reject:
+    post:
+      operationId: tuso_post__proposals_id_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/profile:
+    get:
+      operationId: tuso_get__id_profile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities/{facilityId}/resources:
+    post:
+      operationId: tuso_post__facilities_facilityId_resources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: tuso_get__facilities_facilityId_resources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resources/{resourceId}/bookings:
+    post:
+      operationId: tuso_post__resources_resourceId_bookings
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: tuso_get__resources_resourceId_bookings
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /bookings/{bookingId}:
+    delete:
+      operationId: tuso_delete__bookings_bookingId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities/{facilityId}/calendars/slots:
+    get:
+      operationId: tuso_get__facilities_facilityId_calendars_slots
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /start-shift/options:
+    get:
+      operationId: tuso_get__start_shift_options
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /start-shift:
+    post:
+      operationId: tuso_post__start_shift
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities/emit:
+    post:
+      operationId: tuso_post__facilities_emit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facilities/{facilityId}/workspaces:
+    post:
+      operationId: tuso_post__facilities_facilityId_workspaces
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: tuso_get__facilities_facilityId_workspaces
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /workspaces/{workspaceId}:
+    get:
+      operationId: tuso_get__workspaces_workspaceId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: tuso_put__workspaces_workspaceId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /workspaces/{workspaceId}/override:
+    post:
+      operationId: tuso_post__workspaces_workspaceId_override
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /districts:
+    get:
+      operationId: tuso_get__districts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wards:
+    get:
+      operationId: tuso_get__wards
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /bulk:
+    post:
+      operationId: tuso_post__bulk
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tuso_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tuso_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-federation:
+    post:
+      operationId: tuso_post__test_federation
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tuso-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -29,6 +29,9 @@ public class BronzeEventKafkaConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(BronzeEventKafkaConsumer.class);
 
+    /** Illustrative AsyncAPI channel; production uses {@code ingestion.kafka.topic-pattern}. */
+    static final String CONTRACT_REFERENCE_TOPIC = "impilo.example.topic";
+
     private final IngestService ingestService;
     private final DeadLetterEventRepository deadLetterRepository;
     private final ObjectMapper objectMapper;

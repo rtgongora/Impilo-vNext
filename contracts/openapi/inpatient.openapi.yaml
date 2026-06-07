@@ -37,34 +37,35 @@ paths:
   /internal/v1/health:
     get:
       operationId: inpatientInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/test-command:
     post:
       operationId: inpatientInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -73,24 +74,24 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/admissions:
     get:
       operationId: listAdmissions
-      tags: [Admissions]
+      tags:
+        - Admissions
       summary: List admissions
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: facilityId
           in: query
           required: false
@@ -103,47 +104,48 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Admission list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Admission"
+                  $ref: '#/components/schemas/Admission'
     post:
       operationId: createAdmission
-      tags: [Admissions]
+      tags:
+        - Admissions
       summary: Create admission
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAdmissionRequest"
+              $ref: '#/components/schemas/CreateAdmissionRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Admission"
-
+                $ref: '#/components/schemas/Admission'
   /internal/v1/admissions/{admissionRef}:
     get:
       operationId: getAdmission
-      tags: [Admissions]
+      tags:
+        - Admissions
       summary: Get admission by reference
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: admissionRef
           in: path
           required: true
@@ -151,23 +153,23 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Admission
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Admission"
-
+                $ref: '#/components/schemas/Admission'
   /internal/v1/admissions/{admissionRef}/transfer:
     post:
       operationId: transferPatient
-      tags: [Admissions]
+      tags:
+        - Admissions
       summary: Transfer patient to ward/bed
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: admissionRef
           in: path
           required: true
@@ -179,25 +181,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransferRequest"
+              $ref: '#/components/schemas/TransferRequest'
       responses:
-        "201":
+        '201':
           description: Transfer recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transfer"
-
+                $ref: '#/components/schemas/Transfer'
   /internal/v1/admissions/{admissionRef}/discharge:
     post:
       operationId: dischargePatient
-      tags: [Admissions]
+      tags:
+        - Admissions
       summary: Discharge patient
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: admissionRef
           in: path
           required: true
@@ -205,12 +207,74 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Discharged admission
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Admission"
+                $ref: '#/components/schemas/Admission'
+  /:
+    get:
+      operationId: inpatient_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: inpatient_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{admissionRef}:
+    get:
+      operationId: inpatient_get__admissionRef_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{admissionRef}/transfer:
+    post:
+      operationId: inpatient_post__admissionRef_transfer
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{admissionRef}/discharge:
+    post:
+      operationId: inpatient_post__admissionRef_discharge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: inpatient_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: inpatient_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from inpatient-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

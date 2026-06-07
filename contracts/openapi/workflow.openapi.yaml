@@ -35,7 +35,8 @@ paths:
   /internal/v1/workflows/definitions:
     post:
       operationId: workflowCreateDefinition
-      tags: [Internal-Workflow]
+      tags:
+        - Internal-Workflow
       summary: Create workflow definition
       requestBody:
         required: true
@@ -45,18 +46,26 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Definition created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
+    get:
+      operationId: workflow_get__internal_v1_workflows_definitions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
   /internal/v1/workflows/instances:
     post:
       operationId: workflowStartInstance
-      tags: [Internal-Workflow]
+      tags:
+        - Internal-Workflow
       summary: Start workflow instance
       requestBody:
         required: true
@@ -66,17 +75,88 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Instance started
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "404":
+        '404':
           description: Definition not found
-        "422":
+        '422':
           description: Invalid transition
+    get:
+      operationId: workflow_get__internal_v1_workflows_instances
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/workflows/definitions/{definition_id}/publish:
+    post:
+      operationId: workflow_post__internal_v1_workflows_definitions_definition_id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/workflows/definitions/{definition_id}:
+    get:
+      operationId: workflow_get__internal_v1_workflows_definitions_definition_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/workflows/instances/{instance_id}/transition:
+    post:
+      operationId: workflow_post__internal_v1_workflows_instances_instance_id_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/workflows/instances/{instance_id}:
+    get:
+      operationId: workflow_get__internal_v1_workflows_instances_instance_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/workflows/instances/{instance_id}/tasks:
+    get:
+      operationId: workflow_get__internal_v1_workflows_instances_instance_id_tasks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/snapshots/workflows:
+    get:
+      operationId: workflow_get__internal_v1_snapshots_workflows
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/snapshots/instances:
+    get:
+      operationId: workflow_get__internal_v1_snapshots_instances
+      tags:
+        - Generated-From-Handler
+      summary: Documented from workflow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

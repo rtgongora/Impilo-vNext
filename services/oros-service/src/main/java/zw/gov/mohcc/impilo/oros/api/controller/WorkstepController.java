@@ -35,12 +35,18 @@ public class WorkstepController {
     /**
      * Get all worksteps for an order, in creation order.
      */
-    @GetMapping("/orders/{orderId}/worksteps")
+    @GetMapping({"/orders/{orderId}/worksteps", "/worksteps"})
     public ResponseEntity<ApiResponse<List<WorkstepDto>>> getWorksteps(
-            @PathVariable String orderId) {
+            @PathVariable(required = false) String orderId,
+            @RequestParam(required = false) String orderIdQuery) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
+        String targetOrderId = orderId != null ? orderId : orderIdQuery;
+        if (targetOrderId == null || targetOrderId.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("OROS_MISSING_ORDER_ID", "orderId is required", 400, correlationId));
+        }
 
-        List<WorkstepDto> steps = workstepEngine.getWorksteps(orderId).stream()
+        List<WorkstepDto> steps = workstepEngine.getWorksteps(targetOrderId).stream()
                 .map(WorkstepDto::from)
                 .collect(Collectors.toList());
 

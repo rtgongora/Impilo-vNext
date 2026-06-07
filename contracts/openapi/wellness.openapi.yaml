@@ -39,7 +39,8 @@ tags:
 paths:
   /internal/v1/wellness/connect/v1/manifest:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Health Connect capability manifest
       operationId: wellnessConnectManifest
       responses:
@@ -51,7 +52,8 @@ paths:
                 $ref: '#/components/schemas/EnvelopeObject'
   /internal/v1/wellness/connect/v1/changesets:
     post:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Ingest a Health Connect–style changeset (idempotent, deduped)
       operationId: wellnessConnectIngestChangeset
       parameters:
@@ -71,7 +73,8 @@ paths:
                 $ref: '#/components/schemas/IngestResultEnvelope'
   /internal/v1/wellness/connect/v1/sleep-segments:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Sleep stage segments derived from HC ingest
       operationId: wellnessConnectSleepSegments
       parameters:
@@ -90,7 +93,8 @@ paths:
                 $ref: '#/components/schemas/CitizenListEnvelope'
   /internal/v1/wellness/connect/v1/exercise-sessions:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Exercise sessions from HC ingest
       operationId: wellnessConnectExerciseSessions
       parameters:
@@ -109,7 +113,8 @@ paths:
                 $ref: '#/components/schemas/CitizenListEnvelope'
   /internal/v1/wellness/connect/v1/ingest-log:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Recent ingest audit rows (optional payload echo)
       operationId: wellnessConnectIngestLog
       parameters:
@@ -133,7 +138,8 @@ paths:
                 $ref: '#/components/schemas/CitizenListEnvelope'
   /internal/v1/wellness/connect/v1/extension-records:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Passthrough HC types stored as extension JSON
       operationId: wellnessConnectExtensionRecords
       parameters:
@@ -150,10 +156,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/health-id:
     get:
-      tags: [CitizenHealthId]
+      tags:
+        - CitizenHealthId
       summary: Active citizen health ID card row
       operationId: getCitizenHealthId
       parameters:
@@ -166,7 +172,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
     post:
-      tags: [CitizenHealthId]
+      tags:
+        - CitizenHealthId
       summary: Issue a health ID card row
       operationId: createCitizenHealthId
       parameters:
@@ -183,10 +190,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/wellness/activities:
     get:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       summary: List wellness activity rows (daily rollups)
       operationId: listWellnessActivities
       parameters:
@@ -204,7 +211,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       summary: Upsert manual or aggregated daily activity row
       operationId: logWellnessActivity
       parameters:
@@ -222,10 +230,10 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/mobile/citizen/wellness/vitals:
     get:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       summary: List vitals log entries
       operationId: listWellnessVitals
       parameters:
@@ -242,7 +250,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       summary: Append a vital reading
       operationId: logWellnessVital
       parameters:
@@ -259,10 +268,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/wellness/mood:
     get:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       operationId: listWellnessMood
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -274,7 +283,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       operationId: logWellnessMood
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -290,10 +300,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/wellness/challenges:
     get:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       operationId: listWellnessChallenges
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -303,10 +313,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/wellness/challenges/{id}/join:
     post:
-      tags: [CitizenWellness]
+      tags:
+        - CitizenWellness
       operationId: joinWellnessChallenge
       parameters:
         - name: id
@@ -330,10 +340,10 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/mobile/citizen/wallet:
     get:
-      tags: [CitizenWallet]
+      tags:
+        - CitizenWallet
       operationId: getHealthWallet
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -344,10 +354,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/wallet/transactions:
     get:
-      tags: [CitizenWallet]
+      tags:
+        - CitizenWallet
       operationId: listWalletTransactions
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -358,10 +368,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/sos/contacts:
     get:
-      tags: [CitizenSos]
+      tags:
+        - CitizenSos
       operationId: listSosContacts
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -373,7 +383,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [CitizenSos]
+      tags:
+        - CitizenSos
       operationId: addSosContact
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -389,10 +400,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/sos/contacts/{id}:
     delete:
-      tags: [CitizenSos]
+      tags:
+        - CitizenSos
       operationId: deleteSosContact
       parameters:
         - name: id
@@ -408,10 +419,10 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/mobile/citizen/sos/alert:
     post:
-      tags: [CitizenSos]
+      tags:
+        - CitizenSos
       operationId: triggerSosAlert
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -427,10 +438,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/queue/status:
     get:
-      tags: [CitizenQueue]
+      tags:
+        - CitizenQueue
       operationId: getQueueStatus
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -441,10 +452,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/queue/join:
     post:
-      tags: [CitizenQueue]
+      tags:
+        - CitizenQueue
       operationId: joinQueue
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -460,10 +471,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/clubs:
     get:
-      tags: [CitizenClubs]
+      tags:
+        - CitizenClubs
       operationId: listClubs
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -477,10 +488,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/clubs/{id}/join:
     post:
-      tags: [CitizenClubs]
+      tags:
+        - CitizenClubs
       operationId: joinClub
       parameters:
         - name: id
@@ -504,10 +515,10 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/mobile/citizen/providers:
     get:
-      tags: [CitizenProviders]
+      tags:
+        - CitizenProviders
       operationId: listProviders
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -521,10 +532,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/providers/{id}:
     get:
-      tags: [CitizenProviders]
+      tags:
+        - CitizenProviders
       operationId: getProvider
       parameters:
         - name: id
@@ -542,10 +553,10 @@ paths:
                 $ref: '#/components/schemas/EnvelopeObject'
         '404':
           description: Unknown provider
-
   /internal/v1/mobile/citizen/crowdfunding:
     get:
-      tags: [CitizenCrowdfunding]
+      tags:
+        - CitizenCrowdfunding
       operationId: listCrowdfundingCampaigns
       parameters:
         - $ref: '#/components/parameters/XTenantId'
@@ -559,10 +570,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/mobile/citizen/crowdfunding/{id}/donate:
     post:
-      tags: [CitizenCrowdfunding]
+      tags:
+        - CitizenCrowdfunding
       operationId: donateToCampaign
       parameters:
         - name: id
@@ -583,10 +594,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/mobile/citizen/services/discover:
     get:
-      tags: [CitizenMarketplace]
+      tags:
+        - CitizenMarketplace
       summary: Discover marketplace services (stub listing)
       operationId: discoverMarketplaceServices
       parameters:
@@ -605,10 +616,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/wellness/personal-data/sources:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: List connected wellness sources for a patient
       operationId: listPersonalHealthSources
       parameters:
@@ -621,7 +632,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Connect/register a wellness source (manual, wearable, Health Connect, etc.)
       operationId: connectPersonalHealthSource
       parameters:
@@ -638,10 +650,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/wellness/personal-data/sources/{id}/permissions:
     patch:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Update connected source category permissions and sharing controls
       operationId: updatePersonalHealthSourcePermissions
       parameters:
@@ -667,10 +679,10 @@ paths:
                 additionalProperties: true
         '404':
           description: Source not found
-
   /internal/v1/wellness/personal-data/permissions:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: List effective source permissions for a patient
       operationId: listPersonalHealthPermissions
       parameters:
@@ -682,10 +694,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
-
   /internal/v1/wellness/personal-data/readings/manual:
     post:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Record a manual wellness reading
       operationId: createManualWellnessReading
       parameters:
@@ -702,10 +714,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/wellness/personal-data/summary:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Citizen personal wellness summary (non-clinical record by default)
       operationId: getPersonalWellnessSummary
       parameters:
@@ -717,10 +729,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/wellness/personal-data/provider-summary:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Provider-facing wellness summary (patient-shared wellness scope)
       operationId: getProviderWellnessSummary
       parameters:
@@ -732,10 +744,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/wellness/personal-data/remote-alerts:
     get:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Remote monitoring alerts for patient or worklist
       operationId: listRemoteMonitoringAlerts
       parameters:
@@ -755,7 +767,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CitizenListEnvelope'
     post:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Create a remote monitoring alert
       operationId: createRemoteMonitoringAlert
       parameters:
@@ -772,10 +785,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnvelopeObject'
-
   /internal/v1/wellness/personal-data/remote-alerts/{id}/review:
     post:
-      tags: [HealthConnect]
+      tags:
+        - HealthConnect
       summary: Review and update remote monitoring alert status
       operationId: reviewRemoteMonitoringAlert
       parameters:
@@ -801,6 +814,403 @@ paths:
                 additionalProperties: true
         '404':
           description: Alert not found
+  /health-id:
+    get:
+      operationId: wellness_get__health_id
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__health_id
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wellness/activities:
+    get:
+      operationId: wellness_get__wellness_activities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__wellness_activities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wellness/vitals:
+    get:
+      operationId: wellness_get__wellness_vitals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__wellness_vitals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wellness/mood:
+    get:
+      operationId: wellness_get__wellness_mood
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__wellness_mood
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wellness/challenges:
+    get:
+      operationId: wellness_get__wellness_challenges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wellness/challenges/{id}/join:
+    post:
+      operationId: wellness_post__wellness_challenges_id_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wallet:
+    get:
+      operationId: wellness_get__wallet
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /wallet/transactions:
+    get:
+      operationId: wellness_get__wallet_transactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sos/contacts:
+    get:
+      operationId: wellness_get__sos_contacts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__sos_contacts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sos/contacts/{id}:
+    delete:
+      operationId: wellness_delete__sos_contacts_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sos/alert:
+    post:
+      operationId: wellness_post__sos_alert
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /monitoring/devices:
+    get:
+      operationId: wellness_get__monitoring_devices
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__monitoring_devices
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /monitoring/devices/{id}/sync:
+    post:
+      operationId: wellness_post__monitoring_devices_id_sync
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queue/status:
+    get:
+      operationId: wellness_get__queue_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queue/join:
+    post:
+      operationId: wellness_post__queue_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clubs:
+    get:
+      operationId: wellness_get__clubs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clubs/{id}/join:
+    post:
+      operationId: wellness_post__clubs_id_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers:
+    get:
+      operationId: wellness_get__providers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers/{id}:
+    get:
+      operationId: wellness_get__providers_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /crowdfunding:
+    get:
+      operationId: wellness_get__crowdfunding
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /crowdfunding/{id}/donate:
+    post:
+      operationId: wellness_post__crowdfunding_id_donate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /services/discover:
+    get:
+      operationId: wellness_get__services_discover
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /manifest:
+    get:
+      operationId: wellness_get__manifest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sleep-segments:
+    get:
+      operationId: wellness_get__sleep_segments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /exercise-sessions:
+    get:
+      operationId: wellness_get__exercise_sessions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ingest-log:
+    get:
+      operationId: wellness_get__ingest_log
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /extension-records:
+    get:
+      operationId: wellness_get__extension_records
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /changesets:
+    post:
+      operationId: wellness_post__changesets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /challenges:
+    get:
+      operationId: wellness_get__challenges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources:
+    get:
+      operationId: wellness_get__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources/{id}/permissions:
+    patch:
+      operationId: wellness_patch__sources_id_permissions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /permissions:
+    get:
+      operationId: wellness_get__permissions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /readings/manual:
+    post:
+      operationId: wellness_post__readings_manual
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summary:
+    get:
+      operationId: wellness_get__summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider-summary:
+    get:
+      operationId: wellness_get__provider_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /remote-alerts:
+    get:
+      operationId: wellness_get__remote_alerts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: wellness_post__remote_alerts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /remote-alerts/{id}/review:
+    post:
+      operationId: wellness_post__remote_alerts_id_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from wellness-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   parameters:

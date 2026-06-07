@@ -37,12 +37,13 @@ paths:
   /internal/v1/addresses:
     get:
       operationId: indawoListAddresses
-      tags: [Internal-Address]
+      tags:
+        - Internal-Address
       summary: List addresses for tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Address list
           content:
             application/json:
@@ -53,11 +54,12 @@ paths:
                   additionalProperties: true
     post:
       operationId: indawoCreateAddress
-      tags: [Internal-Address]
+      tags:
+        - Internal-Address
       summary: Create address
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
       requestBody:
         required: true
         content:
@@ -66,42 +68,42 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/addresses/{id}:
     get:
       operationId: indawoGetAddress
-      tags: [Internal-Address]
+      tags:
+        - Internal-Address
       summary: Get address by id
       parameters:
-        - $ref: "#/components/parameters/AddressId"
+        - $ref: '#/components/parameters/AddressId'
       responses:
-        "200":
+        '200':
           description: Address
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "404":
+        '404':
           description: Not found
-
   /internal/v1/snapshots/sites:
     get:
       operationId: indawoSnapshotSites
-      tags: [Internal-Snapshot]
+      tags:
+        - Internal-Snapshot
       summary: Paginated site snapshot
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: cursor
           in: query
           schema:
@@ -121,13 +123,261 @@ paths:
             type: string
             format: date-time
       responses:
-        "200":
+        '200':
           description: Site snapshot page
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    get:
+      operationId: indawo_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: indawo_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: indawo_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/sites/{site_id}:
+    put:
+      operationId: indawo_put__internal_v1_sites_site_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: indawo_get__internal_v1_sites_site_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/sites/{site_id}/status-summary:
+    get:
+      operationId: indawo_get__internal_v1_sites_site_id_status_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/sites:
+    get:
+      operationId: indawo_get__internal_v1_sites
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /external/v1/sites/{site_id}:
+    get:
+      operationId: indawo_get__external_v1_sites_site_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sites:
+    get:
+      operationId: indawo_get__sites
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sites/{siteId}:
+    get:
+      operationId: indawo_get__sites_siteId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications:
+    post:
+      operationId: indawo_post__applications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/submit:
+    post:
+      operationId: indawo_post__applications_applicationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sites/{siteId}/renewals:
+    post:
+      operationId: indawo_post__sites_siteId_renewals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /checklist-templates:
+    get:
+      operationId: indawo_get__checklist_templates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /checklist-templates/{templateId}:
+    get:
+      operationId: indawo_get__checklist_templates_templateId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inspections:
+    post:
+      operationId: indawo_post__inspections
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: indawo_get__inspections
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inspections/{inspectionId}/record:
+    post:
+      operationId: indawo_post__inspections_inspectionId_record
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /compliance-actions/{actionId}:
+    post:
+      operationId: indawo_post__compliance_actions_actionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /compliance-actions:
+    get:
+      operationId: indawo_get__compliance_actions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /licences:
+    post:
+      operationId: indawo_post__licences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /enforcement-cases:
+    post:
+      operationId: indawo_post__enforcement_cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: indawo_get__enforcement_cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /documents:
+    post:
+      operationId: indawo_post__documents
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /documents/{documentId}/verify:
+    post:
+      operationId: indawo_post__documents_documentId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments:
+    post:
+      operationId: indawo_post__assignments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assignments/{assignmentId}:
+    post:
+      operationId: indawo_post__assignments_assignmentId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/summary:
+    get:
+      operationId: indawo_get__dashboard_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from indawo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

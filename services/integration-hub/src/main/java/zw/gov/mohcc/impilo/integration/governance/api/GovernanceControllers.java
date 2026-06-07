@@ -179,4 +179,33 @@ public final class GovernanceControllers {
             return service.listEventCatalogue(classification, ownerServiceId);
         }
     }
+
+    // ── External Event Subscriptions ─────────────────────────────────────────
+    @RestController
+    @RequestMapping("/internal/v1/external-event-subscriptions")
+    public static class ExternalEventSubscriptionsController {
+        private final GovernanceService service;
+        public ExternalEventSubscriptionsController(GovernanceService service) { this.service = service; }
+
+        @GetMapping
+        @PreAuthorize("hasAnyRole('INTEGRATION_ADMIN','MARKETPLACE_ADMIN','OPERATIONS','AUDITOR','SYSTEM_ADMIN','DEVELOPER')")
+        public List<Map<String, Object>> list(
+                @RequestParam(value = "externalAppId", required = false) String externalAppId) {
+            String tenantId = RequestContextHolder.require().tenantId();
+            return service.listExternalEventSubscriptions(tenantId).stream()
+                    .filter(sub -> externalAppId == null || externalAppId.isBlank()
+                            || externalAppId.equals(sub.getExternalAppId()))
+                    .map(sub -> Map.<String, Object>of(
+                            "id", sub.getId(),
+                            "externalAppId", sub.getExternalAppId(),
+                            "integrationContractId", sub.getIntegrationContractId(),
+                            "webhookSubscriptionId", sub.getWebhookSubscriptionId(),
+                            "eventTopic", sub.getEventTopic(),
+                            "status", sub.getStatus(),
+                            "approvedBy", sub.getApprovedBy() != null ? sub.getApprovedBy() : "",
+                            "approvedAt", sub.getApprovedAt(),
+                            "createdAt", sub.getCreatedAt()))
+                    .toList();
+        }
+    }
 }

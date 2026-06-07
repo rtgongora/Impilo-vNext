@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,50 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    post:
+      operationId: observability_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from observability-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: observability_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from observability-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health/summary:
+    get:
+      operationId: observability_get__health_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from observability-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /metrics/lag:
+    get:
+      operationId: observability_get__metrics_lag
+      tags:
+        - Generated-From-Handler
+      summary: Documented from observability-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /heartbeat:
+    post:
+      operationId: observability_post__heartbeat
+      tags:
+        - Generated-From-Handler
+      summary: Documented from observability-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

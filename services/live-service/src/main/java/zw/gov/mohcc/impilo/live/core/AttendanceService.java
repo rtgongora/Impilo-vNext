@@ -86,10 +86,14 @@ public class AttendanceService {
                 ? event.getAttendanceThresholdMinutes() : 30;
         boolean meetsThreshold = attendance.getLiveWatchMinutes() >= threshold
                 || attendance.getTotalWatchMinutes() >= threshold;
+        boolean wasCompleted = "COMPLETED".equals(attendance.getCompletionStatus());
         attendance.setEligibleForCertificate(meetsThreshold);
         attendance.setEligibleForCpd(event.isCpdEnabled() && meetsThreshold);
         if (meetsThreshold) {
             attendance.setCompletionStatus("COMPLETED");
+            if (!wasCompleted) {
+                emit(attendance, event, "impilo.live.attendance.completed.v1");
+            }
         }
     }
 

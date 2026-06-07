@@ -35,7 +35,8 @@ paths:
   /internal/v1/search/index:
     post:
       operationId: searchIndexEntity
-      tags: [Internal-Search]
+      tags:
+        - Internal-Search
       summary: Index or update a document for an entity
       requestBody:
         required: true
@@ -46,18 +47,18 @@ paths:
               description: IndexRequest — align with service DTO in a later revision
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Indexed
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/search/index/{entityType}/{entityId}:
     delete:
       operationId: searchRemoveEntity
-      tags: [Internal-Search]
+      tags:
+        - Internal-Search
       summary: Remove entity from index
       parameters:
         - name: entityType
@@ -71,13 +72,13 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Removed
-
   /internal/v1/search:
     get:
       operationId: searchQuery
-      tags: [Internal-Search]
+      tags:
+        - Internal-Search
       summary: Full-text search
       parameters:
         - name: q
@@ -102,18 +103,18 @@ paths:
             minimum: 1
             default: 20
       responses:
-        "200":
+        '200':
           description: Search hits
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/search/index/{entityType}:
     get:
       operationId: searchListByType
-      tags: [Internal-Search]
+      tags:
+        - Internal-Search
       summary: List indexed documents by entity type
       parameters:
         - name: entityType
@@ -134,13 +135,40 @@ paths:
             minimum: 1
             default: 20
       responses:
-        "200":
+        '200':
           description: Paged results
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /index:
+    post:
+      operationId: search_post__index
+      tags:
+        - Generated-From-Handler
+      summary: Documented from search-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /index/{entityType}/{entityId}:
+    delete:
+      operationId: search_delete__index_entityType_entityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from search-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /index/{entityType}:
+    get:
+      operationId: search_get__index_entityType_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from search-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

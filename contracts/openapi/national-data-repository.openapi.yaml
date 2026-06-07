@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,11 +23,11 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/datasets:
     get:
       operationId: ndrDatasetsList
-      tags: [NDR-National]
+      tags:
+        - NDR-National
       summary: List dataset definitions and versions
       responses:
         '200':
@@ -38,7 +39,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: ndrDatasetCreate
-      tags: [NDR-National]
+      tags:
+        - NDR-National
       summary: Register dataset definition
       responses:
         '201':
@@ -48,11 +50,11 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/datasets/{key}/versions:
     post:
       operationId: ndrDatasetVersionCreate
-      tags: [NDR-National]
+      tags:
+        - NDR-National
       summary: Create dataset version
       parameters:
         - name: key
@@ -68,11 +70,11 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/query:
     post:
       operationId: ndrDatasetQuery
-      tags: [NDR-National]
+      tags:
+        - NDR-National
       summary: Deprecated runtime query endpoint (ownership moved to ndr-service)
       responses:
         '409':
@@ -82,6 +84,32 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    post:
+      operationId: nationaldatarepository_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from national-data-repository-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: nationaldatarepository_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from national-data-repository-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{key}/versions:
+    post:
+      operationId: nationaldatarepository_post__key_versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from national-data-repository-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

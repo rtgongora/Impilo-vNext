@@ -56,35 +56,35 @@ tags:
     description: Provisional O-CPID reconciliation
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoIdentityInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoIdentityInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -93,18 +93,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── CPID Generation ───────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/identity/cpid/generate:
     post:
       operationId: generateCpid
-      tags: [CPID]
+      tags:
+        - CPID
       summary: Generate a deterministic CPID (UUID v5) from tenantId + healthId
       description: |
         Pure computation — does NOT persist a mapping. Use POST /v1/identity/mapping
@@ -114,19 +113,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/GenerateCpidRequest"
+              $ref: '#/components/schemas/GenerateCpidRequest'
       responses:
-        "200":
+        '200':
           description: Generated CPID
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseCpid"
-
+                $ref: '#/components/schemas/ApiResponseCpid'
   /v1/identity/cpid/provisional:
     post:
       operationId: generateProvisionalCpid
-      tags: [CPID]
+      tags:
+        - CPID
       summary: Generate a provisional O-CPID for offline use
       description: |
         Issues a random UUID O-CPID tracked in the provisional_cpid table.
@@ -136,20 +135,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProvisionalCpidRequest"
+              $ref: '#/components/schemas/ProvisionalCpidRequest'
       responses:
-        "200":
+        '200':
           description: Provisional O-CPID issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseProvisionalCpid"
-
-  # ── Identity Resolution ───────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseProvisionalCpid'
   /v1/identity/resolve:
     post:
       operationId: resolveIdentity
-      tags: [Resolution]
+      tags:
+        - Resolution
       summary: Resolve Impilo ID hash through the full chain to CPID
       description: |
         Full resolution: Impilo ID verifier hash -> Health ID (via VITO) -> CPID.
@@ -159,19 +157,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveRequest"
+              $ref: '#/components/schemas/ResolveRequest'
       responses:
-        "200":
+        '200':
           description: Resolution result with CPID
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseResolve"
-
+                $ref: '#/components/schemas/ApiResponseResolve'
   /v1/identity/mapping/{healthId}:
     get:
       operationId: getMappingByHealthId
-      tags: [Resolution]
+      tags:
+        - Resolution
       summary: Get the CPID mapping for a Health ID within a tenant
       parameters:
         - name: healthId
@@ -180,19 +178,19 @@ paths:
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Mapping record
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseMapping"
-
+                $ref: '#/components/schemas/ApiResponseMapping'
   /v1/identity/mapping:
     post:
       operationId: createMapping
-      tags: [Resolution]
+      tags:
+        - Resolution
       summary: Create a Health ID -> CPID mapping (idempotent)
       description: |
         CPID is deterministically generated (UUID v5). If the mapping already
@@ -202,20 +200,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateMappingRequest"
+              $ref: '#/components/schemas/CreateMappingRequest'
       responses:
-        "200":
+        '200':
           description: Mapping created or existing returned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseMapping"
-
-  # ── MOSIP Indirect Links ──────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseMapping'
   /v1/identity/mosip/link:
     post:
       operationId: storeMosipLink
-      tags: [MOSIP]
+      tags:
+        - MOSIP
       summary: Store an encrypted MOSIP link reference
       description: |
         The linkRef (MOSIP opaque token) is encrypted with AES-256-GCM and its
@@ -226,39 +223,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MosipLinkRequest"
+              $ref: '#/components/schemas/MosipLinkRequest'
       responses:
-        "200":
+        '200':
           description: MOSIP link stored
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseMosipLink"
-
+                $ref: '#/components/schemas/ApiResponseMosipLink'
   /v1/identity/mosip/verify:
     post:
       operationId: verifyMosipLink
-      tags: [MOSIP]
+      tags:
+        - MOSIP
       summary: Verify a MOSIP link by hash comparison
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/MosipVerifyRequest"
+              $ref: '#/components/schemas/MosipVerifyRequest'
       responses:
-        "200":
+        '200':
           description: Verification result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseMosipVerify"
-
-  # ── Reconciliation ────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseMosipVerify'
   /v1/identity/reconcile:
     post:
       operationId: reconcileProvisionalCpid
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Reconcile a provisional O-CPID to a canonical CPID
       description: |
         Resolves healthId to a deterministic CPID and updates the provisional
@@ -268,35 +264,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReconcileRequest"
+              $ref: '#/components/schemas/ReconcileRequest'
       responses:
-        "200":
+        '200':
           description: Reconciliation result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseReconcile"
-
+                $ref: '#/components/schemas/ApiResponseReconcile'
   /v1/identity/provisional:
     get:
       operationId: listUnreconciledCpids
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: List unreconciled provisional O-CPIDs for a tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: List of unreconciled provisional CPIDs
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseProvisionalList"
-
-  # ── Scoped Tokens ─────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponseProvisionalList'
   /v1/identity/tokens:
     post:
       operationId: issueScopedToken
-      tags: [Token]
+      tags:
+        - Token
       summary: Issue a scoped Ed25519-signed service token
       description: |
         Short-lived JWS tokens for internal service-to-service authorization.
@@ -306,38 +301,38 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IssueScopedTokenRequest"
+              $ref: '#/components/schemas/IssueScopedTokenRequest'
       responses:
-        "200":
+        '200':
           description: Scoped token issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseScopedToken"
-
+                $ref: '#/components/schemas/ApiResponseScopedToken'
   /v1/identity/tokens/introspect:
     post:
       operationId: introspectToken
-      tags: [Token]
+      tags:
+        - Token
       summary: Introspect a scoped token — verify active, not expired, not revoked
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IntrospectRequest"
+              $ref: '#/components/schemas/IntrospectRequest'
       responses:
-        "200":
+        '200':
           description: Token introspection result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseIntrospect"
-
+                $ref: '#/components/schemas/ApiResponseIntrospect'
   /v1/identity/tokens/{jti}:
     delete:
       operationId: revokeScopedToken
-      tags: [Token]
+      tags:
+        - Token
       summary: Revoke a scoped token by its JTI (JWT ID)
       parameters:
         - name: jti
@@ -346,13 +341,129 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Token revoked
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /generate:
+    post:
+      operationId: tshepoidentity_post__generate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provisional:
+    post:
+      operationId: tshepoidentity_post__provisional
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: tshepoidentity_get__provisional
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /link:
+    post:
+      operationId: tshepoidentity_post__link
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify:
+    post:
+      operationId: tshepoidentity_post__verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reconcile:
+    post:
+      operationId: tshepoidentity_post__reconcile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resolve:
+    post:
+      operationId: tshepoidentity_post__resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /mapping/{healthId}:
+    get:
+      operationId: tshepoidentity_get__mapping_healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /mapping:
+    post:
+      operationId: tshepoidentity_post__mapping
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /introspect:
+    post:
+      operationId: tshepoidentity_post__introspect
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{jti}:
+    delete:
+      operationId: tshepoidentity_delete__jti_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepoidentity_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepoidentity_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-identity-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

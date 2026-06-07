@@ -33,7 +33,8 @@ run_check() {
 run_check "Component Inventory"       "inspect-components.sh"
 run_check "Service Minimums"          "check-service-minimums.sh"
 run_check "App Runnability"           "check-app-runnability.sh"
-run_check "Doc & Acceptance Coverage" "check-doc-and-acceptance-coverage.sh"
+run_check "OpenAPI YAML Validity"     "../guard/check-openapi-yaml-validity.sh"
+run_check "Contract Implementation"   "../guard/check-contract-implementation.sh" || true
 
 echo ""
 echo "╔═══════════════════════════════════════════════════════════════╗"

@@ -46,13 +46,26 @@ public class RouteController {
     }
 
     /**
-     * Retry a failed route.
+     * Retry a failed route (order-scoped legacy path).
      */
     @PostMapping("/retry/{orderId}")
     public ResponseEntity<ApiResponse<RouteResponse>> retryRoute(@PathVariable String orderId) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
 
         RoutingEntity route = routingEngine.retryRoute(orderId);
+        RouteResponse response = RouteResponse.from(route);
+
+        return ResponseEntity.ok(ApiResponse.ok(response, correlationId));
+    }
+
+    /**
+     * Contract-aligned retry by route UUID.
+     */
+    @PostMapping("/{routeId}/retry")
+    public ResponseEntity<ApiResponse<RouteResponse>> retryRouteById(@PathVariable UUID routeId) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+
+        RoutingEntity route = routingEngine.retryRouteByRouteId(routeId);
         RouteResponse response = RouteResponse.from(route);
 
         return ResponseEntity.ok(ApiResponse.ok(response, correlationId));

@@ -12,6 +12,7 @@ import zw.gov.mohcc.impilo.msikaapps.service.MarketplaceService;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * REST controllers for the Msika Apps capability marketplace. Endpoints are
@@ -133,6 +134,125 @@ public final class MarketplaceControllers {
             RequestContext ctx = RequestContextHolder.require();
             String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
             return service.suspendInstallation(id, req, actorId, ctx.tenantId());
+        }
+
+        @PostMapping("/{id}/reinstate")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','SYSTEM_ADMIN')")
+        public InstallationResponse reinstate(@PathVariable String id) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            return service.activateInstallation(id, actorId, ctx.tenantId());
+        }
+    }
+
+    /** Contract path-param aliases (`installationId`, `requestId`, `itemId`). */
+    @RestController
+    @RequestMapping("/internal/v1/marketplace")
+    public static class ContractPathAliasController {
+        private final MarketplaceService service;
+        public ContractPathAliasController(MarketplaceService service) { this.service = service; }
+
+        @GetMapping("/installations/{installationId}")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','INTEGRATION_ADMIN','OPERATIONS','SYSTEM_ADMIN')")
+        public InstallationResponse getInstallation(@PathVariable("installationId") String installationId) {
+            return service.getInstallation(installationId, RequestContextHolder.require().tenantId());
+        }
+
+        @PostMapping("/installations/{installationId}/configure")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','INTEGRATION_ADMIN','SYSTEM_ADMIN')")
+        public InstallationResponse configureInstallation(
+                @PathVariable("installationId") String installationId,
+                @Valid @RequestBody InstallationConfigureRequest req) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            return service.configureInstallation(installationId, req, actorId, ctx.tenantId());
+        }
+
+        @PostMapping("/installations/{installationId}/suspend")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','INTEGRATION_ADMIN','OPERATIONS','SYSTEM_ADMIN')")
+        public InstallationResponse suspendInstallation(
+                @PathVariable("installationId") String installationId,
+                @Valid @RequestBody InstallationSuspendRequest req) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            return service.suspendInstallation(installationId, req, actorId, ctx.tenantId());
+        }
+
+        @PostMapping("/installations/{installationId}/reinstate")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','SYSTEM_ADMIN')")
+        public InstallationResponse reinstateInstallation(@PathVariable("installationId") String installationId) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            return service.activateInstallation(installationId, actorId, ctx.tenantId());
+        }
+    }
+
+    /** Contract-aligned aliases for `/apps` paths (canonical handlers remain on `/items`). */
+    @RestController
+    @RequestMapping("/internal/v1/marketplace/apps")
+    public static class AppsAliasController {
+        private final MarketplaceService service;
+        public AppsAliasController(MarketplaceService service) { this.service = service; }
+
+        @GetMapping
+        @PreAuthorize("hasAnyRole('CITIZEN','PROVIDER','FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','INTEGRATION_ADMIN','OPERATIONS','SYSTEM_ADMIN','DEVELOPER')")
+        public List<MarketplaceItemResponse> search(
+                @RequestParam(required = false) String type,
+                @RequestParam(required = false) String category,
+                @RequestParam(required = false) String publisherId) {
+            return service.searchCatalogue(type, category, publisherId);
+        }
+
+        @GetMapping("/{itemId}")
+        @PreAuthorize("hasAnyRole('CITIZEN','PROVIDER','FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','INTEGRATION_ADMIN','OPERATIONS','SYSTEM_ADMIN','DEVELOPER')")
+        public MarketplaceItemResponse get(@PathVariable("itemId") String itemId) {
+            return service.getItem(itemId);
+        }
+    }
+
+    /** Contract-aligned approve/reject aliases for activation decisions. */
+    @RestController
+    @RequestMapping("/internal/v1/marketplace/activation-requests")
+    public static class ActivationDecisionAliasController {
+        private final MarketplaceService service;
+        public ActivationDecisionAliasController(MarketplaceService service) { this.service = service; }
+
+        @PostMapping("/{requestId}/approve")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','SYSTEM_ADMIN')")
+        public ActivationRequestResponse approve(
+                @PathVariable("requestId") String requestId,
+                @RequestBody(required = false) Map<String, String> body) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            String reason = body != null ? body.getOrDefault("reason", "approved") : "approved";
+            return service.decideActivationRequest(
+                    requestId, new ActivationDecisionRequest("APPROVED", reason), actorId, ctx.tenantId());
+        }
+
+        @PostMapping("/{requestId}/reject")
+        @PreAuthorize("hasAnyRole('FACILITY_ADMIN','DISTRICT_ADMIN','PROVINCIAL_ADMIN','NATIONAL_ADMIN','MARKETPLACE_ADMIN','SYSTEM_ADMIN')")
+        public ActivationRequestResponse reject(
+                @PathVariable("requestId") String requestId,
+                @RequestBody(required = false) Map<String, String> body) {
+            RequestContext ctx = RequestContextHolder.require();
+            String actorId = ctx.principal() != null ? ctx.principal().getName() : "system";
+            String reason = body != null ? body.getOrDefault("reason", "rejected") : "rejected";
+            return service.decideActivationRequest(
+                    requestId, new ActivationDecisionRequest("REJECTED", reason), actorId, ctx.tenantId());
+        }
+    }
+
+    /** Contract-aligned audit path alias (`/audit-events`). */
+    @RestController
+    @RequestMapping("/internal/v1/marketplace/audit-events")
+    public static class AuditEventsAliasController {
+        private final MarketplaceService service;
+        public AuditEventsAliasController(MarketplaceService service) { this.service = service; }
+
+        @GetMapping
+        @PreAuthorize("hasAnyRole('MARKETPLACE_ADMIN','INTEGRATION_ADMIN','OPERATIONS','SYSTEM_ADMIN','AUDITOR')")
+        public List<AuditEventResponse> list(@RequestParam(required = false) String itemId) {
+            return service.listAuditEvents(RequestContextHolder.require().tenantId(), itemId);
         }
     }
 

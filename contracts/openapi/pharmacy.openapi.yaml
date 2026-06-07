@@ -46,7 +46,6 @@ tags:
     description: Internal integration endpoints (OROS, MUSHEX callbacks)
 
 paths:
-  # ── Prescriptions ─────────────────────────────────────────────────────────
   /v1/prescriptions:
     post:
       operationId: createPrescription
@@ -55,37 +54,38 @@ paths:
         Creates a canonical prescription record in pharmacy-service. This endpoint
         is used by Experience prescribing flows (web/mobile) and must not return
         synthetic success.
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PrescriptionCreateRequest"
+              $ref: '#/components/schemas/PrescriptionCreateRequest'
       responses:
-        "201":
+        '201':
           description: Prescription created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PrescriptionResource"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PrescriptionResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/prescriptions/patient/{cpid}:
     get:
       operationId: listPatientPrescriptions
       summary: List prescriptions by patient
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       parameters:
         - name: cpid
           in: path
@@ -96,35 +96,39 @@ paths:
           in: query
           schema:
             type: string
-            enum: [ACTIVE, DISPENSED, CANCELLED, PENDING]
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+            enum:
+              - ACTIVE
+              - DISPENSED
+              - CANCELLED
+              - PENDING
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Prescription list
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/PrescriptionResource"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                          $ref: '#/components/schemas/PrescriptionResource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/prescriptions/{id}:
     get:
       operationId: getPrescription
       summary: Get prescription by ID
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       parameters:
         - name: id
           in: path
@@ -133,29 +137,29 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Prescription found
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PrescriptionResource"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PrescriptionResource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/prescriptions/{id}/cancel:
     post:
       operationId: cancelPrescription
       summary: Cancel active prescription
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       parameters:
         - name: id
           in: path
@@ -168,33 +172,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PrescriptionCancelRequest"
+              $ref: '#/components/schemas/PrescriptionCancelRequest'
       responses:
-        "200":
+        '200':
           description: Prescription cancelled
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PrescriptionResource"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PrescriptionResource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/prescriptions/{id}/refill:
     post:
       operationId: requestPrescriptionRefill
       summary: Request refill for prescription
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       parameters:
         - name: id
           in: path
@@ -210,24 +214,24 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Refill requested
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/prescriptions/{id}/dispense:
     post:
       operationId: markPrescriptionDispensed
       summary: Mark prescription as dispensed
-      tags: [Prescriptions]
+      tags:
+        - Prescriptions
       parameters:
         - name: id
           in: path
@@ -245,27 +249,25 @@ paths:
                 dispensed_by:
                   type: string
       responses:
-        "200":
+        '200':
           description: Prescription dispensed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PrescriptionResource"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Worklist ──────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/PrescriptionResource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/worklists:
     get:
       operationId: getWorklist
@@ -274,79 +276,79 @@ paths:
         Returns a list of dispense orders for the given facility, filtered by
         status, priority, and other criteria. Orders are sorted by priority
         (STAT > URGENT > ASAP > ROUTINE) then by creation time ascending.
-      tags: [Worklist]
+      tags:
+        - Worklist
       parameters:
-        - $ref: "#/components/parameters/FacilityIdQuery"
+        - $ref: '#/components/parameters/FacilityIdQuery'
         - name: status
           in: query
           schema:
-            $ref: "#/components/schemas/DispenseStatus"
+            $ref: '#/components/schemas/DispenseStatus'
         - name: priority
           in: query
           schema:
-            $ref: "#/components/schemas/DispensePriority"
+            $ref: '#/components/schemas/DispensePriority'
         - name: workspaceId
           in: query
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Worklist returned
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/DispenseOrderSummary"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Dispense Orders ──────────────────────────────────────────────────────
+                          $ref: '#/components/schemas/DispenseOrderSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/dispense-orders/{id}:
     get:
       operationId: getDispenseOrder
       summary: Get dispense order detail
       description: Returns full dispense order including all items, FEFO suggestions, and pickup proof.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Dispense order detail
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/dispense-orders/patient/{cpid}:
     get:
       operationId: getPatientDispenseOrders
       summary: Get dispense orders by patient CPID
       description: Returns all dispense orders for a given patient, ordered by creation date descending.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
         - name: cpid
           in: path
@@ -357,28 +359,27 @@ paths:
         - name: status
           in: query
           schema:
-            $ref: "#/components/schemas/DispenseStatus"
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+            $ref: '#/components/schemas/DispenseStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Patient dispense orders
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/DispenseOrderSummary"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                          $ref: '#/components/schemas/DispenseOrderSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/dispense-orders/{id}/accept:
     post:
       operationId: acceptOrder
@@ -387,30 +388,30 @@ paths:
         Transitions the order from PENDING to ACCEPTED. Assigns the current
         actor as the dispensing pharmacist. Publishes pharmacy.dispense.accepted
         event via outbox.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Order accepted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-orders/{id}/pick:
     post:
       operationId: pickItems
@@ -419,38 +420,38 @@ paths:
         Records the physical pick of drug items. Validates batch numbers,
         expiry dates (FEFO compliance), and available stock. Transitions the
         order to PICKING status. Each pick includes the barcode scan result.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PickRequest"
+              $ref: '#/components/schemas/PickRequest'
       responses:
-        "200":
+        '200':
           description: Items picked
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-orders/{id}/partial:
     post:
       operationId: partialDispense
@@ -459,30 +460,30 @@ paths:
         Marks the order as PARTIAL — some items have been dispensed but not all.
         This allows the patient to collect available items while remaining items
         are backordered or pending. Publishes pharmacy.dispense.partial event.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Partial dispense recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-orders/{id}/complete:
     post:
       operationId: completeDispense
@@ -491,30 +492,30 @@ paths:
         Marks the order as COMPLETED — all items have been dispensed. Triggers
         stock deduction, OROS writeback (order status update), and MUSHEX
         charge event. Publishes Kafka topic `pharmacy.dispense.complete` (DISPENSE_COMPLETED outbox).
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       responses:
-        "200":
+        '200':
           description: Dispense completed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-orders/{id}/backorder:
     post:
       operationId: backorder
@@ -523,39 +524,38 @@ paths:
         Marks the order as BACKORDERED when stock is unavailable.
         Records expected restock date and notes. Publishes
         pharmacy.dispense.backordered event.
-      tags: [Dispense Orders]
+      tags:
+        - Dispense Orders
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BackorderRequest"
+              $ref: '#/components/schemas/BackorderRequest'
       responses:
-        "200":
+        '200':
           description: Order backordered
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Dispense Items ──────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-items/{itemId}/substitute:
     post:
       operationId: substituteItem
@@ -565,38 +565,38 @@ paths:
         original drug, replacement drug, reason for substitution, and batch/expiry
         details. Requires pharmacist authorization. Publishes
         pharmacy.item.substituted event.
-      tags: [Dispense Items]
+      tags:
+        - Dispense Items
       parameters:
-        - $ref: "#/components/parameters/ItemIdPath"
+        - $ref: '#/components/parameters/ItemIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SubstituteRequest"
+              $ref: '#/components/schemas/SubstituteRequest'
       responses:
-        "200":
+        '200':
           description: Item substituted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseItem"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-items/{itemId}/substitution-options:
     get:
       operationId: getSubstitutionOptions
@@ -605,31 +605,30 @@ paths:
         Returns a list of therapeutic equivalents that can be used to substitute
         the given item. Includes stock-on-hand, nearest expiry, and therapeutic
         equivalence classification for each option.
-      tags: [Dispense Items]
+      tags:
+        - Dispense Items
       parameters:
-        - $ref: "#/components/parameters/ItemIdPath"
+        - $ref: '#/components/parameters/ItemIdPath'
       responses:
-        "200":
+        '200':
           description: Substitution options
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
                         type: array
                         items:
-                          $ref: "#/components/schemas/SubstitutionOption"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Barcode ─────────────────────────────────────────────────────────────
+                          $ref: '#/components/schemas/SubstitutionOption'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/items/lookup-by-barcode:
     get:
       operationId: lookupBarcode
@@ -638,7 +637,8 @@ paths:
         Decodes a GS1/GTIN barcode and returns the drug details including
         batch number, expiry date, and manufacturer. Used during the pick
         process for verification.
-      tags: [Barcode]
+      tags:
+        - Barcode
       parameters:
         - name: code
           in: query
@@ -647,29 +647,27 @@ paths:
             type: string
           description: Barcode string (GS1, GTIN, EAN, etc.)
       responses:
-        "200":
+        '200':
           description: Barcode decoded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/BarcodeResult"
-        "404":
+                        $ref: '#/components/schemas/BarcodeResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
           description: Barcode not recognized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Returns / Wastage / Reversal ────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/dispense-orders/{id}/return:
     post:
       operationId: processReturn
@@ -678,36 +676,36 @@ paths:
         Records the return of dispensed items. Returns are classified by
         condition (INTACT, DAMAGED, EXPIRED). Intact items may be restocked.
         Publishes pharmacy.dispense.returned event.
-      tags: [Returns]
+      tags:
+        - Returns
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReturnRequest"
+              $ref: '#/components/schemas/ReturnRequest'
       responses:
-        "200":
+        '200':
           description: Return processed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/dispense-orders/{id}/wastage:
     post:
       operationId: processWastage
@@ -716,36 +714,36 @@ paths:
         Records wastage of dispensed drugs. Requires disposal method and
         optional witness. Used for controlled substances and expired drugs.
         Publishes pharmacy.dispense.wastage event.
-      tags: [Returns]
+      tags:
+        - Returns
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WastageRequest"
+              $ref: '#/components/schemas/WastageRequest'
       responses:
-        "200":
+        '200':
           description: Wastage recorded
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/dispense-orders/{id}/reversal:
     post:
       operationId: processReversal
@@ -754,39 +752,38 @@ paths:
         Reverses a completed dispense order. Restores stock, reverses MUSHEX
         charges, and updates OROS order status. Requires authorization and
         reason. Publishes pharmacy.dispense.reversed event.
-      tags: [Returns]
+      tags:
+        - Returns
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReversalRequest"
+              $ref: '#/components/schemas/ReversalRequest'
       responses:
-        "200":
+        '200':
           description: Dispense reversed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/DispenseOrderDetail"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Pickup ──────────────────────────────────────────────────────────────
+                        $ref: '#/components/schemas/DispenseOrderDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/dispense-orders/{id}/pickup/create:
     post:
       operationId: createPickup
@@ -796,38 +793,38 @@ paths:
         (SMS code), QR (scannable code), and biometric methods. Optionally
         supports delegated pickup where a third party collects on behalf of
         the patient. Token expires after a configurable period.
-      tags: [Pickup]
+      tags:
+        - Pickup
       parameters:
-        - $ref: "#/components/parameters/OrderIdPath"
+        - $ref: '#/components/parameters/OrderIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PickupCreateRequest"
+              $ref: '#/components/schemas/PickupCreateRequest'
       responses:
-        "201":
+        '201':
           description: Pickup proof created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PickupProof"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PickupProof'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/pickup/claim:
     post:
       operationId: claimPickup
@@ -836,43 +833,42 @@ paths:
         Claims a pickup using the token (OTP code or QR scan result) and
         optional biometric fingerprint. Validates the token, marks the
         pickup as claimed, and publishes pharmacy.pickup.claimed event.
-      tags: [Pickup]
+      tags:
+        - Pickup
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PickupClaimRequest"
+              $ref: '#/components/schemas/PickupClaimRequest'
       responses:
-        "200":
+        '200':
           description: Pickup claimed
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PickupProof"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
+                        $ref: '#/components/schemas/PickupProof'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Token not found or expired
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "409":
+                $ref: '#/components/schemas/ApiResponse'
+        '409':
           description: Pickup already claimed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ── Stock Reconciliation ────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/reconcile/stock/pending:
     get:
       operationId: getReconcilePending
@@ -881,32 +877,32 @@ paths:
         Returns paginated list of stock variances between internal inventory
         and the external eLMIS system. Items are ordered by variance magnitude
         descending.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
-        - $ref: "#/components/parameters/PageParam"
-        - $ref: "#/components/parameters/SizeParam"
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
         - name: facilityId
           in: query
           schema:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Pending reconciliation items
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/PagedReconcileSummary"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
+                        $ref: '#/components/schemas/PagedReconcileSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/reconcile/stock/{id}/resolve:
     post:
       operationId: resolveReconcile
@@ -915,7 +911,8 @@ paths:
         Resolves a stock variance by accepting internal count, accepting
         external count, or specifying a manual adjustment. Records resolution
         notes for audit. Publishes pharmacy.reconcile.resolved event.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - name: id
           in: path
@@ -929,31 +926,29 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveRequest"
+              $ref: '#/components/schemas/ResolveRequest'
       responses:
-        "200":
+        '200':
           description: Reconciliation resolved
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/ApiResponse"
+                  - $ref: '#/components/schemas/ApiResponse'
                   - type: object
                     properties:
                       data:
-                        $ref: "#/components/schemas/ReconcileSummary"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  # ── Internal Integration ────────────────────────────────────────────────
+                        $ref: '#/components/schemas/ReconcileSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/internal/oros/status:
     post:
       operationId: orosStatusCallback
@@ -962,7 +957,8 @@ paths:
         Internal endpoint called by OROS when a pharmacy-type order changes
         status. Creates or updates the corresponding dispense order. Not
         exposed externally.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
@@ -983,14 +979,20 @@ paths:
                   type: string
                 status:
                   type: string
-                  enum: [PLACED, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED, REJECTED]
+                  enum:
+                    - PLACED
+                    - ACCEPTED
+                    - IN_PROGRESS
+                    - COMPLETED
+                    - CANCELLED
+                    - REJECTED
                 patientCpid:
                   type: string
                 facilityId:
                   type: string
                   format: uuid
                 priority:
-                  $ref: "#/components/schemas/DispensePriority"
+                  $ref: '#/components/schemas/DispensePriority'
                 items:
                   type: array
                   items:
@@ -1012,15 +1014,14 @@ paths:
                       strength:
                         type: string
       responses:
-        "200":
+        '200':
           description: Status update processed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/mushex/charge:
     post:
       operationId: mushexChargeCallback
@@ -1028,7 +1029,8 @@ paths:
       description: |
         Internal endpoint called after MUSHEX confirms billing for a dispense.
         Updates the payment status on the dispense order.
-      tags: [Internal]
+      tags:
+        - Internal
       requestBody:
         required: true
         content:
@@ -1044,7 +1046,10 @@ paths:
                   format: uuid
                 chargeStatus:
                   type: string
-                  enum: [CHARGED, FAILED, REVERSED]
+                  enum:
+                    - CHARGED
+                    - FAILED
+                    - REVERSED
                 chargeId:
                   type: string
                 amount:
@@ -1056,14 +1061,248 @@ paths:
                 failureReason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Charge status processed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /lookup-by-barcode:
+    get:
+      operationId: pharmacy_get__lookup_by_barcode
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: pharmacy_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{cpid}:
+    get:
+      operationId: pharmacy_get__patient_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/accept:
+    post:
+      operationId: pharmacy_post__id_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/pick:
+    post:
+      operationId: pharmacy_post__id_pick
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/partial:
+    post:
+      operationId: pharmacy_post__id_partial
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/complete:
+    post:
+      operationId: pharmacy_post__id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/backorder:
+    post:
+      operationId: pharmacy_post__id_backorder
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /oros/status:
+    post:
+      operationId: pharmacy_post__oros_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /mushex/charge:
+    post:
+      operationId: pharmacy_post__mushex_charge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dispense-orders/{id}/pickup/create:
+    post:
+      operationId: pharmacy_post__dispense_orders_id_pickup_create
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pickup/claim:
+    post:
+      operationId: pharmacy_post__pickup_claim
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: pharmacy_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/cancel:
+    post:
+      operationId: pharmacy_post__id_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/refill:
+    post:
+      operationId: pharmacy_post__id_refill
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/dispense:
+    post:
+      operationId: pharmacy_post__id_dispense
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stock/pending:
+    get:
+      operationId: pharmacy_get__stock_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stock/{id}/resolve:
+    post:
+      operationId: pharmacy_post__stock_id_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/return:
+    post:
+      operationId: pharmacy_post__id_return
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/wastage:
+    post:
+      operationId: pharmacy_post__id_wastage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reversal:
+    post:
+      operationId: pharmacy_post__id_reversal
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemId}/substitute:
+    post:
+      operationId: pharmacy_post__itemId_substitute
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemId}/substitution-options:
+    get:
+      operationId: pharmacy_get__itemId_substitution_options
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /worklists:
+    get:
+      operationId: pharmacy_get__worklists
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: pharmacy_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: pharmacy_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pharmacy-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   # ── Security ────────────────────────────────────────────────────────────

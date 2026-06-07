@@ -53,34 +53,35 @@ paths:
   /internal/v1/health:
     get:
       operationId: madiInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/test-command:
     post:
       operationId: madiInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -89,26 +90,30 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/madi/dashboard:
     get:
       operationId: madiDashboard
-      tags: [Dashboard]
+      tags:
+        - Dashboard
       summary: Dashboard metrics by scope
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: scope
           in: query
           schema:
             type: string
-            enum: [local, facility, central, drive]
+            enum:
+              - local
+              - facility
+              - central
+              - drive
             default: local
         - name: facility_id
           in: query
@@ -121,88 +126,88 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Dashboard metrics
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/madi/donors:
     post:
       operationId: madiRegisterDonor
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Register a blood donor profile
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DonorRegisterRequest"
+              $ref: '#/components/schemas/DonorRegisterRequest'
       responses:
-        "201":
+        '201':
           description: Donor registered
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/madi/donors/by-person:
     get:
       operationId: madiDonorByPerson
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Lookup donor profile by person CPID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: person_cpid
           in: query
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Donor profile
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "404":
+        '404':
           description: Donor not found
-
   /internal/v1/madi/donors/{donorId}/screenings:
     post:
       operationId: madiScreenDonor
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Record donor eligibility screening
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DonorId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ScreeningRequest"
+              $ref: '#/components/schemas/ScreeningRequest'
       responses:
-        "201":
+        '201':
           description: Screening recorded
-
   /internal/v1/madi/donors/{donorId}/deferrals:
     post:
       operationId: madiDeferDonor
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Defer a donor
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DonorId'
       requestBody:
         required: true
         content:
@@ -211,18 +216,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Deferral recorded
-
   /internal/v1/madi/donors/{donorId}/preferences:
     put:
       operationId: madiDonorPreferences
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Update donor communication preferences
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DonorId'
       requestBody:
         required: true
         content:
@@ -231,18 +236,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Preferences updated
-
   /internal/v1/madi/donors/{donorId}/feedback:
     post:
       operationId: madiDonorFeedback
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Submit post-donation feedback
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DonorId'
       requestBody:
         required: true
         content:
@@ -251,37 +256,37 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Feedback recorded
-
   /internal/v1/madi/donors/{donorId}/history:
     get:
       operationId: madiDonorHistory
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Donor donation history
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DonorId'
       responses:
-        "200":
+        '200':
           description: Donor history
-
   /internal/v1/madi/donors/{donorId}/next-eligibility:
     get:
       operationId: madiDonorNextEligibility
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Next donation eligibility window
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DonorId'
       responses:
-        "200":
+        '200':
           description: Eligibility summary
-
   /internal/v1/madi/donors/drives-near-me:
     get:
       operationId: madiDrivesNearMe
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Find donation drives near an Ndila site reference
       parameters:
         - name: ndila_site_ref
@@ -295,44 +300,45 @@ paths:
             type: number
             default: 25
       responses:
-        "200":
+        '200':
           description: Nearby drives
-
   /internal/v1/madi/drives:
     post:
       operationId: madiCreateDrive
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Create a donation drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDriveRequest"
+              $ref: '#/components/schemas/CreateDriveRequest'
       responses:
-        "201":
+        '201':
           description: Drive created
     get:
       operationId: madiListDrives
-      tags: [Drives]
+      tags:
+        - Drives
       summary: List donation drives for tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Drive list
-
   /internal/v1/madi/drives/{driveId}/publish:
     post:
       operationId: madiPublishDrive
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Publish a donation drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DriveId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DriveId'
       requestBody:
         content:
           application/json:
@@ -340,18 +346,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Drive published
-
   /internal/v1/madi/drives/{driveId}/register:
     post:
       operationId: madiRegisterAtDrive
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Register donor attendance at a drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DriveId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DriveId'
       requestBody:
         required: true
         content:
@@ -360,37 +366,37 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Registration recorded
-
   /internal/v1/madi/drives/{driveId}/screen:
     post:
       operationId: madiScreenAtDrive
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Screen donor at drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DriveId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DriveId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ScreeningRequest"
+              $ref: '#/components/schemas/ScreeningRequest'
       responses:
-        "200":
+        '200':
           description: Screening recorded
-
   /internal/v1/madi/drives/{driveId}/donations:
     post:
       operationId: madiRecordDonation
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Record blood collection at drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/DriveId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/DriveId'
       requestBody:
         required: true
         content:
@@ -399,29 +405,29 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Donation recorded
-
   /internal/v1/madi/drives/{driveId}/close:
     post:
       operationId: madiCloseDrive
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Close a donation drive
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DriveId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DriveId'
       responses:
-        "200":
+        '200':
           description: Drive closed
-
   /internal/v1/madi/processing/receive:
     post:
       operationId: madiReceiveUnit
-      tags: [Processing]
+      tags:
+        - Processing
       summary: Receive blood unit into processing
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
@@ -430,18 +436,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Unit received
-
   /internal/v1/madi/processing/{batchId}/test:
     post:
       operationId: madiTestBatch
-      tags: [Processing]
+      tags:
+        - Processing
       summary: Record serology / testing results
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BatchId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BatchId'
       requestBody:
         required: true
         content:
@@ -450,18 +456,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Test results recorded
-
   /internal/v1/madi/processing/{batchId}/quarantine:
     post:
       operationId: madiQuarantineBatch
-      tags: [Processing]
+      tags:
+        - Processing
       summary: Quarantine a processing batch
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BatchId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BatchId'
       requestBody:
         required: true
         content:
@@ -470,18 +476,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Batch quarantined
-
   /internal/v1/madi/processing/{batchId}/release:
     post:
       operationId: madiReleaseBatch
-      tags: [Processing]
+      tags:
+        - Processing
       summary: Release a processing batch
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BatchId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BatchId'
       requestBody:
         content:
           application/json:
@@ -489,17 +495,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Batch released
-
   /internal/v1/madi/processing/components:
     post:
       operationId: madiPrepareComponent
-      tags: [Processing]
+      tags:
+        - Processing
       summary: Prepare blood component from unit
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
@@ -508,16 +514,16 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Component prepared
-
   /internal/v1/madi/blood-banks:
     post:
       operationId: madiCreateBloodBank
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Register a blood bank
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       requestBody:
         required: true
         content:
@@ -526,30 +532,30 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Blood bank registered
-
   /internal/v1/madi/blood-banks/{bloodBankId}/stock:
     get:
       operationId: madiBloodBankStock
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Blood bank stock balances
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/BloodBankId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/BloodBankId'
       responses:
-        "200":
+        '200':
           description: Stock balances
-
   /internal/v1/madi/blood-banks/{bloodBankId}/movements:
     post:
       operationId: madiBloodBankMovement
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Record stock movement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BloodBankId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BloodBankId'
       requestBody:
         required: true
         content:
@@ -558,18 +564,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Movement recorded
-
   /internal/v1/madi/blood-banks/{bloodBankId}/reconciliations:
     post:
       operationId: madiBloodBankReconciliation
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Record stock reconciliation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BloodBankId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BloodBankId'
       requestBody:
         required: true
         content:
@@ -578,18 +584,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Reconciliation recorded
-
   /internal/v1/madi/blood-banks/{bloodBankId}/wastage:
     post:
       operationId: madiBloodBankWastage
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Record blood wastage
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BloodBankId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BloodBankId'
       requestBody:
         required: true
         content:
@@ -598,18 +604,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Wastage recorded
-
   /internal/v1/madi/blood-banks/{bloodBankId}/returns:
     post:
       operationId: madiBloodBankReturn
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Record blood unit return
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/BloodBankId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/BloodBankId'
       requestBody:
         required: true
         content:
@@ -618,48 +624,67 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Return recorded
-
   /internal/v1/madi/orders:
     post:
       operationId: madiCreateOrder
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Create blood order
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BloodOrderRequest"
+              $ref: '#/components/schemas/BloodOrderRequest'
       responses:
-        "201":
+        '201':
           description: Order created
-
+    get:
+      operationId: madiListOrders
+      tags:
+        - Orders
+      summary: List blood orders for facility context
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: patient_cpid
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order list
   /internal/v1/madi/orders/{orderId}/submit:
     post:
       operationId: madiSubmitOrder
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Submit blood order
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/OrderId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/OrderId'
       responses:
-        "200":
+        '200':
           description: Order submitted
-
   /internal/v1/madi/orders/{orderId}/samples:
     post:
       operationId: madiCollectSample
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Collect patient sample for crossmatch
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/OrderId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/OrderId'
       requestBody:
         required: true
         content:
@@ -668,18 +693,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Sample collected
-
   /internal/v1/madi/orders/{orderId}/crossmatch:
     post:
       operationId: madiCrossmatch
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Record crossmatch result
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/OrderId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/OrderId'
       requestBody:
         required: true
         content:
@@ -688,18 +713,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Crossmatch recorded
-
   /internal/v1/madi/orders/{orderId}/reserve:
     post:
       operationId: madiReserveOrder
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Reserve blood unit for order
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/OrderId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/OrderId'
       requestBody:
         required: true
         content:
@@ -708,18 +733,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Unit reserved
-
   /internal/v1/madi/orders/{orderId}/issue:
     post:
       operationId: madiIssueOrder
-      tags: [Orders]
+      tags:
+        - Orders
       summary: Issue blood unit for transfusion
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/OrderId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/OrderId'
       requestBody:
         required: true
         content:
@@ -728,17 +753,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Unit issued
-
   /internal/v1/madi/transfusions:
     post:
       operationId: madiStartTransfusion
-      tags: [Transfusions]
+      tags:
+        - Transfusions
       summary: Start transfusion episode
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
@@ -747,18 +772,37 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Episode started
-
+    get:
+      operationId: madiListTransfusions
+      tags:
+        - Transfusions
+      summary: List transfusion episodes
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: patient_cpid
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Episode list
   /internal/v1/madi/transfusions/{episodeId}/observations:
     post:
       operationId: madiTransfusionObservation
-      tags: [Transfusions]
+      tags:
+        - Transfusions
       summary: Record transfusion observation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/EpisodeId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/EpisodeId'
       requestBody:
         required: true
         content:
@@ -767,18 +811,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Observation recorded
-
   /internal/v1/madi/transfusions/{episodeId}/complete:
     post:
       operationId: madiCompleteTransfusion
-      tags: [Transfusions]
+      tags:
+        - Transfusions
       summary: Complete transfusion episode
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - $ref: "#/components/parameters/EpisodeId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
+        - $ref: '#/components/parameters/EpisodeId'
       requestBody:
         required: true
         content:
@@ -787,17 +831,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Episode completed
-
   /internal/v1/madi/transfusions/{episodeId}/verify:
     post:
       operationId: madiVerifyTransfusion
-      tags: [Transfusions]
+      tags:
+        - Transfusions
       summary: Verify transfusion episode
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/EpisodeId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
       requestBody:
         content:
           application/json:
@@ -805,17 +849,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Episode verified
-
   /internal/v1/madi/haemovigilance/reactions:
     post:
       operationId: madiReportReaction
-      tags: [Haemovigilance]
+      tags:
+        - Haemovigilance
       summary: Report adverse transfusion reaction
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
@@ -824,17 +868,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Reaction reported
-
   /internal/v1/madi/haemovigilance/cases:
     post:
       operationId: madiOpenHaemovigilanceCase
-      tags: [Haemovigilance]
+      tags:
+        - Haemovigilance
       summary: Open haemovigilance investigation case
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/FacilityId'
       requestBody:
         required: true
         content:
@@ -843,17 +887,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Case opened
-
   /internal/v1/madi/haemovigilance/cases/{caseId}/investigate:
     post:
       operationId: madiInvestigateCase
-      tags: [Haemovigilance]
+      tags:
+        - Haemovigilance
       summary: Record investigation notes
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CaseId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
       requestBody:
         content:
           application/json:
@@ -861,17 +905,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Investigation updated
-
   /internal/v1/madi/haemovigilance/cases/{caseId}/close:
     post:
       operationId: madiCloseCase
-      tags: [Haemovigilance]
+      tags:
+        - Haemovigilance
       summary: Close haemovigilance case
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CaseId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CaseId'
       requestBody:
         content:
           application/json:
@@ -879,79 +923,96 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Case closed
-
   /internal/v1/madi/central-bank/metrics:
     get:
       operationId: madiCentralBankMetrics
-      tags: [CentralBank]
+      tags:
+        - CentralBank
       summary: National central blood bank metrics
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Central bank metrics
-
   /internal/v1/madi/dashboard/forecast:
     get:
       operationId: madiDashboardForecast
-      tags: [Dashboard]
+      tags:
+        - Dashboard
       summary: Thirty-day blood demand and supply forecast
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: facility_id
           in: query
           schema:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Forecast rows by blood group and component type
-
   /internal/v1/madi/central-bank/emergency-redistributions:
     get:
       operationId: madiListEmergencyRedistributions
-      tags: [CentralBank]
+      tags:
+        - CentralBank
       summary: List emergency redistribution requests
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Redistribution list
     post:
       operationId: madiRequestEmergencyRedistribution
-      tags: [CentralBank]
+      tags:
+        - CentralBank
       summary: Request emergency blood redistribution between facilities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [source_facility_id, target_facility_id, blood_group, component_type, units_requested]
+              required:
+                - source_facility_id
+                - target_facility_id
+                - blood_group
+                - component_type
+                - units_requested
               properties:
-                source_facility_id: { type: string, format: uuid }
-                target_facility_id: { type: string, format: uuid }
-                blood_group: { type: string }
-                component_type: { type: string }
-                units_requested: { type: integer, minimum: 1 }
-                reason: { type: string }
-                requested_by: { type: string }
-                priority: { type: string }
+                source_facility_id:
+                  type: string
+                  format: uuid
+                target_facility_id:
+                  type: string
+                  format: uuid
+                blood_group:
+                  type: string
+                component_type:
+                  type: string
+                units_requested:
+                  type: integer
+                  minimum: 1
+                reason:
+                  type: string
+                requested_by:
+                  type: string
+                priority:
+                  type: string
       responses:
-        "201":
+        '201':
           description: Redistribution requested
-
   /internal/v1/madi/central-bank/emergency-redistributions/{redistributionId}/handoff:
     post:
       operationId: madiInitiateEmergencyHandoff
-      tags: [CentralBank]
+      tags:
+        - CentralBank
       summary: Initiate or retry NHUME physical transfer handoff
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: redistributionId
           in: path
           required: true
@@ -964,34 +1025,35 @@ paths:
             schema:
               type: object
               properties:
-                initiated_by: { type: string }
+                initiated_by:
+                  type: string
       responses:
-        "200":
+        '200':
           description: Handoff updated with NHUME delivery reference
-
   /internal/v1/madi/terminology/component-pins:
     get:
       operationId: madiComponentTerminologyPins
-      tags: [Processing]
+      tags:
+        - Processing
       summary: ZIBO artefact version pins per jurisdiction
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: jurisdiction
           in: query
           schema:
             type: string
             default: ZW
       responses:
-        "200":
+        '200':
           description: Jurisdiction-pinned component catalogue metadata
-
   /internal/v1/madi/central-bank/emergency-redistributions/{redistributionId}/approve:
     post:
       operationId: madiApproveEmergencyRedistribution
-      tags: [CentralBank]
+      tags:
+        - CentralBank
       summary: Approve or fulfil an emergency redistribution
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: redistributionId
           in: path
           required: true
@@ -1004,23 +1066,28 @@ paths:
           application/json:
             schema:
               type: object
-              required: [approved_by]
+              required:
+                - approved_by
               properties:
-                approved_by: { type: string }
-                units_allocated: { type: integer, minimum: 1 }
-                status: { type: string }
+                approved_by:
+                  type: string
+                units_allocated:
+                  type: integer
+                  minimum: 1
+                status:
+                  type: string
       responses:
-        "200":
+        '200':
           description: Redistribution updated
-
   /internal/v1/madi/donors/{donorId}/pre-screening:
     post:
       operationId: madiSubmitPreScreening
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Guided donor wellness pre-screening
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DonorId'
       requestBody:
         required: true
         content:
@@ -1032,28 +1099,28 @@ paths:
                   type: object
                   additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Pre-screening recorded
-
   /internal/v1/madi/donors/{donorId}/pre-screening/latest:
     get:
       operationId: madiLatestPreScreening
-      tags: [Donors]
+      tags:
+        - Donors
       summary: Latest donor pre-screening outcome
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/DonorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DonorId'
       responses:
-        "200":
+        '200':
           description: Latest pre-screening
-
   /internal/v1/madi/blood-banks/fridges:
     get:
       operationId: madiListFridges
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: List blood fridges for IoT monitoring
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: blood_bank_id
           in: query
           required: true
@@ -1061,16 +1128,16 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Fridge list
-
   /internal/v1/madi/blood-banks/fridges/{fridgeId}/readings:
     get:
       operationId: madiFridgeReadings
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Temperature readings for a fridge
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: fridgeId
           in: path
           required: true
@@ -1078,16 +1145,16 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Reading history
-
   /internal/v1/madi/blood-banks/fridges/{fridgeId}/sync-iot:
     post:
       operationId: madiSyncFridgeIot
-      tags: [BloodBanks]
+      tags:
+        - BloodBanks
       summary: Pull latest IoT temperature into MADI
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: fridgeId
           in: path
           required: true
@@ -1095,57 +1162,17 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Fridge synced
-
-  /internal/v1/madi/orders:
-    get:
-      operationId: madiListOrders
-      tags: [Orders]
-      summary: List blood orders for facility context
-      parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - name: status
-          in: query
-          schema:
-            type: string
-        - name: patient_cpid
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Order list
-
-  /internal/v1/madi/transfusions:
-    get:
-      operationId: madiListTransfusions
-      tags: [Transfusions]
-      summary: List transfusion episodes
-      parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/FacilityId"
-        - name: status
-          in: query
-          schema:
-            type: string
-        - name: patient_cpid
-          in: query
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Episode list
-
   /internal/v1/madi/transfusions/{episodeId}/pre-verify:
     post:
       operationId: madiPreVerifyTransfusion
-      tags: [Transfusions]
+      tags:
+        - Transfusions
       summary: Bedside patient and unit verification
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/EpisodeId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/EpisodeId'
       requestBody:
         required: true
         content:
@@ -1154,27 +1181,27 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Pre-transfusion verification recorded
-
   /internal/v1/madi/haemovigilance/national-dashboard:
     get:
       operationId: madiNationalHaemovigilanceDashboard
-      tags: [Haemovigilance]
+      tags:
+        - Haemovigilance
       summary: National haemovigilance supervisory roll-up
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: National dashboard metrics
-
   /internal/v1/madi/drives/sync-conflicts:
     post:
       operationId: madiRecordDriveSyncConflict
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Record offline drive capture sync conflict
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       requestBody:
         required: true
         content:
@@ -1183,16 +1210,16 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Conflict recorded
-
   /internal/v1/madi/drives/sync-conflicts/{conflictId}/resolve:
     post:
       operationId: madiResolveDriveSyncConflict
-      tags: [Drives]
+      tags:
+        - Drives
       summary: Resolve offline drive capture conflict
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: conflictId
           in: path
           required: true
@@ -1207,8 +1234,519 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Conflict resolved
+  /:
+    post:
+      operationId: madi_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: madi_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{bloodBankId}/stock:
+    get:
+      operationId: madi_get__bloodBankId_stock
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{bloodBankId}/movements:
+    post:
+      operationId: madi_post__bloodBankId_movements
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{bloodBankId}/reconciliations:
+    post:
+      operationId: madi_post__bloodBankId_reconciliations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{bloodBankId}/wastage:
+    post:
+      operationId: madi_post__bloodBankId_wastage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{bloodBankId}/returns:
+    post:
+      operationId: madi_post__bloodBankId_returns
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fridges:
+    get:
+      operationId: madi_get__fridges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fridges/{fridgeId}/readings:
+    get:
+      operationId: madi_get__fridges_fridgeId_readings
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fridges/{fridgeId}/sync-iot:
+    post:
+      operationId: madi_post__fridges_fridgeId_sync_iot
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}:
+    get:
+      operationId: madi_get__orderId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/submit:
+    post:
+      operationId: madi_post__orderId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/samples:
+    post:
+      operationId: madi_post__orderId_samples
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/crossmatch:
+    post:
+      operationId: madi_post__orderId_crossmatch
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/reserve:
+    post:
+      operationId: madi_post__orderId_reserve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/issue:
+    post:
+      operationId: madi_post__orderId_issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /metrics:
+    get:
+      operationId: madi_get__metrics
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /emergency-redistributions:
+    get:
+      operationId: madi_get__emergency_redistributions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: madi_post__emergency_redistributions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /emergency-redistributions/{redistributionId}/approve:
+    post:
+      operationId: madi_post__emergency_redistributions_redistributionId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /emergency-redistributions/{redistributionId}/handoff:
+    post:
+      operationId: madi_post__emergency_redistributions_redistributionId_handoff
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /forecast:
+    get:
+      operationId: madi_get__forecast
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{driveId}/publish:
+    post:
+      operationId: madi_post__driveId_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{driveId}/register:
+    post:
+      operationId: madi_post__driveId_register
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{driveId}/screen:
+    post:
+      operationId: madi_post__driveId_screen
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{driveId}/donations:
+    post:
+      operationId: madi_post__driveId_donations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{driveId}/close:
+    post:
+      operationId: madi_post__driveId_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sync-conflicts:
+    post:
+      operationId: madi_post__sync_conflicts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sync-conflicts/{conflictId}/resolve:
+    post:
+      operationId: madi_post__sync_conflicts_conflictId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-person:
+    get:
+      operationId: madi_get__by_person
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/screenings:
+    post:
+      operationId: madi_post__donorId_screenings
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/deferrals:
+    post:
+      operationId: madi_post__donorId_deferrals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/preferences:
+    put:
+      operationId: madi_put__donorId_preferences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/feedback:
+    post:
+      operationId: madi_post__donorId_feedback
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/history:
+    get:
+      operationId: madi_get__donorId_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/next-eligibility:
+    get:
+      operationId: madi_get__donorId_next_eligibility
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/pre-screening:
+    post:
+      operationId: madi_post__donorId_pre_screening
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{donorId}/pre-screening/latest:
+    get:
+      operationId: madi_get__donorId_pre_screening_latest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /drives-near-me:
+    get:
+      operationId: madi_get__drives_near_me
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reactions:
+    post:
+      operationId: madi_post__reactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cases:
+    post:
+      operationId: madi_post__cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cases/{caseId}/investigate:
+    post:
+      operationId: madi_post__cases_caseId_investigate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cases/{caseId}/close:
+    post:
+      operationId: madi_post__cases_caseId_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /national-dashboard:
+    get:
+      operationId: madi_get__national_dashboard
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /receive:
+    post:
+      operationId: madi_post__receive
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{batchId}/test:
+    post:
+      operationId: madi_post__batchId_test
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{batchId}/quarantine:
+    post:
+      operationId: madi_post__batchId_quarantine
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{batchId}/release:
+    post:
+      operationId: madi_post__batchId_release
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /components:
+    post:
+      operationId: madi_post__components
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /component-pins:
+    get:
+      operationId: madi_get__component_pins
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{episodeId}/observations:
+    post:
+      operationId: madi_post__episodeId_observations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{episodeId}/complete:
+    post:
+      operationId: madi_post__episodeId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{episodeId}/verify:
+    post:
+      operationId: madi_post__episodeId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{episodeId}/pre-verify:
+    post:
+      operationId: madi_post__episodeId_pre_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{episodeId}:
+    get:
+      operationId: madi_get__episodeId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: madi_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: madi_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from madi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

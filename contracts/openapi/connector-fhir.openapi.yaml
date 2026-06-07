@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,41 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /internal/v1/fhir/relay:
+    post:
+      operationId: connectorfhiradapter_post__internal_v1_fhir_relay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from connector-fhir-adapter handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/fhir/destinations:
+    post:
+      operationId: connectorfhiradapter_post__internal_v1_fhir_destinations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from connector-fhir-adapter handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: connectorfhiradapter_get__internal_v1_fhir_destinations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from connector-fhir-adapter handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/fhir/audit:
+    get:
+      operationId: connectorfhiradapter_get__internal_v1_fhir_audit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from connector-fhir-adapter handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}
