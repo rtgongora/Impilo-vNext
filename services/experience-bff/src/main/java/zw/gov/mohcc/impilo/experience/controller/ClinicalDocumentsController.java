@@ -6,8 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -119,5 +121,43 @@ public class ClinicalDocumentsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "data", created != null ? created : Map.of(),
                 "meta", meta));
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, Object>> uploadAndIndex(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("patient_id") String patientId,
+            @RequestPart("document_type") String documentType,
+            @RequestPart("title") String title,
+            @RequestPart(value = "description", required = false) String description,
+            @RequestPart(value = "encounter_id", required = false) String encounterId,
+            @RequestPart(value = "uploaded_by", required = false) String uploadedBy) throws java.io.IOException {
+
+        String mimeType = file.getContentType() != null ? file.getContentType() : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename() : title;
+        JsonNode stored = documentServiceClient.uploadObject(file.getBytes(), filename, mimeType);
+
+        String objectId = stored != null && stored.has("id") ? stored.get("id").asText() : null;
+        String storageKey = stored != null && stored.has("storageKey")
+                ? stored.get("storageKey").asText()
+                : (stored != null && stored.has("storage_key") ? stored.get("storage_key").asText() : filename);
+
+        CreateDocumentRequest request = new CreateDocumentRequest(
+                patientId,
+                encounterId,
+                documentType,
+                title,
+                description,
+                mimeType,
+                file.getSize(),
+                storageKey,
+                uploadedBy != null ? uploadedBy : "clinical-upload",
+                objectId);
+
+        return createDocument(tenantId, podId, requestId, correlationId, null, request);
     }
 }

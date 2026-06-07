@@ -54,3 +54,35 @@ export function useUploadDocument() {
     },
   });
 }
+
+interface UploadDocumentFilePayload {
+  patientId: string;
+  file: File;
+  documentType: string;
+  title: string;
+  description?: string | null;
+  encounter_id?: string | null;
+  uploaded_by?: string;
+}
+
+/** Multipart upload → document-store object → PCT clinical document index. */
+export function useUploadDocumentFile() {
+  const queryClient = useQueryClient();
+
+  return useMutation<ClinicalDocumentResponse, unknown, UploadDocumentFilePayload>({
+    mutationFn: async (payload) => {
+      const form = new FormData();
+      form.append("file", payload.file);
+      form.append("patient_id", payload.patientId);
+      form.append("document_type", payload.documentType);
+      form.append("title", payload.title);
+      if (payload.description) form.append("description", payload.description);
+      if (payload.encounter_id) form.append("encounter_id", payload.encounter_id);
+      if (payload.uploaded_by) form.append("uploaded_by", payload.uploaded_by);
+      return apiClient.postForm<ClinicalDocumentResponse>("/internal/v1/clinical-documents/upload", form);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinical-documents"] });
+    },
+  });
+}
