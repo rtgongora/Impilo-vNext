@@ -16,7 +16,7 @@ import java.util.Map;
  * Deprecated compatibility shim — forwards legacy {@code /v1/appointments} callers to booking-service.
  */
 @Component
-@ConditionalOnProperty(name = "impilo.booking.forward-enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "impilo.booking.forward-enabled", havingValue = "true", matchIfMissing = false)
 public class BookingForwardClient {
 
     private static final Logger log = LoggerFactory.getLogger(BookingForwardClient.class);
