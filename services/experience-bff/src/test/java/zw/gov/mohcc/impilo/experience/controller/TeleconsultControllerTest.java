@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
@@ -27,6 +28,10 @@ import static org.mockito.ArgumentMatchers.eq;
 class TeleconsultControllerTest {
 
     private PctServiceClient pctClient;
+    private CostaServiceClient costaClient;
+    private AnalyticsPipelineServiceClient analyticsClient;
+    private NotificationServiceClient notificationClient;
+
     private TelemedicineGovernanceService governanceService;
     private TeleconsultController controller;
     private ObjectMapper objectMapper;
@@ -39,13 +44,15 @@ class TeleconsultControllerTest {
         DocumentServiceClient documentClient = Mockito.mock(DocumentServiceClient.class);
         VarapiServiceClient varapiClient = Mockito.mock(VarapiServiceClient.class);
         TusoServiceClient tusoClient = Mockito.mock(TusoServiceClient.class);
-        NotificationServiceClient notificationClient = Mockito.mock(NotificationServiceClient.class);
+        notificationClient = Mockito.mock(NotificationServiceClient.class);
         FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
-        CostaServiceClient costaClient = Mockito.mock(CostaServiceClient.class);
+        costaClient = Mockito.mock(CostaServiceClient.class);
+        analyticsClient = Mockito.mock(AnalyticsPipelineServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         controller = new TeleconsultController(
                 pctClient, mvumoClient, documentClient, varapiClient, tusoClient,
-                notificationClient, fhirGatewayClient, costaClient, governanceService, objectMapper
+                notificationClient, fhirGatewayClient, costaClient, analyticsClient,
+                governanceService, objectMapper
         );
     }
 
@@ -117,5 +124,31 @@ class TeleconsultControllerTest {
         Map<?, ?> error = (Map<?, ?>) response.getBody().get("error");
         assertEquals("TELEMEDICINE_GOVERNANCE_INVALID", error.get("code"));
         Mockito.verifyNoInteractions(pctClient);
+    }
+
+    @Test
+    void completeEmitsTelemedicineAnalyticsEvent() throws Exception {
+        ObjectNode completed = objectMapper.createObjectNode();
+        completed.put("id", "ref-001");
+        completed.put("patientCpid", "CPID-1");
+        completed.put("status", "COMPLETED");
+        Mockito.when(pctClient.completeReferral(eq("ref-001"), any())).thenReturn(completed);
+        Mockito.when(analyticsClient.ingestTelemedicineEvent(any())).thenReturn(objectMapper.createObjectNode());
+
+        var response = controller.complete(
+                "ref-001",
+                "req-4",
+                "corr-4",
+                "tenant-a",
+                "TREATMENT",
+                "fac-1",
+                "provider-1",
+                Map.of("outcome", "COMPLETED"));
+
+        assertEquals(200, response.getStatusCode().value());
+        Mockito.verify(analyticsClient).ingestTelemedicineEvent(Mockito.argThat(event ->
+                "TELECONSULT_COMPLETED".equals(event.get("eventType"))
+                        && "ref-001".equals(event.get("sessionId"))
+                        && "CPID-1".equals(event.get("patientId"))));
     }
 }

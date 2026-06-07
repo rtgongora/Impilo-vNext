@@ -384,6 +384,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
   { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
+  { path: "/telemedicine/analytics", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Analytics", navLabel: "Telemedicine Analytics", navZone: "work" },
 
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
@@ -671,7 +672,7 @@ export const ROUTES: RouteDefinition[] = [
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 13 routes under /live for live events, discovery,
 // room, replay, CPD and analytics (services/live-service). New total is 467.
-export const EXPECTED_ROUTE_COUNT = 467;
+export const EXPECTED_ROUTE_COUNT = 468;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.AnalyticsPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
@@ -51,6 +52,7 @@ public class TeleconsultController {
     private final NotificationServiceClient notificationClient;
     private final FhirGatewayServiceClient fhirGatewayClient;
     private final CostaServiceClient costaClient;
+    private final AnalyticsPipelineServiceClient analyticsClient;
     private final TelemedicineGovernanceService telemedicineGovernanceService;
     private final ObjectMapper objectMapper;
 
@@ -62,6 +64,7 @@ public class TeleconsultController {
                                  NotificationServiceClient notificationClient,
                                  FhirGatewayServiceClient fhirGatewayClient,
                                  CostaServiceClient costaClient,
+                                 AnalyticsPipelineServiceClient analyticsClient,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -72,6 +75,7 @@ public class TeleconsultController {
         this.notificationClient = notificationClient;
         this.fhirGatewayClient = fhirGatewayClient;
         this.costaClient = costaClient;
+        this.analyticsClient = analyticsClient;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -489,6 +493,7 @@ public class TeleconsultController {
                 return upstreamFailure("PCT_UNAVAILABLE", "No completion payload returned", requestId, correlationId);
             }
             emitTelemedicineNotification("TELECONSULT_COMPLETED", completed, actorId, "Teleconsult session completed.");
+            emitTelemedicineAnalyticsEvent("TELECONSULT_COMPLETED", id, completed, actorId, facilityId, body);
             writeTeleconsultSummaryToFhir(id, completed, actorId);
             triggerTeleconsultBilling(id, completed, body);
             telemedicineGovernanceService.audit(
@@ -1008,6 +1013,47 @@ public class TeleconsultController {
             return ok(rows, requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    private void emitTelemedicineAnalyticsEvent(String eventType,
+                                                String sessionId,
+                                                JsonNode source,
+                                                String actorId,
+                                                String facilityId,
+                                                Map<String, Object> body) {
+        try {
+            Map<String, Object> event = new LinkedHashMap<>();
+            event.put("eventType", eventType);
+            event.put("sessionId", sessionId);
+            event.put("referralId", sessionId);
+            if (facilityId != null && !facilityId.isBlank()) {
+                event.put("facilityId", facilityId);
+            }
+            event.put("actorId", defaultString(actorId, "unknown"));
+            String patientId = extractPatient(source);
+            if (patientId != null && !patientId.isBlank()) {
+                event.put("patientId", patientId);
+            }
+            event.put("occurredAt", OffsetDateTime.now().toString());
+            if (body != null) {
+                copyAnalyticsField(body, event, "outcome");
+                copyAnalyticsField(body, event, "durationMinutes", "duration_minutes");
+                copyAnalyticsField(body, event, "specialty");
+            }
+            analyticsClient.ingestTelemedicineEvent(event);
+        } catch (Exception ex) {
+            log.warn("Telemedicine analytics emission failed: {}", ex.getMessage());
+        }
+    }
+
+    private static void copyAnalyticsField(Map<String, Object> from, Map<String, Object> to, String... keys) {
+        for (String key : keys) {
+            Object value = from.get(key);
+            if (value != null && !String.valueOf(value).isBlank()) {
+                to.put(keys[0], value);
+                return;
+            }
         }
     }
 

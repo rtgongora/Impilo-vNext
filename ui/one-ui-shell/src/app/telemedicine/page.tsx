@@ -213,6 +213,15 @@ export default function TelemedicinePage() {
           </div>
         ) : (
           <>
+            <div className="mb-4 flex justify-end">
+              <Link
+                href="/telemedicine/analytics"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-impilo-200"
+              >
+                <Calendar className="h-4 w-4 text-impilo-500" />
+                Lifecycle SLA analytics
+              </Link>
+            </div>
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
               <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
                 <div className="mb-3 flex items-center gap-2">
