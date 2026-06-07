@@ -91,6 +91,8 @@
         <!-- BUTANO — Shared Health Record (HAPI FHIR JPA) -->
         <module>butano-service</module>
         <module>booking-service</module>
+        <!-- Impilo Live — Live Events, Webinars & Broadcast -->
+        <module>live-service</module>
         <!-- BUTANO FHIR — FHIR Resource Access & Orchestration -->
         <module>butano-fhir</module>
         <!-- Search Service — Enterprise Search -->

@@ -1,0 +1,175 @@
+openapi: "3.0.3"
+
+info:
+  title: Impilo Live — Live Events & Broadcast
+  version: "1.0.0"
+  description: |
+    Sovereign live events, webinars, broadcasts, registrations, attendance,
+    interactions, certificates, and analytics for Impilo vNext.
+
+    Surfaces (BFF -> service):
+      Experience BFF                          live-service
+      /internal/v1/live/events              -> /internal/v1/live/events
+      /internal/v1/live/registrations     -> /internal/v1/live/registrations
+      /internal/v1/live/room              -> /internal/v1/live/room
+      /internal/v1/live/interactions      -> /internal/v1/live/interactions
+      /internal/v1/live/moderation        -> /internal/v1/live/moderation
+      /internal/v1/live/attendance        -> /internal/v1/live/attendance
+      /internal/v1/live/certificates      -> /internal/v1/live/certificates
+      /internal/v1/live/analytics         -> /internal/v1/live/analytics
+      /internal/v1/live/discover          -> /internal/v1/live/discover
+      /internal/v1/live/composer/assist   -> llm-orchestration-service
+
+servers:
+  - url: http://localhost:8380
+    description: live-service direct (local)
+  - url: http://localhost:8160
+    description: Experience BFF (local)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Live-Events
+  - name: Live-Registrations
+  - name: Live-Room
+  - name: Live-Interactions
+  - name: Live-Attendance
+  - name: Live-Discovery
+
+paths:
+  /internal/v1/live/events:
+    get:
+      operationId: liveListEvents
+      tags: [Live-Events]
+      summary: List live events
+      parameters:
+        - $ref: "#/components/parameters/TenantId"
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event list
+    post:
+      operationId: liveCreateEvent
+      tags: [Live-Events]
+      summary: Create a live event
+      responses:
+        "201":
+          description: Created
+
+  /internal/v1/live/events/{eventId}:
+    get:
+      operationId: liveGetEvent
+      tags: [Live-Events]
+      summary: Get event details
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event details
+
+  /internal/v1/live/events/{eventId}/schedule:
+    post:
+      operationId: liveScheduleEvent
+      tags: [Live-Events]
+      summary: Schedule a draft event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Scheduled
+
+  /internal/v1/live/discover/context/{contextType}:
+    get:
+      operationId: liveDiscoverByContext
+      tags: [Live-Discovery]
+      summary: Discover events by context (PROFESSIONAL, CITIZEN, PUBLIC)
+      parameters:
+        - name: contextType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discovered events
+
+  /internal/v1/live/room/{eventId}/join:
+    post:
+      operationId: liveJoinRoom
+      tags: [Live-Room]
+      summary: Join live event room and receive media token
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Room token
+
+  /internal/v1/live/registrations/events/{eventId}:
+    post:
+      operationId: liveRegister
+      tags: [Live-Registrations]
+      summary: Register for an event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Registered
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    LiveEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        eventType:
+          type: string
+        contextType:
+          type: string
+        status:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        cpdEnabled:
+          type: boolean

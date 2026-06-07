@@ -1,0 +1,50 @@
+asyncapi: '2.6.0'
+info:
+  title: Impilo Live Events
+  version: '1.0.0'
+  description: Kafka events emitted by live-service via transactional outbox.
+
+channels:
+  impilo.live.event.scheduled.v1:
+    publish:
+      message:
+        name: LiveEventScheduled
+        payload:
+          type: object
+          properties:
+            eventId:
+              type: string
+              format: uuid
+            tenantId:
+              type: string
+              format: uuid
+            title:
+              type: string
+            contextType:
+              type: string
+
+  impilo.live.event.started.v1:
+    publish:
+      message:
+        name: LiveEventStarted
+        payload:
+          type: object
+          properties:
+            eventId:
+              type: string
+              format: uuid
+
+  impilo.live.attendance.completed.v1:
+    publish:
+      message:
+        name: LiveAttendanceCompleted
+        payload:
+          type: object
+          properties:
+            eventId:
+              type: string
+              format: uuid
+            participantId:
+              type: string
+            eligibleForCpd:
+              type: boolean

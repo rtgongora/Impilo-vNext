@@ -1,0 +1,154 @@
+package zw.gov.mohcc.impilo.live.api.dto;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+public final class LiveDtos {
+
+    private LiveDtos() {}
+
+    public record CreateEventRequest(
+            String title,
+            String description,
+            String eventType,
+            String contextType,
+            String audienceType,
+            String visibility,
+            String organiserType,
+            String organiserId,
+            String facilityId,
+            String districtId,
+            String provinceId,
+            String programmeId,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime,
+            Boolean registrationRequired,
+            Integer maxParticipants,
+            Boolean recordingAllowed,
+            Boolean replayAllowed,
+            Boolean cpdEnabled,
+            BigDecimal cpdPoints,
+            Integer attendanceThresholdMinutes,
+            String agenda,
+            String objectives,
+            UUID linkedFundoCourseId,
+            UUID linkedMadiDriveId
+    ) {}
+
+    public record EventResponse(
+            UUID id,
+            UUID tenantId,
+            String title,
+            String description,
+            String eventType,
+            String contextType,
+            String status,
+            String facilityId,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime,
+            boolean cpdEnabled,
+            BigDecimal cpdPoints,
+            Integer attendanceThresholdMinutes,
+            boolean chatEnabled,
+            boolean qnaEnabled,
+            boolean pollsEnabled
+    ) {}
+
+    public record RegisterRequest(
+            String participantId,
+            String participantType,
+            String inviteSource
+    ) {}
+
+    public record RegistrationResponse(
+            UUID id,
+            UUID eventId,
+            String participantId,
+            String registrationStatus,
+            boolean saved,
+            OffsetDateTime registeredAt
+    ) {}
+
+    public record JoinRoomRequest(
+            String participantId,
+            String participantType,
+            String role
+    ) {}
+
+    public record RoomTokenRequest(
+            String participantId,
+            String role
+    ) {}
+
+    public record RoomTokenResponse(
+            String roomId,
+            String roomUrl,
+            String accessToken,
+            String provider,
+            String channel
+    ) {}
+
+    public record QuestionRequest(
+            String participantId,
+            String participantType,
+            String questionText,
+            boolean anonymousAllowed
+    ) {}
+
+    public record ChatRequest(
+            String participantId,
+            String participantType,
+            String message
+    ) {}
+
+    public record PollRequest(
+            String question,
+            List<String> options,
+            String createdBy
+    ) {}
+
+    public record PollResponseRequest(
+            String participantId,
+            String selectedOption
+    ) {}
+
+    public record ModerationRequest(
+            String action,
+            String moderatedBy
+    ) {}
+
+    public record AttendanceResponse(
+            UUID id,
+            UUID eventId,
+            String participantId,
+            int liveWatchMinutes,
+            int totalWatchMinutes,
+            boolean eligibleForCertificate,
+            boolean eligibleForCpd,
+            String completionStatus
+    ) {}
+
+    public record CertificateResponse(
+            UUID id,
+            UUID eventId,
+            String participantId,
+            String certificateType,
+            String verificationCode,
+            OffsetDateTime issuedAt
+    ) {}
+
+    public record AnalyticsDashboard(
+            UUID eventId,
+            Map<String, Object> metrics
+    ) {}
+
+    public record DiscoverQuery(
+            String contextType,
+            String facilityId,
+            String userId,
+            String role
+    ) {}
+}

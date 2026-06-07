@@ -1,0 +1,75 @@
+server:
+  port: 8380
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: live-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/live
+    username: ${POSTGRES_USER:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: live
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: live
+    baseline-on-migrate: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_BOOTSTRAP:localhost:9092}}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_ISSUER:${KEYCLOAK_URL:http://localhost:8080}/realms/${KEYCLOAK_REALM:impilo}}
+
+live:
+  security:
+    oauth2-enabled: true
+  media:
+    provider: ${LIVE_MEDIA_PROVIDER:local-dev}
+  outbox:
+    poll-interval-ms: 2000
+  v11:
+    emit-mode: ${LIVE_EMIT_MODE:DUAL}
+  integrations:
+    varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
+    vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
+    tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
+    fundo-base-url: ${FUNDO_BASE_URL:http://localhost:8235}
+    madi-base-url: ${MADI_BASE_URL:http://localhost:8300}
+    notification-base-url: ${NOTIFICATION_BASE_URL:http://localhost:8200}
+    rtc-gateway-base-url: ${RTC_GATEWAY_BASE_URL:http://localhost:8195}
+
+impilo:
+  security:
+    disable-oauth-for-tests: ${IMPILO_DISABLE_OAUTH_FOR_TESTS:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    tags:
+      application: live-service
