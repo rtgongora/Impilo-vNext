@@ -36,4 +36,5 @@ export const DOMAIN_CLIENT_MAP = {
   workflowClient: "@/hooks/queries/useDispatchOps.ts",
   adminClient: "@/hooks/queries/useAdminUsers.ts",
   socialClient: "@/hooks/queries/useSocial.ts",
+  live: "@/hooks/queries/useLive.ts",
 } as const;

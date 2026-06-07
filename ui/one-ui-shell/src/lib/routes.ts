@@ -618,6 +618,21 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/madi/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Madi Dashboard", navLabel: "Madi Dashboard", navZone: "work" },
   { path: "/madi/processing", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Processing", navLabel: "Processing", navZone: "work" },
   { path: "/madi/logistics", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Logistics", navLabel: "Blood Logistics", navZone: "work" },
+
+  // ── Zone: Impilo Live (services/live-service at /internal/v1/live) ──
+  { path: "/live", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Live", navLabel: "Impilo Live", navZone: "work" },
+  { path: "/live/manage", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Management", navLabel: "Manage Events", navZone: "work" },
+  { path: "/live/create", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Create Live Event", navLabel: "Create Event", navZone: "work" },
+  { path: "/live/discover", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Discover Live Events", navLabel: "Live Health Talks", navZone: "life" },
+  { path: "/live/saved", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Saved Live Events", navLabel: "Saved Events", navZone: "life" },
+  { path: "/live/my-events", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Live Events", navLabel: "My Events", navZone: "life" },
+  { path: "/live/replays", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Replays", navLabel: "Replays", navZone: "life" },
+  { path: "/live/cpd", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live CPD", navLabel: "Live CPD", navZone: "work" },
+  { path: "/live/certificates", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Certificates", navLabel: "Live Certificates", navZone: "work" },
+  { path: "/live/event/[eventId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Detail", navLabel: "Event", navZone: "work" },
+  { path: "/live/event/[eventId]/room", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Room", navLabel: "Live Room", navZone: "work" },
+  { path: "/live/event/[eventId]/replay", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Event Replay", navLabel: "Replay", navZone: "life" },
+  { path: "/live/event/[eventId]/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Analytics", navLabel: "Analytics", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -654,7 +669,9 @@ export const ROUTES: RouteDefinition[] = [
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
 // Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
 // haemovigilance (services/madi-service). New canonical total is 452.
-export const EXPECTED_ROUTE_COUNT = 454;
+// Impilo Live (Jun 2026): 13 routes under /live for live events, discovery,
+// room, replay, CPD and analytics (services/live-service). New total is 467.
+export const EXPECTED_ROUTE_COUNT = 467;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary
