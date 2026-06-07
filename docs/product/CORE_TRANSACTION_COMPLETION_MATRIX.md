@@ -1,18 +1,17 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-07T08:46:04.574Z
-> Journeys: **46** | Transaction-complete: **8**
+> Generated: 2026-06-07T12:35:16.804Z
+> Journeys: **46** | Transaction-complete: **14**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 8 |
-| backend-ready-but-frontend-incomplete | 15 |
-| backend-partial | 20 |
+| transaction-complete | 14 |
+| backend-ready-but-frontend-incomplete | 13 |
+| backend-partial | 17 |
 | mobile-missing | 2 |
-| trust-security-incomplete | 1 |
 
 ## Coverage
 
@@ -34,14 +33,14 @@
 | Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | transaction-complete | 7 | 1 | — |
 | Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
-| Outpatient Consultation | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 50 | 3 | discharge instructions orchestration and imaging write lanes still par |
-| Inpatient Admission Workflow | EMERGENCY | backend-partial | 36 | 2 | inpatient UX partial vs backend |
+| Outpatient Consultation | FACILITY_WALK_IN | transaction-complete | 50 | 3 | — |
+| Inpatient Admission Workflow | EMERGENCY | transaction-complete | 36 | 2 | — |
 | Telemedicine Encounter | TELEMEDICINE | backend-partial | 3 | 3 | real-time media transport blocked |
 | Lab Order & Result | LABORATORY | transaction-complete | 7 | 3 | — |
-| Imaging Order & Result | IMAGING | backend-ready-but-frontend-incomplete | 35 | 1 | order compose from encounter incomplete |
+| Imaging Order & Result | IMAGING | transaction-complete | 35 | 1 | — |
 | Prescription & Dispense | PHARMACY | backend-ready-but-frontend-incomplete | 6 | 1 | mobile prescribing depth |
 | Referral Create & Manage | REFERRAL | backend-ready-but-frontend-incomplete | 2 | 1 | incoming-referrals handoff UX thin |
-| Appointment Scheduling | APPOINTMENT | backend-partial | 8 | 2 | citizen booking UX thin |
+| Appointment Scheduling | APPOINTMENT | transaction-complete | 8 | 2 | — |
 | Consent Capture | ADMINISTRATIVE_HEALTH | backend-partial | 8 | 1 | admin workflow parity vs mvumo templates |
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | backend-partial | 28 | 4 | payer-ops stubs; MusheX raw paths not in browser |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | backend-partial | 1 | 1 | indexing UX partial vs document-service |
@@ -54,14 +53,14 @@
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | backend-partial | 48 | 0 | no direct citizen UI (by design) |
 | Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | backend-partial | 16 | 1 | card pickup page blocked |
 | Marketplace Order | MARKETPLACE | backend-partial | 12 | 7 | booking list unavailable |
-| Wellness & Lifestyle Journey | WELLNESS | backend-partial | 13 | 1 | routes map coming-soon |
+| Wellness & Lifestyle Journey | WELLNESS | transaction-complete | 13 | 1 | — |
 | Social / Community / Timeline | WELLNESS | backend-ready-but-frontend-incomplete | 6 | 11 | public health alerts placeholder in rail |
 | Public Health / CHW Outreach | COMMUNITY_OUTREACH | mobile-missing | 5 | 6 | field ops mobile thinner than web |
 | Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | mobile-missing | 20 | 0 | mobile CRVS parity missing |
 | Coverage Enrollment | ADMINISTRATIVE_HEALTH | backend-partial | 1 | 1 | intelligence surfaces partial |
 | Wallet Payment | MARKETPLACE | backend-ready-but-frontend-incomplete | 6 | 1 | — |
 | Offline Clinical Queue | FACILITY_WALK_IN | backend-partial | 25 | 4 | offline conflict UX |
-| Emergency / ED Encounter | EMERGENCY | trust-security-incomplete | 36 | 2 | ED flow depth vs backend |
+| Emergency / ED Encounter | EMERGENCY | transaction-complete | 36 | 2 | — |
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | transaction-complete | 4 | 0 | — |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | backend-ready-but-frontend-incomplete | 6 | 2 | Ndila map dashboards incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 21 | 2 | route context not always passed to guidance BFF |

@@ -1,18 +1,18 @@
 # Core Transaction Honest Gap Audit
 
-> **Generated:** 2026-06-07 (Phase 4.0 re-baseline)  
-> **Baseline:** measured classifier — **8/46 transaction-complete**  
+> **Generated:** 2026-06-07 (Phase 4.2 promotion pass)  
+> **Baseline:** measured classifier — **14/46 transaction-complete**  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md), [`docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md`](../product/PHASE_4_PRODUCTION_COMPLETION_BAR.md)
 
 ## Summary
 
 | Classification | Count | Meaning |
 |----------------|------:|---------|
-| transaction-complete | 8 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
-| backend-ready-but-frontend-incomplete | 15 | Sovereign/BFF capability exists; UI/mobile write or orchestration gap |
-| backend-partial | 20 | Backend depth, BFF proxy, or stub-route signals incomplete |
+| transaction-complete | 14 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
+| backend-ready-but-frontend-incomplete | 11 | Sovereign/BFF capability exists; UI/mobile write or orchestration gap |
+| backend-partial | 18 | Backend depth, BFF proxy, or stub-route signals incomplete |
 | mobile-missing | 2 | Web exists; mobile journey not productised |
-| trust-security-incomplete | 1 | Break-glass / emergency authz path incomplete |
+| trust-security-incomplete | 0 | — |
 
 **13 journeys reclassified** vs stale hard-coded matrix — see [`reports/product/classification-rebaseline.json`](../../reports/product/classification-rebaseline.json).
 
@@ -28,6 +28,12 @@
 | Blood Order & Crossmatch | `/madi/orders/[orderId]` → BFF → `BloodOrderServiceTest` |
 | Transfusion Episode & Bedside Verify | `/madi/transfusion/[episodeId]` → pre-verify → provider mobile |
 | Haemovigilance Report & Investigation | `/madi/haemovigilance/*` → `HaemovigilanceServiceTest` |
+| Outpatient Consultation | `/ehr/.../encounter/[id]` → discharge + imaging panels → PCT/OROS |
+| Imaging Order & Result | Encounter IMAGING lane → viewer study link |
+| Appointment Scheduling | citizen/provider check-in → encounter spine |
+| Inpatient Admission Workflow | beds API + ward board transfer/discharge correlation |
+| Emergency / ED Encounter | ED activations + break-glass web/mobile BFF |
+| Wellness & Lifestyle Journey | `/wellness/routes` discover catalogue (honest fields) |
 
 ## Chain template (per incomplete journey)
 

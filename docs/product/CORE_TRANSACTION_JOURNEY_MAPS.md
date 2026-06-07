@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-07T08:46:04.574Z
+> Generated: 2026-06-07T12:35:16.804Z
 > Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -17,14 +17,14 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | backend-ready-but-frontend-incomplete |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | transaction-complete |
 | Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
-| Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | backend-ready-but-frontend-incomplete |
-| Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | backend-partial |
+| Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | transaction-complete |
+| Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | transaction-complete |
 | Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-partial |
 | Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
-| Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | backend-ready-but-frontend-incomplete |
+| Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | transaction-complete |
 | Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | backend-ready-but-frontend-incomplete |
 | Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | backend-ready-but-frontend-incomplete |
-| Appointment Scheduling | APPOINTMENT | citizen | /queue/scheduled | partial | backend-partial |
+| Appointment Scheduling | APPOINTMENT | citizen | /queue/scheduled | partial | transaction-complete |
 | Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | backend-partial |
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | backend-partial |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | provider | /ehr/[patientId]/documents | partial | backend-partial |
@@ -37,14 +37,14 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | backend-partial |
 | Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | backend-partial |
 | Marketplace Order | MARKETPLACE | citizen | /marketplace | partial | backend-partial |
-| Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | backend-partial |
+| Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | transaction-complete |
 | Social / Community / Timeline | WELLNESS | citizen | /social | wired | backend-ready-but-frontend-incomplete |
 | Public Health / CHW Outreach | COMMUNITY_OUTREACH | community-health-worker | /public-health | partial | mobile-missing |
 | Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | mobile-missing |
 | Coverage Enrollment | ADMINISTRATIVE_HEALTH | citizen | /coverage | partial | backend-partial |
 | Wallet Payment | MARKETPLACE | citizen | /wallet | wired | backend-ready-but-frontend-incomplete |
 | Offline Clinical Queue | FACILITY_WALK_IN | provider | mobile offline mode | partial | backend-partial |
-| Emergency / ED Encounter | EMERGENCY | provider | /clinical/emergency | partial | trust-security-incomplete |
+| Emergency / ED Encounter | EMERGENCY | provider | /clinical/emergency | partial | transaction-complete |
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | wired | transaction-complete |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | health-information-officer | /public-health | partial | backend-ready-but-frontend-incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | backend-ready-but-frontend-incomplete |

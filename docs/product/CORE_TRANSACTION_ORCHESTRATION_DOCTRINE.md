@@ -1,6 +1,6 @@
 # Core Transaction Orchestration Doctrine
 
-> Generated: 2026-06-07T08:46:04.574Z
+> Generated: 2026-06-07T12:35:16.804Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Phase: **2 — Core Transaction Mapping**
 > Canonical predecessor: [CORE_TRANSACTION_DOCTRINE.md](../doctrine/CORE_TRANSACTION_DOCTRINE.md)

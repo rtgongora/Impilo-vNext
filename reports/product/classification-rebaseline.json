@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T08:46:04.574Z",
+  "generatedAt": "2026-06-07T12:35:16.804Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -63,10 +63,34 @@
       "derived": "backend-partial"
     },
     {
+      "id": "outpatient-consultation",
+      "journeyName": "Outpatient Consultation",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "inpatient-admission",
+      "journeyName": "Inpatient Admission Workflow",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "telemedicine-encounter",
       "journeyName": "Telemedicine Encounter",
       "previous": "backend-ready-but-frontend-incomplete",
       "derived": "backend-partial"
+    },
+    {
+      "id": "imaging-order-result",
+      "journeyName": "Imaging Order & Result",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "appointment-scheduling",
+      "journeyName": "Appointment Scheduling",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
     },
     {
       "id": "consent-capture",
@@ -102,13 +126,19 @@
       "id": "wellness-journey",
       "journeyName": "Wellness & Lifestyle Journey",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "coverage-enrollment",
       "journeyName": "Coverage Enrollment",
       "previous": "backend-ready-but-frontend-incomplete",
       "derived": "backend-partial"
+    },
+    {
+      "id": "emergency-encounter",
+      "journeyName": "Emergency / ED Encounter",
+      "previous": "trust-security-incomplete",
+      "derived": "transaction-complete"
     },
     {
       "id": "credential-verification",
@@ -130,10 +160,9 @@
     }
   ],
   "measuredCounts": {
-    "backend-partial": 20,
-    "backend-ready-but-frontend-incomplete": 15,
-    "transaction-complete": 8,
-    "mobile-missing": 2,
-    "trust-security-incomplete": 1
+    "backend-partial": 17,
+    "backend-ready-but-frontend-incomplete": 13,
+    "transaction-complete": 14,
+    "mobile-missing": 2
   }
 }

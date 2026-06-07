@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T08:46:04.574Z",
+  "generatedAt": "2026-06-07T12:35:16.804Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -474,7 +474,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "discharge instructions orchestration and imaging write lanes still partial",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
         "prescription-dispense",
@@ -483,7 +483,7 @@
       "productOwnerAcceptanceTest": "Outpatient consult documented with vitals, note, and next steps",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "inpatient-admission",
@@ -550,8 +550,8 @@
       "auditRequirements": "admission/discharge audit",
       "completionState": "ADMITTED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "ward movement depth",
-      "missingFrontendMobileWork": "inpatient UX partial vs backend",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
         "emergency-encounter"
@@ -559,7 +559,7 @@
       "productOwnerAcceptanceTest": "Patient admitted, bed assigned, visible in ward worklist",
       "coreTransactionType": "EMERGENCY",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "telemedicine-encounter",
@@ -718,7 +718,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "order compose from encounter incomplete",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "lab-order-result",
         "document-upload"
@@ -726,7 +726,7 @@
       "productOwnerAcceptanceTest": "Imaging study visible in viewer with audit trail",
       "coreTransactionType": "IMAGING",
       "lifecycleStage": "ORDERS_AND_ANCILLARY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "prescription-dispense",
@@ -852,8 +852,8 @@
       "auditRequirements": "scheduling audit",
       "completionState": "SCHEDULED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "scheduling depth varies",
-      "missingFrontendMobileWork": "citizen booking UX thin",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "queue-walk-in",
         "citizen-onboarding"
@@ -861,7 +861,7 @@
       "productOwnerAcceptanceTest": "Appointment booked and appears in facility schedule",
       "coreTransactionType": "APPOINTMENT",
       "lifecycleStage": "SCHEDULING_OR_QUEUE",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "consent-capture",
@@ -1630,8 +1630,8 @@
       "auditRequirements": "wellness participation audit",
       "completionState": "FOLLOW_UP_ACTIVE",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "proxy vs explicit controller mix",
-      "missingFrontendMobileWork": "routes map coming-soon",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "citizen-monitoring",
         "fundo-learning"
@@ -1639,7 +1639,7 @@
       "productOwnerAcceptanceTest": "Citizen tracks wellness activity with real backend",
       "coreTransactionType": "WELLNESS",
       "lifecycleStage": "ACCESS_SERVICE",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "social-community",
@@ -2016,7 +2016,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "ED flow depth vs backend",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "inpatient-admission",
         "provider-patient-encounter"
@@ -2024,7 +2024,7 @@
       "productOwnerAcceptanceTest": "Emergency encounter with break-glass audit if used",
       "coreTransactionType": "EMERGENCY",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "trust-security-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "core-transaction-orchestration",
