@@ -98,7 +98,7 @@ class CoreTransactionControllerTest {
         private static final ObjectMapper MAPPER = new ObjectMapper();
 
         StubService() {
-            super(null, null, null, null, MAPPER);
+            super(null, null, null, null, null, MAPPER);
         }
 
         @Override

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.DispatchServiceClient;
@@ -31,14 +32,7 @@ public class CoreTransactionCompositionService {
     private final InpatientServiceClient inpatientServiceClient;
     private final ObjectMapper objectMapper;
 
-    public CoreTransactionCompositionService(WorkflowServiceClient workflowServiceClient,
-                                            PctServiceClient pctServiceClient,
-                                            CostaServiceClient costaServiceClient,
-                                            DispatchServiceClient dispatchServiceClient,
-                                            ObjectMapper objectMapper) {
-        this(workflowServiceClient, pctServiceClient, costaServiceClient, dispatchServiceClient, null, objectMapper);
-    }
-
+    @Autowired
     public CoreTransactionCompositionService(WorkflowServiceClient workflowServiceClient,
                                             PctServiceClient pctServiceClient,
                                             CostaServiceClient costaServiceClient,

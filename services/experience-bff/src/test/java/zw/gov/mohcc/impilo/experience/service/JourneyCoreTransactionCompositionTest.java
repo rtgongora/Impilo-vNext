@@ -22,6 +22,7 @@ class JourneyCoreTransactionCompositionTest {
                 new StubPctJourneyClient(),
                 null,
                 null,
+                null,
                 MAPPER);
 
         ObjectNode view = service.getCoreTransaction("journey-42");

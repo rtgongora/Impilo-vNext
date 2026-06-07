@@ -25,6 +25,7 @@ class EncounterCoreTransactionCompositionTest {
                 new StubPctClient(),
                 null,
                 null,
+                null,
                 MAPPER);
 
         ObjectNode envelope = service.listCoreTransactions(null, "FACILITY_WALK_IN", "42");
@@ -38,6 +39,7 @@ class EncounterCoreTransactionCompositionTest {
         CoreTransactionCompositionService service = new CoreTransactionCompositionService(
                 new EmptyWorkflowClient(),
                 new StubPctClient(),
+                null,
                 null,
                 null,
                 MAPPER);
