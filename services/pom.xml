@@ -97,6 +97,8 @@
         <module>search-service</module>
         <!-- Learning — Fundo / CPD / helpdesk / workflow contextual layer -->
         <module>learning-service</module>
+        <!-- MADI — Blood Donation, Blood Bank and Transfusion -->
+        <module>madi-service</module>
         <!-- Forms Service — Clinical Content Platform -->
         <module>forms-service</module>
         <!-- Data Pipeline — v1.1-Native Ingestion & Watermarking -->
