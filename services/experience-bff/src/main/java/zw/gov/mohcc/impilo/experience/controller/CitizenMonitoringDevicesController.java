@@ -58,6 +58,11 @@ public class CitizenMonitoringDevicesController {
         return forward(request, body);
     }
 
+    @PostMapping("/internal/v1/mobile/citizen/monitoring/readings")
+    public ResponseEntity<byte[]> ingestReadings(HttpServletRequest request, @RequestBody(required = false) byte[] body) {
+        return forward(request, body);
+    }
+
     private ResponseEntity<byte[]> forward(HttpServletRequest request, byte[] body) {
         if (body == null && request.getContentLengthLong() > 0) {
             try {

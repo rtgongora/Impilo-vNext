@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.wellness.monitoring.MonitoringDeviceReadingsService;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -21,9 +22,11 @@ import java.util.UUID;
 public class CitizenMyLifeController {
 
     private final JdbcTemplate jdbc;
+    private final MonitoringDeviceReadingsService deviceReadingsService;
 
-    public CitizenMyLifeController(JdbcTemplate jdbc) {
+    public CitizenMyLifeController(JdbcTemplate jdbc, MonitoringDeviceReadingsService deviceReadingsService) {
         this.jdbc = jdbc;
+        this.deviceReadingsService = deviceReadingsService;
     }
 
     @GetMapping("/health-id")
@@ -323,9 +326,71 @@ public class CitizenMyLifeController {
 
     @PostMapping("/monitoring/devices/{id}/sync")
     @Transactional
-    public ResponseEntity<Map<String, Object>> syncDevice(@PathVariable UUID id) {
+    public ResponseEntity<Map<String, Object>> syncDevice(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable UUID id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        List<Map<String, Object>> deviceRows = jdbc.queryForList(
+                "SELECT * FROM monitoring_devices WHERE id = ? AND tenant_id = ?", id, tenantId);
+        if (deviceRows.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "DEVICE_NOT_FOUND"));
+        }
+        Map<String, Object> device = deviceRows.get(0);
         jdbc.update("UPDATE monitoring_devices SET last_sync_at = NOW() WHERE id = ?", id);
-        return ResponseEntity.ok(Map.of("synced", true, "syncedAt", OffsetDateTime.now()));
+
+        int readingsIngested = 0;
+        if (body != null && body.get("readings") instanceof List<?> readings) {
+            readingsIngested = deviceReadingsService.ingestReadings(tenantId, device, readings);
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "synced", true,
+                "syncedAt", OffsetDateTime.now(),
+                "readingsIngested", readingsIngested));
+    }
+
+    @PostMapping("/monitoring/readings")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> ingestMonitoringReadings(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody Map<String, Object> body) {
+        String patientId = body.get("patientId") != null ? body.get("patientId").toString() : null;
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "patientId is required"));
+        }
+
+        Object deviceIdRaw = body.get("deviceId") != null ? body.get("deviceId") : body.get("device_id");
+        String deviceType = "";
+        String deviceName = "";
+        if (deviceIdRaw != null && !deviceIdRaw.toString().isBlank()) {
+            UUID deviceId = UUID.fromString(deviceIdRaw.toString());
+            List<Map<String, Object>> deviceRows = jdbc.queryForList(
+                    "SELECT * FROM monitoring_devices WHERE id = ? AND tenant_id = ? AND patient_id = ?",
+                    deviceId,
+                    tenantId,
+                    patientId);
+            if (deviceRows.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "DEVICE_NOT_FOUND"));
+            }
+            Map<String, Object> device = deviceRows.get(0);
+            deviceType = stringValue(device.get("device_type"), device.get("deviceType"));
+            deviceName = stringValue(device.get("device_name"), device.get("deviceName"));
+            jdbc.update("UPDATE monitoring_devices SET last_sync_at = NOW() WHERE id = ?", deviceId);
+        }
+
+        if (!(body.get("readings") instanceof List<?> readings) || readings.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "readings array is required"));
+        }
+
+        int ingested = 0;
+        for (Object raw : readings) {
+            if (raw instanceof Map<?, ?> reading) {
+                deviceReadingsService.ingestOne(tenantId, patientId, deviceType, deviceName, reading);
+                ingested++;
+            }
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "data", Map.of("readingsIngested", ingested, "source", MonitoringDeviceReadingsService.SOURCE_DEVICE_SYNC)));
     }
 
     @GetMapping("/queue/status")
@@ -457,6 +522,15 @@ public class CitizenMyLifeController {
                         + "FROM marketplace_services WHERE tenant_id = ? AND available = true ORDER BY rating DESC NULLS LAST LIMIT 30",
                 tenantId);
         return ResponseEntity.ok(Map.of("data", services));
+    }
+
+    private static String stringValue(Object... values) {
+        for (Object value : values) {
+            if (value != null && !value.toString().isBlank()) {
+                return value.toString().trim();
+            }
+        }
+        return "";
     }
 
     private static int toInt(Object v) {

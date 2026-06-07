@@ -20,6 +20,9 @@ export default function DevicesPage() {
   const syncDevice = useSyncMonitoringDevice(patientId);
 
   const [showPair, setShowPair] = useState(false);
+  const [syncTargetId, setSyncTargetId] = useState<string | null>(null);
+  const [syncValue, setSyncValue] = useState("");
+  const [syncUnit, setSyncUnit] = useState("");
   const [pairForm, setPairForm] = useState({
     deviceName: "",
     deviceType: "BLOOD_PRESSURE",
@@ -44,6 +47,51 @@ export default function DevicesPage() {
       },
     );
   };
+
+  function defaultUnitForDeviceType(deviceType: string) {
+    switch (deviceType) {
+      case "BLOOD_PRESSURE":
+        return "mmHg";
+      case "PULSE_OXIMETER":
+        return "%";
+      case "GLUCOMETER":
+        return "mmol/L";
+      case "SCALE":
+        return "kg";
+      case "WEARABLE":
+        return "bpm";
+      default:
+        return "";
+    }
+  }
+
+  function openSyncPanel(deviceId: string, deviceType: string) {
+    setSyncTargetId(deviceId);
+    setSyncValue("");
+    setSyncUnit(defaultUnitForDeviceType(deviceType));
+  }
+
+  function submitSync(deviceId: string, deviceType: string) {
+    const value = Number(syncValue);
+    if (Number.isNaN(value)) return;
+    syncDevice.mutate(
+      {
+        deviceId,
+        readings: [
+          {
+            value,
+            unit: syncUnit.trim() || defaultUnitForDeviceType(deviceType),
+          },
+        ],
+      },
+      {
+        onSuccess: () => {
+          setSyncTargetId(null);
+          setSyncValue("");
+        },
+      },
+    );
+  }
 
   return (
     <AppLayout>
@@ -117,33 +165,72 @@ export default function DevicesPage() {
                 <Smartphone className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-4 text-sm font-semibold text-gray-900">No devices paired</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  Pair a health device to register it for your account. Readings and timeline views follow in later
-                  releases.
+                  Pair a health device to register it for your account. Sync readings to populate your vitals timeline.
                 </p>
               </div>
             ) : (
               <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200 bg-white">
                 {devices.map((d) => (
-                  <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
-                    <div>
-                      <p className="font-medium text-gray-900">{d.deviceName}</p>
-                      <p className="text-sm text-gray-500">
-                        {d.deviceType} · {d.connectionType}
-                        {d.manufacturer ? ` · ${d.manufacturer}` : ""}
-                        {d.model ? ` ${d.model}` : ""}
-                      </p>
-                      {d.lastSyncAt && (
-                        <p className="text-xs text-gray-400 mt-1">Last sync: {d.lastSyncAt}</p>
-                      )}
+                  <li key={d.id} className="px-4 py-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-gray-900">{d.deviceName}</p>
+                        <p className="text-sm text-gray-500">
+                          {d.deviceType} · {d.connectionType}
+                          {d.manufacturer ? ` · ${d.manufacturer}` : ""}
+                          {d.model ? ` ${d.model}` : ""}
+                        </p>
+                        {d.lastSyncAt && (
+                          <p className="text-xs text-gray-400 mt-1">Last sync: {d.lastSyncAt}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openSyncPanel(d.id, d.deviceType)}
+                        disabled={syncDevice.isPending}
+                        className="text-sm font-medium text-orange-600 hover:text-orange-800 disabled:opacity-50"
+                      >
+                        {syncDevice.isPending && syncTargetId === d.id ? "Syncing…" : "Sync reading"}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => syncDevice.mutate(d.id)}
-                      disabled={syncDevice.isPending}
-                      className="text-sm font-medium text-orange-600 hover:text-orange-800 disabled:opacity-50"
-                    >
-                      {syncDevice.isPending ? "Syncing…" : "Record sync"}
-                    </button>
+                    {syncTargetId === d.id && (
+                      <div className="rounded-lg border border-orange-100 bg-orange-50/60 p-3 flex flex-wrap items-end gap-3">
+                        <label className="text-xs text-gray-600 flex flex-col gap-1">
+                          Latest value
+                          <input
+                            type="number"
+                            step="any"
+                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm w-32"
+                            value={syncValue}
+                            onChange={(e) => setSyncValue(e.target.value)}
+                            placeholder="e.g. 120"
+                          />
+                        </label>
+                        <label className="text-xs text-gray-600 flex flex-col gap-1">
+                          Unit
+                          <input
+                            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm w-24"
+                            value={syncUnit}
+                            onChange={(e) => setSyncUnit(e.target.value)}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          disabled={syncDevice.isPending || !syncValue.trim()}
+                          onClick={() => submitSync(d.id, d.deviceType)}
+                          className="rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
+                        >
+                          Submit sync
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSyncTargetId(null)}
+                          className="text-sm text-gray-600 hover:text-gray-900"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>

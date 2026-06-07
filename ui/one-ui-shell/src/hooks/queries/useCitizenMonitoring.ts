@@ -6,7 +6,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMonitoringDevices,
   fetchMonitoringReadings,
+  fetchMonitoringAlerts,
   pairMonitoringDevice,
+  reviewMonitoringAlert,
   syncMonitoringDevice,
 } from "@/lib/citizen-monitoring-api";
 
@@ -14,6 +16,7 @@ const qk = {
   devices: (patientId: string) => ["citizen-monitoring", "devices", patientId] as const,
   readings: (patientId: string, type?: string) =>
     ["citizen-monitoring", "readings", patientId, type ?? "all"] as const,
+  alerts: (patientId: string) => ["citizen-monitoring", "alerts", patientId] as const,
 };
 
 export function useMonitoringDevices(patientId: string | undefined) {
@@ -29,6 +32,27 @@ export function useMonitoringReadings(patientId: string | undefined, type?: stri
     queryKey: qk.readings(patientId ?? "", type),
     queryFn: () => fetchMonitoringReadings(patientId!, type),
     enabled: !!patientId,
+  });
+}
+
+export function useMonitoringAlerts(patientId: string | undefined) {
+  return useQuery({
+    queryKey: qk.alerts(patientId ?? ""),
+    queryFn: () => fetchMonitoringAlerts(patientId!),
+    enabled: !!patientId,
+  });
+}
+
+export function useReviewMonitoringAlert(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { alertId: string; reviewNotes?: string }) =>
+      reviewMonitoringAlert(args.alertId, { status: "REVIEWED", reviewNotes: args.reviewNotes }),
+    onSuccess: async () => {
+      if (patientId) {
+        await qc.invalidateQueries({ queryKey: qk.alerts(patientId) });
+      }
+    },
   });
 }
 
@@ -56,10 +80,14 @@ export function usePairMonitoringDevice(patientId: string | undefined) {
 export function useSyncMonitoringDevice(patientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (deviceId: string) => syncMonitoringDevice(deviceId),
+    mutationFn: (args: {
+      deviceId: string;
+      readings?: Array<{ vitalType?: string; value: number; unit?: string; measuredAt?: string; notes?: string }>;
+    }) => syncMonitoringDevice(args.deviceId, args.readings ? { readings: args.readings } : undefined),
     onSuccess: async () => {
       if (patientId) {
         await qc.invalidateQueries({ queryKey: qk.devices(patientId) });
+        await qc.invalidateQueries({ queryKey: qk.readings(patientId) });
       }
     },
   });

@@ -15,6 +15,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -112,5 +113,40 @@ class WellnessCitizenApiDockerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()", greaterThanOrEqualTo(1)))
                 .andExpect(jsonPath("$.data[0].device_name").value("IT BP cuff"));
+    }
+
+    @Test
+    void pairDevice_syncWithReading_then_vitalsContainDeviceSync() throws Exception {
+        String pairResponse = mvc.perform(post("/internal/v1/mobile/citizen/monitoring/devices")
+                        .header("X-Tenant-ID", TENANT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "patientId", PATIENT,
+                                "deviceName", "IT BP cuff",
+                                "deviceType", "BLOOD_PRESSURE",
+                                "manufacturer", "ACME",
+                                "model", "X1",
+                                "connectionType", "BLUETOOTH"))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String deviceId = objectMapper.readTree(pairResponse).path("data").path("id").asText();
+
+        mvc.perform(post("/internal/v1/mobile/citizen/monitoring/devices/" + deviceId + "/sync")
+                        .header("X-Tenant-ID", TENANT)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "readings", List.of(Map.of("value", 121, "unit", "mmHg"))))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readingsIngested").value(1));
+
+        mvc.perform(get("/internal/v1/mobile/citizen/wellness/vitals")
+                        .header("X-Tenant-ID", TENANT)
+                        .param("patientId", PATIENT))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()", greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.data[0].source").value("DEVICE_SYNC"));
     }
 }
