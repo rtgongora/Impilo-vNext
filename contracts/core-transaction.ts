@@ -119,7 +119,11 @@ export type CoreTransactionType =
   | "ADMINISTRATIVE_HEALTH"
   | "WELLNESS"
   | "TRAINING_OR_COMPETENCY"
-  | "SUPERVISION_OR_MENTORSHIP";
+  | "SUPERVISION_OR_MENTORSHIP"
+  | "BLOOD_DONATION"
+  | "BLOOD_ORDER"
+  | "TRANSFUSION"
+  | "HAEMOVIGILANCE";
 
 export type CoreTransactionLifecycleStage =
   | "NEED_OR_TRIGGER"

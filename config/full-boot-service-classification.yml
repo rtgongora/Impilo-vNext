@@ -1,8 +1,8 @@
 metadata:
-  generated_at: '2026-06-05T06:08:09.199Z'
+  generated_at: '2026-06-07T04:24:51.016Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
-  total_entries: 141
+  total_entries: 143
 classifications:
   - id: ai-model-registry-service
     canonical_name: ai-model-registry-service
@@ -210,6 +210,46 @@ classifications:
     deployment_lane: doctrine_only
     run_applicable: false
     run_not_applicable_reason: External or contract-only dependency
+  - id: booking-service
+    canonical_name: booking-service
+    plane: experience
+    domain: workflow-orchestration
+    component_type: backend_service
+    full_boot_classification: optional_full_boot
+    classification: optional_full_boot
+    runtime_kind: kubernetes_service
+    deploy_order_group: experience_layer
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/booking-service/Dockerfile OR build-runtime-image-from-jar.sh booking-service
+    image_name: impilo/booking-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/booking-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/booking-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/booking-service
+    build_tool: maven
+    default_http_port: 8265
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: butano-fhir
     canonical_name: butano-fhir
     plane: clinical
@@ -2432,6 +2472,46 @@ classifications:
     deployment_lane: runtime_k8s_microservice
     run_applicable: true
     run_not_applicable_reason: null
+  - id: madi-service
+    canonical_name: madi-service
+    plane: clinical
+    domain: blood-bank-transfusion
+    component_type: backend_service
+    full_boot_classification: optional_full_boot
+    classification: optional_full_boot
+    runtime_kind: kubernetes_service
+    deploy_order_group: domain_services
+    build_required: true
+    image_required: false
+    runtime_image_required: false
+    image_strategy: shared-dockerfile-template
+    image_strategy_reclass: shared-template-candidate
+    image_strategy_status: valid
+    image_build_command: docker build -f services/madi-service/Dockerfile OR build-runtime-image-from-jar.sh madi-service
+    image_name: impilo/madi-service
+    official_image: null
+    official_chart: null
+    dockerfile_path: services/madi-service/Dockerfile
+    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
+    jib_module: services/madi-service
+    buildpack_builder: null
+    container_required: false
+    helm_required: false
+    health_check_required: false
+    contract_check_required: true
+    frontend_surface_expected: true
+    mobile_surface_expected: false
+    doctrine_compliance_required: false
+    source_path: services/madi-service
+    build_tool: maven
+    default_http_port: 8300
+    priority: P2
+    blocker: null
+    reason: Thin JAR-copy Dockerfile — equivalent to shared template
+    classification_confidence: certain
+    deployment_lane: runtime_k8s_microservice
+    run_applicable: true
+    run_not_applicable_reason: null
   - id: minio
     canonical_name: minio
     plane: integration
@@ -4234,46 +4314,6 @@ classifications:
     priority: P2
     blocker: null
     reason: Thin JAR-copy Dockerfile — equivalent to shared template
-    classification_confidence: certain
-    deployment_lane: runtime_k8s_microservice
-    run_applicable: true
-    run_not_applicable_reason: null
-  - id: booking-service
-    canonical_name: booking-service
-    plane: experience
-    domain: workflow-orchestration
-    component_type: backend_service
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
-    runtime_kind: kubernetes_service
-    deploy_order_group: domain_services
-    build_required: true
-    image_required: true
-    runtime_image_required: true
-    image_strategy: shared-dockerfile-template
-    image_strategy_reclass: shared-template-candidate
-    image_strategy_status: valid
-    image_build_command: docker build -f services/booking-service/Dockerfile OR build-runtime-image-from-jar.sh booking-service
-    image_name: impilo/booking-service
-    official_image: null
-    official_chart: null
-    dockerfile_path: services/booking-service/Dockerfile
-    shared_template: scripts/build/templates/impilo-jre-runtime.Dockerfile
-    jib_module: services/booking-service
-    buildpack_builder: null
-    container_required: false
-    helm_required: false
-    health_check_required: true
-    contract_check_required: true
-    frontend_surface_expected: true
-    mobile_surface_expected: true
-    doctrine_compliance_required: true
-    source_path: services/booking-service
-    build_tool: maven
-    default_http_port: 8265
-    priority: P1
-    blocker: null
-    reason: Booking vs Appointment sovereign orchestration — shared JRE template
     classification_confidence: certain
     deployment_lane: runtime_k8s_microservice
     run_applicable: true

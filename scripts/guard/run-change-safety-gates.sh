@@ -14,6 +14,7 @@ CHECKS=(
   check-api-contracts.sh
   check-backend-frontend-parity.sh
   check-mobile-parity.sh
+  check-madi-surfacing.sh
 )
 
 FAIL=0

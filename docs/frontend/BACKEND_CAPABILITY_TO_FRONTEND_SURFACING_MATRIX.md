@@ -1,12 +1,12 @@
 # Backend Capability to Frontend Surfacing Matrix
 
-> Generated: 2026-06-05. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
+> Generated: 2026-06-07. Regenerate: `node scripts/frontend/generate-parity-docs.mjs`
 
 ## Summary
 
 | Maturity | Count |
 |----------|-------|
-| Live | 2 |
+| Live | 11 |
 | Partial | 20 |
 | Fixture | 0 |
 | Not Wired | 0 |
@@ -38,6 +38,15 @@
 | Integration | Integration Hub | Routes, dead letters, dispatch | /internal/v1/integration-hub/* | contracts/openapi/integration-hub.openapi.yaml | /admin/integration-status, /settings/integrations | useIntegrationHub.ts | partial | partial | no | Partial | MEDIUM | Adapter template admin thin | Integration admin depth |
 | Platform | Workflow / Dispatch | Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | contracts/openapi/workflow.openapi.yaml | /operations/workflows, /operations/dispatch | useDispatchOps.ts | partial | partial | partial | Partial | HIGH | Dispatch detail + offline queue UX | Workflow instance table + dispatch guided detail |
 | Platform | Admin / Governance | Users, tenants, roles, audit, feature flags | /internal/v1/admin/* | experience-bff.openapi.yaml | /admin/*, /organization-admin/* | useAdminUsers.ts, useTrustAdmin.ts | partial | partial | no | Partial | MEDIUM | Keys/federation blocked | Document Blocked surfaces explicitly |
+| Clinical | MADI | Donor engagement (register, profile, eligibility, feedback) | /internal/v1/madi/donors/*, /internal/v1/mobile/citizen/madi/* | contracts/openapi/madi.openapi.yaml | /madi/donor/* | useMadi.ts | Live | Live | partial | Live | HIGH | Nompilo donor assist depth | Expand Nompilo guided pre-screening |
+| Clinical | MADI | Donation drive scheduling and field capture | /internal/v1/madi/drives/*, /internal/v1/mobile/provider/madi/drives/* | contracts/openapi/madi.openapi.yaml | /madi/drives/* | useMadi.ts | Live | Live | no | Live | HIGH | Offline drive capture conflict UX | Harden offline sync for drive field capture |
+| Clinical | MADI | Blood processing and component labelling | /internal/v1/madi/processing/* | contracts/openapi/madi.openapi.yaml | /madi/processing | useMadi.ts | Live | no | no | Live | MEDIUM | ZIBO terminology deep-link | Surface component catalogue codes in UI |
+| Clinical | MADI | Blood bank stock and inventory balance | /internal/v1/madi/blood-banks/* | contracts/openapi/madi.openapi.yaml | /madi/blood-bank/* | useMadi.ts | Live | no | no | Live | HIGH | IoT fridge temperature integration | Wire cold-chain sensor readiness |
+| Clinical | MADI | Clinical blood order (crossmatch, reserve, issue) | /internal/v1/madi/orders/*, /internal/v1/mobile/provider/madi/orders/* | contracts/openapi/madi.openapi.yaml | /madi/orders/* | useMadi.ts | Live | Live | partial | Live | HIGH | OROS ServiceRequest deep-link from order detail | Surface OROS order ref in order tracking UI |
+| Clinical | MADI | Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | contracts/openapi/madi.openapi.yaml | /madi/transfusion/* | useMadi.ts | Live | Live | partial | Live | HIGH | Biometric patient verification | Wire Impilo ID verification when available |
+| Clinical | MADI | Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | contracts/openapi/madi.openapi.yaml | /madi/haemovigilance | useMadi.ts | Live | Live | no | Live | HIGH | National haemovigilance roll-up | Public-health supervisory dashboard depth |
+| Clinical | MADI | Central blood bank coordination | /internal/v1/madi/central-bank/* | contracts/openapi/madi.openapi.yaml | /madi/central-bank | useMadi.ts | Live | no | no | Live | MEDIUM | Emergency redistribution workflow | Add emergency allocation actions |
+| Clinical | MADI | MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | contracts/openapi/madi.openapi.yaml | /madi/dashboard | useMadi.ts | Live | no | partial | Live | MEDIUM | 30-day demand forecast depth | Expand forecasting models |
 
 ## Trust headers (all BFF paths)
 

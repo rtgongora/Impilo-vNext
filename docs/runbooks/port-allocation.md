@@ -68,6 +68,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8091** | `fhir-gateway-service` | BFF `fhir-gateway-base-url` |
 | **8289** | `butano-fhir` | FHIR orchestration layer; not the same as gateway |
 | **8121** | `inpatient-service` | |
+| **8300** | `madi-service` | MADI — blood donation, blood bank, transfusion |
 | **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |

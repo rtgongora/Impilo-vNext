@@ -1279,6 +1279,55 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: madi-service
+    maven_module: madi-service
+    primary_plane: clinical
+    plane: clinical
+    domain: blood-bank-transfusion
+    secondary_planes:
+      - enterprise
+      - experience
+      - data
+      - integration
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: 8300
+    product_names:
+      - MADI
+    owner_team: TBD
+    system_of_record_for:
+      - blood donor registry
+      - donation drives
+      - blood units
+      - crossmatch
+      - transfusion episodes
+      - haemovigilance
+    consumes_from:
+      - vito-service
+      - varapi-service
+      - tuso-service
+      - tshepo-authz-service
+      - oros-service
+      - inventory-service
+      - nhume-service
+      - ndila-service
+      - butano-service
+      - zibo-service
+      - costing-engine-service
+    exposes_to:
+      - experience-bff
+    forbidden_responsibilities:
+      - must-not-act-as-identity-source-of-record
+      - must-not-duplicate-oros-order-lifecycle
+      - must-not-duplicate-inventory-ledger
+      - must-not-duplicate-nhume-dispatch-lifecycle
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: msika-flow-service
     maven_module: msika-flow-service
     primary_plane: enterprise

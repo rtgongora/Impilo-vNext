@@ -30,6 +30,13 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 12 | Ndila | | |
 | 13 | Nhume | | |
 | 14 | MusheX | | |
+| 15 | MADI — donor hub `/madi/donor` (register, drives, feedback) | | My Life zone |
+| 16 | MADI — donation drives `/madi/drives` | | Facility context for ops |
+| 17 | MADI — blood bank `/madi/blood-bank` (orders, stock, crossmatch, issue) | | |
+| 18 | MADI — clinical order `/madi/orders` from EHR orders page | | |
+| 19 | MADI — transfusion `/madi/transfusion` | | |
+| 20 | MADI — haemovigilance `/madi/haemovigilance` | | |
+| 21 | MADI — central bank `/madi/central-bank` | | National/regional view |
 
 ## Error Capture
 

@@ -43,6 +43,7 @@
 | `landela-adapter-service` | integration | Landela Adapter canonical records |
 | `learning-service` | experience | Learning canonical records |
 | `llm-orchestration-service` | integration | Llm Orchestration canonical records |
+| `madi-service` | clinical | blood donor registry, donation drives, blood units, crossmatch, transfusion episodes, haemovigilance |
 | `msika-flow-service` | enterprise | Msika Flow canonical records |
 | `msika-service` | enterprise | Msika canonical records |
 | `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |

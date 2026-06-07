@@ -8,6 +8,7 @@
 | analytics-pipeline-service | integration | — | baseline-assessed |
 | asset-registry-service | integration | 8310 | baseline-assessed |
 | audit-ledger-service | integration | 8350 | baseline-assessed |
+| booking-service | experience | 8265 | baseline-assessed |
 | butano-fhir | clinical | 8289 | baseline-assessed |
 | butano-service | clinical | 8090 | baseline-assessed |
 | campaigns-service | data | 8190 | baseline-assessed |
@@ -44,6 +45,7 @@
 | landela-adapter-service | integration | 8092 | baseline-assessed |
 | learning-service | experience | — | baseline-assessed |
 | llm-orchestration-service | integration | — | baseline-assessed |
+| madi-service | clinical | 8300 | baseline-assessed |
 | msika-flow-service | enterprise | 8100 | baseline-assessed |
 | msika-service | enterprise | 8086 | baseline-assessed |
 | mushe-wallet-service | enterprise | — | baseline-assessed |
