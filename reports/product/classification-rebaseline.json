@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T18:47:05.392Z",
+  "generatedAt": "2026-06-07T23:09:09.857Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -54,31 +54,13 @@
       "id": "citizen-onboarding",
       "journeyName": "Citizen / Client Onboarding",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "provider-login",
-      "journeyName": "Provider Login & Role Activation",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "workspace-context-selection",
       "journeyName": "Workspace / Shift Context Selection",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "facility-context-selection",
-      "journeyName": "Facility Context Selection",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "patient-search-selection",
-      "journeyName": "Patient Search & Selection",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "outpatient-consultation",
@@ -96,7 +78,7 @@
       "id": "telemedicine-encounter",
       "journeyName": "Telemedicine Encounter",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "imaging-order-result",
@@ -126,13 +108,13 @@
       "id": "consent-capture",
       "journeyName": "Consent Capture",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "payment-billing-claim",
       "journeyName": "Payment / Billing / Exemption / Claim",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "document-upload",
@@ -141,40 +123,16 @@
       "derived": "transaction-complete"
     },
     {
-      "id": "dispatch-delivery",
-      "journeyName": "Dispatch / Delivery (NHUME)",
-      "previous": "backend-partial",
-      "derived": "transaction-complete"
-    },
-    {
       "id": "notification-comms",
       "journeyName": "Notification & Communications",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "fundo-learning",
-      "journeyName": "Fundo / Learning Journey",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "reporting-dashboard",
-      "journeyName": "Data / Report / Dashboard Journey",
-      "previous": "backend-partial",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "registry-administration",
       "journeyName": "Registry Administration",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "integration-sync-replay",
-      "journeyName": "Integration / Sync / Replay",
-      "previous": "backend-partial",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "health-id-issuance",
@@ -186,30 +144,12 @@
       "id": "marketplace-order",
       "journeyName": "Marketplace Order",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "wellness-journey",
       "journeyName": "Wellness & Lifestyle Journey",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "social-community",
-      "journeyName": "Social / Community / Timeline",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "public-health-outreach",
-      "journeyName": "Public Health / CHW Outreach",
-      "previous": "mobile-missing",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "crvs-ubomi",
-      "journeyName": "Civil Registration (UBOMI / CRVS)",
-      "previous": "mobile-missing",
       "derived": "transaction-complete"
     },
     {
@@ -225,40 +165,22 @@
       "derived": "transaction-complete"
     },
     {
-      "id": "offline-clinical-queue",
-      "journeyName": "Offline Clinical Queue",
-      "previous": "backend-partial",
-      "derived": "transaction-complete"
-    },
-    {
       "id": "emergency-encounter",
       "journeyName": "Emergency / ED Encounter",
       "previous": "trust-security-incomplete",
       "derived": "transaction-complete"
     },
     {
-      "id": "surveillance-outbreak",
-      "journeyName": "Surveillance / Outbreak Response",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
-      "id": "ai-guidance-nompilo",
-      "journeyName": "AI Guidance / Nompilo Assist",
-      "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
-    },
-    {
       "id": "credential-verification",
       "journeyName": "Credential Verification",
       "previous": "backend-partial",
-      "derived": "transaction-complete"
+      "derived": "backend-ready-but-frontend-incomplete"
     },
     {
       "id": "provider-registry-onboarding",
       "journeyName": "Provider Registry Onboarding",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "transaction-complete"
+      "derived": "backend-partial"
     },
     {
       "id": "citizen-monitoring",
@@ -270,11 +192,13 @@
       "id": "chronic-care",
       "journeyName": "Chronic Care Management",
       "previous": "backend-partial",
-      "derived": "transaction-complete"
+      "derived": "backend-ready-but-frontend-incomplete"
     }
   ],
   "measuredCounts": {
-    "transaction-complete": 45,
-    "backend-partial": 1
+    "backend-partial": 14,
+    "backend-ready-but-frontend-incomplete": 9,
+    "transaction-complete": 21,
+    "mobile-missing": 2
   }
 }

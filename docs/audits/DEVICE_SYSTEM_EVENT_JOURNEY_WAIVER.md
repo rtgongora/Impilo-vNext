@@ -20,4 +20,4 @@ The Device / System Event journey is intentionally **ops-only**:
 
 ## Measured outcome
 
-**45/46 transaction-complete + 1 documented ops-only waiver** satisfies Phase 4 completion target.
+**21/46 transaction-complete + 1 documented ops-only waiver** is the honest measured baseline after the 2026-06-07 product-truth skeptical pass (see [`PRODUCT_TRUTH_SKEPTICAL_AUDIT.md`](./PRODUCT_TRUTH_SKEPTICAL_AUDIT.md)).

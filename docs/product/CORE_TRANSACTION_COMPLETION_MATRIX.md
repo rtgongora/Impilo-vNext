@@ -1,15 +1,17 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-07T18:47:05.392Z
-> Journeys: **46** | Transaction-complete: **45**
+> Generated: 2026-06-07T23:09:09.857Z
+> Journeys: **46** | Transaction-complete: **21**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 45 |
-| backend-partial | 1 |
+| transaction-complete | 21 |
+| backend-ready-but-frontend-incomplete | 9 |
+| backend-partial | 14 |
+| mobile-missing | 2 |
 
 ## Coverage
 
@@ -24,48 +26,48 @@
 
 | journey | type | classification | routes | mobile | gap |
 | --- | --- | --- | --- | --- | --- |
-| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | transaction-complete | 4 | 2 | card ops / pickup verification thin |
-| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | transaction-complete | 6 | 2 | device block UX admin-only |
-| Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | transaction-complete | 8 | 0 | workspace settings coming-soon stub |
-| Facility Context Selection | ADMINISTRATIVE_HEALTH | transaction-complete | 2 | 57 | digital readiness dashboards thin |
-| Patient Search & Selection | FACILITY_WALK_IN | transaction-complete | 36 | 0 | — |
+| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | backend-partial | 4 | 2 | card ops / pickup verification thin |
+| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 6 | 2 | device block UX admin-only |
+| Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | backend-partial | 8 | 0 | workspace settings coming-soon stub |
+| Facility Context Selection | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 2 | 57 | digital readiness dashboards thin |
+| Patient Search & Selection | FACILITY_WALK_IN | backend-ready-but-frontend-incomplete | 36 | 0 | — |
 | Queue / Walk-in Registration | FACILITY_WALK_IN | transaction-complete | 7 | 1 | — |
 | Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
 | Outpatient Consultation | FACILITY_WALK_IN | transaction-complete | 50 | 3 | — |
 | Inpatient Admission Workflow | EMERGENCY | transaction-complete | 36 | 2 | — |
-| Telemedicine Encounter | TELEMEDICINE | transaction-complete | 3 | 3 | real-time media transport blocked |
+| Telemedicine Encounter | TELEMEDICINE | backend-partial | 3 | 3 | real-time media transport blocked |
 | Lab Order & Result | LABORATORY | transaction-complete | 7 | 3 | — |
 | Imaging Order & Result | IMAGING | transaction-complete | 35 | 1 | — |
 | Prescription & Dispense | PHARMACY | transaction-complete | 6 | 1 | — |
 | Referral Create & Manage | REFERRAL | transaction-complete | 2 | 1 | — |
 | Appointment Scheduling | APPOINTMENT | transaction-complete | 8 | 2 | — |
-| Consent Capture | ADMINISTRATIVE_HEALTH | transaction-complete | 8 | 1 | admin workflow parity vs mvumo templates |
-| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | transaction-complete | 28 | 4 | payer-ops stubs; MusheX raw paths not in browser |
+| Consent Capture | ADMINISTRATIVE_HEALTH | backend-partial | 8 | 1 | admin workflow parity vs mvumo templates |
+| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | backend-partial | 28 | 4 | payer-ops stubs; MusheX raw paths not in browser |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | transaction-complete | 1 | 1 | indexing UX partial vs document-service |
-| Dispatch / Delivery (NHUME) | MARKETPLACE | transaction-complete | 18 | 2 | dispatch detail + offline queue UX |
-| Notification & Communications | ADMINISTRATIVE_HEALTH | transaction-complete | 3 | 3 | campaign admin thin |
-| Fundo / Learning Journey | TRAINING_OR_COMPETENCY | transaction-complete | 54 | 2 | mobile learning shell shallow |
-| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | transaction-complete | 18 | 3 | Ndila map dashboards incomplete |
-| Registry Administration | ADMINISTRATIVE_HEALTH | transaction-complete | 34 | 1 | issuance/card ops not fully surfaced |
-| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | transaction-complete | 6 | 0 | integration status partial |
+| Dispatch / Delivery (NHUME) | MARKETPLACE | backend-partial | 18 | 2 | dispatch detail + offline queue UX |
+| Notification & Communications | ADMINISTRATIVE_HEALTH | backend-partial | 3 | 3 | campaign admin thin |
+| Fundo / Learning Journey | TRAINING_OR_COMPETENCY | backend-ready-but-frontend-incomplete | 54 | 2 | mobile learning shell shallow |
+| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | backend-partial | 18 | 3 | Ndila map dashboards incomplete |
+| Registry Administration | ADMINISTRATIVE_HEALTH | backend-partial | 34 | 1 | issuance/card ops not fully surfaced |
+| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | backend-partial | 6 | 0 | integration status partial |
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | backend-partial | 48 | 0 | no direct citizen UI (by design) |
 | Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | transaction-complete | 16 | 1 | pickup verify BFF routes missing |
-| Marketplace Order | MARKETPLACE | transaction-complete | 12 | 7 | booking list unavailable |
+| Marketplace Order | MARKETPLACE | backend-partial | 12 | 7 | booking list unavailable |
 | Wellness & Lifestyle Journey | WELLNESS | transaction-complete | 13 | 1 | — |
-| Social / Community / Timeline | WELLNESS | transaction-complete | 6 | 11 | public health alerts placeholder in rail |
-| Public Health / CHW Outreach | COMMUNITY_OUTREACH | transaction-complete | 5 | 6 | field ops mobile thinner than web |
-| Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | transaction-complete | 20 | 0 | mobile CRVS parity missing |
+| Social / Community / Timeline | WELLNESS | backend-ready-but-frontend-incomplete | 6 | 11 | public health alerts placeholder in rail |
+| Public Health / CHW Outreach | COMMUNITY_OUTREACH | mobile-missing | 5 | 6 | field ops mobile thinner than web |
+| Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | mobile-missing | 20 | 0 | mobile CRVS parity missing |
 | Coverage Enrollment | ADMINISTRATIVE_HEALTH | transaction-complete | 1 | 1 | intelligence surfaces partial |
 | Wallet Payment | MARKETPLACE | transaction-complete | 6 | 1 | — |
-| Offline Clinical Queue | FACILITY_WALK_IN | transaction-complete | 25 | 4 | offline conflict UX |
+| Offline Clinical Queue | FACILITY_WALK_IN | backend-partial | 25 | 4 | offline conflict UX |
 | Emergency / ED Encounter | EMERGENCY | transaction-complete | 36 | 2 | — |
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | transaction-complete | 4 | 0 | — |
-| Surveillance / Outbreak Response | COMMUNITY_OUTREACH | transaction-complete | 6 | 2 | Ndila map dashboards incomplete |
-| AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | transaction-complete | 21 | 2 | route context not always passed to guidance BFF |
-| Credential Verification | ADMINISTRATIVE_HEALTH | transaction-complete | 1 | 0 | verification workflow screens thin |
-| Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | transaction-complete | 19 | 4 | reconciliation queue thin |
+| Surveillance / Outbreak Response | COMMUNITY_OUTREACH | backend-ready-but-frontend-incomplete | 6 | 2 | Ndila map dashboards incomplete |
+| AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 21 | 2 | route context not always passed to guidance BFF |
+| Credential Verification | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 1 | 0 | verification workflow screens thin |
+| Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | backend-partial | 19 | 4 | reconciliation queue thin |
 | Citizen Remote Monitoring | CHRONIC_CARE | transaction-complete | 6 | 1 | — |
-| Chronic Care Management | CHRONIC_CARE | transaction-complete | 40 | 1 | care plan UX depth |
+| Chronic Care Management | CHRONIC_CARE | backend-ready-but-frontend-incomplete | 40 | 1 | care plan UX depth |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | transaction-complete | 8 | 11 | — |
 | Blood Order & Crossmatch | BLOOD_ORDER | transaction-complete | 2 | 12 | — |
 | Transfusion Episode & Bedside Verify | TRANSFUSION | transaction-complete | 2 | 11 | — |
@@ -80,10 +82,10 @@ Prioritize the clinical spine and **complete orchestration on existing surfaces*
 1. **Provider Patient Encounter** — transaction-complete: pathway execution orchestration partial
 1. **Core Transaction Orchestration Shell** — transaction-complete: 
 1. **Health ID Issuance & Card Ops** — transaction-complete: pickup verify BFF routes missing
-1. **Payment / Billing / Exemption / Claim** — transaction-complete: payer-ops stubs; MusheX raw paths not in browser
+1. **Payment / Billing / Exemption / Claim** — backend-partial: payer-ops stubs; MusheX raw paths not in browser
 1. **Lab Order & Result** — transaction-complete: 
-1. **Public Health / CHW Outreach** — transaction-complete: field ops mobile thinner than web
-1. **Civil Registration (UBOMI / CRVS)** — transaction-complete: mobile CRVS parity missing
+1. **Public Health / CHW Outreach** — mobile-missing: field ops mobile thinner than web
+1. **Civil Registration (UBOMI / CRVS)** — mobile-missing: mobile CRVS parity missing
 
 ## Unmapped backend services (supporting/internal)
 
