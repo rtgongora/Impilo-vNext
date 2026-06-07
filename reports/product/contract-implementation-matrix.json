@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-06-07T13:48:01.140Z",
+  "generatedAt": "2026-06-07T18:37:07.542Z",
   "counts": {
-    "totalOpenApiOperations": 4451,
+    "totalOpenApiOperations": 4452,
     "totalAsyncChannels": 84,
-    "implemented": 4535,
+    "implemented": 4536,
     "partial": 0,
     "missing": 0,
     "unownedContract": 0,
@@ -33518,7 +33518,20 @@
       "operationId": "syncMonitoringDevice",
       "method": "POST",
       "path": "/internal/v1/mobile/citizen/monitoring/devices/{id}/sync",
-      "summary": "Record a sync completion for a device",
+      "summary": "Record a sync completion and optionally ingest device readings",
+      "modules": [
+        "experience-bff"
+      ],
+      "implStatus": "implemented",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CitizenMonitoringDevicesController.java",
+      "stubPattern": null
+    },
+    {
+      "contract": "monitoring.openapi.yaml",
+      "operationId": "ingestMonitoringReadings",
+      "method": "POST",
+      "path": "/internal/v1/mobile/citizen/monitoring/readings",
+      "summary": "Ingest one or more device-native readings for a person",
       "modules": [
         "experience-bff"
       ],

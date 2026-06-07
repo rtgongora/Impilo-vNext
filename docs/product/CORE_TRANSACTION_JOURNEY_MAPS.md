@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-07T13:42:14.136Z
+> Generated: 2026-06-07T18:29:20.306Z
 > Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -35,7 +35,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Registry Administration | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | backend-partial |
 | Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | integration-system | /developer | partial | backend-partial |
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | backend-partial |
-| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | backend-partial |
+| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | transaction-complete |
 | Marketplace Order | MARKETPLACE | citizen | /marketplace | partial | backend-partial |
 | Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | transaction-complete |
 | Social / Community / Timeline | WELLNESS | citizen | /social | wired | backend-ready-but-frontend-incomplete |
@@ -50,7 +50,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | backend-ready-but-frontend-incomplete |
 | Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | backend-ready-but-frontend-incomplete |
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | backend-partial |
-| Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | backend-ready-but-frontend-incomplete |
+| Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | transaction-complete |
 | Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | backend-ready-but-frontend-incomplete |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | citizen | /madi/donor | wired | transaction-complete |
 | Blood Order & Crossmatch | BLOOD_ORDER | provider | /madi/orders | wired | transaction-complete |

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T13:42:14.136Z",
+  "generatedAt": "2026-06-07T18:29:20.306Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -1522,7 +1522,7 @@
       "completionState": "IDENTITY_RESOLVED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "pickup verify BFF routes missing",
-      "missingFrontendMobileWork": "card pickup page blocked",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "citizen-onboarding",
         "registry-administration"
@@ -1530,7 +1530,7 @@
       "productOwnerAcceptanceTest": "Health ID issued, card printed, pickup verified",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "marketplace-order",
@@ -2306,7 +2306,7 @@
       "completionState": "FOLLOW_UP_ACTIVE",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "monitoring depth vs wellness BFF",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "wellness-journey",
         "chronic-care"
@@ -2314,7 +2314,7 @@
       "productOwnerAcceptanceTest": "Citizen records monitoring obs visible to care team",
       "coreTransactionType": "CHRONIC_CARE",
       "lifecycleStage": "FOLLOW_UP_CONTINUITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "chronic-care",

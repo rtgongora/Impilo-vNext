@@ -58,7 +58,7 @@ const JOURNEY_GAP_OVERRIDES = {
   "registry-administration": { missingFrontend: "issuance/card ops not fully surfaced" },
   "integration-sync-replay": { missingFrontend: "integration status partial" },
   "device-system-event": { missingFrontend: "no direct citizen UI (by design)" },
-  "health-id-issuance": { missingFrontend: "card pickup page blocked" },
+  "health-id-issuance": { missingFrontend: "" },
   "marketplace-order": { missingFrontend: "booking list unavailable" },
   "wellness-journey": { missingFrontend: "" },
   "social-community": { missingFrontend: "public health alerts placeholder in rail" },
@@ -71,7 +71,7 @@ const JOURNEY_GAP_OVERRIDES = {
   "ai-guidance-nompilo": { missingFrontend: "route context not always passed to guidance BFF" },
   "credential-verification": { missingFrontend: "verification workflow screens thin" },
   "provider-registry-onboarding": { missingFrontend: "reconciliation queue thin" },
-  "citizen-monitoring": { missingFrontend: "monitoring depth vs wellness BFF" },
+  "citizen-monitoring": { missingFrontend: "" },
   "chronic-care": { missingFrontend: "care plan UX depth" },
   "haemovigilance-report": { missingFrontend: "national dashboard web-only by policy" },
 };
@@ -296,12 +296,15 @@ const COMPLETION_EVIDENCE = {
       "/internal/v1/pharmacy/dispense",
       "/internal/v1/mobile/provider/pharmacy/pending",
       "/internal/v1/mobile/provider/pharmacy/dispense",
+      "/internal/v1/mobile/provider/pharmacy/verify-five-rights",
     ],
     uiRoutes: ["/pharmacy/dispense", "/ehr/[patientId]/orders"],
     tests: [
       "ui/one-ui-shell/src/lib/__tests__/prescription-dispense-golden-thread.test.ts",
       "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/PharmacyControllerTest.java",
       "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedControllerTest.java",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/pharmacy/PharmacyFiveRightsVerifierTest.java",
+      "apps/mobile/provider-app/src/__tests__/services/prescriptionService.test.ts",
     ],
   },
   "referral-create": {
@@ -316,6 +319,40 @@ const COMPLETION_EVIDENCE = {
       "ui/one-ui-shell/src/app/queue/incoming-referrals/page.test.tsx",
       "ui/one-ui-shell/src/lib/__tests__/referral-create-golden-thread.test.ts",
       "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/ReferralsControllerTest.java",
+    ],
+  },
+  "health-id-issuance": {
+    bffEndpoints: [
+      "/internal/v1/vito/issuance/queue",
+      "/internal/v1/vito/issuance/{requestId}",
+      "/internal/v1/vito/delegated-pickup/create",
+      "/internal/v1/vito/print/card/verify-pickup",
+      "/internal/v1/vito/print/card/confirm-handover",
+    ],
+    uiRoutes: [
+      "/operations/vito/issuance",
+      "/operations/vito/issuance/[requestId]",
+      "/operations/vito/cards/pickup",
+      "/operations/vito/print",
+    ],
+    tests: [
+      "ui/one-ui-shell/src/lib/__tests__/health-id-pickup-golden-thread.test.ts",
+      "services/vito-service/src/test/java/zw/gov/mohcc/impilo/vito/api/PrintJobControllerPickupTest.java",
+      "services/vito-service/src/test/java/zw/gov/mohcc/impilo/vito/core/pickup/DelegatedPickupServiceTest.java",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/facility/FacilityNameResolverTest.java",
+    ],
+  },
+  "citizen-monitoring": {
+    bffEndpoints: [
+      "/internal/v1/mobile/citizen/monitoring/devices",
+      "/internal/v1/mobile/citizen/monitoring/readings",
+      "/internal/v1/mobile/citizen/wellness/vitals",
+      "/internal/v1/wellness/personal-data/remote-alerts",
+    ],
+    uiRoutes: ["/monitoring/devices", "/monitoring/readings", "/monitoring/alerts"],
+    tests: [
+      "ui/one-ui-shell/src/lib/__tests__/citizen-monitoring-golden-thread.test.ts",
+      "services/wellness-service/src/test/java/zw/gov/mohcc/impilo/wellness/monitoring/MonitoringDeviceReadingsServiceTest.java",
     ],
   },
 };

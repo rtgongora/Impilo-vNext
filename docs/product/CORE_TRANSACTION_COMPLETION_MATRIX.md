@@ -1,16 +1,16 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-07T13:42:14.136Z
-> Journeys: **46** | Transaction-complete: **16**
+> Generated: 2026-06-07T18:29:20.306Z
+> Journeys: **46** | Transaction-complete: **18**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 16 |
-| backend-ready-but-frontend-incomplete | 11 |
-| backend-partial | 17 |
+| transaction-complete | 18 |
+| backend-ready-but-frontend-incomplete | 10 |
+| backend-partial | 16 |
 | mobile-missing | 2 |
 
 ## Coverage
@@ -51,7 +51,7 @@
 | Registry Administration | ADMINISTRATIVE_HEALTH | backend-partial | 34 | 1 | issuance/card ops not fully surfaced |
 | Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | backend-partial | 6 | 0 | integration status partial |
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | backend-partial | 48 | 0 | no direct citizen UI (by design) |
-| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | backend-partial | 16 | 1 | card pickup page blocked |
+| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | transaction-complete | 16 | 1 | pickup verify BFF routes missing |
 | Marketplace Order | MARKETPLACE | backend-partial | 12 | 7 | booking list unavailable |
 | Wellness & Lifestyle Journey | WELLNESS | transaction-complete | 13 | 1 | — |
 | Social / Community / Timeline | WELLNESS | backend-ready-but-frontend-incomplete | 6 | 11 | public health alerts placeholder in rail |
@@ -66,7 +66,7 @@
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 21 | 2 | route context not always passed to guidance BFF |
 | Credential Verification | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 1 | 0 | verification workflow screens thin |
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | backend-partial | 19 | 4 | reconciliation queue thin |
-| Citizen Remote Monitoring | CHRONIC_CARE | backend-ready-but-frontend-incomplete | 6 | 1 | monitoring depth vs wellness BFF |
+| Citizen Remote Monitoring | CHRONIC_CARE | transaction-complete | 6 | 1 | — |
 | Chronic Care Management | CHRONIC_CARE | backend-ready-but-frontend-incomplete | 40 | 1 | care plan UX depth |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | transaction-complete | 8 | 11 | — |
 | Blood Order & Crossmatch | BLOOD_ORDER | transaction-complete | 2 | 12 | — |
@@ -81,7 +81,7 @@ Prioritize the clinical spine and **complete orchestration on existing surfaces*
 
 1. **Provider Patient Encounter** — transaction-complete: pathway execution orchestration partial
 1. **Core Transaction Orchestration Shell** — transaction-complete: 
-1. **Health ID Issuance & Card Ops** — backend-partial: card pickup page blocked
+1. **Health ID Issuance & Card Ops** — transaction-complete: pickup verify BFF routes missing
 1. **Payment / Billing / Exemption / Claim** — backend-partial: payer-ops stubs; MusheX raw paths not in browser
 1. **Lab Order & Result** — transaction-complete: 
 1. **Public Health / CHW Outreach** — mobile-missing: field ops mobile thinner than web

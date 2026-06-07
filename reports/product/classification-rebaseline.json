@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T13:42:14.136Z",
+  "generatedAt": "2026-06-07T18:29:20.306Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -129,6 +129,12 @@
       "derived": "backend-partial"
     },
     {
+      "id": "health-id-issuance",
+      "journeyName": "Health ID Issuance & Card Ops",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "marketplace-order",
       "journeyName": "Marketplace Order",
       "previous": "backend-ready-but-frontend-incomplete",
@@ -165,6 +171,12 @@
       "derived": "backend-partial"
     },
     {
+      "id": "citizen-monitoring",
+      "journeyName": "Citizen Remote Monitoring",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "chronic-care",
       "journeyName": "Chronic Care Management",
       "previous": "backend-partial",
@@ -172,9 +184,9 @@
     }
   ],
   "measuredCounts": {
-    "backend-partial": 17,
-    "backend-ready-but-frontend-incomplete": 11,
-    "transaction-complete": 16,
+    "backend-partial": 16,
+    "backend-ready-but-frontend-incomplete": 10,
+    "transaction-complete": 18,
     "mobile-missing": 2
   }
 }
