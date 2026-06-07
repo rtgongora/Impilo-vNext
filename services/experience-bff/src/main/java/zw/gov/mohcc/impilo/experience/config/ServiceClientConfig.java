@@ -123,7 +123,9 @@ public class ServiceClientConfig {
             /** Nhume — dispatch, delivery, fleet (port 8210). */
             String nhumeBaseUrl,
             /** MADI — blood donation, blood bank, transfusion (port 8300). */
-            String madiBaseUrl
+            String madiBaseUrl,
+            /** Impilo Live — live events, webinars, broadcasts (port 8380). */
+            String liveBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -193,6 +195,7 @@ public class ServiceClientConfig {
             if (ndilaBaseUrl == null) ndilaBaseUrl = "http://localhost:8155";
             if (nhumeBaseUrl == null) nhumeBaseUrl = "http://localhost:8210";
             if (madiBaseUrl == null) madiBaseUrl = "http://localhost:8300";
+            if (liveBaseUrl == null) liveBaseUrl = "http://localhost:8380";
         }
     }
 
@@ -208,7 +211,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null
+                null, null, null, null, null, null, null
         );
     }
 
@@ -228,7 +231,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null
         );
     }
 

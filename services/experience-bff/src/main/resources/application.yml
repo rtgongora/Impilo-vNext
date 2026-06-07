@@ -105,6 +105,7 @@ impilo:
     ndila-base-url: ${NDILA_BASE_URL:http://localhost:8155}
     nhume-base-url: ${NHUME_BASE_URL:${NHUME_SERVICE_BASE_URL:http://localhost:8210}}
     madi-base-url: ${MADI_BASE_URL:${MADI_SERVICE_BASE_URL:http://localhost:8300}}
+    live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
     tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}

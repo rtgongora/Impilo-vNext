@@ -232,6 +232,14 @@ public class SecurityConfig {
                     .requestMatchers("/internal/v1/mobile/provider/madi/**")
                             .hasAnyRole(CLINICAL_ROLES)
 
+                    // ── Impilo Live — events, webinars, broadcasts ─────
+                    .requestMatchers("/internal/v1/live/**")
+                            .authenticated()
+                    .requestMatchers("/internal/v1/mobile/citizen/live/**")
+                            .hasAnyRole(CITIZEN_ROLES)
+                    .requestMatchers("/internal/v1/mobile/provider/live/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+
                     // ── PACS / DICOM viewer ──────────────────────────────
                     .requestMatchers("/internal/v1/pacs/**")
                             .hasAnyRole(CLINICAL_ROLES)
