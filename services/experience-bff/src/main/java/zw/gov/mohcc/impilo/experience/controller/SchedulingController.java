@@ -11,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
-import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
@@ -33,7 +32,6 @@ public class SchedulingController {
     private final BookingServiceClient bookingServiceClient;
     private final TusoServiceClient tusoClient;
     private final SchedulingServiceClient schedulingServiceClient;
-    private final PctServiceClient pctClient;
     private final AppointmentCheckInService appointmentCheckInService;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
@@ -42,12 +40,10 @@ public class SchedulingController {
     public SchedulingController(BookingServiceClient bookingServiceClient,
                                 TusoServiceClient tusoClient,
                                 SchedulingServiceClient schedulingServiceClient,
-                                PctServiceClient pctClient,
                                 AppointmentCheckInService appointmentCheckInService) {
         this.bookingServiceClient = bookingServiceClient;
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
-        this.pctClient = pctClient;
         this.appointmentCheckInService = appointmentCheckInService;
     }
 
@@ -325,28 +321,6 @@ public class SchedulingController {
         for (String value : values) {
             if (value != null && !value.isBlank()) {
                 return value;
-            }
-        }
-        return null;
-    }
-
-    private static UUID findScheduledQueueId(JsonNode queues) {
-        if (queues == null || !queues.isArray()) {
-            return null;
-        }
-        for (JsonNode q : queues) {
-            String type = q.path("queueType").asText("");
-            if ("WALK_IN".equalsIgnoreCase(type) || "CONSULTATION".equalsIgnoreCase(type)) {
-                String qid = q.path("queueId").asText(null);
-                if (qid != null && !qid.isBlank()) {
-                    return UUID.fromString(qid);
-                }
-            }
-        }
-        if (!queues.isEmpty()) {
-            String qid = queues.get(0).path("queueId").asText(null);
-            if (qid != null && !qid.isBlank()) {
-                return UUID.fromString(qid);
             }
         }
         return null;
