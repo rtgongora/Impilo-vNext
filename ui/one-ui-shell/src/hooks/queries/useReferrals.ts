@@ -62,6 +62,17 @@ interface CompleteReferralPayload {
 type ReferralsResponse = ApiResponse<ReferralResource[]>;
 type ReferralResponse = ApiResponse<ReferralResource>;
 
+export function useIncomingReferrals(facilityId: string | undefined) {
+  return useQuery<ReferralsResponse>({
+    queryKey: ["referrals", "incoming", facilityId],
+    queryFn: () =>
+      apiClient.get<ReferralsResponse>(
+        `/internal/v1/referrals/incoming?facility_id=${encodeURIComponent(facilityId!)}`,
+      ),
+    enabled: !!facilityId,
+  });
+}
+
 export function useReferrals(patientId: string) {
   return useQuery<ReferralsResponse>({
     queryKey: ["referrals", { patientId }],
@@ -133,4 +144,16 @@ export function useRespondReferral() {
       queryClient.invalidateQueries({ queryKey: ["referrals"] });
     },
   });
+}
+
+export function buildReferralConsultHandoffRoute(
+  patientId: string,
+  referralId: string,
+  transactionId?: string | null,
+): string {
+  const params = new URLSearchParams({ tab: "referrals", referral_id: referralId });
+  if (transactionId?.trim()) {
+    params.set("transaction_id", transactionId.trim());
+  }
+  return `/ehr/${encodeURIComponent(patientId)}/consults?${params.toString()}`;
 }

@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-07T12:35:16.804Z
+> Generated: 2026-06-07T13:42:14.136Z
 > Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -22,8 +22,8 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-partial |
 | Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
 | Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | transaction-complete |
-| Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | backend-ready-but-frontend-incomplete |
-| Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | backend-ready-but-frontend-incomplete |
+| Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | transaction-complete |
+| Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | transaction-complete |
 | Appointment Scheduling | APPOINTMENT | citizen | /queue/scheduled | partial | transaction-complete |
 | Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | backend-partial |
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | backend-partial |

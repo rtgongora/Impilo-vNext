@@ -84,26 +84,27 @@ public class DelegatedPickupService {
     }
 
     /**
+     * Verify a delegated pickup token and OTP without marking the pickup redeemed.
+     * Used by facility staff before physical card handover.
+     */
+    @Transactional
+    public PickupVerification verifyPickup(String pickupToken, String otp) {
+        DelegatedPickupEntity pickup = resolveActivePickup(pickupToken);
+        assertOtpValid(pickup, otp, false);
+        return new PickupVerification(
+                pickup.getDelegateName(),
+                pickup.getFacilityId(),
+                pickup.getIssuanceRequestId(),
+                pickup.getExpiresAt());
+    }
+
+    /**
      * Redeem a delegated pickup at a facility.
      * Verifies the QR token AND the OTP. Max attempts enforced.
      */
     @Transactional
     public DelegatedPickupEntity redeem(String pickupToken, String otp, String redeemedBy) {
-        String tokenHash = hmacService.computeLookupHash(pickupToken);
-        DelegatedPickupEntity pickup = pickupRepo.findByPickupTokenHash(tokenHash)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid pickup token"));
-
-        // Check status
-        if (pickup.getStatus() != PickupStatus.ACTIVE) {
-            throw new IllegalStateException("Pickup is not active: " + pickup.getStatus());
-        }
-
-        // Check expiry
-        if (OffsetDateTime.now().isAfter(pickup.getExpiresAt())) {
-            pickup.setStatus(PickupStatus.EXPIRED);
-            pickupRepo.save(pickup);
-            throw new IllegalStateException("Pickup has expired");
-        }
+        DelegatedPickupEntity pickup = resolveActivePickup(pickupToken);
 
         if (biometricPolicyOnRedeem) {
             TshepoBiometricPolicyResponse policy = biometricPolicyClient.evaluate(
@@ -116,21 +117,8 @@ public class DelegatedPickupService {
             }
         }
 
-        // Increment attempt count
-        pickup.setAttempts(pickup.getAttempts() + 1);
+        assertOtpValid(pickup, otp, true);
 
-        // Verify OTP
-        if (!argon2IdService.verify(otp, pickup.getOtpHash())) {
-            if (pickup.getAttempts() >= pickup.getMaxAttempts()) {
-                pickup.setStatus(PickupStatus.REVOKED);
-                pickupRepo.save(pickup);
-                throw new IllegalStateException("Max attempts exceeded, pickup revoked");
-            }
-            pickupRepo.save(pickup);
-            throw new IllegalArgumentException("Invalid OTP (" + pickup.getAttempts() + "/" + pickup.getMaxAttempts() + " attempts)");
-        }
-
-        // Success
         pickup.setStatus(PickupStatus.REDEEMED);
         pickup.setRedeemedAt(OffsetDateTime.now());
         pickup.setRedeemedBy(redeemedBy);
@@ -140,6 +128,39 @@ public class DelegatedPickupService {
                 "{\"tenantId\":\"" + pickup.getTenantId() + "\",\"redeemedBy\":\"" + redeemedBy + "\"}");
 
         return pickup;
+    }
+
+    private DelegatedPickupEntity resolveActivePickup(String pickupToken) {
+        String tokenHash = hmacService.computeLookupHash(pickupToken);
+        DelegatedPickupEntity pickup = pickupRepo.findByPickupTokenHash(tokenHash)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid pickup token"));
+
+        if (pickup.getStatus() != PickupStatus.ACTIVE) {
+            throw new IllegalStateException("Pickup is not active: " + pickup.getStatus());
+        }
+
+        if (OffsetDateTime.now().isAfter(pickup.getExpiresAt())) {
+            pickup.setStatus(PickupStatus.EXPIRED);
+            pickupRepo.save(pickup);
+            throw new IllegalStateException("Pickup has expired");
+        }
+        return pickup;
+    }
+
+    private void assertOtpValid(DelegatedPickupEntity pickup, String otp, boolean incrementOnSuccess) {
+        if (!argon2IdService.verify(otp, pickup.getOtpHash())) {
+            pickup.setAttempts(pickup.getAttempts() + 1);
+            if (pickup.getAttempts() >= pickup.getMaxAttempts()) {
+                pickup.setStatus(PickupStatus.REVOKED);
+                pickupRepo.save(pickup);
+                throw new IllegalStateException("Max attempts exceeded, pickup revoked");
+            }
+            pickupRepo.save(pickup);
+            throw new IllegalArgumentException("Invalid OTP (" + pickup.getAttempts() + "/" + pickup.getMaxAttempts() + " attempts)");
+        }
+        if (incrementOnSuccess) {
+            pickup.setAttempts(pickup.getAttempts() + 1);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -165,4 +186,10 @@ public class DelegatedPickupService {
     }
 
     public record PickupPackage(Long pickupId, String pickupToken, String otp, OffsetDateTime expiresAt) {}
+
+    public record PickupVerification(
+            String delegateName,
+            UUID facilityId,
+            Long issuanceRequestId,
+            OffsetDateTime expiresAt) {}
 }

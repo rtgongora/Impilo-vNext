@@ -55,11 +55,6 @@ export function useSubmitPrintJob() {
   });
 }
 
-// TODO: BFF routes /internal/v1/vito/print/card/verify-pickup and
-//       /internal/v1/vito/print/card/confirm-handover are wired in VitoPrintBffController
-//       but VITO (PrintJobController) does not yet implement the upstream endpoints.
-//       These hooks will work end-to-end once vito-service adds the corresponding routes.
-
 export function useVerifyPickupToken() {
   return useMutation({
     mutationFn: (body: PickupVerifyRequest) =>

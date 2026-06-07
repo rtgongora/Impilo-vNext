@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T12:35:16.804Z",
+  "generatedAt": "2026-06-07T13:42:14.136Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -87,6 +87,18 @@
       "derived": "transaction-complete"
     },
     {
+      "id": "prescription-dispense",
+      "journeyName": "Prescription & Dispense",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "referral-create",
+      "journeyName": "Referral Create & Manage",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "appointment-scheduling",
       "journeyName": "Appointment Scheduling",
       "previous": "backend-partial",
@@ -161,8 +173,8 @@
   ],
   "measuredCounts": {
     "backend-partial": 17,
-    "backend-ready-but-frontend-incomplete": 13,
-    "transaction-complete": 14,
+    "backend-ready-but-frontend-incomplete": 11,
+    "transaction-complete": 16,
     "mobile-missing": 2
   }
 }

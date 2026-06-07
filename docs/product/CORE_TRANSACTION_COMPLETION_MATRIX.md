@@ -1,15 +1,15 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-07T12:35:16.804Z
-> Journeys: **46** | Transaction-complete: **14**
+> Generated: 2026-06-07T13:42:14.136Z
+> Journeys: **46** | Transaction-complete: **16**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 14 |
-| backend-ready-but-frontend-incomplete | 13 |
+| transaction-complete | 16 |
+| backend-ready-but-frontend-incomplete | 11 |
 | backend-partial | 17 |
 | mobile-missing | 2 |
 
@@ -38,8 +38,8 @@
 | Telemedicine Encounter | TELEMEDICINE | backend-partial | 3 | 3 | real-time media transport blocked |
 | Lab Order & Result | LABORATORY | transaction-complete | 7 | 3 | — |
 | Imaging Order & Result | IMAGING | transaction-complete | 35 | 1 | — |
-| Prescription & Dispense | PHARMACY | backend-ready-but-frontend-incomplete | 6 | 1 | mobile prescribing depth |
-| Referral Create & Manage | REFERRAL | backend-ready-but-frontend-incomplete | 2 | 1 | incoming-referrals handoff UX thin |
+| Prescription & Dispense | PHARMACY | transaction-complete | 6 | 1 | — |
+| Referral Create & Manage | REFERRAL | transaction-complete | 2 | 1 | — |
 | Appointment Scheduling | APPOINTMENT | transaction-complete | 8 | 2 | — |
 | Consent Capture | ADMINISTRATIVE_HEALTH | backend-partial | 8 | 1 | admin workflow parity vs mvumo templates |
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | backend-partial | 28 | 4 | payer-ops stubs; MusheX raw paths not in browser |

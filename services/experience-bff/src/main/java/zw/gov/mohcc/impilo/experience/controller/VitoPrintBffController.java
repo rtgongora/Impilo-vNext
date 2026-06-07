@@ -27,8 +27,6 @@ public class VitoPrintBffController {
         return forward(() -> vitoServiceClient.rawPost("/v1/print/card/job", body), requestId, correlationId);
     }
 
-    // TODO: VITO does not yet implement POST /v1/print/card/verify-pickup.
-    //       Once PrintJobController in vito-service gains that endpoint this BFF route will be live.
     @PostMapping(value = "/card/verify-pickup", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> verifyPickup(
             @RequestBody Map<String, Object> body,
@@ -37,8 +35,6 @@ public class VitoPrintBffController {
         return forward(() -> vitoServiceClient.rawPost("/v1/print/card/verify-pickup", body), requestId, correlationId);
     }
 
-    // TODO: VITO does not yet implement POST /v1/print/card/confirm-handover.
-    //       Once PrintJobController in vito-service gains that endpoint this BFF route will be live.
     @PostMapping(value = "/card/confirm-handover", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> confirmHandover(
             @RequestBody Map<String, Object> body,

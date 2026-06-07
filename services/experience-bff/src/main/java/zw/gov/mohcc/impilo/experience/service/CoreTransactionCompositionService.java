@@ -770,6 +770,12 @@ public class CoreTransactionCompositionService {
         return ADMISSION_TX_PREFIX + admissionRef;
     }
 
+    public static final String REFERRAL_TX_PREFIX = "referral-";
+
+    public static String referralTransactionId(String referralId) {
+        return REFERRAL_TX_PREFIX + referralId;
+    }
+
     public static boolean isAdmissionTransactionId(String transactionId) {
         return transactionId != null && transactionId.startsWith(ADMISSION_TX_PREFIX);
     }

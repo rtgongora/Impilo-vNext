@@ -53,7 +53,7 @@ export async function fetchHealthOsLauncher(opts: { facilityId?: string; roles?:
   const qs = query.length > 0 ? `?${query.join("&")}` : "";
   try {
     const response = await apiClient.get<LauncherApp[] | { data: LauncherApp[] }>(
-      `/internal/v1/marketplace/launcher${qs}`,
+      `/internal/v1/launcher/apps${qs}`,
     );
     const body = response.data as unknown;
     if (Array.isArray(body)) return body as LauncherApp[];

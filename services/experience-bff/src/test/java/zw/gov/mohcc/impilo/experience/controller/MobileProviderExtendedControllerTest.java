@@ -40,6 +40,17 @@ class MobileProviderExtendedControllerTest {
         assertEquals("BILLING_ROUTE_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
     }
 
+    @Test
+    void pharmacyPendingReturnsWorklistFromUpstream() {
+        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+                new StubPctClient(), new StubVitoClient(), new WorklistPharmacyClient(), new StubCostaClient(), new StubOrosClient());
+
+        ResponseEntity<Map<String, Object>> response = controller.getPendingDispensing("tenant-1", "facility-1");
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(1, ((java.util.List<?>) response.getBody().get("data")).size());
+    }
+
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
     }
@@ -54,6 +65,21 @@ class MobileProviderExtendedControllerTest {
 
     private static final class StubPharmacyClient extends PharmacyServiceClient {
         StubPharmacyClient() { super(new RestTemplate(), endpoints()); }
+    }
+
+    private static final class WorklistPharmacyClient extends PharmacyServiceClient {
+        WorklistPharmacyClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode getWorklist(String facilityId, String status) {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ArrayNode rows = mapper.createArrayNode();
+            rows.addObject()
+                    .put("id", "rx-1")
+                    .put("medication_name", "Amoxicillin")
+                    .put("patient_id", "cpid-1");
+            return rows;
+        }
     }
 
     private static final class StubCostaClient extends CostaServiceClient {

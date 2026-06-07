@@ -73,3 +73,46 @@ export async function pairMonitoringDevice(body: {
 export async function syncMonitoringDevice(deviceId: string): Promise<void> {
   await apiClient.post(`${BASE}/devices/${encodeURIComponent(deviceId)}/sync`, {});
 }
+
+const WELLNESS_VITALS = "/internal/v1/mobile/citizen/wellness/vitals";
+
+export interface MonitoringReading {
+  id: string;
+  vitalType: string;
+  value: number;
+  unit: string;
+  measuredAt: string;
+  source: string;
+  notes?: string;
+}
+
+function num(v: unknown, fallback = 0): number {
+  if (typeof v === "number" && !Number.isNaN(v)) return v;
+  if (typeof v === "string" && v.trim() !== "") {
+    const n = Number(v);
+    return Number.isNaN(n) ? fallback : n;
+  }
+  return fallback;
+}
+
+function mapReadingRow(row: Row): MonitoringReading {
+  return {
+    id: str(row.id, "reading"),
+    vitalType: str(row.vital_type ?? row.vitalType, "UNKNOWN"),
+    value: num(row.value),
+    unit: str(row.unit, ""),
+    measuredAt: str(row.measured_at ?? row.measuredAt, ""),
+    source: str(row.source, "MANUAL"),
+    notes: row.notes != null ? str(row.notes) : undefined,
+  };
+}
+
+/** Live vitals from wellness-service (manual, Health Connect, etc.) — not device-sync metadata alone. */
+export async function fetchMonitoringReadings(patientId: string, type?: string): Promise<MonitoringReading[]> {
+  const params = type ? `&type=${encodeURIComponent(type)}` : "";
+  const res = await apiClient.get<{ data: Row[] }>(
+    `${WELLNESS_VITALS}?patientId=${encodeURIComponent(patientId)}${params}`,
+  );
+  const rows = res.data?.data ?? [];
+  return rows.map(mapReadingRow);
+}

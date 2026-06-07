@@ -3,7 +3,9 @@
  */
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { Screen, Header, TabBar, Card, CardBody, Badge } from "@impilo/mobile-design-system";
+import { Screen, Header, TabBar, Card, CardBody, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPendingDispensing } from "../../services/queueService";
 import { PharmacyDispensingScreen } from "./PharmacyDispensingScreen";
 
 type PharmacyTab = "dashboard" | "dispense" | "stock" | "prescriptions";
@@ -14,6 +16,45 @@ const TABS: Array<{ key: PharmacyTab; label: string }> = [
   { key: "stock", label: "Stock" },
   { key: "prescriptions", label: "Prescriptions" },
 ];
+
+function PharmacyPrescriptionsTab() {
+  const { data: pending = [], isLoading } = useQuery({
+    queryKey: ["pharmacy-pending"],
+    queryFn: fetchPendingDispensing,
+  });
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  const rows = pending as Array<Record<string, unknown>>;
+
+  return (
+    <ScrollView testID="pharmacy-prescriptions-screen" contentContainerStyle={styles.content}>
+      <Card>
+        <CardBody>
+          <Text style={styles.title}>Pending prescriptions ({rows.length})</Text>
+          <Text style={styles.sub}>Facility worklist from pharmacy-service — verify then dispense on the Dispense tab.</Text>
+        </CardBody>
+      </Card>
+      {rows.length === 0 ? (
+        <Text style={styles.sub}>No pending prescriptions in the worklist.</Text>
+      ) : (
+        rows.map((item) => (
+          <Card key={String(item.id)}>
+            <CardBody>
+              <Text style={styles.rxName}>{String(item.medication_name ?? "Medication")}</Text>
+              <Text style={styles.sub}>
+                {String(item.dosage ?? "")} · {String(item.frequency ?? "")} · Patient {String(item.patient_id ?? "")}
+              </Text>
+              <Badge variant="secondary">{String(item.status ?? "PENDING")}</Badge>
+            </CardBody>
+          </Card>
+        ))
+      )}
+    </ScrollView>
+  );
+}
 
 export function PharmacyHubScreen() {
   const [tab, setTab] = useState<PharmacyTab>("dashboard");
@@ -45,14 +86,7 @@ export function PharmacyHubScreen() {
         </Card>
       </ScrollView>
     ) : (
-      <ScrollView testID="pharmacy-prescriptions-screen" contentContainerStyle={styles.content}>
-        <Card>
-          <CardBody>
-            <Text style={styles.title}>Prescriptions</Text>
-            <Text style={styles.sub}>View and manage prescription pipeline (Tier-2).</Text>
-          </CardBody>
-        </Card>
-      </ScrollView>
+      <PharmacyPrescriptionsTab />
     );
 
   return (
@@ -71,6 +105,6 @@ const styles = StyleSheet.create({
   content: { padding: 16, gap: 12 },
   title: { fontSize: 16, fontWeight: "700", color: "#111827" },
   sub: { fontSize: 13, color: "#6B7280", marginTop: 6 },
+  rxName: { fontSize: 14, fontWeight: "600", color: "#111827" },
   badges: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
 });
-

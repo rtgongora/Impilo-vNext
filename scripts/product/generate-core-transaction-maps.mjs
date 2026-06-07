@@ -45,8 +45,8 @@ const JOURNEY_GAP_OVERRIDES = {
   "inpatient-admission": { missingFrontend: "" },
   "telemedicine-encounter": { missingFrontend: "real-time media transport blocked" },
   "imaging-order-result": { missingFrontend: "" },
-  "prescription-dispense": { missingFrontend: "mobile prescribing depth" },
-  "referral-create": { missingFrontend: "incoming-referrals handoff UX thin" },
+  "prescription-dispense": { missingFrontend: "" },
+  "referral-create": { missingFrontend: "" },
   "appointment-scheduling": { missingFrontend: "" },
   "consent-capture": { missingFrontend: "admin workflow parity vs mvumo templates" },
   "payment-billing-claim": { missingFrontend: "payer-ops stubs; MusheX raw paths not in browser" },
@@ -289,6 +289,33 @@ const COMPLETION_EVIDENCE = {
     tests: [
       "ui/one-ui-shell/src/app/wellness/routes/page.test.tsx",
       "ui/one-ui-shell/src/lib/__tests__/wellness-journey-golden-thread.test.ts",
+    ],
+  },
+  "prescription-dispense": {
+    bffEndpoints: [
+      "/internal/v1/pharmacy/dispense",
+      "/internal/v1/mobile/provider/pharmacy/pending",
+      "/internal/v1/mobile/provider/pharmacy/dispense",
+    ],
+    uiRoutes: ["/pharmacy/dispense", "/ehr/[patientId]/orders"],
+    tests: [
+      "ui/one-ui-shell/src/lib/__tests__/prescription-dispense-golden-thread.test.ts",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/PharmacyControllerTest.java",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedControllerTest.java",
+    ],
+  },
+  "referral-create": {
+    bffEndpoints: [
+      "/internal/v1/referrals",
+      "/internal/v1/referrals/incoming",
+      "/internal/v1/referrals/{id}/accept",
+      "/internal/v1/referrals/{id}/respond",
+    ],
+    uiRoutes: ["/queue/incoming-referrals", "/ehr/[patientId]/consults", "/ehr/[patientId]/referrals"],
+    tests: [
+      "ui/one-ui-shell/src/app/queue/incoming-referrals/page.test.tsx",
+      "ui/one-ui-shell/src/lib/__tests__/referral-create-golden-thread.test.ts",
+      "services/experience-bff/src/test/java/zw/gov/mohcc/impilo/experience/controller/ReferralsControllerTest.java",
     ],
   },
 };

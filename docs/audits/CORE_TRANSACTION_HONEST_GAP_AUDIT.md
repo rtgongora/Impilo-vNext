@@ -1,14 +1,14 @@
 # Core Transaction Honest Gap Audit
 
-> **Generated:** 2026-06-07 (Phase 4.2 promotion pass)  
-> **Baseline:** measured classifier — **14/46 transaction-complete**  
+> **Generated:** 2026-06-07 (Phase 4.3 promotion pass)  
+> **Baseline:** measured classifier — **16/46 transaction-complete**  
 > **Authority:** [`docs/frontend/GAP_CLOSURE_RULES.md`](../frontend/GAP_CLOSURE_RULES.md), [`docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md`](../product/PHASE_4_PRODUCTION_COMPLETION_BAR.md)
 
 ## Summary
 
 | Classification | Count | Meaning |
 |----------------|------:|---------|
-| transaction-complete | 14 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
+| transaction-complete | 16 | Full chain + tests + `COMPLETION_EVIDENCE` registry entry |
 | backend-ready-but-frontend-incomplete | 11 | Sovereign/BFF capability exists; UI/mobile write or orchestration gap |
 | backend-partial | 18 | Backend depth, BFF proxy, or stub-route signals incomplete |
 | mobile-missing | 2 | Web exists; mobile journey not productised |
@@ -34,6 +34,8 @@
 | Inpatient Admission Workflow | beds API + ward board transfer/discharge correlation |
 | Emergency / ED Encounter | ED activations + break-glass web/mobile BFF |
 | Wellness & Lifestyle Journey | `/wellness/routes` discover catalogue (honest fields) |
+| Prescription & Dispense | web dispense + mobile provider pharmacy worklist/dispense BFF |
+| Referral Create & Manage | incoming handoff → accept/respond → consults closure |
 
 ## Chain template (per incomplete journey)
 

@@ -4,11 +4,34 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import IncomingReferralsPage from "./page";
 
-const { get, post } = vi.hoisted(() => ({
-  get: vi.fn(),
-  post: vi.fn(),
+const { acceptMutateAsync } = vi.hoisted(() => ({
+  acceptMutateAsync: vi.fn(),
 }));
 const facility = { id: "facility-1", name: "Harare Central" };
+
+const incomingReferrals = [
+  {
+    id: "ref-1",
+    type: "referral",
+    attributes: {
+      patient_id: "patient-1",
+      referral_type: "SPECIALIST",
+      specialty: "Cardiology",
+      referred_to: "Cardiology Team",
+      referred_to_facility: "Harare Central",
+      reason: "Review persistent chest pain",
+      urgency: "URGENT",
+      status: "PENDING",
+      clinical_summary: "Troponin elevated",
+      referred_by: "provider-9",
+      referred_by_name: "Dr. Ncube",
+      response_notes: null,
+      responded_at: null,
+      accepted_at: null,
+      created_at: "2026-04-08T08:00:00.000Z",
+    },
+  },
+];
 
 vi.mock("@/components/AppLayout", () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -29,42 +52,18 @@ vi.mock("@/hooks/useFacilityStore", () => ({
     selector({ facility }),
 }));
 
-vi.mock("@/lib/api-client", () => ({
-  apiClient: {
-    get,
-    post,
-  },
+vi.mock("@/hooks/queries/useReferrals", () => ({
+  useIncomingReferrals: () => ({ data: { data: incomingReferrals }, isLoading: false }),
+  useAcceptReferral: () => ({ mutateAsync: acceptMutateAsync, isPending: false }),
+  useRespondReferral: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  buildReferralConsultHandoffRoute: (patientId: string, referralId: string) =>
+    `/ehr/${patientId}/consults?tab=referrals&referral_id=${referralId}`,
 }));
 
 describe("IncomingReferralsPage", () => {
   beforeEach(() => {
-    get.mockReset();
-    post.mockReset();
-    get.mockResolvedValue({
-      data: [
-        {
-          id: "ref-1",
-          type: "referral",
-          attributes: {
-            patient_id: "patient-1",
-            referral_type: "SPECIALIST",
-            specialty: "Cardiology",
-            referred_to: "Cardiology Team",
-            referred_to_facility: "Harare Central",
-            reason: "Review persistent chest pain",
-            urgency: "URGENT",
-            status: "PENDING",
-            clinical_summary: "Troponin elevated",
-            referred_by: "provider-9",
-            referred_by_name: "Dr. Ncube",
-            response_notes: null,
-            responded_at: null,
-            accepted_at: null,
-            created_at: "2026-04-08T08:00:00.000Z",
-          },
-        },
-      ],
-    });
+    acceptMutateAsync.mockReset();
+    acceptMutateAsync.mockResolvedValue({ data: incomingReferrals[0] });
   });
 
   it("shows the receiving orchestration summary and in-place handoff action", async () => {
@@ -88,9 +87,9 @@ describe("IncomingReferralsPage", () => {
     await user.click(acceptButtons[acceptButtons.length - 1]);
 
     await waitFor(() =>
-      expect(post).toHaveBeenCalledWith(
-        "/internal/v1/referrals/ref-1/accept",
+      expect(acceptMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
+          id: "ref-1",
           receiving_facility_id: "facility-1",
           receiving_facility_name: "Harare Central",
           notes: "Cardiology registrar notified.",

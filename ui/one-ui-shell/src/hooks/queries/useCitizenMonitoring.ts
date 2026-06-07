@@ -5,18 +5,29 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMonitoringDevices,
+  fetchMonitoringReadings,
   pairMonitoringDevice,
   syncMonitoringDevice,
 } from "@/lib/citizen-monitoring-api";
 
 const qk = {
   devices: (patientId: string) => ["citizen-monitoring", "devices", patientId] as const,
+  readings: (patientId: string, type?: string) =>
+    ["citizen-monitoring", "readings", patientId, type ?? "all"] as const,
 };
 
 export function useMonitoringDevices(patientId: string | undefined) {
   return useQuery({
     queryKey: qk.devices(patientId ?? ""),
     queryFn: () => fetchMonitoringDevices(patientId!),
+    enabled: !!patientId,
+  });
+}
+
+export function useMonitoringReadings(patientId: string | undefined, type?: string) {
+  return useQuery({
+    queryKey: qk.readings(patientId ?? "", type),
+    queryFn: () => fetchMonitoringReadings(patientId!, type),
     enabled: !!patientId,
   });
 }
