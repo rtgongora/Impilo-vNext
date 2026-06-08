@@ -119,3 +119,47 @@ export function summarizeCpdCredits(payload: AnyRecord): number {
   const count = root.cpdEligibleCount ?? root.totalCredits ?? root.credits;
   return typeof count === "number" ? count : Number(count) || 0;
 }
+
+export function parseAssessmentOptions(raw: unknown): string[] {
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map((v) => String(v));
+  } catch {
+    // delimiter fallback
+  }
+  return raw.split("|").map((s) => s.trim()).filter(Boolean);
+}
+
+export async function fetchAssessment(assessmentId: string): Promise<AnyRecord> {
+  const r = await apiClient.get<{ data: { assessment?: AnyRecord } }>(
+    `${V11}/assessments/${encodeURIComponent(assessmentId)}`,
+  );
+  return r.data.data?.assessment ?? {};
+}
+
+export async function submitAssessmentAttempt(
+  assessmentId: string,
+  body: AnyRecord,
+): Promise<AnyRecord> {
+  const r = await apiClient.post<{ data: { attempt?: AnyRecord } }>(
+    `${V11}/assessments/${encodeURIComponent(assessmentId)}/attempts`,
+    body,
+  );
+  return r.data.data?.attempt ?? {};
+}
+
+export async function issueCertificate(enrolmentId: string): Promise<AnyRecord> {
+  const r = await apiClient.post<{ data: { certificate?: AnyRecord } }>(
+    `${V11}/enrolments/${encodeURIComponent(enrolmentId)}/certificate`,
+    {},
+  );
+  return r.data.data?.certificate ?? {};
+}
+
+export async function fetchCertificates(subjectType: string, subjectId: string): Promise<Array<AnyRecord>> {
+  const r = await apiClient.get<{ data: { items?: Array<AnyRecord> } }>(
+    `${V11}/certificates?subjectType=${encodeURIComponent(subjectType)}&subjectId=${encodeURIComponent(subjectId)}`,
+  );
+  return r.data.data?.items ?? [];
+}

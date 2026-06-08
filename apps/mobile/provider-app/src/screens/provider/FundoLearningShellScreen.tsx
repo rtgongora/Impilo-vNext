@@ -6,15 +6,20 @@ import { useAuth } from "@impilo/mobile-auth";
 import { useAppStore } from "../../stores/appStore";
 import {
   createEnrolment,
+  fetchAssessment,
   fetchCatalog,
+  fetchCertificates,
   fetchCourseAssessments,
   fetchCourseStructure,
   fetchCpdEvidence,
   fetchMyLearning,
   fetchPathways,
+  issueCertificate,
   markLessonComplete,
   openLesson,
+  parseAssessmentOptions,
   startEnrolment,
+  submitAssessmentAttempt,
   summarizeCpdCredits,
 } from "../../services/fundoLearningService";
 
@@ -30,6 +35,9 @@ export function FundoLearningShellScreen() {
   const [activeLessonId, setActiveLessonId] = useState<string>("");
   const [activeEnrolmentId, setActiveEnrolmentId] = useState<string>("");
   const [activeAssessmentId, setActiveAssessmentId] = useState<string>("");
+  const [assessmentAnswers, setAssessmentAnswers] = useState<Record<string, string>>({});
+  const [attemptResult, setAttemptResult] = useState<AnyRecord | null>(null);
+  const [issuedCertificate, setIssuedCertificate] = useState<AnyRecord | null>(null);
   const authUser = auth.user as { sub?: string; provider_id?: string; providerId?: string } | undefined;
   const subjectType = learningSubjectType ?? "PROVIDER";
   const subjectId = learningSubjectId ?? authUser?.provider_id ?? authUser?.providerId ?? authUser?.sub ?? "mobile-provider";
@@ -86,6 +94,29 @@ export function FundoLearningShellScreen() {
   const activeLesson = lessons.find((l) => String(l.id) === activeLessonId) ?? null;
   const cpdCredits = summarizeCpdCredits(cpdEvidence.data ?? {});
   const activeAssessment = (assessments.data ?? []).find((a) => String(a.id) === activeAssessmentId) ?? null;
+  const assessmentDetail = useQuery({
+    queryKey: ["mobile-fundo", "assessment-detail", activeAssessmentId],
+    queryFn: () => fetchAssessment(activeAssessmentId),
+    enabled: Boolean(activeAssessmentId) && stage === "assessment",
+  });
+  const certificates = useQuery({
+    queryKey: ["mobile-fundo", "certificates", subjectType, subjectId],
+    queryFn: () => fetchCertificates(subjectType, subjectId),
+    enabled: stage === "home" || stage === "course",
+  });
+  const submitAttemptMutation = useMutation({
+    mutationFn: () =>
+      submitAssessmentAttempt(activeAssessmentId, {
+        subjectType,
+        subjectId,
+        answers: assessmentAnswers,
+      }),
+    onSuccess: (attempt) => setAttemptResult(attempt),
+  });
+  const issueCertificateMutation = useMutation({
+    mutationFn: () => issueCertificate(activeEnrolmentId),
+    onSuccess: (cert) => setIssuedCertificate(cert),
+  });
 
   useEffect(() => {
     if (appsFocus && stage === "home") {
@@ -124,7 +155,9 @@ export function FundoLearningShellScreen() {
                   <Text style={styles.title}>My Learning Snapshot</Text>
                   <Text style={styles.meta}>In progress: {Array.isArray(myLearning.data?.inProgress) ? myLearning.data?.inProgress.length : 0}</Text>
                   <Text style={styles.meta}>Completed: {Array.isArray(myLearning.data?.completed) ? myLearning.data?.completed.length : 0}</Text>
-                  <Text style={styles.meta}>Certificates: {Array.isArray(myLearning.data?.certificates) ? myLearning.data?.certificates.length : 0}</Text>
+                  <Text style={styles.meta}>
+                    Certificates: {certificates.isLoading ? "…" : (certificates.data ?? []).length}
+                  </Text>
                   <Text style={styles.meta}>
                     CPD credits: {cpdEvidence.isLoading ? "…" : cpdCredits}
                   </Text>
@@ -192,6 +225,16 @@ export function FundoLearningShellScreen() {
             />
             <Text style={styles.meta}>Enrolment ID: {activeEnrolmentId || "-"}</Text>
             <Text style={styles.meta}>CPD credits (evidence): {cpdCredits}</Text>
+            <Button
+              title={issueCertificateMutation.isPending ? "Issuing..." : "Issue certificate"}
+              size="sm"
+              variant="outline"
+              onPress={() => activeEnrolmentId && issueCertificateMutation.mutate()}
+              disabled={!activeEnrolmentId || issueCertificateMutation.isPending}
+            />
+            {issuedCertificate ? (
+              <Text style={styles.meta}>Certificate: {String(issuedCertificate.certificateNumber ?? issuedCertificate.id)}</Text>
+            ) : null}
             {lessons.map((lesson) => (
               <Pressable
                 key={String(lesson.id)}
@@ -230,7 +273,11 @@ export function FundoLearningShellScreen() {
           <View style={styles.section}>
             <Text style={styles.title}>{String(activeLesson.title ?? "Lesson")}</Text>
             <Text style={styles.meta}>Type: {String(activeLesson.contentType ?? "TEXT")}</Text>
-            <Text style={styles.body}>{String(activeLesson.contentBody ?? activeLesson.contentRef ?? "No content available")}</Text>
+            <Text style={styles.body}>
+              {String(activeLesson.contentType) === "VIDEO"
+                ? `Video: ${String(activeLesson.contentRef ?? activeLesson.contentBody ?? "No video URL")}`
+                : String(activeLesson.contentBody ?? activeLesson.contentRef ?? "No content available")}
+            </Text>
             <View style={styles.navRow}>
               <Button
                 title="Open lesson"
@@ -253,14 +300,47 @@ export function FundoLearningShellScreen() {
         {stage === "assessment" && activeAssessment ? (
           <View style={styles.section}>
             <Text style={styles.title}>{String(activeAssessment.title ?? "Assessment")}</Text>
-            <Text style={styles.meta}>
-              BFF: GET /internal/v1/learning/v11/assessments/{String(activeAssessment.id)}
-            </Text>
-            <Text style={styles.body}>
-              Assessment attempt UI opens on web at /learning/assessments/{String(activeAssessment.id)}/attempt.
-              Mobile placeholder wired to course assessments endpoint; start attempt when enrolment is active.
-            </Text>
-            <Text style={styles.meta}>Enrolment: {activeEnrolmentId || "Enrol in course first"}</Text>
+            {assessmentDetail.isLoading ? <LoadingSpinner /> : null}
+            {((assessmentDetail.data?.questions as Array<AnyRecord>) ?? []).map((question) => {
+              const qid = String(question.id);
+              const qType = String(question.type ?? "");
+              const options = parseAssessmentOptions(question.optionsJson);
+              return (
+                <View key={qid} style={styles.item}>
+                  <Text style={styles.itemTitle}>{String(question.prompt ?? "Question")}</Text>
+                  {qType === "TRUE_FALSE" ? (
+                    <View style={styles.navRow}>
+                      <Button title="True" size="sm" variant={assessmentAnswers[qid] === "true" ? "primary" : "outline"} onPress={() => setAssessmentAnswers((prev) => ({ ...prev, [qid]: "true" }))} />
+                      <Button title="False" size="sm" variant={assessmentAnswers[qid] === "false" ? "primary" : "outline"} onPress={() => setAssessmentAnswers((prev) => ({ ...prev, [qid]: "false" }))} />
+                    </View>
+                  ) : qType === "MULTIPLE_CHOICE" ? (
+                    <View style={styles.navRow}>
+                      {options.map((option) => (
+                        <Button
+                          key={option}
+                          title={option}
+                          size="sm"
+                          variant={assessmentAnswers[qid] === option ? "primary" : "outline"}
+                          onPress={() => setAssessmentAnswers((prev) => ({ ...prev, [qid]: option }))}
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.meta}>Free-text responses require manual review on web.</Text>
+                  )}
+                </View>
+              );
+            })}
+            <Button
+              title={submitAttemptMutation.isPending ? "Submitting..." : "Submit attempt"}
+              onPress={() => activeAssessmentId && activeEnrolmentId && submitAttemptMutation.mutate()}
+              disabled={!activeAssessmentId || !activeEnrolmentId || submitAttemptMutation.isPending}
+            />
+            {attemptResult ? (
+              <Text style={styles.meta}>
+                Attempt {String(attemptResult.id ?? "")}: score {String(attemptResult.score ?? "-")} • passed {String(attemptResult.passed ?? "-")}
+              </Text>
+            ) : null}
             <Button title="Back to course" size="sm" variant="outline" onPress={() => setStage("course")} />
           </View>
         ) : null}
