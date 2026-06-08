@@ -120,7 +120,24 @@ test.describe("Provider login resolving destinations", () => {
     await expect(page).toHaveURL(/\/provider-workspace/, { timeout: 12_000 });
   });
 
-  test("citizen without linked provider lands on home after resolving", async ({ page }) => {
+  test("activated provider without facility lands on facility picker with returnTo", async ({ page }) => {
+    await seedAuthSession(page, {
+      id: "prov-no-fac",
+      email: "nofac@impilo.zw",
+      displayName: "Provider No Facility",
+      roles: ["CLINICIAN"],
+      actorType: "PROVIDER",
+      assuranceLevel: "VERIFIED",
+      providerActivated: true,
+      providerId: "PRV-NO-FAC",
+    });
+    await mockLinkedIdsRoute(page);
+
+    await page.goto("/auth/resolving");
+    await expect(page).toHaveURL(/\/facility\?returnTo=%2Fprovider-workspace/, { timeout: 12_000 });
+  });
+
+  test("citizen without linked provider lands on home with my_life mode after resolving", async ({ page }) => {
     await seedAuthSession(page, {
       id: "cit-user-1",
       email: "citizen@impilo.zw",
@@ -134,6 +151,10 @@ test.describe("Provider login resolving destinations", () => {
 
     await page.goto("/auth/resolving");
     await expect(page).toHaveURL(/\/home/, { timeout: 12_000 });
+
+    const mode = await page.evaluate(() => sessionStorage.getItem("exp:operational_mode"));
+    const homeMode = await page.getByTestId("home-operational-mode").textContent().catch(() => null);
+    expect(mode === "my_life" || homeMode === "my_life").toBeTruthy();
   });
 
   test("linked-but-inactive provider lands on activation after resolving", async ({ page }) => {

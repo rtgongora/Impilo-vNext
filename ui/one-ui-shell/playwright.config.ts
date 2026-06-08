@@ -5,7 +5,7 @@ export default defineConfig({
   fullyParallel: !process.env.PLAYWRIGHT_SKIP_WEBSERVER,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  timeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER ? 30_000 : 15_000,
+  timeout: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.PLAYWRIGHT_COMPOSE_E2E ? 60_000 : 15_000,
   workers: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.CI ? 1 : undefined,
   reporter: "list",
   use: {
@@ -26,7 +26,7 @@ export default defineConfig({
       },
     },
   ],
-  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER
+  webServer: process.env.PLAYWRIGHT_SKIP_WEBSERVER || process.env.PLAYWRIGHT_COMPOSE_E2E
     ? undefined
     : {
         command: "npm run dev",
