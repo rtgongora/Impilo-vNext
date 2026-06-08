@@ -1,6 +1,9 @@
 package zw.gov.mohcc.impilo.learning.fundo;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.OffsetDateTime;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +72,14 @@ public class FundoCertificateService {
         cert.setStatus("ISSUED");
         cert.setCpdEligible(course.isCpdEligible());
         cert.setCpdPoints(course.isCpdEligible() ? course.getCpdPoints() : null);
+        cert.setVerificationDigest(computeVerificationDigest(
+                tenantId,
+                enrolmentId,
+                enrolment.getCourseId(),
+                enrolment.getSubjectType(),
+                enrolment.getSubjectId(),
+                cert.getCertificateNumber(),
+                cert.getIssuedAt()));
         certificateRepository.save(cert);
 
         outbox.append("FundoCertificate", cert.getId().toString(),
@@ -110,7 +121,33 @@ public class FundoCertificateService {
         v.put("status", c.getStatus());
         v.put("cpdEligible", c.isCpdEligible());
         v.put("cpdPoints", c.getCpdPoints());
+        v.put("verificationDigest", c.getVerificationDigest());
         return v;
+    }
+
+    static String computeVerificationDigest(
+            UUID tenantId,
+            UUID enrolmentId,
+            UUID courseId,
+            String subjectType,
+            String subjectId,
+            String certificateNumber,
+            OffsetDateTime issuedAt) {
+        String canonical = String.join("|",
+                tenantId.toString(),
+                enrolmentId.toString(),
+                courseId.toString(),
+                subjectType,
+                subjectId,
+                certificateNumber,
+                issuedAt == null ? "" : issuedAt.toString());
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(canonical.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new IllegalStateException("verification_digest_failed", e);
+        }
     }
 
     private static String generateCertificateNumber(String courseCode) {

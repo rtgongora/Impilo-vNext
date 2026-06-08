@@ -437,6 +437,8 @@ class FundoNativeLmsIT {
             assertThat(first.view().get("id")).isEqualTo(second.view().get("id"));
             assertThat(first.view().get("cpdEligible")).isEqualTo(true);
             assertThat(first.view().get("cpdPoints")).isEqualTo(2);
+            assertThat(first.view().get("verificationDigest")).isNotNull();
+            assertThat(String.valueOf(first.view().get("verificationDigest"))).hasSize(64);
             assertThat(eventsOfType(FundoNativeEventTypes.CERTIFICATE_ISSUED)).hasSize(1);
         }
 

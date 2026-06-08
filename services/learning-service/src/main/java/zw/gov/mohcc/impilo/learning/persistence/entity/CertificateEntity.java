@@ -67,6 +67,10 @@ public class CertificateEntity {
     @Column(name = "cpd_points")
     private Integer cpdPoints;
 
+    /** SHA-256 hex digest of canonical metadata — tamper-evident, not PKI-signed. */
+    @Column(name = "verification_digest", length = 128)
+    private String verificationDigest;
+
     @PrePersist
     void prePersist() {
         if (id == null) id = UUID.randomUUID();
@@ -99,4 +103,6 @@ public class CertificateEntity {
     public void setCpdEligible(boolean cpdEligible) { this.cpdEligible = cpdEligible; }
     public Integer getCpdPoints() { return cpdPoints; }
     public void setCpdPoints(Integer cpdPoints) { this.cpdPoints = cpdPoints; }
+    public String getVerificationDigest() { return verificationDigest; }
+    public void setVerificationDigest(String verificationDigest) { this.verificationDigest = verificationDigest; }
 }
