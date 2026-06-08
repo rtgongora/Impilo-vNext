@@ -109,7 +109,6 @@ waves:
       - community-service
       - costa-console
       - developer-console
-      - ehr
       - inventory-web
       - knowledge-admin
       - learning-service
@@ -117,9 +116,6 @@ waves:
       - msika-flow-portal
       - msika-flow-vendor
       - msika-web
-      - mushex-finance-console
-      - mushex-ops-console
-      - mushex-payer-portal
       - ops-console
       - ops-docs
       - oros-web

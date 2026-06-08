@@ -5,14 +5,14 @@
 ## Strategy counts
 
 - **shared-dockerfile-template**: 70
-- **buildpacks**: 23
 - **jib**: 20
+- **buildpacks**: 19
 - **not-required-internal-package**: 12
 - **not-required-generated-client**: 9
 - **official-helm-chart**: 8
+- **not-required-doctrine-only-component**: 5
 - **not-required-mobile-artifact**: 2
 - **dockerfile**: 1
-- **not-required-doctrine-only-component**: 1
 
 | Component | Plane | Type | Full-boot class | Image required | Strategy | Status | Dockerfile | Shared template | Jib module | Buildpack | Official image/chart | Image name | Build command | Build status | Blocker | Remediation |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -48,7 +48,7 @@
 | dhis2 | integration | external_dependency | external_dependency | no | not-required-generated-client | not_required | — | — | — | — | — | impilo/dhis2 | — | not_required | — | External or contract-only dependency |
 | dispatch-service | integration | backend_service | optional_full_boot | no | jib | valid | services/dispatch-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/dispatch-service | — | — | impilo/dispatch-service | bash scripts/build/build-runtime-image-from-jar.sh dispatch-service | not_required | — | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template |
 | document-service | clinical | backend_service | optional_full_boot | no | shared-dockerfile-template | valid | services/document-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/document-service | — | — | impilo/document-service | docker build -f services/document-service/Dockerfile OR build-runtime-image-from-jar.sh document-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
-| ehr | experience | frontend_app | optional_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/ehr | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
+| ehr | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/ehr | — | not_required | — | Deprecated or future-only |
 | envoy | trust | infrastructure | required_full_boot | yes | official-helm-chart | valid | — | — | — | — | envoyproxy/envoy:v1.31-latest | envoyproxy/envoy:v1.31-latest | no local build — pull/chart deploy | unknown | not_deployed_in_preview | Deploy in impilo-full-preview when authorized |
 | experience-bff | experience | backend_service | required_full_boot | yes | shared-dockerfile-template | valid | services/experience-bff/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/experience-bff | — | — | impilo/experience-bff | docker build -f services/experience-bff/Dockerfile OR build-runtime-image-from-jar.sh experience-bff | pass | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | external-elmis | integration | external_dependency | external_dependency | no | not-required-generated-client | not_required | — | — | — | — | — | impilo/external-elmis | — | not_required | — | External or contract-only dependency |
@@ -89,9 +89,9 @@
 | msika-service | enterprise | backend_service | optional_full_boot | no | shared-dockerfile-template | valid | services/msika-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/msika-service | — | — | impilo/msika-service | docker build -f services/msika-service/Dockerfile OR build-runtime-image-from-jar.sh msika-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | msika-web | experience | frontend_app | optional_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/msika-web | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
 | mushe-wallet-service | enterprise | backend_service | optional_full_boot | no | shared-dockerfile-template | valid | services/mushe-wallet-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/mushe-wallet-service | — | — | impilo/mushe-wallet-service | docker build -f services/mushe-wallet-service/Dockerfile OR build-runtime-image-from-jar.sh mushe-wallet-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
-| mushex-finance-console | experience | frontend_app | optional_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/mushex-finance-console | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
-| mushex-ops-console | experience | frontend_app | optional_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/mushex-ops-console | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
-| mushex-payer-portal | experience | frontend_app | optional_full_boot | no | buildpacks | not_required | — | — | — | paketobuildpacks/nodejs | — | impilo/mushex-payer-portal | pack build (optional) or bundled in one-ui-shell | not_required | — | UI workspace not independently deployed — not a missing Dockerfile failure |
+| mushex-finance-console | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/mushex-finance-console | — | not_required | — | Deprecated or future-only |
+| mushex-ops-console | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/mushex-ops-console | — | not_required | — | Deprecated or future-only |
+| mushex-payer-portal | experience | frontend_app | deprecated_retired | no | not-required-doctrine-only-component | not_required | — | — | — | — | — | impilo/mushex-payer-portal | — | not_required | — | Deprecated or future-only |
 | mushex-service | enterprise | backend_service | optional_full_boot | no | jib | valid | services/mushex-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/mushex-service | — | — | impilo/mushex-service | bash scripts/build/build-runtime-image-from-jar.sh mushex-service | not_required | — | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template |
 | mvumo-service | trust | backend_service | optional_full_boot | no | shared-dockerfile-template | valid | services/mvumo-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/mvumo-service | — | — | impilo/mvumo-service | docker build -f services/mvumo-service/Dockerfile OR build-runtime-image-from-jar.sh mvumo-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |
 | national-data-repository-service | data | backend_service | optional_full_boot | no | shared-dockerfile-template | valid | services/national-data-repository-service/Dockerfile | scripts/build/templates/impilo-jre-runtime.Dockerfile | services/national-data-repository-service | — | — | impilo/national-data-repository-service | docker build -f services/national-data-repository-service/Dockerfile OR build-runtime-image-from-jar.sh national-data-repository-service | not_required | — | Thin JAR-copy Dockerfile — equivalent to shared template |

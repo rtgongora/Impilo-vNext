@@ -44,37 +44,37 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 
 | Field | Value |
 | ----- | ----- |
-| Status | `awaiting-evidence` |
+| Status | `retired` |
 | Source of truth | [`ui/mushex-finance-console/DEPRECATED.md`](../../ui/mushex-finance-console/DEPRECATED.md) |
 | Audit gap | G-6 in [`costa-mushex-experience-layer-wiring-audit.md`](../audits/costa-mushex-experience-layer-wiring-audit.md) |
 | Canonical replacement | `ui/one-ui-shell` finance pages: `/finance/settlements`, `/finance/reconciliation`, `/finance/refunds`, `/finance/ledger`, `/finance/costa`, `/finance/mushex-platform` |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-finance-console/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI and no other repository depends on its artefacts. (c) All canonical replacement pages are at parity with the sidecar's last-shipped behaviour. |
-| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
-| Blockers | (1) telemetry source missing; (2) parity audit against canonical pages has not been run as a fresh sweep since Stage 3.3. |
+| Current evidence | Wave 6 program (2026-06-08): canonical parity confirmed in [`phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md); not in preview helm; CI/full-boot build removed — see [`wave-6-sidecar-retirement-record.md`](../product-truth/wave-6-sidecar-retirement-record.md). |
+| Blockers | None — folder retained with `DEPRECATED.md` for audit trail; physical deletion deferred. |
 
 ### RR-02 — `ui/mushex-ops-console` (sidecar UI)
 
 | Field | Value |
 | ----- | ----- |
-| Status | `awaiting-evidence` |
+| Status | `retired` |
 | Source of truth | [`ui/mushex-ops-console/DEPRECATED.md`](../../ui/mushex-ops-console/DEPRECATED.md) |
 | Audit gap | G-6 |
 | Canonical replacement | `ui/one-ui-shell` finance + admin pages, including `/finance/mushex-platform`, `/finance/payer-ops`, `/finance/reconciliation`, `/admin/audit/**`. |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-ops-console/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI. (c) Canonical replacement parity confirmed. |
-| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
-| Blockers | Same as RR-01. |
+| Current evidence | Wave 6 program (2026-06-08): canonical parity + not in preview helm + CI build removed — see [`wave-6-sidecar-retirement-record.md`](../product-truth/wave-6-sidecar-retirement-record.md). |
+| Blockers | None — folder retained with `DEPRECATED.md` for audit trail; physical deletion deferred. |
 
 ### RR-03 — `ui/mushex-payer-portal` (sidecar UI)
 
 | Field | Value |
 | ----- | ----- |
-| Status | `awaiting-evidence` |
+| Status | `retired` |
 | Source of truth | [`ui/mushex-payer-portal/DEPRECATED.md`](../../ui/mushex-payer-portal/DEPRECATED.md) |
 | Audit gap | G-6 |
 | Canonical replacement | `ui/one-ui-shell` finance pages: `/finance/payer-claims`, `/finance/payer-ops`, `/finance/refunds`. |
 | Retirement criteria | (a) Telemetry confirms zero load of any `/mushex-payer-portal/**` route for **30 consecutive days** in any environment where the sidecar is deployed. (b) Build pipelines for the sidecar are removed from CI. (c) Canonical replacement parity confirmed. |
-| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
-| Blockers | Same as RR-01. |
+| Current evidence | Wave 6 program (2026-06-08): canonical parity + not in preview helm + CI build removed — see [`wave-6-sidecar-retirement-record.md`](../product-truth/wave-6-sidecar-retirement-record.md). |
+| Blockers | None — folder retained with `DEPRECATED.md` for audit trail; physical deletion deferred. |
 
 ### RR-04 — `ui/experience` (legacy web shell — pre-`one-ui-shell`)
 
@@ -92,13 +92,13 @@ Promotion from `awaiting-evidence` to `evidence-clean` requires linking the actu
 
 | Field | Value |
 | ----- | ----- |
-| Status | `flagged` |
+| Status | `retired` |
 | Source of truth | [`ui/ehr/DEPRECATED.md`](../../ui/ehr/DEPRECATED.md) |
 | Audit gap | Doctrine reference: `docs/doctrine/health-os-doctrine.md`. |
 | Canonical replacement | `ui/one-ui-shell` `/ehr/**` pages. |
 | Retirement criteria | Same shape as RR-04. |
-| Current evidence | Query templates available in [`telemetry-query-recipes.md`](./telemetry-query-recipes.md); parity evidence in [`docs/audits/phase-7-retirement-parity-audit.md`](../audits/phase-7-retirement-parity-audit.md). |
-| Blockers | Same as RR-04. |
+| Current evidence | Wave 6 program (2026-06-08): canonical parity + not in preview helm + CI build removed — see [`wave-6-sidecar-retirement-record.md`](../product-truth/wave-6-sidecar-retirement-record.md). Sidecar ledger already marked `retired sidecar path`. |
+| Blockers | None — folder retained with `DEPRECATED.md` for audit trail; physical deletion deferred. |
 
 ### RR-06 — Legacy mobile-citizen wallet routes (wellness-proxy whitelist + `CitizenMyLifeController` wallet endpoints)
 

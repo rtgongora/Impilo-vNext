@@ -1,7 +1,7 @@
 # vNext Experience Orchestration Map
 
-> Generated: 2026-06-07T08:44:44.353Z
-> Entries: **956**
+> Generated: 2026-06-08T14:34:53.641Z
+> Entries: **965**
 
 JSON: [experience-orchestration-map.json](../../reports/product/experience-orchestration-map.json)
 
@@ -9,14 +9,14 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 
 | Status | Count |
 |--------|------:|
-| coherent | 165 |
-| partial | 144 |
+| coherent | 430 |
+| partial | 117 |
 | isolated-page | 43 |
-| orphan-backend | 188 |
-| orphan-frontend | 27 |
-| mock-stub | 9 |
-| unclear-intent | 54 |
-| missing-journey | 326 |
+| orphan-backend | 189 |
+| orphan-frontend | 28 |
+| mock-stub | 7 |
+| unclear-intent | 41 |
+| missing-journey | 110 |
 
 | route | actor | journey | status |
 | --- | --- | --- | --- |
@@ -28,17 +28,17 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 | /auth/reset-password | citizen | — | unclear-intent |
 | /auth/mfa | provider | provider-login | coherent |
 | /auth/logout | citizen | — | unclear-intent |
-| /auth | citizen | citizen-onboarding | missing-journey |
-| /auth/register | citizen | citizen-onboarding | missing-journey |
-| /auth/register/assurance | citizen | citizen-onboarding | missing-journey |
-| /auth/register/status | citizen | citizen-onboarding | missing-journey |
+| /auth | citizen | citizen-onboarding | coherent |
+| /auth/register | citizen | citizen-onboarding | coherent |
+| /auth/register/assurance | citizen | citizen-onboarding | coherent |
+| /auth/register/status | citizen | citizen-onboarding | coherent |
 | /auth/resolving | provider | provider-login | coherent |
 | /privacy | citizen | — | unclear-intent |
 | /terms | citizen | — | isolated-page |
 | /consent | citizen | consent-capture | coherent |
 | /account-deletion | citizen | — | isolated-page |
 | /privacy/app-stores | citizen | — | unclear-intent |
-| /clinical | provider | outpatient-consultation | missing-journey |
+| /clinical | provider | outpatient-consultation | coherent |
 | /core-transaction | provider | provider-patient-encounter | coherent |
 | /client-journey | platform | core-transaction-orchestration | coherent |
 | /provider-workspace | platform | core-transaction-orchestration | coherent |
@@ -46,7 +46,7 @@ JSON: [experience-orchestration-map.json](../../reports/product/experience-orche
 | /clinical-tools | provider | outpatient-consultation | missing-journey |
 | /clinical-tools/rules | provider | outpatient-consultation | missing-journey |
 | /clinical-tools/forms | provider | outpatient-consultation | mock-stub |
-| /clinical/control-tower | provider | outpatient-consultation | missing-journey |
-| /clinical/dictation | provider | outpatient-consultation | missing-journey |
-| /clinical/emergency | provider | outpatient-consultation | missing-journey |
-| /clinical/inpatient | provider | outpatient-consultation | missing-journey |
+| /clinical/control-tower | provider | outpatient-consultation | coherent |
+| /clinical/dictation | provider | outpatient-consultation | coherent |
+| /clinical/emergency | provider | outpatient-consultation | coherent |
+| /clinical/inpatient | provider | outpatient-consultation | coherent |

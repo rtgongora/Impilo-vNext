@@ -1,6 +1,6 @@
 # Product Truth Recovery Map
 
-> Generated: 2026-06-07T08:41:38.419Z
+> Generated: 2026-06-08T14:34:51.416Z
 > Branch: `claude/staging-ux-orchestration-remediation-Yypyl`
 > Regenerate: `node scripts/product/generate-product-truth-recovery.mjs`
 
@@ -9,7 +9,7 @@
 Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backend controllers, web routes, mobile screens, hooks, events, migrations, doctrine, and infrastructure into one product-truth inventory.
 
 **Exhaustive machine-readable exports:**
-- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2503 entries
+- [product-truth-recovery-map.json](../../reports/product/product-truth-recovery-map.json) — 2545 entries
 - [product-truth-recovery-map.csv](../../reports/product/product-truth-recovery-map.csv) — same data, CSV
 - [product-truth-rollups.md](../../reports/product/product-truth-rollups.md) — summary counts
 
@@ -17,13 +17,13 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 
 | Dimension | Discovered |
 |-----------|----------:|
-| Total items | 2503 |
+| Total items | 2545 |
 | Backend services | 91 |
 | APIs/contracts | 111 |
-| Frontend routes | 467 |
-| Mobile screens | 162 |
-| BFF route prefixes | 209 |
-| Unknown-needs-review | 100 |
+| Frontend routes | 468 |
+| Mobile screens | 163 |
+| BFF route prefixes | 215 |
+| Unknown-needs-review | 101 |
 
 ## Canonical capabilities (embedded registry)
 
@@ -41,6 +41,8 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | Nhume: Dispatch, delivery, fleet tracking | Enterprise/Nhume | partial | partial | Partial | Dual path: nhume vs dispatch BFF |
 | Comms Hub: Omnichannel, messaging, notifications | Experience/Comms Hub | partial | partial | Partial | Template/campaign admin depth |
 | Telemedicine: Teleconsult sessions, scheduling | Clinical/Telemedicine | partial | partial | Partial | RTC media intentionally blocked |
+| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | Data/Telemedicine analytics | yes | no | Partial | Mobile analytics dashboard |
+| Break-glass (provider request): Emergency access override request from clinical/ | Trust/Break-glass (provider request) | yes | partial | Partial | Mobile provider break-glass still uses legacy mobile BFF stubs |
 | Msika / Msika Flow: Catalog, orders, marketplace | Enterprise/Msika / Msika Flow | partial | partial | Partial | Order list routes 501 on some paths |
 | MusheX / COSTA: Payments, claims, billing, tariffs | Enterprise/MusheX / COSTA | partial | partial | Partial | No raw /mushex/v1 in browser |
 | Fundo: LMS courses, studio, certificates | Experience/Fundo | partial | partial | Partial | Mobile learning shell shallow |
@@ -60,6 +62,8 @@ Authoritative Phase 1 discovery map reconciling registry, contracts, BFF, backen
 | MADI: Haemovigilance (adverse reaction reporting) | Clinical/MADI | Live | Live | Live | — |
 | MADI: Central blood bank coordination | Clinical/MADI | Live | no | Live | — |
 | Impilo Live: Live events, webinars, broadcasts | Experience/Impilo Live | yes | yes | Live | Host controls on mobile partial |
+| Health OS Launcher: Role/facility-aware app launcher + marketplace tiles | Experience/Health OS Launcher | yes | partial | Partial | Mobile launcher parity |
+| Wellness / Monitoring: Citizen remote monitoring device pair/list/sync | Experience/Wellness / Monitoring | yes | yes | Partial | Readings timeline depth |
 | MADI: MADI dashboards and programme KPIs | Clinical/MADI | Live | no | Live | — |
 
 ## Backend services (registry)
@@ -116,6 +120,7 @@ _…and 51 more rows in JSON/CSV._
 | --- | --- | --- |
 | /access/governance | ui/one-ui-shell/src/app/access/governance/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /coverage/contracts | ui/one-ui-shell/src/app/coverage/contracts/page.tsx | not in routes.ts — guard/sidebar coverage gap |
+| /coverage/enroll | ui/one-ui-shell/src/app/coverage/enroll/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /coverage/member | ui/one-ui-shell/src/app/coverage/member/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /developer/event-catalogue | ui/one-ui-shell/src/app/developer/event-catalogue/page.tsx | not in routes.ts — guard/sidebar coverage gap |
 | /ehr/[patientId]/emergency | ui/one-ui-shell/src/app/ehr/[patientId]/emergency/page.tsx | not in routes.ts — guard/sidebar coverage gap |

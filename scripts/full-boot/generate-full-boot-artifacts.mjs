@@ -50,6 +50,14 @@ const REQUIRED_TRUST = new Set([
 ]);
 const REQUIRED_REGISTRY = new Set(["vito-service", "varapi-service", "tuso-service", "zibo-service", "ubomi-service"]);
 const REQUIRED_EXPERIENCE = new Set(["experience-bff", "one-ui-shell"]);
+
+/** Wave 6 program — RR-flagged sidecars absorbed into ui/one-ui-shell (build + preview helm retired). */
+const WAVE_6_RETIRED_SIDECARS = new Set([
+  "mushex-finance-console",
+  "mushex-ops-console",
+  "mushex-payer-portal",
+  "ehr",
+]);
 const REQUIRED_INFRA = new Set([
   "postgres",
   "redis",
@@ -134,7 +142,7 @@ function classifyEntry(entry) {
   if (entry.primary_plane === "clinical" && ["butano-service", "fhir-gateway-service", "pct-service"].includes(id)) {
     return "required_full_boot";
   }
-  if (id === "tshepo-service") return "deprecated_retired";
+  if (id === "tshepo-service" || WAVE_6_RETIRED_SIDECARS.has(id)) return "deprecated_retired";
   if (entry.module_path === "external" || entry.source_path?.startsWith("external")) {
     return "external_dependency";
   }
@@ -314,6 +322,10 @@ function enrichEntry(entry, facts) {
   let recommended_next_action = img.reason ?? "Verify after authorization";
   if (blocker === "not_deployed_in_preview") recommended_next_action = "Deploy in impilo-full-preview when authorized";
 
+  const wave6RetireReason = WAVE_6_RETIRED_SIDECARS.has(entry.id)
+    ? "Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed"
+    : null;
+
   return {
     ...entry,
     dockerfile_status: hasDocker ? "present" : entry.buildable ? "optional" : "n/a",
@@ -321,6 +333,7 @@ function enrichEntry(entry, facts) {
     full_boot_classification: classification,
     deploy_order_group: deployOrderGroup(entry, classification),
     ...img,
+    reason: wave6RetireReason ?? img.reason,
     runtime_image_required: img.image_required,
     current_status,
     blocker,

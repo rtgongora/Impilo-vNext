@@ -1,5 +1,5 @@
 metadata:
-  generated_at: '2026-06-08T02:28:32.955Z'
+  generated_at: '2026-06-08T16:31:03.391Z'
   source: docs/registry/services-registry.yaml
   doctrine: docs/environment/RUNTIME_IMAGE_STRATEGY_DOCTRINE.md
   total_entries: 146
@@ -1309,24 +1309,24 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: deprecated_retired
+    classification: deprecated_retired
     runtime_kind: frontend
     deploy_order_group: experience_layer
-    build_required: true
+    build_required: false
     image_required: false
     runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
+    image_strategy: not-required-doctrine-only-component
+    image_strategy_reclass: not-required-doctrine-only-component
     image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
+    image_build_command: null
     image_name: impilo/ehr
     official_image: null
     official_chart: null
     dockerfile_path: null
     shared_template: null
     jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
+    buildpack_builder: null
     container_required: false
     helm_required: false
     health_check_required: false
@@ -1339,11 +1339,11 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
     classification_confidence: certain
-    deployment_lane: build_validate_only
+    deployment_lane: doctrine_only
     run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    run_not_applicable_reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
   - id: envoy
     canonical_name: envoy
     plane: trust
@@ -2957,24 +2957,24 @@ classifications:
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: deprecated_retired
+    classification: deprecated_retired
     runtime_kind: frontend
     deploy_order_group: experience_layer
-    build_required: true
+    build_required: false
     image_required: false
     runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
+    image_strategy: not-required-doctrine-only-component
+    image_strategy_reclass: not-required-doctrine-only-component
     image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
+    image_build_command: null
     image_name: impilo/mushex-finance-console
     official_image: null
     official_chart: null
     dockerfile_path: null
     shared_template: null
     jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
+    buildpack_builder: null
     container_required: false
     helm_required: false
     health_check_required: false
@@ -2987,34 +2987,34 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
     classification_confidence: certain
-    deployment_lane: build_validate_only
+    deployment_lane: doctrine_only
     run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    run_not_applicable_reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
   - id: mushex-ops-console
     canonical_name: mushex-ops-console
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: deprecated_retired
+    classification: deprecated_retired
     runtime_kind: frontend
     deploy_order_group: experience_layer
-    build_required: true
+    build_required: false
     image_required: false
     runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
+    image_strategy: not-required-doctrine-only-component
+    image_strategy_reclass: not-required-doctrine-only-component
     image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
+    image_build_command: null
     image_name: impilo/mushex-ops-console
     official_image: null
     official_chart: null
     dockerfile_path: null
     shared_template: null
     jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
+    buildpack_builder: null
     container_required: false
     helm_required: false
     health_check_required: false
@@ -3027,34 +3027,34 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
     classification_confidence: certain
-    deployment_lane: build_validate_only
+    deployment_lane: doctrine_only
     run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    run_not_applicable_reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
   - id: mushex-payer-portal
     canonical_name: mushex-payer-portal
     plane: experience
     domain: ui-workspace
     component_type: frontend_app
-    full_boot_classification: optional_full_boot
-    classification: optional_full_boot
+    full_boot_classification: deprecated_retired
+    classification: deprecated_retired
     runtime_kind: frontend
     deploy_order_group: experience_layer
-    build_required: true
+    build_required: false
     image_required: false
     runtime_image_required: false
-    image_strategy: buildpacks
-    image_strategy_reclass: buildpack-candidate
+    image_strategy: not-required-doctrine-only-component
+    image_strategy_reclass: not-required-doctrine-only-component
     image_strategy_status: not_required
-    image_build_command: pack build (optional) or bundled in one-ui-shell
+    image_build_command: null
     image_name: impilo/mushex-payer-portal
     official_image: null
     official_chart: null
     dockerfile_path: null
     shared_template: null
     jib_module: null
-    buildpack_builder: paketobuildpacks/nodejs
+    buildpack_builder: null
     container_required: false
     helm_required: false
     health_check_required: false
@@ -3067,11 +3067,11 @@ classifications:
     default_http_port: null
     priority: P2
     blocker: null
-    reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
     classification_confidence: certain
-    deployment_lane: build_validate_only
+    deployment_lane: doctrine_only
     run_applicable: false
-    run_not_applicable_reason: UI workspace not independently deployed — not a missing Dockerfile failure
+    run_not_applicable_reason: Wave 6 sidecar retirement — canonical parity in one-ui-shell; not in preview helm; CI build removed
   - id: mushex-service
     canonical_name: mushex-service
     plane: enterprise
@@ -5521,7 +5521,7 @@ classifications:
     blocker: null
     reason: Deprecated or future-only
     classification_confidence: certain
-    deployment_lane: build_validate_only
+    deployment_lane: doctrine_only
     run_applicable: false
     run_not_applicable_reason: Deprecated or future-only
   - id: tuso-service

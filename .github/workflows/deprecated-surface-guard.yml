@@ -5,11 +5,17 @@ on:
     paths:
       - "ui/experience/**"
       - "ui/ehr/**"
+      - "ui/mushex-finance-console/**"
+      - "ui/mushex-ops-console/**"
+      - "ui/mushex-payer-portal/**"
   push:
     branches: [main, develop, "claude/**"]
     paths:
       - "ui/experience/**"
       - "ui/ehr/**"
+      - "ui/mushex-finance-console/**"
+      - "ui/mushex-ops-console/**"
+      - "ui/mushex-payer-portal/**"
 
 jobs:
   block-deprecated-ui-paths:
@@ -20,19 +26,5 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fail if new files appear under ui/experience or ui/ehr
-        run: |
-          set -euo pipefail
-          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
-          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
-            echo "No base ref; skipping diff (initial push)."
-            exit 0
-          fi
-          ADDED=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'ui/experience/' 'ui/ehr/' || true)
-          if [ -n "$ADDED" ]; then
-            echo "::error::New files detected under retired UI paths (ui/experience, ui/ehr):"
-            echo "$ADDED"
-            echo "Canonical web shell is ui/one-ui-shell. Do not reintroduce the fork."
-            exit 1
-          fi
-          echo "No new files under ui/experience or ui/ehr."
+      - name: Fail if new files appear under retired UI sidecar paths
+        run: bash scripts/guard/check-deprecated-surfaces.sh

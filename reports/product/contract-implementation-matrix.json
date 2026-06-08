@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-08T02:28:28.557Z",
+  "generatedAt": "2026-06-08T16:30:59.078Z",
   "counts": {
     "totalOpenApiOperations": 4452,
     "totalAsyncChannels": 84,
@@ -6613,7 +6613,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PolicyConsentController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabWorklistController.java",
       "stubPattern": null
     },
     {
@@ -15128,7 +15128,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/InventorySupplyBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalToolsController.java",
       "stubPattern": null
     },
     {
@@ -18040,7 +18040,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MobileProviderExtendedController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalToolsController.java",
       "stubPattern": null
     },
     {
@@ -20367,7 +20367,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/MvumoRemoteSessionController.java",
       "stubPattern": null
     },
     {
@@ -22226,7 +22226,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PolicyConsentController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabWorklistController.java",
       "stubPattern": null
     },
     {
@@ -22668,7 +22668,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PolicyConsentController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabWorklistController.java",
       "stubPattern": null
     },
     {
@@ -23136,7 +23136,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/InventorySupplyBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ClinicalToolsController.java",
       "stubPattern": null
     },
     {
@@ -24904,7 +24904,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PolicyConsentController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LabWorklistController.java",
       "stubPattern": null
     },
     {

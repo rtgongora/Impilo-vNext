@@ -1,6 +1,6 @@
 # vNext Actor Model
 
-> Generated: 2026-06-07T08:44:44.353Z
+> Generated: 2026-06-08T14:34:53.641Z
 > 24 actor types (human and non-human)
 
 | actor | identity | auth | context | transactions | ui |

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-08T02:14:50.545Z",
-  "journeyCount": 46,
+  "generatedAt": "2026-06-08T14:34:53.479Z",
+  "journeyCount": 47,
   "journeys": [
     {
       "journeyId": "citizen-onboarding",
@@ -36,7 +36,7 @@
       "auditRequirements": "registration audit chain; identity issuance log",
       "completionState": "IDENTITY_RESOLVED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "issuance queue ops depth",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "consent-capture",
@@ -126,7 +126,7 @@
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "control-tower dashboards thin",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "facility-context-selection",
         "provider-patient-encounter"
@@ -221,7 +221,7 @@
       "completionState": "ACCESS_GRANTED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "digital readiness dashboards thin",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "workspace-context-selection",
         "queue-walk-in"
@@ -380,7 +380,7 @@
       "auditRequirements": "encounter audit chain",
       "completionState": "CLINICAL_COMPLETION_PENDING",
       "currentImplementationStatus": "wired",
-      "missingBackendWork": "pathway execution orchestration partial",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "outpatient-consultation",
@@ -570,16 +570,18 @@
       "context": "remote care; consent required",
       "entryPoint": "/telemedicine",
       "startState": "SCHEDULED",
-      "steps": "create session → consent → routing → consult (RTC blocked) → referral update",
+      "steps": "create session → consent → routing → governed RTC token → consult → referral update",
       "backendServices": [
         "pct-service",
         "mvumo-service",
         "rtc-gateway-service",
+        "analytics-pipeline-service",
         "experience-bff"
       ],
-      "apis": "/internal/v1/teleconsult/*, /internal/v1/mvumo/*",
+      "apis": "/internal/v1/teleconsult/*, /internal/v1/mvumo/*, /internal/v1/rtc/*",
       "frontendRoutes": [
         "/telemedicine",
+        "/telemedicine/analytics",
         "/telemedicine/new",
         "/telemedicine/session/[sessionId]"
       ],
@@ -593,14 +595,14 @@
       "trustSecurityChecks": "consent; remote session authz",
       "auditRequirements": "telehealth audit",
       "completionState": "COMPLETED",
-      "currentImplementationStatus": "partial",
-      "missingBackendWork": "RTC media intentionally unavailable",
-      "missingFrontendMobileWork": "RTC media transport preview-limited (lifecycle BFF wired)",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "consent-capture",
         "referral-create"
       ],
-      "productOwnerAcceptanceTest": "Teleconsult created, consented, referral persisted without RTC",
+      "productOwnerAcceptanceTest": "Teleconsult created, consented, governed RTC token issued, referral persisted",
       "coreTransactionType": "TELEMEDICINE",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
       "completionClassification": "transaction-complete"
@@ -827,11 +829,12 @@
       "steps": "find slot → book → confirm → remind → check-in",
       "backendServices": [
         "scheduling-service",
+        "booking-service",
         "tuso-service",
         "notification-service",
         "experience-bff"
       ],
-      "apis": "/internal/v1/appointments/*, /internal/v1/scheduling/*",
+      "apis": "/internal/v1/appointments/*, /internal/v1/scheduling/*, /internal/v1/bookings/*",
       "frontendRoutes": [
         "/queue/scheduled",
         "/scheduling",
@@ -901,7 +904,7 @@
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "remote-session admin depth",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "telemedicine-encounter",
         "citizen-onboarding"
@@ -971,7 +974,7 @@
       "auditRequirements": "financial audit chain",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "long-tail finance routes",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "wallet-payment",
@@ -1010,8 +1013,8 @@
       "auditRequirements": "document access audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "scanning pipeline depth",
-      "missingFrontendMobileWork": "indexing UX partial vs document-service",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "imaging-order-result",
         "provider-patient-encounter"
@@ -1067,9 +1070,9 @@
       "trustSecurityChecks": "courier role; route authz",
       "auditRequirements": "delivery audit",
       "completionState": "COMPLETED",
-      "currentImplementationStatus": "partial",
-      "missingBackendWork": "dual nhume vs dispatch BFF path",
-      "missingFrontendMobileWork": "dispatch detail + offline queue UX",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "marketplace-order",
         "notification-comms"
@@ -1077,7 +1080,7 @@
       "productOwnerAcceptanceTest": "Courier completes delivery run with POD",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "INSTRUCTIONS_AND_NOTIFICATIONS",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "notification-comms",
@@ -1112,7 +1115,7 @@
       "auditRequirements": "comms audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "wired",
-      "missingBackendWork": "template/campaign admin depth",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "consent-capture",
@@ -1206,7 +1209,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "mobile learning shell shallow (web catalogue/enrolment complete)",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-login",
         "credential-verification"
@@ -1264,7 +1267,7 @@
       "auditRequirements": "report access audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "NDR/warehouse depth",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "public-health-outreach",
@@ -1339,7 +1342,7 @@
       "auditRequirements": "registry audit mandatory",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "council import queue thin",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "health-id-issuance",
@@ -1383,7 +1386,7 @@
       "auditRequirements": "integration audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "adapter template admin thin",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "device-system-event",
@@ -1468,7 +1471,7 @@
       "auditRequirements": "device event audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "device admin UX backend-only",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "ops admin surface only (by design)",
       "relatedJourneys": [
         "health-id-issuance",
@@ -1522,8 +1525,8 @@
       "trustSecurityChecks": "issuance authz; biometric verify",
       "auditRequirements": "issuance audit",
       "completionState": "IDENTITY_RESOLVED",
-      "currentImplementationStatus": "partial",
-      "missingBackendWork": "pickup verify BFF routes missing",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
       "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "citizen-onboarding",
@@ -1579,9 +1582,9 @@
       "trustSecurityChecks": "commerce authz",
       "auditRequirements": "order audit",
       "completionState": "COMPLETED",
-      "currentImplementationStatus": "partial",
-      "missingBackendWork": "order list routes 501 on some paths",
-      "missingFrontendMobileWork": "booking list unavailable",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "wallet-payment",
         "dispatch-delivery"
@@ -1589,7 +1592,7 @@
       "productOwnerAcceptanceTest": "Citizen places order and tracks fulfilment",
       "coreTransactionType": "MARKETPLACE",
       "lifecycleStage": "SERVICE_SELECTION",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "wellness-journey",
@@ -1642,6 +1645,63 @@
       "coreTransactionType": "WELLNESS",
       "lifecycleStage": "ACCESS_SERVICE",
       "completionClassification": "transaction-complete"
+    },
+    {
+      "journeyId": "impilo-live-events",
+      "journeyName": "Impilo Live Events",
+      "initiatingActor": "citizen",
+      "respondingActor": "live-service",
+      "transactionObject": "Live event / broadcast session",
+      "context": "health talks, webinars, CPD live",
+      "entryPoint": "/live/discover",
+      "startState": "SCHEDULED",
+      "steps": "discover → register → join room → replay → certificate",
+      "backendServices": [
+        "live-service",
+        "rtc-gateway-service",
+        "booking-service",
+        "experience-bff"
+      ],
+      "apis": "/internal/v1/live/*, /internal/v1/rtc/*",
+      "frontendRoutes": [
+        "/live",
+        "/live/certificates",
+        "/live/cpd",
+        "/live/create",
+        "/live/discover",
+        "/live/event/[eventId]",
+        "/live/event/[eventId]/analytics",
+        "/live/event/[eventId]/replay",
+        "/live/event/[eventId]/room",
+        "/live/manage",
+        "/live/my-events",
+        "/live/replays",
+        "/live/saved"
+      ],
+      "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/live/LiveDiscoverScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/live/LiveEventScreen.tsx",
+        "apps/mobile/citizen-app/src/screens/telehealth/LiveKitMobileConsultRoom.tsx",
+        "apps/mobile/provider-app/src/screens/live/ProviderLiveHubScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/CriticalEventScreen.tsx",
+        "apps/mobile/provider-app/src/screens/provider/LiveKitMobileConsultRoom.tsx"
+      ],
+      "dataReadWritten": "live event registration; attendance",
+      "eventsEmitted": "live.event.*",
+      "trustSecurityChecks": "event authz; replay token scope",
+      "auditRequirements": "live participation audit",
+      "completionState": "COMPLETED",
+      "currentImplementationStatus": "wired",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
+      "relatedJourneys": [
+        "wellness-journey",
+        "fundo-learning"
+      ],
+      "productOwnerAcceptanceTest": "Citizen discovers live event and joins governed room",
+      "coreTransactionType": "WELLNESS",
+      "lifecycleStage": "ACCESS_SERVICE",
+      "completionClassification": "backend-ready-but-frontend-incomplete"
     },
     {
       "journeyId": "social-community",
@@ -1737,7 +1797,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "field ops mobile thinner than web",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "surveillance-outbreak",
         "reporting-dashboard"
@@ -1745,7 +1805,7 @@
       "productOwnerAcceptanceTest": "CHW records outreach visit on mobile",
       "coreTransactionType": "COMMUNITY_OUTREACH",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "mobile-missing"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "crvs-ubomi",
@@ -1785,7 +1845,9 @@
         "/registry/trust",
         "/ubomi"
       ],
-      "mobileScreens": [],
+      "mobileScreens": [
+        "apps/mobile/citizen-app/src/screens/crvs/UbomiCrvsScreen.tsx"
+      ],
       "dataReadWritten": "vital events; certificates",
       "eventsEmitted": "ubomi.*",
       "trustSecurityChecks": "CRVS authz",
@@ -1793,7 +1855,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "mobile CRVS parity missing",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "registry-administration",
         "citizen-onboarding"
@@ -1801,7 +1863,7 @@
       "productOwnerAcceptanceTest": "Vital event registered with certificate issuance",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "RECORD_CONTRIBUTION",
-      "completionClassification": "mobile-missing"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "coverage-enrollment",
@@ -1940,8 +2002,8 @@
       "auditRequirements": "offline action audit",
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "federation depth",
-      "missingFrontendMobileWork": "offline conflict UX",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
         "integration-sync-replay"
@@ -1949,7 +2011,7 @@
       "productOwnerAcceptanceTest": "Provider works offline, syncs without data loss",
       "coreTransactionType": "FACILITY_WALK_IN",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "emergency-encounter",
@@ -2262,8 +2324,8 @@
       "auditRequirements": "provider registry audit",
       "completionState": "IDENTITY_RESOLVED",
       "currentImplementationStatus": "partial",
-      "missingBackendWork": "council import queue",
-      "missingFrontendMobileWork": "reconciliation queue thin",
+      "missingBackendWork": "",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-login",
         "credential-verification"
@@ -2271,7 +2333,7 @@
       "productOwnerAcceptanceTest": "Provider onboarded with valid licensure",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "citizen-monitoring",
@@ -2656,6 +2718,7 @@
       "health-id-issuance",
       "marketplace-order",
       "wellness-journey",
+      "impilo-live-events",
       "social-community",
       "public-health-outreach",
       "crvs-ubomi",
@@ -2745,6 +2808,10 @@
       "consent-capture"
     ],
     "rtc-gateway-service": [
+      "telemedicine-encounter",
+      "impilo-live-events"
+    ],
+    "analytics-pipeline-service": [
       "telemedicine-encounter"
     ],
     "pacs-adapter-service": [
@@ -2763,6 +2830,10 @@
     ],
     "scheduling-service": [
       "appointment-scheduling"
+    ],
+    "booking-service": [
+      "appointment-scheduling",
+      "impilo-live-events"
     ],
     "notification-service": [
       "appointment-scheduling",
@@ -2864,6 +2935,9 @@
     "simba-service": [
       "wellness-journey"
     ],
+    "live-service": [
+      "impilo-live-events"
+    ],
     "llm-orchestration-service": [
       "social-community",
       "ai-guidance-nompilo",
@@ -2902,10 +2976,8 @@
   },
   "unmappedServices": [
     "ai-model-registry-service",
-    "analytics-pipeline-service",
     "asset-registry-service",
     "audit-ledger-service",
-    "booking-service",
     "butano-fhir",
     "clinical-knowledge-platform-service",
     "data-access-governance-service",
@@ -2919,7 +2991,6 @@
     "inventory-elmis-adapter",
     "inventory-service",
     "jobs-service",
-    "live-service",
     "msika-apps-service",
     "national-data-repository-service",
     "ndr-service",

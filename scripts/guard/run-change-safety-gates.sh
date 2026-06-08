@@ -6,6 +6,7 @@ source "$REPO_PATH/scripts/guard/_guard-common.sh"
 
 CHECKS=(
   check-deprecated-surfaces.sh
+  check-retired-sidecars-full-boot.sh
   check-dangerous-deletions.sh
   check-duplicate-services.sh
   check-service-inventory.sh

@@ -67,7 +67,11 @@ export function isRuntimeK8sMicroservice(entry) {
 export function deploymentLane(entry) {
   const id = entry.id;
   const strategy = entry.image_strategy ?? "";
-  if (entry.full_boot_classification === "doctrine_only_future" || entry.component_type === "external_dependency") {
+  if (
+    entry.full_boot_classification === "doctrine_only_future" ||
+    entry.full_boot_classification === "deprecated_retired" ||
+    entry.component_type === "external_dependency"
+  ) {
     return "doctrine_only";
   }
   if (OFFICIAL_INFRA.has(id) || strategy === "official-upstream-image") return "runtime_official";

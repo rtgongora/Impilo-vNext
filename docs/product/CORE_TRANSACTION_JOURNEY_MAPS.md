@@ -1,7 +1,7 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-08T02:14:50.545Z
-> Journeys discovered: **46**
+> Generated: 2026-06-08T14:34:53.479Z
+> Journeys discovered: **47**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md) for spine doctrine.
@@ -19,7 +19,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | transaction-complete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | transaction-complete |
-| Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | transaction-complete |
+| Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | wired | transaction-complete |
 | Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
 | Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | transaction-complete |
 | Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | transaction-complete |
@@ -28,28 +28,29 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | transaction-complete |
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | transaction-complete |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | provider | /ehr/[patientId]/documents | partial | transaction-complete |
-| Dispatch / Delivery (NHUME) | MARKETPLACE | courier | /operations/dispatch | partial | backend-partial |
+| Dispatch / Delivery (NHUME) | MARKETPLACE | courier | /operations/dispatch | wired | transaction-complete |
 | Notification & Communications | ADMINISTRATIVE_HEALTH | platform | /communication | wired | transaction-complete |
 | Fundo / Learning Journey | TRAINING_OR_COMPETENCY | provider | /learning | partial | transaction-complete |
 | Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | data-analyst | /reports | partial | transaction-complete |
 | Registry Administration | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | transaction-complete |
 | Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | integration-system | /developer | partial | transaction-complete |
 | Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | transaction-complete |
-| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | transaction-complete |
-| Marketplace Order | MARKETPLACE | citizen | /marketplace | partial | backend-partial |
+| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | wired | transaction-complete |
+| Marketplace Order | MARKETPLACE | citizen | /marketplace | wired | transaction-complete |
 | Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | transaction-complete |
+| Impilo Live Events | WELLNESS | citizen | /live/discover | wired | backend-ready-but-frontend-incomplete |
 | Social / Community / Timeline | WELLNESS | citizen | /social | wired | transaction-complete |
-| Public Health / CHW Outreach | COMMUNITY_OUTREACH | community-health-worker | /public-health | partial | mobile-missing |
-| Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | mobile-missing |
+| Public Health / CHW Outreach | COMMUNITY_OUTREACH | community-health-worker | /public-health | partial | transaction-complete |
+| Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | transaction-complete |
 | Coverage Enrollment | ADMINISTRATIVE_HEALTH | citizen | /coverage | partial | transaction-complete |
 | Wallet Payment | MARKETPLACE | citizen | /wallet | wired | transaction-complete |
-| Offline Clinical Queue | FACILITY_WALK_IN | provider | mobile offline mode | partial | backend-partial |
+| Offline Clinical Queue | FACILITY_WALK_IN | provider | mobile offline mode | partial | transaction-complete |
 | Emergency / ED Encounter | EMERGENCY | provider | /clinical/emergency | partial | transaction-complete |
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | wired | transaction-complete |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | health-information-officer | /public-health | partial | transaction-complete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | transaction-complete |
 | Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | transaction-complete |
-| Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | backend-partial |
+| Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | transaction-complete |
 | Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | transaction-complete |
 | Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | transaction-complete |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | citizen | /madi/donor | wired | transaction-complete |
@@ -140,4 +141,4 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **PO acceptance test:** Provider searches patient, selects, opens chart with correct CPID
 
 
-_Full 46 journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._
+_Full 47 journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._

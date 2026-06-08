@@ -39,6 +39,10 @@ while IFS= read -r f; do
     guard_fail "suspected mock data in production file: $f"
     parity_record_blocking
   fi
+  if grep -qE 'value:\s*"0"' "$f" 2>/dev/null && grep -qE 'lab/worklist|LabWorklist' "$f" 2>/dev/null; then
+    guard_fail "hardcoded zero KPI lab worklist shell: $f"
+    parity_record_blocking
+  fi
 done <<< "$NEW_FILES"
 
 # Advisory: legacy patterns in full tree (not blocking)

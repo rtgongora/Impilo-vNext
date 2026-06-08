@@ -10,23 +10,23 @@
     "enterprise": 16
   },
   "by_classification": {
-    "optional_full_boot": 102,
+    "optional_full_boot": 98,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
-    "deprecated_retired": 1
+    "deprecated_retired": 5
   },
   "image_strategy": {
     "dockerfile": 1,
     "shared-dockerfile-template": 70,
     "jib": 20,
-    "buildpacks": 23,
+    "buildpacks": 19,
     "official-upstream-image": 0,
     "official-helm-chart": 8,
     "not-required-internal-package": 12,
     "not-required-mobile-artifact": 2,
     "not-required-generated-client": 9,
-    "not-required-doctrine-only-component": 1,
+    "not-required-doctrine-only-component": 5,
     "unknown-needs-review": 0,
     "missing-required-image-strategy": 0
   },
@@ -34,10 +34,10 @@
   "dockerfile_count": 1,
   "shared_template_count": 70,
   "jib_count": 20,
-  "buildpacks_count": 23,
+  "buildpacks_count": 19,
   "official_image_count": 0,
   "official_chart_count": 8,
-  "not_required_count": 24,
+  "not_required_count": 28,
   "unknown_needs_review_count": 0,
   "missing_required_image_strategy": 0
 }

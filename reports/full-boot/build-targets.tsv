@@ -26,7 +26,6 @@ developer-console		ui/developer-console	optional_full_boot
 developer-portal-service		services/developer-portal-service	optional_full_boot
 dispatch-service		services/dispatch-service	optional_full_boot
 document-service		services/document-service	optional_full_boot
-ehr		ui/ehr	optional_full_boot
 experience-bff		services/experience-bff	required_full_boot
 fhir-gateway-service		services/fhir-gateway-service	required_full_boot
 forms-service		services/forms-service	optional_full_boot
@@ -56,9 +55,6 @@ msika-flow-vendor		ui/msika-flow-vendor	optional_full_boot
 msika-service		services/msika-service	optional_full_boot
 msika-web		ui/msika-web	optional_full_boot
 mushe-wallet-service		services/mushe-wallet-service	optional_full_boot
-mushex-finance-console		ui/mushex-finance-console	optional_full_boot
-mushex-ops-console		ui/mushex-ops-console	optional_full_boot
-mushex-payer-portal		ui/mushex-payer-portal	optional_full_boot
 mushex-service		services/mushex-service	optional_full_boot
 mvumo-service		services/mvumo-service	optional_full_boot
 national-data-repository-service		services/national-data-repository-service	optional_full_boot

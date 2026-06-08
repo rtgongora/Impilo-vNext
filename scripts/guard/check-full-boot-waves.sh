@@ -25,8 +25,13 @@ for e in doc["classifications"]:
 assigned = []
 for w in waves.get("waves", []):
     assigned.extend(w.get("services", []))
+retired = {
+    e["id"]
+    for e in doc["classifications"]
+    if e.get("full_boot_classification") == "deprecated_retired"
+}
 missing = sorted(runtime - set(assigned))
-extra = sorted(set(assigned) - runtime)
+extra = sorted(set(assigned) - runtime - retired)
 dupes = [x for x in assigned if assigned.count(x) > 1]
 if dupes:
     print("FAIL: duplicate wave assignments:", sorted(set(dupes)))

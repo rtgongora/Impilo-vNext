@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-06-07T08:44:44.353Z",
-  "totalFrontendRoutes": 494,
-  "routesMappedToActorContextIntentTransaction": 386,
-  "orphanRoutes": 124,
-  "backendCapabilitiesWithoutJourneys": 34,
-  "mockStubPlaceholderRouteCount": 9,
+  "generatedAt": "2026-06-08T14:34:53.641Z",
+  "totalFrontendRoutes": 496,
+  "routesMappedToActorContextIntentTransaction": 401,
+  "orphanRoutes": 112,
+  "backendCapabilitiesWithoutJourneys": 31,
+  "mockStubPlaceholderRouteCount": 7,
   "isolatedPages": 43,
-  "incompleteTransactionJourneys": 38,
-  "mobileSurfacesDisconnected": 49,
+  "incompleteTransactionJourneys": 1,
+  "mobileSurfacesDisconnected": 46,
   "orchestrationStatusCounts": {
-    "coherent": 165,
-    "partial": 144,
+    "coherent": 430,
+    "partial": 117,
     "isolated-page": 43,
-    "orphan-backend": 188,
-    "orphan-frontend": 27,
-    "mock-stub": 9,
-    "unclear-intent": 54,
-    "missing-journey": 326
+    "orphan-backend": 189,
+    "orphan-frontend": 28,
+    "mock-stub": 7,
+    "unclear-intent": 41,
+    "missing-journey": 110
   },
   "top20CoherenceGaps": [
     {
@@ -35,30 +35,6 @@
       "type": "route",
       "id": "/auth/logout",
       "status": "unclear-intent",
-      "gap": "hooks/queries/useAuth.ts"
-    },
-    {
-      "type": "route",
-      "id": "/auth",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useAuth.ts"
-    },
-    {
-      "type": "route",
-      "id": "/auth/register",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useAuth.ts"
-    },
-    {
-      "type": "route",
-      "id": "/auth/register/assurance",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useAuth.ts"
-    },
-    {
-      "type": "route",
-      "id": "/auth/register/status",
-      "status": "missing-journey",
       "gap": "hooks/queries/useAuth.ts"
     },
     {
@@ -87,12 +63,6 @@
     },
     {
       "type": "route",
-      "id": "/clinical",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
-    },
-    {
-      "type": "route",
       "id": "/clinical-tools",
       "status": "missing-journey",
       "gap": "Clinical Tools"
@@ -111,33 +81,63 @@
     },
     {
       "type": "route",
-      "id": "/clinical/control-tower",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
+      "id": "/production-command-centre",
+      "status": "isolated-page",
+      "gap": "Production Command Centre"
     },
     {
       "type": "route",
-      "id": "/clinical/dictation",
-      "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
+      "id": "/health-os/command-centre",
+      "status": "isolated-page",
+      "gap": "Health OS Command Centre"
     },
     {
       "type": "route",
-      "id": "/clinical/emergency",
+      "id": "/data-intelligence",
       "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
+      "gap": "Data & Intelligence"
     },
     {
       "type": "route",
-      "id": "/clinical/inpatient",
+      "id": "/data-intelligence/quality",
       "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
+      "gap": "Data Quality"
     },
     {
       "type": "route",
-      "id": "/clinical/inpatient/admissions",
+      "id": "/data-intelligence/pipelines",
       "status": "missing-journey",
-      "gap": "hooks/queries/useClinicalCuration.ts"
+      "gap": "Data Pipelines"
+    },
+    {
+      "type": "route",
+      "id": "/data-intelligence/integration",
+      "status": "missing-journey",
+      "gap": "Integration Monitor"
+    },
+    {
+      "type": "route",
+      "id": "/data-intelligence/reports",
+      "status": "missing-journey",
+      "gap": "Reporting Hub"
+    },
+    {
+      "type": "route",
+      "id": "/data-intelligence/audit",
+      "status": "missing-journey",
+      "gap": "Audit Intelligence"
+    },
+    {
+      "type": "route",
+      "id": "/public-health",
+      "status": "missing-journey",
+      "gap": "Public Health"
+    },
+    {
+      "type": "route",
+      "id": "/public-health/surveillance",
+      "status": "missing-journey",
+      "gap": "Surveillance"
     }
   ],
   "recommendedFirstOrchestrationBatch": [

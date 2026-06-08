@@ -12,22 +12,22 @@
     "registry": 7
   },
   "by_classification": {
-    "optional_full_boot": 102,
+    "optional_full_boot": 98,
     "external_dependency": 9,
     "required_full_boot": 22,
     "internal_package": 12,
-    "deprecated_retired": 1
+    "deprecated_retired": 5
   },
   "by_image_strategy": {
     "shared-dockerfile-template": 70,
     "not-required-generated-client": 9,
     "jib": 20,
-    "buildpacks": 23,
+    "buildpacks": 19,
     "not-required-mobile-artifact": 2,
     "not-required-internal-package": 12,
+    "not-required-doctrine-only-component": 5,
     "official-helm-chart": 8,
-    "dockerfile": 1,
-    "not-required-doctrine-only-component": 1
+    "dockerfile": 1
   },
   "required_full_boot": 22,
   "required_with_valid_image_strategy": 22,
@@ -36,7 +36,7 @@
   "missing_required_image_strategy_count": 0,
   "failing_required_image_builds": [],
   "unknown_needs_review": [],
-  "not_required_components_count": 24,
+  "not_required_components_count": 28,
   "official_image_chart_defined": 8,
   "images_ready": true,
   "helm_deployability_ready": true,

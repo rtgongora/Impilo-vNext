@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-08T02:14:50.545Z",
+  "generatedAt": "2026-06-08T14:34:53.479Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -141,6 +141,12 @@
       "derived": "transaction-complete"
     },
     {
+      "id": "dispatch-delivery",
+      "journeyName": "Dispatch / Delivery (NHUME)",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "notification-comms",
       "journeyName": "Notification & Communications",
       "previous": "backend-ready-but-frontend-incomplete",
@@ -186,7 +192,7 @@
       "id": "marketplace-order",
       "journeyName": "Marketplace Order",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "wellness-journey",
@@ -201,6 +207,18 @@
       "derived": "transaction-complete"
     },
     {
+      "id": "public-health-outreach",
+      "journeyName": "Public Health / CHW Outreach",
+      "previous": "mobile-missing",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "crvs-ubomi",
+      "journeyName": "Civil Registration (UBOMI / CRVS)",
+      "previous": "mobile-missing",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "coverage-enrollment",
       "journeyName": "Coverage Enrollment",
       "previous": "backend-ready-but-frontend-incomplete",
@@ -210,6 +228,12 @@
       "id": "wallet-payment",
       "journeyName": "Wallet Payment",
       "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "offline-clinical-queue",
+      "journeyName": "Offline Clinical Queue",
+      "previous": "backend-partial",
       "derived": "transaction-complete"
     },
     {
@@ -240,7 +264,7 @@
       "id": "provider-registry-onboarding",
       "journeyName": "Provider Registry Onboarding",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "citizen-monitoring",
@@ -256,8 +280,7 @@
     }
   ],
   "measuredCounts": {
-    "transaction-complete": 40,
-    "backend-partial": 4,
-    "mobile-missing": 2
+    "transaction-complete": 46,
+    "backend-ready-but-frontend-incomplete": 1
   }
 }

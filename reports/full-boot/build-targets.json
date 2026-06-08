@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-08T02:28:29.213Z",
+  "generated_at": "2026-06-08T16:30:59.748Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -377,20 +377,6 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "ehr",
-      "path": "ui/ehr",
-      "component_name": "ehr",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "optional_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
       "classification_confidence": "certain"
     },
     {
@@ -797,48 +783,6 @@
       "image_strategy": "shared-dockerfile-template",
       "image_strategy_status": "valid",
       "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "mushex-finance-console",
-      "path": "ui/mushex-finance-console",
-      "component_name": "mushex-finance-console",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "optional_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "mushex-ops-console",
-      "path": "ui/mushex-ops-console",
-      "component_name": "mushex-ops-console",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "optional_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
-      "classification_confidence": "certain"
-    },
-    {
-      "id": "mushex-payer-portal",
-      "path": "ui/mushex-payer-portal",
-      "component_name": "mushex-payer-portal",
-      "type": "frontend_app",
-      "plane": "experience",
-      "classification": "optional_full_boot",
-      "build_required": true,
-      "image_required": false,
-      "image_strategy": "buildpacks",
-      "image_strategy_status": "not_required",
-      "reason": "UI workspace not independently deployed \u2014 not a missing Dockerfile failure",
       "classification_confidence": "certain"
     },
     {

@@ -160,7 +160,7 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `community-service` | backend_service | optional_full_boot | image_strategy_defined | certain |
 | `costa-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `developer-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
-| `ehr` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `ehr` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
 | `experience-bff` | backend_service | required_full_boot | deployed_and_healthy | certain |
 | `inventory-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `knowledge-admin` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
@@ -170,9 +170,9 @@ Evidence: [`docs/architecture/planes/06-experience-workflow-orchestration.md`](d
 | `msika-flow-portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `msika-flow-vendor` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `msika-web` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
-| `mushex-finance-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
-| `mushex-ops-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
-| `mushex-payer-portal` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
+| `mushex-finance-console` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
+| `mushex-ops-console` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
+| `mushex-payer-portal` | frontend_app | deprecated_retired | no_runtime_image_required | certain |
 | `one-ui-shell` | frontend_app | required_full_boot | deployed_and_healthy | certain |
 | `ops-console` | frontend_app | optional_full_boot | no_runtime_image_required | certain |
 | `ops-docs` | frontend_app | optional_full_boot | no_runtime_image_required | certain |

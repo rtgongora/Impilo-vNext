@@ -4,6 +4,8 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 
 **Preview URL:** http://41.57.127.235/
 
+**Production-readiness program (2026-06):** Extended manual scripts for all 14 critical services + shell corrections live in [`docs/product-truth/preview-validation-production-readiness.md`](../product-truth/preview-validation-production-readiness.md). Key shell checks: hero auth logo, Nompilo via taskbar/`Ctrl+K` (not full-page strip), provider login → `/provider-workspace`, OROS `/lab/worklist` live data.
+
 ## Before Testing
 
 1. Confirm preview is deployed: `bash scripts/deploy/preview-status.sh`
@@ -43,6 +45,38 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 25 | Impilo Live — organiser manage + analytics | | `/live/manage` → moderation → `/live/event/{id}/analytics` |
 | 26 | Impilo Live — resources tab in live room | | Host adds resource; attendees see list (no 404 on `/resources`) |
 | 27 | Impilo Live — replay after event ends | | Status `PUBLISHED_REPLAY`; replay page tracks watch minutes |
+
+### Gap-closure journeys (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| 28 | Client intake dedup wizard `/registry/intake` or `/registry/clients/new` | | Search → VITO score → merge when pending case exists |
+| 29 | Guardian-assisted + emergency provisional intake panels | | `/registry/clients/new` — honest BFF create/intake session |
+| 30 | Provider council workspace `/registry/provider-council/council-workspace` | | Tabs: pending / approved / rejected / needs-info; advance + review actions |
+| 31 | Provider login lands Work context | | Provider auth → `/auth/resolving` → `/provider-workspace` (not citizen home) |
+| 32 | OROS lab hub `/lab` multi-type orchestration | | LAB / IMAGING / PHARMACY / BLOOD filters; links to worklist, catalog, reconciliation |
+| 33 | OROS catalog `/lab/catalog` live data | | No static category shell; BFF `/internal/v1/lab-catalog` |
+| 34 | OROS reconciliation `/lab/reconciliation` match/resolve | | BFF `/internal/v1/lab-reconciliation` |
+| 35 | Encounter care chain rail on EHR encounter page | | OROS orders + Costa billing + MusheX payment counts visible |
+| 36 | Inpatient admissions + nursing `maturity=live` | | `/clinical/inpatient/admissions`, `/clinical/inpatient/nursing` task lists |
+| 37 | Imaging worklist + facility dashboard | | `/imaging/worklist` (IMAGING type), `/imaging/facility` |
+| 38 | Wellness commodities (inventory-backed) | | `/wellness/commodities` → stock management embed |
+| 39 | MusheX finance journeys rail + service access | | `/finance` rail; `/finance/service-access` exemption/deferred register |
+| 40 | Enterprise charge-sheet consumables + drill-down | | `ConsumablesCostPanel`; `/enterprise/oversight`; geography KPI tiles on dashboard |
+| 41 | Coverage Ndila geography map | | `/coverage` → Intelligence → Geography tab |
+| 42 | Public health national oversight | | `/public-health/oversight` district/province drill-down + field task queue |
+| 43 | MADI blood logistics panel stock summary | | Blood-bank stock KPIs alongside Nhume dispatch boundary |
+
+### Preview-runtime depth (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| 44 | Telemedicine care chain rail + RTC health | | `/telemedicine` rail; `/teleconsult/ops/rtc-health` shows LiveKit readiness |
+| 45 | Triage → teleconsult escalation | | `/queue/triage` “Escalate to teleconsult” deep-links `/telemedicine/new?patientId=…` |
+| 46 | Session auto-media + LiveKit room | | `/telemedicine/session/{id}` provisions token on ACTIVE; video pane connects or shows honest RTC boundary |
+| 47 | Council MusheX intent + sync payment | | `/registry/provider-council/self-service?providerId=…` — Create intent → Sync payment → fee-paid advance |
+| 48 | National revenue oversight panel | | `/enterprise/oversight` — Costa national revenue + claims + MusheX remittances + debt aging |
+| 49 | MADI central-bank mobile tab | | Provider app Clinical Tools → **Central Bank** — metrics + emergency redistribution approve/handoff |
 
 ## Impilo Live smoke notes
 
