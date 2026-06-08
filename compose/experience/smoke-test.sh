@@ -126,6 +126,21 @@ else
   fail "Expected 409 for idempotency conflict, got $HTTP_CODE"
 fi
 
+# ── Test 5: Fundo catalog via BFF (learning-service) ───────────
+info "Test 5: Fundo v11 catalog via BFF"
+FUNDO_CODE=$(curl -sf -o /tmp/smoke-fundo.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/learning/v11/catalog?status=PUBLISHED&limit=5" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$FUNDO_CODE" = "200" ] && grep -q "FUNDO-EHR-101\|Introduction to Impilo EHR" /tmp/smoke-fundo.json 2>/dev/null; then
+  pass "Fundo catalog returned governed seed courses"
+else
+  fail "Fundo catalog check failed (HTTP $FUNDO_CODE). Is learning-service healthy on :8235?"
+fi
+
 echo ""
 echo "========================================="
 echo -e "  ${GREEN}All smoke tests passed!${NC}"

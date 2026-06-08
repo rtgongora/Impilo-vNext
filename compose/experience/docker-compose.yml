@@ -106,7 +106,7 @@ services:
     command:
       - |
         until psql -h experience-db -U impilo -d postgres -c '\q' 2>/dev/null; do sleep 1; done
-        for db in inpatient pct impilo_integration_hub; do
+        for db in inpatient pct impilo_integration_hub impilo_learning; do
           psql -h experience-db -U impilo -d postgres -tc "SELECT 1 FROM pg_database WHERE datname = '$$db'" | grep -q 1 \
             || psql -h experience-db -U impilo -d postgres -c "CREATE DATABASE \"$$db\" OWNER impilo;"
         done
@@ -213,6 +213,31 @@ services:
       retries: 12
       start_period: 60s
 
+  # ── Impilo Fundo (native learning-service) ───────────────────────
+  learning-service:
+    build:
+      context: ../../services/learning-service
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: "8235"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://experience-db:5432/impilo_learning
+      SPRING_DATASOURCE_USERNAME: impilo
+      SPRING_DATASOURCE_PASSWORD: impilo
+      LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+      LEARNING_OUTBOX_PUBLISHER_ENABLED: "false"
+      FUNDO_PUBLIC_BASE_URL: http://localhost:3000/learning
+    ports:
+      - "8235:8235"
+    depends_on:
+      sovereign-db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8235/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
   # ── Experience BFF ───────────────────────────────────────────────
   # Build context must be the module directory: Dockerfile copies target/experience-bff-*.jar
   # (run tools/dev/up.ps1 or: cd services && mvn … package — see compose/experience/README.md)
@@ -251,6 +276,7 @@ services:
       FHIR_BASE_URL: http://host.docker.internal:8090/fhir
       WELLNESS_SERVICE_BASE_URL: http://wellness-service:8161
       INPATIENT_BASE_URL: http://inpatient-service:8121
+      LEARNING_SERVICE_BASE_URL: http://learning-service:8235
       # Dev compose: no Keycloak JWT — required when OAuth2 RS autoconfig is excluded.
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true"
       # Same defaults as local application.yml, but pointed at compose service names.
@@ -269,6 +295,8 @@ services:
       pct-service:
         condition: service_healthy
       integration-hub:
+        condition: service_healthy
+      learning-service:
         condition: service_healthy
       redis:
         condition: service_healthy

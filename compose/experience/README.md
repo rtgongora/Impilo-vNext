@@ -43,7 +43,7 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 
 ### Quick Start (Docker Compose)
 
-The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092), wellness-service, inpatient-service (:8121), experience-bff, one-ui-shell** — the same Redis/Kafka **roles** as the repo root [`docker-compose.yml`](../../docker-compose.yml), wired so Java services use `redis` / `kafka` on the Docker network (not `localhost` inside the container). Do not run root `redis` + `kafka` on the same host ports at the same time.
+The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092), wellness-service, learning-service (Fundo :8235), inpatient-service (:8121), experience-bff, one-ui-shell** — the same Redis/Kafka **roles** as the repo root [`docker-compose.yml`](../../docker-compose.yml), wired so Java services use `redis` / `kafka` on the Docker network (not `localhost` inside the container). Do not run root `redis` + `kafka` on the same host ports at the same time.
 
 ```bash
 # Start everything (Maven JARs + compose)
