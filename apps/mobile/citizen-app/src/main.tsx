@@ -120,6 +120,10 @@ import { registerGlobals } from "@livekit/react-native";
   }
 })();
 
+import { configureMobileGeolocationFromExpo } from "@impilo/mobile-ndila";
+
+configureMobileGeolocationFromExpo();
+
 // 2. NOW import the App
 import { App } from "./App";
 

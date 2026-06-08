@@ -1,6 +1,6 @@
 # UI Surfacing Hotspot Register
 
-> Generated: 2026-06-05. Regenerate: `node scripts/frontend/generate-ui-surfacing-hotspot-register.mjs`
+> Generated: 2026-06-07. Regenerate: `node scripts/frontend/generate-ui-surfacing-hotspot-register.mjs`
 
 Surfaces that need meaningful product UI (not route parity alone). Aligned with [GAP_CLOSURE_RULES.md](./GAP_CLOSURE_RULES.md).
 
@@ -8,7 +8,7 @@ Surfaces that need meaningful product UI (not route parity alone). Aligned with 
 
 | Metric | Count |
 |--------|-------|
-| Pages scanned | 444 |
+| Pages scanned | 493 |
 | Hotspots (P0/P1 or QRP) | 42 |
 | P0 thin shells (5+ QRP) | 6 |
 | P1 mixed/fixture | 36 |

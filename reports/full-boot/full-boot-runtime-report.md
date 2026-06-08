@@ -12,10 +12,10 @@
 
 | Metric | Value |
 |--------|-------|
-| Total discovered | 141 |
+| Total discovered | 146 |
 | Required full boot | 22 |
 | Image pass / fail | 86 / 0 |
 | Helm ready / missing / partial | 22 / 0 / 0 |
-| Deployed in full boot | 93 |
-| Pods ready / total | 93 / 93 |
+| Deployed in full boot | 22 |
+| Pods ready / total | 22 / 22 |
 

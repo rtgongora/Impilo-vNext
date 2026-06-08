@@ -67,9 +67,6 @@ tags:
 # Paths
 # ===========================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Artifacts
-  # -------------------------------------------------------------------------
   /v1/artifacts:
     get:
       operationId: listArtifacts
@@ -77,7 +74,8 @@ paths:
       description: |
         Returns a paginated list of terminology artifacts filtered by type,
         status, or search query. Results are sorted by updatedAt descending.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -100,24 +98,24 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: List of artifacts
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
     post:
       operationId: createArtifact
       summary: Create a new terminology artifact
       description: |
         Creates a new artifact in DRAFT status. The content field should contain
         the FHIR resource JSON, XML, or CSV data depending on sourceFormat.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -131,45 +129,45 @@ paths:
             schema:
               $ref: '#/components/schemas/ArtifactCreateRequest'
       responses:
-        "201":
+        '201':
           description: Artifact created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/artifacts/{artifactId}:
     get:
       operationId: getArtifact
       summary: Get artifact by ID
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact detail
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
     put:
       operationId: updateArtifact
       summary: Update artifact metadata or content
       description: |
         Updates a DRAFT artifact. Only title, description, publisher, and
         content fields can be modified. Published artifacts cannot be updated.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -182,64 +180,63 @@ paths:
             schema:
               $ref: '#/components/schemas/ArtifactUpdateRequest'
       responses:
-        "200":
+        '200':
           description: Artifact updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
     delete:
       operationId: deleteArtifact
       summary: Delete a DRAFT artifact
       description: Only DRAFT artifacts can be deleted. Published artifacts must be retired.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact deleted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/artifacts/{artifactId}/publish:
     post:
       operationId: publishArtifact
       summary: Publish a DRAFT artifact
       description: Transitions artifact from DRAFT to ACTIVE status.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact published
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/artifacts/{artifactId}/deprecate:
     post:
       operationId: deprecateArtifact
@@ -247,24 +244,24 @@ paths:
       description: |
         Marks an ACTIVE artifact as DEPRECATED. Deprecated artifacts are still
         usable but should be replaced by newer versions.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact deprecated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/artifacts/{artifactId}/retire:
     post:
       operationId: retireArtifact
@@ -272,44 +269,44 @@ paths:
       description: |
         Permanently retires an ACTIVE or DEPRECATED artifact. Retired artifacts
         cannot be used for validation or mapping.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact retired
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/artifacts/{artifactId}/versions:
     get:
       operationId: getArtifactVersions
       summary: List all versions of an artifact
       description: Returns version history for the artifact identified by canonicalUrl.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact version list
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactVersionListResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/artifacts/resolve:
     get:
       operationId: resolveArtifact
@@ -317,7 +314,8 @@ paths:
       description: |
         Resolves an artifact by its canonical URL and optional version.
         If no version is specified, the latest ACTIVE version is returned.
-      tags: [Artifact]
+      tags:
+        - Artifact
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -334,23 +332,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Resolved artifact
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ArtifactResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Packs
-  # -------------------------------------------------------------------------
   /v1/packs:
     get:
       operationId: listPacks
       summary: List terminology packs
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -361,19 +356,19 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: List of packs
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-
     post:
       operationId: createPack
       summary: Create a new terminology pack
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -385,60 +380,60 @@ paths:
             schema:
               $ref: '#/components/schemas/PackCreateRequest'
       responses:
-        "201":
+        '201':
           description: Pack created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/packs/{packId}:
     get:
       operationId: getPack
       summary: Get pack by ID
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/PackIdPath'
       responses:
-        "200":
+        '200':
           description: Pack detail
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/packs/{packId}/artifacts:
     get:
       operationId: getPackArtifacts
       summary: List artifacts in a pack
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/PackIdPath'
       responses:
-        "200":
+        '200':
           description: Artifacts in pack
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackArtifactListResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
     post:
       operationId: addArtifactToPack
       summary: Add an artifact to a pack
       description: Adds an existing artifact to a DRAFT pack.
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -450,31 +445,32 @@ paths:
           application/json:
             schema:
               type: object
-              required: [artifactId]
+              required:
+                - artifactId
               properties:
                 artifactId:
                   type: string
                   format: uuid
       responses:
-        "200":
+        '200':
           description: Artifact added
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/packs/{packId}/artifacts/{artifactId}:
     delete:
       operationId: removeArtifactFromPack
       summary: Remove an artifact from a pack
       description: Removes an artifact from a DRAFT pack.
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -482,17 +478,16 @@ paths:
         - $ref: '#/components/parameters/PackIdPath'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: Artifact removed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/packs/{packId}/publish:
     post:
       operationId: publishPack
@@ -500,49 +495,46 @@ paths:
       description: |
         Transitions pack from DRAFT to ACTIVE. All contained artifacts must
         be in ACTIVE status for the pack to be published.
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/PackIdPath'
       responses:
-        "200":
+        '200':
           description: Pack published
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/packs/{packId}/deprecate:
     post:
       operationId: deprecatePack
       summary: Deprecate an ACTIVE pack
-      tags: [Pack]
+      tags:
+        - Pack
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/PackIdPath'
       responses:
-        "200":
+        '200':
           description: Pack deprecated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PackResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
-  # -------------------------------------------------------------------------
-  # Validation
-  # -------------------------------------------------------------------------
   /v1/validate/coding:
     post:
       operationId: validateCoding
@@ -550,7 +542,8 @@ paths:
       description: |
         Validates that a code exists in the specified code system and
         optionally belongs to a value set.
-      tags: [Validate]
+      tags:
+        - Validate
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -563,15 +556,14 @@ paths:
             schema:
               $ref: '#/components/schemas/ValidateCodingRequest'
       responses:
-        "200":
+        '200':
           description: Validation result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidateCodingResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
   /v1/validate/resource:
     post:
       operationId: validateResource
@@ -579,7 +571,8 @@ paths:
       description: |
         Validates a FHIR resource against its base definition and optionally
         a specified profile. Returns structured validation issues.
-      tags: [Validate]
+      tags:
+        - Validate
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -591,15 +584,14 @@ paths:
             schema:
               $ref: '#/components/schemas/ValidateResourceRequest'
       responses:
-        "200":
+        '200':
           description: Validation result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidateResourceResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
   /v1/validate/job:
     post:
       operationId: submitValidationJob
@@ -607,7 +599,8 @@ paths:
       description: |
         Submits a batch of FHIR resources for asynchronous validation.
         Returns a job ID that can be polled for progress and results.
-      tags: [Validate]
+      tags:
+        - Validate
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -619,20 +612,20 @@ paths:
             schema:
               $ref: '#/components/schemas/ValidationJobSubmitRequest'
       responses:
-        "202":
+        '202':
           description: Job accepted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationJobResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
   /v1/validate/job/{jobId}:
     get:
       operationId: getValidationJob
       summary: Get validation job status and results
-      tags: [Validate]
+      tags:
+        - Validate
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -643,18 +636,14 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Job status
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationJobResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Mapping
-  # -------------------------------------------------------------------------
   /v1/map:
     post:
       operationId: mapCode
@@ -662,7 +651,8 @@ paths:
       description: |
         Translates a source code to one or more target codes using available
         ConceptMap artifacts. Returns all matching mappings with equivalence.
-      tags: [Map]
+      tags:
+        - Map
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -674,15 +664,14 @@ paths:
             schema:
               $ref: '#/components/schemas/MapRequest'
       responses:
-        "200":
+        '200':
           description: Mapping results
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MapResultListResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
   /v1/map/sources:
     get:
       operationId: getMapSources
@@ -690,7 +679,8 @@ paths:
       description: |
         Returns a list of source terminology systems that have ConceptMap
         artifacts available for mapping.
-      tags: [Map]
+      tags:
+        - Map
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -700,13 +690,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Available mapping sources
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/MapSourceListResponse'
-
   /v1/map/rebuild:
     post:
       operationId: rebuildMapIndex
@@ -714,31 +703,29 @@ paths:
       description: |
         Triggers a full rebuild of the in-memory mapping index from all
         ACTIVE ConceptMap artifacts. Use after bulk imports.
-      tags: [Map]
+      tags:
+        - Map
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
       responses:
-        "200":
+        '200':
           description: Rebuild initiated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-        "403":
+        '403':
           $ref: '#/components/responses/Forbidden'
-
-  # -------------------------------------------------------------------------
-  # Assignments
-  # -------------------------------------------------------------------------
   /v1/assignments:
     get:
       operationId: listAssignments
       summary: List pack assignments
-      tags: [Assignment]
+      tags:
+        - Assignment
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -759,22 +746,22 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: List of assignments
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssignmentListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-
     post:
       operationId: assignPack
       summary: Assign a pack to a scope
       description: |
         Creates a new assignment binding a terminology pack to a scope
         (facility, workspace, service, or tenant) with a policy enforcement mode.
-      tags: [Assignment]
+      tags:
+        - Assignment
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -786,22 +773,22 @@ paths:
             schema:
               $ref: '#/components/schemas/AssignRequest'
       responses:
-        "201":
+        '201':
           description: Assignment created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AssignmentResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/assignments/{assignmentId}:
     delete:
       operationId: unassignPack
       summary: Remove a pack assignment
-      tags: [Assignment]
+      tags:
+        - Assignment
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -813,18 +800,14 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Assignment removed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Import
-  # -------------------------------------------------------------------------
   /v1/import/fhir-bundle:
     post:
       operationId: importFhirBundle
@@ -833,7 +816,8 @@ paths:
         Imports terminology resources (CodeSystem, ValueSet, ConceptMap, etc.)
         from a FHIR Bundle. Each resource in the bundle is created as a new
         artifact in DRAFT status.
-      tags: [Import]
+      tags:
+        - Import
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -846,15 +830,14 @@ paths:
               type: object
               description: FHIR Bundle resource (resourceType = Bundle)
       responses:
-        "200":
+        '200':
           description: Import result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportResultResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
   /v1/import/csv:
     post:
       operationId: importCsv
@@ -862,7 +845,8 @@ paths:
       description: |
         Creates a single artifact from CSV data. The CSV must follow the
         expected column format for the specified FHIR type.
-      tags: [Import]
+      tags:
+        - Import
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -874,18 +858,14 @@ paths:
             schema:
               $ref: '#/components/schemas/CsvImportRequest'
       responses:
-        "200":
+        '200':
           description: Import result
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportResultResponse'
-        "400":
+        '400':
           $ref: '#/components/responses/BadRequest'
-
-  # -------------------------------------------------------------------------
-  # Export
-  # -------------------------------------------------------------------------
   /v1/export/packs/{packId}/bundle:
     get:
       operationId: exportPackBundle
@@ -893,47 +873,44 @@ paths:
       description: |
         Exports all artifacts in a pack as a FHIR Bundle (type = collection).
         Only ACTIVE packs can be exported.
-      tags: [Export]
+      tags:
+        - Export
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/PackIdPath'
       responses:
-        "200":
+        '200':
           description: FHIR Bundle
           content:
             application/json:
               schema:
                 type: object
                 description: FHIR Bundle resource
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-        "409":
+        '409':
           $ref: '#/components/responses/Conflict'
-
   /v1/export/artifacts/{artifactId}:
     get:
       operationId: exportArtifact
       summary: Export a single artifact as FHIR resource
-      tags: [Export]
+      tags:
+        - Export
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/ArtifactIdPath'
       responses:
-        "200":
+        '200':
           description: FHIR resource
           content:
             application/json:
               schema:
                 type: object
                 description: FHIR terminology resource
-        "404":
+        '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Governance
-  # -------------------------------------------------------------------------
   /v1/governance/validation-logs:
     get:
       operationId: getValidationLogs
@@ -941,7 +918,8 @@ paths:
       description: |
         Returns validation events recorded by the governance engine. Filter by
         severity, source service, or resource type.
-      tags: [Governance]
+      tags:
+        - Governance
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -974,15 +952,14 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/SizeParam'
       responses:
-        "200":
+        '200':
           description: Validation log entries
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ValidationLogListResponse'
-        "401":
+        '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/governance/top-failures:
     get:
       operationId: getTopFailures
@@ -990,7 +967,8 @@ paths:
       description: |
         Returns the most frequent validation failures aggregated by
         system + code. Useful for identifying systemic terminology gaps.
-      tags: [Governance]
+      tags:
+        - Governance
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1011,13 +989,12 @@ paths:
             type: string
             format: date-time
       responses:
-        "200":
+        '200':
           description: Top failures
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TopFailureListResponse'
-
   /v1/governance/stats:
     get:
       operationId: getGovernanceStats
@@ -1025,7 +1002,8 @@ paths:
       description: |
         Returns aggregate validation statistics including total validations,
         error rates, and per-service breakdowns for the specified time period.
-      tags: [Governance]
+      tags:
+        - Governance
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1042,16 +1020,208 @@ paths:
             type: string
             format: date-time
       responses:
-        "200":
+        '200':
           description: Governance statistics
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GovernanceStatsResponse'
+  /{id}:
+    put:
+      operationId: zibo_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: zibo_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: zibo_delete__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/publish:
+    post:
+      operationId: zibo_post__id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/deprecate:
+    post:
+      operationId: zibo_post__id_deprecate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/retire:
+    post:
+      operationId: zibo_post__id_retire
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /versions:
+    get:
+      operationId: zibo_get__versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resolve:
+    get:
+      operationId: zibo_get__resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /validation-logs:
+    get:
+      operationId: zibo_get__validation_logs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /top-failures:
+    get:
+      operationId: zibo_get__top_failures
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stats:
+    get:
+      operationId: zibo_get__stats
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /sources:
+    get:
+      operationId: zibo_get__sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rebuild:
+    post:
+      operationId: zibo_post__rebuild
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/artifacts:
+    post:
+      operationId: zibo_post__id_artifacts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: zibo_get__id_artifacts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/artifacts/{artifactId}:
+    delete:
+      operationId: zibo_delete__id_artifacts_artifactId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /artifacts:
+    get:
+      operationId: zibo_get__artifacts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /artifacts/emit:
+    post:
+      operationId: zibo_post__artifacts_emit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /coding:
+    post:
+      operationId: zibo_post__coding
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resource:
+    post:
+      operationId: zibo_post__resource
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /job:
+    post:
+      operationId: zibo_post__job
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /job/{jobId}:
+    get:
+      operationId: zibo_get__job_jobId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from zibo-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
-# ===========================================================================
-# Components
-# ===========================================================================
 components:
   # -------------------------------------------------------------------------
   # Security Schemes

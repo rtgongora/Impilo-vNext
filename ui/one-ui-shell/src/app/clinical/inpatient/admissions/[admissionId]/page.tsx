@@ -7,6 +7,7 @@ import { PlaneWorkspaceShell } from "@/components/workspace/PlaneWorkspaceShell"
 import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState";
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { useAdmission, useWardRounds } from "@/hooks/queries/useInpatient";
+import { AdmissionOrchestrationRail } from "@/components/inpatient/AdmissionOrchestrationRail";
 
 export default function InpatientAdmissionDetailPage() {
   const params = useParams();
@@ -34,6 +35,8 @@ export default function InpatientAdmissionDetailPage() {
       ]}
     >
       <TrustContextBanner purposeOfUse="INPATIENT_CARE" />
+
+      {admissionId ? <AdmissionOrchestrationRail admissionRef={admissionId} /> : null}
 
       {isLoading ? (
         <div className="flex items-center py-12 text-slate-500">

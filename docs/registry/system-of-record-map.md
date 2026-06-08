@@ -6,6 +6,7 @@
 | `analytics-pipeline-service` | integration | Analytics Pipeline canonical records |
 | `asset-registry-service` | integration | Asset Registry canonical records |
 | `audit-ledger-service` | integration | Audit Ledger canonical records |
+| `booking-service` | experience | booking transaction container, appointment scheduled events, booking-to-appointment conversion lifecycle, Mvumo-gated booking orchestration links |
 | `butano-fhir` | clinical | Butano Fhir canonical records |
 | `butano-service` | clinical | Butano canonical records |
 | `campaigns-service` | data | public-health campaign definitions, campaign outreach plans and schedules, campaign execution state and coverage metrics |
@@ -42,6 +43,7 @@
 | `landela-adapter-service` | integration | Landela Adapter canonical records |
 | `learning-service` | experience | Learning canonical records |
 | `llm-orchestration-service` | integration | Llm Orchestration canonical records |
+| `madi-service` | clinical | blood donor registry, donation drives, blood units, crossmatch, transfusion episodes, haemovigilance |
 | `msika-flow-service` | enterprise | Msika Flow canonical records |
 | `msika-service` | enterprise | Msika canonical records |
 | `mushe-wallet-service` | enterprise | Mushe Wallet canonical records |

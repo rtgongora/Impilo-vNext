@@ -38,33 +38,34 @@ paths:
   /internal/v1/health:
     get:
       operationId: aiRegistryInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: aiRegistryInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — echo payload
       security: []
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -73,66 +74,67 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /internal/v1/ai-registry/models:
     get:
       operationId: listModels
-      tags: [Models]
+      tags:
+        - Models
       summary: List models for tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Models
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ModelResponse"
+                  $ref: '#/components/schemas/ModelResponse'
     post:
       operationId: createModel
-      tags: [Models]
+      tags:
+        - Models
       summary: Register a new model (DRAFT)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateModelRequest"
+              $ref: '#/components/schemas/CreateModelRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelResponse"
-
+                $ref: '#/components/schemas/ModelResponse'
   /internal/v1/ai-registry/models/{modelId}:
     get:
       operationId: getModel
-      tags: [Models]
+      tags:
+        - Models
       summary: Get model by id
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: modelId
           in: path
           required: true
@@ -140,24 +142,25 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Model
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelResponse"
-        "404":
+                $ref: '#/components/schemas/ModelResponse'
+        '404':
           description: Not found
     put:
       operationId: updateModel
-      tags: [Models]
+      tags:
+        - Models
       summary: Update model metadata
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - name: modelId
           in: path
           required: true
@@ -169,26 +172,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateModelRequest"
+              $ref: '#/components/schemas/UpdateModelRequest'
       responses:
-        "200":
+        '200':
           description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelResponse"
-
+                $ref: '#/components/schemas/ModelResponse'
   /internal/v1/ai-registry/models/{modelId}/approve:
     post:
       operationId: approveModel
-      tags: [Models]
+      tags:
+        - Models
       summary: Approve a DRAFT model
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - name: modelId
           in: path
           required: true
@@ -200,26 +203,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApproveModelRequest"
+              $ref: '#/components/schemas/ApproveModelRequest'
       responses:
-        "200":
+        '200':
           description: Approved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelResponse"
-
+                $ref: '#/components/schemas/ModelResponse'
   /internal/v1/ai-registry/models/{modelId}/withdraw:
     post:
       operationId: withdrawModel
-      tags: [Models]
+      tags:
+        - Models
       summary: Withdraw a model
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - name: modelId
           in: path
           required: true
@@ -231,25 +234,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WithdrawModelRequest"
+              $ref: '#/components/schemas/WithdrawModelRequest'
       responses:
-        "200":
+        '200':
           description: Withdrawn
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelResponse"
-
+                $ref: '#/components/schemas/ModelResponse'
   /internal/v1/ai-registry/models/{modelId}/versions:
     get:
       operationId: listModelVersions
-      tags: [ModelVersions]
+      tags:
+        - ModelVersions
       summary: List versions for a model
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: modelId
           in: path
           required: true
@@ -257,24 +260,25 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Versions
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/VersionResponse"
+                  $ref: '#/components/schemas/VersionResponse'
     post:
       operationId: createModelVersion
-      tags: [ModelVersions]
+      tags:
+        - ModelVersions
       summary: Register a new model version
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - name: modelId
           in: path
           required: true
@@ -286,25 +290,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateVersionRequest"
+              $ref: '#/components/schemas/CreateVersionRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VersionResponse"
-
+                $ref: '#/components/schemas/VersionResponse'
   /internal/v1/ai-registry/inference-records:
     get:
       operationId: queryInferenceRecords
-      tags: [InferenceRecords]
+      tags:
+        - InferenceRecords
       summary: List inference records by workflow or subject
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: workflow_ref
           in: query
           required: false
@@ -321,50 +325,51 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Records
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/InferenceResponse"
-        "400":
+                  $ref: '#/components/schemas/InferenceResponse'
+        '400':
           description: Missing query mode
     post:
       operationId: recordInference
-      tags: [InferenceRecords]
+      tags:
+        - InferenceRecords
       summary: Record an inference execution
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateInferenceRequest"
+              $ref: '#/components/schemas/CreateInferenceRequest'
       responses:
-        "201":
+        '201':
           description: Recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InferenceResponse"
-
+                $ref: '#/components/schemas/InferenceResponse'
   /internal/v1/ai-registry/drift-events:
     get:
       operationId: listDriftEventsByModel
-      tags: [DriftEvents]
+      tags:
+        - DriftEvents
       summary: List drift events for a model
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: model_id
           in: query
           required: true
@@ -372,37 +377,108 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Drift events
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/DriftResponse"
+                  $ref: '#/components/schemas/DriftResponse'
     post:
       operationId: recordDriftEvent
-      tags: [DriftEvents]
+      tags:
+        - DriftEvents
       summary: Record a drift signal
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDriftRequest"
+              $ref: '#/components/schemas/CreateDriftRequest'
       responses:
-        "201":
+        '201':
           description: Recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DriftResponse"
+                $ref: '#/components/schemas/DriftResponse'
+  /health:
+    get:
+      operationId: aimodelregistry_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: aimodelregistry_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: aimodelregistry_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: aimodelregistry_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{modelId}:
+    get:
+      operationId: aimodelregistry_get__modelId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: aimodelregistry_put__modelId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{modelId}/approve:
+    post:
+      operationId: aimodelregistry_post__modelId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{modelId}/withdraw:
+    post:
+      operationId: aimodelregistry_post__modelId_withdraw
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ai-model-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

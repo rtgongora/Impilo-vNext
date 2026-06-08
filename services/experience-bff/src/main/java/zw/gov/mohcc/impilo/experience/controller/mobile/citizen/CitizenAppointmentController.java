@@ -7,26 +7,30 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
-import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-import zw.gov.mohcc.impilo.experience.controller.ResourceNotFoundException;
+import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
+import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 
 import java.util.*;
 
 /**
- * Citizen appointment endpoints.
+ * Citizen appointment endpoints — list appointments; create booking REQUESTED.
  * GET  /internal/v1/mobile/citizen/appointments
  * GET  /internal/v1/mobile/citizen/appointments/{id}
  * POST /internal/v1/mobile/citizen/appointments
  * POST /internal/v1/mobile/citizen/appointments/{id}/cancel
+ * POST /internal/v1/mobile/citizen/appointments/{id}/check-in
  */
 @RestController
 @RequestMapping("/internal/v1/mobile/citizen/appointments")
 public class CitizenAppointmentController {
 
-    private final TusoServiceClient tusoClient;
+    private final BookingServiceClient bookingServiceClient;
+    private final AppointmentCheckInService appointmentCheckInService;
 
-    public CitizenAppointmentController(TusoServiceClient tusoClient) {
-        this.tusoClient = tusoClient;
+    public CitizenAppointmentController(BookingServiceClient bookingServiceClient,
+                                        AppointmentCheckInService appointmentCheckInService) {
+        this.bookingServiceClient = bookingServiceClient;
+        this.appointmentCheckInService = appointmentCheckInService;
     }
 
     public record RequestAppointmentBody(
@@ -48,13 +52,10 @@ public class CitizenAppointmentController {
 
         int limit = Math.min(size, 100);
 
-        JsonNode appointments = tusoClient.listCitizenAppointments(actorId, status, page, limit);
-
-        // UUID patientId = resolvePatientId(tenantId, actorId);
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        JsonNode appointments = bookingServiceClient.listCitizenAppointments(actorId, status, page, limit);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", appointments);
+        response.put("data", enrichAppointmentsWithBookingId(appointments));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -66,12 +67,10 @@ public class CitizenAppointmentController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        JsonNode appointment = tusoClient.getAppointment(id.toString());
-
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(..., id, tenantId);
+        JsonNode appointment = bookingServiceClient.getAppointment(id.toString());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", appointment);
+        response.put("data", enrichAppointmentWithBookingId(appointment));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -85,17 +84,16 @@ public class CitizenAppointmentController {
             @RequestHeader("X-Actor-ID") String actorId,
             @Valid @RequestBody RequestAppointmentBody body) {
 
-        Map<String, Object> appointmentData = new LinkedHashMap<>();
-        appointmentData.put("facilityId", body.facilityId());
-        appointmentData.put("appointmentType", body.appointmentType());
-        appointmentData.put("preferredDate", body.preferredDate());
-        appointmentData.put("reason", body.reason());
+        Map<String, Object> bookingData = new LinkedHashMap<>();
+        bookingData.put("facilityId", body.facilityId());
+        bookingData.put("appointmentType", body.appointmentType());
+        bookingData.put("bookingType", body.appointmentType());
+        bookingData.put("preferredDate", body.preferredDate());
+        bookingData.put("preferredStartTime", body.preferredDate());
+        bookingData.put("reason", body.reason());
+        bookingData.put("reasonForBooking", body.reason());
 
-        JsonNode result = tusoClient.createCitizenAppointment(actorId, appointmentData);
-
-        // jdbcTemplate.update("""
-        //     INSERT INTO appointments (...) VALUES (...)
-        //     """, ...);
+        JsonNode result = bookingServiceClient.createCitizenBooking(actorId, bookingData);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
@@ -114,16 +112,97 @@ public class CitizenAppointmentController {
 
         String reason = body != null && body.containsKey("reason") ? body.get("reason").toString() : "Cancelled";
 
-        tusoClient.cancelAppointment(id.toString(), reason);
-
-        // jdbcTemplate.update("""
-        //     UPDATE appointments SET status = 'CANCELLED', updated_at = ?
-        //     WHERE id = ? AND tenant_id = ? AND status IN ('SCHEDULED', 'CONFIRMED')
-        //     """, ...);
+        JsonNode cancelled = bookingServiceClient.cancelAppointment(id.toString(), reason);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
+        Object data = cancelled != null ? enrichAppointmentWithBookingId(cancelled)
+                : Map.of("id", id.toString(), "status", "CANCELLED");
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<Map<String, Object>> checkIn(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader("X-Actor-ID") String actorId) {
+
+        JsonNode appointment = bookingServiceClient.getAppointment(id.toString());
+        if (appointment == null || appointment.isNull()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", Map.of("code", "APPOINTMENT_NOT_FOUND", "message", "Appointment not found"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+
+        String patientId = firstNonBlank(
+                textOr(appointment, "patientId"),
+                textOr(appointment, "patient_id"),
+                textOr(appointment.path("attributes"), "patientId"));
+        String patientCpid = firstNonBlank(
+                textOr(appointment, "patientCpid"),
+                textOr(appointment, "patient_cpid"),
+                textOr(appointment.path("attributes"), "cpid"));
+
+        boolean actorMatches = actorId != null
+                && (actorId.equals(patientId) || actorId.equals(patientCpid));
+        if (!actorMatches) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "error", Map.of("code", "APPOINTMENT_FORBIDDEN", "message", "Appointment does not belong to actor"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+
+        return appointmentCheckInService.checkIn(id, requestId, correlationId);
+    }
+
+    private static Object enrichAppointmentWithBookingId(JsonNode appointment) {
+        if (appointment == null || appointment.isNull()) {
+            return appointment;
+        }
+        if (appointment.isObject()) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            appointment.fields().forEachRemaining(entry -> copy.put(entry.getKey(), entry.getValue()));
+            String bookingId = firstNonBlank(
+                    textOr(appointment, "bookingId"),
+                    textOr(appointment, "booking_id"));
+            if (bookingId != null) {
+                copy.putIfAbsent("booking_id", bookingId);
+                copy.putIfAbsent("bookingId", bookingId);
+            }
+            return copy;
+        }
+        return appointment;
+    }
+
+    private static Object enrichAppointmentsWithBookingId(JsonNode appointments) {
+        if (appointments == null || appointments.isNull()) {
+            return appointments;
+        }
+        if (appointments.isArray()) {
+            List<Object> enriched = new ArrayList<>();
+            appointments.forEach(node -> enriched.add(enrichAppointmentWithBookingId(node)));
+            return enriched;
+        }
+        return enrichAppointmentWithBookingId(appointments);
+    }
+
+    private static String textOr(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String value = node.path(field).asText(null);
+        return value != null && !value.isBlank() ? value : null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 }

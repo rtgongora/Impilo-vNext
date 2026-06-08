@@ -2,7 +2,7 @@
  * Experience UI — Reports Query Hooks
  */
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 /** Legacy shape used by /reports/* pages */
@@ -68,5 +68,18 @@ export function useGenerateReport() {
   return useMutation<ReportGenerateResponse, unknown, GenerateReportPayload>({
     mutationFn: (payload) =>
       apiClient.post<ReportGenerateResponse>("/internal/v1/reports/generate", toGenerateBody(payload)),
+  });
+}
+
+export function useReportJob(jobId: string | null | undefined) {
+  return useQuery<ApiResponse<ReportJobCreatedResource>>({
+    queryKey: ["report-job", jobId],
+    queryFn: () => apiClient.get<ApiResponse<ReportJobCreatedResource>>(`/internal/v1/reports/${jobId}`),
+    enabled: !!jobId,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.attributes?.status;
+      if (!status || status === "completed" || status === "failed") return false;
+      return 3000;
+    },
   });
 }

@@ -80,6 +80,14 @@ vi.mock("@/hooks/queries/useCareContinuity", () => ({
     mutate: vi.fn(),
     isPending: false,
   }),
+  useAddCarePlanGoal: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+  usePerformCarePlanIntervention: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
 }));
 
 describe("CarePlansPage", () => {

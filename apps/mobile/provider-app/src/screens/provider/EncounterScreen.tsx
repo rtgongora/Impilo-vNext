@@ -4,8 +4,9 @@
  * Displays the current encounter with tabs for Vitals, Diagnosis, Rx, Labs, Referrals, Notes.
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Screen,
   Header,
@@ -20,6 +21,7 @@ import {
 } from "@impilo/mobile-design-system";
 import { useEncounterStore, encounterStore } from "../../stores/encounterStore";
 import { closeEncounter, addEncounterNotes } from "../../services/encounterService";
+import { applyCoreTransactionAction, listCoreTransactions } from "../../services/coreTransactionService";
 import { VitalsPanel } from "./VitalsPanel";
 import { DiagnosisPanel } from "./DiagnosisPanel";
 import { PrescriptionPanel } from "./PrescriptionPanel";
@@ -45,6 +47,52 @@ export function EncounterScreen() {
   const [activeTab, setActiveTab] = useState("vitals");
   const [closing, setClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const encounterTransactionQuery = useQuery({
+    queryKey: ["provider-encounter-core-transaction", activeEncounter?.id],
+    queryFn: () =>
+      listCoreTransactions({
+        type: "FACILITY_WALK_IN",
+        encounterId: activeEncounter!.id,
+      }),
+    enabled: Boolean(activeEncounter?.id),
+  });
+
+  const queryClient = useQueryClient();
+
+  const encounterTransaction = useMemo(() => {
+    const row = encounterTransactionQuery.data?.[0];
+    if (!row || typeof row !== "object") return null;
+    const envelope = row as Record<string, unknown>;
+    const tx = (envelope.transaction as Record<string, unknown> | undefined) ?? envelope;
+    const nextActions = Array.isArray(envelope.nextActions) ? envelope.nextActions : [];
+    return {
+      id: String(tx.id ?? ""),
+      state: String(tx.currentState ?? ""),
+      providerStage: String(
+        ((envelope.journeys as Record<string, unknown> | undefined)?.provider as Record<string, unknown> | undefined)
+          ?.currentStage ?? "",
+      ),
+      nextActions: nextActions
+        .map((action) => action as Record<string, unknown>)
+        .filter((action) => typeof action.code === "string" && typeof action.label === "string")
+        .map((action) => ({ code: String(action.code), label: String(action.label) })),
+    };
+  }, [encounterTransactionQuery.data]);
+
+  const applyTransactionAction = useMutation({
+    mutationFn: ({ transactionId, actionCode }: { transactionId: string; actionCode: string }) =>
+      applyCoreTransactionAction(transactionId, actionCode, {
+        encounterId: activeEncounter?.id,
+        patientId: activeEncounter?.patientId,
+        source: "mobile-encounter-screen",
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["provider-encounter-core-transaction", activeEncounter?.id],
+      });
+    },
+  });
 
   const handleCloseEncounter = useCallback(async () => {
     if (!activeEncounter) return;
@@ -140,6 +188,52 @@ export function EncounterScreen() {
           </CardBody>
         </Card>
 
+        {encounterTransactionQuery.isLoading ? (
+          <Card>
+            <CardBody>
+              <Text style={styles.transactionHint}>Loading encounter transaction context…</Text>
+            </CardBody>
+          </Card>
+        ) : encounterTransaction ? (
+          <Card testID="encounter-transaction-context">
+            <CardHeader title="Encounter transaction" />
+            <CardBody>
+              <Text style={styles.transactionState}>{`State: ${encounterTransaction.state}`}</Text>
+              {encounterTransaction.providerStage ? (
+                <Text style={styles.transactionHint}>
+                  {`Provider stage: ${encounterTransaction.providerStage}`}
+                </Text>
+              ) : null}
+              {encounterTransaction.nextActions.length > 0 ? (
+                <View style={styles.transactionActions}>
+                  {encounterTransaction.nextActions.map((action) => (
+                    <Button
+                      key={action.code}
+                      title={action.label}
+                      variant="outline"
+                      loading={applyTransactionAction.isPending}
+                      onPress={() => {
+                        applyTransactionAction.mutate({
+                          transactionId: encounterTransaction.id,
+                          actionCode: action.code,
+                        });
+                      }}
+                    />
+                  ))}
+                </View>
+              ) : null}
+            </CardBody>
+          </Card>
+        ) : (
+          <Card>
+            <CardBody>
+              <Text style={styles.transactionHint}>
+                No FACILITY_WALK_IN transaction linked to this encounter yet.
+              </Text>
+            </CardBody>
+          </Card>
+        )}
+
         {/* Encounter tabs */}
         <View style={styles.tabContainer}>
           <TabBar
@@ -203,5 +297,23 @@ const styles = StyleSheet.create({
     marginTop: 24,
     flexDirection: "row",
     gap: 12,
+  },
+  transactionState: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  transactionHint: {
+    fontSize: 13,
+    color: "#6B7280",
+  },
+  transactionNext: {
+    marginTop: 4,
+    fontSize: 13,
+    color: "#2563EB",
+  },
+  transactionActions: {
+    marginTop: 12,
+    gap: 8,
   },
 });

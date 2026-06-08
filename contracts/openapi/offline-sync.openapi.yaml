@@ -42,37 +42,35 @@ tags:
     description: Conflict detection and resolution
 
 paths:
-  # ---------------------------------------------------------------------------
-  # v1.1 Probe endpoints
-  # ---------------------------------------------------------------------------
   /internal/v1/health:
     get:
       operationId: offlineSyncInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: offlineSyncInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -81,23 +79,23 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /internal/v1/test-federation:
     post:
       operationId: offlineSyncInternalTestFederation
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — national federation authority
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -106,73 +104,70 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Federation proof accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeFederationBody"
-
-  # ---------------------------------------------------------------------------
-  # Sync Pack endpoints
-  # ---------------------------------------------------------------------------
+                $ref: '#/components/schemas/ProbeFederationBody'
   /internal/v1/sync-packs:
     get:
       operationId: offlineSyncListSyncPacks
-      tags: [Sync-Pack]
+      tags:
+        - Sync-Pack
       summary: List all sync packs
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Array of sync pack objects
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SyncPackResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  $ref: '#/components/schemas/SyncPackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       operationId: offlineSyncCreateSyncPack
-      tags: [Sync-Pack]
+      tags:
+        - Sync-Pack
       summary: Upload a new sync pack from a disconnected device
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSyncPackRequest"
+              $ref: '#/components/schemas/CreateSyncPackRequest'
       responses:
-        "201":
+        '201':
           description: Sync pack created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SyncPackResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/SyncPackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/sync-packs/{id}:
     get:
       operationId: offlineSyncGetSyncPack
-      tags: [Sync-Pack]
+      tags:
+        - Sync-Pack
       summary: Retrieve a single sync pack by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -180,27 +175,27 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Sync pack detail
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SyncPackResponse"
-        "404":
+                $ref: '#/components/schemas/SyncPackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Sync pack not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/sync-packs/{id}/replay:
     post:
       operationId: offlineSyncReplaySyncPack
-      tags: [Sync-Pack]
+      tags:
+        - Sync-Pack
       summary: Replay a previously failed or conflicted sync pack
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -208,52 +203,49 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Sync pack replayed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SyncPackResponse"
-        "404":
+                $ref: '#/components/schemas/SyncPackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Sync pack not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Conflict Queue endpoints
-  # ---------------------------------------------------------------------------
   /internal/v1/conflicts:
     get:
       operationId: offlineSyncListConflicts
-      tags: [Conflict-Queue]
+      tags:
+        - Conflict-Queue
       summary: List unresolved conflicts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Array of conflict queue entries
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ConflictQueueResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  $ref: '#/components/schemas/ConflictQueueResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/conflicts/{id}/resolve:
     post:
       operationId: offlineSyncResolveConflict
-      tags: [Conflict-Queue]
+      tags:
+        - Conflict-Queue
       summary: Resolve a conflict with a chosen strategy
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -265,18 +257,89 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveConflictRequest"
+              $ref: '#/components/schemas/ResolveConflictRequest'
       responses:
-        "200":
+        '200':
           description: Conflict resolved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ConflictQueueResponse"
-        "404":
+                $ref: '#/components/schemas/ConflictQueueResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Conflict not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+  /:
+    get:
+      operationId: offlinesync_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: offlinesync_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/resolve:
+    post:
+      operationId: offlinesync_post__id_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: offlinesync_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: offlinesync_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-federation:
+    post:
+      operationId: offlinesync_post__test_federation
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: offlinesync_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/replay:
+    post:
+      operationId: offlinesync_post__id_replay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-sync-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

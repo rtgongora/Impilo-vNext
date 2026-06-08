@@ -46,67 +46,65 @@ tags:
     description: Active session snapshot
 
 paths:
-  # ---------------------------------------------------------------------------
-  # Session endpoints
-  # ---------------------------------------------------------------------------
   /internal/v1/channels/sessions:
     get:
       operationId: channelsListSessions
-      tags: [Session]
+      tags:
+        - Session
       summary: List sessions for the current actor context
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Array of session objects
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SessionResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                  $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       operationId: channelsCreateSession
-      tags: [Session]
+      tags:
+        - Session
       summary: Create a new channel session
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateSessionRequest"
+              $ref: '#/components/schemas/CreateSessionRequest'
       responses:
-        "201":
+        '201':
           description: Session created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/channels/sessions/{id}:
     get:
       operationId: channelsGetSession
-      tags: [Session]
+      tags:
+        - Session
       summary: Retrieve a single session by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -114,28 +112,28 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Session detail
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "404":
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Session not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
   /internal/v1/channels/sessions/{sessionId}/escalate:
     post:
       operationId: channelsEscalateSession
-      tags: [Session]
+      tags:
+        - Session
       summary: Escalate a session to a human agent
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
         - name: sessionId
           in: path
           required: true
@@ -147,62 +145,56 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/EscalateRequest"
+              $ref: '#/components/schemas/EscalateRequest'
       responses:
-        "200":
+        '200':
           description: Session escalated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SessionResponse"
-        "404":
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Session not found
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Message endpoints
-  # ---------------------------------------------------------------------------
   /internal/v1/channels/messages:
     post:
       operationId: channelsSendOutbound
-      tags: [Message]
+      tags:
+        - Message
       summary: Send an outbound message on a session
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateMessageRequest"
+              $ref: '#/components/schemas/CreateMessageRequest'
       responses:
-        "201":
+        '201':
           description: Message accepted for delivery
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Inbound endpoints
-  # ---------------------------------------------------------------------------
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /external/v1/channels/inbound:
     post:
       operationId: channelsReceiveInbound
-      tags: [Inbound]
+      tags:
+        - Inbound
       summary: Receive an inbound message from an external channel provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: Idempotency-Key
           in: header
           required: false
@@ -214,71 +206,100 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InboundMessageRequest"
+              $ref: '#/components/schemas/InboundMessageRequest'
       responses:
-        "201":
+        '201':
           description: Inbound message accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MessageResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Assisted Interaction endpoints
-  # ---------------------------------------------------------------------------
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/channels/assisted-interactions:
     post:
       operationId: channelsRecordAssistedInteraction
-      tags: [Assisted-Interaction]
+      tags:
+        - Assisted-Interaction
       summary: Record an agent-assisted interaction on a session
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateAssistedInteractionRequest"
+              $ref: '#/components/schemas/CreateAssistedInteractionRequest'
       responses:
-        "201":
+        '201':
           description: Assisted interaction recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AssistedInteractionResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
-  # ---------------------------------------------------------------------------
-  # Snapshot endpoints
-  # ---------------------------------------------------------------------------
+                $ref: '#/components/schemas/AssistedInteractionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /internal/v1/channels/sessions/snapshot:
     get:
       operationId: channelsSessionSnapshot
-      tags: [Snapshot]
+      tags:
+        - Snapshot
       summary: Snapshot of all active sessions for the current context
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Array of active session objects
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SessionResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+                  $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /:
+    post:
+      operationId: channels_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from channels-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: channels_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from channels-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: channels_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from channels-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{sessionId}/escalate:
+    post:
+      operationId: channels_post__sessionId_escalate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from channels-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

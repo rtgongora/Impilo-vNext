@@ -75,6 +75,7 @@
 | `docs/doctrine/PROVIDER_JOURNEY.md` | human-review | all planes | advisory |
 | `docs/doctrine/README.md` | human-review | all planes | advisory |
 | `docs/doctrine/THREE_CORE_JOURNEYS.md` | human-review | all planes | advisory |
+| `docs/doctrine/booking-appointment-doctrine.md` | human-review | all planes | advisory |
 | `docs/doctrine/costa-mushex-billing-timing.md` | human-review | all planes | advisory |
 | `docs/doctrine/doctrine-gap-matrix.md` | human-review | all planes | advisory |
 | `docs/doctrine/health-os-doctrine.md` | human-review | all planes | advisory |

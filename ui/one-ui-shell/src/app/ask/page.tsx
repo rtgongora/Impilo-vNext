@@ -12,13 +12,19 @@
  */
 
 import { useState, useRef, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { MessageSquare, Send, Loader2, Sparkles, ShieldCheck, BookMarked } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { randomUUID } from "@/lib/uuid";
-import { useAskEdlizClinical, useClinicalPathways, useStartClinicalPathwaySession } from "@/hooks/queries/useGuidance";
+import {
+  useAskEdlizClinical,
+  useAskGuidance,
+  useClinicalPathways,
+  useStartClinicalPathwaySession,
+} from "@/hooks/queries/useGuidance";
+import { buildNompiloRouteContext } from "@/lib/nompilo-route-context";
 
 interface Message {
   id: string;
@@ -30,7 +36,9 @@ interface Message {
 
 export default function AskPage() {
   const searchParams = useSearchParams();
-  const routeContext = searchParams.get("from");
+  const pathname = usePathname() ?? "/ask";
+  const routeContext = searchParams.get("from") ?? pathname;
+  const nompiloContext = buildNompiloRouteContext(routeContext);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
@@ -45,6 +53,7 @@ export default function AskPage() {
   const [consentGranted, setConsentGranted] = useState(false);
   const [mode, setMode] = useState<"general" | "edliz">("general");
   const askEdliz = useAskEdlizClinical();
+  const askGuidance = useAskGuidance();
   const { data: pathwaysRes } = useClinicalPathways();
   const startPathway = useStartClinicalPathwaySession();
   const [pathwaySessionId, setPathwaySessionId] = useState<string | null>(null);
@@ -133,16 +142,18 @@ export default function AskPage() {
       return;
     }
 
-    apiClient
-      .post<{ data: { response: string } }>("/internal/v1/guidance/ask", {
+    askGuidance
+      .mutateAsync({
         question: text,
         personalized: consentGranted,
+        context: { ...nompiloContext },
       })
       .then((res) => {
+        const payload = res?.data as { response?: string } | undefined;
         const assistantMsg: Message = {
           id: randomUUID(),
           role: "assistant",
-          content: res?.data?.response ?? "I received your question. The guidance service is processing your request.",
+          content: payload?.response ?? "I received your question. The guidance service is processing your request.",
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMsg]);
@@ -163,11 +174,9 @@ export default function AskPage() {
     <AppLayout>
       <PageShell title="Ask" subtitle="General guidance or governed Ask EDLIZ (national clinical knowledge)" icon={<MessageSquare className="h-6 w-6" />}>
         <div className="flex flex-col h-[calc(100vh-220px)] max-w-2xl mx-auto">
-          {routeContext ? (
-            <p className="mb-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900">
-              Nompilo context from <code className="font-mono">{routeContext}</code> — suggestions are scoped to this page where permitted.
-            </p>
-          ) : null}
+          <p className="mb-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-900" data-testid="nompilo-ask-route-context">
+            Nompilo context: <code className="font-mono">{nompiloContext.routePath}</code> · {nompiloContext.surface} journey
+          </p>
           <div className="flex gap-2 mb-3">
             <button
               type="button"

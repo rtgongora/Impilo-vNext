@@ -17,7 +17,7 @@ import {
   Activity, Receipt, Pill, Calendar, Shield, Stethoscope,
   ClipboardList, Package, Settings, FileText, MapPin,
   ChevronRight, Video, ShoppingCart, Database, AlertTriangle,
-  Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog,
+  Briefcase, Heart, Globe, Siren, Award, User, ShieldCheck, UserCog, Droplet,
   MessageSquare, Radio, TestTube2, Scan, Phone, Send, ThumbsUp, MessageCircle, GraduationCap,
   Wifi, Wrench, Layers, QrCode, FlaskConical, FileCheck, Clipboard, Play, LayoutGrid, BedDouble,
 } from "lucide-react";
@@ -648,9 +648,9 @@ function getWorkerSnapshotCards(args: {
         tone: args.queueInService > 0 ? "impilo" : "slate",
       },
       {
-        label: "Today's bookings",
+        label: "Today's appointments",
         value: String(args.appointmentsCount),
-        detail: "Planned arrivals and follow-ups that may convert into active encounters.",
+        detail: "Confirmed scheduled arrivals — pending booking requests are in Booking Requests.",
         tone: args.appointmentsCount > 0 ? "emerald" : "slate",
       },
       {
@@ -1727,6 +1727,30 @@ export default function HomePage() {
                 </div>
               </div>
 
+              {/* Blood donation — My Life */}
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
+                  <Droplet className="w-5 h-5 text-rose-600" /> Give blood
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <Link href="/madi/donor/drives" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-rose-50 border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                    <Droplet className="w-6 h-6 text-rose-600" />
+                    <span className="text-xs font-medium text-gray-900">Donate blood</span>
+                    <span className="text-[11px] text-gray-500">Find a drive near you</span>
+                  </Link>
+                  <Link href="/madi/donor/register" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-rose-200 hover:border-rose-400 transition-colors text-center">
+                    <Heart className="w-6 h-6 text-rose-500" />
+                    <span className="text-xs font-medium text-gray-900">Become a blood donor</span>
+                    <span className="text-[11px] text-gray-500">Voluntary registration</span>
+                  </Link>
+                  <Link href="/madi/donor" className="flex flex-col items-center gap-2 p-4 rounded-lg bg-white border border-gray-200 hover:border-rose-300 transition-colors text-center">
+                    <User className="w-6 h-6 text-gray-500" />
+                    <span className="text-xs font-medium text-gray-900">My donor hub</span>
+                    <span className="text-[11px] text-gray-500">History & preferences</span>
+                  </Link>
+                </div>
+              </div>
+
               {/* Personal Links */}
               <div className="bg-white rounded-lg border border-gray-200 p-6">
                 <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2 mb-4">
@@ -1949,7 +1973,9 @@ function CitizenHome({
               { href: "/home/profile", label: "Profile", icon: User, badge: null },
               { href: "/home/medications", label: "Medications", icon: Pill, badge: null },
               { href: "/home/documents", label: "Documents", icon: FileText, badge: null },
-              { href: "/scheduling", label: "Appointments", icon: Calendar, badge: null },
+              { href: "/home/bookings", label: "My Bookings", icon: Calendar, badge: null },
+              { href: "/home/appointments", label: "My Appointments", icon: Calendar, badge: null },
+              { href: "/madi/donor", label: "Blood donation", icon: Droplet, badge: null },
               { href: "/monitoring", label: "Monitoring", icon: Activity, badge: null },
             ].map((item) => {
               const Icon = item.icon;
@@ -2040,22 +2066,22 @@ function CitizenHome({
             </div>
           </Link>
 
-          {/* Upcoming — live appointments from BFF when the session can see them */}
+          {/* Upcoming appointments — confirmed scheduled events only */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming
+              <Calendar className="w-3.5 h-3.5 text-impilo-500" /> Upcoming appointments
             </h3>
             {citizenAppointmentsLoading && (
               <p className="text-xs text-gray-500">Loading appointments…</p>
             )}
             {!citizenAppointmentsLoading && citizenAppointmentsError && (
               <p className="text-xs text-gray-500 leading-relaxed">
-                Appointments could not be loaded. Open Scheduling to book or manage visits.
+                Appointments could not be loaded. Book a service or check My Bookings for pending requests.
               </p>
             )}
             {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length === 0 && (
               <p className="text-xs text-gray-500 leading-relaxed">
-                No upcoming visits in the scheduling feed for this account yet. Book or manage visits in Scheduling.
+                No confirmed appointments yet. Booking requests appear under My Bookings until confirmed.
               </p>
             )}
             {!citizenAppointmentsLoading && !citizenAppointmentsError && upcomingAppointments.length > 0 && (
@@ -2075,9 +2101,17 @@ function CitizenHome({
                 })}
               </ul>
             )}
-            <Link href="/scheduling" className="mt-3 block text-center text-xs font-medium text-impilo-600 hover:underline">
-              Open scheduling →
-            </Link>
+            <div className="mt-3 flex flex-col gap-1 text-center text-xs font-medium">
+              <Link href="/home/bookings/new" className="text-impilo-600 hover:underline">
+                Book a service →
+              </Link>
+              <Link href="/home/bookings" className="text-gray-500 hover:underline">
+                My Bookings (pending requests)
+              </Link>
+              <Link href="/home/appointments" className="text-gray-500 hover:underline">
+                My Appointments (confirmed)
+              </Link>
+            </div>
           </div>
 
           {/* Quick health actions */}

@@ -18,6 +18,7 @@ import {
   ClipboardList,
   Code2,
   CreditCard,
+  Droplet,
   FileBarChart2,
   FileText,
   FolderOpen,
@@ -34,6 +35,7 @@ import {
   Monitor,
   Package,
   Pill,
+  Radio,
   Route,
   Search,
   Settings2,
@@ -127,6 +129,8 @@ const ZONES: SidebarZone[] = [
       { href: "/finance", label: "Finance", icon: Wallet, requiredRoles: FINANCE_ROLES },
       // Absorbed sidecars: oros-web → /lab
       { href: "/lab", label: "Laboratory", icon: FlaskConical, requiredRoles: CLINICAL_ROLES },
+      { href: "/madi", label: "Madi", icon: Droplet, requiredRoles: CLINICAL_ROLES },
+      { href: "/live", label: "Impilo Live", icon: Radio, requiredRoles: CLINICAL_ROLES },
     ],
   },
   {
@@ -135,6 +139,7 @@ const ZONES: SidebarZone[] = [
     items: [
       { href: "/professional", label: "Professional Profile", icon: Stethoscope },
       { href: "/learning", label: "Impilo Fundo", icon: GraduationCap },
+      { href: "/live/cpd", label: "Impilo Live CPD", icon: Radio },
       { href: "/home/credentials", label: "Credentials", icon: ClipboardList },
       { href: "/registry-admin", label: "Registry plane", icon: ShieldCheck, requiredRoles: ["SYSTEM_ADMIN", "HIE_ADMIN"] },
       { href: "/registry", label: "Registry", icon: Building2 },
@@ -169,6 +174,8 @@ const ZONES: SidebarZone[] = [
         { href: "/wallet", label: "My Wallet", icon: Wallet },
         // Health OS §2: Wellness — prevention, self-care, fitness
         { href: "/wellness", label: "Wellness", icon: Sparkles },
+        { href: "/madi/donor", label: "Blood donation", icon: Droplet },
+        { href: "/live/discover", label: "Live Health Talks", icon: Radio },
         // Health OS §4: Caregiving — delegated care, family, dependants
         { href: "/caregiving", label: "Caregiving", icon: HeartHandshake },
         // Health OS §2: Remote monitoring — devices, chronic care, readings
@@ -180,6 +187,8 @@ const ZONES: SidebarZone[] = [
         { href: "/home/profile", label: "Profile", icon: User },
         { href: "/home/preferences", label: "Preferences", icon: Heart },
         { href: "/home/medications", label: "Medications", icon: Pill },
+        { href: "/home/bookings", label: "My Bookings", icon: Calendar },
+        { href: "/home/appointments", label: "My Appointments", icon: Calendar },
         { href: "/home/documents", label: "Documents", icon: FileText },
         { href: "/shell/file-manager", label: "File manager", icon: FolderOpen },
         { href: "/shell/task-manager", label: "Task manager", icon: Layers },

@@ -60,9 +60,6 @@ tags:
 # Paths
 # ===========================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # IPS Bundle
-  # -------------------------------------------------------------------------
   /v1/summary/ips/{cpid}:
     get:
       operationId: getIpsSummary
@@ -72,7 +69,8 @@ paths:
         Implementation Guide. The bundle contains Composition + referenced
         resources (allergies, problems, medications, immunizations, vitals,
         lab results, procedures, care plans).
-      tags: [IPS]
+      tags:
+        - IPS
       parameters:
         - name: cpid
           in: path
@@ -80,7 +78,7 @@ paths:
           description: Client Pseudonymous ID (CPID) — the BUTANO-internal patient reference
           schema:
             type: string
-            example: "CPID-00000001"
+            example: CPID-00000001
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -92,18 +90,14 @@ paths:
               schema:
                 description: FHIR R4 Bundle (IPS document)
                 type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Patient not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Visit Summary Bundle
-  # -------------------------------------------------------------------------
   /v1/summary/visit/{encounterId}:
     get:
       operationId: getVisitSummary
@@ -111,7 +105,8 @@ paths:
       description: |
         Returns a FHIR Bundle containing all resources associated with the
         specified encounter (observations, conditions, medications, etc.).
-      tags: [Visit]
+      tags:
+        - Visit
       parameters:
         - name: encounterId
           in: path
@@ -119,7 +114,7 @@ paths:
           description: Logical FHIR Encounter ID
           schema:
             type: string
-            example: "enc-2024-00042"
+            example: enc-2024-00042
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -131,18 +126,14 @@ paths:
               schema:
                 description: FHIR R4 Bundle (visit summary)
                 type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Encounter not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Patient Timeline
-  # -------------------------------------------------------------------------
   /v1/timeline/{cpid}:
     get:
       operationId: getPatientTimeline
@@ -151,7 +142,8 @@ paths:
         Aggregates clinical resources for the patient and returns them in
         reverse-chronological order. Supports filtering by resource type and
         date range, with cursor-based pagination.
-      tags: [Timeline]
+      tags:
+        - Timeline
       parameters:
         - name: cpid
           in: path
@@ -159,7 +151,7 @@ paths:
           description: Client Pseudonymous ID
           schema:
             type: string
-            example: "CPID-00000001"
+            example: CPID-00000001
         - name: since
           in: query
           required: false
@@ -167,14 +159,14 @@ paths:
           schema:
             type: string
             format: date
-            example: "2024-01-01"
+            example: '2024-01-01'
         - name: type
           in: query
           required: false
           description: Comma-separated list of FHIR resource types to include
           schema:
             type: string
-            example: "Encounter,Observation,Condition,MedicationRequest"
+            example: Encounter,Observation,Condition,MedicationRequest
         - name: page
           in: query
           required: false
@@ -197,18 +189,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseTimelineResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Patient not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # CPID Reconciliation — trigger
-  # -------------------------------------------------------------------------
   /v1/internal/reconcile-subject:
     post:
       operationId: reconcileSubject
@@ -218,7 +206,8 @@ paths:
         deprecated CPID across all FHIR resources. This endpoint queues an
         asynchronous reconciliation job that updates Patient references,
         Encounter subjects, Observation subjects, etc.
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       requestBody:
         required: true
         content:
@@ -240,15 +229,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # CPID Reconciliation — status
-  # -------------------------------------------------------------------------
   /v1/internal/reconciliation/{id}:
     get:
       operationId: getReconciliationStatus
       summary: Get the status of a reconciliation job
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       parameters:
         - name: id
           in: path
@@ -264,18 +250,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseReconciliationStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Reconciliation job not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Tenant Health
-  # -------------------------------------------------------------------------
   /v1/internal/health/tenants:
     get:
       operationId: getTenantHealth
@@ -283,7 +265,8 @@ paths:
       description: |
         Returns the list of configured tenants and their active status.
         Used by the ops console to verify multi-tenant FHIR partitioning.
-      tags: [Ops]
+      tags:
+        - Ops
       responses:
         '200':
           description: Array of tenant info
@@ -293,10 +276,6 @@ paths:
                 $ref: '#/components/schemas/ApiResponseTenantInfoArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Resource Statistics
-  # -------------------------------------------------------------------------
   /v1/internal/stats:
     get:
       operationId: getResourceStats
@@ -304,7 +283,8 @@ paths:
       description: |
         Returns a map of FHIR resource type names to their total count in the
         current tenant's partition. Useful for ops dashboards.
-      tags: [Ops]
+      tags:
+        - Ops
       responses:
         '200':
           description: Resource statistics
@@ -314,10 +294,88 @@ paths:
                 $ref: '#/components/schemas/ApiResponseResourceStats'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /ips/{cpid}:
+    get:
+      operationId: butano_get__ips_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /visit/{encounterId}:
+    get:
+      operationId: butano_get__visit_encounterId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reconcile-subject:
+    post:
+      operationId: butano_post__reconcile_subject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reconciliation/{id}:
+    get:
+      operationId: butano_get__reconciliation_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health/tenants:
+    get:
+      operationId: butano_get__health_tenants
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stats:
+    get:
+      operationId: butano_get__stats
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cpid}:
+    get:
+      operationId: butano_get__cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: butano_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: butano_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from butano-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
-# ===========================================================================
-# Components
-# ===========================================================================
 components:
   # -------------------------------------------------------------------------
   # Security Schemes

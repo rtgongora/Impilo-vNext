@@ -1,6 +1,6 @@
 # Frontend route inventory
 
-> Generated from `ui/one-ui-shell/src/lib/routes.ts` (417 routes)
+> Generated from `ui/one-ui-shell/src/lib/routes.ts` (467 routes)
 
 - `/`
 - `/access`
@@ -174,6 +174,11 @@
 - `/health-os/command-centre`
 - `/home`
 - `/home/allergies`
+- `/home/appointments`
+- `/home/appointments/[appointmentId]`
+- `/home/bookings`
+- `/home/bookings/[bookingId]`
+- `/home/bookings/new`
 - `/home/conditions`
 - `/home/credentials`
 - `/home/documents`
@@ -182,6 +187,7 @@
 - `/home/preferences`
 - `/home/profile`
 - `/home/referrals`
+- `/home/results`
 - `/id-services`
 - `/intelligence`
 - `/inventory`
@@ -196,10 +202,4 @@
 - `/lab/results`
 - `/lab/worklist`
 - `/learning`
-- `/learning/admin`
-- `/learning/admin/assessments`
-- `/learning/admin/assessments/[assessmentId]/edit`
-- `/learning/admin/assessments/new`
-- `/learning/admin/courses`
-- `/learning/admin/courses/[courseId]/edit`
-- … and 217 more
+- … and 267 more

@@ -10,6 +10,8 @@ import zw.gov.mohcc.impilo.oros.core.OrderStateMachine;
 import zw.gov.mohcc.impilo.oros.core.ResultService;
 import zw.gov.mohcc.impilo.oros.integration.ButanoIntegration;
 import zw.gov.mohcc.impilo.oros.integration.PctIntegration;
+import zw.gov.mohcc.impilo.oros.domain.AdapterMode;
+import zw.gov.mohcc.impilo.oros.domain.OrderType;
 import zw.gov.mohcc.impilo.oros.persistence.entity.OrderEntity;
 import zw.gov.mohcc.impilo.oros.persistence.entity.ResultEntity;
 import zw.gov.mohcc.impilo.shared.auth.TrustContextHolder;
@@ -17,6 +19,7 @@ import zw.gov.mohcc.impilo.shared.response.ApiResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -81,7 +84,7 @@ public class InternalController {
      * Trigger a PCT integration hook for an order.
      * Notifies PCT about expected worksteps or available results.
      */
-    @PostMapping("/pct/hook")
+    @PostMapping({"/pct/hook", "/pct/order-hook"})
     public ResponseEntity<ApiResponse<Map<String, String>>> pctHook(
             @RequestBody Map<String, String> request) {
         String correlationId = TrustContextHolder.require().correlationId().toString();
@@ -124,5 +127,39 @@ public class InternalController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.ok(capabilities, correlationId));
+    }
+
+    /**
+     * Create or update facility capability configuration.
+     */
+    @PutMapping("/capabilities")
+    public ResponseEntity<ApiResponse<CapabilityDto>> upsertCapability(
+            @RequestBody Map<String, Object> request) {
+        String correlationId = TrustContextHolder.require().correlationId().toString();
+        Object facilityRaw = request.get("facilityId");
+        Object adapterRaw = request.get("adapterMode");
+        Object orderTypesRaw = request.get("supportedOrderTypes");
+        if (facilityRaw == null || adapterRaw == null || orderTypesRaw == null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("OROS_INVALID_CAPABILITY",
+                            "facilityId, adapterMode, and supportedOrderTypes are required", 400, correlationId));
+        }
+
+        UUID facilityId = UUID.fromString(facilityRaw.toString());
+        AdapterMode adapterMode = AdapterMode.valueOf(adapterRaw.toString());
+        @SuppressWarnings("unchecked")
+        List<String> orderTypeNames = (List<String>) orderTypesRaw;
+        String externalEndpoint = request.get("externalEndpoint") != null
+                ? request.get("externalEndpoint").toString() : null;
+        String config = request.get("routingRules") != null
+                ? request.get("routingRules").toString() : null;
+
+        CapabilityDto last = null;
+        for (String orderTypeName : orderTypeNames) {
+            var entity = capabilityService.upsertCapability(
+                    facilityId, OrderType.valueOf(orderTypeName), adapterMode, externalEndpoint, config);
+            last = CapabilityDto.from(entity);
+        }
+        return ResponseEntity.ok(ApiResponse.ok(last, correlationId));
     }
 }

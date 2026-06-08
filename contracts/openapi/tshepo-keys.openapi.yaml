@@ -56,35 +56,35 @@ tags:
     description: CA certificate trust store management
 
 paths:
-  # ── Internal probes ───────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: tshepoKeysInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: tshepoKeysInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -93,36 +93,34 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
-  # ── JWKS ──────────────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeCommandBody'
   /v1/keys/jwks:
     get:
       operationId: getJwks
-      tags: [JWKS]
+      tags:
+        - JWKS
       summary: Public JWKS endpoint — RFC 7517 Ed25519 (OKP) public keys
       description: |
         Unauthenticated endpoint so any service or client can fetch public keys
         for JWT/JWS verification. Response is cached (Cache-Control: public, max-age=60).
       security: []
       responses:
-        "200":
+        '200':
           description: JSON Web Key Set
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JwksResponse"
-
-  # ── Key Management ────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/JwksResponse'
   /v1/keys:
     get:
       operationId: listSigningKeys
-      tags: [Key-Management]
+      tags:
+        - Key-Management
       summary: List all signing keys for a tenant
       parameters:
         - name: tenantId
@@ -132,19 +130,19 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: List of signing keys
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SigningKeyResponse"
-
+                  $ref: '#/components/schemas/SigningKeyResponse'
   /v1/keys/{keyId}:
     get:
       operationId: getSigningKey
-      tags: [Key-Management]
+      tags:
+        - Key-Management
       summary: Get a specific signing key by key ID
       parameters:
         - name: keyId
@@ -153,17 +151,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Signing key details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SigningKeyResponse"
-        "404":
+                $ref: '#/components/schemas/SigningKeyResponse'
+        '404':
           description: Key not found
     delete:
       operationId: revokeSigningKey
-      tags: [Key-Management]
+      tags:
+        - Key-Management
       summary: Revoke a signing key (marks as REVOKED, not deleted)
       description: |
         Revoked keys can no longer be used for signing but remain available
@@ -175,13 +174,13 @@ paths:
           schema:
             type: string
       responses:
-        "204":
+        '204':
           description: Key revoked
-
   /v1/keys/rotate:
     post:
       operationId: rotateKey
-      tags: [Key-Management]
+      tags:
+        - Key-Management
       summary: Trigger manual key rotation
       description: |
         Generates a new Ed25519 signing key pair for the tenant, marks the
@@ -191,20 +190,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RotateKeyRequest"
+              $ref: '#/components/schemas/RotateKeyRequest'
       responses:
-        "201":
+        '201':
           description: Key rotated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RotateKeyResponse"
-
-  # ── Signing ───────────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/RotateKeyResponse'
   /v1/sign:
     post:
       operationId: signPayload
-      tags: [Signing]
+      tags:
+        - Signing
       summary: Sign a payload with the current active Ed25519 key
       description: |
         If `jwsCompact` is true, returns a full JWS compact serialization.
@@ -215,19 +213,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignPayloadRequest"
+              $ref: '#/components/schemas/SignPayloadRequest'
       responses:
-        "200":
+        '200':
           description: Signature result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SignPayloadResponse"
-
+                $ref: '#/components/schemas/SignPayloadResponse'
   /v1/sign/token:
     post:
       operationId: issueServiceToken
-      tags: [Signing]
+      tags:
+        - Signing
       summary: Issue a scoped, short-lived JWS service token
       description: |
         Scoped service tokens for internal authorization. Returns the token
@@ -237,37 +235,37 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IssueTokenRequest"
+              $ref: '#/components/schemas/IssueTokenRequest'
       responses:
-        "200":
+        '200':
           description: Service token issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokenResponse"
-
-  # ── Certificates ──────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/TokenResponse'
   /v1/certificates:
     post:
       operationId: importCertificate
-      tags: [Certificates]
+      tags:
+        - Certificates
       summary: Import a CA certificate into the trust store
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CertificateImportRequest"
+              $ref: '#/components/schemas/CertificateImportRequest'
       responses:
-        "201":
+        '201':
           description: Certificate imported
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CertificateResponse"
+                $ref: '#/components/schemas/CertificateResponse'
     get:
       operationId: listCertificates
-      tags: [Certificates]
+      tags:
+        - Certificates
       summary: List all certificates for a tenant
       parameters:
         - name: tenantId
@@ -277,19 +275,19 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: List of trusted certificates
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/CertificateResponse"
-
+                  $ref: '#/components/schemas/CertificateResponse'
   /v1/certificates/{id}:
     delete:
       operationId: revokeCertificate
-      tags: [Certificates]
+      tags:
+        - Certificates
       summary: Revoke a trusted certificate
       parameters:
         - name: id
@@ -305,8 +303,79 @@ paths:
             type: string
             format: uuid
       responses:
-        "204":
+        '204':
           description: Certificate revoked
+  /{id}:
+    delete:
+      operationId: tshepokeys_delete__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /jwks:
+    get:
+      operationId: tshepokeys_get__jwks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rotate:
+    post:
+      operationId: tshepokeys_post__rotate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{keyId}:
+    get:
+      operationId: tshepokeys_get__keyId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: tshepokeys_delete__keyId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /token:
+    post:
+      operationId: tshepokeys_post__token
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: tshepokeys_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: tshepokeys_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from tshepo-keys-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

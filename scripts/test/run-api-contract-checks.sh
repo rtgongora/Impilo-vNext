@@ -21,4 +21,18 @@ gate_run "bff-health-version-route-exists" bash -c '
 
 gate_run "openapi-social-contract" bash -c 'test -f contracts/openapi/social.openapi.yaml' || FAIL=1
 
+gate_run "openapi-yaml-validity" bash scripts/guard/check-openapi-yaml-validity.sh || FAIL=1
+
+gate_run "contract-implementation-matrix" bash -c '
+  cd scripts/completeness
+  npm install --silent 2>/dev/null || npm install --silent
+  npm run contract-matrix --silent
+  test -f ../../reports/product/contract-implementation-matrix.json
+' || FAIL=1
+
+gate_run "contract-implementation-gate-advisory" bash -c '
+  CONTRACT_IMPLEMENTATION_VIOLATION_THRESHOLD="${CONTRACT_IMPLEMENTATION_VIOLATION_THRESHOLD:-999999}"
+  bash scripts/guard/check-contract-implementation.sh
+' || gate_warn "contract implementation violations present — see CONTRACT_IMPLEMENTATION_MATRIX.md"
+
 exit "$FAIL"

@@ -32,6 +32,8 @@ export interface SiteRegistrySummary {
   lifecycleStatus: string;
   licenceStatus: string;
   licenceExpiryDate: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface SiteRegistryProfile {
@@ -64,6 +66,18 @@ export interface SiteRegistryProfile {
   assignments?: UnknownRecord[];
 }
 
+function readNumber(row: UnknownRecord, ...keys: string[]): number | null {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
 function normalizeSummary(row: unknown): SiteRegistrySummary {
   const r = asRecord(row);
   return {
@@ -78,6 +92,8 @@ function normalizeSummary(row: unknown): SiteRegistrySummary {
     lifecycleStatus: asString(r.lifecycleStatus),
     licenceStatus: asString(r.licenceStatus),
     licenceExpiryDate: asDateString(r.licenceExpiryDate),
+    latitude: readNumber(r, "latitude", "lat", "geoLatitude", "geo_latitude"),
+    longitude: readNumber(r, "longitude", "lng", "lon", "geoLongitude", "geo_longitude"),
   };
 }
 

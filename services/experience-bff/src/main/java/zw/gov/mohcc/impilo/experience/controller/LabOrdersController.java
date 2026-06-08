@@ -115,7 +115,8 @@ public class LabOrdersController {
 
         UUID orderId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now();
-        String orderNumber = "LAB-" + now.toInstant().toEpochMilli();
+        String orosType = resolveOrosOrderType(request.category());
+        String orderNumber = orosType + "-" + now.toInstant().toEpochMilli();
 
         // Delegate to OROS: place the order in the sovereign order orchestration service
         String orosOrderId = null;
@@ -127,7 +128,7 @@ public class LabOrdersController {
                         "quantity", 1
                 ));
                 JsonNode orosData = orosClient.placeOrder(
-                        "LAB",
+                        orosType,
                         request.priority() != null ? request.priority() : "ROUTINE",
                         request.patient_cpid(),
                         request.pct_encounter_ref(),
@@ -283,5 +284,24 @@ public class LabOrdersController {
         response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /** Maps UI category to OROS order type (LAB, IMAGING, PHARMACY, PROCEDURE). */
+    static String resolveOrosOrderType(String category) {
+        if (category == null || category.isBlank()) {
+            return "LAB";
+        }
+        String normalized = category.trim().toUpperCase(Locale.ROOT);
+        if (normalized.contains("IMAG") || normalized.contains("RADIO") || normalized.equals("CT")
+                || normalized.equals("MRI") || normalized.equals("XRAY")) {
+            return "IMAGING";
+        }
+        if (normalized.contains("PHARM")) {
+            return "PHARMACY";
+        }
+        if (normalized.contains("PROC")) {
+            return "PROCEDURE";
+        }
+        return "LAB";
     }
 }

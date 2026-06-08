@@ -84,6 +84,12 @@ describe("FinancePayerOpsPage", () => {
     });
   });
 
+  it("surfaces production MusheX rails guidance", () => {
+    renderPage();
+    expect(screen.getByTestId("payer-ops-production-rails")).toBeInTheDocument();
+    expect(screen.getByText(/Production MusheX rails/i)).toBeInTheDocument();
+  });
+
   it("composes payer journey state and linked settlement lookup", async () => {
     const user = userEvent.setup();
     renderPage();

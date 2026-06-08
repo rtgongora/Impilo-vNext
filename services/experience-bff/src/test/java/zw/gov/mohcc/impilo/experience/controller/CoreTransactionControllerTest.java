@@ -19,10 +19,23 @@ class CoreTransactionControllerTest {
     void listCoreTransactions_returnsComposedEnvelope() {
         CoreTransactionController controller = new CoreTransactionController(new StubService());
         ResponseEntity<Map<String, Object>> response =
-                controller.listCoreTransactions("QUEUED", "FACILITY_WALK_IN", "req-1", "corr-1");
+                controller.listCoreTransactions("QUEUED", "FACILITY_WALK_IN", null, "req-1", "corr-1");
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("req-1", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+    }
+
+    @Test
+    void listCoreTransactions_acceptsEncounterIdFilter() {
+        CoreTransactionController controller = new CoreTransactionController(new StubService());
+        ResponseEntity<Map<String, Object>> matched =
+                controller.listCoreTransactions(null, null, "enc-1", "req-1", "corr-1");
+        ResponseEntity<Map<String, Object>> unmatched =
+                controller.listCoreTransactions(null, null, "enc-other", "req-1", "corr-1");
+        assertEquals(200, matched.getStatusCode().value());
+        assertEquals(200, unmatched.getStatusCode().value());
+        assertNotNull(matched.getBody());
+        assertNotNull(unmatched.getBody());
     }
 
     @Test
@@ -85,18 +98,26 @@ class CoreTransactionControllerTest {
         private static final ObjectMapper MAPPER = new ObjectMapper();
 
         StubService() {
-            super(null, null, null, null, MAPPER);
+            super(null, null, null, null, null, MAPPER);
         }
 
         @Override
-        public ObjectNode listCoreTransactions(String state, String type) {
+        public ObjectNode listCoreTransactions(String state, String type, String encounterId) {
             ObjectNode root = MAPPER.createObjectNode();
             ArrayNode items = MAPPER.createArrayNode();
+            ObjectNode view = MAPPER.createObjectNode();
             ObjectNode tx = MAPPER.createObjectNode();
             tx.put("id", "tx-1");
             tx.put("type", type != null ? type : "FACILITY_WALK_IN");
             tx.put("currentState", state != null ? state : "INITIATED");
-            items.add(tx);
+            view.set("transaction", tx);
+            ObjectNode clinical = MAPPER.createObjectNode();
+            clinical.put("encounterId", "enc-1");
+            view.set("clinicalContext", clinical);
+            items.add(view);
+            if (encounterId != null && !encounterId.isBlank() && !"enc-1".equals(encounterId)) {
+                items = MAPPER.createArrayNode();
+            }
             root.set("items", items);
             root.set("failureModes", MAPPER.createArrayNode());
             return root;

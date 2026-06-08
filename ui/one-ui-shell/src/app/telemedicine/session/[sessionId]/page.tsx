@@ -78,8 +78,10 @@ export default function TeleconsultSessionPage() {
         const res = await apiClient.get<{ data: Record<string, unknown> }>(`/internal/v1/teleconsult/sessions/${sessionId}`);
         setSession(res.data);
       } catch {
-        // Session might not exist in teleconsult controller — create a shell
-        setSession({ id: sessionId, status: "IN_SESSION", stage: 5 });
+        setSession(null);
+        setMediaError(
+          "Teleconsult session could not be loaded. RTC media remains scoped Partial until governed transport is wired.",
+        );
       }
       try {
         const msgs = await apiClient.get<{ data: Message[] }>(`/internal/v1/teleconsult/sessions/${sessionId}/messages`);

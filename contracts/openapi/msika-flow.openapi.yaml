@@ -41,7 +41,8 @@ tags:
 paths:
   /v1/cart/validate:
     post:
-      tags: [Cart]
+      tags:
+        - Cart
       operationId: validateCart
       summary: Validate cart items against MSIKA Core catalog restrictions
       parameters:
@@ -62,10 +63,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_ValidationResult'
-
   /v1/orders:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: createOrder
       summary: Create a new marketplace order
       parameters:
@@ -86,10 +87,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}:
     get:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: getOrder
       summary: Get order by ID
       parameters:
@@ -107,10 +108,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/cancel:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: cancelOrder
       summary: Cancel an order
       parameters:
@@ -128,10 +129,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/price:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: priceOrder
       summary: Compute and snapshot pricing for an order
       parameters:
@@ -149,10 +150,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/pay:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: createPaymentIntent
       summary: Create MUSHEX payment intent for an order
       parameters:
@@ -170,10 +171,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_PaymentIntentResponse'
-
   /v1/orders/{id}/route:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: routeOrder
       summary: Route order to fulfillment target
       parameters:
@@ -191,10 +192,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/accept:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: acceptOrder
       summary: Accept a routed order (vendor/facility action)
       parameters:
@@ -212,10 +213,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/mark-ready:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: markOrderReady
       summary: Mark order ready for pickup
       parameters:
@@ -233,10 +234,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/mark-delivered:
     post:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: markOrderDelivered
       summary: Mark order as delivered
       parameters:
@@ -254,10 +255,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/tracking:
     get:
-      tags: [Orders]
+      tags:
+        - Orders
       operationId: getOrderTracking
       summary: Get order tracking and event history
       parameters:
@@ -274,10 +275,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/pickup/issue:
     post:
-      tags: [Pickup]
+      tags:
+        - Pickup
       operationId: issuePickupToken
       summary: Issue pickup token (OTP + QR) for ready-for-pickup order
       parameters:
@@ -295,10 +296,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_PickupIssueResponse'
-
   /v1/pickup/claim:
     post:
-      tags: [Pickup]
+      tags:
+        - Pickup
       operationId: claimPickup
       summary: Claim a pickup using token or OTP
       parameters:
@@ -318,10 +319,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_ClaimResult'
-
   /v1/orders/{id}/pickup/slip.pdf:
     get:
-      tags: [Pickup]
+      tags:
+        - Pickup
       operationId: getPickupSlip
       summary: Download pickup slip PDF
       parameters:
@@ -337,10 +338,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/rx/attach-token:
     post:
-      tags: [Rx Fulfillment]
+      tags:
+        - Rx Fulfillment
       operationId: attachRxToken
       summary: Attach and validate a prescription token from OROS/Pharmacy
       responses:
@@ -350,10 +351,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/rx/{orderId}/substitution/propose:
     post:
-      tags: [Rx Fulfillment]
+      tags:
+        - Rx Fulfillment
       operationId: proposeSubstitution
       summary: Propose a medication substitution
       parameters:
@@ -375,10 +376,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderLineView'
-
   /v1/rx/{orderId}/substitution/approve:
     post:
-      tags: [Rx Fulfillment]
+      tags:
+        - Rx Fulfillment
       operationId: approveSubstitution
       summary: Approve a proposed substitution (patient/provider action)
       parameters:
@@ -400,10 +401,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderLineView'
-
   /v1/bookings/create:
     post:
-      tags: [Bookings]
+      tags:
+        - Bookings
       operationId: createBooking
       summary: Create a service booking order
       requestBody:
@@ -419,10 +420,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/bookings/{id}/reschedule:
     post:
-      tags: [Bookings]
+      tags:
+        - Bookings
       operationId: rescheduleBooking
       summary: Reschedule a booking
       parameters:
@@ -438,10 +439,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/bookings/{id}/cancel:
     post:
-      tags: [Bookings]
+      tags:
+        - Bookings
       operationId: cancelBooking
       summary: Cancel a booking
       parameters:
@@ -457,10 +458,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/vendors/apply:
     post:
-      tags: [Vendors]
+      tags:
+        - Vendors
       operationId: applyVendor
       summary: Submit vendor application
       requestBody:
@@ -476,10 +477,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/vendors/{id}/documents/upload:
     post:
-      tags: [Vendors]
+      tags:
+        - Vendors
       operationId: uploadVendorDocument
       summary: Upload vendor verification document
       parameters:
@@ -501,10 +502,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/vendors/{id}/orders:
     get:
-      tags: [Vendors]
+      tags:
+        - Vendors
       operationId: getVendorOrders
       summary: Get orders assigned to a vendor
       parameters:
@@ -520,10 +521,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/vendors/{id}/orders/{orderId}/accept:
     post:
-      tags: [Vendors]
+      tags:
+        - Vendors
       operationId: vendorAcceptOrder
       summary: Vendor accepts an assigned order
       parameters:
@@ -544,10 +545,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_OrderView'
-
   /v1/orders/{id}/refund:
     post:
-      tags: [Refunds]
+      tags:
+        - Refunds
       operationId: requestRefund
       summary: Request full or partial refund
       parameters:
@@ -569,10 +570,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/ops/reviews/pending:
     get:
-      tags: [Ops]
+      tags:
+        - Ops
       operationId: getPendingReviews
       summary: Get pending ops reviews
       parameters:
@@ -584,10 +585,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/ops/reviews/{id}/approve:
     post:
-      tags: [Ops]
+      tags:
+        - Ops
       operationId: approveReview
       summary: Approve an ops review
       parameters:
@@ -605,10 +606,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/ops/reviews/{id}/reject:
     post:
-      tags: [Ops]
+      tags:
+        - Ops
       operationId: rejectReview
       summary: Reject an ops review
       parameters:
@@ -630,10 +631,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
-
   /v1/ops/stuck-orders:
     get:
-      tags: [Ops]
+      tags:
+        - Ops
       operationId: getStuckOrders
       summary: Get fulfillment routes that failed and need intervention
       responses:
@@ -643,6 +644,491 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse_Object'
+  /create:
+    post:
+      operationId: msikaflow_post__create
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/reschedule:
+    post:
+      operationId: msikaflow_post__id_reschedule
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/cancel:
+    post:
+      operationId: msikaflow_post__id_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /validate:
+    post:
+      operationId: msikaflow_post__validate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /open:
+    get:
+      operationId: msikaflow_get__open
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cartId}/items:
+    post:
+      operationId: msikaflow_post__cartId_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: msikaflow_delete__cartId_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cartId}/checkout:
+    post:
+      operationId: msikaflow_post__cartId_checkout
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /plans:
+    post:
+      operationId: msikaflow_post__plans
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__plans
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /plans/{planId}:
+    get:
+      operationId: msikaflow_get__plans_planId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: msikaflow_patch__plans_planId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /legs/{legId}:
+    patch:
+      operationId: msikaflow_patch__legs_legId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers:
+    post:
+      operationId: msikaflow_post__providers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__providers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assets:
+    post:
+      operationId: msikaflow_post__assets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__assets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /missions:
+    post:
+      operationId: msikaflow_post__missions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__missions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /handoffs:
+    post:
+      operationId: msikaflow_post__handoffs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__handoffs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /custody:
+    post:
+      operationId: msikaflow_post__custody
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__custody
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /exceptions:
+    post:
+      operationId: msikaflow_post__exceptions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__exceptions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /proofs:
+    post:
+      operationId: msikaflow_post__proofs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: msikaflow_get__proofs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews/pending:
+    get:
+      operationId: msikaflow_get__reviews_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews/{id}/approve:
+    post:
+      operationId: msikaflow_post__reviews_id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews/{id}/reject:
+    post:
+      operationId: msikaflow_post__reviews_id_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stuck-orders:
+    get:
+      operationId: msikaflow_get__stuck_orders
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: msikaflow_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: msikaflow_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/status-summary:
+    get:
+      operationId: msikaflow_get__id_status_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/validate:
+    post:
+      operationId: msikaflow_post__id_validate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/price:
+    post:
+      operationId: msikaflow_post__id_price
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/pay:
+    post:
+      operationId: msikaflow_post__id_pay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/route:
+    post:
+      operationId: msikaflow_post__id_route
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/accept:
+    post:
+      operationId: msikaflow_post__id_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/mark-ready:
+    post:
+      operationId: msikaflow_post__id_mark_ready
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/mark-delivered:
+    post:
+      operationId: msikaflow_post__id_mark_delivered
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/tracking:
+    get:
+      operationId: msikaflow_get__id_tracking
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orders/{id}/pickup/issue:
+    post:
+      operationId: msikaflow_post__orders_id_pickup_issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pickup/claim:
+    post:
+      operationId: msikaflow_post__pickup_claim
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /orders/{id}/pickup/slip.pdf:
+    get:
+      operationId: msikaflow_get__orders_id_pickup_slip_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/refund:
+    post:
+      operationId: msikaflow_post__id_refund
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /attach-token:
+    post:
+      operationId: msikaflow_post__attach_token
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/substitution/propose:
+    post:
+      operationId: msikaflow_post__orderId_substitution_propose
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{orderId}/substitution/approve:
+    post:
+      operationId: msikaflow_post__orderId_substitution_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /apply:
+    post:
+      operationId: msikaflow_post__apply
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/documents/upload:
+    post:
+      operationId: msikaflow_post__id_documents_upload
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/orders:
+    get:
+      operationId: msikaflow_get__id_orders
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/orders/{orderId}/accept:
+    post:
+      operationId: msikaflow_post__id_orders_orderId_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: msikaflow_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: msikaflow_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from msika-flow-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

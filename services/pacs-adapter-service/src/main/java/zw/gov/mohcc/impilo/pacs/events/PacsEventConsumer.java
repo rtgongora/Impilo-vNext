@@ -10,6 +10,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.pacs.domain.StudyStatus;
+import zw.gov.mohcc.impilo.pacs.events.ImagingPipelineKafkaContracts;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.ImagingStudyEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.ImagingStudyRepository;
 
@@ -35,7 +36,11 @@ public class PacsEventConsumer {
     }
 
     @KafkaListener(
-            topics = {"oros.order.status_changed", "impilo.oros.order"},
+            topics = {
+                    ImagingPipelineKafkaContracts.ORDER_CREATED,
+                    "oros.order.status_changed",
+                    "impilo.oros.order"
+            },
             groupId = "pacs-adapter"
     )
     @Transactional

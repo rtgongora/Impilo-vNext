@@ -1,13 +1,9 @@
 /**
  * Health OS Launcher + Capability Marketplace hooks.
  *
- * Backed by the BFF Health OS Marketplace surface in
- * {@code experience-bff /internal/v1/marketplace/launcher} and friends, which
- * proxies to {@code msika-apps-service}.
- *
- * The launcher returns the role/facility-aware list of capabilities (apps + AI
- * skills) with lifecycle states so the shell can render correct call-to-actions
- * (Open / Request access / Pending approval / Suspended / Deprecated etc.).
+ * Launcher list/state/access uses {@code experience-bff /internal/v1/launcher/apps/**}
+ * (HealthOsLauncherController). Marketplace catalogue/activation paths remain on
+ * {@code /internal/v1/marketplace/*}.
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,6 +33,12 @@ export interface LauncherApp {
   launchUrl?: string | null;
   rolesAllowed: string[];
   installationId?: string | null;
+}
+
+interface LauncherAppsBffResponse {
+  apps?: Array<Record<string, unknown>>;
+  actor?: Record<string, unknown>;
+  generatedAt?: string;
 }
 
 export type MarketplaceItemType =
@@ -181,10 +183,16 @@ export function useHealthOsLauncher(opts: { facilityId?: string; roles?: string[
       if (facilityId) params.set("facilityId", facilityId);
       if (rolesParam) params.set("roles", rolesParam);
       const query = params.toString();
-      const response = await apiClient.get<ApiResponse<LauncherApp[]> | LauncherApp[]>(
-        `/internal/v1/marketplace/launcher${query ? `?${query}` : ""}`,
+      const response = await apiClient.get<ApiResponse<LauncherAppsBffResponse> | LauncherAppsBffResponse>(
+        `/internal/v1/launcher/apps${query ? `?${query}` : ""}`,
       );
-      return unwrap(response);
+      const body = unwrap(response);
+      const rawApps = Array.isArray(body)
+        ? body
+        : (body as LauncherAppsBffResponse).apps ?? [];
+      return rawApps
+        .filter((raw) => raw.systemAppFlag !== true)
+        .map(mapLauncherAppFromBff);
     },
   });
 }
@@ -392,6 +400,43 @@ export function useExternalApplications() {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapLauncherAppFromBff(raw: Record<string, unknown>): LauncherApp {
+  const appCode = String(raw.appCode ?? raw.itemCode ?? raw.id ?? "");
+  const href =
+    raw.href != null ? String(raw.href) : raw.launchUrl != null ? String(raw.launchUrl) : null;
+  const rawState = String(raw.state ?? "AVAILABLE");
+  let state = rawState as LauncherAppState;
+  if (rawState === "AVAILABLE" && href) {
+    state = "INSTALLED";
+  }
+  return {
+    id: String(raw.id ?? appCode),
+    itemCode: appCode,
+    name: String(raw.name ?? appCode),
+    description: String(raw.description ?? ""),
+    type: raw.type === "AI_SKILL" ? "AI_SKILL" : "APP",
+    category: String(raw.category ?? "marketplace"),
+    iconRef:
+      raw.icon != null
+        ? String(raw.icon)
+        : raw.iconRef != null
+          ? String(raw.iconRef)
+          : null,
+    state,
+    reason:
+      raw.stateExplanation != null
+        ? String(raw.stateExplanation)
+        : raw.reason != null
+          ? String(raw.reason)
+          : null,
+    launchUrl: href,
+    rolesAllowed: Array.isArray(raw.rolesAllowed)
+      ? raw.rolesAllowed.map(String)
+      : [],
+    installationId: raw.installationId != null ? String(raw.installationId) : null,
+  };
+}
 
 function unwrap<T>(response: ApiResponse<T> | T): T {
   if (response && typeof response === "object" && "data" in (response as Record<string, unknown>)) {

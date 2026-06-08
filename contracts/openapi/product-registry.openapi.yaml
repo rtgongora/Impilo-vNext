@@ -36,32 +36,33 @@ paths:
   /internal/v1/health:
     get:
       operationId: productRegistryInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 health probe
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: UP
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/test-command:
     post:
       operationId: productRegistryInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 echo probe
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -70,21 +71,21 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/products:
     get:
       operationId: productRegistryListProducts
-      tags: [Internal-Product]
+      tags:
+        - Internal-Product
       summary: List products
       responses:
-        "200":
+        '200':
           description: Product list
           content:
             application/json:
@@ -95,7 +96,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: productRegistryCreateProduct
-      tags: [Internal-Product]
+      tags:
+        - Internal-Product
       summary: Create product
       requestBody:
         required: true
@@ -105,18 +107,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/products/{id}:
     get:
       operationId: productRegistryGetProduct
-      tags: [Internal-Product]
+      tags:
+        - Internal-Product
       summary: Get product by id
       parameters:
         - name: id
@@ -126,18 +128,18 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Product
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/products/search:
     get:
       operationId: productRegistrySearchProducts
-      tags: [Internal-Product]
+      tags:
+        - Internal-Product
       summary: Search products
       parameters:
         - name: q
@@ -146,7 +148,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Matches
           content:
             application/json:
@@ -155,14 +157,14 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/products/snapshot:
     get:
       operationId: productRegistrySnapshotActive
-      tags: [Internal-Product]
+      tags:
+        - Internal-Product
       summary: All active products for bootstrap
       responses:
-        "200":
+        '200':
           description: Active products
           content:
             application/json:
@@ -171,6 +173,67 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+  /:
+    get:
+      operationId: productregistry_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: productregistry_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: productregistry_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: productregistry_put__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /search:
+    get:
+      operationId: productregistry_get__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: productregistry_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: productregistry_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from product-registry-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

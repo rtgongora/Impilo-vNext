@@ -27,6 +27,8 @@ export interface AppState {
   unreadNotifications: number;
   unreadMessages: number;
   globalError: { code: string; message: string } | null;
+  /** Navigate to a Personal screen section once (e.g. madi-donor from Impilo Live). */
+  personalSectionRequest: string | null;
 
   setActiveTab: (tab: CitizenTab) => void;
   setOnlineStatus: (online: boolean) => void;
@@ -40,6 +42,7 @@ export interface AppState {
   setUnreadNotifications: (count: number) => void;
   setUnreadMessages: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
+  setPersonalSectionRequest: (section: string | null) => void;
 }
 
 export const appStore = createStore<AppState>((set) => ({
@@ -54,6 +57,7 @@ export const appStore = createStore<AppState>((set) => ({
   unreadNotifications: 0,
   unreadMessages: 0,
   globalError: null,
+  personalSectionRequest: null,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setOnlineStatus: (isOnline) => set({ isOnline }),
@@ -70,6 +74,7 @@ export const appStore = createStore<AppState>((set) => ({
   setUnreadNotifications: (count) => set({ unreadNotifications: count }),
   setUnreadMessages: (count) => set({ unreadMessages: count }),
   setGlobalError: (error) => set({ globalError: error }),
+  setPersonalSectionRequest: (section) => set({ personalSectionRequest: section }),
 }));
 
 export function useAppStore<T = AppState>(selector?: (state: AppState) => T): T {

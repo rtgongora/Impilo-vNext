@@ -30,10 +30,11 @@ paths:
   /internal/v1/gl/accounts:
     get:
       operationId: glListAccounts
-      tags: [GL]
+      tags:
+        - GL
       summary: List GL accounts
       responses:
-        "200":
+        '200':
           description: Accounts
           content:
             application/json:
@@ -45,10 +46,11 @@ paths:
   /internal/v1/gl/periods/open:
     get:
       operationId: glOpenPeriods
-      tags: [GL]
+      tags:
+        - GL
       summary: List open accounting periods
       responses:
-        "200":
+        '200':
           description: Periods
           content:
             application/json:
@@ -60,7 +62,8 @@ paths:
   /internal/v1/gl/journals:
     get:
       operationId: glListJournals
-      tags: [GL]
+      tags:
+        - GL
       summary: Journals for a period
       parameters:
         - name: period_id
@@ -70,7 +73,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Journal entries
           content:
             application/json:
@@ -81,7 +84,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: glCreateJournal
-      tags: [GL]
+      tags:
+        - GL
       summary: Create journal draft
       requestBody:
         required: true
@@ -91,7 +95,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Created entry
           content:
             application/json:
@@ -101,7 +105,8 @@ paths:
   /internal/v1/gl/journals/{entryId}/post:
     post:
       operationId: glPostJournal
-      tags: [GL]
+      tags:
+        - GL
       summary: Post journal entry
       parameters:
         - name: entryId
@@ -111,7 +116,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Posted
           content:
             application/json:
@@ -121,7 +126,8 @@ paths:
   /internal/v1/gl/trial-balance:
     get:
       operationId: glTrialBalance
-      tags: [GL]
+      tags:
+        - GL
       summary: Trial balance for period
       parameters:
         - name: period_id
@@ -131,7 +137,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Trial balance
           content:
             application/json:
@@ -141,7 +147,8 @@ paths:
   /internal/v1/gl/financial-statements/income-statement:
     get:
       operationId: glIncomeStatement
-      tags: [GL]
+      tags:
+        - GL
       summary: Income statement
       parameters:
         - name: period_id
@@ -151,7 +158,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Statement
           content:
             application/json:
@@ -161,7 +168,8 @@ paths:
   /internal/v1/gl/financial-statements/balance-sheet:
     get:
       operationId: glBalanceSheet
-      tags: [GL]
+      tags:
+        - GL
       summary: Balance sheet
       parameters:
         - name: period_id
@@ -171,7 +179,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Statement
           content:
             application/json:
@@ -181,7 +189,8 @@ paths:
   /internal/v1/gl/budgets:
     get:
       operationId: glBudgets
-      tags: [GL]
+      tags:
+        - GL
       summary: Budget lines for fiscal year
       parameters:
         - name: fiscalYear
@@ -190,7 +199,7 @@ paths:
           schema:
             type: integer
       responses:
-        "200":
+        '200':
           description: Budgets
           content:
             application/json:
@@ -199,6 +208,158 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
+  /:
+    get:
+      operationId: generalledger_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: generalledger_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /seed:
+    post:
+      operationId: generalledger_post__seed
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{accountId}:
+    put:
+      operationId: generalledger_put__accountId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /refresh-actuals:
+    post:
+      operationId: generalledger_post__refresh_actuals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /income-statement:
+    get:
+      operationId: generalledger_get__income_statement
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /balance-sheet:
+    get:
+      operationId: generalledger_get__balance_sheet
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/health:
+    get:
+      operationId: generalledger_get__internal_v1_health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{entryId}:
+    get:
+      operationId: generalledger_get__entryId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{entryId}/post:
+    post:
+      operationId: generalledger_post__entryId_post
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{entryId}/reverse:
+    post:
+      operationId: generalledger_post__entryId_reverse
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /open:
+    get:
+      operationId: generalledger_get__open
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ensure:
+    post:
+      operationId: generalledger_post__ensure
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{periodId}/close:
+    post:
+      operationId: generalledger_post__periodId_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /year-end:
+    post:
+      operationId: generalledger_post__year_end
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /snapshot:
+    post:
+      operationId: generalledger_post__snapshot
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /snapshots:
+    get:
+      operationId: generalledger_get__snapshots
+      tags:
+        - Generated-From-Handler
+      summary: Documented from general-ledger-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

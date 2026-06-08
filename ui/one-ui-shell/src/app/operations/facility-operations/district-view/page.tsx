@@ -7,28 +7,21 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Globe2, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
 import { OpsMapPanel } from "@/components/operations/OpsMapPanel";
+import { useFacilities } from "@/hooks/queries/useFacilities";
 import { useFacilityQueueSnapshots, type FacilityQueueSnapshotRow } from "@/hooks/queries/useFacilityOperations";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
-
-type FacilityRow = { id: string; attributes?: { name?: string; province?: string; district?: string } };
-
 export default function DistrictOperationsPage() {
   const { isOperationsOversight } = useRoleGroup();
   const [province, setProvince] = useState("");
 
-  const facilitiesQ = useQuery({
-    queryKey: ["district-facilities", province],
-    queryFn: () =>
-      apiClient.get<ApiResponse<FacilityRow[]>>(
-        `/internal/v1/facilities?size=40&page=0${province ? `&province=${encodeURIComponent(province)}` : ""}`,
-      ),
-    enabled: isOperationsOversight,
+  const facilitiesQ = useFacilities({
+    province: province || undefined,
+    page: 0,
+    size: 40,
   });
 
   const facilityIds = useMemo(
@@ -44,11 +37,14 @@ export default function DistrictOperationsPage() {
     const byId = new Map(snaps.map((s) => [s.facility_id, s]));
     return facilities.map((f) => {
       const s = byId.get(f.id);
+      const attrs = f.attributes;
       return {
         id: f.id,
-        name: f.attributes?.name ?? f.id,
-        province: f.attributes?.province ?? "â€”",
-        district: f.attributes?.district ?? "â€”",
+        name: attrs?.name ?? f.id,
+        province: attrs?.province ?? "â€”",
+        district: attrs?.district ?? "â€”",
+        latitude: attrs?.latitude ?? null,
+        longitude: attrs?.longitude ?? null,
         waiting: s?.waiting ?? 0,
         called: s?.called ?? 0,
         inService: s?.inService ?? 0,
@@ -176,6 +172,8 @@ export default function DistrictOperationsPage() {
             markers={merged.map((row) => ({
               id: row.id,
               label: row.name,
+              latitude: row.latitude ?? undefined,
+              longitude: row.longitude ?? undefined,
               status: `${row.waiting} waiting`,
             }))}
           />

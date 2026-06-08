@@ -56,562 +56,1119 @@ tags:
   - name: Ops
 
 paths:
-  # ── Geocoding ──────────────────────────────────────────────────────────────
   /api/v1/ndila/geocode:
     post:
       operationId: ndilaGeocode
-      tags: [Geocoding]
+      tags:
+        - Geocoding
       summary: Geocode free-text query → coordinates
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/GeocodeRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GeocodeRequest'
       responses:
-        "200":
+        '200':
           description: Geocode response with provider metadata
           content:
-            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
   /api/v1/ndila/reverse-geocode:
     post:
       operationId: ndilaReverseGeocode
-      tags: [Geocoding]
+      tags:
+        - Geocoding
       summary: Reverse geocode coordinates → address
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/ReverseGeocodeRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReverseGeocodeRequest'
       responses:
-        "200":
+        '200':
           description: Reverse geocode response
           content:
-            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
   /api/v1/ndila/search:
     get:
       operationId: ndilaSearch
-      tags: [Geocoding]
+      tags:
+        - Geocoding
       summary: Free-text place search
       parameters:
-        - { name: q, in: query, required: true, schema: { type: string } }
-        - { name: country, in: query, schema: { type: string } }
-        - { name: province, in: query, schema: { type: string } }
-        - { name: district, in: query, schema: { type: string } }
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: country
+          in: query
+          schema:
+            type: string
+        - name: province
+          in: query
+          schema:
+            type: string
+        - name: district
+          in: query
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Search results (Ndila Geocode envelope)
           content:
-            application/json: { schema: { $ref: '#/components/schemas/GeocodeResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeocodeResponse'
   /api/v1/ndila/validate-location:
     post:
       operationId: ndilaValidateLocation
-      tags: [Locations]
+      tags:
+        - Locations
       summary: Validate a coordinate (range / plausibility / accuracy)
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/ValidateLocationRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateLocationRequest'
       responses:
-        "200":
+        '200':
           description: Validation outcome
           content:
-            application/json: { schema: { $ref: '#/components/schemas/ValidateLocationResponse' } }
-
-  # ── Locations ──────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateLocationResponse'
   /api/v1/ndila/locations:
     post:
       operationId: ndilaCreateLocation
-      tags: [Locations]
+      tags:
+        - Locations
       summary: Create / register a Ndila location
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CreateLocationRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLocationRequest'
       responses:
-        "201":
+        '201':
           description: Location created
           content:
-            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
   /api/v1/ndila/locations/{id}:
     get:
       operationId: ndilaGetLocation
-      tags: [Locations]
+      tags:
+        - Locations
       summary: Get location by id
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Location payload
           content:
-            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
     put:
       operationId: ndilaUpdateLocationCoordinates
-      tags: [Locations]
+      tags:
+        - Locations
       summary: Update a location's coordinates / accuracy
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/UpdateLocationCoordinatesRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLocationCoordinatesRequest'
       responses:
-        "200":
+        '200':
           description: Updated location
           content:
-            application/json: { schema: { $ref: '#/components/schemas/LocationResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationResponse'
   /api/v1/ndila/locations/by-owner/{ownerService}/{ownerEntityId}:
     get:
       operationId: ndilaListLocationsByOwner
-      tags: [Locations]
+      tags:
+        - Locations
       summary: List Ndila locations indexed against an owner entity (Tuso facility, Indawo site, etc.)
       parameters:
-        - { name: ownerService, in: path, required: true, schema: { type: string } }
-        - { name: ownerEntityId, in: path, required: true, schema: { type: string } }
+        - name: ownerService
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ownerEntityId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Locations
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/LocationResponse' }
-
-  # ── Routing ────────────────────────────────────────────────────────────────
+                items:
+                  $ref: '#/components/schemas/LocationResponse'
   /api/v1/ndila/routes:
     post:
       operationId: ndilaRoute
-      tags: [Routing]
+      tags:
+        - Routing
       summary: Compute a point-to-point route
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/RouteRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
       responses:
-        "200":
+        '200':
           description: Route response with provider metadata
           content:
-            application/json: { schema: { $ref: '#/components/schemas/RouteResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
   /api/v1/ndila/routes/multi-stop:
     post:
       operationId: ndilaMultiStopRoute
-      tags: [Routing]
+      tags:
+        - Routing
       summary: Compute a multi-stop route
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/MultiStopRouteRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MultiStopRouteRequest'
       responses:
-        "200":
+        '200':
           description: Multi-stop response
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/distance-matrix:
     post:
       operationId: ndilaDistanceMatrix
-      tags: [Routing]
+      tags:
+        - Routing
       summary: Compute a distance / duration matrix
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/DistanceMatrixRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistanceMatrixRequest'
       responses:
-        "200":
+        '200':
           description: Distance matrix response
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/eta:
     post:
       operationId: ndilaEta
-      tags: [Routing]
+      tags:
+        - Routing
       summary: Compute an ETA (geometry-less route)
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/RouteRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
       responses:
-        "200":
+        '200':
           description: Route response (no polyline)
           content:
-            application/json: { schema: { $ref: '#/components/schemas/RouteResponse' } }
-
-  # ── Geofences ──────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
   /api/v1/ndila/geofences:
     post:
       operationId: ndilaCreateGeofence
-      tags: [Geofences]
+      tags:
+        - Geofences
       summary: Create a Ndila geofence
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CreateGeofenceRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGeofenceRequest'
       responses:
-        "201":
+        '201':
           description: Geofence created
           content:
-            application/json: { schema: { $ref: '#/components/schemas/GeofenceResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeofenceResponse'
   /api/v1/ndila/geofences/{id}:
     get:
       operationId: ndilaGetGeofence
-      tags: [Geofences]
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      tags:
+        - Geofences
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Geofence payload
           content:
-            application/json: { schema: { $ref: '#/components/schemas/GeofenceResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeofenceResponse'
   /api/v1/ndila/geofences/check-point:
     post:
       operationId: ndilaGeofenceCheckPoint
-      tags: [Geofences]
+      tags:
+        - Geofences
       summary: Determine which geofences contain a point
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CheckPointRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPointRequest'
       responses:
-        "200":
+        '200':
           description: Matched geofences
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
-  # ── Catchments ─────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/catchments:
     post:
       operationId: ndilaCreateCatchment
-      tags: [Catchments]
+      tags:
+        - Catchments
       summary: Create a Ndila catchment area
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CreateCatchmentRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatchmentRequest'
       responses:
-        "201":
+        '201':
           description: Catchment created
           content:
-            application/json: { schema: { $ref: '#/components/schemas/CatchmentResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatchmentResponse'
   /api/v1/ndila/catchments/{id}:
     get:
       operationId: ndilaGetCatchment
-      tags: [Catchments]
-      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      tags:
+        - Catchments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Catchment payload
           content:
-            application/json: { schema: { $ref: '#/components/schemas/CatchmentResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatchmentResponse'
   /api/v1/ndila/catchments/by-owner/{ownerService}/{ownerEntityId}:
     get:
       operationId: ndilaListCatchmentsByOwner
-      tags: [Catchments]
+      tags:
+        - Catchments
       parameters:
-        - { name: ownerService, in: path, required: true, schema: { type: string } }
-        - { name: ownerEntityId, in: path, required: true, schema: { type: string } }
+        - name: ownerService
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ownerEntityId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Catchments for owner
           content:
             application/json:
               schema:
                 type: array
-                items: { $ref: '#/components/schemas/CatchmentResponse' }
-
+                items:
+                  $ref: '#/components/schemas/CatchmentResponse'
   /api/v1/ndila/catchments/check-point:
     post:
       operationId: ndilaCatchmentCheckPoint
-      tags: [Catchments]
+      tags:
+        - Catchments
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CheckPointRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckPointRequest'
       responses:
-        "200":
+        '200':
           description: Matched catchments
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/catchments/nearest-service:
     post:
       operationId: ndilaNearestService
-      tags: [Catchments]
+      tags:
+        - Catchments
       summary: Find nearest service of a given type
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/NearestServiceRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NearestServiceRequest'
       responses:
-        "200":
+        '200':
           description: Nearest service matches
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/catchments/coverage-summary:
     post:
       operationId: ndilaCoverageSummary
-      tags: [Catchments]
+      tags:
+        - Catchments
       summary: Summarize catchment coverage for an owner entity
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/CoverageSummaryRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoverageSummaryRequest'
       responses:
-        "200":
+        '200':
           description: Coverage summary
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
-  # ── Spatial search ─────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/spatial/nearby:
     post:
       operationId: ndilaSpatialNearby
-      tags: [Spatial-Search]
+      tags:
+        - Spatial-Search
       summary: Find Ndila locations near a point
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/NearbyRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NearbyRequest'
       responses:
-        "200":
+        '200':
           description: Nearby matches
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/spatial/nearest:
     post:
       operationId: ndilaSpatialNearest
-      tags: [Spatial-Search]
+      tags:
+        - Spatial-Search
       summary: Find nearest Ndila locations (single or k-nearest)
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/NearbyRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NearbyRequest'
       responses:
-        "200":
+        '200':
           description: Nearest matches
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
-  # ── Tracking ───────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/tracking/assets:
     post:
       operationId: ndilaRegisterTrackingAsset
-      tags: [Tracking]
+      tags:
+        - Tracking
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/RegisterAssetRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterAssetRequest'
       responses:
-        "201":
+        '201':
           description: Asset registered
           content:
-            application/json: { schema: { $ref: '#/components/schemas/TrackingAssetResponse' } }
-
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackingAssetResponse'
   /api/v1/ndila/tracking/assets/{assetId}/location:
     post:
       operationId: ndilaIngestTrackingEvent
-      tags: [Tracking]
+      tags:
+        - Tracking
       summary: Ingest a tracking event for an asset
-      parameters: [{ name: assetId, in: path, required: true, schema: { type: string } }]
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/TrackingEventRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackingEventRequest'
       responses:
-        "201":
+        '201':
           description: Event ingested
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/tracking/assets/{assetId}/latest:
     get:
       operationId: ndilaLatestTrackingEvent
-      tags: [Tracking]
-      parameters: [{ name: assetId, in: path, required: true, schema: { type: string } }]
+      tags:
+        - Tracking
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Latest event
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/tracking/assets/{assetId}/history:
     get:
       operationId: ndilaTrackingHistory
-      tags: [Tracking]
+      tags:
+        - Tracking
       parameters:
-        - { name: assetId, in: path, required: true, schema: { type: string } }
-        - { name: from, in: query, schema: { type: string, format: date-time } }
-        - { name: to, in: query, schema: { type: string, format: date-time } }
+        - name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
       responses:
-        "200":
+        '200':
           description: History
           content:
             application/json:
               schema:
                 type: array
-                items: { type: object, additionalProperties: true }
-
+                items:
+                  type: object
+                  additionalProperties: true
   /api/v1/ndila/tracking/assets/nearby:
     post:
       operationId: ndilaNearbyAssets
-      tags: [Tracking]
+      tags:
+        - Tracking
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Nearby assets
           content:
             application/json:
               schema:
                 type: array
-                items: { type: object, additionalProperties: true }
-
-  # ── Intelligence ───────────────────────────────────────────────────────────
+                items:
+                  type: object
+                  additionalProperties: true
   /api/v1/ndila/intelligence/facility-coordinate-quality:
     post:
       operationId: ndilaCoordinateQuality
-      tags: [Intelligence]
+      tags:
+        - Intelligence
       summary: Report on coordinate quality issues for a tenant / district
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Coordinate quality report
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/intelligence/risk-clusters:
     post:
       operationId: ndilaRiskClusters
-      tags: [Intelligence]
+      tags:
+        - Intelligence
       summary: Summarize spatial risk clusters
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Risk cluster summary
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/intelligence/ai-context-packet:
     post:
       operationId: ndilaAiContextPacket
-      tags: [Intelligence]
+      tags:
+        - Intelligence
       summary: Generate a Nompilo-safe spatial context packet
       requestBody:
         required: true
         content:
-          application/json: { schema: { $ref: '#/components/schemas/AiContextPacketRequest' } }
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiContextPacketRequest'
       responses:
-        "200":
+        '200':
           description: AI-safe context packet
           content:
-            application/json: { schema: { $ref: '#/components/schemas/AiContextPacketResponse' } }
-
-  # ── Audience ───────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiContextPacketResponse'
   /api/v1/ndila/audience/by-geofence:
     post:
       operationId: ndilaAudienceByGeofence
-      tags: [Audience]
+      tags:
+        - Audience
       summary: Resolve a comms audience by Ndila geofence (handle only, never raw PII)
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Audience handle
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/audience/by-catchment:
     post:
       operationId: ndilaAudienceByCatchment
-      tags: [Audience]
+      tags:
+        - Audience
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Audience handle
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/audience/by-radius:
     post:
       operationId: ndilaAudienceByRadius
-      tags: [Audience]
+      tags:
+        - Audience
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Audience handle
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/audience/by-admin-area:
     post:
       operationId: ndilaAudienceByAdminArea
-      tags: [Audience]
+      tags:
+        - Audience
       requestBody:
         required: true
         content:
-          application/json: { schema: { type: object, additionalProperties: true } }
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Audience handle
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
-  # ── Tiles ──────────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /api/v1/ndila/tiles/config:
     get:
       operationId: ndilaTileConfig
-      tags: [Tiles]
+      tags:
+        - Tiles
       summary: Return a per-tenant tile provider configuration. Public OSM tile servers are blocked in production.
       responses:
-        "200":
+        '200':
           description: Tile config
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
-  # ── Ops ────────────────────────────────────────────────────────────────────
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /internal/v1/ndila/providers:
     get:
       operationId: ndilaListProviders
-      tags: [Ops]
+      tags:
+        - Ops
       summary: Inspect provider capabilities + enabled state
       responses:
-        "200":
+        '200':
           description: Provider matrix
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
-
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
   /internal/v1/health:
     get:
       operationId: ndilaInternalHealth
-      tags: [Ops]
+      tags:
+        - Ops
       summary: Internal health probe
       responses:
-        "200":
+        '200':
           description: Service reachable
           content:
-            application/json: { schema: { type: object, additionalProperties: true } }
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /api/v1/maps/audience/by-geofence:
+    post:
+      operationId: ndila_post__api_v1_maps_audience_by_geofence
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/audience/by-catchment:
+    post:
+      operationId: ndila_post__api_v1_maps_audience_by_catchment
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/audience/by-radius:
+    post:
+      operationId: ndila_post__api_v1_maps_audience_by_radius
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/audience/by-admin-area:
+    post:
+      operationId: ndila_post__api_v1_maps_audience_by_admin_area
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments:
+    post:
+      operationId: ndila_post__api_v1_maps_catchments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments/{id}:
+    get:
+      operationId: ndila_get__api_v1_maps_catchments_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments/by-owner/{ownerService}/{ownerEntityId}:
+    get:
+      operationId: ndila_get__api_v1_maps_catchments_by_owner_ownerService_ownerEntityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments/check-point:
+    post:
+      operationId: ndila_post__api_v1_maps_catchments_check_point
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments/nearest-service:
+    post:
+      operationId: ndila_post__api_v1_maps_catchments_nearest_service
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/catchments/coverage-summary:
+    post:
+      operationId: ndila_post__api_v1_maps_catchments_coverage_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/geocode:
+    post:
+      operationId: ndila_post__api_v1_maps_geocode
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/reverse-geocode:
+    post:
+      operationId: ndila_post__api_v1_maps_reverse_geocode
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/search:
+    get:
+      operationId: ndila_get__api_v1_maps_search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/geofences:
+    post:
+      operationId: ndila_post__api_v1_maps_geofences
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/geofences/{id}:
+    get:
+      operationId: ndila_get__api_v1_maps_geofences_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/geofences/check-point:
+    post:
+      operationId: ndila_post__api_v1_maps_geofences_check_point
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/intelligence/facility-coordinate-quality:
+    post:
+      operationId: ndila_post__api_v1_maps_intelligence_facility_coordinate_quality
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/intelligence/risk-clusters:
+    post:
+      operationId: ndila_post__api_v1_maps_intelligence_risk_clusters
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/intelligence/ai-context-packet:
+    post:
+      operationId: ndila_post__api_v1_maps_intelligence_ai_context_packet
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/locations:
+    post:
+      operationId: ndila_post__api_v1_maps_locations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/locations/{id}:
+    get:
+      operationId: ndila_get__api_v1_maps_locations_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: ndila_put__api_v1_maps_locations_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/locations/by-owner/{ownerService}/{ownerEntityId}:
+    get:
+      operationId: ndila_get__api_v1_maps_locations_by_owner_ownerService_ownerEntityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/validate-location:
+    post:
+      operationId: ndila_post__api_v1_maps_validate_location
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/routes:
+    post:
+      operationId: ndila_post__api_v1_maps_routes
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/routes/multi-stop:
+    post:
+      operationId: ndila_post__api_v1_maps_routes_multi_stop
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/distance-matrix:
+    post:
+      operationId: ndila_post__api_v1_maps_distance_matrix
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/eta:
+    post:
+      operationId: ndila_post__api_v1_maps_eta
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/spatial/nearby:
+    post:
+      operationId: ndila_post__api_v1_maps_spatial_nearby
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/spatial/nearest:
+    post:
+      operationId: ndila_post__api_v1_maps_spatial_nearest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tiles/config:
+    get:
+      operationId: ndila_get__api_v1_maps_tiles_config
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets:
+    post:
+      operationId: ndila_post__api_v1_maps_tracking_assets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/ndila/tracking/assets/{assetId}:
+    get:
+      operationId: ndila_get__api_v1_ndila_tracking_assets_assetId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets/{assetId}:
+    get:
+      operationId: ndila_get__api_v1_maps_tracking_assets_assetId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets/{assetId}/location:
+    post:
+      operationId: ndila_post__api_v1_maps_tracking_assets_assetId_location
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets/{assetId}/latest:
+    get:
+      operationId: ndila_get__api_v1_maps_tracking_assets_assetId_latest
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets/{assetId}/history:
+    get:
+      operationId: ndila_get__api_v1_maps_tracking_assets_assetId_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /api/v1/maps/tracking/assets/nearby:
+    post:
+      operationId: ndila_post__api_v1_maps_tracking_assets_nearby
+      tags:
+        - Generated-From-Handler
+      summary: Documented from ndila-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

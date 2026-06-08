@@ -1,0 +1,143 @@
+# Core Transaction Journey Maps
+
+> Generated: 2026-06-08T02:14:50.545Z
+> Journeys discovered: **46**
+> Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
+
+See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md) for spine doctrine.
+
+## Summary
+
+| journey | type | initiator | entry | status | classification |
+| --- | --- | --- | --- | --- | --- |
+| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | citizen | /auth/register | partial | transaction-complete |
+| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | provider | /auth/login/provider-id | wired | transaction-complete |
+| Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | provider | /workspace | partial | transaction-complete |
+| Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | transaction-complete |
+| Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | transaction-complete |
+| Queue / Walk-in Registration | FACILITY_WALK_IN | provider | /queue/walk-in | wired | transaction-complete |
+| Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
+| Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | transaction-complete |
+| Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | transaction-complete |
+| Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | transaction-complete |
+| Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
+| Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | transaction-complete |
+| Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | transaction-complete |
+| Referral Create & Manage | REFERRAL | provider | /ehr/[patientId]/referrals | wired | transaction-complete |
+| Appointment Scheduling | APPOINTMENT | citizen | /queue/scheduled | partial | transaction-complete |
+| Consent Capture | ADMINISTRATIVE_HEALTH | citizen | /consent | wired | transaction-complete |
+| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | transaction-complete |
+| Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | provider | /ehr/[patientId]/documents | partial | transaction-complete |
+| Dispatch / Delivery (NHUME) | MARKETPLACE | courier | /operations/dispatch | partial | backend-partial |
+| Notification & Communications | ADMINISTRATIVE_HEALTH | platform | /communication | wired | transaction-complete |
+| Fundo / Learning Journey | TRAINING_OR_COMPETENCY | provider | /learning | partial | transaction-complete |
+| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | data-analyst | /reports | partial | transaction-complete |
+| Registry Administration | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | transaction-complete |
+| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | integration-system | /developer | partial | transaction-complete |
+| Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | transaction-complete |
+| Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | transaction-complete |
+| Marketplace Order | MARKETPLACE | citizen | /marketplace | partial | backend-partial |
+| Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | transaction-complete |
+| Social / Community / Timeline | WELLNESS | citizen | /social | wired | transaction-complete |
+| Public Health / CHW Outreach | COMMUNITY_OUTREACH | community-health-worker | /public-health | partial | mobile-missing |
+| Civil Registration (UBOMI / CRVS) | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | mobile-missing |
+| Coverage Enrollment | ADMINISTRATIVE_HEALTH | citizen | /coverage | partial | transaction-complete |
+| Wallet Payment | MARKETPLACE | citizen | /wallet | wired | transaction-complete |
+| Offline Clinical Queue | FACILITY_WALK_IN | provider | mobile offline mode | partial | backend-partial |
+| Emergency / ED Encounter | EMERGENCY | provider | /clinical/emergency | partial | transaction-complete |
+| Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | wired | transaction-complete |
+| Surveillance / Outbreak Response | COMMUNITY_OUTREACH | health-information-officer | /public-health | partial | transaction-complete |
+| AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | transaction-complete |
+| Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | transaction-complete |
+| Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | backend-partial |
+| Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | transaction-complete |
+| Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | transaction-complete |
+| Blood Donation & Donor Engagement | BLOOD_DONATION | citizen | /madi/donor | wired | transaction-complete |
+| Blood Order & Crossmatch | BLOOD_ORDER | provider | /madi/orders | wired | transaction-complete |
+| Transfusion Episode & Bedside Verify | TRANSFUSION | provider | /madi/transfusion | wired | transaction-complete |
+| Haemovigilance Report & Investigation | HAEMOVIGILANCE | provider | /madi/haemovigilance | wired | transaction-complete |
+
+## Journey detail (sample — full data in JSON/CSV)
+
+### Citizen / Client Onboarding
+
+- **Initiating actor:** citizen
+- **Responding actor:** platform-registry
+- **Transaction object:** Health ID + person anchor
+- **Context:** self-service registration; assurance level pending
+- **Entry point:** /auth/register
+- **Steps:** register → assurance → identity resolution → Health ID issued → consent review
+- **Backend services:** vito-service, tshepo-identity-service, identity-assurance-service, tshepo-consent-service, experience-bff
+- **APIs:** /internal/v1/auth/*, /internal/v1/identity/*, /internal/v1/vito/*
+- **Web routes:** /auth/register, /auth/register/assurance, /auth/register/status, /id-services
+- **Mobile screens:** apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx, apps/mobile/citizen-app/src/screens/personal/ProfileSection.tsx
+- **Completion state:** IDENTITY_RESOLVED
+- **Status:** partial — transaction-complete
+- **PO acceptance test:** Citizen completes registration, receives Health ID, sees next-step guidance
+
+### Provider Login & Role Activation
+
+- **Initiating actor:** provider
+- **Responding actor:** platform-trust
+- **Transaction object:** authenticated session + Provider ID activation
+- **Context:** facility-bound professional capacity
+- **Entry point:** /auth/login/provider-id
+- **Steps:** login → MFA → provider lookup → role activation → session established
+- **Backend services:** tshepo-authz-service, tshepo-identity-service, varapi-service, experience-bff
+- **APIs:** /internal/v1/auth/*, /internal/v1/identity/providers
+- **Web routes:** /auth/login, /auth/login/biometric, /auth/login/email, /auth/login/provider-id, /auth/mfa…
+- **Mobile screens:** apps/mobile/citizen-app/src/screens/LoginScreen.tsx, apps/mobile/provider-app/src/screens/LoginScreen.tsx
+- **Completion state:** TRUST_CONTEXT_ESTABLISHED
+- **Status:** wired — transaction-complete
+- **PO acceptance test:** Provider signs in with Provider ID, activates role, lands in workspace
+
+### Workspace / Shift Context Selection
+
+- **Initiating actor:** provider
+- **Responding actor:** platform-registry
+- **Transaction object:** active workspace + shift context
+- **Context:** department/ward/workspace under facility
+- **Entry point:** /workspace
+- **Steps:** select facility → select workspace → select shift → context headers injected
+- **Backend services:** tuso-service, experience-bff
+- **APIs:** /internal/v1/workspaces/*, /internal/v1/shifts/*, /internal/v1/facilities
+- **Web routes:** /facility, /facility/[id], /shift, /shift/active, /shift/handover…
+- **Mobile screens:** none mapped
+- **Completion state:** TRUST_CONTEXT_ESTABLISHED
+- **Status:** partial — transaction-complete
+- **PO acceptance test:** Provider selects workspace/shift; subsequent requests carry trust context
+
+### Facility Context Selection
+
+- **Initiating actor:** provider
+- **Responding actor:** tuso-service
+- **Transaction object:** Facility ID context
+- **Context:** regulated facility operating model
+- **Entry point:** /facility
+- **Steps:** facility search → select → X-Facility-ID set → queue/EHR unlocked
+- **Backend services:** tuso-service, experience-bff
+- **APIs:** /internal/v1/facilities, /internal/v1/registry/*
+- **Web routes:** /facility, /facility/[id]
+- **Mobile screens:** apps/mobile/provider-app/src/screens/provider/APGARScreen.tsx, apps/mobile/provider-app/src/screens/provider/ActivityFeedScreen.tsx, apps/mobile/provider-app/src/screens/provider/AdminRegistryHubScreen.tsx
+- **Completion state:** ACCESS_GRANTED
+- **Status:** wired — transaction-complete
+- **PO acceptance test:** Provider selects facility; queue and EHR routes become available
+
+### Patient Search & Selection
+
+- **Initiating actor:** provider
+- **Responding actor:** vito-service
+- **Transaction object:** subject Health ID / CPID selection
+- **Context:** facility queue or EHR entry
+- **Entry point:** /queue/search
+- **Steps:** search → match → select patient → open chart or queue item
+- **Backend services:** vito-service, experience-bff, pct-service
+- **APIs:** /internal/v1/vito/*, /internal/v1/identity/*, /internal/v1/queue
+- **Web routes:** /ehr/[patientId], /ehr/[patientId]/advance-directives, /ehr/[patientId]/allergies, /ehr/[patientId]/assessments, /ehr/[patientId]/care-plans…
+- **Mobile screens:** none mapped
+- **Completion state:** IDENTITY_RESOLVED
+- **Status:** wired — transaction-complete
+- **PO acceptance test:** Provider searches patient, selects, opens chart with correct CPID
+
+
+_Full 46 journeys in [core-transaction-journey-maps.json](../../reports/product/core-transaction-journey-maps.json)._

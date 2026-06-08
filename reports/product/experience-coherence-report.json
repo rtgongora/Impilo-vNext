@@ -1,0 +1,177 @@
+{
+  "generatedAt": "2026-06-07T08:44:44.353Z",
+  "totalFrontendRoutes": 494,
+  "routesMappedToActorContextIntentTransaction": 386,
+  "orphanRoutes": 124,
+  "backendCapabilitiesWithoutJourneys": 34,
+  "mockStubPlaceholderRouteCount": 9,
+  "isolatedPages": 43,
+  "incompleteTransactionJourneys": 38,
+  "mobileSurfacesDisconnected": 49,
+  "orchestrationStatusCounts": {
+    "coherent": 165,
+    "partial": 144,
+    "isolated-page": 43,
+    "orphan-backend": 188,
+    "orphan-frontend": 27,
+    "mock-stub": 9,
+    "unclear-intent": 54,
+    "missing-journey": 326
+  },
+  "top20CoherenceGaps": [
+    {
+      "type": "route",
+      "id": "/auth/forgot-password",
+      "status": "unclear-intent",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth/reset-password",
+      "status": "unclear-intent",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth/logout",
+      "status": "unclear-intent",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth/register",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth/register/assurance",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/auth/register/status",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useAuth.ts"
+    },
+    {
+      "type": "route",
+      "id": "/privacy",
+      "status": "unclear-intent",
+      "gap": "hooks/queries/usePrivacyPreferences.ts"
+    },
+    {
+      "type": "route",
+      "id": "/terms",
+      "status": "isolated-page",
+      "gap": "Terms of Use"
+    },
+    {
+      "type": "route",
+      "id": "/account-deletion",
+      "status": "isolated-page",
+      "gap": "Account Deletion"
+    },
+    {
+      "type": "route",
+      "id": "/privacy/app-stores",
+      "status": "unclear-intent",
+      "gap": "hooks/queries/usePrivacyPreferences.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical-tools",
+      "status": "missing-journey",
+      "gap": "Clinical Tools"
+    },
+    {
+      "type": "route",
+      "id": "/clinical-tools/rules",
+      "status": "missing-journey",
+      "gap": "Rules Engine"
+    },
+    {
+      "type": "route",
+      "id": "/clinical-tools/forms",
+      "status": "mock-stub",
+      "gap": "Form Builder"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/control-tower",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/dictation",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/emergency",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/inpatient",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    },
+    {
+      "type": "route",
+      "id": "/clinical/inpatient/admissions",
+      "status": "missing-journey",
+      "gap": "hooks/queries/useClinicalCuration.ts"
+    }
+  ],
+  "recommendedFirstOrchestrationBatch": [
+    {
+      "title": "Context activation chain",
+      "detail": "Login → facility → workspace → shift headers before clinical routes"
+    },
+    {
+      "title": "Core transaction next-actions",
+      "detail": "Every doctrine/journey page exposes next action from BFF timeline"
+    },
+    {
+      "title": "Patient search → encounter entry",
+      "detail": "Queue search opens chart with transaction_id correlation"
+    },
+    {
+      "title": "Nompilo route context",
+      "detail": "Pass pathname + transaction context to /ask and handoff endpoints"
+    },
+    {
+      "title": "Register orphan pages",
+      "detail": "27 unregistered pages into routes.ts with guard/sidebar"
+    },
+    {
+      "title": "Mobile provider encounter shell",
+      "detail": "Align provider-app encounter with web encounter journey"
+    },
+    {
+      "title": "Finance payer-ops wiring",
+      "detail": "Replace stub adapters with typed BFF fail-close envelopes"
+    },
+    {
+      "title": "Wellness routes map",
+      "detail": "Complete wellness map surface (currently coming-soon)"
+    }
+  ]
+}

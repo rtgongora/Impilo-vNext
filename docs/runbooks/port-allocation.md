@@ -68,6 +68,8 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8091** | `fhir-gateway-service` | BFF `fhir-gateway-base-url` |
 | **8289** | `butano-fhir` | FHIR orchestration layer; not the same as gateway |
 | **8121** | `inpatient-service` | |
+| **8300** | `madi-service` | MADI — blood donation, blood bank, transfusion |
+| **8380** | `live-service` | Impilo Live — live events, webinars, broadcasts |
 | **8122** | `community-service` | Community health / CHW / outreach (PCT care setting) |
 | 8093 | `document-service` | Document Store |
 | **8113** | `pacs-adapter-service` | |
@@ -103,6 +105,7 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 | **8241** | `rules-service` |
 | **8250** | `workflow-service` |
 | 8260 | `guidance-service` |
+| **8265** | `booking-service` |
 | **8280** | `ai-model-registry-service` | AI governance & model registry (Law 11 / v1.3 Ring-0) |
 | 8270 | `clinical-knowledge-platform-service` |
 

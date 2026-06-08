@@ -1,0 +1,883 @@
+{
+  "generatedAt": "2026-06-07T08:11:36.151Z",
+  "policy": "Zero-based layered completion — transaction-complete count reset to 0 until L6 certified",
+  "transactionCompleteCount": 0,
+  "journeyCount": 46,
+  "certifiedJourneyCount": 0,
+  "journeys": [
+    {
+      "entityType": "journey",
+      "name": "Citizen / Client Onboarding",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Provider Login & Role Activation",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Workspace / Shift Context Selection",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Facility Context Selection",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Patient Search & Selection",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Queue / Walk-in Registration",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Provider Patient Encounter",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Outpatient Consultation",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Inpatient Admission Workflow",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Telemedicine Encounter",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Lab Order & Result",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Imaging Order & Result",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Prescription & Dispense",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Referral Create & Manage",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Appointment Scheduling",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Consent Capture",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Payment / Billing / Exemption / Claim",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Document Upload / Scan / Index",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Dispatch / Delivery (NHUME)",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Notification & Communications",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Fundo / Learning Journey",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Data / Report / Dashboard Journey",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Registry Administration",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Integration / Sync / Replay",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Device / System Event Journey",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Health ID Issuance & Card Ops",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Marketplace Order",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Wellness & Lifestyle Journey",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Social / Community / Timeline",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Public Health / CHW Outreach",
+      "priorClassification": "mobile-missing",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Civil Registration (UBOMI / CRVS)",
+      "priorClassification": "mobile-missing",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Coverage Enrollment",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Wallet Payment",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Offline Clinical Queue",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Emergency / ED Encounter",
+      "priorClassification": "trust-security-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Core Transaction Orchestration Shell",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Surveillance / Outbreak Response",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "AI Guidance / Nompilo Assist",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Credential Verification",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Provider Registry Onboarding",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Citizen Remote Monitoring",
+      "priorClassification": "backend-ready-but-frontend-incomplete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Chronic Care Management",
+      "priorClassification": "backend-partial",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Blood Donation & Donor Engagement",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Blood Order & Crossmatch",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Transfusion Episode & Bedside Verify",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    },
+    {
+      "entityType": "journey",
+      "name": "Haemovigilance Report & Investigation",
+      "priorClassification": "transaction-complete",
+      "certification": "uncertified",
+      "layers": {
+        "L0": "pending",
+        "L1": "pending",
+        "L2": "pending",
+        "L3": "pending",
+        "L4": "pending",
+        "L5": "pending",
+        "L6": "pending"
+      },
+      "blockers": [
+        "Zero-based reset — no layer credit until adversarial verdict packet passes"
+      ],
+      "evidenceLinks": []
+    }
+  ]
+}

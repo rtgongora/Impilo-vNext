@@ -135,6 +135,11 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/home/conditions", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Conditions", navLabel: "Conditions", navZone: "life" },
   { path: "/home/allergies", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Allergies", navLabel: "Allergies", navZone: "life" },
   { path: "/home/results", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Results", navLabel: "Results", navZone: "life" },
+  { path: "/home/bookings", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Bookings", navLabel: "My Bookings", navZone: "life" },
+  { path: "/home/bookings/new", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Book a Service", navLabel: "Book a Service", navZone: "life" },
+  { path: "/home/bookings/[bookingId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Booking Details", navLabel: "Booking", navZone: "life" },
+  { path: "/home/appointments", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Appointments", navLabel: "My Appointments", navZone: "life" },
+  { path: "/home/appointments/[appointmentId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Appointment Details", navLabel: "Appointment", navZone: "life" },
   { path: "/citizen", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Citizen Services", navLabel: "Citizen Services", navZone: "life" },
   { path: "/citizen/health-id/qr", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Health ID QR", navLabel: "Health ID QR", navZone: "life" },
   { path: "/citizen/health-id/request", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Request Health ID", navLabel: "Request Health ID", navZone: "life" },
@@ -163,6 +168,9 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/scheduling/roster", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Staff Roster", navLabel: "Roster", navZone: "work" },
   { path: "/scheduling/on-call", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "On-Call Schedule", navLabel: "On-Call", navZone: "work" },
   { path: "/scheduling/noticeboard", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Provider Noticeboard", navLabel: "Noticeboard", navZone: "work" },
+  { path: "/scheduling/booking-requests", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Requests", navLabel: "Booking Requests", navZone: "work" },
+  { path: "/scheduling/today", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Today's Appointments", navLabel: "Today", navZone: "work" },
+  { path: "/scheduling/bookings/config", zone: "queue", layout: "app", sidebar: "queue", guard: "workspace", pageTitle: "Booking Configuration", navLabel: "Booking Config", navZone: "work" },
 
   // â”€â”€ Zone: Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/communication", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Communication Hub", navLabel: "Communication", navZone: "work" },
@@ -376,6 +384,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/telemedicine", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Telemedicine Hub", navLabel: "Telemedicine", navZone: "work" },
   { path: "/telemedicine/new", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "New Teleconsultation", navLabel: "New Teleconsult", navZone: "work" },
   { path: "/telemedicine/session/[sessionId]", zone: "queue", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "Teleconsult Session", navLabel: "Session", navZone: "work" },
+  { path: "/telemedicine/analytics", zone: "queue", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Telemedicine Analytics", navLabel: "Telemedicine Analytics", navZone: "work" },
 
   // â”€â”€ Zone: Provider Activation (Health OS Â§6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/provider/activate", zone: "auth", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Activate Provider Role", navLabel: "Provider Activation" },
@@ -579,6 +588,52 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/nhume/custody/[deliveryId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Chain of Custody", navLabel: "Chain of Custody", navZone: "work" },
   // Citizen-facing track page (privacy-safe, role-aware).
   { path: "/nhume/track/[deliveryId]", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Track Delivery", navLabel: "Track Delivery", navZone: "life" },
+
+  // ── Zone: Madi — Blood Donation, Transfusion & Haemovigilance ──
+  // Backend: services/madi-service at /internal/v1/madi
+  { path: "/madi", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Madi Blood Services", navLabel: "Madi", navZone: "work" },
+  { path: "/madi/donor", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Donor Hub", navLabel: "Blood Donation", navZone: "life" },
+  { path: "/madi/donor/register", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Become a Donor", navLabel: "Register as Donor", navZone: "life" },
+  { path: "/madi/donor/profile", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Profile", navLabel: "Donor Profile", navZone: "life" },
+  { path: "/madi/donor/screening", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Screening", navLabel: "Screening", navZone: "life" },
+  { path: "/madi/donor/drives", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donation Drives Near Me", navLabel: "Nearby Drives", navZone: "life" },
+  { path: "/madi/donor/history", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donation History", navLabel: "Donation History", navZone: "life" },
+  { path: "/madi/donor/feedback", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Feedback", navLabel: "Donor Feedback", navZone: "life" },
+  { path: "/madi/donor/preferences", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Donor Preferences", navLabel: "Donor Preferences", navZone: "life" },
+  { path: "/madi/drives", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Donation Drives", navLabel: "Donation Drives", navZone: "work" },
+  { path: "/madi/drives/new", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "New Donation Drive", navLabel: "New Drive", navZone: "work" },
+  { path: "/madi/drives/[driveId]", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Drive Detail", navLabel: "Drive", navZone: "work" },
+  { path: "/madi/blood-bank", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Local Blood Bank", navLabel: "Blood Bank", navZone: "work" },
+  { path: "/madi/blood-bank/orders", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Bank Orders", navLabel: "Bank Orders", navZone: "work" },
+  { path: "/madi/blood-bank/stock", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Stock", navLabel: "Blood Stock", navZone: "work" },
+  { path: "/madi/blood-bank/crossmatch", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Crossmatch", navLabel: "Crossmatch", navZone: "work" },
+  { path: "/madi/blood-bank/issue", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Issue Blood", navLabel: "Issue Blood", navZone: "work" },
+  { path: "/madi/blood-bank/fridges", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Fridge Monitoring", navLabel: "Fridge IoT", navZone: "work" },
+  { path: "/madi/central-bank", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "Central Blood Bank", navLabel: "Central Bank", navZone: "work" },
+  { path: "/madi/orders", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Order Blood", navLabel: "Order Blood", navZone: "work" },
+  { path: "/madi/orders/[orderId]", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Order Detail", navLabel: "Order Detail", navZone: "work" },
+  { path: "/madi/transfusion", zone: "queue", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Record Transfusion", navLabel: "Transfusion", navZone: "work" },
+  { path: "/madi/transfusion/[episodeId]", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Transfusion Episode", navLabel: "Transfusion Episode", navZone: "work" },
+  { path: "/madi/haemovigilance", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Haemovigilance", navLabel: "Haemovigilance", navZone: "work" },
+  { path: "/madi/haemovigilance/national", zone: "operations", layout: "app", sidebar: "main", guard: "role", requiredRole: "ADMIN", pageTitle: "National Haemovigilance", navLabel: "National Haemovigilance", navZone: "work" },
+  { path: "/madi/dashboard", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Madi Dashboard", navLabel: "Madi Dashboard", navZone: "work" },
+  { path: "/madi/processing", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Processing", navLabel: "Processing", navZone: "work" },
+  { path: "/madi/logistics", zone: "operations", layout: "app", sidebar: "main", guard: "facility", pageTitle: "Blood Logistics", navLabel: "Blood Logistics", navZone: "work" },
+
+  // ── Zone: Impilo Live (services/live-service at /internal/v1/live) ──
+  { path: "/live", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Impilo Live", navLabel: "Impilo Live", navZone: "work" },
+  { path: "/live/manage", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Management", navLabel: "Manage Events", navZone: "work" },
+  { path: "/live/create", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Create Live Event", navLabel: "Create Event", navZone: "work" },
+  { path: "/live/discover", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Discover Live Events", navLabel: "Live Health Talks", navZone: "life" },
+  { path: "/live/saved", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Saved Live Events", navLabel: "Saved Events", navZone: "life" },
+  { path: "/live/my-events", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Live Events", navLabel: "My Events", navZone: "life" },
+  { path: "/live/replays", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Replays", navLabel: "Replays", navZone: "life" },
+  { path: "/live/cpd", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live CPD", navLabel: "Live CPD", navZone: "work" },
+  { path: "/live/certificates", zone: "professional", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Certificates", navLabel: "Live Certificates", navZone: "work" },
+  { path: "/live/event/[eventId]", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Event Detail", navLabel: "Event", navZone: "work" },
+  { path: "/live/event/[eventId]/room", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Room", navLabel: "Live Room", navZone: "work" },
+  { path: "/live/event/[eventId]/replay", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Event Replay", navLabel: "Replay", navZone: "life" },
+  { path: "/live/event/[eventId]/analytics", zone: "operations", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Live Analytics", navLabel: "Analytics", navZone: "work" },
 ];
 
 // Total route count assertion.
@@ -613,7 +668,11 @@ export const ROUTES: RouteDefinition[] = [
 // Combined with upstream additions on this branch the canonical total is 370.
 // GAP-010 post-merge (2026-05-28): registered 21 shadow routes (social, wallet, communication hub,
 // ubomi, communities/pages, extended auth) so guards and breadcrumbs apply.
-export const EXPECTED_ROUTE_COUNT = 418;
+// Madi (Jun 2026): 26 routes under /madi for blood donation, transfusion &
+// haemovigilance (services/madi-service). New canonical total is 452.
+// Impilo Live (Jun 2026): 13 routes under /live for live events, discovery,
+// room, replay, CPD and analytics (services/live-service). New total is 467.
+export const EXPECTED_ROUTE_COUNT = 468;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

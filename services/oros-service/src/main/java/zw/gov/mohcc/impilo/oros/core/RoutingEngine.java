@@ -147,6 +147,16 @@ public class RoutingEngine {
     }
 
     /**
+     * Retry routing for a failed route identified by route UUID.
+     */
+    @Transactional
+    public RoutingEntity retryRouteByRouteId(UUID routeId) {
+        RoutingEntity route = routingRepository.findById(routeId)
+                .orElseThrow(() -> new IllegalArgumentException("Route not found: " + routeId));
+        return retryRoute(route.getOrderId());
+    }
+
+    /**
      * Get the route for an order.
      */
     public RoutingEntity getRoute(String orderId) {

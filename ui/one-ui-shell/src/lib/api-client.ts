@@ -41,6 +41,9 @@ export interface ApiResponse<T> {
   meta?: {
     request_id: string;
     correlation_id: string;
+    journey_id?: string;
+    core_transaction_id?: string;
+    encounter_id?: string;
     page?: {
       number: number;
       size: number;

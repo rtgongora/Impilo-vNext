@@ -48,7 +48,7 @@ public class TusoServiceClient {
      */
     public JsonNode createBooking(UUID resourceId, String subjectRef, String purpose,
                                   OffsetDateTime startTime, OffsetDateTime endTime, String notes) {
-        String url = baseUrl + "/v1/resources/" + resourceId + "/bookings";
+        String url = baseUrl + "/v1/internal/resources/" + resourceId + "/bookings";
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("subjectRef", subjectRef);
         body.put("purpose", purpose);
@@ -66,7 +66,7 @@ public class TusoServiceClient {
      * List bookings for a resource in a time range.
      */
     public JsonNode listBookings(UUID resourceId, OffsetDateTime from, OffsetDateTime to) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/resources/" + resourceId + "/bookings")
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/resources/" + resourceId + "/bookings")
                 .queryParam("from", from)
                 .queryParam("to", to)
                 .toUriString();
@@ -78,7 +78,7 @@ public class TusoServiceClient {
      * Cancel a booking.
      */
     public JsonNode cancelBooking(UUID bookingId, String reason) {
-        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/bookings/" + bookingId)
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/bookings/" + bookingId)
                 .queryParam("reason", reason)
                 .toUriString();
         log.info("TUSO: Cancelling booking={}, reason={}", bookingId, reason);
@@ -90,7 +90,7 @@ public class TusoServiceClient {
      * List resources for a facility.
      */
     public JsonNode listFacilityResources(long facilityId, String resourceType) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/facilities/" + facilityId + "/resources");
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/facilities/" + facilityId + "/resources");
         if (resourceType != null) builder.queryParam("resourceType", resourceType);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
         return extractData(response);
@@ -118,6 +118,21 @@ public class TusoServiceClient {
         String url = baseUrl + "/v1/internal/facilities";
         log.info("TUSO: Creating facility");
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Governed master health facility pack import (dry-run or execute). */
+    public JsonNode importFacilityMasterPack(Map<String, Object> requestBody) {
+        String url = baseUrl + "/v1/internal/facilities/import/master-pack";
+        log.info("TUSO: Importing facility master pack dryRun={}", requestBody.get("dryRun"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read pack data quality report from generated artefacts. */
+    public JsonNode getFacilityMasterQualityReport() {
+        String url = baseUrl + "/v1/internal/facilities/import/master-pack/quality-report";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
 

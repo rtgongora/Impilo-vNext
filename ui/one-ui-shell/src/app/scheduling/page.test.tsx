@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import SchedulingPage from "./page";
 
+const { createMutateAsync } = vi.hoisted(() => ({
+  createMutateAsync: vi.fn().mockResolvedValue({ data: { id: "appt-new" } }),
+}));
+
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => ({
     get: () => null,
   }),
@@ -57,8 +63,23 @@ vi.mock("@/hooks/useFacilityStore", () => ({
 }));
 
 vi.mock("@/hooks/queries/usePatients", () => ({
-  usePatients: () => ({
-    data: { data: [] },
+  usePatients: (params?: { search?: string }) => ({
+    data:
+      params?.search && params.search.length >= 2
+        ? {
+            data: [
+              {
+                id: "patient-1",
+                attributes: {
+                  displayName: "Tariro Moyo",
+                  cpid: "CP-001",
+                  dateOfBirth: "1991-06-11",
+                  gender: "female",
+                },
+              },
+            ],
+          }
+        : { data: [] },
     isLoading: false,
   }),
 }));
@@ -75,6 +96,13 @@ vi.mock("@/lib/pii-mask", () => ({
   displayCpid: (cpid: string) => cpid,
 }));
 
+vi.mock("@/hooks/queries/useAppointments", () => ({
+  useCreateAppointment: () => ({ mutateAsync: createMutateAsync, isPending: false }),
+  useConfirmAppointment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCancelAppointment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCheckInAppointment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
     get: vi.fn().mockResolvedValue({ data: [] }),
@@ -83,6 +111,10 @@ vi.mock("@/lib/api-client", () => ({
 }));
 
 describe("SchedulingPage", () => {
+  beforeEach(() => {
+    createMutateAsync.mockClear();
+  });
+
   it("renders scheduling hub with facility context", () => {
     render(<SchedulingPage />);
 
@@ -108,5 +140,31 @@ describe("SchedulingPage", () => {
     expect(screen.getByText("Today")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Confirmed")).toBeInTheDocument();
+  });
+
+  it("books an appointment through the canonical scheduling hook", async () => {
+    const user = userEvent.setup();
+
+    render(<SchedulingPage />);
+
+    await user.click(screen.getByRole("button", { name: "New Appointment" }));
+    await user.type(screen.getByPlaceholderText("Search by name or CPID..."), "Tari");
+    await waitFor(() => expect(screen.getByText("Tariro Moyo")).toBeInTheDocument(), { timeout: 2000 });
+    await user.click(screen.getByText("Tariro Moyo"));
+    const dateInput = document.querySelector('input[type="date"]');
+    expect(dateInput).not.toBeNull();
+    await user.type(dateInput as HTMLInputElement, "2026-06-10");
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+
+    await waitFor(() =>
+      expect(createMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          patient_id: "patient-1",
+          facility_id: "facility-1",
+          appointment_type: "OPD",
+          scheduled_at: "2026-06-10T09:00:00Z",
+        }),
+      ),
+    );
   });
 });

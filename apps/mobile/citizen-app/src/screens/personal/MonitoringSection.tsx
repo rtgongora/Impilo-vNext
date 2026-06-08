@@ -27,11 +27,35 @@ export function MonitoringSection() {
   });
 
   const syncMutation = useMutation({
-    mutationFn: (id: string) => syncDevice(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["monitoring-devices"] }),
+    mutationFn: ({ id, value, unit }: { id: string; value: number; unit: string }) =>
+      syncDevice(id, { readings: [{ value, unit }] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["monitoring-devices"] });
+      setSyncTargetId(null);
+      setSyncValue("");
+    },
   });
 
+  const [syncTargetId, setSyncTargetId] = useState<string | null>(null);
+  const [syncValue, setSyncValue] = useState("");
+
   if (isLoading) return <LoadingSpinner />;
+
+  function defaultUnit(deviceType: string) {
+    switch (deviceType) {
+      case "BLOOD_PRESSURE":
+        return "mmHg";
+      case "PULSE_OXIMETER":
+        return "%";
+      case "GLUCOMETER":
+      case "GLUCOSE_METER":
+        return "mmol/L";
+      case "SCALE":
+        return "kg";
+      default:
+        return "bpm";
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -63,16 +87,38 @@ export function MonitoringSection() {
         </View>
       ) : (
         devices.map((d) => (
-          <View key={d.id} style={styles.deviceCard}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.deviceName}>{d.deviceName}</Text>
-              <Text style={styles.deviceMeta}>{d.deviceType.replace(/_/g, " ")} · {d.manufacturer} {d.model}</Text>
-              <Text style={styles.deviceMeta}>{d.connectionType} · {d.status} {d.batteryLevel != null ? `· ${d.batteryLevel}%` : ""}</Text>
-              {d.lastSyncAt && <Text style={styles.syncTime}>Last sync: {new Date(d.lastSyncAt).toLocaleString()}</Text>}
+          <View key={d.id} style={styles.deviceCardWrap}>
+            <View style={styles.deviceCard}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.deviceName}>{d.deviceName}</Text>
+                <Text style={styles.deviceMeta}>{d.deviceType.replace(/_/g, " ")} · {d.manufacturer} {d.model}</Text>
+                <Text style={styles.deviceMeta}>{d.connectionType} · {d.status} {d.batteryLevel != null ? `· ${d.batteryLevel}%` : ""}</Text>
+                {d.lastSyncAt && <Text style={styles.syncTime}>Last sync: {new Date(d.lastSyncAt).toLocaleString()}</Text>}
+              </View>
+              <TouchableOpacity style={styles.syncButton} onPress={() => setSyncTargetId(d.id)}>
+                <Text style={styles.syncText}>Sync</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.syncButton} onPress={() => syncMutation.mutate(d.id)}>
-              <Text style={styles.syncText}>Sync</Text>
-            </TouchableOpacity>
+            {syncTargetId === d.id && (
+              <View style={styles.syncForm}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Latest reading"
+                  keyboardType="decimal-pad"
+                  value={syncValue}
+                  onChangeText={setSyncValue}
+                />
+                <Button
+                  title={syncMutation.isPending ? "Syncing…" : "Submit reading"}
+                  onPress={() => {
+                    const value = Number(syncValue);
+                    if (Number.isNaN(value)) return;
+                    syncMutation.mutate({ id: d.id, value, unit: defaultUnit(d.deviceType) });
+                  }}
+                  disabled={!syncValue.trim() || syncMutation.isPending}
+                />
+              </View>
+            )}
           </View>
         ))
       )}
@@ -95,10 +141,12 @@ const styles = StyleSheet.create({
   empty: { alignItems: "center", paddingVertical: 32 },
   emptyText: { fontSize: 15, fontWeight: "600", color: "#374151" },
   emptyHint: { fontSize: 13, color: "#9CA3AF" },
+  deviceCardWrap: { gap: 8 },
   deviceCard: { flexDirection: "row", alignItems: "center", backgroundColor: "#F9FAFB", borderRadius: 12, padding: 16 },
   deviceName: { fontSize: 15, fontWeight: "600", color: "#111827" },
   deviceMeta: { fontSize: 12, color: "#6B7280" },
   syncTime: { fontSize: 11, color: "#2563EB", marginTop: 2 },
   syncButton: { backgroundColor: "#2563EB", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
   syncText: { color: "#FFF", fontSize: 13, fontWeight: "600" },
+  syncForm: { marginTop: 8, gap: 8 },
 });

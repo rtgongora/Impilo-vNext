@@ -27,6 +27,7 @@ import zw.gov.mohcc.impilo.tuso.api.dto.CreateFacilityRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityContactDto;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityIdentifierDto;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityListResponse;
+import zw.gov.mohcc.impilo.tuso.api.dto.FacilityMasterPackMetadata;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityResponse;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilitySearchRequest;
 import zw.gov.mohcc.impilo.tuso.api.dto.FacilityStatusSummary;
@@ -384,6 +385,7 @@ public class FacilityController {
     }
 
     private FacilityListResponse.FacilitySummary toFacilitySummary(FacilityEntity entity) {
+        FacilityMasterPackMetadata.Flags pack = FacilityMasterPackMetadata.from(entity);
         return new FacilityListResponse.FacilitySummary(
                 entity.getId(),
                 entity.getName(),
@@ -391,7 +393,17 @@ public class FacilityController {
                 entity.getFacilityType(),
                 entity.getStatus(),
                 entity.getDistrict(),
-                entity.getProvince()
+                entity.getProvince(),
+                entity.getLatitude(),
+                entity.getLongitude(),
+                entity.getOwnership(),
+                entity.getLevel(),
+                entity.getOperationalStatus(),
+                pack.facilityUid(),
+                pack.hasValidCoordinates(),
+                pack.missingFacilityCode(),
+                pack.locationContext(),
+                pack.bedCapacity()
         );
     }
 }

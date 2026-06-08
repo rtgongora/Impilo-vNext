@@ -299,10 +299,9 @@ export default function FinancePayerOpsPage() {
               <code className="text-[11px]">
                 /internal/v1/finance/payer-ops/payment-intents/&#123;intentId&#125;/attempts
               </code>{" "}
-              — honours the rail recorded on the intent. The MusheX safety gate prevents real
-              providers from being called until an operator opts the rail in
-              <em> and</em> a real provider client is wired in
-              (every adapter today is a stub).
+              — honours the rail recorded on the intent. Use the SANDBOX rail in preview for
+              governed simulated settlement; production live rails require operator enablement
+              and a configured provider client per MusheX safety doctrine.
             </p>
             <div className="mt-3 flex flex-wrap gap-2 items-end">
               <label className="text-xs text-slate-600">
@@ -329,6 +328,16 @@ export default function FinancePayerOpsPage() {
               </label>
               <button
                 type="button"
+                disabled={reselectM.isPending || !activeIntentId}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                onClick={() =>
+                  reselectM.mutate({ intentId: activeIntentId!, reason: "preview-sandbox-rail" })
+                }
+              >
+                {reselectM.isPending ? "Reselecting…" : "Reselect SANDBOX rail"}
+              </button>
+              <button
+                type="button"
                 disabled={initiateM.isPending || !activeIntentId}
                 className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
                 onClick={() => setShowInitiateConfirm(true)}
@@ -346,11 +355,9 @@ export default function FinancePayerOpsPage() {
                 <p className="font-medium">Confirm initiate attempt</p>
                 <p className="mt-1">
                   This calls MusheX <code>initiateAttempt</code> for intent{" "}
-                  <code className="font-mono">{activeIntentId}</code>. The safety gate will refuse
-                  to invoke a real provider until both the operator config flags AND the
-                  adapter&apos;s <code>liveCapable()</code> are true. Today, every adapter is a
-                  stub, so attempts on real rails persist as <code>INITIATED</code>+<code>BLOCKED_NOT_LIVE_CAPABLE</code>
-                  with no money movement.
+                  <code className="font-mono">{activeIntentId}</code>. Preview environments should
+                  reselect the SANDBOX rail first; live rails move money only after operator
+                  configuration and provider readiness checks pass.
                 </p>
                 <div className="mt-2 flex gap-2">
                   <button
@@ -499,6 +506,22 @@ export default function FinancePayerOpsPage() {
                 Remittance claim accepted. Continue with attempts and settlement reconciliation.
               </p>
             ) : null}
+          </section>
+
+          <section
+            className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm"
+            data-testid="payer-ops-production-rails"
+          >
+            <h2 className="text-sm font-semibold text-emerald-900">Production MusheX rails</h2>
+            <p className="mt-1 text-xs text-emerald-800">
+              Live payment rails (mobile money, card acquirers, bank switches) are configured in MusheX and surfaced here
+              via adapter registry. Preview uses SANDBOX; production operators load adapters, confirm rail enablement, then
+              initiate attempts against the intent&apos;s selected rail.
+            </p>
+            <p className="mt-2 text-xs text-emerald-900">
+              Workflow: load intent → claim remittance → load adapters → reselect rail (SANDBOX in preview, live in
+              production) → initiate attempt → reconcile receipts and settlements.
+            </p>
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -32,6 +32,7 @@ export {
   configureGeolocation,
   haversineMeters,
 } from "./gpsCapture";
+export { configureMobileGeolocationFromExpo } from "./configureMobileGeolocation";
 export type { GpsCaptureResult, GeolocationLike } from "./gpsCapture";
 
 export {
@@ -49,3 +50,9 @@ export {
   useNdilaOfflineQueue,
   haversine,
 } from "./hooks";
+
+export { MobileNdilaMapView } from "./MobileNdilaMapView";
+export type { MobileNdilaMapMarker, MobileNdilaMapViewProps } from "./MobileNdilaMapView";
+
+export { MobileNearbyMapView } from "./MobileNearbyMapView";
+export type { MobileNearbyMapViewProps } from "./MobileNearbyMapView";

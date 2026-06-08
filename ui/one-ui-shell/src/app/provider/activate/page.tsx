@@ -16,6 +16,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Loader2, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ProviderRoleActivationRail } from "@/components/auth/ProviderRoleActivationRail";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { apiClient } from "@/lib/api-client";
@@ -86,7 +87,8 @@ export default function ProviderActivatePage() {
   return (
     <AppLayout>
       <PageShell title="Activate Provider Role" subtitle="Health OS §6 — Sign in as a person; practice as a provider only under activated Provider ID">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-xl mx-auto space-y-4">
+          <ProviderRoleActivationRail compact returnTo={returnTo} />
           {/* Doctrine banner */}
           <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4 text-sm text-impilo-800">
             <div className="flex items-center gap-2 mb-1">

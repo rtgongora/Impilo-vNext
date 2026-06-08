@@ -5,6 +5,8 @@ import { useState } from "react";
 import { UserPlus, CheckCircle, AlertTriangle, Plus, X } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { VitoRestrictedLocationCapture } from "@/components/registry/VitoRestrictedLocationCapture";
+import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
 import {
   useCreateRegistration,
   useSubmitRegistration,
@@ -135,6 +137,7 @@ export default function NewRegistrationPage() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [matchCandidates, setMatchCandidates] = useState<MatchCandidate[]>([]);
+  const [registrationLocation, setRegistrationLocation] = useState<NdilaCoordinate | null>(null);
 
   const [form1, setForm1] = useState<Step1FormData>({
     firstName: "",
@@ -195,7 +198,18 @@ export default function NewRegistrationPage() {
       phone: form1.phone || null,
       addressLine1: form1.addressLine1 || null,
       notes: form1.notes || null,
-      metadata: form1.nationality ? { nationality: form1.nationality } : null,
+      metadata: {
+        ...(form1.nationality ? { nationality: form1.nationality } : {}),
+        ...(registrationLocation
+          ? {
+              registrationLocation: {
+                latitude: registrationLocation.latitude,
+                longitude: registrationLocation.longitude,
+                source: "NDILA_IDENTITY_REGISTRATION",
+              },
+            }
+          : {}),
+      },
       ...(form1.idDocumentType === "NATIONAL_ID"
         ? { nationalIdReference: form1.idDocumentNumber || null }
         : { passportReference: form1.idDocumentNumber || null }),
@@ -477,6 +491,12 @@ export default function NewRegistrationPage() {
                   />
                 </label>
               </div>
+
+              <VitoRestrictedLocationCapture
+                registrationType={form1.registrationType}
+                value={registrationLocation}
+                onChange={setRegistrationLocation}
+              />
 
               <div className="flex justify-end">
                 <button

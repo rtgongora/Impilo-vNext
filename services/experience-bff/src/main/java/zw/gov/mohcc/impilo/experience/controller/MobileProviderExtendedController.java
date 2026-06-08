@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
-import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
+import zw.gov.mohcc.impilo.experience.pharmacy.PharmacyFiveRightsVerifier;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -184,28 +186,96 @@ public class MobileProviderExtendedController {
     // ── Pharmacy Dispensing ─────────────────────────────────────────
 
     @GetMapping("/pharmacy/pending")
-    public ResponseEntity<Map<String, Object>> getPendingDispensing(@RequestHeader("X-Tenant-ID") String tenantId) {
-        // Previously: jdbc.queryForList("SELECT * FROM prescriptions WHERE ... status = 'ACTIVE' ...")
-        return ResponseEntity.ok(Map.of("data", List.of()));
+    public ResponseEntity<Map<String, Object>> getPendingDispensing(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId) {
+        if (facilityId == null || facilityId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_FACILITY_ID", "message", "X-Facility-ID header is required"),
+                    "data", List.of()));
+        }
+        try {
+            JsonNode worklist = pharmacyClient.getWorklist(facilityId, "PENDING");
+            List<Object> data = new ArrayList<>();
+            if (worklist != null && worklist.isArray()) {
+                worklist.forEach(data::add);
+            }
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", e.getMessage()),
+                    "data", List.of()));
+        }
     }
 
     @PostMapping("/pharmacy/dispense")
-    public ResponseEntity<Map<String, Object>> dispense(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        // Previously: jdbc.update("UPDATE prescriptions SET status = 'DISPENSED' ...")
-        String prescriptionId = body.get("prescriptionId").toString();
-        try {
-            pharmacyClient.completeDispense(UUID.fromString(prescriptionId));
-        } catch (Exception e) {
-            // Non-blocking — sovereign service may not be available yet
+    public ResponseEntity<Map<String, Object>> dispense(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestBody Map<String, Object> body) {
+        Object rawId = body.get("prescriptionId");
+        if (rawId == null) {
+            rawId = body.get("prescription_id");
         }
-        return ResponseEntity.ok(Map.of("dispensed", true));
+        if (rawId == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_PRESCRIPTION_ID", "message", "prescriptionId is required")));
+        }
+        String dispensedBy = body.get("dispensedBy") != null
+                ? body.get("dispensedBy").toString()
+                : body.get("dispensed_by") != null
+                    ? body.get("dispensed_by").toString()
+                    : "mobile-provider";
+        try {
+            UUID prescriptionId = UUID.fromString(rawId.toString());
+            JsonNode data = pharmacyClient.dispensePrescription(
+                    prescriptionId,
+                    Map.of("dispensed_by", dispensedBy));
+            return ResponseEntity.ok(Map.of(
+                    "dispensed", true,
+                    "data", data != null ? data : Map.of()));
+        } catch (IllegalArgumentException badId) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "INVALID_PRESCRIPTION_ID", "message", "prescriptionId must be a UUID")));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", e.getMessage())));
+        }
     }
 
     @PostMapping("/pharmacy/verify-five-rights")
     public ResponseEntity<Map<String, Object>> verifyFiveRights(@RequestBody Map<String, Object> body) {
-        // 5 rights: right patient, right drug, right dose, right route, right time
-        return ResponseEntity.ok(Map.of("verified", true, "rights", Map.of(
-                "rightPatient", true, "rightDrug", true, "rightDose", true, "rightRoute", true, "rightTime", true)));
+        Object rawId = body.get("prescriptionId");
+        if (rawId == null) {
+            rawId = body.get("prescription_id");
+        }
+        if (rawId == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "MISSING_PRESCRIPTION_ID", "message", "prescriptionId is required")));
+        }
+        String expectedPatient = body.get("patient_id") != null
+                ? body.get("patient_id").toString()
+                : body.get("patientId") != null ? body.get("patientId").toString() : null;
+        try {
+            JsonNode rx = pharmacyClient.getPrescription(rawId.toString());
+            if (rx == null) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                        "verified", false,
+                        "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", "Prescription not returned")));
+            }
+            PharmacyFiveRightsVerifier.Result result = PharmacyFiveRightsVerifier.evaluate(rx, expectedPatient);
+            return ResponseEntity.ok(Map.of(
+                    "verified", result.verified(),
+                    "rights", result.rights()));
+        } catch (IllegalArgumentException badId) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "INVALID_PRESCRIPTION_ID", "message", "prescriptionId must be a UUID")));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "verified", false,
+                    "error", Map.of("code", "PHARMACY_UNAVAILABLE", "message", e.getMessage())));
+        }
     }
 
     // ── Charges / Billing ───────────────────────────────────────────

@@ -114,12 +114,20 @@ public class ServiceClientConfig {
             String workforceGovernanceBaseUrl,
             /** scheduling-service MVP — slot templates + holds (distinct default port from inpatient-service) */
             String schedulingServiceBaseUrl,
+            /** booking-service — sovereign Booking + Appointment aggregates (port 8265) */
+            String bookingBaseUrl,
             /** msika-apps-service — Health OS Capability Marketplace (Msika Apps). */
             String msikaAppsBaseUrl,
             /** Ndila — geospatial intelligence, routing, tiles (port 8155). */
             String ndilaBaseUrl,
             /** Nhume — dispatch, delivery, fleet (port 8210). */
-            String nhumeBaseUrl
+            String nhumeBaseUrl,
+            /** MADI — blood donation, blood bank, transfusion (port 8300). */
+            String madiBaseUrl,
+            /** Impilo Live — live events, webinars, broadcasts (port 8380). */
+            String liveBaseUrl,
+            /** analytics-pipeline-service — telemedicine lifecycle analytics (port 8365). */
+            String analyticsPipelineBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -184,9 +192,13 @@ public class ServiceClientConfig {
             if (wellnessBaseUrl == null) wellnessBaseUrl = "http://localhost:8125";
             if (workforceGovernanceBaseUrl == null) workforceGovernanceBaseUrl = "http://localhost:8165";
             if (schedulingServiceBaseUrl == null) schedulingServiceBaseUrl = "http://localhost:8128";
+            if (bookingBaseUrl == null) bookingBaseUrl = "http://localhost:8265";
             if (msikaAppsBaseUrl == null) msikaAppsBaseUrl = "http://localhost:8181";
             if (ndilaBaseUrl == null) ndilaBaseUrl = "http://localhost:8155";
             if (nhumeBaseUrl == null) nhumeBaseUrl = "http://localhost:8210";
+            if (madiBaseUrl == null) madiBaseUrl = "http://localhost:8300";
+            if (liveBaseUrl == null) liveBaseUrl = "http://localhost:8380";
+            if (analyticsPipelineBaseUrl == null) analyticsPipelineBaseUrl = "http://localhost:8365";
         }
     }
 
@@ -202,7 +214,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null
+                null, null, null, null, null, null, null, null
         );
     }
 
@@ -222,7 +234,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null
+                null, null, null, null, null, null, null, null, null
         );
     }
 

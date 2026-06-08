@@ -31,6 +31,8 @@ import {
   landelaDocumentAccessHref,
   registryIntakeLandelaPrefillHref,
 } from "@/lib/landela-routes";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { SiteRegistryGeoMapPanel } from "@/components/maps/SiteRegistryGeoMapPanel";
 
 const FACILITY_SAMPLE_CSV =
   "name,facilityCode,facilityType,province,district\nSample Import Clinic,ZW-IMP-DEMO-001,CLINIC,Harare,Harare";
@@ -50,7 +52,7 @@ export default function RegistryIntakePage() {
   const searchIndawo = useSearchIndawoSites();
 
   const [targetRegistry, setTargetRegistry] = useState<"FACILITY" | "SITE">("FACILITY");
-  const [importSource, setImportSource] = useState<"inline" | "landela">("inline");
+  const [importSource, setImportSource] = useState<"inline" | "landela" | "master-pack">("inline");
   const [landelaDocumentId, setLandelaDocumentId] = useState("");
   const [csvText, setCsvText] = useState(FACILITY_SAMPLE_CSV);
 
@@ -80,10 +82,33 @@ export default function RegistryIntakePage() {
     if (targetRegistry === "SITE") {
       return "Header row: name, type (optional), status (optional). Rows upsert to Indawo with deterministic IDs.";
     }
+    if (importSource === "master-pack") {
+      return "Paste tuso_facility_registry_seed.json from docs/data/facility-master-2024-07-23/generated/. Idempotent Tuso import by facility_uid, then Ndila geospatial sync.";
+    }
     return "Header row: name, facilityCode, facilityType, province, district. Tuso duplicate search by facility code.";
-  }, [targetRegistry]);
+  }, [targetRegistry, importSource]);
 
   function submitImportPreview() {
+    if (importSource === "master-pack") {
+      if (!csvText.trim().startsWith("[")) {
+        window.alert("Master pack import expects a JSON array (tuso_facility_registry_seed.json).");
+        return;
+      }
+      createImport.mutate(
+        {
+          targetRegistry: "FACILITY",
+          importType: "FACILITY_MASTER_PACK",
+          inlineJson: csvText,
+        },
+        {
+          onSuccess: (res) => {
+            const idOut = (res as { data?: { id?: string } }).data?.id;
+            if (idOut) setImportJobId(idOut);
+          },
+        },
+      );
+      return;
+    }
     if (importSource === "landela") {
       const id = landelaDocumentId.trim();
       if (!id) {
@@ -141,6 +166,17 @@ export default function RegistryIntakePage() {
             <ArrowLeft className="h-4 w-4" />
             Back to registry hub
           </Link>
+        </div>
+
+        <div className="mb-6">
+          {targetRegistry === "FACILITY" ? (
+            <FacilitiesGeoMapPanel
+              title="Facility placement preview"
+              subtitle="Coordinate truth for Tuso intake — capture on facility registration"
+            />
+          ) : (
+            <SiteRegistryGeoMapPanel />
+          )}
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-2">
@@ -262,6 +298,17 @@ export default function RegistryIntakePage() {
                 />
                 Landela document (UUID)
               </label>
+              {targetRegistry === "FACILITY" ? (
+                <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-gray-700">
+                  <input
+                    type="radio"
+                    name="importSource"
+                    checked={importSource === "master-pack"}
+                    onChange={() => setImportSource("master-pack")}
+                  />
+                  Master Health Facility pack (JSON)
+                </label>
+              ) : null}
             </div>
 
             {importSource === "landela" ? (

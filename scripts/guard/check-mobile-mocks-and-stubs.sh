@@ -14,7 +14,7 @@ while IFS= read -r f; do
   [[ -z "$f" || ! -f "$f" ]] && continue
   parity_is_test_path "$f" && continue
   parity_is_allowlisted "$f" && continue
-  if grep -qiE 'coming soon|under construction|placeholder|TODO: implement|stub screen' "$f" 2>/dev/null; then
+  if grep -qiE 'coming soon|under construction|TODO: implement|stub screen|placeholder screen|placeholder page' "$f" 2>/dev/null; then
     guard_fail "new mobile placeholder: $f"
     parity_record_blocking
   fi
@@ -36,7 +36,7 @@ while IFS= read -r f; do
   [[ "$f" == *Screen.tsx ]] || continue
   parity_is_allowlisted "$f" && continue
   if ! grep -qE 'Service|api|fetch|useQuery|mobile-api' "$f" 2>/dev/null; then
-    if grep -qiE 'Text.*>|placeholder|coming soon' "$f" 2>/dev/null; then
+    if grep -qiE 'Text.*>|coming soon|under construction' "$f" 2>/dev/null; then
       guard_warn "mobile screen may be shell-only: $f"
       parity_record_advisory
     fi

@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -32,10 +33,19 @@ public class GuidanceServiceClient {
     }
 
     public JsonNode ask(String question, boolean personalized) {
+        return ask(question, personalized, Map.of());
+    }
+
+    public JsonNode ask(String question, boolean personalized, Map<String, Object> context) {
         String url = baseUrl + "/internal/v1/guidance/ask";
-        log.debug("Guidance: ask personalized={}", personalized);
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url,
-                Map.of("question", question, "personalized", personalized), JsonNode.class);
+        log.debug("Guidance: ask personalized={} routePath={}", personalized, context.get("routePath"));
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("question", question);
+        payload.put("personalized", personalized);
+        if (context != null && !context.isEmpty()) {
+            payload.put("context", context);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, payload, JsonNode.class);
         return extractData(response);
     }
 

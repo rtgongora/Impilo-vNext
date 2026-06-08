@@ -12,8 +12,12 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { QueueWorkspaceHeader } from "@/components/queue/QueueWorkspaceHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import {
+  useAppointments,
+  useCancelAppointment,
+  useCheckInAppointment,
+  useConfirmAppointment,
+} from "@/hooks/queries/useAppointments";
 import {
   formatQueueDateTime,
   getAppointmentPatientId,
@@ -24,31 +28,21 @@ import {
   getAppointmentType,
   QUEUE_STATUS_STYLES,
 } from "@/lib/queue-workflows";
-
-type AppointmentResource = {
-  id: string;
-  type: string;
-  attributes: Record<string, unknown>;
-};
+import { buildPostCheckInRoute } from "@/lib/appointment-check-in-routing";
 
 export default function ScheduledQueuePage() {
   const router = useRouter();
   const facility = useFacilityStore((state) => state.facility);
-  const queryClient = useQueryClient();
-  const { data, isLoading, error } = useQuery<ApiResponse<AppointmentResource[]>>({
-    queryKey: ["appointments", { facilityId: facility?.id }],
-    queryFn: () =>
-      apiClient.get<ApiResponse<AppointmentResource[]>>(`/internal/v1/appointments?facility_id=${facility?.id}`),
-    enabled: !!facility?.id,
-  });
-  const confirmAppointment = useMutation({
-    mutationFn: (appointmentId: string) => apiClient.post(`/internal/v1/appointments/${appointmentId}/confirm`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
-  });
-  const cancelAppointment = useMutation({
-    mutationFn: (appointmentId: string) =>
-      apiClient.post(`/internal/v1/appointments/${appointmentId}/cancel`, { reason: "Cancelled from scheduled queue" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["appointments"] }),
+  const { data, isLoading, error } = useAppointments(facility?.id);
+  const confirmAppointment = useConfirmAppointment();
+  const cancelAppointment = useCancelAppointment();
+  const checkInAppointment = useCheckInAppointment({
+    onCheckedIn: (meta) => {
+      const route = buildPostCheckInRoute(meta);
+      if (route) {
+        router.push(route);
+      }
+    },
   });
 
   const entries = data?.data ?? [];
@@ -82,6 +76,11 @@ export default function ScheduledQueuePage() {
                 label: "Today",
                 value: String(scheduledToday),
                 detail: "Appointments due today and likely to convert into live queue work.",
+              },
+              {
+                label: "Check-in chain",
+                value: "BFF",
+                detail: "Check-in posts to scheduling BFF → booking CHECKED_IN + PCT journey enqueue for chart handoff.",
               },
               {
                 label: "Teleconsults",
@@ -157,6 +156,16 @@ export default function ScheduledQueuePage() {
                               Open Chart
                             </Link>
                           ) : null}
+                          {status === "SCHEDULED" || status === "CONFIRMED" ? (
+                            <button
+                              type="button"
+                              onClick={() => checkInAppointment.mutate(entry.id)}
+                              disabled={checkInAppointment.isPending}
+                              className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              Check in
+                            </button>
+                          ) : null}
                           {status === "SCHEDULED" ? (
                             <button
                               type="button"
@@ -170,7 +179,12 @@ export default function ScheduledQueuePage() {
                           {status !== "CANCELLED" ? (
                             <button
                               type="button"
-                              onClick={() => cancelAppointment.mutate(entry.id)}
+                              onClick={() =>
+                                cancelAppointment.mutate({
+                                  id: entry.id,
+                                  reason: "Cancelled from scheduled queue",
+                                })
+                              }
                               disabled={cancelAppointment.isPending}
                               className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
                             >

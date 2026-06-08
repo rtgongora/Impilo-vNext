@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ExternalLink, Loader2, Search } from "lucide-react";
+import { SiteRegistryGeoMapPanel } from "@/components/maps/SiteRegistryGeoMapPanel";
 import { useSiteRegistrySites } from "@/hooks/queries/useSiteRegistry";
 
 export default function SiteRegistryListPage() {
@@ -24,6 +25,8 @@ export default function SiteRegistryListPage() {
           Back to Public Health
         </Link>
       </div>
+
+      <SiteRegistryGeoMapPanel />
 
       <div className="rounded-lg border bg-white p-3">
         <div className="flex items-center gap-2">

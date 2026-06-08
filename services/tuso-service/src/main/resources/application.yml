@@ -77,6 +77,9 @@ tuso:
     kafka-topic-prefix: tuso
 
 impilo:
+  booking:
+    base-url: ${BOOKING_BASE_URL:http://localhost:8265}
+    forward-enabled: ${BOOKING_FORWARD_ENABLED:false}
   ops:
     enabled: true
     outbox-table: tuso.event_outbox

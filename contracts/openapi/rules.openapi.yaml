@@ -36,10 +36,11 @@ paths:
   /internal/v1/rules:
     get:
       operationId: rulesList
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: List rules for tenant
       responses:
-        "200":
+        '200':
           description: Rule list
           content:
             application/json:
@@ -50,7 +51,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: rulesCreate
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: Create rule
       requestBody:
         required: true
@@ -60,18 +62,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/rules/{key}/versions:
     post:
       operationId: rulesCreateVersion
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: Create new version for rule key
       parameters:
         - name: key
@@ -87,18 +89,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Version created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/rules/{key}/activate:
     post:
       operationId: rulesActivate
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: Activate a specific version
       parameters:
         - name: key
@@ -112,18 +114,18 @@ paths:
           schema:
             type: integer
       responses:
-        "200":
+        '200':
           description: Activated
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/rules/{key}/deactivate:
     post:
       operationId: rulesDeactivate
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: Deactivate rule key
       parameters:
         - name: key
@@ -132,18 +134,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Deactivated rule
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/rules/{key}/evaluate:
     post:
       operationId: rulesEvaluate
-      tags: [Internal-Rules]
+      tags:
+        - Internal-Rules
       summary: Evaluate rule against payload
       parameters:
         - name: key
@@ -159,13 +161,49 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Evaluation result
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /{key}/versions:
+    post:
+      operationId: rules_post__key_versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rules-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{key}/activate:
+    post:
+      operationId: rules_post__key_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rules-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{key}/deactivate:
+    post:
+      operationId: rules_post__key_deactivate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rules-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{key}/evaluate:
+    post:
+      operationId: rules_post__key_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from rules-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

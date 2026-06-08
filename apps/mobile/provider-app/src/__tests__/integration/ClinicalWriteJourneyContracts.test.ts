@@ -67,6 +67,12 @@ describe("clinical write journey canonical routes", () => {
       quantity: 15,
     });
 
+    const prescriptionPayload = vi.mocked(apiClient.post).mock.calls.find(
+      ([path]) => path === "/internal/v1/mobile/provider/prescriptions"
+    )?.[1] as Record<string, unknown> | undefined;
+    expect(prescriptionPayload?.medication_name).toBe("Amoxicillin");
+    expect(prescriptionPayload?.prescribed_by).toBeTruthy();
+
     const calledRoutes = vi.mocked(apiClient.post).mock.calls.map(([path]) => String(path));
     expect(calledRoutes).toEqual(
       expect.arrayContaining([

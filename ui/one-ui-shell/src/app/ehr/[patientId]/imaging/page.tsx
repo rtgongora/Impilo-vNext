@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   Activity,
   AlertCircle,
@@ -28,6 +28,7 @@ import { PageShell } from "@/components/PageShell";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import { useImagingStudies, useSyncImagingHierarchy } from "@/hooks/queries/useImaging";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { ImagingOrderCorrelatePanel } from "@/components/imaging/ImagingOrderCorrelatePanel";
 import { apiClient } from "@/lib/api-client";
 
 const BFF_BASE_URL = process.env.NEXT_PUBLIC_BFF_URL || (typeof window !== "undefined" ? "" : "http://localhost:8160");
@@ -131,7 +132,9 @@ function useStudySeries(studyId: string | null, seriesIds: string[]) {
 
 export default function ImagingPage() {
   const params = useParams<{ patientId: string }>();
+  const searchParams = useSearchParams();
   const patientId = params.patientId;
+  const pendingOrderId = searchParams.get("orderId");
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
   const activeEncounter = (encountersData?.data ?? []).find(
@@ -276,6 +279,10 @@ export default function ImagingPage() {
               },
             ]}
           />
+
+          {pendingOrderId ? (
+            <ImagingOrderCorrelatePanel patientId={patientId} orderId={pendingOrderId} />
+          ) : null}
 
           <div className="rounded-3xl border border-slate-200 bg-slate-50/70 p-4">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-500">

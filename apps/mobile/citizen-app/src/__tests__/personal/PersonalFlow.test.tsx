@@ -17,7 +17,7 @@ vi.mock("@impilo/mobile-api-client", () => ({
 }));
 
 import { fetchProfile, updateProfile, fetchConsents, updateConsent, deleteAccount } from "../../services/profileService";
-import { fetchAppointments, fetchAppointment, requestAppointment, cancelAppointment } from "../../services/appointmentService";
+import { fetchAppointments, fetchAppointment, requestAppointment, cancelAppointment, checkInAppointment } from "../../services/appointmentService";
 import { fetchPrescriptions, fetchPrescription, requestRefill } from "../../services/prescriptionService";
 import { fetchLabResults, fetchLabResult } from "../../services/labResultService";
 import { fetchCoverage, fetchCoverageDetail } from "../../services/coverageService";
@@ -198,6 +198,29 @@ describe("Appointment Service", () => {
     expect(mockApiClient.post).toHaveBeenCalledWith(
       "/internal/v1/mobile/citizen/appointments/apt-1/cancel",
       { reason: "No longer needed" }
+    );
+  });
+
+  it("checks in through shared citizen BFF endpoint", async () => {
+    mockApiClient.post.mockResolvedValue({
+      data: {
+        data: {
+          appointment_id: "apt-1",
+          status: "CHECKED_IN",
+          encounter_id: "9001",
+        },
+        meta: {
+          encounter_id: "9001",
+          core_transaction_id: "encounter:9001",
+        },
+      },
+    });
+
+    const result = await checkInAppointment("apt-1");
+    expect(result.data.status).toBe("CHECKED_IN");
+    expect(result.meta.core_transaction_id).toBe("encounter:9001");
+    expect(mockApiClient.post).toHaveBeenCalledWith(
+      "/internal/v1/mobile/citizen/appointments/apt-1/check-in",
     );
   });
 });

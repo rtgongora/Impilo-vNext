@@ -17,7 +17,8 @@ paths:
     post:
       operationId: createShareLink
       summary: Create a share link with OTP
-      tags: [Share Links]
+      tags:
+        - Share Links
       requestBody:
         content:
           application/json:
@@ -29,7 +30,8 @@ paths:
     get:
       operationId: listShareLinks
       summary: List share links by subject
-      tags: [Share Links]
+      tags:
+        - Share Links
       parameters:
         - name: subjectType
           in: query
@@ -52,12 +54,12 @@ paths:
       responses:
         '200':
           description: Share link results
-
   /v1/internal/share-links/{linkId}:
     get:
       operationId: getShareLink
       summary: Get share link details
-      tags: [Share Links]
+      tags:
+        - Share Links
       parameters:
         - name: linkId
           in: path
@@ -68,12 +70,12 @@ paths:
       responses:
         '200':
           description: Share link details
-
   /v1/internal/share-links/{linkId}/revoke:
     post:
       operationId: revokeShareLink
       summary: Revoke a share link
-      tags: [Share Links]
+      tags:
+        - Share Links
       parameters:
         - name: linkId
           in: path
@@ -84,12 +86,12 @@ paths:
       responses:
         '200':
           description: Share link revoked
-
   /v1/internal/share-links/{linkId}/pdf:
     get:
       operationId: getShareSlipPdf
       summary: Generate share slip PDF with QR
-      tags: [Share Links]
+      tags:
+        - Share Links
       parameters:
         - name: linkId
           in: path
@@ -105,12 +107,12 @@ paths:
               schema:
                 type: string
                 format: binary
-
   /v1/internal/share-links/{linkId}/audit:
     get:
       operationId: getShareLinkAudit
       summary: Get share link audit trail
-      tags: [Audit]
+      tags:
+        - Audit
       parameters:
         - name: linkId
           in: path
@@ -121,12 +123,12 @@ paths:
       responses:
         '200':
           description: Audit trail
-
   /v1/public/share/claim:
     post:
       operationId: claimShare
       summary: Claim a shared document bundle with OTP (public, rate-limited)
-      tags: [Public Share]
+      tags:
+        - Public Share
       security: []
       requestBody:
         content:
@@ -142,12 +144,12 @@ paths:
                 $ref: '#/components/schemas/ClaimResult'
         '429':
           description: Rate limit exceeded
-
   /v1/public/share/verify/{token}:
     get:
       operationId: verifyShareLink
       summary: Check if share link is valid (public, rate-limited)
-      tags: [Public Share]
+      tags:
+        - Public Share
       security: []
       parameters:
         - name: token
@@ -158,6 +160,78 @@ paths:
       responses:
         '200':
           description: Link status (minimal info)
+  /claim:
+    post:
+      operationId: shareslip_post__claim
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify/{token}:
+    get:
+      operationId: shareslip_get__verify_token_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{linkId}:
+    get:
+      operationId: shareslip_get__linkId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{linkId}/revoke:
+    post:
+      operationId: shareslip_post__linkId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{linkId}/pdf:
+    get:
+      operationId: shareslip_get__linkId_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{linkId}/audit:
+    get:
+      operationId: shareslip_get__linkId_audit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: shareslip_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: shareslip_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from share-slip-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -1,4 +1,4 @@
-import type { OpsMapMarker } from "@/components/operations/OpsMapPanel";
+import type { OpsMapMarker } from "@/lib/ndila/geo-map-markers";
 
 type Row = Record<string, unknown>;
 

@@ -8,6 +8,7 @@
 | `analytics-pipeline-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/analytics-pipeline-service` | triage |
 | `asset-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/asset-registry-service` | triage |
 | `audit-ledger-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/audit-ledger-service` | triage |
+| `booking-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/booking-service` | triage |
 | `butano-fhir` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/butano-fhir` | triage |
 | `butano-service` | health-os-doctrine, core-transaction (if domain) | boot + surface | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | missing | `services/butano-service` | not_deployed_in_preview |
 | `butano-web` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/butano-web` | triage |
@@ -56,8 +57,11 @@
 | `knowledge-admin` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/knowledge-admin` | triage |
 | `landela-adapter-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/landela-adapter-service` | triage |
 | `learning-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/learning-service` | triage |
+| `live-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/live-service` | triage |
 | `llm-orchestration-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/llm-orchestration-service` | triage |
+| `madi-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `services/madi-service` | triage |
 | `minio` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | missing | `docker-compose.yml` | not_deployed_in_preview |
+| `msika-apps-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-apps-service` | triage |
 | `msika-flow-ops` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-flow-ops` | triage |
 | `msika-flow-portal` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | wired | see MOBILE_PARITY_MATRIX | partial | unknown | `ui/msika-flow-portal` | triage |
 | `msika-flow-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/msika-flow-service` | triage |
@@ -100,6 +104,7 @@
 | `redis` | health-os-doctrine, core-transaction (if domain) | boot + surface | external-image | — | see MOBILE_PARITY_MATRIX | — | partial | `docker-compose.yml` | triage |
 | `referral-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/referral-service` | triage |
 | `reporting-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/reporting-service` | triage |
+| `rtc-gateway-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/rtc-gateway-service` | triage |
 | `rules-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/rules-service` | triage |
 | `scheduling-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/scheduling-service` | triage |
 | `schema-registry-service` | health-os-doctrine, core-transaction (if domain) | as classified | implemented-or-partial | unknown-or-partial | see MOBILE_PARITY_MATRIX | partial | unknown | `services/schema-registry-service` | triage |

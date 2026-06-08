@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FacilityLocationCapture } from "@/components/maps/FacilityLocationCapture";
 import { useCreateFacilityApplication } from "@/hooks/queries/useFacilityRegulatory";
+import type { NdilaCoordinate } from "@/lib/ndila/ndila-client";
 
 const inputClass =
   "w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
@@ -14,6 +16,7 @@ const inputClass =
 export default function NewFacilityPage() {
   const router = useRouter();
   const createApplication = useCreateFacilityApplication();
+  const [coordinates, setCoordinates] = useState<NdilaCoordinate | null>(null);
   const [form, setForm] = useState({
     applicationType: "NEW_REGISTRATION",
     pathway: "PRIVATE",
@@ -66,6 +69,8 @@ export default function NewFacilityPage() {
         ward: form.ward.trim() || undefined,
         addressLine1: form.addressLine1.trim() || undefined,
         addressLine2: form.addressLine2.trim() || undefined,
+        latitude: coordinates?.latitude,
+        longitude: coordinates?.longitude,
         requestedUnits: form.unitName.trim()
           ? [
               {
@@ -337,6 +342,8 @@ export default function NewFacilityPage() {
               The application could not be opened. Check the required fields and try again.
             </p>
           ) : null}
+
+          <FacilityLocationCapture value={coordinates} onChange={setCoordinates} />
 
           <button
             type="submit"

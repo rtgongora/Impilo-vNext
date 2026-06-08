@@ -52,3 +52,31 @@ export async function requestAppointment(params: {
 export async function cancelAppointment(id: string, reason?: string): Promise<void> {
   await apiClient.post(`${V1}/${encodeURIComponent(id)}/cancel`, { reason });
 }
+
+export interface AppointmentCheckInMeta {
+  patient_id?: string;
+  journey_id?: string;
+  encounter_id?: string;
+  core_transaction_id?: string;
+  queue_token_id?: string;
+}
+
+export interface AppointmentCheckInResult {
+  data: {
+    appointment_id: string;
+    status: string;
+    encounter_id?: string;
+    queue_token_id?: string;
+  };
+  meta: AppointmentCheckInMeta & {
+    request_id?: string;
+    correlation_id?: string;
+  };
+}
+
+export async function checkInAppointment(id: string): Promise<AppointmentCheckInResult> {
+  const response = await apiClient.post<AppointmentCheckInResult>(
+    `${V1}/${encodeURIComponent(id)}/check-in`,
+  );
+  return response.data;
+}

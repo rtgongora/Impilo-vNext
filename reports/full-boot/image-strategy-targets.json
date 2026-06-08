@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T18:23:58.915Z",
+  "generated_at": "2026-06-08T02:28:29.213Z",
   "targets": [
     {
       "id": "ai-model-registry-service",
@@ -84,6 +84,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/audit-ledger-service/Dockerfile OR build-runtime-image-from-jar.sh audit-ledger-service",
       "image_name": "impilo/audit-ledger-service"
+    },
+    {
+      "id": "booking-service",
+      "path": "services/booking-service",
+      "component_name": "booking-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/booking-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/booking-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/booking-service/Dockerfile OR build-runtime-image-from-jar.sh booking-service",
+      "image_name": "impilo/booking-service"
     },
     {
       "id": "butano-fhir",
@@ -1031,6 +1052,27 @@
       "image_name": "impilo/learning-service"
     },
     {
+      "id": "live-service",
+      "path": "services/live-service",
+      "component_name": "live-service",
+      "type": "backend_service",
+      "plane": "experience",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/live-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/live-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/live-service/Dockerfile OR build-runtime-image-from-jar.sh live-service",
+      "image_name": "impilo/live-service"
+    },
+    {
       "id": "llm-orchestration-service",
       "path": "services/llm-orchestration-service",
       "component_name": "llm-orchestration-service",
@@ -1052,6 +1094,27 @@
       "image_name": "impilo/llm-orchestration-service"
     },
     {
+      "id": "madi-service",
+      "path": "services/madi-service",
+      "component_name": "madi-service",
+      "type": "backend_service",
+      "plane": "clinical",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/madi-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/madi-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/madi-service/Dockerfile OR build-runtime-image-from-jar.sh madi-service",
+      "image_name": "impilo/madi-service"
+    },
+    {
       "id": "minio",
       "path": "docker-compose.yml",
       "component_name": "minio",
@@ -1071,6 +1134,27 @@
       "official_chart": "minio/minio",
       "image_build_command": "no local build \u2014 pull/chart deploy",
       "image_name": "minio/minio:latest"
+    },
+    {
+      "id": "msika-apps-service",
+      "path": "services/msika-apps-service",
+      "component_name": "msika-apps-service",
+      "type": "backend_service",
+      "plane": "enterprise",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/msika-apps-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/msika-apps-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/msika-apps-service/Dockerfile OR build-runtime-image-from-jar.sh msika-apps-service",
+      "image_name": "impilo/msika-apps-service"
     },
     {
       "id": "msika-flow-ops",
@@ -1890,6 +1974,27 @@
       "official_chart": null,
       "image_build_command": "docker build -f services/reporting-service/Dockerfile OR build-runtime-image-from-jar.sh reporting-service",
       "image_name": "impilo/reporting-service"
+    },
+    {
+      "id": "rtc-gateway-service",
+      "path": "services/rtc-gateway-service",
+      "component_name": "rtc-gateway-service",
+      "type": "backend_service",
+      "plane": "integration",
+      "classification": "optional_full_boot",
+      "build_required": true,
+      "image_required": false,
+      "image_strategy": "shared-dockerfile-template",
+      "image_strategy_status": "valid",
+      "reason": "Thin JAR-copy Dockerfile \u2014 equivalent to shared template",
+      "classification_confidence": "certain",
+      "dockerfile_path": "services/rtc-gateway-service/Dockerfile",
+      "shared_template": "scripts/build/templates/impilo-jre-runtime.Dockerfile",
+      "jib_module": "services/rtc-gateway-service",
+      "official_image": null,
+      "official_chart": null,
+      "image_build_command": "docker build -f services/rtc-gateway-service/Dockerfile OR build-runtime-image-from-jar.sh rtc-gateway-service",
+      "image_name": "impilo/rtc-gateway-service"
     },
     {
       "id": "rules-service",

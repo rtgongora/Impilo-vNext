@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.DocumentServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
@@ -38,6 +39,20 @@ class ClinicalDocumentsControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.listDocuments("t1", "req-2", "corr-2", 0, 20, null);
         assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void uploadAndIndex_chainsDocumentStoreToPctRecord() throws Exception {
+        ClinicalDocumentsController controller =
+                new ClinicalDocumentsController(new StubPctClient(), new UploadingStubDocumentClient());
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "clinical-bytes".getBytes());
+        ResponseEntity<Map<String, Object>> response = controller.uploadAndIndex(
+                "t1", "pod-1", "req-up", "corr-up",
+                file, "patient-1", "CLINICAL_NOTE", "Referral scan",
+                "OCR indexed", "enc-1", "Dr. Moyo");
+        assertEquals(201, response.getStatusCode().value());
+        assertNotNull(response.getBody().get("data"));
     }
 
     @Test
@@ -77,5 +92,17 @@ class ClinicalDocumentsControllerTest {
 
     private static final class StubDocumentClient extends DocumentServiceClient {
         StubDocumentClient() { super(new RestTemplate(), endpoints()); }
+    }
+
+    private static final class UploadingStubDocumentClient extends DocumentServiceClient {
+        UploadingStubDocumentClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override
+        public JsonNode uploadObject(byte[] bytes, String originalFilename, String mimeType) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("id", "00000000-0000-0000-0000-000000000099");
+            node.put("storageKey", "uploads/clinical/test.pdf");
+            return node;
+        }
     }
 }

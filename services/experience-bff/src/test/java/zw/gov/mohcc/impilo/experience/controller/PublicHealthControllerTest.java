@@ -147,6 +147,18 @@ class PublicHealthControllerTest {
     }
 
     @Test
+    void listAlertsUsesSurveillanceAlertsEndpoint() {
+        CapturingRestTemplate restTemplate = new CapturingRestTemplate();
+        PublicHealthController controller = controller(restTemplate);
+
+        var response = controller.listAlerts("req-alerts");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(restTemplate.lastGetUrl);
+        assertTrue(restTemplate.lastGetUrl.contains("/internal/v1/surveillance/alerts"));
+    }
+
+    @Test
     void acknowledgeAlertUsesSurveillanceAlertsEndpoint() {
         CapturingRestTemplate restTemplate = new CapturingRestTemplate();
         PublicHealthController controller = controller(restTemplate);

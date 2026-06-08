@@ -29,6 +29,7 @@ import {
   useLogEmergencyAction,
   type EmergencyActivationRow,
 } from "@/hooks/queries/useEmergency";
+import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
@@ -174,6 +175,12 @@ export default function EmergencyDepartmentPage() {
             </Link>
           </div>
 
+          <BreakGlassRequestPanel
+            resourceType="EMERGENCY_DEPARTMENT"
+            title="ED break-glass override"
+            description="Use when an emergency protocol requires immediate access outside normal policy. Supervisor review is mandatory."
+          />
+
           {error && (
             <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -298,6 +305,7 @@ export default function EmergencyDepartmentPage() {
                     {rows.map((row, idx) => {
                       const id = asString(row.id);
                       const pid = row.patient_id ? asString(row.patient_id) : "";
+                      const eid = row.encounter_id ? asString(row.encounter_id) : "";
                       const active = asString(row.status).toUpperCase() === "ACTIVE";
                       return (
                         <tr key={id || `activation-${idx}`} className="hover:bg-gray-50">
@@ -315,13 +323,29 @@ export default function EmergencyDepartmentPage() {
                           <td className="px-4 py-2 text-gray-600">{asString(row.location) || "—"}</td>
                           <td className="px-4 py-2">
                             {pid ? (
-                              <Link
-                                href={`/ehr/${pid}/summary`}
-                                className="inline-flex items-center gap-1 font-medium text-impilo-600 hover:underline"
-                              >
-                                <User className="h-3.5 w-3.5" aria-hidden />
-                                Chart
-                              </Link>
+                              <div className="flex flex-col gap-1">
+                                <Link
+                                  href={`/ehr/${pid}/summary`}
+                                  className="inline-flex items-center gap-1 font-medium text-impilo-600 hover:underline"
+                                >
+                                  <User className="h-3.5 w-3.5" aria-hidden />
+                                  Chart
+                                </Link>
+                                {eid ? (
+                                  <Link
+                                    href={`/ehr/${pid}/encounter/${eid}`}
+                                    className="text-xs font-medium text-slate-600 hover:underline"
+                                  >
+                                    Encounter
+                                  </Link>
+                                ) : null}
+                                <Link
+                                  href={`/ehr/${pid}/emergency`}
+                                  className="text-xs font-medium text-red-700 hover:underline"
+                                >
+                                  ED workspace
+                                </Link>
+                              </div>
                             ) : (
                               <span className="text-gray-400">—</span>
                             )}

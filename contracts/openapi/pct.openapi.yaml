@@ -78,9 +78,6 @@ tags:
 # Paths
 # ===========================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Work Sessions
-  # -------------------------------------------------------------------------
   /v1/work/start:
     post:
       operationId: startShift
@@ -88,7 +85,8 @@ paths:
       description: |
         Creates a new active work session for the authenticated clinician
         at the specified facility and workspace.
-      tags: [Work]
+      tags:
+        - Work
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -118,12 +116,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /v1/work/end:
     post:
       operationId: endShift
       summary: End the current work shift
-      tags: [Work]
+      tags:
+        - Work
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -146,7 +144,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /v1/work/context:
     get:
       operationId: getWorkContext
@@ -154,7 +151,8 @@ paths:
       description: |
         Returns the current work context including active shift details,
         facility, and workspace information.
-      tags: [Work]
+      tags:
+        - Work
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -170,10 +168,6 @@ paths:
                 $ref: '#/components/schemas/ApiResponseWorkContext'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
-  # -------------------------------------------------------------------------
-  # Journeys
-  # -------------------------------------------------------------------------
   /v1/journeys/start:
     post:
       operationId: startJourney
@@ -182,7 +176,8 @@ paths:
         Creates a new journey for a patient arriving at the facility.
         The journey tracks the patient through triage, queuing, encounters,
         admission, and discharge/death.
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -208,12 +203,12 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/journeys/{id}:
     get:
       operationId: getJourney
       summary: Get journey by ID
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -238,7 +233,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/journeys/{id}/triage:
     post:
       operationId: recordTriage
@@ -246,7 +240,8 @@ paths:
       description: |
         Records the triage assessment including acuity level, vitals,
         and notes. Transitions the journey to TRIAGED state.
-      tags: [Triage]
+      tags:
+        - Triage
       parameters:
         - name: id
           in: path
@@ -280,7 +275,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/journeys/{id}/route:
     post:
       operationId: routePatient
@@ -288,7 +282,8 @@ paths:
       description: |
         Routes the patient to the specified queue. Assigns a token number
         and transitions the journey to QUEUED state.
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -322,15 +317,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Queues
-  # -------------------------------------------------------------------------
   /v1/queues:
     get:
       operationId: getQueues
       summary: List queues for a facility/workspace
-      tags: [Queue]
+      tags:
+        - Queue
       parameters:
         - name: facilityId
           in: query
@@ -356,12 +348,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseQueueArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/queues/{queueId}/enqueue:
     post:
       operationId: enqueuePatient
       summary: Manually enqueue a patient
-      tags: [Queue]
+      tags:
+        - Queue
       parameters:
         - name: queueId
           in: path
@@ -393,7 +385,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/queues/{queueId}/call-next:
     post:
       operationId: callNextPatient
@@ -401,7 +392,8 @@ paths:
       description: |
         Dequeues the highest-priority waiting patient, marks them as CALLED,
         and returns the queue item with token number.
-      tags: [Queue]
+      tags:
+        - Queue
       parameters:
         - name: queueId
           in: path
@@ -430,12 +422,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /v1/queues/{queueId}/items:
     get:
       operationId: getQueueItems
       summary: List items in a queue
-      tags: [Queue]
+      tags:
+        - Queue
       parameters:
         - name: queueId
           in: path
@@ -459,10 +451,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Queue Items
-  # -------------------------------------------------------------------------
   /v1/queue-items/{itemId}/status:
     post:
       operationId: updateQueueItemStatus
@@ -470,7 +458,8 @@ paths:
       description: |
         Transition a queue item to a new status (e.g., CALLED -> IN_SERVICE,
         IN_SERVICE -> COMPLETED, CALLED -> NO_SHOW).
-      tags: [QueueItem]
+      tags:
+        - QueueItem
       parameters:
         - name: itemId
           in: path
@@ -502,12 +491,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/queue-items/{itemId}/transfer:
     post:
       operationId: transferQueueItem
       summary: Transfer a queue item to another queue
-      tags: [QueueItem]
+      tags:
+        - QueueItem
       parameters:
         - name: itemId
           in: path
@@ -539,10 +528,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Encounters
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/encounter/start:
     post:
       operationId: startEncounter
@@ -550,7 +535,8 @@ paths:
       description: |
         Creates a new encounter associated with the journey. Transitions
         the journey to ENCOUNTER_STARTED state.
-      tags: [Encounter]
+      tags:
+        - Encounter
       parameters:
         - name: id
           in: path
@@ -588,12 +574,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /v1/encounters/{id}/complete:
     post:
       operationId: completeEncounter
       summary: Complete a clinical encounter
-      tags: [Encounter]
+      tags:
+        - Encounter
       parameters:
         - name: id
           in: path
@@ -618,12 +604,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/encounters/{id}:
     get:
       operationId: getEncounter
       summary: Get encounter details
-      tags: [Encounter]
+      tags:
+        - Encounter
       parameters:
         - name: id
           in: path
@@ -648,7 +634,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/encounters/{id}/pathway-protocol:
     patch:
       operationId: updateEncounterPathwayProtocol
@@ -656,7 +641,8 @@ paths:
       description: |
         Updates linkage metadata for care pathway/protocol selection on an encounter.
         Pathway execution remains owned by guidance/rules/clinical-knowledge services.
-      tags: [Encounter]
+      tags:
+        - Encounter
       parameters:
         - name: id
           in: path
@@ -689,14 +675,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/patient/{cpid}/timeline:
     get:
       operationId: getPatientTimeline
       summary: Get patient journey timeline
       description: |
         Returns a chronological timeline of all journey events for the patient.
-      tags: [Patient]
+      tags:
+        - Patient
       parameters:
         - name: cpid
           in: path
@@ -704,7 +690,7 @@ paths:
           description: Client Pseudonymous ID (CPID)
           schema:
             type: string
-            example: "CPID-00000001"
+            example: CPID-00000001
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
         - $ref: '#/components/parameters/X-Actor-Id'
@@ -721,10 +707,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Admissions
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/admit:
     post:
       operationId: requestAdmission
@@ -732,7 +714,8 @@ paths:
       description: |
         Initiates an admission request for a patient journey. Creates an
         admission record in PENDING_APPROVAL state.
-      tags: [Admission]
+      tags:
+        - Admission
       parameters:
         - name: id
           in: path
@@ -766,12 +749,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/admissions/{id}/approve:
     post:
       operationId: approveAdmission
       summary: Approve an admission request
-      tags: [Admission]
+      tags:
+        - Admission
       parameters:
         - name: id
           in: path
@@ -796,7 +779,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/admissions/{id}/admit:
     post:
       operationId: admitPatient
@@ -804,7 +786,8 @@ paths:
       description: |
         Transitions the admission from APPROVED to ADMITTED. The journey
         state moves to ADMITTED.
-      tags: [Admission]
+      tags:
+        - Admission
       parameters:
         - name: id
           in: path
@@ -829,12 +812,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/admissions/{id}/assign-bed:
     post:
       operationId: assignBed
       summary: Assign a bed to an admitted patient
-      tags: [Admission]
+      tags:
+        - Admission
       parameters:
         - name: id
           in: path
@@ -873,12 +856,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
   /v1/admissions/{id}/transfer:
     post:
       operationId: transferAdmission
       summary: Transfer an admitted patient to another ward
-      tags: [Admission]
+      tags:
+        - Admission
       parameters:
         - name: id
           in: path
@@ -911,10 +894,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Discharge
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/discharge/start:
     post:
       operationId: startDischarge
@@ -922,7 +901,8 @@ paths:
       description: |
         Creates a discharge case that tracks blockers (pending labs,
         pharmacy clearance, etc.) before the patient can be discharged.
-      tags: [Discharge]
+      tags:
+        - Discharge
       parameters:
         - name: id
           in: path
@@ -948,12 +928,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/discharge/{caseId}/status:
     get:
       operationId: getDischargeStatus
       summary: Get discharge case status
-      tags: [Discharge]
+      tags:
+        - Discharge
       parameters:
         - name: caseId
           in: path
@@ -978,12 +958,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/discharge/{caseId}/clear-blocker:
     post:
       operationId: clearDischargeBlocker
       summary: Clear a discharge blocker
-      tags: [Discharge]
+      tags:
+        - Discharge
       parameters:
         - name: caseId
           in: path
@@ -1016,7 +996,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/discharge/{caseId}/complete:
     post:
       operationId: completeDischarge
@@ -1024,7 +1003,8 @@ paths:
       description: |
         Marks the discharge as complete. All blockers must be resolved
         before this can succeed. The journey transitions to DISCHARGED.
-      tags: [Discharge]
+      tags:
+        - Discharge
       parameters:
         - name: caseId
           in: path
@@ -1055,10 +1035,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Death Registration
-  # -------------------------------------------------------------------------
   /v1/journeys/{id}/death/record:
     post:
       operationId: recordDeath
@@ -1066,7 +1042,8 @@ paths:
       description: |
         Records patient death and creates a death case for UBOMI
         notification processing.
-      tags: [Death]
+      tags:
+        - Death
       parameters:
         - name: id
           in: path
@@ -1100,7 +1077,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/death/{caseId}/ubomi-status:
     post:
       operationId: updateUbomiStatus
@@ -1108,7 +1084,8 @@ paths:
       description: |
         Updates the UBOMI (civil registration) status for a death case
         (e.g., SUBMITTED, ACCEPTED, REJECTED).
-      tags: [Death]
+      tags:
+        - Death
       parameters:
         - name: caseId
           in: path
@@ -1141,12 +1118,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/death/{caseId}/complete:
     post:
       operationId: completeDeathCase
       summary: Complete the death registration case
-      tags: [Death]
+      tags:
+        - Death
       parameters:
         - name: caseId
           in: path
@@ -1171,10 +1148,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
-  # -------------------------------------------------------------------------
-  # Control Tower / Ops
-  # -------------------------------------------------------------------------
   /v1/ops/control-tower:
     get:
       operationId: getControlTower
@@ -1182,7 +1155,8 @@ paths:
       description: |
         Returns real-time operational analytics including queue stats,
         admission occupancy, journey state distribution, and wait times.
-      tags: [ControlTower]
+      tags:
+        - ControlTower
       parameters:
         - name: facilityId
           in: query
@@ -1203,12 +1177,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseControlTowerData'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/ops/bottlenecks:
     get:
       operationId: getBottlenecks
       summary: Get active bottleneck alerts
-      tags: [ControlTower]
+      tags:
+        - ControlTower
       parameters:
         - name: facilityId
           in: query
@@ -1229,12 +1203,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseBottleneckArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/ops/queues/telemetry:
     get:
       operationId: getQueueTelemetry
       summary: Get queue telemetry time-series data
-      tags: [ControlTower]
+      tags:
+        - ControlTower
       parameters:
         - name: facilityId
           in: query
@@ -1255,12 +1229,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseQueueTelemetryArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/ops/telemedicine:
     get:
       operationId: getTelemedicineOps
       summary: Get telemedicine SLA and backlog snapshot
-      tags: [ControlTower]
+      tags:
+        - ControlTower
       parameters:
         - name: facilityId
           in: query
@@ -1275,12 +1249,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals:
     get:
       operationId: listReferrals
       summary: List referrals by patient
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: patientId
           in: query
@@ -1298,7 +1272,8 @@ paths:
     post:
       operationId: createReferral
       summary: Create referral
-      tags: [Journey]
+      tags:
+        - Journey
       requestBody:
         required: true
         content:
@@ -1314,12 +1289,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/incoming:
     get:
       operationId: listIncomingReferrals
       summary: List incoming referrals for facility
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: facilityId
           in: query
@@ -1339,12 +1314,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}:
     get:
       operationId: getReferral
       summary: Get referral by id
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1359,12 +1334,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/stage:
     put:
       operationId: updateReferralStage
       summary: Update referral stage and metadata
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1386,12 +1361,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/consent:
     post:
       operationId: updateReferralConsent
       summary: Update referral consent metadata
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1413,12 +1388,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/submit:
     post:
       operationId: submitReferral
       summary: Submit referral for specialist queue
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1433,12 +1408,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/accept:
     post:
       operationId: acceptReferral
       summary: Accept referral
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1453,12 +1428,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/respond:
     post:
       operationId: respondReferral
       summary: Respond to referral
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1480,12 +1455,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/referrals/{id}/complete:
     post:
       operationId: completeReferral
       summary: Complete referral
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1507,12 +1482,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/telehealth:
     get:
       operationId: listTelehealthSessions
       summary: List facility telehealth sessions
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: facilityId
           in: query
@@ -1535,7 +1510,8 @@ paths:
     post:
       operationId: createTelehealthSession
       summary: Create telehealth session
-      tags: [Journey]
+      tags:
+        - Journey
       requestBody:
         required: true
         content:
@@ -1549,12 +1525,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TelehealthSessionEnvelope'
-
   /v1/telehealth/{id}:
     get:
       operationId: getTelehealthSession
       summary: Get telehealth session
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1568,12 +1544,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TelehealthSessionEnvelope'
-
   /v1/telehealth/{id}/join:
     post:
       operationId: joinTelehealthSession
       summary: Join telehealth session
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1587,12 +1563,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TelehealthSessionEnvelope'
-
   /v1/telehealth/{id}/end:
     post:
       operationId: endTelehealthSession
       summary: End telehealth session
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: id
           in: path
@@ -1613,12 +1589,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TelehealthSessionEnvelope'
-
   /v1/patient/{cpid}/telehealth:
     get:
       operationId: listPatientTelehealthSessions
       summary: List telehealth sessions for patient
-      tags: [Journey]
+      tags:
+        - Journey
       parameters:
         - name: cpid
           in: path
@@ -1638,15 +1614,12 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-
-  # -------------------------------------------------------------------------
-  # Tasks
-  # -------------------------------------------------------------------------
   /v1/tasks:
     post:
       operationId: createTask
       summary: Create a new task
-      tags: [Task]
+      tags:
+        - Task
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1670,12 +1643,12 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/tasks/{taskId}/complete:
     post:
       operationId: completeTask
       summary: Mark a task as completed
-      tags: [Task]
+      tags:
+        - Task
       parameters:
         - name: taskId
           in: path
@@ -1699,12 +1672,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-
   /v1/tasks/my:
     get:
       operationId: getMyTasks
       summary: Get tasks assigned to the current actor
-      tags: [Task]
+      tags:
+        - Task
       parameters:
         - $ref: '#/components/parameters/X-Tenant-Id'
         - $ref: '#/components/parameters/X-Correlation-Id'
@@ -1720,12 +1693,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseTaskArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/tasks/workspace/{workspaceId}:
     get:
       operationId: getWorkspaceTasks
       summary: Get tasks for a workspace
-      tags: [Task]
+      tags:
+        - Task
       parameters:
         - name: workspaceId
           in: path
@@ -1746,12 +1719,12 @@ paths:
                 $ref: '#/components/schemas/ApiResponseTaskArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
-
   /v1/tasks/journey/{journeyId}:
     get:
       operationId: getJourneyTasks
       summary: Get tasks for a journey
-      tags: [Task]
+      tags:
+        - Task
       parameters:
         - name: journeyId
           in: path
@@ -1773,10 +1746,589 @@ paths:
                 $ref: '#/components/schemas/ApiResponseTaskArray'
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /journeys/{id}/admit:
+    post:
+      operationId: pct_post__journeys_id_admit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /admissions/{id}/approve:
+    post:
+      operationId: pct_post__admissions_id_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /admissions/{id}/admit:
+    post:
+      operationId: pct_post__admissions_id_admit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /admissions/{id}/assign-bed:
+    post:
+      operationId: pct_post__admissions_id_assign_bed
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    get:
+      operationId: pct_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: pct_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: pct_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/sign:
+    post:
+      operationId: pct_post__id_sign
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /journeys/{id}/death/record:
+    post:
+      operationId: pct_post__journeys_id_death_record
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /death/{caseId}/ubomi-status:
+    post:
+      operationId: pct_post__death_caseId_ubomi_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /death/{caseId}/complete:
+    post:
+      operationId: pct_post__death_caseId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /journeys/{id}/discharge/start:
+    post:
+      operationId: pct_post__journeys_id_discharge_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /discharge/{caseId}/status:
+    get:
+      operationId: pct_get__discharge_caseId_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /discharge/{caseId}/clear-blocker:
+    post:
+      operationId: pct_post__discharge_caseId_clear_blocker
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /discharge/{caseId}/complete:
+    post:
+      operationId: pct_post__discharge_caseId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /journeys/{id}/encounter/start:
+    post:
+      operationId: pct_post__journeys_id_encounter_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /encounters/{id}/complete:
+    post:
+      operationId: pct_post__encounters_id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /encounters/{id}/pathway-protocol:
+    patch:
+      operationId: pct_patch__encounters_id_pathway_protocol
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /encounters/{id}:
+    get:
+      operationId: pct_get__encounters_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{cpid}/timeline:
+    get:
+      operationId: pct_get__patient_cpid_timeline
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /start:
+    post:
+      operationId: pct_post__start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/triage:
+    post:
+      operationId: pct_post__id_triage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/route:
+    post:
+      operationId: pct_post__id_route
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{cpid}:
+    get:
+      operationId: pct_get__patient_cpid_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /control-tower:
+    get:
+      operationId: pct_get__control_tower
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /bottlenecks:
+    get:
+      operationId: pct_get__bottlenecks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queues/telemetry:
+    get:
+      operationId: pct_get__queues_telemetry
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{queueId}/enqueue:
+    post:
+      operationId: pct_post__queueId_enqueue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{queueId}/call-next:
+    post:
+      operationId: pct_post__queueId_call_next
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{queueId}/items:
+    get:
+      operationId: pct_get__queueId_items
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemId}/status:
+    post:
+      operationId: pct_post__itemId_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{itemId}/transfer:
+    post:
+      operationId: pct_post__itemId_transfer
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /incoming:
+    get:
+      operationId: pct_get__incoming
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /encounter/{encounterId}:
+    get:
+      operationId: pct_get__encounter_encounterId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/stage:
+    put:
+      operationId: pct_put__id_stage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/consent:
+    post:
+      operationId: pct_post__id_consent
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/submit:
+    post:
+      operationId: pct_post__id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/accept:
+    post:
+      operationId: pct_post__id_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/respond:
+    post:
+      operationId: pct_post__id_respond
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/complete:
+    post:
+      operationId: pct_post__id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{taskId}/complete:
+    post:
+      operationId: pct_post__taskId_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /my:
+    get:
+      operationId: pct_get__my
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /workspace/{workspaceId}:
+    get:
+      operationId: pct_get__workspace_workspaceId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /journey/{journeyId}:
+    get:
+      operationId: pct_get__journey_journeyId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telehealth:
+    post:
+      operationId: pct_post__telehealth
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: pct_get__telehealth
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telehealth/{id}:
+    get:
+      operationId: pct_get__telehealth_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telehealth/{id}/join:
+    post:
+      operationId: pct_post__telehealth_id_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /telehealth/{id}/end:
+    post:
+      operationId: pct_post__telehealth_id_end
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /patient/{cpid}/telehealth:
+    get:
+      operationId: pct_get__patient_cpid_telehealth
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals:
+    get:
+      operationId: pct_get__referrals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: pct_post__referrals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/incoming:
+    get:
+      operationId: pct_get__referrals_incoming
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}:
+    get:
+      operationId: pct_get__referrals_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/stage:
+    put:
+      operationId: pct_put__referrals_id_stage
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/consent:
+    post:
+      operationId: pct_post__referrals_id_consent
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/submit:
+    post:
+      operationId: pct_post__referrals_id_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/accept:
+    post:
+      operationId: pct_post__referrals_id_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/respond:
+    post:
+      operationId: pct_post__referrals_id_respond
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /referrals/{id}/complete:
+    post:
+      operationId: pct_post__referrals_id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/telemedicine:
+    get:
+      operationId: pct_get__ops_telemedicine
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /end:
+    post:
+      operationId: pct_post__end
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /context:
+    get:
+      operationId: pct_get__context
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: pct_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: pct_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pct-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
-# ===========================================================================
-# Components
-# ===========================================================================
 components:
   # -------------------------------------------------------------------------
   # Security Schemes

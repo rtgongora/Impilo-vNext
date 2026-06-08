@@ -45,6 +45,7 @@ waves:
       - forms-service
       - guidance-service
       - inpatient-service
+      - madi-service
       - inventory-elmis-adapter
       - inventory-service
       - oros-service
@@ -97,10 +98,13 @@ waves:
       - security-hardening-service
       - support-service
       - workflow-service
+      - rtc-gateway-service
   - id: 6
     name: optional-experience
     plane: experience
     services:
+      - booking-service
+      - live-service
       - butano-web
       - community-service
       - costa-console
@@ -135,6 +139,7 @@ waves:
       - credential-verification-service
       - general-ledger-service
       - hr-payroll-service
+      - msika-apps-service
       - msika-flow-service
       - msika-service
       - mushe-wallet-service

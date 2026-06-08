@@ -32,6 +32,10 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
+import { EncounterOrchestrationRail } from "@/components/encounter/EncounterOrchestrationRail";
+import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrdersPanel";
+import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
+import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
 import { EncounterVitalsGuidance } from "@/components/clinical/EncounterVitalsGuidance";
 import {
   ActiveDataEntryLayout,
@@ -413,6 +417,32 @@ export default function EncounterPage() {
 
             {!structuredFormFocus && <PatientJourneyContextPanel patientId={patientId} variant="compact" />}
 
+            {!structuredFormFocus && (
+              <EncounterOrchestrationRail encounterId={encounterId} patientId={patientId} />
+            )}
+
+            {!structuredFormFocus && isActive && isClinical && (
+              <>
+                <EncounterLabOrdersPanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
+                  disabled={!isActive}
+                />
+                <EncounterImagingOrdersPanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
+                  disabled={!isActive}
+                />
+                <EncounterDischargePanel
+                  patientId={patientId}
+                  encounterId={encounterId}
+                  disabled={!isActive}
+                />
+              </>
+            )}
+
             <ClinicalReviewHeader
               badge="Encounter closure"
               badgeIcon={Stethoscope}
@@ -421,7 +451,7 @@ export default function EncounterPage() {
               facilityName={facility?.name}
               encounterLabel={`${encounter.attributes.encounterType} since ${new Date(encounter.attributes.startedAt).toLocaleString()}`}
               actions={[
-                { href: `/ehr/${patientId}/orders`, label: "Orders", icon: ClipboardList },
+                { href: `/ehr/${patientId}/orders?encounterId=${encounterId}`, label: "Orders", icon: ClipboardList },
                 { href: `/ehr/${patientId}/notes`, label: "Notes", icon: FileText, tone: "secondary" },
                 { href: `/pharmacy/prescriptions?patientId=${patientId}&encounterId=${encounterId}&source=encounter`, label: "Pharmacy", icon: Pill, tone: "secondary" },
                 { href: `/ehr/${patientId}/consults`, label: "Consults", icon: ArrowUpRight, tone: "secondary" },
@@ -559,7 +589,7 @@ export default function EncounterPage() {
                 {isActive && isClinical && (
                   <div className="flex gap-2">
                     <Link
-                      href={`/ehr/${patientId}/orders`}
+                      href={`/ehr/${patientId}/orders?encounterId=${encounterId}`}
                       className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-medium rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1"
                     >
                       <ClipboardList className="w-3 h-3" /> Orders

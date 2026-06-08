@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { Card, CardBody, Button, TextField, RxCard, ErrorState } from "@impilo/mobile-design-system";
-import { createPrescription, getPrescriptionsForEncounter } from "../../services/prescriptionService";
+import { createPrescription, cancelPrescription, getPrescriptionsForPatient } from "../../services/prescriptionService";
 import { checkDrugInteractions } from "../../services/queueService";
 import { encounterStore, useEncounterStore } from "../../stores/encounterStore";
 import type { Prescription } from "../../types";
@@ -90,16 +90,22 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
   const [duration, setDuration] = useState("");
   const [quantity, setQuantity] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [route, setRoute] = useState("PO");
+  const [indication, setIndication] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [interactionNote, setInteractionNote] = useState<string | null>(null);
   const [interactionWarnings, setInteractionWarnings] = useState<string[]>([]);
 
   useEffect(() => {
-    getPrescriptionsForEncounter(encounterId)
-      .then((rxList) => rxList.forEach((rx) => encounterStore.getState().addPrescription(rx)))
+    getPrescriptionsForPatient(patientId)
+      .then((rxList) =>
+        rxList
+          .filter((rx) => rx.encounterId === encounterId)
+          .forEach((rx) => encounterStore.getState().addPrescription(rx))
+      )
       .catch(() => {});
-  }, [encounterId]);
+  }, [encounterId, patientId]);
 
   const handleCreate = useCallback(async () => {
     if (!medication.trim() || !dosage.trim()) return;
@@ -146,6 +152,8 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
         duration,
         quantity: parseInt(quantity, 10) || 0,
         instructions: instructions || undefined,
+        route: route || "PO",
+        indication: indication || undefined,
       });
       encounterStore.getState().addPrescription(rx);
       setMedication("");
@@ -171,6 +179,8 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
             <TextField label="Frequency" value={frequency} onChange={setFrequency} testID="rx-frequency" />
             <TextField label="Duration" value={duration} onChange={setDuration} testID="rx-duration" />
             <TextField label="Quantity" value={quantity} onChange={setQuantity} testID="rx-quantity" />
+            <TextField label="Route" value={route} onChange={setRoute} testID="rx-route" />
+            <TextField label="Indication" value={indication} onChange={setIndication} testID="rx-indication" />
             <TextField label="Instructions" value={instructions} onChange={setInstructions} testID="rx-instructions" />
           </View>
           <View style={styles.buttonContainer}>
@@ -195,15 +205,31 @@ export function PrescriptionPanel({ encounterId, patientId }: PrescriptionPanelP
 
       <View style={styles.prescriptionsList}>
         {prescriptions.map((rx) => (
-          <RxCard
-            key={rx.id}
-            medicationName={rx.medication}
-            dosage={rx.dosage}
-            frequency={rx.frequency}
-            status={
-              rx.status === "DISPENSED" || rx.status === "EXPIRED" ? "COMPLETED" : rx.status
-            }
-          />
+          <View key={rx.id} style={styles.rxRow}>
+            <RxCard
+              medicationName={rx.medication}
+              dosage={rx.dosage}
+              frequency={rx.frequency}
+              status={
+                rx.status === "DISPENSED" || rx.status === "EXPIRED" ? "COMPLETED" : rx.status
+              }
+            />
+            {rx.status === "ACTIVE" ? (
+              <Button
+                title="Cancel"
+                variant="outline"
+                onPress={async () => {
+                  try {
+                    const cancelled = await cancelPrescription(rx.id);
+                    encounterStore.getState().addPrescription(cancelled);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Failed to cancel prescription");
+                  }
+                }}
+                testID={`cancel-rx-${rx.id}`}
+              />
+            ) : null}
+          </View>
         ))}
       </View>
     </View>
@@ -221,6 +247,10 @@ const styles = StyleSheet.create({
   },
   prescriptionsList: {
     marginTop: 12,
+    gap: 8,
+  },
+  rxRow: {
+    gap: 6,
   },
   interactionInfo: {
     fontSize: 12,

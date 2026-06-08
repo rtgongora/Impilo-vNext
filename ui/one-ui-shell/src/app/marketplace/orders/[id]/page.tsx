@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useMarketplaceOrder } from "@/hooks/queries/useMarketplace";
 import { useCommerceOrder, useCommerceOrderAction, useCommerceOrderTracking } from "@/hooks/queries/useCommerceFlow";
+import { CommerceDeliveryMapPanel } from "@/components/maps/CommerceDeliveryMapPanel";
 
 const STATUS_TIMELINE = ["PENDING", "APPROVED", "SHIPPED", "DELIVERED"];
 const STATUS_ICON: Record<string, typeof Clock> = {
@@ -86,6 +87,8 @@ export default function OrderDetailPage() {
                 </div>
               </div>
             </div>
+
+            <CommerceDeliveryMapPanel order={commerceOrder} trackingPayload={trackingQ.data} />
 
             {trackingQ.data ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

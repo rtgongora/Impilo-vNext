@@ -37,6 +37,10 @@ vi.mock("@/hooks/queries/useEmergency", () => ({
   useEndEmergency: () => mockUseEndEmergency(),
 }));
 
+vi.mock("@/components/trust/BreakGlassRequestPanel", () => ({
+  BreakGlassRequestPanel: () => <div data-testid="break-glass-request-panel" />,
+}));
+
 vi.mock("@/hooks/useAuthStore", () => ({
   useAuthStore: () => ({
     user: { id: "actor-1", displayName: "Test Clinician" },

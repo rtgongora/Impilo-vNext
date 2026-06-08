@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { TelemedicineEncounterOrchestrationRail } from "@/components/telemedicine/TelemedicineEncounterOrchestrationRail";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
@@ -197,6 +199,16 @@ export default function TelemedicinePage() {
             : "Select a facility to start or join telemedicine sessions"
         }
       >
+        <div className="mb-4">
+          <TelemedicineEncounterOrchestrationRail />
+        </div>
+        <div className="mb-6">
+          <FacilitiesGeoMapPanel
+            title="Outreach facility map"
+            subtitle="Nearest governed facilities for telemedicine outreach context"
+            size={60}
+          />
+        </div>
         {!facility ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
             <AlertCircle className="mx-auto mb-3 h-10 w-10 text-amber-600" />
@@ -213,6 +225,15 @@ export default function TelemedicinePage() {
           </div>
         ) : (
           <>
+            <div className="mb-4 flex justify-end">
+              <Link
+                href="/telemedicine/analytics"
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-impilo-200"
+              >
+                <Calendar className="h-4 w-4 text-impilo-500" />
+                Lifecycle SLA analytics
+              </Link>
+            </div>
             <div className="mb-6 grid gap-4 lg:grid-cols-3">
               <div className="rounded-2xl border border-impilo-200 bg-impilo-50 p-5">
                 <div className="mb-3 flex items-center gap-2">

@@ -10,6 +10,7 @@ import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +62,10 @@ class EncounterControllerTest {
         ResponseEntity<Map<String, Object>> response =
                 controller.createEncounter("t1", "pod-1", "req-3", "corr-3", null, request);
         assertEquals(201, response.getStatusCode().value());
-        assertEquals("req-3", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
+        Map<?, ?> meta = (Map<?, ?>) response.getBody().get("meta");
+        assertEquals("req-3", meta.get("request_id"));
+        assertEquals("encounter-1", meta.get("core_transaction_id"));
+        assertEquals("journey-1", meta.get("journey_id"));
     }
 
     @Test
@@ -86,6 +90,29 @@ class EncounterControllerTest {
     }
 
     @Test
+    void dischargeEncounter_forwardsInstructionFieldsToPct() {
+        StubPctClient pct = new StubPctClient();
+        EncounterController controller = new EncounterController(pct);
+        Map<String, Object> body = Map.of(
+                "dischargeType", "DISCHARGE",
+                "discharge_diagnosis", "Acute bronchitis",
+                "follow_up_instructions", "Review in 7 days",
+                "patient_instructions", "Rest and fluids");
+        ResponseEntity<Map<String, Object>> response =
+                controller.dischargeEncounter("1", "tenant-1", "req-5b", "corr-5b", null, body);
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> meta = (Map<String, Object>) response.getBody().get("meta");
+        assertEquals("Acute bronchitis", meta.get("discharge_diagnosis"));
+        assertEquals("Review in 7 days", meta.get("follow_up_instructions"));
+        assertEquals("Rest and fluids", meta.get("patient_instructions"));
+        assertEquals("Acute bronchitis", pct.lastDischargeBody.get("dischargeDiagnosis"));
+        assertEquals("Review in 7 days", pct.lastDischargeBody.get("followUpInstructions"));
+        assertEquals("encounter-1", meta.get("core_transaction_id"));
+        assertEquals("1", meta.get("encounter_id"));
+    }
+
+    @Test
     void updateEncounterPathwayProtocol_returnsOk() {
         EncounterController controller = new EncounterController(new StubPctClient());
         ResponseEntity<Map<String, Object>> response = controller.updateEncounterPathwayProtocol(
@@ -104,6 +131,8 @@ class EncounterControllerTest {
     }
 
     private static final class StubPctClient extends PctServiceClient {
+        Map<String, Object> lastDischargeBody = new LinkedHashMap<>();
+
         StubPctClient() { super(new RestTemplate(), endpoints(), mapper); }
 
         @Override public JsonNode getPatientTimeline(String cpid) {
@@ -146,10 +175,19 @@ class EncounterControllerTest {
         }
 
         @Override public JsonNode startDischarge(String journeyId, String dischargeType) {
-            return mapper.createObjectNode()
-                    .put("journeyId", journeyId)
-                    .put("status", "INITIATED")
-                    .put("dischargeType", dischargeType);
+            return startDischarge(journeyId, Map.of("dischargeType", dischargeType));
+        }
+
+        @Override public JsonNode startDischarge(String journeyId, Map<String, Object> body) {
+            lastDischargeBody = new LinkedHashMap<>(body);
+            ObjectNode node = mapper.createObjectNode();
+            node.put("journeyId", journeyId);
+            node.put("status", "INITIATED");
+            Object dischargeType = body.get("dischargeType");
+            if (dischargeType != null) {
+                node.put("dischargeType", String.valueOf(dischargeType));
+            }
+            return node;
         }
 
         @Override public JsonNode updateEncounterPathwayProtocol(Long encounterId, String pathwayRef, String protocolRef) {

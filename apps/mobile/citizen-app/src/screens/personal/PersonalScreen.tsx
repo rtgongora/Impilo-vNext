@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Screen, Header } from "@impilo/mobile-design-system";
 import { ProfileSection } from "./ProfileSection";
 import { AppointmentsSection } from "./AppointmentsSection";
+import { BookingsSection } from "./BookingsSection";
 import { PrescriptionsSection } from "./PrescriptionsSection";
 import { ResultsSection } from "./ResultsSection";
 import { CoverageSection } from "./CoverageSection";
@@ -39,6 +40,9 @@ import { PatientConsentScreen } from "./PatientConsentScreen";
 import { SupportScreen } from "../support/SupportScreen";
 import { NhumeTrackingScreen } from "../NhumeTrackingScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
+import { MadiDonorHubScreen } from "../madi/MadiDonorHubScreen";
+import { LiveDiscoverScreen } from "../live/LiveDiscoverScreen";
+import { appStore, useAppStore } from "../../stores/appStore";
 
 type PersonalTab =
   | "profile"
@@ -49,6 +53,7 @@ type PersonalTab =
   | "referrals"
   | "discover-providers"
   | "care-plans"
+  | "bookings"
   | "appointments"
   | "prescriptions"
   | "results"
@@ -78,7 +83,9 @@ type PersonalTab =
   | "terms"
   | "consent"
   | "support"
-  | "prod-ready";
+  | "prod-ready"
+  | "madi-donor"
+  | "impilo-live";
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -91,6 +98,7 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "referrals", label: "Referrals", icon: "people" },
   { id: "discover-providers", label: "Find Provider", icon: "search" },
   { id: "care-plans", label: "Care Plans", icon: "clipboard" },
+  { id: "bookings", label: "My Bookings", icon: "document-text" },
   { id: "appointments", label: "Appointments", icon: "calendar" },
   { id: "prescriptions", label: "Prescriptions", icon: "receipt" },
   { id: "results", label: "Results", icon: "flask" },
@@ -98,6 +106,8 @@ const PERSONAL_TABS: Array<{ id: PersonalTab; label: string; icon: IoniconsName 
   { id: "reminders", label: "Reminders", icon: "alarm" },
   { id: "timeline", label: "Timeline", icon: "time" },
   { id: "wellness", label: "Wellness", icon: "fitness" },
+  { id: "madi-donor", label: "Blood Donor", icon: "heart" },
+  { id: "impilo-live", label: "Impilo Live", icon: "radio" },
   { id: "prod-ready", label: "Prod Ready", icon: "rocket" },
   { id: "finance", label: "Finance", icon: "cash" },
   { id: "challenges", label: "Challenges", icon: "trophy" },
@@ -132,6 +142,7 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   referrals: ReferralsSection,
   "discover-providers": ProviderDiscoveryScreen,
   "care-plans": CarePlansSection,
+  bookings: BookingsSection,
   appointments: AppointmentsSection,
   prescriptions: PrescriptionsSection,
   results: ResultsSection,
@@ -139,6 +150,8 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
   reminders: RemindersScreen,
   timeline: HealthTimelineScreen,
   wellness: WellnessSection,
+  "madi-donor": MadiDonorHubScreen,
+  "impilo-live": LiveDiscoverScreen,
   finance: FinanceSection,
   challenges: ChallengesScreen,
   programs: ProgramsScreen,
@@ -164,8 +177,16 @@ const SECTIONS: Record<PersonalTab, React.FC> = {
 };
 
 export function PersonalScreen() {
+  const { personalSectionRequest } = useAppStore();
   const [activeSection, setActiveSection] = useState<PersonalTab>("profile");
   const SectionComponent = activeSection === "prod-ready" ? null : SECTIONS[activeSection];
+
+  useEffect(() => {
+    if (personalSectionRequest) {
+      setActiveSection(personalSectionRequest as PersonalTab);
+      appStore.getState().setPersonalSectionRequest(null);
+    }
+  }, [personalSectionRequest]);
 
   const sectionNavMap: Record<string, PersonalTab> = {
     wellness: "wellness",

@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -35,6 +37,21 @@ public class InpatientController {
         return node;
     }
 
+    private static String extractAdmissionRef(JsonNode created) {
+        if (created == null || created.isNull()) {
+            return null;
+        }
+        String direct = created.path("admissionRef").asText(null);
+        if (direct != null && !direct.isBlank()) {
+            return direct;
+        }
+        direct = created.path("id").asText(null);
+        if (direct != null && !direct.isBlank()) {
+            return direct;
+        }
+        return created.path("admissionId").asText(null);
+    }
+
     private static ResponseStatusException upstreamFailure(String operation, Exception cause) {
         log.warn("{} failed: {}", operation, cause.getMessage());
         return new ResponseStatusException(HttpStatus.BAD_GATEWAY, operation + " failed", cause);
@@ -57,6 +74,44 @@ public class InpatientController {
             throw e;
         } catch (Exception e) {
             throw upstreamFailure("Inpatient listAdmissions", e);
+        }
+    }
+
+    @GetMapping("/admissions/active")
+    public ResponseEntity<Map<String, Object>> getActiveAdmissions(
+            @RequestParam(name = "subject_cpid") String subjectCpid,
+            @RequestParam(name = "facility_id") String facilityId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        if (subjectCpid == null || subjectCpid.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_SUBJECT_CPID", "message", "subject_cpid is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        if (facilityId == null || facilityId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "MISSING_FACILITY_ID", "message", "facility_id is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        try {
+            JsonNode data = inpatientClient.getActiveAdmissions(subjectCpid.trim(), facilityId.trim());
+            if (data == null || data.isNull()) {
+                return ResponseEntity.ok(Map.of(
+                        "data", null,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            JsonNode primary = data.isArray() && !data.isEmpty() ? data.get(0) : data;
+            String admissionRef = extractAdmissionRef(primary);
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            if (admissionRef != null) {
+                meta.put("admission_ref", admissionRef);
+                meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            }
+            return ResponseEntity.ok(Map.of("data", primary, "meta", meta));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient getActiveAdmissions", e);
         }
     }
 
@@ -85,9 +140,17 @@ public class InpatientController {
             @RequestBody Map<String, Object> body) {
         try {
             JsonNode created = requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission");
+            String admissionRef = extractAdmissionRef(created);
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            if (admissionRef != null) {
+                meta.put("admission_ref", admissionRef);
+                meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            }
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "data", created,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                    "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -105,9 +168,12 @@ public class InpatientController {
             JsonNode data = requirePayload(
                     inpatientClient.dischargeAdmission(admissionRef, body),
                     "Inpatient dischargeAdmission");
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("admission_ref", admissionRef);
+            meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -123,11 +189,14 @@ public class InpatientController {
             @RequestBody Map<String, Object> body) {
         try {
             JsonNode data = requirePayload(
-                    inpatientClient.transferPatient(admissionRef, body),
+                    inpatientClient.transferPatient(admissionRef, normalizeTransferBody(body)),
                     "Inpatient transferPatient");
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("request_id", requestId);
+            meta.put("correlation_id", correlationId);
+            meta.put("admission_ref", admissionRef);
+            meta.put("core_transaction_id", CoreTransactionCompositionService.admissionTransactionId(admissionRef));
+            return ResponseEntity.ok(Map.of("data", data, "meta", meta));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
@@ -151,6 +220,32 @@ public class InpatientController {
             throw e;
         } catch (Exception e) {
             throw upstreamFailure("Inpatient listWardRounds", e);
+        }
+    }
+
+    private static Map<String, Object> normalizeTransferBody(Map<String, Object> body) {
+        Map<String, Object> normalized = new LinkedHashMap<>();
+        if (body == null) {
+            return normalized;
+        }
+        copyTransferField(body, normalized, "toWardId", "to_ward_id");
+        copyTransferField(body, normalized, "toBedId", "to_bed_id");
+        if (body.containsKey("reason")) {
+            normalized.put("reason", body.get("reason"));
+        }
+        return normalized;
+    }
+
+    private static void copyTransferField(Map<String, Object> source,
+                                          Map<String, Object> target,
+                                          String camelKey,
+                                          String snakeKey) {
+        Object value = source.get(camelKey);
+        if (value == null) {
+            value = source.get(snakeKey);
+        }
+        if (value != null && !String.valueOf(value).isBlank()) {
+            target.put(camelKey, value);
         }
     }
 }

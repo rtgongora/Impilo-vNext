@@ -62,36 +62,35 @@ tags:
     description: Fundo learning completion ingest and CPD candidate projection
 
 paths:
-
-  # ── Internal Probe ────────────────────────────────────────────────────
   /internal/v1/health:
     get:
       operationId: varapiInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: varapiInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -100,23 +99,23 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /internal/v1/test-federation:
     post:
       operationId: varapiInternalTestFederation
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — national federation authority
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -125,44 +124,43 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Federation proof accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeFederationBody"
-
-  # ── Provider CRUD ─────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ProbeFederationBody'
   /v1/internal/providers:
     post:
       operationId: createProvider
-      tags: [Provider]
+      tags:
+        - Provider
       summary: Register a new provider in the national registry
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateProviderRequest"
+              $ref: '#/components/schemas/CreateProviderRequest'
       responses:
-        "201":
+        '201':
           description: Provider registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/search:
     post:
       operationId: searchProviders
-      tags: [Provider]
+      tags:
+        - Provider
       summary: Search providers by criteria
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -181,135 +179,147 @@ paths:
                 status:
                   type: string
       responses:
-        "200":
+        '200':
           description: Search results
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}:
     get:
       operationId: getProvider
-      tags: [Provider]
+      tags:
+        - Provider
       summary: Retrieve a provider by public ID (ULID)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: Provider profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "404":
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
           description: Provider not found
     put:
       operationId: updateProvider
-      tags: [Provider]
+      tags:
+        - Provider
       summary: Update provider demographics and contacts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateProviderRequest"
+              $ref: '#/components/schemas/UpdateProviderRequest'
       responses:
-        "200":
+        '200':
           description: Provider updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/status:
     post:
       operationId: changeProviderStatus
-      tags: [Provider]
+      tags:
+        - Provider
       summary: Change provider status (activate, suspend, deactivate)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [status, reason]
+              required:
+                - status
+                - reason
               properties:
                 status:
                   type: string
-                  enum: [ACTIVE, SUSPENDED, DEACTIVATED]
+                  enum:
+                    - ACTIVE
+                    - SUSPENDED
+                    - DEACTIVATED
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Status changed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Council Management ────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/councils:
     post:
       operationId: createCouncil
-      tags: [Council]
+      tags:
+        - Council
       summary: Register a professional council (MCAZ, NMCZ, PCAZ, ORG_HR)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [councilCode, councilType, name]
+              required:
+                - councilCode
+                - councilType
+                - name
               properties:
                 councilCode:
                   type: string
                 councilType:
                   type: string
-                  enum: [HPA, PROFESSIONAL_COUNCIL, ORG_HR]
+                  enum:
+                    - HPA
+                    - PROFESSIONAL_COUNCIL
+                    - ORG_HR
                 name:
                   type: string
       responses:
-        "201":
+        '201':
           description: Council registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listCouncils
-      tags: [Council]
+      tags:
+        - Council
       summary: List all registered councils
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Council list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/councils/{councilId}:
     get:
       operationId: getCouncil
-      tags: [Council]
+      tags:
+        - Council
       summary: Get council by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: councilId
           in: path
           required: true
@@ -317,21 +327,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Council details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/councils/{councilId}/imports:
     post:
       operationId: importCouncilData
-      tags: [Council]
+      tags:
+        - Council
       summary: Bulk import council registration data
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: councilId
           in: path
           required: true
@@ -348,23 +358,22 @@ paths:
                 type: object
                 additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Import results
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── CPD ───────────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/cpd/cycles:
     post:
       operationId: createCpdCycle
-      tags: [CPD]
+      tags:
+        - CPD
       summary: Create a new CPD cycle for a provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
@@ -381,22 +390,22 @@ paths:
                 requiredCredits:
                   type: integer
       responses:
-        "201":
+        '201':
           description: CPD cycle created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/cpd/cycles/{cycleId}/events:
     post:
       operationId: recordCpdEvent
-      tags: [CPD]
+      tags:
+        - CPD
       summary: Record a CPD event (training, conference, workshop)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
         - name: cycleId
           in: path
           required: true
@@ -417,21 +426,21 @@ paths:
                 description:
                   type: string
       responses:
-        "201":
+        '201':
           description: CPD event recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/cpd/events/{eventId}/verify:
     post:
       operationId: verifyCpdEvent
-      tags: [CPD]
+      tags:
+        - CPD
       summary: Verify a CPD event (mark as confirmed)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
         - name: eventId
           in: path
           required: true
@@ -439,39 +448,38 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: CPD event verified
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/cpd/summary:
     get:
       operationId: getCpdSummary
-      tags: [CPD]
+      tags:
+        - CPD
       summary: Get CPD compliance summary for a provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: CPD summary with credits earned vs required
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── License Lifecycle ─────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/licenses:
     post:
       operationId: issueLicense
-      tags: [License]
+      tags:
+        - License
       summary: Issue a new license to a provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
@@ -490,35 +498,36 @@ paths:
                   type: string
                   format: date
       responses:
-        "201":
+        '201':
           description: License issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
     get:
       operationId: listLicenses
-      tags: [License]
+      tags:
+        - License
       summary: List all licenses for a provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: License list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/renew:
     post:
       operationId: renewLicense
-      tags: [License]
+      tags:
+        - License
       summary: Renew an existing license
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
         - name: licenseId
           in: path
           required: true
@@ -526,21 +535,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: License renewed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/suspend:
     post:
       operationId: suspendLicense
-      tags: [License]
+      tags:
+        - License
       summary: Suspend a license pending investigation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
         - name: licenseId
           in: path
           required: true
@@ -548,21 +557,21 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: License suspended
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/licenses/{licenseId}/revoke:
     post:
       operationId: revokeLicense
-      tags: [License]
+      tags:
+        - License
       summary: Permanently revoke a license
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
         - name: licenseId
           in: path
           required: true
@@ -570,77 +579,86 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: License revoked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Privilege Management ──────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/privileges:
     get:
       operationId: listPrivileges
-      tags: [Privilege]
+      tags:
+        - Privilege
       summary: List facility-level clinical privileges for a provider
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: Privilege list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/privileges/grant:
     post:
       operationId: grantPrivilege
-      tags: [Privilege]
+      tags:
+        - Privilege
       summary: Grant a clinical privilege at a facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [facilityId, privilege]
+              required:
+                - facilityId
+                - privilege
               properties:
                 facilityId:
                   type: string
                   format: uuid
                 privilege:
                   type: string
-                  enum: [CONSULTATION, SURGERY, PRESCRIBING, ADMIN, SUPERVISION]
+                  enum:
+                    - CONSULTATION
+                    - SURGERY
+                    - PRESCRIBING
+                    - ADMIN
+                    - SUPERVISION
       responses:
-        "201":
+        '201':
           description: Privilege granted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/providers/{providerPublicId}/privileges/revoke:
     post:
       operationId: revokePrivilege
-      tags: [Privilege]
+      tags:
+        - Privilege
       summary: Revoke a clinical privilege
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ProviderPublicId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [facilityId, privilege, reason]
+              required:
+                - facilityId
+                - privilege
+                - reason
               properties:
                 facilityId:
                   type: string
@@ -650,36 +668,36 @@ paths:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Privilege revoked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/privileges/pending:
     get:
       operationId: listPendingPrivileges
-      tags: [Privilege]
+      tags:
+        - Privilege
       summary: List pending privilege decisions for review
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Pending privilege list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/privileges/{privilegeId}/decide:
     post:
       operationId: decidePrivilege
-      tags: [Privilege]
+      tags:
+        - Privilege
       summary: Approve or reject a privilege request
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: privilegeId
           in: path
           required: true
@@ -692,37 +710,40 @@ paths:
           application/json:
             schema:
               type: object
-              required: [decision]
+              required:
+                - decision
               properties:
                 decision:
                   type: string
-                  enum: [APPROVED, REJECTED]
+                  enum:
+                    - APPROVED
+                    - REJECTED
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Decision recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Eligibility ───────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/eligibility/check:
     post:
       operationId: checkEligibility
-      tags: [Eligibility]
+      tags:
+        - Eligibility
       summary: Check provider eligibility for a workspace/role/facility
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [providerPublicId]
+              required:
+                - providerPublicId
               properties:
                 providerPublicId:
                   type: string
@@ -735,100 +756,98 @@ paths:
                 role:
                   type: string
       responses:
-        "200":
+        '200':
           description: Eligibility result (eligible / ineligible with reasons)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── FHIR Projections ──────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/fhir/practitioner/{providerPublicId}:
     get:
       operationId: getFhirPractitioner
-      tags: [FHIR]
+      tags:
+        - FHIR
       summary: FHIR R4 Practitioner resource for a provider
       parameters:
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: FHIR Practitioner JSON
           content:
             application/fhir+json:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/fhir/practitionerrole/{providerPublicId}:
     get:
       operationId: getFhirPractitionerRole
-      tags: [FHIR]
+      tags:
+        - FHIR
       summary: FHIR R4 PractitionerRole resource
       parameters:
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: FHIR PractitionerRole JSON
           content:
             application/fhir+json:
               schema:
                 type: object
                 additionalProperties: true
-
   /v1/fhir/bundle/provider/{providerPublicId}:
     get:
       operationId: getFhirProviderBundle
-      tags: [FHIR]
+      tags:
+        - FHIR
       summary: FHIR R4 Bundle (Practitioner + PractitionerRole + Organization)
       parameters:
-        - $ref: "#/components/parameters/ProviderPublicId"
+        - $ref: '#/components/parameters/ProviderPublicId'
       responses:
-        "200":
+        '200':
           description: FHIR Bundle JSON
           content:
             application/fhir+json:
               schema:
                 type: object
                 additionalProperties: true
-
-  # ── Portal Self-Service ───────────────────────────────────────────────
   /v1/portal/me:
     get:
       operationId: varapiPortalMe
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Current provider portal profile
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       responses:
-        "200":
+        '200':
           description: Portal profile envelope
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/ApiResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/portal/cpd:
     get:
       operationId: portalGetCpd
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Get own CPD summary via portal
       responses:
-        "200":
+        '200':
           description: CPD summary
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/portal/cpd/evidence:
     post:
       operationId: portalUploadEvidence
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Upload CPD evidence via portal
       requestBody:
         required: true
@@ -838,30 +857,30 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Evidence uploaded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/portal/certificates:
     get:
       operationId: portalListCertificates
-      tags: [Portal]
+      tags:
+        - Portal
       summary: List own certificates via portal
       responses:
-        "200":
+        '200':
           description: Certificate list
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/portal/certificates/{id}/download:
     get:
       operationId: portalDownloadCertificate
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Download a certificate PDF
       parameters:
         - name: id
@@ -871,47 +890,47 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Certificate PDF
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-
-  # ── Provider Tokens ───────────────────────────────────────────────────
   /v1/internal/provider-token/issue:
     post:
       operationId: issueProviderToken
-      tags: [Token]
+      tags:
+        - Token
       summary: Issue a scoped provider token
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [providerPublicId]
+              required:
+                - providerPublicId
               properties:
                 providerPublicId:
                   type: string
                 scope:
                   type: string
       responses:
-        "201":
+        '201':
           description: Token issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/provider-token/rotate:
     post:
       operationId: rotateProviderToken
-      tags: [Token]
+      tags:
+        - Token
       summary: Rotate a provider token
       requestBody:
         required: true
@@ -921,17 +940,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Token rotated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/provider-token/recovery/start:
     post:
       operationId: startTokenRecovery
-      tags: [Token]
+      tags:
+        - Token
       summary: Start provider token recovery flow
       requestBody:
         required: true
@@ -941,17 +960,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Recovery started
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/provider-token/recovery/verify:
     post:
       operationId: verifyTokenRecovery
-      tags: [Token]
+      tags:
+        - Token
       summary: Verify provider token recovery
       requestBody:
         required: true
@@ -961,37 +980,36 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Recovery verified
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Reconciliation ────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/reconciliation/queue:
     get:
       operationId: listReconciliationQueue
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: List pending deduplication cases for reconciliation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Queue of pending cases
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/internal/reconciliation/{caseId}/decision:
     post:
       operationId: decideReconciliation
-      tags: [Reconciliation]
+      tags:
+        - Reconciliation
       summary: Decide a reconciliation case (merge, keep-separate, defer)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: caseId
           in: path
           required: true
@@ -1004,25 +1022,29 @@ paths:
           application/json:
             schema:
               type: object
-              required: [decision]
+              required:
+                - decision
               properties:
                 decision:
                   type: string
-                  enum: [MERGE, KEEP_SEPARATE, DEFER]
+                  enum:
+                    - MERGE
+                    - KEEP_SEPARATE
+                    - DEFER
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Decision recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /v1/webhooks/fundo/cpd-completion:
     post:
       operationId: ingestFundoCpdCompletionWebhook
-      tags: [Learning-Integration]
+      tags:
+        - Learning-Integration
       summary: Ingest Fundo completion webhook and project CPD candidate row
       requestBody:
         required: true
@@ -1037,52 +1059,1332 @@ paths:
                 - completionAt
                 - externalRef
               properties:
-                providerPublicId: { type: string }
-                councilId: { type: string }
-                courseId: { type: string }
-                courseName: { type: string }
-                completionAt: { type: string, format: date-time }
-                externalRef: { type: string }
-                suggestedCredits: { type: number, format: double }
+                providerPublicId:
+                  type: string
+                councilId:
+                  type: string
+                courseId:
+                  type: string
+                courseName:
+                  type: string
+                completionAt:
+                  type: string
+                  format: date-time
+                externalRef:
+                  type: string
+                suggestedCredits:
+                  type: number
+                  format: double
       responses:
-        "200":
+        '200':
           description: Candidate recorded or deduplicated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
-  # ── Snapshots ─────────────────────────────────────────────────────────
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/snapshots/providers:
     get:
       operationId: getProviderSnapshots
-      tags: [Snapshot]
+      tags:
+        - Snapshot
       summary: List provider snapshot watermarks
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
       responses:
-        "200":
+        '200':
           description: Snapshot metadata
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
-
+                $ref: '#/components/schemas/ApiResponse'
   /internal/v1/snapshots/providers/emit:
     post:
       operationId: emitProviderSnapshots
-      tags: [Snapshot]
+      tags:
+        - Snapshot
       summary: Trigger full-state snapshot emit for downstream sync
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "202":
+        '202':
           description: Snapshot emit accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponse"
+                $ref: '#/components/schemas/ApiResponse'
+  /{affiliationId}/submit:
+    post:
+      operationId: varapi_post__affiliationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{affiliationId}/approve:
+    post:
+      operationId: varapi_post__affiliationId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{affiliationId}/reject:
+    post:
+      operationId: varapi_post__affiliationId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{affiliationId}/terminate:
+    post:
+      operationId: varapi_post__affiliationId_terminate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{affiliationId}:
+    get:
+      operationId: varapi_get__affiliationId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}:
+    get:
+      operationId: varapi_get__provider_providerId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/active:
+    get:
+      operationId: varapi_get__provider_providerId_active
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}/active:
+    get:
+      operationId: varapi_get__facility_facilityId_active
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/primary:
+    get:
+      operationId: varapi_get__provider_providerId_primary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/facility/{facilityId}/active:
+    get:
+      operationId: varapi_get__provider_providerId_facility_facilityId_active
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}/issue:
+    post:
+      operationId: varapi_post__certificateId_issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}/renew:
+    post:
+      operationId: varapi_post__certificateId_renew
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}/suspend:
+    post:
+      operationId: varapi_post__certificateId_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}/reinstate:
+    post:
+      operationId: varapi_post__certificateId_reinstate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}/revoke:
+    post:
+      operationId: varapi_post__certificateId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{certificateId}:
+    get:
+      operationId: varapi_get__certificateId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/valid:
+    get:
+      operationId: varapi_get__provider_providerId_valid
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/current:
+    get:
+      operationId: varapi_get__provider_providerId_current
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /number/{certificateNumber}:
+    get:
+      operationId: varapi_get__number_certificateNumber_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /expiring:
+    get:
+      operationId: varapi_get__expiring
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /expired:
+    get:
+      operationId: varapi_get__expired
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{actionId}/fulfil:
+    post:
+      operationId: varapi_post__actionId_fulfil
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{actionId}/exempt:
+    post:
+      operationId: varapi_post__actionId_exempt
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{actionId}/escalate:
+    post:
+      operationId: varapi_post__actionId_escalate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{actionId}:
+    get:
+      operationId: varapi_get__actionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/outstanding:
+    get:
+      operationId: varapi_get__provider_providerId_outstanding
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/overdue:
+    get:
+      operationId: varapi_get__provider_providerId_overdue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /due-within/{days}:
+    get:
+      operationId: varapi_get__due_within_days_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /overdue:
+    get:
+      operationId: varapi_get__overdue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{councilId}:
+    get:
+      operationId: varapi_get__councilId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{councilId}/imports:
+    post:
+      operationId: varapi_post__councilId_imports
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cycles:
+    post:
+      operationId: varapi_post__cycles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cycles/{cycleId}/events:
+    post:
+      operationId: varapi_post__cycles_cycleId_events
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /events/{eventId}/verify:
+    post:
+      operationId: varapi_post__events_eventId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /summary:
+    get:
+      operationId: varapi_get__summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /check:
+    post:
+      operationId: varapi_post__check
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-temp/{temporaryProviderPublicId}:
+    get:
+      operationId: varapi_get__by_temp_temporaryProviderPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{profileId}/link-provider:
+    post:
+      operationId: varapi_post__profileId_link_provider
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /practitioner/{providerPublicId}:
+    get:
+      operationId: varapi_get__practitioner_providerPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /practitionerrole/{providerPublicId}:
+    get:
+      operationId: varapi_get__practitionerrole_providerPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /bundle/provider/{providerPublicId}:
+    get:
+      operationId: varapi_get__bundle_provider_providerPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{licenseId}/renew:
+    post:
+      operationId: varapi_post__licenseId_renew
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{licenseId}/suspend:
+    post:
+      operationId: varapi_post__licenseId_suspend
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{licenseId}/revoke:
+    post:
+      operationId: varapi_post__licenseId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /me:
+    get:
+      operationId: varapi_get__me
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cpd:
+    get:
+      operationId: varapi_get__cpd
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cpd/evidence:
+    post:
+      operationId: varapi_post__cpd_evidence
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /certificates:
+    get:
+      operationId: varapi_get__certificates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /certificates/{id}/download:
+    get:
+      operationId: varapi_get__certificates_id_download
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{contextId}/authorize:
+    post:
+      operationId: varapi_post__contextId_authorize
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{contextId}/revoke:
+    post:
+      operationId: varapi_post__contextId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{contextId}/renew:
+    post:
+      operationId: varapi_post__contextId_renew
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{contextId}:
+    get:
+      operationId: varapi_get__contextId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/context-type/{contextType}:
+    get:
+      operationId: varapi_get__provider_providerId_context_type_contextType_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{assignmentId}/approve:
+    post:
+      operationId: varapi_post__assignmentId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{assignmentId}/reject:
+    post:
+      operationId: varapi_post__assignmentId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{assignmentId}/revoke:
+    post:
+      operationId: varapi_post__assignmentId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{assignmentId}/transfer:
+    post:
+      operationId: varapi_post__assignmentId_transfer
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{assignmentId}:
+    get:
+      operationId: varapi_get__assignmentId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}/history:
+    get:
+      operationId: varapi_get__facility_facilityId_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/history:
+    get:
+      operationId: varapi_get__provider_providerId_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}/eligible-providers:
+    get:
+      operationId: varapi_get__facility_facilityId_eligible_providers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers/{providerPublicId}/privileges/grant:
+    post:
+      operationId: varapi_post__providers_providerPublicId_privileges_grant
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers/{providerPublicId}/privileges/revoke:
+    post:
+      operationId: varapi_post__providers_providerPublicId_privileges_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers/{providerPublicId}/privileges:
+    get:
+      operationId: varapi_get__providers_providerPublicId_privileges
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /privileges/pending:
+    get:
+      operationId: varapi_get__privileges_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /privileges/{privilegeId}/decide:
+    post:
+      operationId: varapi_post__privileges_privilegeId_decide
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/submit:
+    post:
+      operationId: varapi_post__applicationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/verify:
+    post:
+      operationId: varapi_post__applicationId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/committee:
+    post:
+      operationId: varapi_post__applicationId_committee
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/decision:
+    post:
+      operationId: varapi_post__applicationId_decision
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/approve:
+    post:
+      operationId: varapi_post__applicationId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}/close:
+    post:
+      operationId: varapi_post__applicationId_close
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{applicationId}:
+    get:
+      operationId: varapi_get__applicationId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /open:
+    get:
+      operationId: varapi_get__open
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/enroll:
+    post:
+      operationId: varapi_post__providerPublicId_enroll
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/templates:
+    get:
+      operationId: varapi_get__providerPublicId_templates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/profile:
+    get:
+      operationId: varapi_get__providerPublicId_profile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/verify:
+    post:
+      operationId: varapi_post__providerPublicId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}:
+    get:
+      operationId: varapi_get__healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/affiliations:
+    get:
+      operationId: varapi_get__healthId_affiliations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/notices:
+    get:
+      operationId: varapi_get__healthId_notices
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}:
+    get:
+      operationId: varapi_get__providerPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: varapi_put__providerPublicId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/standing-summary:
+    get:
+      operationId: varapi_get__providerPublicId_standing_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/workforce-assignments-summary:
+    get:
+      operationId: varapi_get__providerPublicId_workforce_assignments_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /search:
+    post:
+      operationId: varapi_post__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: varapi_get__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{providerPublicId}/status:
+    post:
+      operationId: varapi_post__providerPublicId_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /council-regulatory-config:
+    get:
+      operationId: varapi_get__council_regulatory_config
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: varapi_put__council_regulatory_config
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /profiles:
+    get:
+      operationId: varapi_get__profiles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: varapi_post__profiles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /obligations:
+    get:
+      operationId: varapi_get__obligations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: varapi_post__obligations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /obligations/{obligationId}/mushex-intent:
+    post:
+      operationId: varapi_post__obligations_obligationId_mushex_intent
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /obligations/{obligationId}/sync-payment:
+    post:
+      operationId: varapi_post__obligations_obligationId_sync_payment
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/open:
+    get:
+      operationId: varapi_get__applications_open
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/under-admin-review:
+    post:
+      operationId: varapi_post__applications_applicationId_under_admin_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/awaiting-payment:
+    post:
+      operationId: varapi_post__applications_applicationId_awaiting_payment
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /applications/{applicationId}/fee-paid:
+    post:
+      operationId: varapi_post__applications_applicationId_fee_paid
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reviews:
+    post:
+      operationId: varapi_post__reviews
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: varapi_get__reviews
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fundo-links:
+    post:
+      operationId: varapi_post__fundo_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fundo-cpd-candidates:
+    get:
+      operationId: varapi_get__fundo_cpd_candidates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fundo-cpd-candidates/{candidateId}/accept:
+    post:
+      operationId: varapi_post__fundo_cpd_candidates_candidateId_accept
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /fundo-cpd-candidates/{candidateId}/reject:
+    post:
+      operationId: varapi_post__fundo_cpd_candidates_candidateId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/summary:
+    get:
+      operationId: varapi_get__provider_providerId_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/applications:
+    get:
+      operationId: varapi_get__provider_providerId_applications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/affiliations:
+    get:
+      operationId: varapi_get__provider_providerId_affiliations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/qualifications:
+    get:
+      operationId: varapi_get__provider_providerId_qualifications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/practice-contexts:
+    get:
+      operationId: varapi_get__provider_providerId_practice_contexts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/compliance:
+    get:
+      operationId: varapi_get__provider_providerId_compliance
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/certificates:
+    get:
+      operationId: varapi_get__provider_providerId_certificates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/pending-applications:
+    get:
+      operationId: varapi_get__dashboard_pending_applications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/pending-affiliations:
+    get:
+      operationId: varapi_get__dashboard_pending_affiliations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/pending-qualifications:
+    get:
+      operationId: varapi_get__dashboard_pending_qualifications
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/pending-cpd:
+    get:
+      operationId: varapi_get__dashboard_pending_cpd
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/expiring-certificates:
+    get:
+      operationId: varapi_get__dashboard_expiring_certificates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/expiring-practice-contexts:
+    get:
+      operationId: varapi_get__dashboard_expiring_practice_contexts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/overdue-compliance:
+    get:
+      operationId: varapi_get__dashboard_overdue_compliance
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{qualificationId}/submit:
+    post:
+      operationId: varapi_post__qualificationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{qualificationId}/verify:
+    post:
+      operationId: varapi_post__qualificationId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{qualificationId}/supersede:
+    post:
+      operationId: varapi_post__qualificationId_supersede
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{qualificationId}:
+    get:
+      operationId: varapi_get__qualificationId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/verified:
+    get:
+      operationId: varapi_get__provider_providerId_verified
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/pending-verification:
+    get:
+      operationId: varapi_get__provider_providerId_pending_verification
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queue:
+    get:
+      operationId: varapi_get__queue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{caseId}/decision:
+    post:
+      operationId: varapi_post__caseId_decision
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers:
+    get:
+      operationId: varapi_get__providers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /providers/emit:
+    post:
+      operationId: varapi_post__providers_emit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /issue:
+    post:
+      operationId: varapi_post__issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rotate:
+    post:
+      operationId: varapi_post__rotate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /recovery/start:
+    post:
+      operationId: varapi_post__recovery_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /recovery/verify:
+    post:
+      operationId: varapi_post__recovery_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/facility/{facilityId}:
+    post:
+      operationId: varapi_post__provider_providerId_facility_facilityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provider/{providerId}/facility/{facilityId}/pic-eligible:
+    get:
+      operationId: varapi_get__provider_providerId_facility_facilityId_pic_eligible
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}/has-active-provider:
+    post:
+      operationId: varapi_post__facility_facilityId_has_active_provider
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: varapi_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: varapi_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-federation:
+    post:
+      operationId: varapi_post__test_federation
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cpd-completion:
+    post:
+      operationId: varapi_post__cpd_completion
+      tags:
+        - Generated-From-Handler
+      summary: Documented from varapi-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

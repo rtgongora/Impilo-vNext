@@ -47,3 +47,51 @@ paths:
       responses:
         '200':
           description: Reservation released
+  /health:
+    get:
+      operationId: scheduling_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from scheduling-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /slots:
+    get:
+      operationId: scheduling_get__slots
+      tags:
+        - Generated-From-Handler
+      summary: Documented from scheduling-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /slots/reserve:
+    post:
+      operationId: scheduling_post__slots_reserve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from scheduling-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /slots/release:
+    post:
+      operationId: scheduling_post__slots_release
+      tags:
+        - Generated-From-Handler
+      summary: Documented from scheduling-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /engine/capacity-rules:
+    get:
+      operationId: scheduling_get__engine_capacity_rules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from scheduling-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  schemas: {}

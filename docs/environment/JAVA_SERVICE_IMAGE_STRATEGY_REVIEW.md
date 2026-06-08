@@ -2,7 +2,7 @@
 
 > Prefer **pre-built JAR + shared JRE template** or **Jib**. Avoid Maven inside Alpine runtime Dockerfiles.
 
-**Maven services in catalog:** 86
+**Maven services in catalog:** 91
 
 | Service | Path | Full-boot | JAR after build | Dockerfile | Strategy | Recommended | Reason | Changes |
 |---|---|---|---|---|---|---|---|---|
@@ -10,6 +10,7 @@
 | analytics-pipeline-service | services/analytics-pipeline-service | optional | yes (if reactor built) | services/analytics-pipeline-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | asset-registry-service | services/asset-registry-service | optional | yes (if reactor built) | services/asset-registry-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | audit-ledger-service | services/audit-ledger-service | optional | yes (if reactor built) | services/audit-ledger-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| booking-service | services/booking-service | optional | no | services/booking-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | butano-fhir | services/butano-fhir | optional | yes (if reactor built) | services/butano-fhir/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | butano-service | services/butano-service | required | yes (if reactor built) | services/butano-service/Dockerfile | jib | prebuilt-jar-runtime-image or jib | Dockerfile runs Maven in container — prefer Jib or pre-built JAR + shared template | Deploy in impilo-full-preview when authorized |
 | campaigns-service | services/campaigns-service | optional | yes (if reactor built) | services/campaigns-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
@@ -45,7 +46,10 @@
 | jobs-service | services/jobs-service | optional | yes (if reactor built) | services/jobs-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | landela-adapter-service | services/landela-adapter-service | optional | yes (if reactor built) | services/landela-adapter-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | learning-service | services/learning-service | optional | yes (if reactor built) | services/learning-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| live-service | services/live-service | optional | no | services/live-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | llm-orchestration-service | services/llm-orchestration-service | optional | yes (if reactor built) | services/llm-orchestration-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| madi-service | services/madi-service | optional | no | services/madi-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| msika-apps-service | services/msika-apps-service | optional | yes (if reactor built) | services/msika-apps-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | msika-flow-service | services/msika-flow-service | optional | yes (if reactor built) | services/msika-flow-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | msika-service | services/msika-service | optional | yes (if reactor built) | services/msika-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | mushe-wallet-service | services/mushe-wallet-service | optional | yes (if reactor built) | services/mushe-wallet-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
@@ -68,6 +72,7 @@
 | product-registry-service | services/product-registry-service | optional | yes (if reactor built) | services/product-registry-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | referral-service | services/referral-service | optional | yes (if reactor built) | services/referral-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | reporting-service | services/reporting-service | optional | yes (if reactor built) | services/reporting-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
+| rtc-gateway-service | services/rtc-gateway-service | optional | yes (if reactor built) | services/rtc-gateway-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | rules-service | services/rules-service | optional | yes (if reactor built) | services/rules-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | scheduling-service | services/scheduling-service | optional | yes (if reactor built) | services/scheduling-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |
 | schema-registry-service | services/schema-registry-service | optional | yes (if reactor built) | services/schema-registry-service/Dockerfile | shared-dockerfile-template | prebuilt-jar-runtime-image (current) | Thin JAR-copy Dockerfile — equivalent to shared template | — |

@@ -17,7 +17,8 @@ paths:
     post:
       operationId: createPrintJob
       summary: Create a print job
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       requestBody:
         content:
           application/json:
@@ -29,7 +30,8 @@ paths:
     get:
       operationId: searchPrintJobs
       summary: Search print jobs
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       parameters:
         - name: status
           in: query
@@ -56,12 +58,12 @@ paths:
       responses:
         '200':
           description: Print job results
-
   /v1/internal/print-jobs/{jobId}:
     get:
       operationId: getPrintJob
       summary: Get print job details
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       parameters:
         - name: jobId
           in: path
@@ -72,12 +74,12 @@ paths:
       responses:
         '200':
           description: Print job details
-
   /v1/internal/print-jobs/{jobId}/status:
     post:
       operationId: updateJobStatus
       summary: Update print job status
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       parameters:
         - name: jobId
           in: path
@@ -93,12 +95,12 @@ paths:
       responses:
         '200':
           description: Status updated
-
   /v1/internal/print-jobs/{jobId}/cancel:
     post:
       operationId: cancelPrintJob
       summary: Cancel a print job
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       parameters:
         - name: jobId
           in: path
@@ -109,12 +111,12 @@ paths:
       responses:
         '200':
           description: Print job cancelled
-
   /v1/internal/print-jobs/{jobId}/pdf:
     get:
       operationId: downloadRenderedPdf
       summary: Download rendered PDF
-      tags: [Print Jobs]
+      tags:
+        - Print Jobs
       parameters:
         - name: jobId
           in: path
@@ -130,6 +132,86 @@ paths:
               schema:
                 type: string
                 format: binary
+  /status:
+    get:
+      operationId: cardprintagent_get__status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: cardprintagent_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: cardprintagent_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{jobId}:
+    get:
+      operationId: cardprintagent_get__jobId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{jobId}/status:
+    post:
+      operationId: cardprintagent_post__jobId_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{jobId}/cancel:
+    post:
+      operationId: cardprintagent_post__jobId_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{jobId}/pdf:
+    get:
+      operationId: cardprintagent_get__jobId_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: cardprintagent_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: cardprintagent_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from card-print-agent handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

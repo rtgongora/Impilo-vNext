@@ -1,6 +1,6 @@
 # Frontend ↔ backend parity matrix
 
-> Generated: 2026-06-05. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-07. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 | capability | endpoint | webRoute | webClient | realData | mockRisk | parity | priority | remediation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -16,6 +16,8 @@
 | Nhume: Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | /nhume/*, /operations/dispatch | lib/nhume.ts, useDispatchOps.ts | partial | no | partial | HIGH | Unified operator UX + maturity labels | advisory |
 | Comms Hub: Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | /communication, /omnichannel | useOmnichannel.ts, useCommunication.ts | partial | no | partial | MEDIUM | Comms dashboard actionable tasks | advisory |
 | Telemedicine: Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | /telemedicine/* | useTelemedicine.ts | partial | no | partial | HIGH | Label Blocked for RTC; live scheduling/records | advisory |
+| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | /telemedicine/analytics | useTelemedicineAnalytics.ts | partial | no | partial | MEDIUM | BFF proxy + web SLA dashboard | advisory |
+| Break-glass (provider request): Emergency access override request from clinical/emergency shells | POST /internal/v1/trust/break-glass | /clinical/emergency, /ehr/[patientId]/emergency | useTrustBreakGlass.ts, BreakGlassRequestPanel.tsx | partial | no | partial | HIGH | Provider break-glass panel on ED + EHR emergency views | advisory |
 | Msika / Msika Flow: Catalog, orders, marketplace | /internal/v1/marketplace/*, /internal/v1/commerce/* | /marketplace/* | useMarketplace.ts, useCommerceFlow.ts | partial | no | partial | MEDIUM | Honest blocked states on list routes | advisory |
 | MusheX / COSTA: Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | /finance/*, /wallet | useMusheWallet.ts, useFinanceBillingWorkspace.ts | partial | no | partial | HIGH | Finance journey mobile parity | advisory |
 | Fundo: LMS courses, studio, certificates | /internal/v1/learning/v11/* | /learning/* | useFundoLms.ts, useFundoStudio.ts | partial | no | partial | MEDIUM | Fundo mobile module depth | advisory |
@@ -26,3 +28,15 @@
 | Integration Hub: Routes, dead letters, dispatch | /internal/v1/integration-hub/* | /admin/integration-status, /settings/integrations | useIntegrationHub.ts | partial | no | partial | MEDIUM | Integration admin depth | advisory |
 | Workflow / Dispatch: Workflow definitions, instances, dispatch tasks | /internal/v1/workflows/*, /internal/v1/dispatch/* | /operations/workflows, /operations/dispatch | useDispatchOps.ts | partial | no | partial | HIGH | Workflow instance table + dispatch guided detail | advisory |
 | Admin / Governance: Users, tenants, roles, audit, feature flags | /internal/v1/admin/* | /admin/*, /organization-admin/* | useAdminUsers.ts, useTrustAdmin.ts | partial | no | partial | MEDIUM | Document Blocked surfaces explicitly | advisory |
+| MADI: Donor engagement (register, profile, eligibility, feedback) | /internal/v1/madi/donors/*, /internal/v1/mobile/citizen/madi/* | /madi/donor/* | useMadi.ts | yes | no | complete | HIGH | Guided pre-screening + Nompilo assist on web and citizen mobile | existing |
+| MADI: Donation drive scheduling and field capture | /internal/v1/madi/drives/*, /internal/v1/mobile/provider/madi/drives/* | /madi/drives/* | useMadi.ts | yes | no | complete | HIGH | Offline queue + sync-conflict resolution on provider mobile | existing |
+| MADI: Blood processing and component labelling | /internal/v1/madi/processing/* | /madi/processing | useMadi.ts | yes | no | complete | MEDIUM | ZIBO SNOMED deep-links on /madi/processing component selector | existing |
+| MADI: Blood bank stock and inventory balance | /internal/v1/madi/blood-banks/* | /madi/blood-bank/* | useMadi.ts | yes | no | complete | HIGH | IoT fridge monitoring at /madi/blood-bank/fridges | existing |
+| MADI: Clinical blood order (crossmatch, reserve, issue) | /internal/v1/madi/orders/*, /internal/v1/mobile/provider/madi/orders/* | /madi/orders/* | useMadi.ts | yes | no | complete | HIGH | OROS lab worklist deep-link on order detail | existing |
+| MADI: Transfusion episode and observation capture | /internal/v1/madi/transfusions/*, /internal/v1/mobile/provider/madi/transfusions/* | /madi/transfusion/* | useMadi.ts | yes | no | complete | HIGH | VITO biometric + barcode bedside verify on web and mobile | existing |
+| MADI: Haemovigilance (adverse reaction reporting) | /internal/v1/madi/haemovigilance/*, /internal/v1/mobile/provider/madi/haemovigilance/* | /madi/haemovigilance | useMadi.ts | yes | no | complete | HIGH | National roll-up at /madi/haemovigilance/national | existing |
+| MADI: Central blood bank coordination | /internal/v1/madi/central-bank/* | /madi/central-bank | useMadi.ts | yes | no | complete | MEDIUM | Emergency redistribution request + approve on /madi/central-bank | existing |
+| Impilo Live: Live events, webinars, broadcasts | /internal/v1/live/* | /live, /live/discover, /live/event/[eventId] | useLive.ts | yes | no | complete | MEDIUM | Deepen provider host/moderator mobile controls | existing |
+| Health OS Launcher: Role/facility-aware app launcher + marketplace tiles | /internal/v1/launcher/apps, /internal/v1/launcher/apps/{appCode}/state | ShellStartMenu (Start menu) | useHealthOsLauncher.ts | partial | no | partial | HIGH | Shell Start menu uses BFF launcher/apps contract surface | advisory |
+| Wellness / Monitoring: Citizen remote monitoring device pair/list/sync | /internal/v1/mobile/citizen/monitoring/devices | /monitoring/devices | useCitizenMonitoring.ts, citizen-monitoring-api.ts | partial | no | partial | MEDIUM | BFF explicit proxy to wellness-service; web + citizen mobile wired | advisory |
+| MADI: MADI dashboards and programme KPIs | /internal/v1/madi/dashboard | /madi/dashboard | useMadi.ts | yes | no | complete | MEDIUM | 30-day forecast table on /madi/dashboard from order + stock signals | existing |

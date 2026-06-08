@@ -9,4 +9,9 @@ describe("@impilo/mobile-ndila exports", () => {
     expect(typeof ndila.queueTrackingEvent).toBe("function");
     expect(typeof ndila.flushQueue).toBe("function");
   });
+
+  it("exposes mobile map views", () => {
+    expect(ndila.MobileNdilaMapView).toBeDefined();
+    expect(ndila.MobileNearbyMapView).toBeDefined();
+  });
 });

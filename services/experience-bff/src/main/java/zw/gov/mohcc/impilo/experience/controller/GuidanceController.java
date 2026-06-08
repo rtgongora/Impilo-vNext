@@ -9,6 +9,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.GuidanceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoConsentServiceClient;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -44,7 +45,8 @@ public class GuidanceController {
         try {
             String question = (String) body.getOrDefault("question", "");
             boolean personalized = Boolean.TRUE.equals(body.get("personalized"));
-            JsonNode result = guidanceClient.ask(question, personalized);
+            Map<String, Object> context = extractRouteContext(body);
+            JsonNode result = guidanceClient.ask(question, personalized, context);
             return ResponseEntity.ok(Map.of(
                     "data", result != null ? result : Map.of(),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
@@ -52,6 +54,26 @@ public class GuidanceController {
             log.error("Guidance ask failed: {}", e.getMessage());
             return upstreamFailure("GUIDANCE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> extractRouteContext(Map<String, Object> body) {
+        Map<String, Object> context = new LinkedHashMap<>();
+        Object raw = body.get("context");
+        if (raw instanceof Map<?, ?> map) {
+            map.forEach((k, v) -> {
+                if (k != null && v != null) {
+                    context.put(String.valueOf(k), v);
+                }
+            });
+        }
+        if (!context.containsKey("routePath") && body.get("from") != null) {
+            context.put("routePath", String.valueOf(body.get("from")));
+        }
+        if (!context.containsKey("routePath") && body.get("routePath") != null) {
+            context.put("routePath", String.valueOf(body.get("routePath")));
+        }
+        return context;
     }
 
     /** GET /reminders — active reminders for the current user. */

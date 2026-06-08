@@ -3,7 +3,7 @@
 import { PlaneWorkspaceShell } from "@/components/workspace/PlaneWorkspaceShell";
 import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
-import { NdilaIntelligencePanel } from "@/components/ndila";
+import { NdilaIntelligencePanel, NdilaWorkspaceMapPanel } from "@/components/ndila";
 import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
 
 export default function NdilaWorkspacePage() {
@@ -13,8 +13,10 @@ export default function NdilaWorkspacePage() {
       subtitle="Facility mapping, routes, catchment areas, and location-based service discovery"
       plane="Data & Intelligence Plane"
       maturity="partial"
-      maturityDetail="Tile preview and markers; full map client rollout in progress"
+      maturityDetail="Full map workspace with governed tiles, nearby search, and route preview"
       relatedLinks={[
+        { label: "Data & intelligence", href: "/data-intelligence" },
+        { label: "NDR pipelines", href: "/data-intelligence/pipelines" },
         { label: "Nhume fleet map", href: "/nhume/map" },
         { label: "Public health sites", href: "/public-health/site-registry" },
         { label: "Facility registry", href: "/registry/facilities" },
@@ -25,10 +27,11 @@ export default function NdilaWorkspacePage() {
       <div className="mb-4">
         <FeatureMaturityBadge
           status="partial"
-          detail="Live Ndila BFF when service is up; no silent coordinate mocks"
+          detail="Live Ndila BFF + map workspace when service is up; no silent coordinate mocks"
         />
       </div>
       <div className="space-y-6">
+        <NdilaWorkspaceMapPanel />
         <NdilaIntelligencePanel
           question="Which facilities and public health sites are in this catchment, and what are routing priorities for field teams?"
           areaScope={{ level: "NATIONAL" }}

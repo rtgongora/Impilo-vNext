@@ -11,6 +11,7 @@
 import Link from "next/link";
 import { Lightbulb, Bell, BookOpen, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { NompiloGuidanceOrchestrationRail } from "@/components/intelligent/NompiloGuidanceOrchestrationRail";
 import { PageShell } from "@/components/PageShell";
 
 const SECTIONS = [
@@ -24,6 +25,7 @@ export default function GuidancePage() {
   return (
     <AppLayout>
       <PageShell title="Guidance" subtitle="Personalised health guidance, reminders, and education" icon={<Lightbulb className="h-6 w-6" />}>
+        <NompiloGuidanceOrchestrationRail />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
           {SECTIONS.map(({ href, label, description, Icon, color }) => (
             <Link key={href} href={href} className="rounded-xl border border-gray-200 bg-white p-5 hover:border-impilo-400 hover:shadow-md transition-all group">

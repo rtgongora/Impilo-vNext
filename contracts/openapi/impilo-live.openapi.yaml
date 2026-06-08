@@ -1,0 +1,629 @@
+openapi: "3.0.3"
+
+info:
+  title: Impilo Live — Live Events & Broadcast
+  version: "1.0.0"
+  description: |
+    Sovereign live events, webinars, broadcasts, registrations, attendance,
+    interactions, certificates, and analytics for Impilo vNext.
+
+    Surfaces (BFF -> service):
+      Experience BFF                          live-service
+      /internal/v1/live/events              -> /internal/v1/live/events
+      /internal/v1/live/registrations     -> /internal/v1/live/registrations
+      /internal/v1/live/room              -> /internal/v1/live/room
+      /internal/v1/live/interactions      -> /internal/v1/live/interactions
+      /internal/v1/live/moderation        -> /internal/v1/live/moderation
+      /internal/v1/live/attendance        -> /internal/v1/live/attendance
+      /internal/v1/live/certificates      -> /internal/v1/live/certificates
+      /internal/v1/live/analytics         -> /internal/v1/live/analytics
+      /internal/v1/live/discover          -> /internal/v1/live/discover
+      /internal/v1/live/composer/assist   -> llm-orchestration-service
+
+servers:
+  - url: http://localhost:8380
+    description: live-service direct (local)
+  - url: http://localhost:8160
+    description: Experience BFF (local)
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Live-Events
+  - name: Live-Registrations
+  - name: Live-Room
+  - name: Live-Interactions
+  - name: Live-Attendance
+  - name: Live-Discovery
+
+paths:
+  /internal/v1/live/events:
+    get:
+      operationId: liveListEvents
+      tags:
+        - Live-Events
+      summary: List live events
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event list
+    post:
+      operationId: liveCreateEvent
+      tags:
+        - Live-Events
+      summary: Create a live event
+      responses:
+        '201':
+          description: Created
+  /internal/v1/live/events/{eventId}:
+    get:
+      operationId: liveGetEvent
+      tags:
+        - Live-Events
+      summary: Get event details
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event details
+  /internal/v1/live/events/{eventId}/schedule:
+    post:
+      operationId: liveScheduleEvent
+      tags:
+        - Live-Events
+      summary: Schedule a draft event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Scheduled
+  /internal/v1/live/discover/context/{contextType}:
+    get:
+      operationId: liveDiscoverByContext
+      tags:
+        - Live-Discovery
+      summary: Discover events by context (PROFESSIONAL, CITIZEN, PUBLIC)
+      parameters:
+        - name: contextType
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Discovered events
+  /internal/v1/live/room/{eventId}/join:
+    post:
+      operationId: liveJoinRoom
+      tags:
+        - Live-Room
+      summary: Join live event room and receive media token
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Room token
+  /internal/v1/live/registrations/events/{eventId}:
+    post:
+      operationId: liveRegister
+      tags:
+        - Live-Registrations
+      summary: Register for an event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Registered
+  /{eventId}/snapshot:
+    post:
+      operationId: live_post__eventId_snapshot
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/dashboard:
+    get:
+      operationId: live_get__eventId_dashboard
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/history:
+    get:
+      operationId: live_get__eventId_history
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/join:
+    post:
+      operationId: live_post__eventId_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/leave:
+    post:
+      operationId: live_post__eventId_leave
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/participants/{participantId}/minutes:
+    put:
+      operationId: live_put__eventId_participants_participantId_minutes
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}:
+    get:
+      operationId: live_get__eventId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: live_put__eventId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/participants/{participantId}:
+    get:
+      operationId: live_get__eventId_participants_participantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/attendance/{participantId}:
+    post:
+      operationId: live_post__eventId_attendance_participantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/cpd/{participantId}:
+    post:
+      operationId: live_post__eventId_cpd_participantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify/{verificationCode}:
+    get:
+      operationId: live_get__verify_verificationCode_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /context/{contextType}:
+    get:
+      operationId: live_get__context_contextType_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /facility/{facilityId}:
+    get:
+      operationId: live_get__facility_facilityId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /role:
+    get:
+      operationId: live_get__role
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /:
+    post:
+      operationId: live_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: live_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/schedule:
+    post:
+      operationId: live_post__eventId_schedule
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/cancel:
+    post:
+      operationId: live_post__eventId_cancel
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/madi-drive:
+    get:
+      operationId: live_get__eventId_madi_drive
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/questions:
+    post:
+      operationId: live_post__eventId_questions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: live_get__eventId_questions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/questions/{questionId}/upvote:
+    post:
+      operationId: live_post__eventId_questions_questionId_upvote
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/chat:
+    post:
+      operationId: live_post__eventId_chat
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: live_get__eventId_chat
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/polls:
+    post:
+      operationId: live_post__eventId_polls
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: live_get__eventId_polls
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/polls/{pollId}/activate:
+    post:
+      operationId: live_post__eventId_polls_pollId_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/polls/{pollId}/respond:
+    post:
+      operationId: live_post__eventId_polls_pollId_respond
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/resources:
+    get:
+      operationId: live_get__eventId_resources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: live_post__eventId_resources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/feedback:
+    post:
+      operationId: live_post__eventId_feedback
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/chat/{messageId}:
+    post:
+      operationId: live_post__eventId_chat_messageId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/questions/{questionId}:
+    post:
+      operationId: live_post__eventId_questions_questionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/chat-enabled:
+    put:
+      operationId: live_put__eventId_chat_enabled
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/qna-enabled:
+    put:
+      operationId: live_put__eventId_qna_enabled
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /events/{eventId}:
+    post:
+      operationId: live_post__events_eventId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: live_get__events_eventId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /events/{eventId}/participants/{participantId}:
+    delete:
+      operationId: live_delete__events_eventId_participants_participantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /events/{eventId}/participants/{participantId}/saved:
+    put:
+      operationId: live_put__events_eventId_participants_participantId_saved
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /participants/{participantId}:
+    get:
+      operationId: live_get__participants_participantId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/token:
+    post:
+      operationId: live_post__eventId_token
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/start:
+    post:
+      operationId: live_post__eventId_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/end:
+    post:
+      operationId: live_post__eventId_end
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/record:
+    post:
+      operationId: live_post__eventId_record
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/media-health:
+    get:
+      operationId: live_get__eventId_media_health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/replay:
+    get:
+      operationId: live_get__eventId_replay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/process-replay:
+    post:
+      operationId: live_post__eventId_process_replay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{eventId}/publish-replay:
+    post:
+      operationId: live_post__eventId_publish_replay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: live_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: live_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from live-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    TenantId:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    LiveEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        eventType:
+          type: string
+        contextType:
+          type: string
+        status:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        cpdEnabled:
+          type: boolean

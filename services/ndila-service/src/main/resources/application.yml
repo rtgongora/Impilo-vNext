@@ -77,7 +77,7 @@ ndila:
   providers:
     default-geocoding: ${NDILA_DEFAULT_GEOCODING:MOCK}
     default-routing: ${NDILA_DEFAULT_ROUTING:MOCK}
-    default-tiles: ${NDILA_DEFAULT_TILES:MOCK}
+    default-tiles: ${NDILA_DEFAULT_TILES:PREVIEW_SOVEREIGN}
     default-boundaries: ${NDILA_DEFAULT_BOUNDARIES:INTERNAL}
     fallback-chain-geocoding: ${NDILA_FALLBACK_GEOCODING:MOCK}
     fallback-chain-routing: ${NDILA_FALLBACK_ROUTING:MOCK}
@@ -118,8 +118,13 @@ ndila:
 
     # Offline-cached tiles (MinIO bucket reference)
     offline-tiles:
-      enabled: ${NDILA_OFFLINE_TILES_ENABLED:true}
+      enabled: ${NDILA_OFFLINE_TILES_ENABLED:false}
       bucket: ${NDILA_OFFLINE_TILES_BUCKET:impilo-ndila-tiles}
+
+    # Sovereign in-process raster tiles for dev / staging / preview (no public OSM).
+    preview-sovereign-tiles:
+      enabled: ${NDILA_PREVIEW_SOVEREIGN_TILES_ENABLED:true}
+      http-base-path: ${NDILA_PREVIEW_TILE_HTTP_BASE:/api/v1/ndila}
 
   # Cache policy
   cache:

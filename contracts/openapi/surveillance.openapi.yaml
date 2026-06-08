@@ -43,7 +43,8 @@ paths:
   /internal/v1/ingest:
     post:
       operationId: surveillanceIngest
-      tags: [Internal-Ingest]
+      tags:
+        - Internal-Ingest
       summary: Ingest surveillance event
       requestBody:
         required: true
@@ -53,23 +54,23 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "202":
+        '202':
           description: Ingest accepted
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "400":
+        '400':
           description: Invalid payload
-
   /internal/v1/signals:
     get:
       operationId: surveillanceListSignals
-      tags: [Internal-Signals]
+      tags:
+        - Internal-Signals
       summary: List active signal definitions
       responses:
-        "200":
+        '200':
           description: Signal list
           content:
             application/json:
@@ -78,7 +79,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: surveillanceCreateSignal
-      tags: [Internal-Signals]
+      tags:
+        - Internal-Signals
       summary: Create or update signal
       requestBody:
         required: true
@@ -88,35 +90,35 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Signal stored
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/cases:
     get:
       operationId: surveillanceListCases
-      tags: [Internal-Cases]
+      tags:
+        - Internal-Cases
       summary: List surveillance cases
       responses:
-        "200":
+        '200':
           description: Case list
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/surveillance/counters:
     get:
       operationId: surveillanceGetCounters
-      tags: [Internal-Alerts]
+      tags:
+        - Internal-Alerts
       summary: Get surveillance counters
       responses:
-        "200":
+        '200':
           description: Counter snapshot
           content:
             application/json:
@@ -125,7 +127,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: surveillanceUpdateCounters
-      tags: [Internal-Alerts]
+      tags:
+        - Internal-Alerts
       summary: Upsert surveillance counter values
       requestBody:
         required: true
@@ -135,35 +138,35 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Counters updated
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/surveillance/alerts:
     get:
       operationId: surveillanceListAlerts
-      tags: [Internal-Alerts]
+      tags:
+        - Internal-Alerts
       summary: List triggered surveillance alerts
       responses:
-        "200":
+        '200':
           description: Alert list
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/surveillance/alerts/definitions:
     get:
       operationId: surveillanceListAlertDefinitions
-      tags: [Internal-Alerts]
+      tags:
+        - Internal-Alerts
       summary: List alert definitions
       responses:
-        "200":
+        '200':
           description: Alert definition list
           content:
             application/json:
@@ -172,7 +175,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: surveillanceCreateAlertDefinition
-      tags: [Internal-Alerts]
+      tags:
+        - Internal-Alerts
       summary: Create alert definition
       requestBody:
         required: true
@@ -182,32 +186,32 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Alert definition created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/public-health/weekly-idsr:
     get:
       operationId: surveillanceWeeklyIdsr
-      tags: [Internal-Public-Health]
+      tags:
+        - Internal-Public-Health
       summary: Weekly IDSR aggregate lifecycle endpoint
       responses:
-        "200":
+        '200':
           description: Weekly aggregate payload
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/public-health/outbreaks:
     post:
       operationId: surveillanceCreateOutbreak
-      tags: [Internal-Public-Health]
+      tags:
+        - Internal-Public-Health
       summary: Record outbreak lifecycle event
       requestBody:
         required: true
@@ -217,20 +221,20 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Outbreak lifecycle accepted
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "400":
+        '400':
           description: Invalid payload
-
   /internal/v1/public-health/field-operations:
     post:
       operationId: surveillanceCreateFieldOperation
-      tags: [Internal-Public-Health]
+      tags:
+        - Internal-Public-Health
       summary: Record field operation lifecycle event
       requestBody:
         required: true
@@ -240,15 +244,394 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "202":
+        '202':
           description: Field operation accepted
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "400":
+        '400':
           description: Invalid payload
+  /internal/v1/surveillance/alerts/{alertId}/acknowledge:
+    post:
+      operationId: surveillance_post__internal_v1_surveillance_alerts_alertId_acknowledge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /context:
+    get:
+      operationId: surveillance_get__context
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /operations-home:
+    get:
+      operationId: surveillance_get__operations_home
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /map-markers:
+    get:
+      operationId: surveillance_get__map_markers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /nompilo/situation-summary:
+    post:
+      operationId: surveillance_post__nompilo_situation_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /nompilo/ask:
+    post:
+      operationId: surveillance_post__nompilo_ask
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /nompilo/briefing:
+    post:
+      operationId: surveillance_post__nompilo_briefing
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /weekly-idsr:
+    get:
+      operationId: surveillance_get__weekly_idsr
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /outbreaks:
+    get:
+      operationId: surveillance_get__outbreaks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__outbreaks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /outbreaks/{outbreakId}/transition:
+    post:
+      operationId: surveillance_post__outbreaks_outbreakId_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /field-tasks:
+    get:
+      operationId: surveillance_get__field_tasks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__field_tasks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /field-tasks/{taskId}/transition:
+    post:
+      operationId: surveillance_post__field_tasks_taskId_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /field-operations:
+    post:
+      operationId: surveillance_post__field_operations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /investigations:
+    get:
+      operationId: surveillance_get__investigations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__investigations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /investigations/{investigationId}/status:
+    post:
+      operationId: surveillance_post__investigations_investigationId_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reports/briefs:
+    get:
+      operationId: surveillance_get__reports_briefs
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reports/briefs/generate:
+    post:
+      operationId: surveillance_post__reports_briefs_generate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /complaints:
+    get:
+      operationId: surveillance_get__complaints
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__complaints
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /complaints/{complaintId}/transition:
+    post:
+      operationId: surveillance_post__complaints_complaintId_transition
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reports/briefs/{briefId}/publish:
+    post:
+      operationId: surveillance_post__reports_briefs_briefId_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /reports/briefs/{briefId}/exports:
+    post:
+      operationId: surveillance_post__reports_briefs_briefId_exports
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/alert-rules:
+    get:
+      operationId: surveillance_get__intelligence_alert_rules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__intelligence_alert_rules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/alert-rules/{ruleId}/toggle:
+    post:
+      operationId: surveillance_post__intelligence_alert_rules_ruleId_toggle
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/data-sources:
+    get:
+      operationId: surveillance_get__intelligence_data_sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__intelligence_data_sources
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/data-sources/{sourceId}/heartbeat:
+    post:
+      operationId: surveillance_post__intelligence_data_sources_sourceId_heartbeat
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/data-quality-issues:
+    get:
+      operationId: surveillance_get__intelligence_data_quality_issues
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: surveillance_post__intelligence_data_quality_issues
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/data-quality-issues/{issueId}/resolve:
+    post:
+      operationId: surveillance_post__intelligence_data_quality_issues_issueId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/rules/{ruleId}/conditions:
+    post:
+      operationId: surveillance_post__intelligence_rules_ruleId_conditions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/rules/{ruleId}/test:
+    post:
+      operationId: surveillance_post__intelligence_rules_ruleId_test
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/evaluate:
+    post:
+      operationId: surveillance_post__intelligence_evaluate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/triggers:
+    get:
+      operationId: surveillance_get__intelligence_triggers
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/alerts:
+    get:
+      operationId: surveillance_get__intelligence_alerts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/alerts/{alertId}/acknowledge:
+    post:
+      operationId: surveillance_post__intelligence_alerts_alertId_acknowledge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /intelligence/alerts/{alertId}/resolve:
+    post:
+      operationId: surveillance_post__intelligence_alerts_alertId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /inspections/schedules:
+    post:
+      operationId: surveillance_post__inspections_schedules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: surveillance_get__inspections_schedules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from surveillance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

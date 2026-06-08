@@ -3,8 +3,14 @@ package zw.gov.mohcc.impilo.experience.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
@@ -80,6 +86,34 @@ public class DocumentServiceClient {
     public JsonNode findByHash(String sha256) {
         String url = baseUrl + "/v1/internal/objects/by-hash/" + sha256;
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Upload binary content to document-store (MinIO-backed object registry).
+     */
+    public JsonNode uploadObject(byte[] bytes, String originalFilename, String mimeType) {
+        String url = baseUrl + "/v1/internal/objects";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        ByteArrayResource fileResource = new ByteArrayResource(bytes) {
+            @Override
+            public String getFilename() {
+                return originalFilename;
+            }
+        };
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+        body.add("mimeType", mimeType);
+        if (originalFilename != null && !originalFilename.isBlank()) {
+            body.add("originalFilename", originalFilename);
+        }
+
+        HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);
+        log.debug("DocStore: Uploading object filename={} mime={}", originalFilename, mimeType);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
         return extractData(response);
     }
 

@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { ArrowLeft, Award, Shield, BookOpen, CheckCircle2, AlertTriangle, Clock, Download, BadgeCheck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { CredentialVerificationWorkflowPanel } from "@/components/credentials/CredentialVerificationWorkflowPanel";
 import { ContextualLearningPanel } from "@/components/learning/ContextualLearningPanel";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -56,6 +57,9 @@ export default function CredentialsPage() {
   return (
     <AppLayout>
       <PageShell title="Credentials & CPD" subtitle="Professional licenses, certifications, continuing education, and digital credentials.">
+        <div className="mb-4">
+          <CredentialVerificationWorkflowPanel />
+        </div>
         <div className="mb-4">
           <Link href="/home" className="inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Back to Home

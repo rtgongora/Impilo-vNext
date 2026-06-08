@@ -6,7 +6,7 @@
  * Route: /queue/incoming-referrals | pageTitle: "Incoming Referrals"
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
@@ -24,7 +24,12 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
-import { apiClient, type ApiResponse } from "@/lib/api-client";
+import {
+  buildReferralConsultHandoffRoute,
+  useAcceptReferral,
+  useIncomingReferrals,
+  useRespondReferral,
+} from "@/hooks/queries/useReferrals";
 import {
   COORDINATION_COPY,
   getReferralFacilityName,
@@ -71,50 +76,17 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function IncomingReferralsPage() {
   const facility = useFacilityStore((s) => s.facility);
+  const { data: incomingData, isLoading } = useIncomingReferrals(facility?.id);
+  const acceptReferral = useAcceptReferral();
+  const respondReferral = useRespondReferral();
 
-  const [referrals, setReferrals] = useState<IncomingReferral[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const referrals = (incomingData?.data ?? []) as unknown as IncomingReferral[];
   const [activeAction, setActiveAction] = useState<{ id: string; type: "accept" | "respond" } | null>(null);
   const [scheduledAt, setScheduledAt] = useState("");
   const [handoffNote, setHandoffNote] = useState("");
   const [responseNotes, setResponseNotes] = useState("");
   const [responseOutcome, setResponseOutcome] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!facility) {
-      setReferrals([]);
-      setIsLoading(false);
-      return;
-    }
-
-    let isCancelled = false;
-    setIsLoading(true);
-
-    apiClient
-      .get<ApiResponse<IncomingReferral[]>>(
-        `/internal/v1/referrals/incoming?facility_id=${encodeURIComponent(facility.id)}`,
-      )
-      .then((res) => {
-        if (!isCancelled) {
-          setReferrals(res.data ?? []);
-        }
-      })
-      .catch(() => {
-        if (!isCancelled) {
-          setReferrals([]);
-        }
-      })
-      .finally(() => {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [facility]);
 
   function resetActionState() {
     setActiveAction(null);
@@ -141,28 +113,13 @@ export default function IncomingReferralsPage() {
     if (!facility) return;
     setIsSubmitting(true);
     try {
-      await apiClient.post(`/internal/v1/referrals/${referralId}/accept`, {
+      await acceptReferral.mutateAsync({
+        id: referralId,
         receiving_facility_id: facility.id,
         receiving_facility_name: facility.name,
         scheduled_at: scheduledAt || undefined,
         notes: handoffNote.trim() || undefined,
       });
-      setReferrals((prev) =>
-        prev.map((referral) =>
-          referral.id === referralId
-            ? {
-                ...referral,
-                attributes: {
-                  ...referral.attributes,
-                  status: "ACCEPTED",
-                  accepted_at: new Date().toISOString(),
-                  receiving_facility_name: facility.name,
-                  scheduled_at: scheduledAt || null,
-                },
-              }
-            : referral,
-        ),
-      );
       resetActionState();
     } finally {
       setIsSubmitting(false);
@@ -172,26 +129,11 @@ export default function IncomingReferralsPage() {
   async function handleRespond(referralId: string) {
     setIsSubmitting(true);
     try {
-      await apiClient.post(`/internal/v1/referrals/${referralId}/respond`, {
+      await respondReferral.mutateAsync({
+        id: referralId,
         response_notes: responseNotes,
-        outcome: responseOutcome || null,
+        outcome: responseOutcome || undefined,
       });
-      setReferrals((prev) =>
-        prev.map((referral) =>
-          referral.id === referralId
-            ? {
-                ...referral,
-                attributes: {
-                  ...referral.attributes,
-                  status: "RESPONDED",
-                  response_notes: responseNotes,
-                  responded_at: new Date().toISOString(),
-                  outcome: responseOutcome || null,
-                },
-              }
-            : referral,
-        ),
-      );
       resetActionState();
     } finally {
       setIsSubmitting(false);
@@ -335,7 +277,12 @@ export default function IncomingReferralsPage() {
               const isActionable = attrs.status === "PENDING" || attrs.status === "ACCEPTED";
               const coordinationMeta = parseConsultationCoordinationMeta(attrs.response_notes);
               const stageCopy = getReferralStageCopy(attrs.status, true);
-              const patientConsultsHref = `/ehr/${attrs.patient_id}/consults?tab=referrals`;
+              const referralTransactionId = `referral-${referral.id}`;
+              const patientConsultsHref = buildReferralConsultHandoffRoute(
+                attrs.patient_id,
+                referral.id,
+                referralTransactionId,
+              );
               const patientTeleconsultHref = `/ehr/${attrs.patient_id}/consults?tab=teleconsults`;
 
               return (

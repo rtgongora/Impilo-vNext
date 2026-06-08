@@ -19,7 +19,7 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalDocuments,
-  useUploadDocument,
+  useUploadDocumentFile,
   type ClinicalDocumentResource,
 } from "@/hooks/queries/useClinicalDocuments";
 import { useEncounters } from "@/hooks/queries/useEncounters";
@@ -58,7 +58,7 @@ export default function DocumentsPage() {
   );
 
   const { data: documentsData, isLoading } = useClinicalDocuments(patientId);
-  const uploadDocument = useUploadDocument();
+  const uploadDocument = useUploadDocumentFile();
 
   const documents: ClinicalDocumentResource[] = documentsData?.data ?? [];
   const notesAndSummaries = documents.filter(
@@ -77,11 +77,11 @@ export default function DocumentsPage() {
   }).length;
 
   const [showForm, setShowForm] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     title: "",
     document_type: "CLINICAL_NOTE",
     description: "",
-    storage_key: "",
   });
 
   function updateField(field: string, value: string) {
@@ -90,20 +90,21 @@ export default function DocumentsPage() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!selectedFile) return;
     uploadDocument.mutate(
       {
         patientId,
+        file: selectedFile,
         documentType: form.document_type,
-        title: form.title,
+        title: form.title.trim() || selectedFile.name,
         description: form.description.trim() || null,
         uploaded_by: user?.displayName ?? user?.email ?? "",
         encounter_id: activeEncounter?.id ?? null,
-        facility_id: facility?.id ?? null,
-        storage_key: form.storage_key.trim() || undefined,
       },
       {
         onSuccess: () => {
-          setForm({ title: "", document_type: "CLINICAL_NOTE", description: "", storage_key: "" });
+          setForm({ title: "", document_type: "CLINICAL_NOTE", description: "" });
+          setSelectedFile(null);
           setShowForm(false);
         },
       }
@@ -226,14 +227,18 @@ export default function DocumentsPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-600">File Reference</label>
+                  <label className="mb-1 block text-xs font-medium text-gray-600">File *</label>
                   <input
-                    type="text"
-                    value={form.storage_key}
-                    onChange={(e) => updateField("storage_key", e.target.value)}
-                    placeholder="e.g. documents/patient-123/file.pdf (or paste URL)"
+                    type="file"
+                    required
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-impilo-400"
                   />
+                  {selectedFile && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                    </p>
+                  )}
                 </div>
                 {activeEncounter && (
                   <p className="text-xs text-gray-500">

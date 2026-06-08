@@ -15,6 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PayerOpsControllerTest {
 
     @Test
+    void listAdaptersForwardsMusheXRegistry() {
+        PayerOpsController controller = new PayerOpsController(new StubMushexClient());
+        ResponseEntity<String> response = controller.listAdapters("req-adapters", "corr-adapters");
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"items\":[{\"id\":\"ADP-SANDBOX\",\"rail\":\"SANDBOX\"}]}", response.getBody());
+    }
+
+    @Test
     void listOpsReviewsForwardsPayloadWithMetadata() {
         PayerOpsController controller = new PayerOpsController(new StubMushexClient());
         MultiValueMap<String, String> query = new LinkedMultiValueMap<>();
@@ -106,6 +114,19 @@ class PayerOpsControllerTest {
     }
 
     @Test
+    void claimRemittanceForwardsBody() {
+        ClaimCapturingClient capturing = new ClaimCapturingClient();
+        PayerOpsController controller = new PayerOpsController(capturing);
+
+        ResponseEntity<String> response = controller.claimRemittance(
+                "{\"slipId\":\"REM-9\",\"tenantId\":\"tenant-1\"}", "req-9", "corr-9");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"slipId\":\"REM-9\",\"tenantId\":\"tenant-1\"}", capturing.body);
+        assertEquals("{\"status\":\"CLAIMED\"}", response.getBody());
+    }
+
+    @Test
     void listPaymentIntentsBySourceForwardsQuery() {
         SourceIntentCapturingClient capturing = new SourceIntentCapturingClient();
         PayerOpsController controller = new PayerOpsController(capturing);
@@ -138,6 +159,12 @@ class PayerOpsControllerTest {
         public ResponseEntity<String> issueRemittanceSlip(String intentId) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"id\":\"REM-1\",\"status\":\"ACTIVE\"}");
+        }
+
+        @Override
+        public ResponseEntity<String> listAdapters() {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"items\":[{\"id\":\"ADP-SANDBOX\",\"rail\":\"SANDBOX\"}]}");
         }
     }
 
@@ -189,6 +216,20 @@ class PayerOpsControllerTest {
             this.body = requestBody;
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"success\":true,\"data\":{\"intentId\":\"" + intentId + "\"}}");
+        }
+    }
+
+    private static final class ClaimCapturingClient extends MushexServiceClient {
+        String body;
+
+        private ClaimCapturingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> claimRemittance(String requestBody) {
+            this.body = requestBody;
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body("{\"status\":\"CLAIMED\"}");
         }
     }
 

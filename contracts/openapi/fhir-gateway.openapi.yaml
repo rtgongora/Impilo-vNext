@@ -40,21 +40,22 @@ paths:
   /internal/v1/health:
     get:
       operationId: fhirGatewayHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: Liveness-style health
       responses:
-        "200":
+        '200':
           description: UP
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/test-command:
     post:
       operationId: fhirGatewayTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: Echo test command
       requestBody:
         content:
@@ -63,18 +64,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Echo
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/gateway/routes:
     get:
       operationId: fhirGatewayListRoutes
-      tags: [Internal-Gateway]
+      tags:
+        - Internal-Gateway
       summary: List FHIR route bindings
       parameters:
         - name: tenantId
@@ -83,7 +84,7 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Routes under `data`
           content:
             application/json:
@@ -92,7 +93,8 @@ paths:
                 additionalProperties: true
     post:
       operationId: fhirGatewayCreateRoute
-      tags: [Internal-Gateway]
+      tags:
+        - Internal-Gateway
       summary: Register route
       requestBody:
         required: true
@@ -102,18 +104,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/gateway/forward:
     post:
       operationId: fhirGatewayForward
-      tags: [Internal-Gateway]
+      tags:
+        - Internal-Gateway
       summary: Forward FHIR request per route rules
       requestBody:
         required: true
@@ -123,13 +125,66 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Forward result envelope
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /health:
+    get:
+      operationId: fhirgateway_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: fhirgateway_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /routes:
+    get:
+      operationId: fhirgateway_get__routes
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: fhirgateway_post__routes
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /forward:
+    post:
+      operationId: fhirgateway_post__forward
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /audit:
+    get:
+      operationId: fhirgateway_get__audit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from fhir-gateway-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

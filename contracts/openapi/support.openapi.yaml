@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,162 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /internal/v1/support/articles:
+    post:
+      operationId: support_post__internal_v1_support_articles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_articles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/articles/{article_id}:
+    patch:
+      operationId: support_patch__internal_v1_support_articles_article_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_articles_article_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}/assign:
+    post:
+      operationId: support_post__internal_v1_support_tickets_ticket_id_assign
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}/assignments:
+    get:
+      operationId: support_get__internal_v1_support_tickets_ticket_id_assignments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}/comments:
+    post:
+      operationId: support_post__internal_v1_support_tickets_ticket_id_comments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_tickets_ticket_id_comments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/dashboard/stats:
+    get:
+      operationId: support_get__internal_v1_support_dashboard_stats
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}/messages:
+    post:
+      operationId: support_post__internal_v1_support_tickets_ticket_id_messages
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_tickets_ticket_id_messages
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /tickets:
+    get:
+      operationId: support_get__tickets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /articles:
+    get:
+      operationId: support_get__articles
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets:
+    post:
+      operationId: support_post__internal_v1_support_tickets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_tickets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}:
+    patch:
+      operationId: support_patch__internal_v1_support_tickets_ticket_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: support_get__internal_v1_support_tickets_ticket_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/support/tickets/{ticket_id}/escalate:
+    post:
+      operationId: support_post__internal_v1_support_tickets_ticket_id_escalate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from support-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

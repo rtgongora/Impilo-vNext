@@ -5,6 +5,13 @@
   "type": "module",
   "scripts": {
     "report": "node generate-completeness-report.mjs",
+    "contract-matrix": "node generate-contract-implementation-matrix.mjs",
+    "contract-matrix:check": "node generate-contract-implementation-matrix.mjs --check-only",
+    "coverage-ledger": "node generate-service-coverage-ledger.mjs",
+    "completion-ledger": "node generate-completion-layer-ledger.mjs",
+    "product-ledgers": "npm run contract-matrix && npm run coverage-ledger && npm run completion-ledger",
+    "sync-handler-routes": "node sync-handler-routes-to-contract.mjs",
+    "repair-experience-bff-openapi": "node repair-experience-bff-openapi.mjs",
     "emit-stubs": "node emit-missing-openapi-stubs.mjs",
     "lint-learning-openapi-local": "node lint-learning-openapi-local.mjs",
     "check-lms-rollout-evidence": "node lms-rollout-evidence-check.mjs",

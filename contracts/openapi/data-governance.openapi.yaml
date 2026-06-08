@@ -36,7 +36,8 @@ paths:
   /internal/v1/governance/datasets:
     post:
       operationId: dataGovernanceCreateDataset
-      tags: [Internal-Governance]
+      tags:
+        - Internal-Governance
       summary: Register a governed dataset
       requestBody:
         required: true
@@ -46,15 +47,129 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Dataset registered
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "400":
+        '400':
           description: Validation error
+    get:
+      operationId: datagovernance_get__internal_v1_governance_datasets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /external/v1/exports:
+    post:
+      operationId: datagovernance_post__external_v1_exports
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/grants:
+    post:
+      operationId: datagovernance_post__internal_v1_governance_grants
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/grants/revoke:
+    post:
+      operationId: datagovernance_post__internal_v1_governance_grants_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/policies:
+    post:
+      operationId: datagovernance_post__internal_v1_governance_policies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/decide:
+    post:
+      operationId: datagovernance_post__internal_v1_governance_decide
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /external/v1/governance/datasets:
+    get:
+      operationId: datagovernance_get__external_v1_governance_datasets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/rules:
+    post:
+      operationId: datagovernance_post__internal_v1_governance_rules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: datagovernance_get__internal_v1_governance_rules
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/governance/rules/{ruleId}:
+    get:
+      operationId: datagovernance_get__internal_v1_governance_rules_ruleId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: datagovernance_delete__internal_v1_governance_rules_ruleId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/snapshots/datasets:
+    get:
+      operationId: datagovernance_get__internal_v1_snapshots_datasets
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/snapshots/policies:
+    get:
+      operationId: datagovernance_get__internal_v1_snapshots_policies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from data-governance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -10,9 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
-
+import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -20,7 +21,7 @@ import java.util.*;
 
 /**
  * Appointment scheduling endpoints with TUSO booking bridge.
- * Delegates to TusoServiceClient for canonical booking lifecycle.
+ * Delegates appointments to booking-service; TUSO remains for resource calendar.
  */
 @RestController
 @RequestMapping("/internal/v1/appointments")
@@ -28,15 +29,22 @@ public class SchedulingController {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulingController.class);
 
+    private final BookingServiceClient bookingServiceClient;
     private final TusoServiceClient tusoClient;
     private final SchedulingServiceClient schedulingServiceClient;
+    private final AppointmentCheckInService appointmentCheckInService;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
     private boolean useRemoteSlots;
 
-    public SchedulingController(TusoServiceClient tusoClient, SchedulingServiceClient schedulingServiceClient) {
+    public SchedulingController(BookingServiceClient bookingServiceClient,
+                                TusoServiceClient tusoClient,
+                                SchedulingServiceClient schedulingServiceClient,
+                                AppointmentCheckInService appointmentCheckInService) {
+        this.bookingServiceClient = bookingServiceClient;
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
+        this.appointmentCheckInService = appointmentCheckInService;
     }
 
     public record CreateAppointmentRequest(
@@ -65,12 +73,10 @@ public class SchedulingController {
 
         int limit = Math.min(size, 100);
 
-        JsonNode appointments = tusoClient.listAppointments(patientId, facilityId, status, page, limit);
-
-        // List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql.toString(), params.toArray());
+        JsonNode appointments = bookingServiceClient.listAppointments(patientId, facilityId, status, page, limit);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", appointments);
+        response.put("data", enrichAppointmentsWithBookingId(appointments));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -97,14 +103,10 @@ public class SchedulingController {
         appointmentData.put("resource_id", request.resource_id());
         appointmentData.put("tenant_id", tenantId);
 
-        JsonNode result = tusoClient.createAppointment(appointmentData);
-
-        // jdbcTemplate.update("""
-        //     INSERT INTO appointments (...) VALUES (...)
-        //     """, ...);
+        JsonNode result = bookingServiceClient.createAppointment(appointmentData);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result);
+        response.put("data", enrichAppointmentWithBookingId(result));
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -116,14 +118,29 @@ public class SchedulingController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
-        JsonNode result = tusoClient.confirmAppointment(id.toString());
-
-        // jdbcTemplate.update("UPDATE appointments SET status = 'CONFIRMED' ...", ...);
+        JsonNode result = bookingServiceClient.confirmAppointment(id.toString());
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", result != null ? result : Map.of("id", id.toString(), "status", "CONFIRMED"));
+        Object data = result != null ? enrichAppointmentWithBookingId(result)
+                : Map.of("id", id.toString(), "status", "CONFIRMED");
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Check in a scheduled appointment — bridges scheduling into the outpatient queue spine
+     * by starting a PCT journey and enqueueing a walk-in queue item.
+     */
+    @PostMapping("/{id}/check-in")
+    public ResponseEntity<Map<String, Object>> checkInAppointment(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.POD_ID) String podId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        return appointmentCheckInService.checkIn(id, requestId, correlationId);
     }
 
     @PostMapping("/{id}/cancel")
@@ -137,12 +154,12 @@ public class SchedulingController {
 
         String reason = body != null && body.containsKey("reason") ? (String) body.get("reason") : "Cancelled";
 
-        tusoClient.cancelAppointment(id.toString(), reason);
-
-        // jdbcTemplate.update("UPDATE appointments SET status = 'CANCELLED' ...", ...);
+        JsonNode cancelled = bookingServiceClient.cancelAppointment(id.toString(), reason);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("data", Map.of("id", id.toString(), "status", "CANCELLED"));
+        Object data = cancelled != null ? enrichAppointmentWithBookingId(cancelled)
+                : Map.of("id", id.toString(), "status", "CANCELLED");
+        response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
     }
@@ -292,6 +309,57 @@ public class SchedulingController {
     /**
      * Half-hour labels (HH:mm UTC) touched by each booking — matches legacy BFF slot stepping.
      */
+    private static String textOr(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String value = node.path(field).asText(null);
+        return value != null && !value.isBlank() ? value : null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Additively surfaces {@code bookingId} on appointment payloads when booking-service provides it.
+     */
+    private static Object enrichAppointmentWithBookingId(JsonNode appointment) {
+        if (appointment == null || appointment.isNull()) {
+            return appointment;
+        }
+        if (appointment.isObject()) {
+            Map<String, Object> copy = new LinkedHashMap<>();
+            appointment.fields().forEachRemaining(entry -> copy.put(entry.getKey(), entry.getValue()));
+            String bookingId = firstNonBlank(
+                    textOr(appointment, "bookingId"),
+                    textOr(appointment, "booking_id"));
+            if (bookingId != null) {
+                copy.putIfAbsent("booking_id", bookingId);
+                copy.putIfAbsent("bookingId", bookingId);
+            }
+            return copy;
+        }
+        return appointment;
+    }
+
+    private static Object enrichAppointmentsWithBookingId(JsonNode appointments) {
+        if (appointments == null || appointments.isNull()) {
+            return appointments;
+        }
+        if (appointments.isArray()) {
+            List<Object> enriched = new ArrayList<>();
+            appointments.forEach(node -> enriched.add(enrichAppointmentWithBookingId(node)));
+            return enriched;
+        }
+        return enrichAppointmentWithBookingId(appointments);
+    }
+
     private static Set<String> occupiedHalfHourLabels(List<OffsetDateTime[]> intervals,
                                                      OffsetDateTime dayStart, OffsetDateTime dayEnd) {
         Set<String> labels = new HashSet<>();

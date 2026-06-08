@@ -21,7 +21,7 @@
 | Entry type | Source | Rules applied |
 |------------|--------|---------------|
 | Static shell apps | `ui/one-ui-shell/src/lib/shell/app-registry.ts` | Role gate + href; maturity metadata on `AppDefinition` |
-| Marketplace apps | `useHealthOsLauncher` → `/internal/v1/marketplace/launcher` | Disabled state + reason when not `INSTALLED` |
+| Marketplace apps | `useHealthOsLauncher` → `/internal/v1/launcher/apps` | Disabled state + reason when not launchable |
 | Mobile Health OS | `healthOsLauncherService.ts` (citizen/provider) | Same BFF; partial maturity on screen |
 
 ## Intentionally hidden / API-only / blocked

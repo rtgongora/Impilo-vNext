@@ -35,10 +35,11 @@ paths:
   /internal/v1/forms:
     get:
       operationId: formsListSchemas
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: List form schemas for tenant
       responses:
-        "200":
+        '200':
           description: Schema list
           content:
             application/json:
@@ -49,7 +50,8 @@ paths:
                   additionalProperties: true
     post:
       operationId: formsCreateSchema
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Create form schema
       requestBody:
         required: true
@@ -59,18 +61,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/forms/{id}:
     get:
       operationId: formsGetSchema
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Get schema by id
       parameters:
         - name: id
@@ -79,20 +81,20 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Schema
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-        "404":
+        '404':
           description: Not found
-
   /internal/v1/forms/{id}/versions:
     post:
       operationId: formsCreateVersion
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Create new published version draft
       parameters:
         - name: id
@@ -108,18 +110,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Version created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/forms/{id}/publish:
     post:
       operationId: formsPublishSchema
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Publish schema
       parameters:
         - name: id
@@ -128,18 +130,18 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Published schema
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/forms/{id}/validate:
     post:
       operationId: formsValidatePayload
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Validate payload against schema
       parameters:
         - name: id
@@ -155,18 +157,18 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "200":
+        '200':
           description: Validation outcome
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/forms/{id}/retire:
     post:
       operationId: formsRetireSchema
-      tags: [Internal-Forms]
+      tags:
+        - Internal-Forms
       summary: Retire schema
       parameters:
         - name: id
@@ -175,13 +177,75 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Retired schema
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    post:
+      operationId: forms_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: forms_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: forms_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/versions:
+    post:
+      operationId: forms_post__id_versions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/publish:
+    post:
+      operationId: forms_post__id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/retire:
+    post:
+      operationId: forms_post__id_retire
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/validate:
+    post:
+      operationId: forms_post__id_validate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from forms-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

@@ -8,6 +8,7 @@ export type NdilaTileConfig = {
   tileUrlTemplate?: string;
   attribution?: string;
   maxZoom?: number;
+  supportsOffline?: boolean;
 };
 
 type AnyRecord = Record<string, unknown>;
@@ -16,8 +17,14 @@ export function useNdilaTileConfig() {
   return useQuery({
     queryKey: ["ndila", "tiles", "config"],
     queryFn: async () => {
-      const res = await apiClient.get<ApiResponse<NdilaTileConfig>>("/internal/v1/ndila/tiles/config");
-      return res.data ?? {};
+      const res = await apiClient.get<ApiResponse<NdilaTileConfig & { providerName?: string }>>(
+        "/internal/v1/ndila/tiles/config",
+      );
+      const raw = res.data ?? {};
+      return {
+        ...raw,
+        provider: raw.provider ?? raw.providerName,
+      };
     },
     staleTime: 60_000,
   });

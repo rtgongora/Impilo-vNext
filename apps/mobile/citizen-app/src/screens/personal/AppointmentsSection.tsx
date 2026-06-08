@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  Card,
-  CardHeader,
-  CardBody,
   Button,
   Badge,
-  TextField,
-  Select,
   LoadingSpinner,
-  EmptyState,
   ErrorState,
 } from "@impilo/mobile-design-system";
-import { fetchAppointments, requestAppointment, cancelAppointment } from "../../services/appointmentService";
+import {
+  fetchAppointments,
+  cancelAppointment,
+  checkInAppointment,
+} from "../../services/appointmentService";
 import type { Appointment } from "../../types";
 
 const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -22,18 +20,14 @@ const STATUS_COLORS: Record<string, "default" | "secondary" | "destructive" | "o
   COMPLETED: "secondary",
   CANCELLED: "destructive",
   IN_PROGRESS: "default",
+  CHECKED_IN: "default",
+  NO_SHOW: "destructive",
 };
 
 export function AppointmentsSection() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [showBooking, setShowBooking] = useState(false);
-  const [facilityId, setFacilityId] = useState("");
-  const [appointmentType, setAppointmentType] = useState("GENERAL");
-  const [preferredDate, setPreferredDate] = useState("");
-  const [reason, setReason] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -52,24 +46,26 @@ export function AppointmentsSection() {
     load();
   }, [load]);
 
-  const handleBook = useCallback(async () => {
-    setSubmitting(true);
-    try {
-      await requestAppointment({ facilityId, appointmentType, preferredDate, reason });
-      setShowBooking(false);
-      setFacilityId("");
-      setReason("");
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-    } finally {
-      setSubmitting(false);
-    }
-  }, [facilityId, appointmentType, preferredDate, reason, load]);
-
   const handleCancel = useCallback(async (id: string) => {
     try {
       await cancelAppointment(id);
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [load]);
+
+  const handleCheckIn = useCallback(async (id: string) => {
+    try {
+      const result = await checkInAppointment(id);
+      const encounterId = result.meta.encounter_id ?? result.data.encounter_id;
+      const transactionId = result.meta.core_transaction_id;
+      Alert.alert(
+        "Checked in",
+        encounterId
+          ? `Encounter ${encounterId} is ready.${transactionId ? ` Transaction ${transactionId}.` : ""}`
+          : "Your appointment is checked in. Proceed to the facility queue.",
+      );
       load();
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
@@ -82,72 +78,22 @@ export function AppointmentsSection() {
   return (
     <View testID="appointments-section" style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.sectionLabel}>MY APPOINTMENTS</Text>
-        <Button
-          title={showBooking ? "Cancel" : "Book New"}
-          variant={showBooking ? "ghost" : "primary"}
-          size="sm"
-          onPress={() => setShowBooking(!showBooking)}
-          testID="toggle-booking"
-        />
-      </View>
-
-      {showBooking ? (
-        <View style={styles.bookingCard}>
-          <Text style={styles.bookingTitle}>Request Appointment</Text>
-          <View style={styles.formContainer}>
-            <TextField
-              label="Facility ID"
-              value={facilityId}
-              onChange={setFacilityId}
-              placeholder="Enter facility ID"
-              testID="booking-facility"
-            />
-            <Select
-              label="Type"
-              value={appointmentType}
-              onChange={setAppointmentType}
-              options={[
-                { label: "General Consultation", value: "GENERAL" },
-                { label: "Follow-Up", value: "FOLLOW_UP" },
-                { label: "Specialist Referral", value: "SPECIALIST" },
-                { label: "Lab Work", value: "LAB_WORK" },
-                { label: "Vaccination", value: "VACCINATION" },
-              ]}
-              testID="booking-type"
-            />
-            <TextField
-              label="Preferred Date"
-              value={preferredDate}
-              onChange={setPreferredDate}
-              placeholder="YYYY-MM-DD"
-              testID="booking-date"
-            />
-            <TextField
-              label="Reason (optional)"
-              value={reason}
-              onChange={setReason}
-              placeholder="Brief description"
-              testID="booking-reason"
-            />
-            <Button
-              title={submitting ? "Submitting..." : "Submit Request"}
-              variant="primary"
-              onPress={handleBook}
-              disabled={submitting || !facilityId || !preferredDate}
-              testID="submit-booking"
-            />
-          </View>
+        <View>
+          <Text style={styles.sectionLabel}>MY APPOINTMENTS</Text>
+          <Text style={styles.sectionSubtitle}>Confirmed scheduled care events only</Text>
         </View>
-      ) : null}
+      </View>
 
       {appointments.length === 0 ? (
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
             <Ionicons name="calendar-outline" size={32} color="#D1D5DB" />
           </View>
-          <Text style={styles.emptyTitle}>No appointments</Text>
-          <Text style={styles.emptyMessage}>Book your first appointment using the button above</Text>
+          <Text style={styles.emptyTitle}>No appointments yet</Text>
+          <Text style={styles.emptyMessage}>
+            Book a service under My Bookings. After your request is approved, the confirmed appointment
+            will appear here.
+          </Text>
         </View>
       ) : (
         appointments.map((appt) => {
@@ -187,13 +133,22 @@ export function AppointmentsSection() {
                     <Text style={styles.reasonText}>{appt.reason}</Text>
                   ) : null}
                   {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
-                    <Button
-                      title="Cancel Appointment"
-                      variant="ghost"
-                      size="sm"
-                      onPress={() => handleCancel(appt.id)}
-                      testID={`cancel-appointment-${appt.id}`}
-                    />
+                    <View style={styles.actionRow}>
+                      <Button
+                        title="Check in"
+                        variant="default"
+                        size="sm"
+                        onPress={() => handleCheckIn(appt.id)}
+                        testID={`check-in-appointment-${appt.id}`}
+                      />
+                      <Button
+                        title="Cancel Appointment"
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => handleCancel(appt.id)}
+                        testID={`cancel-appointment-${appt.id}`}
+                      />
+                    </View>
                   ) : null}
                 </View>
               </View>
@@ -222,24 +177,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: "uppercase",
   },
-  bookingCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  bookingTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 12,
-  },
-  formContainer: {
-    gap: 12,
+  sectionSubtitle: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 2,
   },
   emptyContainer: {
     alignItems: "center",
@@ -332,5 +273,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#9CA3AF",
     marginTop: 2,
+  },
+  actionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 8,
   },
 });

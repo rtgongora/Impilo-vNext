@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { NdilaMap } from "@/components/ndila/NdilaMap";
 import {
   useChecklistTemplates,
   useCreateFacilityApplication,
@@ -325,6 +326,33 @@ export default function FacilityDetailPage() {
                       <p className="mt-2 font-semibold text-gray-900">{new Date(master.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
+                </div>
+                <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-500">Facility map</h3>
+                  {master.latitude != null && master.longitude != null ? (
+                    <div className="mt-4">
+                      <NdilaMap
+                        center={{ latitude: master.latitude, longitude: master.longitude }}
+                        markers={[
+                          {
+                            id: String(master.facilityId),
+                            label: master.name,
+                            latitude: master.latitude,
+                            longitude: master.longitude,
+                            markerType: "facility",
+                            status: master.regulatoryStatus,
+                          },
+                        ]}
+                        height={280}
+                        fitToMarkers
+                        mode="OPERATIONS"
+                      />
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm text-gray-600">
+                      No coordinates on master profile yet — capture during registration or premises change application.
+                    </p>
+                  )}
                 </div>
               </div>
             ) : null}

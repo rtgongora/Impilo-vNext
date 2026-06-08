@@ -23,6 +23,7 @@ import { PharmacyHubScreen } from "./PharmacyHubScreen";
 import { LabHubScreen } from "./LabHubScreen";
 import { MarketplaceOpsScreen } from "./MarketplaceOpsScreen";
 import { ScheduleScreen } from "./ScheduleScreen";
+import { BookingRequestsScreen } from "./BookingRequestsScreen";
 import { AdminRegistryHubScreen } from "./AdminRegistryHubScreen";
 import { OpsReportsHubScreen } from "./OpsReportsHubScreen";
 import { DeveloperHubScreen } from "./DeveloperHubScreen";
@@ -33,6 +34,11 @@ import { TelemedicineScreen } from "./TelemedicineScreen";
 import { FundoLearningShellScreen } from "./FundoLearningShellScreen";
 import { ProductionReadinessJourneyScreen } from "./ProductionReadinessJourneyScreen";
 import { WorkflowDispatchOpsScreen } from "./WorkflowDispatchOpsScreen";
+import { MadiOrdersScreen } from "../madi/MadiOrdersScreen";
+import { MadiTransfusionScreen } from "../madi/MadiTransfusionScreen";
+import { MadiDriveCaptureScreen } from "../madi/MadiDriveCaptureScreen";
+import { MadiReactionReportScreen } from "../madi/MadiReactionReportScreen";
+import { ProviderLiveHubScreen } from "../live/ProviderLiveHubScreen";
 import { TriageScreen } from "./TriageScreen";
 import { BillingScreen } from "./BillingScreen";
 import { PACSViewerScreen } from "./PACSViewerScreen";
@@ -55,6 +61,7 @@ type ToolTab =
   | "reports"
   | "finance"
   | "schedule"
+  | "booking_requests"
   | "pharmacy"
   | "lab"
   | "marketplace"
@@ -71,7 +78,12 @@ type ToolTab =
   | "core_transaction"
   | "workflow_dispatch"
   | "ph_field_tasks"
-  | "prod_ready";
+  | "prod_ready"
+  | "madi_orders"
+  | "madi_transfusion"
+  | "madi_drives"
+  | "madi_reactions"
+  | "impilo_live";
 
 const TABS: { id: ToolTab; label: string }[] = [
   { id: "soap", label: "SOAP" }, { id: "triage", label: "Triage" }, { id: "telemedicine", label: "Telehealth" }, { id: "drugs", label: "Drug Check" }, { id: "orders", label: "Order Sets" },
@@ -80,8 +92,14 @@ const TABS: { id: ToolTab; label: string }[] = [
   { id: "inpatient", label: "Inpatient" }, { id: "facility", label: "Facility" }, { id: "reports", label: "Reports" },
   { id: "finance", label: "Finance" }, { id: "billing", label: "Billing" }, { id: "pacs", label: "PACS" },
   { id: "schedule", label: "Schedule" },
+  { id: "booking_requests", label: "Bookings" },
   { id: "pharmacy", label: "Pharmacy" },
   { id: "lab", label: "Lab" },
+  { id: "madi_orders", label: "Blood Orders" },
+  { id: "madi_transfusion", label: "Transfusion" },
+  { id: "madi_drives", label: "Blood Drives" },
+  { id: "madi_reactions", label: "Haemovig." },
+  { id: "impilo_live", label: "Impilo Live" },
   { id: "marketplace", label: "Market Ops" },
   { id: "admin", label: "Admin" },
   { id: "ops_reports", label: "Ops+" },
@@ -140,8 +158,14 @@ export function ClinicalToolsScreen() {
         {tab === "billing" && <BillingScreen />}
         {tab === "pacs" && <PACSViewerScreen />}
         {tab === "schedule" && <ScheduleScreen />}
+        {tab === "booking_requests" && <BookingRequestsScreen />}
         {tab === "pharmacy" && <PharmacyHubScreen />}
         {tab === "lab" && <LabHubScreen />}
+        {tab === "madi_orders" && <MadiOrdersScreen />}
+        {tab === "madi_transfusion" && <MadiTransfusionScreen />}
+        {tab === "madi_drives" && <MadiDriveCaptureScreen />}
+        {tab === "madi_reactions" && <MadiReactionReportScreen />}
+        {tab === "impilo_live" && <ProviderLiveHubScreen />}
         {tab === "marketplace" && <MarketplaceOpsScreen />}
         {tab === "admin" && <AdminRegistryHubScreen />}
         {tab === "ops_reports" && <OpsReportsHubScreen />}

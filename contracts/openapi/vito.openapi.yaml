@@ -74,139 +74,139 @@ tags:
 # PATHS
 # ============================================================================
 paths:
-  # -------------------------------------------------------------------------
-  # Portal (internet-facing)
-  # -------------------------------------------------------------------------
   /v1/portal/id/request:
     post:
       operationId: portalRequestId
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Request a new Health ID via the citizen portal
       description: Initiates a Health-ID issuance request from a self-service portal session.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PortalIdRequestPayload"
+              $ref: '#/components/schemas/PortalIdRequestPayload'
       responses:
-        "201":
+        '201':
           description: Issuance request created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /v1/portal/id/recovery/start:
     post:
       operationId: portalRecoveryStart
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Start portal-based identity recovery
       description: Sends an OTP or recovery link to the citizen's registered channel.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecoveryStartPayload"
+              $ref: '#/components/schemas/RecoveryStartPayload'
       responses:
-        "200":
+        '200':
           description: Recovery challenge issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "429":
-          $ref: "#/components/responses/TooManyRequests"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /v1/portal/id/recovery/verify:
     post:
       operationId: portalRecoveryVerify
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Verify recovery challenge (OTP / link)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecoveryVerifyPayload"
+              $ref: '#/components/schemas/RecoveryVerifyPayload'
       responses:
-        "200":
+        '200':
           description: Recovery verified — new credentials returned
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecoveryVerifyResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "410":
+                $ref: '#/components/schemas/RecoveryVerifyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '410':
           description: Challenge expired
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/portal/me:
     get:
       operationId: portalGetMe
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Get the authenticated citizen's profile
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       responses:
-        "200":
+        '200':
           description: Current citizen profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Client"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-
+                $ref: '#/components/schemas/Client'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/portal/health-id/qr:
     get:
       operationId: portalHealthIdQr
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Download citizen's Health-ID as a QR code image
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: format
           in: query
           schema:
             type: string
-            enum: [png, svg]
+            enum:
+              - png
+              - svg
             default: png
       responses:
-        "200":
+        '200':
           description: QR code image
           content:
             image/png:
@@ -216,151 +216,149 @@ paths:
             image/svg+xml:
               schema:
                 type: string
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/portal/delegated-pickup/create:
     post:
       operationId: portalDelegatedPickupCreate
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Create a delegated card-pickup authorisation
       description: |
         Allows a citizen to authorise another person to collect their smart card
         on their behalf.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DelegatedPickupCreatePayload"
+              $ref: '#/components/schemas/DelegatedPickupCreatePayload'
       responses:
-        "201":
+        '201':
           description: Delegated pickup created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DelegatedPickup"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/DelegatedPickup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/portal/delegated-pickup/redeem:
     post:
       operationId: portalDelegatedPickupRedeem
-      tags: [Portal]
+      tags:
+        - Portal
       summary: Redeem a delegated card-pickup authorisation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/DelegatedPickupRedeemPayload"
+              $ref: '#/components/schemas/DelegatedPickupRedeemPayload'
       responses:
-        "200":
+        '200':
           description: Pickup redeemed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "410":
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
           description: Authorisation expired or already redeemed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  # -------------------------------------------------------------------------
-  # Internal — Identity core
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/identity/register:
     post:
       operationId: identityRegister
-      tags: [Internal-Identity]
+      tags:
+        - Internal-Identity
       summary: Register a new client identity
       description: |
         Creates a new CPID, stores PII in VITO, and publishes
         `client.registered` via the outbox.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IdentityRegisterPayload"
+              $ref: '#/components/schemas/IdentityRegisterPayload'
       responses:
-        "201":
+        '201':
           description: Client registered
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Client"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/identity/resolve:
     post:
       operationId: identityResolve
-      tags: [Internal-Identity]
+      tags:
+        - Internal-Identity
       summary: Resolve an identity from partial demographics or alias
       description: Returns the best-match CPID for the supplied identifiers.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IdentityResolvePayload"
+              $ref: '#/components/schemas/IdentityResolvePayload'
       responses:
-        "200":
+        '200':
           description: Resolved identity
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IdentityResolveResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/IdentityResolveResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/identity/rotate:
     post:
       operationId: identityRotate
-      tags: [Internal-Identity]
+      tags:
+        - Internal-Identity
       summary: Rotate a client's CPID
       description: |
         Generates a new CPID and links it to the previous one. Downstream
         services are notified via the `cpid.rotated` event.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [healthId]
+              required:
+                - healthId
               properties:
                 healthId:
                   type: string
@@ -369,30 +367,27 @@ paths:
                   type: string
                   description: Reason for rotation
       responses:
-        "200":
+        '200':
           description: CPID rotated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IdentityRotateResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Internal — Client lookup & lifecycle
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/IdentityRotateResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/clients:
     get:
       operationId: listClients
-      tags: [Internal-Clients]
+      tags:
+        - Internal-Clients
       summary: List clients with paging and optional search filters
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
         - name: q
           in: query
           description: Free-text search across name, ID number, phone
@@ -402,119 +397,124 @@ paths:
           in: query
           schema:
             type: string
-            enum: [ACTIVE, INACTIVE, DECEASED]
+            enum:
+              - ACTIVE
+              - INACTIVE
+              - DECEASED
       responses:
-        "200":
+        '200':
           description: Paged list of clients
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/Client"
-
+                          $ref: '#/components/schemas/Client'
   /v1/clients/{healthId}:
     get:
       operationId: getClient
-      tags: [Internal-Clients]
+      tags:
+        - Internal-Clients
       summary: Get a single client by Health ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       responses:
-        "200":
+        '200':
           description: Client found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Client"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/Client'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/clients/{healthId}/verify:
     post:
       operationId: verifyClient
-      tags: [Internal-Clients]
+      tags:
+        - Internal-Clients
       summary: Verify a client's identity (step-up)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/VerifyClientPayload"
+              $ref: '#/components/schemas/VerifyClientPayload'
       responses:
-        "200":
+        '200':
           description: Verification result
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/clients/{healthId}/deactivate:
     post:
       operationId: deactivateClient
-      tags: [Internal-Clients]
+      tags:
+        - Internal-Clients
       summary: Deactivate a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Client deactivated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/clients/{healthId}/deceased:
     post:
       operationId: markClientDeceased
-      tags: [Internal-Clients]
+      tags:
+        - Internal-Clients
       summary: Mark a client as deceased
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [dateOfDeath]
+              required:
+                - dateOfDeath
               properties:
                 dateOfDeath:
                   type: string
@@ -523,82 +523,79 @@ paths:
                   type: string
                   description: Source of death notification (e.g. DHA, facility)
       responses:
-        "200":
+        '200':
           description: Client marked as deceased
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Internal — Issuance workflow
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/internal/issuance/submit:
     post:
       operationId: issuanceSubmit
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Submit a new Health-ID issuance request
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/IssuanceSubmitPayload"
+              $ref: '#/components/schemas/IssuanceSubmitPayload'
       responses:
-        "201":
+        '201':
           description: Issuance request submitted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/internal/issuance/{requestId}/proofing:
     post:
       operationId: issuanceProofing
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Record identity-proofing event for an issuance request
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ProofingEvent"
+              $ref: '#/components/schemas/ProofingEvent'
       responses:
-        "200":
+        '200':
           description: Proofing event recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/internal/issuance/{requestId}/approve:
     post:
       operationId: issuanceApprove
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Approve an issuance request
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       requestBody:
         content:
           application/json:
@@ -608,51 +605,51 @@ paths:
                 notes:
                   type: string
       responses:
-        "200":
+        '200':
           description: Request approved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/internal/issuance/{requestId}/issue:
     post:
       operationId: issuanceIssue
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Issue the Health ID (generates CPID + Health-ID)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       responses:
-        "200":
+        '200':
           description: Health ID issued
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/internal/issuance/{requestId}/deliver:
     post:
       operationId: issuanceDeliver
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Record delivery of the Health-ID credential to the client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       requestBody:
         content:
           application/json:
@@ -661,333 +658,351 @@ paths:
               properties:
                 deliveryChannel:
                   type: string
-                  enum: [IN_PERSON, SMS, EMAIL, DELEGATED_PICKUP]
+                  enum:
+                    - IN_PERSON
+                    - SMS
+                    - EMAIL
+                    - DELEGATED_PICKUP
                 deliveredAt:
                   type: string
                   format: date-time
       responses:
-        "200":
+        '200':
           description: Delivery recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/internal/issuance/{requestId}/reject:
     post:
       operationId: issuanceReject
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Reject an issuance request
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Request rejected
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/internal/issuance/queue:
     get:
       operationId: issuanceQueue
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: List pending issuance requests
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
         - name: status
           in: query
           schema:
             type: string
-            enum: [SUBMITTED, PROOFED, APPROVED, ISSUED, DELIVERED, REJECTED]
+            enum:
+              - SUBMITTED
+              - PROOFED
+              - APPROVED
+              - ISSUED
+              - DELIVERED
+              - REJECTED
       responses:
-        "200":
+        '200':
           description: Paged issuance queue
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/IssuanceRequest"
-
+                          $ref: '#/components/schemas/IssuanceRequest'
   /v1/internal/issuance/{requestId}:
     get:
       operationId: issuanceGet
-      tags: [Internal-Issuance]
+      tags:
+        - Internal-Issuance
       summary: Get a single issuance request by ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/RequestIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/RequestIdPath'
       responses:
-        "200":
+        '200':
           description: Issuance request found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/IssuanceRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Cards
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/IssuanceRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/cards/request:
     post:
       operationId: cardRequest
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Request a new smart card
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CardRequestPayload"
+              $ref: '#/components/schemas/CardRequestPayload'
       responses:
-        "201":
+        '201':
           description: Card request accepted
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/SmartCard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/cards/{cardId}/print:
     post:
       operationId: cardPrint
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Submit card for printing
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/CardIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/CardIdPath'
       responses:
-        "200":
+        '200':
           description: Card submitted to print queue
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/SmartCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/cards/{cardId}/activate:
     post:
       operationId: cardActivate
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Activate a printed card
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/CardIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/CardIdPath'
       responses:
-        "200":
+        '200':
           description: Card activated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/SmartCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/cards/{cardId}/inactivate:
     post:
       operationId: cardInactivate
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Temporarily inactivate a card (e.g. lost/stolen)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/CardIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/CardIdPath'
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
-                  enum: [LOST, STOLEN, DAMAGED, OTHER]
+                  enum:
+                    - LOST
+                    - STOLEN
+                    - DAMAGED
+                    - OTHER
       responses:
-        "200":
+        '200':
           description: Card inactivated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/SmartCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/cards/{cardId}/revoke:
     post:
       operationId: cardRevoke
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Permanently revoke a card
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/CardIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/CardIdPath'
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required: [reason]
+              required:
+                - reason
               properties:
                 reason:
                   type: string
       responses:
-        "200":
+        '200':
           description: Card revoked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/SmartCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/cards/active/{healthId}:
     get:
       operationId: cardGetActive
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Get the active card for a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       responses:
-        "200":
+        '200':
           description: Active card
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SmartCard"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/SmartCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/cards/history/{healthId}:
     get:
       operationId: cardHistory
-      tags: [Cards]
+      tags:
+        - Cards
       summary: Get full card history for a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       responses:
-        "200":
+        '200':
           description: Card history
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/SmartCard"
-
+                  $ref: '#/components/schemas/SmartCard'
   /v1/cards/by-status/{status}:
     get:
       operationId: cardsByStatus
-      tags: [Cards]
+      tags:
+        - Cards
       summary: List cards filtered by status
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: status
           in: path
           required: true
           schema:
             type: string
-            enum: [REQUESTED, PRINTING, PRINTED, ACTIVE, INACTIVE, REVOKED]
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+            enum:
+              - REQUESTED
+              - PRINTING
+              - PRINTED
+              - ACTIVE
+              - INACTIVE
+              - REVOKED
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: Paged list of cards with the given status
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/SmartCard"
-
-  # -------------------------------------------------------------------------
-  # Wallet
-  # -------------------------------------------------------------------------
+                          $ref: '#/components/schemas/SmartCard'
   /v1/wallet/create:
     post:
       operationId: walletCreate
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Create a digital wallet for a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [healthId]
+              required:
+                - healthId
               properties:
                 healthId:
                   type: string
@@ -995,114 +1010,116 @@ paths:
                   type: string
                   default: ZAR
       responses:
-        "201":
+        '201':
           description: Wallet created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Wallet"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/Wallet'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/wallet/{healthId}:
     get:
       operationId: walletGet
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Get wallet balance and metadata for a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       responses:
-        "200":
+        '200':
           description: Wallet details
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Wallet"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/Wallet'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/wallet/topup:
     post:
       operationId: walletTopup
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Top up a wallet balance
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WalletTransactionPayload"
+              $ref: '#/components/schemas/WalletTransactionPayload'
       responses:
-        "200":
+        '200':
           description: Top-up applied
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Wallet"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/Wallet'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/wallet/pay:
     post:
       operationId: walletPay
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Debit the wallet for a service payment
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/WalletTransactionPayload"
+              $ref: '#/components/schemas/WalletTransactionPayload'
       responses:
-        "200":
+        '200':
           description: Payment processed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Wallet"
-        "402":
+                $ref: '#/components/schemas/Wallet'
+        '402':
           description: Insufficient funds
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/wallet/offline:
     post:
       operationId: walletOffline
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Generate an offline payment voucher
       description: |
         Creates a signed offline voucher that can be redeemed when connectivity
         is restored. Used in areas with intermittent network coverage.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [healthId, amount]
+              required:
+                - healthId
+                - amount
               properties:
                 healthId:
                   type: string
@@ -1114,7 +1131,7 @@ paths:
                   default: 1440
                   description: How long the offline voucher remains valid (default 24h)
       responses:
-        "200":
+        '200':
           description: Offline voucher generated
           content:
             application/json:
@@ -1129,25 +1146,25 @@ paths:
                   amount:
                     type: number
                     format: double
-
   /v1/wallet/{walletId}/journal:
     get:
       operationId: walletJournal
-      tags: [Wallet]
+      tags:
+        - Wallet
       summary: Get transaction journal for a wallet
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: walletId
           in: path
           required: true
           schema:
             type: string
             format: uuid
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
         - name: from
           in: query
           schema:
@@ -1159,90 +1176,84 @@ paths:
             type: string
             format: date
       responses:
-        "200":
+        '200':
           description: Paged wallet journal
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/WalletJournal"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Biometric
-  # -------------------------------------------------------------------------
+                          $ref: '#/components/schemas/WalletJournal'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/biometric/enroll:
     post:
       operationId: biometricEnroll
-      tags: [Biometric]
+      tags:
+        - Biometric
       summary: Enrol a biometric template for a client
       description: Stores fingerprint or iris template. Max payload 5 MB.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/BiometricEnrollPayload"
+              $ref: '#/components/schemas/BiometricEnrollPayload'
       responses:
-        "201":
+        '201':
           description: Biometric enrolled
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/biometric/{healthId}:
     get:
       operationId: biometricGet
-      tags: [Biometric]
+      tags:
+        - Biometric
       summary: Retrieve biometric metadata for a client
       description: Returns enrolment status and modality. Template bytes are never returned over the API.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       responses:
-        "200":
+        '200':
           description: Biometric enrolment metadata
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BiometricMetadata"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Match
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/BiometricMetadata'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/match/{healthId}:
     post:
       operationId: matchTrigger
-      tags: [Match]
+      tags:
+        - Match
       summary: Trigger a manual identity-match review for a client
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/HealthIdPath"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/HealthIdPath'
       requestBody:
         content:
           application/json:
@@ -1255,52 +1266,52 @@ paths:
                     type: string
                   description: CPIDs of potential duplicate records
       responses:
-        "201":
+        '201':
           description: Match review case created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MatchResult"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-
+                $ref: '#/components/schemas/MatchResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /v1/match/pending:
     get:
       operationId: matchPending
-      tags: [Match]
+      tags:
+        - Match
       summary: List pending match-review cases
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: Paged list of pending match cases
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/MatchResult"
-
+                          $ref: '#/components/schemas/MatchResult'
   /v1/match/{matchId}/resolve:
     post:
       operationId: matchResolve
-      tags: [Match]
+      tags:
+        - Match
       summary: Resolve a match-review case (merge, split, or dismiss)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: matchId
           in: path
           required: true
@@ -1313,79 +1324,86 @@ paths:
           application/json:
             schema:
               type: object
-              required: [resolution]
+              required:
+                - resolution
               properties:
                 resolution:
                   type: string
-                  enum: [MERGE, SPLIT, DISMISS]
+                  enum:
+                    - MERGE
+                    - SPLIT
+                    - DISMISS
                 survivorCpid:
                   type: string
                   description: Required when resolution is MERGE — the CPID that survives
                 notes:
                   type: string
       responses:
-        "200":
+        '200':
           description: Match case resolved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MatchResult"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # Recovery
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/MatchResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/recovery/handover:
     post:
       operationId: recoveryHandover
-      tags: [Recovery]
+      tags:
+        - Recovery
       summary: Hand over identity recovery to another channel (e.g. call centre)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [healthId, targetChannel]
+              required:
+                - healthId
+                - targetChannel
               properties:
                 healthId:
                   type: string
                 targetChannel:
                   type: string
-                  enum: [CALL_CENTRE, FACILITY, FIELD_WORKER]
+                  enum:
+                    - CALL_CENTRE
+                    - FACILITY
+                    - FIELD_WORKER
       responses:
-        "200":
+        '200':
           description: Handover initiated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/recovery/shs/create:
     post:
       operationId: recoverySHSCreate
-      tags: [Recovery]
+      tags:
+        - Recovery
       summary: Create a Secure Handover Secret (SHS) for identity verification
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [healthId]
+              required:
+                - healthId
               properties:
                 healthId:
                   type: string
@@ -1393,7 +1411,7 @@ paths:
                   type: integer
                   default: 30
       responses:
-        "201":
+        '201':
           description: SHS created
           content:
             application/json:
@@ -1405,61 +1423,59 @@ paths:
                   expiresAt:
                     type: string
                     format: date-time
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/recovery/shs/verify:
     post:
       operationId: recoverySHSVerify
-      tags: [Recovery]
+      tags:
+        - Recovery
       summary: Verify a Secure Handover Secret
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [shsToken]
+              required:
+                - shsToken
               properties:
                 shsToken:
                   type: string
       responses:
-        "200":
+        '200':
           description: SHS verified — identity confirmed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Client"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "410":
+                $ref: '#/components/schemas/Client'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '410':
           description: SHS expired
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  # -------------------------------------------------------------------------
-  # Registry Admin
-  # -------------------------------------------------------------------------
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/registry/mode:
     get:
       operationId: registryMode
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: Get current registry operating mode
       description: Returns whether the registry is in NORMAL, PROVISIONAL, or OFFLINE mode.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       responses:
-        "200":
+        '200':
           description: Current registry mode
           content:
             application/json:
@@ -1468,30 +1484,37 @@ paths:
                 properties:
                   mode:
                     type: string
-                    enum: [NORMAL, PROVISIONAL, OFFLINE]
+                    enum:
+                      - NORMAL
+                      - PROVISIONAL
+                      - OFFLINE
                   since:
                     type: string
                     format: date-time
                   reason:
                     type: string
-
   /v1/registry/provisional/issue:
     post:
       operationId: registryProvisionalIssue
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: Issue a provisional Health ID (offline / degraded mode)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [givenName, familyName, dateOfBirth, facilityId]
+              required:
+                - givenName
+                - familyName
+                - dateOfBirth
+                - facilityId
               properties:
                 givenName:
                   type: string
@@ -1503,7 +1526,7 @@ paths:
                 facilityId:
                   type: string
       responses:
-        "201":
+        '201':
           description: Provisional ID issued
           content:
             application/json:
@@ -1518,17 +1541,17 @@ paths:
                   expiresAt:
                     type: string
                     format: date-time
-
   /v1/registry/provisional/{provisionalRef}/reconcile:
     post:
       operationId: registryProvisionalReconcile
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: Reconcile a provisional ID with a permanent Health ID
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: provisionalRef
           in: path
           required: true
@@ -1540,43 +1563,44 @@ paths:
           application/json:
             schema:
               type: object
-              required: [healthId]
+              required:
+                - healthId
               properties:
                 healthId:
                   type: string
                   description: The permanent Health ID to link to
       responses:
-        "200":
+        '200':
           description: Provisional ID reconciled
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GenericResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-
+                $ref: '#/components/schemas/GenericResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /v1/registry/provisional/pending:
     get:
       operationId: registryProvisionalPending
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: List unreconciled provisional IDs
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: Paged list of pending provisional IDs
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
@@ -1601,44 +1625,44 @@ paths:
                             expiresAt:
                               type: string
                               format: date-time
-
   /v1/registry/dedup/pending:
     get:
       operationId: registryDedupPending
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: List pending deduplication cases
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
-        - $ref: "#/components/parameters/PageNumber"
-        - $ref: "#/components/parameters/PageSize"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
+        - $ref: '#/components/parameters/PageNumber'
+        - $ref: '#/components/parameters/PageSize'
       responses:
-        "200":
+        '200':
           description: Paged dedup cases
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: "#/components/schemas/PagedResponse"
+                  - $ref: '#/components/schemas/PagedResponse'
                   - type: object
                     properties:
                       content:
                         type: array
                         items:
-                          $ref: "#/components/schemas/DedupCase"
-
+                          $ref: '#/components/schemas/DedupCase'
   /v1/registry/dedup/{caseId}/resolve:
     post:
       operationId: registryDedupResolve
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: Resolve a deduplication case
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: caseId
           in: path
           required: true
@@ -1651,44 +1675,50 @@ paths:
           application/json:
             schema:
               type: object
-              required: [action]
+              required:
+                - action
               properties:
                 action:
                   type: string
-                  enum: [MERGE, NOT_DUPLICATE]
+                  enum:
+                    - MERGE
+                    - NOT_DUPLICATE
                 survivorCpid:
                   type: string
                   description: Required when action is MERGE
                 notes:
                   type: string
       responses:
-        "200":
+        '200':
           description: Dedup case resolved
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DedupCase"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+                $ref: '#/components/schemas/DedupCase'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/registry/opencr/match:
     post:
       operationId: registryOpenCRMatch
-      tags: [Registry-Admin]
+      tags:
+        - Registry-Admin
       summary: Trigger an OpenCR probabilistic match
       description: Sends demographics to the OpenCR engine and returns scored candidates.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [givenName, familyName, dateOfBirth]
+              required:
+                - givenName
+                - familyName
+                - dateOfBirth
               properties:
                 givenName:
                   type: string
@@ -1699,13 +1729,17 @@ paths:
                   format: date
                 gender:
                   type: string
-                  enum: [MALE, FEMALE, OTHER, UNKNOWN]
+                  enum:
+                    - MALE
+                    - FEMALE
+                    - OTHER
+                    - UNKNOWN
                 nationalId:
                   type: string
                 phoneNumber:
                   type: string
       responses:
-        "200":
+        '200':
           description: Match candidates
           content:
             application/json:
@@ -1730,28 +1764,27 @@ paths:
                           items:
                             type: string
                           description: Fields that contributed to the match
-
-  # -------------------------------------------------------------------------
-  # Print
-  # -------------------------------------------------------------------------
   /v1/print/card/job:
     post:
       operationId: printCardJob
-      tags: [Print]
+      tags:
+        - Print
       summary: Submit a card print job
       description: Enqueues a print job for a card. Requires card to be in PRINTING status.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [cardId, printerId]
+              required:
+                - cardId
+                - printerId
               properties:
                 cardId:
                   type: string
@@ -1761,10 +1794,12 @@ paths:
                   description: ID of the target card printer
                 priority:
                   type: string
-                  enum: [NORMAL, URGENT]
+                  enum:
+                    - NORMAL
+                    - URGENT
                   default: NORMAL
       responses:
-        "201":
+        '201':
           description: Print job created
           content:
             application/json:
@@ -1776,36 +1811,37 @@ paths:
                     format: uuid
                   status:
                     type: string
-                    enum: [QUEUED, PRINTING, COMPLETED, FAILED]
+                    enum:
+                      - QUEUED
+                      - PRINTING
+                      - COMPLETED
+                      - FAILED
                   createdAt:
                     type: string
                     format: date-time
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  # -------------------------------------------------------------------------
-  # QR
-  # -------------------------------------------------------------------------
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/qr/resolve/{token}:
     get:
       operationId: qrResolve
-      tags: [QR]
+      tags:
+        - QR
       summary: Resolve a QR token to a Health ID
       description: |
         Public endpoint. The token is a signed, short-lived JWT containing the
         CPID. Verification uses the public key from `/v1/qr/public-key`.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: token
           in: path
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Resolved identity
           content:
             application/json:
@@ -1823,30 +1859,30 @@ paths:
                   validUntil:
                     type: string
                     format: date-time
-        "400":
+        '400':
           description: Invalid or malformed token
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "410":
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
           description: Token expired
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/qr/public-key:
     get:
       operationId: qrPublicKey
-      tags: [QR]
+      tags:
+        - QR
       summary: Get the public key used to verify QR tokens
       description: Returns the current RSA/EC public key in JWK format.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Public key in JWK format
           content:
             application/json:
@@ -1861,54 +1897,51 @@ paths:
                     type: string
                   alg:
                     type: string
-                  n:
+                  'n':
                     type: string
                   e:
                     type: string
-
-  # -------------------------------------------------------------------------
-  # Slips (PDF generation)
-  # -------------------------------------------------------------------------
   /v1/slips/emergency-capsule.pdf:
     get:
       operationId: slipsEmergencyCapsule
-      tags: [Slips]
+      tags:
+        - Slips
       summary: Generate an emergency capsule PDF
       description: |
         Generates a single-page PDF containing essential identity and medical
         information for emergency situations. Requires elevated trust level.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: healthId
           in: query
           required: true
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Emergency capsule PDF
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        "404":
-          $ref: "#/components/responses/NotFound"
-
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/slips/pickup.pdf:
     get:
       operationId: slipsPickup
-      tags: [Slips]
+      tags:
+        - Slips
       summary: Generate a card-pickup slip PDF
       description: Produces a printable slip for a client to collect their smart card.
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/ActorType"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/ActorType'
         - name: healthId
           in: query
           required: true
@@ -1921,19 +1954,941 @@ paths:
             type: string
             format: uuid
       responses:
-        "200":
+        '200':
           description: Pickup slip PDF
           content:
             application/pdf:
               schema:
                 type: string
                 format: binary
-        "404":
-          $ref: "#/components/responses/NotFound"
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /enroll:
+    post:
+      operationId: vito_post__enroll
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/templates:
+    get:
+      operationId: vito_get__healthId_templates
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}:
+    get:
+      operationId: vito_get__healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    put:
+      operationId: vito_put__healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: vito_post__healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/profile:
+    get:
+      operationId: vito_get__healthId_profile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify:
+    post:
+      operationId: vito_post__verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /identify:
+    post:
+      operationId: vito_post__identify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dedup-assist:
+    post:
+      operationId: vito_post__dedup_assist
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /exception:
+    post:
+      operationId: vito_post__exception
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /request:
+    post:
+      operationId: vito_post__request
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/print:
+    post:
+      operationId: vito_post__cardId_print
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/activate:
+    post:
+      operationId: vito_post__cardId_activate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/inactivate:
+    post:
+      operationId: vito_post__cardId_inactivate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{cardId}/revoke:
+    post:
+      operationId: vito_post__cardId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /active/{healthId}:
+    get:
+      operationId: vito_get__active_healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /history/{healthId}:
+    get:
+      operationId: vito_get__history_healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-status/{status}:
+    get:
+      operationId: vito_get__by_status_status_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /by-impilo-id/{impiloId}:
+    get:
+      operationId: vito_get__by_impilo_id_impiloId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/verify:
+    post:
+      operationId: vito_post__healthId_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/deactivate:
+    post:
+      operationId: vito_post__healthId_deactivate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/deceased:
+    post:
+      operationId: vito_post__healthId_deceased
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients:
+    get:
+      operationId: vito_get__clients
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}:
+    get:
+      operationId: vito_get__clients_healthId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/identity-summary:
+    get:
+      operationId: vito_get__clients_healthId_identity_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /registrations:
+    post:
+      operationId: vito_post__registrations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /registrations/{registrationId}/submit:
+    post:
+      operationId: vito_post__registrations_registrationId_submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/evidence:
+    post:
+      operationId: vito_post__clients_healthId_evidence
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/verification-reviews:
+    post:
+      operationId: vito_post__clients_healthId_verification_reviews
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/match:
+    post:
+      operationId: vito_post__clients_healthId_match
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /match-candidates/{matchId}/review:
+    post:
+      operationId: vito_post__match_candidates_matchId_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /merge-cases:
+    post:
+      operationId: vito_post__merge_cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /merge-cases/{mergeCaseId}/decision:
+    post:
+      operationId: vito_post__merge_cases_mergeCaseId_decision
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/relationships:
+    post:
+      operationId: vito_post__clients_healthId_relationships
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/authorization-links:
+    post:
+      operationId: vito_post__clients_healthId_authorization_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/stewardship-actions:
+    post:
+      operationId: vito_post__clients_healthId_stewardship_actions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stewardship-actions/{actionId}:
+    post:
+      operationId: vito_post__stewardship_actions_actionId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/{healthId}/corrections:
+    post:
+      operationId: vito_post__clients_healthId_corrections
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dashboard/summary:
+    get:
+      operationId: vito_get__dashboard_summary
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stewardship/workspace:
+    get:
+      operationId: vito_get__stewardship_workspace
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /score:
+    post:
+      operationId: vito_post__score
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cases:
+    get:
+      operationId: vito_get__cases
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /cases/{caseId}/merge:
+    post:
+      operationId: vito_post__cases_caseId_merge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /merge/{mergeId}/unmerge:
+    post:
+      operationId: vito_post__merge_mergeId_unmerge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /external:
+    post:
+      operationId: vito_post__external
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /register:
+    post:
+      operationId: vito_post__register
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resolve:
+    post:
+      operationId: vito_post__resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /rotate:
+    post:
+      operationId: vito_post__rotate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /search:
+    post:
+      operationId: vito_post__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{healthId}/full:
+    get:
+      operationId: vito_get__healthId_full
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /submit:
+    post:
+      operationId: vito_post__submit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/proofing:
+    post:
+      operationId: vito_post__requestId_proofing
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/approve:
+    post:
+      operationId: vito_post__requestId_approve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/issue:
+    post:
+      operationId: vito_post__requestId_issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/deliver:
+    post:
+      operationId: vito_post__requestId_deliver
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}/reject:
+    post:
+      operationId: vito_post__requestId_reject
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /queue:
+    get:
+      operationId: vito_get__queue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{requestId}:
+    get:
+      operationId: vito_get__requestId_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pending:
+    get:
+      operationId: vito_get__pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{matchId}/resolve:
+    post:
+      operationId: vito_post__matchId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{shareRequestId}/revoke:
+    post:
+      operationId: vito_post__shareRequestId_revoke
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{shareRequestId}/contributions:
+    get:
+      operationId: vito_get__shareRequestId_contributions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /claim:
+    post:
+      operationId: vito_post__claim
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /stats:
+    get:
+      operationId: vito_get__stats
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /id/request:
+    post:
+      operationId: vito_post__id_request
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /id/recovery/start:
+    post:
+      operationId: vito_post__id_recovery_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /id/recovery/verify:
+    post:
+      operationId: vito_post__id_recovery_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /me:
+    get:
+      operationId: vito_get__me
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health-id/qr:
+    get:
+      operationId: vito_get__health_id_qr
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /delegated-pickup/create:
+    post:
+      operationId: vito_post__delegated_pickup_create
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /delegated-pickup/redeem:
+    post:
+      operationId: vito_post__delegated_pickup_redeem
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /card/job:
+    post:
+      operationId: vito_post__card_job
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /validate:
+    post:
+      operationId: vito_post__validate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /councils:
+    get:
+      operationId: vito_get__councils
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify-otp:
+    post:
+      operationId: vito_post__verify_otp
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /verify-step-up:
+    post:
+      operationId: vito_post__verify_step_up
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /complete-identity:
+    post:
+      operationId: vito_post__complete_identity
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /workspace:
+    get:
+      operationId: vito_get__workspace
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /contributions:
+    post:
+      operationId: vito_post__contributions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /resolve/{token}:
+    get:
+      operationId: vito_get__resolve_token_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /public-key:
+    get:
+      operationId: vito_get__public_key
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /handover:
+    post:
+      operationId: vito_post__handover
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /shs/create:
+    post:
+      operationId: vito_post__shs_create
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /shs/verify:
+    post:
+      operationId: vito_post__shs_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /mode:
+    get:
+      operationId: vito_get__mode
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provisional/issue:
+    post:
+      operationId: vito_post__provisional_issue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provisional/{provisionalRef}/reconcile:
+    post:
+      operationId: vito_post__provisional_provisionalRef_reconcile
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /provisional/pending:
+    get:
+      operationId: vito_get__provisional_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dedup/pending:
+    get:
+      operationId: vito_get__dedup_pending
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /dedup/{caseId}/resolve:
+    post:
+      operationId: vito_post__dedup_caseId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /opencr/match:
+    post:
+      operationId: vito_post__opencr_match
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /emergency-capsule.pdf:
+    get:
+      operationId: vito_get__emergency_capsule_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pickup.pdf:
+    get:
+      operationId: vito_get__pickup_pdf
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /clients/emit:
+    post:
+      operationId: vito_post__clients_emit
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /create:
+    post:
+      operationId: vito_post__create
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /topup:
+    post:
+      operationId: vito_post__topup
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pay:
+    post:
+      operationId: vito_post__pay
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /offline:
+    post:
+      operationId: vito_post__offline
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{walletId}/journal:
+    get:
+      operationId: vito_get__walletId_journal
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /merge:
+    post:
+      operationId: vito_post__merge
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: vito_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: vito_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-federation:
+    post:
+      operationId: vito_post__test_federation
+      tags:
+        - Generated-From-Handler
+      summary: Documented from vito-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
-# ============================================================================
-# COMPONENTS
-# ============================================================================
 components:
 
   # --------------------------------------------------------------------------

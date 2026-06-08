@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import ReportsHubPage from "./page";
@@ -31,6 +31,15 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
+vi.mock("@/hooks/queries/useReports", () => ({
+  useGenerateReport: () => ({ mutate: vi.fn(), isPending: false, data: undefined }),
+  useReportJob: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
+
+vi.mock("@/hooks/queries/useNdila", () => ({
+  useNdilaTileConfig: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
+
 function renderPage() {
   const client = new QueryClient();
   return render(
@@ -45,6 +54,10 @@ describe("ReportsHubPage", () => {
     renderPage();
     expect(screen.getByRole("heading", { level: 1, name: /^Reports$/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Clinical Reports/i })).toHaveAttribute("href", "/reports/clinical");
-    expect(screen.getByRole("link", { name: /Custom Reports/i })).toHaveAttribute("href", "/reports/custom");
+    const workspaces = screen.getByRole("heading", { name: "Report workspaces" }).closest("section");
+    expect(within(workspaces!).getByRole("link", { name: /Custom Reports/i })).toHaveAttribute(
+      "href",
+      "/reports/custom",
+    );
   });
 });

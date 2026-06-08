@@ -29,7 +29,7 @@ function webStatus(c) {
 }
 
 function mobileStatus(c) {
-  if (c.mobile === "yes") return "complete";
+  if (c.mobile === "yes" || c.mobile === "Live") return "complete";
   if (c.mobile === "n/a" || c.mobile === "no") return "intentionally deferred";
   if (c.mobile === "partial") return "partial";
   return "unknown";
@@ -120,10 +120,15 @@ const mobileRows = CAPABILITIES.map((c) => ({
   domain: c.domain,
   backend: c.backend,
   webRoute: c.webRoute,
-  android: c.mobile === "yes" ? "screens (citizen/provider)" : c.mobile === "partial" ? "partial screens" : "missing",
-  ios: c.mobile === "n/a" ? "not supported by platform" : "planned (Expo/EAS)",
-  mobileClient: `apps/mobile/packages/mobile-*`,
-  realData: c.mobile === "yes" ? "yes" : "partial",
+  android:
+    c.mobile === "yes" || c.mobile === "Live"
+      ? "screens (citizen/provider)"
+      : c.mobile === "partial"
+        ? "partial screens"
+        : "missing",
+  ios: c.mobile === "n/a" ? "not supported by platform" : "Expo (citizen + provider)",
+  mobileClient: c.mobileClient ?? "apps/mobile/citizen-app, apps/mobile/provider-app",
+  realData: c.mobile === "yes" || c.mobile === "Live" ? "yes" : "partial",
   parity: mobileStatus(c),
   gate: c.mobile === "yes" || c.mobile === "partial" ? "advisory" : "advisory",
   remediation: c.action,

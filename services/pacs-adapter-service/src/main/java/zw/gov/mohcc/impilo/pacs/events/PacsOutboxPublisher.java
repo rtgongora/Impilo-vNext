@@ -8,6 +8,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import zw.gov.mohcc.impilo.pacs.core.ImagingStudyService;
 import zw.gov.mohcc.impilo.pacs.persistence.entity.EventOutboxEntity;
 import zw.gov.mohcc.impilo.pacs.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.sharedkernel.events.CompanionOutboxPublisher;
@@ -79,12 +80,17 @@ public class PacsOutboxPublisher extends CompanionOutboxPublisher {
 
     @Override
     protected String resolveLegacyTopic(OutboxRow row) {
-        if ("pacs.study.available".equals(row.eventType())) {
-            return "pacs.imaging_study";
-        }
-        if ("pacs.study.correlated".equals(row.eventType())) {
-            return "pacs.study.correlated";
-        }
-        return null;
+        return switch (row.eventType()) {
+            case ImagingStudyService.EVENT_STUDY_AVAILABLE -> ImagingPipelineKafkaContracts.STUDY_RECEIVED;
+            case ImagingStudyService.EVENT_STUDY_CORRELATED -> ImagingPipelineKafkaContracts.STUDY_CORRELATED;
+            case ImagingStudyService.EVENT_REPORT_LINKED -> ImagingPipelineKafkaContracts.REPORT_AVAILABLE;
+            case "imaging.study.unmatched" -> ImagingPipelineKafkaContracts.STUDY_UNMATCHED;
+            case ImagingPipelineKafkaContracts.WRITEBACK_SUCCEEDED -> ImagingPipelineKafkaContracts.WRITEBACK_SUCCEEDED;
+            case ImagingPipelineKafkaContracts.WRITEBACK_FAILED -> ImagingPipelineKafkaContracts.WRITEBACK_FAILED;
+            case ImagingPipelineKafkaContracts.VIEWER_ACCESS_DENIED -> ImagingPipelineKafkaContracts.VIEWER_ACCESS_DENIED;
+            case "pacs.study.available" -> ImagingPipelineKafkaContracts.STUDY_RECEIVED;
+            case "pacs.study.correlated" -> ImagingPipelineKafkaContracts.STUDY_CORRELATED;
+            default -> null;
+        };
     }
 }

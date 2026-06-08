@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -295,10 +296,14 @@ public class PctServiceClient {
      * @return the discharge case response
      */
     public JsonNode startDischarge(String journeyId, String dischargeType) {
-        String url = baseUrl + "/v1/journeys/" + journeyId + "/discharge/start";
-        Map<String, Object> body = Map.of("dischargeType", dischargeType);
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("dischargeType", dischargeType != null ? dischargeType : "CLINICAL");
+        return startDischarge(journeyId, body);
+    }
 
-        log.info("PCT: Starting discharge for journey={}, type={}", journeyId, dischargeType);
+    public JsonNode startDischarge(String journeyId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/journeys/" + journeyId + "/discharge/start";
+        log.info("PCT: Starting discharge for journey={}", journeyId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }

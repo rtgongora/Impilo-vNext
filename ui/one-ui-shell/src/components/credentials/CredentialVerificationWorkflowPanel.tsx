@@ -1,0 +1,51 @@
+"use client";
+
+import Link from "next/link";
+import { BadgeCheck, ExternalLink, QrCode } from "lucide-react";
+
+export function CredentialVerificationWorkflowPanel() {
+  return (
+    <section
+      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+      data-testid="credential-verification-workflow-panel"
+    >
+      <div className="flex items-start gap-3">
+        <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-impilo-600" />
+        <div className="space-y-3 text-sm text-slate-700">
+          <div>
+            <p className="font-medium text-slate-900">Public credential verification workflow</p>
+            <p className="mt-1">
+              Third parties verify certificates using the sovereign public verifier. Your vault credentials can be checked
+              without exposing PII through the Experience shell.
+            </p>
+          </div>
+          <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-600">
+            <li>Issuer publishes credential to your vault (credential-service).</li>
+            <li>Verifier scans QR or opens token link.</li>
+            <li>
+              <code className="text-[10px]">GET /v1/public/verify/{"{token}"}</code> returns VALID, EXPIRED, or REVOKED.
+            </li>
+          </ol>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/verify/credential"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-impilo-700"
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              Open verifier
+            </Link>
+            <a
+              href="https://docs.impilo.health/credentials/verify"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Verification doctrine
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

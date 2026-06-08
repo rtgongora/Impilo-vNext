@@ -104,6 +104,8 @@ impilo:
     dispatch-base-url: ${DISPATCH_BASE_URL:http://localhost:8320}
     ndila-base-url: ${NDILA_BASE_URL:http://localhost:8155}
     nhume-base-url: ${NHUME_BASE_URL:${NHUME_SERVICE_BASE_URL:http://localhost:8210}}
+    madi-base-url: ${MADI_BASE_URL:${MADI_SERVICE_BASE_URL:http://localhost:8300}}
+    live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
     vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
     tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}
@@ -168,6 +170,7 @@ impilo:
     hr-payroll-base-url: ${HR_PAYROLL_BASE_URL:http://localhost:8282}
     procurement-base-url: ${PROCUREMENT_BASE_URL:http://localhost:8283}
     scheduling-service-base-url: ${SCHEDULING_SERVICE_BASE_URL:http://localhost:8128}
+    booking-base-url: ${BOOKING_BASE_URL:http://localhost:8265}
 
   clinical-platform:
     base-url: ${CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL:http://localhost:8270}

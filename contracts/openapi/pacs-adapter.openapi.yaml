@@ -38,31 +38,32 @@ paths:
   /internal/v1/health:
     get:
       operationId: pacsInternalHealth
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — returns trust context echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Service UP with context echo
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeHealthBody"
-
+                $ref: '#/components/schemas/ProbeHealthBody'
   /internal/v1/test-command:
     post:
       operationId: pacsInternalTestCommand
-      tags: [Internal-Probe]
+      tags:
+        - Internal-Probe
       summary: v1.1 probe — idempotency / echo
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -71,17 +72,17 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Echo payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProbeCommandBody"
-
+                $ref: '#/components/schemas/ProbeCommandBody'
   /internal/v1/imaging-studies:
     get:
       operationId: listImagingStudies
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List imaging studies
       parameters:
         - name: patientCpid
@@ -89,78 +90,79 @@ paths:
           required: false
           schema:
             type: string
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Studies
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ImagingStudy"
+                  $ref: '#/components/schemas/ImagingStudy'
     post:
       operationId: registerImagingStudy
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Register a new imaging study (emits pacs.imaging_study / legacy pacs.study.available via outbox)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateImagingStudyRequest"
+              $ref: '#/components/schemas/CreateImagingStudyRequest'
       responses:
-        "201":
+        '201':
           description: Study created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImagingStudy"
-
+                $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/search:
     post:
       operationId: searchImagingStudies
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Search imaging studies by patient/study/order metadata filters
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: false
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ImagingSearchRequest"
+              $ref: '#/components/schemas/ImagingSearchRequest'
       responses:
-        "200":
+        '200':
           description: Filtered studies
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ImagingStudy"
-
+                  $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/{id}:
     get:
       operationId: getImagingStudy
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Get imaging study by id
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -168,23 +170,23 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Study
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImagingStudy"
-
+                $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/{id}/forward:
     post:
       operationId: forwardImagingStudy
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Forward study to Orthanc
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -196,25 +198,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ForwardStudyRequest"
+              $ref: '#/components/schemas/ForwardStudyRequest'
       responses:
-        "200":
+        '200':
           description: Study after forward
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImagingStudy"
-
+                $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/{id}/correlate:
     patch:
       operationId: correlateImagingStudy
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Correlate study with OROS order (outbox emits correlated + study.available)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -226,25 +228,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CorrelateStudyRequest"
+              $ref: '#/components/schemas/CorrelateStudyRequest'
       responses:
-        "200":
+        '200':
           description: Updated study
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImagingStudy"
-
+                $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/{id}/series:
     get:
       operationId: listImagingSeries
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List DICOM series metadata for a study
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -252,7 +254,7 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Study series rows
           content:
             application/json:
@@ -261,17 +263,17 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/imaging-studies/{studyId}/series/{seriesId}/instances:
     get:
       operationId: listImagingInstances
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List DICOM instance metadata for a series
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: studyId
           in: path
           required: true
@@ -285,7 +287,7 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Series instances
           content:
             application/json:
@@ -294,17 +296,17 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/imaging-studies/{id}/sync-hierarchy:
     post:
       operationId: syncImagingHierarchy
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Pull Orthanc hierarchy metadata into PACS adapter tables
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -312,23 +314,23 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Updated study
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ImagingStudy"
-
+                $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/{id}/viewer-sessions:
     post:
       operationId: launchImagingViewerSession
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Persist viewer launch context and emit imaging.viewer.launched event
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -343,24 +345,24 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Viewer session created
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/imaging-studies/{id}/viewer-launch-context:
     get:
       operationId: getImagingViewerLaunchContext
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Resolve governed viewer launch context with backend and viewer-engine metadata
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -373,24 +375,24 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: Viewer launch context
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/imaging-studies/{id}/report-links:
     post:
       operationId: linkImagingReport
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Link a report reference to the study
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -405,7 +407,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Report link created
           content:
             application/json:
@@ -414,13 +416,14 @@ paths:
                 additionalProperties: true
     get:
       operationId: listImagingReportLinks
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List report links for a study
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -428,7 +431,7 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Report links
           content:
             application/json:
@@ -437,17 +440,17 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/imaging-studies/{id}/order-links:
     post:
       operationId: linkImagingOrder
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Link an OROS order reference to the study
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -462,7 +465,7 @@ paths:
               type: object
               additionalProperties: true
       responses:
-        "201":
+        '201':
           description: Order link created
           content:
             application/json:
@@ -471,13 +474,14 @@ paths:
                 additionalProperties: true
     get:
       operationId: listImagingOrderLinks
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List order links for a study
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: id
           in: path
           required: true
@@ -485,7 +489,7 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Order links
           content:
             application/json:
@@ -494,19 +498,19 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/imaging-studies/ops/status:
     get:
       operationId: getPacsOpsStatus
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Active PACS backend connectivity and capabilities probe
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: PACS adapter to Orthanc connectivity status
           content:
             application/json:
@@ -536,59 +540,59 @@ paths:
                     provider: ORTHANC
                     mode: HYBRID
                     baseUrl: http://orthanc:8042
-
   /internal/v1/imaging-studies/ops/unmatched-studies:
     get:
       operationId: listPacsUnmatchedStudies
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List studies awaiting correlation to OROS order context
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Unmatched studies
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ImagingStudy"
-
+                  $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/ops/failed-correlations:
     get:
       operationId: listPacsFailedCorrelations
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List studies currently in FAILED state
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Failed studies
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ImagingStudy"
-
+                  $ref: '#/components/schemas/ImagingStudy'
   /internal/v1/imaging-studies/ops/failed-writebacks:
     get:
       operationId: listPacsFailedWritebacks
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: List outbox publication failures for imaging events
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Failed writeback / outbox rows
           content:
             application/json:
@@ -597,17 +601,17 @@ paths:
                 items:
                   type: object
                   additionalProperties: true
-
   /internal/v1/imaging-studies/ops/failed-writebacks/{outboxId}/retry:
     post:
       operationId: retryPacsFailedWriteback
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Request immediate retry of a failed writeback row (idempotent)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
         - name: outboxId
           in: path
           required: true
@@ -615,32 +619,236 @@ paths:
             type: integer
             format: int64
       responses:
-        "200":
+        '200':
           description: Retry status
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
-
   /internal/v1/imaging-studies/ops/failed-writebacks/retry-all:
     post:
       operationId: retryAllPacsFailedWritebacks
-      tags: [ImagingStudy]
+      tags:
+        - ImagingStudy
       summary: Requeue and retry all currently failed writeback rows
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Batch retry summary
           content:
             application/json:
               schema:
                 type: object
                 additionalProperties: true
+  /:
+    get:
+      operationId: pacsadapter_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: pacsadapter_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /search:
+    post:
+      operationId: pacsadapter_post__search
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: pacsadapter_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/forward:
+    post:
+      operationId: pacsadapter_post__id_forward
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/correlate:
+    patch:
+      operationId: pacsadapter_patch__id_correlate
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/series:
+    get:
+      operationId: pacsadapter_get__id_series
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{studyId}/series/{seriesId}/instances:
+    get:
+      operationId: pacsadapter_get__studyId_series_seriesId_instances
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/sync-hierarchy:
+    post:
+      operationId: pacsadapter_post__id_sync_hierarchy
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/viewer-sessions:
+    post:
+      operationId: pacsadapter_post__id_viewer_sessions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/viewer-launch-context:
+    get:
+      operationId: pacsadapter_get__id_viewer_launch_context
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/report-links:
+    post:
+      operationId: pacsadapter_post__id_report_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: pacsadapter_get__id_report_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/order-links:
+    post:
+      operationId: pacsadapter_post__id_order_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: pacsadapter_get__id_order_links
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/status:
+    get:
+      operationId: pacsadapter_get__ops_status
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/unmatched-studies:
+    get:
+      operationId: pacsadapter_get__ops_unmatched_studies
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/failed-correlations:
+    get:
+      operationId: pacsadapter_get__ops_failed_correlations
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/failed-writebacks:
+    get:
+      operationId: pacsadapter_get__ops_failed_writebacks
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/failed-writebacks/{outboxId}/retry:
+    post:
+      operationId: pacsadapter_post__ops_failed_writebacks_outboxId_retry
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /ops/failed-writebacks/retry-all:
+    post:
+      operationId: pacsadapter_post__ops_failed_writebacks_retry_all
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: pacsadapter_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: pacsadapter_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from pacs-adapter-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

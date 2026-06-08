@@ -1,6 +1,8 @@
 package zw.gov.mohcc.impilo.experience.controller.mobile;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
@@ -14,7 +16,7 @@ import java.util.*;
 /**
  * Mobile prescription endpoints.
  * POST /internal/v1/mobile/provider/prescriptions              - create prescription
- * GET  /internal/v1/mobile/provider/prescriptions?encounter_id= or patient_id= - list
+ * GET  /internal/v1/mobile/provider/prescriptions?patient_id=    - list (optional encounter_id filter)
  * POST /internal/v1/mobile/provider/prescriptions/{id}/cancel  - cancel prescription
  */
 @RestController
@@ -34,7 +36,8 @@ public class MobilePrescriptionController {
             @NotBlank String patient_id,
             String encounter_id,
             String facility_id,
-            @NotBlank String medication_name,
+            String medication_name,
+            String medication,
             String generic_name,
             @NotBlank String dosage,
             String route,
@@ -43,7 +46,7 @@ public class MobilePrescriptionController {
             Integer quantity,
             String instructions,
             String indication,
-            @NotBlank String prescribed_by
+            String prescribed_by
     ) {}
 
     public record CancelPrescriptionRequest(
@@ -57,22 +60,31 @@ public class MobilePrescriptionController {
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestHeader(value = CompanionHeaders.IDEMPOTENCY_KEY, required = false) String idempotencyKey,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
             @Valid @RequestBody CreatePrescriptionRequest request) {
         try {
+            String medicationName = firstNonBlank(request.medication_name(), request.medication());
+            if (medicationName == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", Map.of("code", "MISSING_MEDICATION", "message", "medication_name is required"),
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            String prescribedBy = firstNonBlank(request.prescribed_by(), actorId, "mobile-provider");
+
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("patient_id", request.patient_id());
             payload.put("facility_id", request.facility_id());
             payload.put("encounter_id", request.encounter_id());
-            payload.put("medication_name", request.medication_name());
+            payload.put("medication_name", medicationName);
             payload.put("generic_name", request.generic_name());
             payload.put("dosage", request.dosage());
-            payload.put("route", request.route());
+            payload.put("route", request.route() != null ? request.route() : "PO");
             payload.put("frequency", request.frequency());
             payload.put("duration", request.duration());
             payload.put("quantity", request.quantity());
             payload.put("instructions", request.instructions());
             payload.put("indication", request.indication());
-            payload.put("prescribed_by", request.prescribed_by());
+            payload.put("prescribed_by", prescribedBy);
             JsonNode data = pharmacyClient.createPrescription(payload);
             if (data != null) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
@@ -94,22 +106,23 @@ public class MobilePrescriptionController {
             @RequestParam(required = false, name = "patient_id") String patientId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        if (patientId != null && !patientId.isBlank()) {
-            try {
-                JsonNode data = pharmacyClient.getPatientPrescriptions(patientId, null, page, size);
-                if (data != null) {
-                    return ResponseEntity.ok(Map.of(
-                            "data", data,
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
-                }
-                return upstreamFailure("PHARMACY_UNAVAILABLE", "No prescription payload returned", requestId, correlationId);
-            } catch (Exception e) {
-                return upstreamFailure("PHARMACY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
-            }
+        if (patientId == null || patientId.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", Map.of("code", "MISSING_PATIENT_ID", "message", "patient_id query parameter is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                "error", Map.of("code", "MISSING_PATIENT_ID", "message", "patient_id query parameter is required"),
-                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        try {
+            JsonNode data = pharmacyClient.getPatientPrescriptions(patientId, null, page, size);
+            if (data != null) {
+                JsonNode filtered = filterByEncounter(data, encounterId);
+                return ResponseEntity.ok(Map.of(
+                        "data", filtered,
+                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+            }
+            return upstreamFailure("PHARMACY_UNAVAILABLE", "No prescription payload returned", requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("PHARMACY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
     }
 
     @PostMapping("/{id}/cancel")
@@ -135,6 +148,30 @@ public class MobilePrescriptionController {
         } catch (Exception e) {
             return upstreamFailure("PHARMACY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
+    }
+
+    private static JsonNode filterByEncounter(JsonNode data, String encounterId) {
+        if (encounterId == null || encounterId.isBlank() || !data.isArray()) {
+            return data;
+        }
+        ArrayNode filtered = JsonNodeFactory.instance.arrayNode();
+        for (JsonNode item : data) {
+            JsonNode attrs = item.has("attributes") ? item.get("attributes") : item;
+            String enc = attrs.path("encounter_id").asText("");
+            if (encounterId.equals(enc)) {
+                filtered.add(item);
+            }
+        }
+        return filtered;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private ResponseEntity<Map<String, Object>> upstreamFailure(

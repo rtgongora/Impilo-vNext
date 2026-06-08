@@ -13,7 +13,8 @@ paths:
     get:
       operationId: internalHealth
       summary: Internal health probe
-      tags: [Health]
+      tags:
+        - Health
       responses:
         '200':
           description: Service reachable
@@ -22,6 +23,139 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
+  /internal/v1/offline/break-glass:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_break_glass
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: offlineedge_get__internal_v1_offline_break_glass
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/break-glass/{event_id}:
+    get:
+      operationId: offlineedge_get__internal_v1_offline_break_glass_event_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/break-glass/{event_id}/review:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_break_glass_event_id_review
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/conflicts:
+    get:
+      operationId: offlineedge_get__internal_v1_offline_conflicts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/conflicts/{conflict_id}:
+    get:
+      operationId: offlineedge_get__internal_v1_offline_conflicts_conflict_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/conflicts/{conflict_id}/resolve:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_conflicts_conflict_id_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/entitlements:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_entitlements
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/entitlements/{entitlement_id}:
+    get:
+      operationId: offlineedge_get__internal_v1_offline_entitlements_entitlement_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/entitlements/{entitlement_id}/verify:
+    get:
+      operationId: offlineedge_get__internal_v1_offline_entitlements_entitlement_id_verify
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/actions:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_actions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: offlineedge_get__internal_v1_offline_actions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/replay/{entitlement_id}:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_replay_entitlement_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/sync:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_sync
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /internal/v1/offline/vitals:
+    post:
+      operationId: offlineedge_post__internal_v1_offline_vitals
+      tags:
+        - Generated-From-Handler
+      summary: Documented from offline-edge-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas: {}

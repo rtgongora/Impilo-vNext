@@ -86,6 +86,15 @@ function specialEnv(serviceId) {
       IMPILO_SECURITY_ALLOW_ANONYMOUS: "true",
     };
   }
+  if (serviceId === "ndila-service") {
+    return {
+      NDILA_ALLOW_ANONYMOUS: "true",
+      NDILA_ENVIRONMENT: "staging",
+      NDILA_DEFAULT_TILES: "PREVIEW_SOVEREIGN",
+      NDILA_PREVIEW_SOVEREIGN_TILES_ENABLED: "true",
+      NDILA_POSTGIS_ENABLED: "false",
+    };
+  }
   return null;
 }
 

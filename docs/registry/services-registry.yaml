@@ -182,6 +182,35 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: booking-service
+    maven_module: booking-service
+    primary_plane: experience
+    plane: experience
+    domain: workflow-orchestration
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Booking
+    owner_team: TBD
+    system_of_record_for:
+      - Booking canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: butano-fhir
     maven_module: butano-fhir
     primary_plane: clinical
@@ -1206,6 +1235,55 @@ services:
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
+  - id: live-service
+    maven_module: live-service
+    primary_plane: experience
+    plane: experience
+    domain: live-events-broadcast
+    secondary_planes:
+      - integration
+      - data
+      - registry
+      - trust
+      - clinical
+    sovereign: true
+    sovereign_group: LIVE
+    primary_protocol: rest
+    default_http_port: 8380
+    product_names:
+      - Impilo Live
+    owner_team: TBD
+    system_of_record_for:
+      - live events and webinars
+      - live event registrations
+      - live event attendance
+      - live event interactions
+      - live event certificates
+      - live event analytics snapshots
+    consumes_from:
+      - vito-service
+      - varapi-service
+      - tuso-service
+      - tshepo-authz-service
+      - learning-service
+      - madi-service
+      - notification-service
+      - rtc-gateway-service
+    exposes_to:
+      - experience-bff
+      - web-mobile-experience
+    forbidden_responsibilities:
+      - must-not-act-as-identity-source-of-record
+      - must-not-own-clinical-encounter-lifecycle
+      - must-not-own-learning-course-content
+      - must-not-own-blood-donor-registry
+      - must-not-bypass-tshepo-authz
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
   - id: llm-orchestration-service
     maven_module: llm-orchestration-service
     primary_plane: integration
@@ -1229,6 +1307,64 @@ services:
     forbidden_responsibilities:
       - must-not-become-system-of-record-for-clinical-or-finance
       - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
+  - id: madi-service
+    maven_module: madi-service
+    primary_plane: clinical
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Madi
+    owner_team: TBD
+    system_of_record_for:
+      - Madi canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: wired
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
+  - id: msika-apps-service
+    maven_module: msika-apps-service
+    primary_plane: enterprise
+    plane: enterprise
+    domain: marketplace
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Msika Apps
+    owner_team: TBD
+    system_of_record_for:
+      - Msika Apps canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-store-clinical-records-as-source-of-truth
+      - must-not-own-identity-assurance-policy
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial
@@ -1903,6 +2039,35 @@ services:
     forbidden_responsibilities:
       - must-not-handle-care-transaction-orchestration
       - must-not-bypass-consent-governance
+    production_status: baseline-assessed
+    implementation_status: implemented-or-partial
+    frontend_wiring_status: unknown-or-partial
+    api_contract_status: partial
+    authz_audit_status: partial
+    observability_status: partial
+  - id: rtc-gateway-service
+    maven_module: rtc-gateway-service
+    primary_plane: integration
+    plane: integration
+    domain: platform-ops
+    secondary_planes: []
+    sovereign: false
+    sovereign_group: null
+    primary_protocol: rest
+    default_http_port: null
+    product_names:
+      - Rtc Gateway
+    owner_team: TBD
+    system_of_record_for:
+      - Rtc Gateway canonical records
+    consumes_from:
+      - tshepo-authz-service
+    exposes_to:
+      - experience-bff
+      - integration-hub
+    forbidden_responsibilities:
+      - must-not-become-system-of-record-for-clinical-or-finance
+      - must-not-embed-actor-facing-business-workflows
     production_status: baseline-assessed
     implementation_status: implemented-or-partial
     frontend_wiring_status: unknown-or-partial

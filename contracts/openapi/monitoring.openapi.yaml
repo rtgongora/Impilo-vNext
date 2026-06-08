@@ -2,22 +2,19 @@ openapi: 3.0.3
 info:
   title: Impilo Citizen Monitoring API (v1)
   description: |
-    **Monitoring v1** — citizen-owned device registry (pair, list, sync heartbeat). Implemented today on
-    `wellness-service` under `/internal/v1/mobile/citizen/monitoring/**`; Experience BFF forwards the same
-    paths via `WellnessServiceProxyController` (`impilo.services.wellness-base-url`).
-
-    **Wave 4 alignment:** Readings ingestion, federated vitals, and **timeline** events sourced from devices are
-    *not* part of this contract revision; they extend this surface without breaking list/pair/sync semantics.
+    **Monitoring v1** — citizen-owned device registry (pair, list, sync) and device-native reading ingestion into
+    `wellness_vitals_log` (`source=DEVICE_SYNC`). Implemented on `wellness-service` under
+    `/internal/v1/mobile/citizen/monitoring/**`; Experience BFF forwards the same paths.
 
     **Person scope (`patientId`):** Same as wellness v1 — expect **CPID** for the authenticated citizen within
     `X-Tenant-ID`; TSHEPO must enforce subject match for production.
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: http://localhost:8161
     description: Local default (`wellness-service`; see docs/runbooks/port-allocation.md)
 tags:
   - name: MonitoringDevices
-    description: Registry and sync stubs (readings → timeline in later waves)
+    description: Registry, sync heartbeat, and device reading ingestion
 paths:
   /internal/v1/mobile/citizen/monitoring/devices:
     get:
@@ -56,23 +53,51 @@ paths:
   /internal/v1/mobile/citizen/monitoring/devices/{id}/sync:
     post:
       tags: [MonitoringDevices]
-      summary: Record a sync completion for a device
+      summary: Record a sync completion and optionally ingest device readings
       operationId: syncMonitoringDevice
       parameters:
+        - $ref: '#/components/parameters/XTenantId'
         - name: id
           in: path
           required: true
           schema:
             type: string
             format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSyncRequest'
       responses:
         '200':
-          description: Sync acknowledged
+          description: Sync acknowledged (with optional readings ingested)
           content:
             application/json:
               schema:
-                type: object
-                additionalProperties: true
+                $ref: '#/components/schemas/DeviceSyncResponse'
+        '404':
+          description: Device not found for tenant
+  /internal/v1/mobile/citizen/monitoring/readings:
+    post:
+      tags: [MonitoringDevices]
+      summary: Ingest one or more device-native readings for a person
+      operationId: ingestMonitoringReadings
+      parameters:
+        - $ref: '#/components/parameters/XTenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestMonitoringReadingsRequest'
+      responses:
+        '201':
+          description: Readings stored in wellness vitals log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestMonitoringReadingsResponse'
 components:
   parameters:
     XTenantId:
@@ -126,3 +151,62 @@ components:
             status:
               type: string
               example: PAIRED
+    DeviceReadingInput:
+      type: object
+      required: [value]
+      properties:
+        vitalType:
+          type: string
+          description: Optional; defaults from paired device type when omitted.
+        value:
+          type: number
+        unit:
+          type: string
+        measuredAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+    DeviceSyncRequest:
+      type: object
+      properties:
+        readings:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceReadingInput'
+    DeviceSyncResponse:
+      type: object
+      properties:
+        synced:
+          type: boolean
+        syncedAt:
+          type: string
+          format: date-time
+        readingsIngested:
+          type: integer
+    IngestMonitoringReadingsRequest:
+      type: object
+      required: [patientId, readings]
+      properties:
+        patientId:
+          type: string
+        deviceId:
+          type: string
+          format: uuid
+          description: When set, validates device ownership and refreshes last_sync_at.
+        readings:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DeviceReadingInput'
+    IngestMonitoringReadingsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            readingsIngested:
+              type: integer
+            source:
+              type: string
+              example: DEVICE_SYNC

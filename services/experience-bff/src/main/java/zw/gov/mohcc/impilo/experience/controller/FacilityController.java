@@ -176,6 +176,18 @@ public class FacilityController {
         attrs.put("province", text(n, "province"));
         attrs.put("region", text(n, "province"));
         attrs.put("status", text(n, "status"));
+        putDoubleIfPresent(attrs, "latitude", n, "latitude");
+        putDoubleIfPresent(attrs, "longitude", n, "longitude");
+        putTextIfPresent(attrs, "ownership", n, "ownership");
+        putTextIfPresent(attrs, "level", n, "level");
+        putTextIfPresent(attrs, "operationalStatus", n, "operationalStatus");
+        putTextIfPresent(attrs, "facilityUid", n, "facilityUid");
+        putBooleanIfPresent(attrs, "hasValidCoordinates", n, "hasValidCoordinates");
+        putBooleanIfPresent(attrs, "missingFacilityCode", n, "missingFacilityCode");
+        putTextIfPresent(attrs, "locationContext", n, "locationContext");
+        if (n.has("bedCapacity") && !n.get("bedCapacity").isNull()) {
+            attrs.put("bedCapacity", n.get("bedCapacity").asInt());
+        }
         attrs.put("capabilities", List.of());
         return Map.of("id", idStr, "type", "facility", "attributes", attrs);
     }
@@ -196,6 +208,10 @@ public class FacilityController {
         if (n.has("longitude") && !n.get("longitude").isNull()) {
             attrs.put("longitude", n.get("longitude").asDouble());
         }
+        putTextIfPresent(attrs, "ownership", n, "ownership");
+        putTextIfPresent(attrs, "level", n, "level");
+        putTextIfPresent(attrs, "operationalStatus", n, "operationalStatus");
+        putTextIfPresent(attrs, "description", n, "description");
         attrs.put("capabilities", List.of());
         JsonNode om = n.get("operatingModel");
         if (om != null && !om.isNull()) {
@@ -212,6 +228,24 @@ public class FacilityController {
             return "";
         }
         return n.get(field).asText("");
+    }
+
+    private static void putTextIfPresent(Map<String, Object> attrs, String key, JsonNode n, String field) {
+        if (n != null && n.has(field) && !n.get(field).isNull()) {
+            attrs.put(key, n.get(field).asText());
+        }
+    }
+
+    private static void putDoubleIfPresent(Map<String, Object> attrs, String key, JsonNode n, String field) {
+        if (n != null && n.has(field) && !n.get(field).isNull()) {
+            attrs.put(key, n.get(field).asDouble());
+        }
+    }
+
+    private static void putBooleanIfPresent(Map<String, Object> attrs, String key, JsonNode n, String field) {
+        if (n != null && n.has(field) && !n.get(field).isNull()) {
+            attrs.put(key, n.get(field).asBoolean());
+        }
     }
 
     @SuppressWarnings("unchecked")

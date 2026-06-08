@@ -13,6 +13,11 @@ import zw.gov.mohcc.impilo.vito.persistence.entity.*;
 import zw.gov.mohcc.impilo.vito.persistence.repository.EventOutboxRepository;
 import zw.gov.mohcc.impilo.vito.persistence.repository.SmartCardRepository;
 
+import zw.gov.mohcc.impilo.vito.core.issuance.IssuanceStateMachineService;
+import zw.gov.mohcc.impilo.vito.core.pickup.DelegatedPickupService;
+import zw.gov.mohcc.impilo.vito.persistence.repository.IssuanceRequestRepository;
+
+import java.time.OffsetDateTime;
 import java.util.*;
 
 /**
@@ -28,10 +33,20 @@ public class PrintJobController {
 
     private final SmartCardRepository cardRepo;
     private final EventOutboxRepository outboxRepo;
+    private final DelegatedPickupService pickupService;
+    private final IssuanceRequestRepository issuanceRepo;
+    private final IssuanceStateMachineService issuanceService;
 
-    public PrintJobController(SmartCardRepository cardRepo, EventOutboxRepository outboxRepo) {
+    public PrintJobController(SmartCardRepository cardRepo,
+                              EventOutboxRepository outboxRepo,
+                              DelegatedPickupService pickupService,
+                              IssuanceRequestRepository issuanceRepo,
+                              IssuanceStateMachineService issuanceService) {
         this.cardRepo = cardRepo;
         this.outboxRepo = outboxRepo;
+        this.pickupService = pickupService;
+        this.issuanceRepo = issuanceRepo;
+        this.issuanceService = issuanceService;
     }
 
     /**
@@ -76,5 +91,103 @@ public class PrintJobController {
                 "status", "PRINT_QUEUED",
                 "message", "Print job submitted. Card status will update when agent confirms printing."
         ));
+    }
+
+    /**
+     * POST /v1/print/card/verify-pickup — verify delegate token + OTP without redeeming.
+     */
+    @PostMapping("/card/verify-pickup")
+    public ResponseEntity<Map<String, Object>> verifyPickup(@RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() != AccessMode.INTERNAL) {
+            return ResponseEntity.status(403).body(Map.of("valid", false, "error", "INTERNAL_ONLY"));
+        }
+
+        String pickupToken = textField(body, "pickupToken", "pickup_token");
+        String otp = textField(body, "delegateOtp", "delegate_otp", "otp");
+        if (pickupToken == null || otp == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "valid", false,
+                    "message", "pickupToken and delegateOtp are required"));
+        }
+
+        try {
+            DelegatedPickupService.PickupVerification verification = pickupService.verifyPickup(pickupToken, otp);
+            IssuanceRequestEntity issuance = issuanceRepo.findById(verification.issuanceRequestId())
+                    .filter(r -> r.getTenantId().equals(ctx.tenantId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Issuance request not found"));
+            String cardId = issuance.getCardId() != null ? issuance.getCardId().toString() : "";
+            String facilityName = firstNonBlank(
+                    verification.facilityName(),
+                    verification.facilityId() != null ? verification.facilityId().toString() : "");
+            return ResponseEntity.ok(Map.of(
+                    "valid", true,
+                    "delegateName", verification.delegateName(),
+                    "facilityName", facilityName,
+                    "facilityId", verification.facilityId() != null ? verification.facilityId().toString() : "",
+                    "cardId", cardId,
+                    "expiresAt", verification.expiresAt().toString()));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "valid", false,
+                    "message", ex.getMessage()));
+        }
+    }
+
+    /**
+     * POST /v1/print/card/confirm-handover — redeem pickup and mark issuance delivered.
+     */
+    @PostMapping("/card/confirm-handover")
+    public ResponseEntity<Map<String, Object>> confirmHandover(@RequestBody Map<String, Object> body) {
+        TrustContext ctx = TrustContextHolder.require();
+        if (ctx.mode() != AccessMode.INTERNAL) {
+            return ResponseEntity.status(403).body(Map.of("confirmed", false, "error", "INTERNAL_ONLY"));
+        }
+
+        String pickupToken = textField(body, "pickupToken", "pickup_token");
+        String otp = textField(body, "delegateOtp", "delegate_otp", "otp");
+        if (pickupToken == null || otp == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "confirmed", false,
+                    "message", "pickupToken and delegateOtp are required"));
+        }
+
+        try {
+            DelegatedPickupEntity pickup = pickupService.redeem(pickupToken, otp, ctx.actorId());
+            IssuanceRequestEntity issuance = issuanceRepo.findById(pickup.getIssuanceRequestId())
+                    .filter(r -> r.getTenantId().equals(ctx.tenantId()))
+                    .orElseThrow(() -> new IllegalArgumentException("Issuance request not found"));
+            issuanceService.deliver(ctx.tenantId(), issuance.getId());
+            OffsetDateTime confirmedAt = OffsetDateTime.now();
+            String cardId = issuance.getCardId() != null ? issuance.getCardId().toString() : "";
+            return ResponseEntity.ok(Map.of(
+                    "confirmed", true,
+                    "confirmedAt", confirmedAt.toString(),
+                    "cardId", cardId,
+                    "message", "Card handover confirmed."));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "confirmed", false,
+                    "message", ex.getMessage()));
+        }
+    }
+
+    private static String textField(Map<String, Object> body, String... keys) {
+        for (String key : keys) {
+            Object value = body.get(key);
+            if (value != null && !value.toString().isBlank()) {
+                return value.toString().trim();
+            }
+        }
+        return null;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
     }
 }

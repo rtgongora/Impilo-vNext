@@ -19,6 +19,7 @@ import { ArrowLeft, Loader2, Send, CheckCircle2, XCircle, Truck, MapPin, ShieldC
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
+import { DeliveryTrackMapPanel } from "@/components/maps/DeliveryTrackMapPanel";
 import {
   useNhumeDelivery,
   useNhumeTimeline,
@@ -105,7 +106,7 @@ export default function NhumeDeliveryDetailPage() {
 
             <div className="mt-6">
               {tab === "overview" && <OverviewTab id={id} delivery={delivery} />}
-              {tab === "timeline" && <TimelineTab id={id} />}
+              {tab === "timeline" && <TimelineTab id={id} delivery={delivery as Record<string, unknown>} />}
               {tab === "custody" && <CustodyTab id={id} />}
               {tab === "items" && <ItemsTab delivery={delivery} />}
             </div>
@@ -281,14 +282,16 @@ function Btn({
 
 // ---- Timeline + tracking tab --------------------------------------------
 
-function TimelineTab({ id }: { id: string }) {
+function TimelineTab({ id, delivery }: { id: string; delivery: Record<string, unknown> }) {
   const { data: timeline } = useNhumeTimeline(id);
   const { data: tracking } = useNhumeTracking(id);
   const events = timeline?.data ?? [];
   const points = tracking?.data ?? [];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <DeliveryTrackMapPanel delivery={delivery} trackingPoints={points} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <div className="rounded-2xl border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-5 py-4">
           <h3 className="font-semibold text-gray-900">Status timeline</h3>
@@ -341,6 +344,7 @@ function TimelineTab({ id }: { id: string }) {
             })}
           </ol>
         )}
+      </div>
       </div>
     </div>
   );

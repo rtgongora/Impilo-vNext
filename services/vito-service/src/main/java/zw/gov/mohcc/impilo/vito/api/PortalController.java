@@ -197,11 +197,12 @@ public class PortalController {
         String delegateContact = body.containsKey("delegateContact") ? body.get("delegateContact").toString() : "{}";
         String delegateIdRef = (String) body.get("delegateIdRef");
         UUID facilityId = UUID.fromString((String) body.get("facilityId"));
+        String facilityName = body.containsKey("facilityName") ? body.get("facilityName").toString() : null;
         int expiryHours = body.containsKey("expiryHours") ? ((Number) body.get("expiryHours")).intValue() : 72;
 
         DelegatedPickupService.PickupPackage pkg = pickupService.create(
                 tenantId, issuanceRequestId, delegateName, delegateContact,
-                delegateIdRef, facilityId, expiryHours);
+                delegateIdRef, facilityId, facilityName, expiryHours);
 
         return ResponseEntity.ok(Map.of(
                 "pickupId", pkg.pickupId(),

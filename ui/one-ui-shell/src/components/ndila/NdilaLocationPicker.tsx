@@ -22,6 +22,7 @@ interface Props {
   value?: NdilaCoordinate | null;
   onChange?: (next: NdilaCoordinate | null, meta?: { source: "ADDRESS_SEARCH" | "MANUAL" | "DEVICE_GPS"; result?: NdilaGeocodeResult; accuracyMeters?: number }) => void;
   country?: string;
+  purposeOfUse?: string;
   allowAddressSearch?: boolean;
   allowManualCoordinates?: boolean;
   allowCurrentDeviceLocation?: boolean;
@@ -29,7 +30,7 @@ interface Props {
 }
 
 export function NdilaLocationPicker({
-  value, onChange, country = "ZWE",
+  value, onChange, country = "ZWE", purposeOfUse,
   allowAddressSearch = true,
   allowManualCoordinates = true,
   allowCurrentDeviceLocation = true,
@@ -47,6 +48,7 @@ export function NdilaLocationPicker({
       {allowAddressSearch && (
         <NdilaAddressSearchBox
           country={country}
+          purposeOfUse={purposeOfUse}
           onSelect={(r) => propagate({ latitude: r.latitude, longitude: r.longitude }, { source: "ADDRESS_SEARCH", result: r })}
         />
       )}

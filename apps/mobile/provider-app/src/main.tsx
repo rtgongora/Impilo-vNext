@@ -1,6 +1,10 @@
 import { registerRootComponent } from "expo";
 import * as Crypto from "expo-crypto";
 import { registerGlobals } from "@livekit/react-native";
+import { configureMobileGeolocationFromExpo } from "@impilo/mobile-ndila";
+
+configureMobileGeolocationFromExpo();
+
 import { App } from "./App";
 
 // Robust polyfills for mobile (React Native / Expo)

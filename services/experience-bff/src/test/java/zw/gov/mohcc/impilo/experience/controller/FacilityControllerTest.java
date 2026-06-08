@@ -33,6 +33,19 @@ class FacilityControllerTest {
     }
 
     @Test
+    void stubModeReturnsSeededFacilityById() {
+        BffFacilitiesProperties props = new BffFacilitiesProperties();
+        props.setMode(BffFacilitiesProperties.Mode.stub);
+        FacilityController controller = new FacilityController(new FailingTusoClient(), props);
+
+        ResponseEntity<Map<String, Object>> response = controller.getFacility("fac-hch", "req-3", "corr-3");
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("fac-hch", data.get("id"));
+    }
+
+    @Test
     void liveModeReturnsMappedPayloadWhenTusoSucceeds() throws Exception {
         BffFacilitiesProperties props = new BffFacilitiesProperties();
         props.setMode(BffFacilitiesProperties.Mode.live);

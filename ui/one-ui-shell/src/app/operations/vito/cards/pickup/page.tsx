@@ -240,13 +240,6 @@ export default function CardPickupPage() {
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            <strong>Note:</strong> The upstream VITO verify-pickup and confirm-handover endpoints are not yet
-            implemented. These forms are wired and ready — the BFF routes exist. Integration will be live once
-            <code className="mx-1 rounded bg-amber-100 px-1 text-xs">PrintJobController</code>
-            in <code className="rounded bg-amber-100 px-1 text-xs">vito-service</code> adds those endpoints.
-          </div>
-
           {!verified ? (
             <VerifyPanel onVerified={handleVerified} />
           ) : (

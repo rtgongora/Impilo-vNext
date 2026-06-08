@@ -41,66 +41,94 @@ paths:
   /internal/v1/attestations:
     post:
       operationId: identityAssuranceRecordAttestation
-      tags: [Attestations]
+      tags:
+        - Attestations
       summary: Record a new attestation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecordAttestationRequest"
+              $ref: '#/components/schemas/RecordAttestationRequest'
       responses:
-        "201":
+        '201':
           description: Attestation stored
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAttestation"
+                $ref: '#/components/schemas/ApiResponseAttestation'
     get:
       operationId: identityAssuranceListAttestations
-      tags: [Attestations]
+      tags:
+        - Attestations
       summary: List attestations for the current tenant
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       responses:
-        "200":
+        '200':
           description: Attestation collection
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseAttestationList"
-
+                $ref: '#/components/schemas/ApiResponseAttestationList'
   /internal/v1/risk/assess:
     post:
       operationId: identityAssuranceAssessRisk
-      tags: [Risk]
+      tags:
+        - Risk
       summary: Create a persisted risk assessment
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/PodId"
-        - $ref: "#/components/parameters/RequestId"
-        - $ref: "#/components/parameters/CorrelationId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/PodId'
+        - $ref: '#/components/parameters/RequestId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AssessRiskRequest"
+              $ref: '#/components/schemas/AssessRiskRequest'
       responses:
-        "201":
+        '201':
           description: Assessment stored
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiResponseRiskAssessment"
+                $ref: '#/components/schemas/ApiResponseRiskAssessment'
+  /:
+    post:
+      operationId: identityassurance_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from identity-assurance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: identityassurance_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from identity-assurance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /assess:
+    post:
+      operationId: identityassurance_post__assess
+      tags:
+        - Generated-From-Handler
+      summary: Documented from identity-assurance-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

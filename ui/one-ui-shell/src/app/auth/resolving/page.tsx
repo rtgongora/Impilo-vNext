@@ -43,8 +43,12 @@ export default function ResolvingPage() {
   const navigate = useCallback(() => {
     if (hasNavigated) return;
     setHasNavigated(true);
+    if (linkedAttrs?.providerId && !user?.providerActivated) {
+      window.location.assign("/provider/activate?returnTo=/clinical");
+      return;
+    }
     window.location.assign("/home");
-  }, [hasNavigated]);
+  }, [hasNavigated, linkedAttrs?.providerId, user?.providerActivated]);
 
   // Resolution steps for the UI
   const steps: ResolverStep[] = [

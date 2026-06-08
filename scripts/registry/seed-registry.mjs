@@ -98,6 +98,7 @@ const LEGACY = new Map(
     ["developer-portal-service", { id: "developer-portal-service", plane: "ops", sovereign: false, primary_protocol: "rest", default_http_port: 8370, product_names: ["Developer Portal"] }],
     ["schema-registry-service", { id: "schema-registry-service", plane: "ops", sovereign: false, primary_protocol: "rest", default_http_port: 8371, product_names: ["Schema Registry"] }],
     ["experience-bff", { id: "experience-bff", plane: "experience", sovereign: false, primary_protocol: "rest", default_http_port: 8160, product_names: ["Experience BFF"] }],
+    ["live-service", { id: "live-service", plane: "experience", sovereign: true, sovereign_group: "LIVE", primary_protocol: "rest", default_http_port: 8380, product_names: ["Impilo Live"] }],
   ]
 );
 
@@ -175,6 +176,62 @@ const DOCTRINE_OVERRIDES = new Map(
           "must-not-bypass-data-governance-or-consent-policy",
           "must-not-store-clinical-source-of-truth-outside-governed-clinical-shr-boundaries",
         ],
+      },
+    ],
+    [
+      "booking-service",
+      {
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "workflow-orchestration",
+        frontend_wiring_status: "wired",
+      },
+    ],
+    [
+      "madi-service",
+      {
+        primary_plane: "clinical",
+        frontend_wiring_status: "wired",
+      },
+    ],
+    [
+      "live-service",
+      {
+        primary_plane: "experience",
+        plane: "experience",
+        domain: "live-events-broadcast",
+        secondary_planes: ["integration", "data", "registry", "trust", "clinical"],
+        system_of_record_for: [
+          "live events and webinars",
+          "live event registrations",
+          "live event attendance",
+          "live event interactions",
+          "live event certificates",
+          "live event analytics snapshots",
+        ],
+        consumes_from: [
+          "vito-service",
+          "varapi-service",
+          "tuso-service",
+          "tshepo-authz-service",
+          "learning-service",
+          "madi-service",
+          "notification-service",
+          "rtc-gateway-service",
+        ],
+        exposes_to: ["experience-bff", "web-mobile-experience"],
+        forbidden_responsibilities: [
+          "must-not-act-as-identity-source-of-record",
+          "must-not-own-clinical-encounter-lifecycle",
+          "must-not-own-learning-course-content",
+          "must-not-own-blood-donor-registry",
+          "must-not-bypass-tshepo-authz",
+        ],
+        frontend_wiring_status: "wired",
+        implementation_status: "implemented-or-partial",
+        api_contract_status: "partial",
+        authz_audit_status: "partial",
+        observability_status: "partial",
       },
     ],
     [

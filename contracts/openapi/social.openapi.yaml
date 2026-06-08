@@ -57,13 +57,14 @@ paths:
   /internal/v1/community/social/feed:
     get:
       operationId: socialGetFeed
-      tags: [Social-Feed]
+      tags:
+        - Social-Feed
       summary: Get role-aware feed slice
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
-        - $ref: "#/components/parameters/CorrelationId"
-        - $ref: "#/components/parameters/RequestId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
+        - $ref: '#/components/parameters/RequestId'
         - name: scope
           in: query
           required: false
@@ -83,553 +84,940 @@ paths:
         - name: cursor
           in: query
           required: false
-          schema: { type: string }
+          schema:
+            type: string
         - name: limit
           in: query
           required: false
-          schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
       responses:
-        "200":
+        '200':
           description: Feed page
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FeedPage"
-
+                $ref: '#/components/schemas/FeedPage'
   /internal/v1/community/social/posts:
     post:
       operationId: socialCreatePost
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       summary: Create a post (text, announcement, question, event, poll, resource)
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePostRequest"
+              $ref: '#/components/schemas/CreatePostRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
-
+                $ref: '#/components/schemas/Post'
   /internal/v1/community/social/posts/{id}:
     get:
       operationId: socialGetPost
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Post
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: '#/components/schemas/Post'
     patch:
       operationId: socialUpdatePost
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdatePostRequest"
+              $ref: '#/components/schemas/UpdatePostRequest'
       responses:
-        "200":
+        '200':
           description: Updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Post"
+                $ref: '#/components/schemas/Post'
     delete:
       operationId: socialArchivePost
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "204":
+        '204':
           description: Archived
-
   /internal/v1/community/social/posts/{id}/publish:
     post:
       operationId: socialPublishDraft
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Published
-
   /internal/v1/community/social/posts/{id}/pin:
     post:
       operationId: socialPinPost
-      tags: [Social-Posts]
+      tags:
+        - Social-Posts
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Pinned
-
   /internal/v1/community/social/posts/{id}/reactions:
     post:
       operationId: socialReact
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReactionRequest"
+              $ref: '#/components/schemas/ReactionRequest'
       responses:
-        "200":
+        '200':
           description: Reaction counts
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReactionSummary"
+                $ref: '#/components/schemas/ReactionSummary'
     delete:
       operationId: socialUnreact
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Updated counts
-
   /internal/v1/community/social/posts/{id}/comments:
     get:
       operationId: socialListComments
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
         - name: limit
           in: query
           required: false
-          schema: { type: integer, default: 50 }
+          schema:
+            type: integer
+            default: 50
       responses:
-        "200":
+        '200':
           description: Comment list
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Comment"
+                  $ref: '#/components/schemas/Comment'
     post:
       operationId: socialAddComment
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CommentRequest"
+              $ref: '#/components/schemas/CommentRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Comment"
-
+                $ref: '#/components/schemas/Comment'
   /internal/v1/community/social/posts/{id}/bookmark:
     post:
       operationId: socialBookmark
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Bookmarked
     delete:
       operationId: socialUnbookmark
-      tags: [Social-Engagement]
+      tags:
+        - Social-Engagement
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Removed bookmark
-
   /internal/v1/community/social/posts/{id}/report:
     post:
       operationId: socialReportPost
-      tags: [Social-Moderation]
+      tags:
+        - Social-Moderation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReportRequest"
+              $ref: '#/components/schemas/ReportRequest'
       responses:
-        "201":
+        '201':
           description: Report accepted
-
   /internal/v1/community/social/communities:
     get:
       operationId: socialListCommunities
-      tags: [Social-Communities]
+      tags:
+        - Social-Communities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: category
           in: query
           required: false
-          schema: { type: string }
+          schema:
+            type: string
         - name: q
           in: query
           required: false
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Communities
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Community"
+                  $ref: '#/components/schemas/Community'
     post:
       operationId: socialCreateCommunity
-      tags: [Social-Communities]
+      tags:
+        - Social-Communities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateCommunityRequest"
+              $ref: '#/components/schemas/CreateCommunityRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Community"
-
+                $ref: '#/components/schemas/Community'
   /internal/v1/community/social/communities/{id}:
     get:
       operationId: socialGetCommunity
-      tags: [Social-Communities]
+      tags:
+        - Social-Communities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Community
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Community"
-
+                $ref: '#/components/schemas/Community'
   /internal/v1/community/social/communities/{id}/join:
     post:
       operationId: socialJoinCommunity
-      tags: [Social-Communities]
+      tags:
+        - Social-Communities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Joined or pending
-
   /internal/v1/community/social/communities/{id}/leave:
     post:
       operationId: socialLeaveCommunity
-      tags: [Social-Communities]
+      tags:
+        - Social-Communities
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Left
-
   /internal/v1/community/social/groups:
     get:
       operationId: socialListGroups
-      tags: [Social-Groups]
+      tags:
+        - Social-Groups
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: communityId
           in: query
           required: false
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
         - name: category
           in: query
           required: false
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Groups
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Group"
+                  $ref: '#/components/schemas/Group'
     post:
       operationId: socialCreateGroup
-      tags: [Social-Groups]
+      tags:
+        - Social-Groups
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateGroupRequest"
+              $ref: '#/components/schemas/CreateGroupRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Group"
-
+                $ref: '#/components/schemas/Group'
   /internal/v1/community/social/groups/{id}:
     get:
       operationId: socialGetGroup
-      tags: [Social-Groups]
+      tags:
+        - Social-Groups
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Group
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Group"
-
+                $ref: '#/components/schemas/Group'
   /internal/v1/community/social/groups/{id}/join:
     post:
       operationId: socialJoinGroup
-      tags: [Social-Groups]
+      tags:
+        - Social-Groups
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Joined or pending
-
   /internal/v1/community/social/pages:
     get:
       operationId: socialListPages
-      tags: [Social-Pages]
+      tags:
+        - Social-Pages
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: kind
           in: query
           required: false
           description: facility|organisation|programme|campaign|service|provider|department
-          schema: { type: string }
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: Pages
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Page"
+                  $ref: '#/components/schemas/Page'
     post:
       operationId: socialCreatePage
-      tags: [Social-Pages]
+      tags:
+        - Social-Pages
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreatePageRequest"
+              $ref: '#/components/schemas/CreatePageRequest'
       responses:
-        "201":
+        '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
-
+                $ref: '#/components/schemas/Page'
   /internal/v1/community/social/pages/{id}:
     get:
       operationId: socialGetPage
-      tags: [Social-Pages]
+      tags:
+        - Social-Pages
       parameters:
-        - $ref: "#/components/parameters/TenantId"
+        - $ref: '#/components/parameters/TenantId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Page
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Page"
-
+                $ref: '#/components/schemas/Page'
   /internal/v1/community/social/pages/{id}/follow:
     post:
       operationId: socialFollowPage
-      tags: [Social-Pages]
+      tags:
+        - Social-Pages
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       responses:
-        "200":
+        '200':
           description: Followed
-
   /internal/v1/community/social/suggestions:
     get:
       operationId: socialSuggestions
-      tags: [Social-Communities, Social-Pages, Social-Groups]
+      tags:
+        - Social-Communities
+        - Social-Pages
+        - Social-Groups
       summary: Role-aware suggested communities/groups/pages for the actor
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       responses:
-        "200":
+        '200':
           description: Suggestions bundle
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SuggestionsBundle"
-
+                $ref: '#/components/schemas/SuggestionsBundle'
   /internal/v1/community/social/moderation/queue:
     get:
       operationId: socialModerationQueue
-      tags: [Social-Moderation]
+      tags:
+        - Social-Moderation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
       responses:
-        "200":
+        '200':
           description: Moderation cases
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/ModerationCase"
-
+                  $ref: '#/components/schemas/ModerationCase'
   /internal/v1/community/social/moderation/{caseId}/resolve:
     post:
       operationId: socialResolveModeration
-      tags: [Social-Moderation]
+      tags:
+        - Social-Moderation
       parameters:
-        - $ref: "#/components/parameters/TenantId"
-        - $ref: "#/components/parameters/ActorId"
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/ActorId'
         - name: caseId
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResolveModerationRequest"
+              $ref: '#/components/schemas/ResolveModerationRequest'
       responses:
-        "200":
+        '200':
           description: Resolved
+  /:
+    post:
+      operationId: community_post__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    get:
+      operationId: community_get__
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}:
+    get:
+      operationId: community_get__id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /health:
+    get:
+      operationId: community_get__health
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /test-command:
+    post:
+      operationId: community_post__test_command
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/start:
+    put:
+      operationId: community_put__id_start
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /{id}/complete:
+    put:
+      operationId: community_put__id_complete
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communities:
+    get:
+      operationId: community_get__communities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: community_post__communities
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communities/{id}:
+    get:
+      operationId: community_get__communities_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communities/{id}/join:
+    post:
+      operationId: community_post__communities_id_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /communities/{id}/leave:
+    post:
+      operationId: community_post__communities_id_leave
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /groups:
+    get:
+      operationId: community_get__groups
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: community_post__groups
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /groups/{id}:
+    get:
+      operationId: community_get__groups_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /groups/{id}/join:
+    post:
+      operationId: community_post__groups_id_join
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pages:
+    get:
+      operationId: community_get__pages
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: community_post__pages
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pages/{id}:
+    get:
+      operationId: community_get__pages_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /pages/{id}/follow:
+    post:
+      operationId: community_post__pages_id_follow
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /suggestions:
+    get:
+      operationId: community_get__suggestions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /moderation/queue:
+    get:
+      operationId: community_get__moderation_queue
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /moderation/{caseId}/resolve:
+    post:
+      operationId: community_post__moderation_caseId_resolve
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /feed:
+    get:
+      operationId: community_get__feed
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts:
+    post:
+      operationId: community_post__posts
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}:
+    get:
+      operationId: community_get__posts_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    patch:
+      operationId: community_patch__posts_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: community_delete__posts_id_
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/publish:
+    post:
+      operationId: community_post__posts_id_publish
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/pin:
+    post:
+      operationId: community_post__posts_id_pin
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/reactions:
+    post:
+      operationId: community_post__posts_id_reactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: community_delete__posts_id_reactions
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/comments:
+    get:
+      operationId: community_get__posts_id_comments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    post:
+      operationId: community_post__posts_id_comments
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/bookmark:
+    post:
+      operationId: community_post__posts_id_bookmark
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+    delete:
+      operationId: community_delete__posts_id_bookmark
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
+  /posts/{id}/report:
+    post:
+      operationId: community_post__posts_id_report
+      tags:
+        - Generated-From-Handler
+      summary: Documented from community-service handler (complete-not-delete sync)
+      responses:
+        '200':
+          description: Success
 
 components:
   securitySchemes:

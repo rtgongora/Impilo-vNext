@@ -69,7 +69,6 @@ public class WellnessServiceProxyController {
                     "/internal/v1/mobile/citizen/wellness/**",
                     "/internal/v1/mobile/citizen/wallet/**",
                     "/internal/v1/mobile/citizen/sos/**",
-                    "/internal/v1/mobile/citizen/monitoring/**",
                     "/internal/v1/mobile/citizen/queue/**",
                     "/internal/v1/mobile/citizen/clubs/**",
                     "/internal/v1/mobile/citizen/providers/**",

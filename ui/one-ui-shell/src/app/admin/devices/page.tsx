@@ -14,25 +14,23 @@ import { OrganizationPlaneContextBar } from "@/components/experience/Organizatio
 import { PageShell } from "@/components/PageShell";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 
-interface DeviceResource {
-  id: string;
-  type: "device";
-  attributes: {
-    name: string;
-    deviceType: string;
-    registeredUser: string;
-    lastActive: string;
-    status: string;
-    [key: string]: unknown;
-  };
+interface DeviceRow {
+  deviceId: string;
+  deviceName: string;
+  deviceType: string;
+  os: string;
+  trustLevel: string;
+  status: string;
+  lastActivity: string;
+  currentDevice?: boolean;
 }
 
-type DevicesResponse = ApiResponse<DeviceResource[]>;
+type DevicesResponse = ApiResponse<DeviceRow[]>;
 
 function useDevices() {
   return useQuery<DevicesResponse>({
     queryKey: ["admin-devices"],
-    queryFn: () => apiClient.get<DevicesResponse>("/internal/v1/admin/devices"),
+    queryFn: () => apiClient.get<DevicesResponse>("/internal/v1/devices"),
   });
 }
 
@@ -88,7 +86,7 @@ export default function DevicesPage() {
                 <tr className="border-b bg-gray-50">
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Device Name</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Registered User</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">Trust Level</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Last Active</th>
                   <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
                 </tr>
@@ -96,28 +94,28 @@ export default function DevicesPage() {
               <tbody className="divide-y divide-gray-100">
                 {devices.map((device) => {
                   const statusStyle =
-                    STATUS_STYLES[device.attributes.status] ?? "bg-gray-100 text-gray-600";
+                    STATUS_STYLES[device.status] ?? "bg-gray-100 text-gray-600";
                   return (
-                    <tr key={device.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={device.deviceId} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-medium text-gray-900">
-                        {device.attributes.name}
+                        {device.deviceName}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-cyan-100 text-cyan-700">
-                          {device.attributes.deviceType}
+                          {device.deviceType}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-600">
-                        {device.attributes.registeredUser}
+                        {device.trustLevel}
                       </td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                        {new Date(device.attributes.lastActive).toLocaleString()}
+                        {device.lastActivity ? new Date(device.lastActivity).toLocaleString() : "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-block px-2 py-0.5 text-xs rounded-full ${statusStyle}`}
                         >
-                          {device.attributes.status}
+                          {device.status}
                         </span>
                       </td>
                     </tr>

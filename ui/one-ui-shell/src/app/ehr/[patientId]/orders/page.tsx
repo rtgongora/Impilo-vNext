@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import {
   Activity,
   Camera,
@@ -19,6 +19,7 @@ import {
   Stethoscope,
   Save,
   TestTube2,
+  Droplet,
   type LucideIcon,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -34,6 +35,7 @@ import {
 } from "@/hooks/queries/useLabOrders";
 import { useClinicalWorklist } from "@/hooks/queries/useClinicalWorklist";
 import { useEncounters } from "@/hooks/queries/useEncounters";
+import { usePatient } from "@/hooks/queries/usePatients";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import { useRoleGroup } from "@/hooks/useRoleGroup";
@@ -100,6 +102,7 @@ function validateGuidedForm(
   form: {
     lab_name: string;
     lab_code: string;
+    imaging_name: string;
     medication_name: string;
     dosage: string;
     referral_specialty: string;
@@ -109,6 +112,11 @@ function validateGuidedForm(
   if (lane === "LAB") {
     if (!form.lab_name.trim() || !form.lab_code.trim()) {
       return "Lab lane requires test name and code.";
+    }
+  }
+  if (lane === "IMAGING") {
+    if (!form.imaging_name.trim()) {
+      return "Imaging lane requires a study or procedure name.";
     }
   }
   if (lane === "MEDICATION") {
@@ -147,15 +155,24 @@ function extractProductCandidates(payload: unknown): ProductRegistryCandidate[] 
 
 export default function OrdersPage() {
   const params = useParams<{ patientId: string }>();
+  const searchParams = useSearchParams();
   const { patientId } = params;
+  const encounterIdFromUrl = searchParams.get("encounterId") ?? "";
+  const laneFromUrl = searchParams.get("lane") ?? "";
   const { user } = useAuthStore();
   const { isClinical } = useRoleGroup();
   const facility = useFacilityStore((state) => state.facility);
+  const { data: patientData } = usePatient(patientId);
+  const patientCpid = String(patientData?.data?.attributes?.cpid ?? "");
   const { data: encountersData } = useEncounters(patientId);
-  const activeEncounter = (encountersData?.data ?? []).find(
-    (encounter) =>
-      encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE"
-  );
+  const activeEncounter =
+    (encounterIdFromUrl
+      ? (encountersData?.data ?? []).find((encounter) => encounter.id === encounterIdFromUrl)
+      : undefined) ??
+    (encountersData?.data ?? []).find(
+      (encounter) =>
+        encounter.attributes.status === "IN_PROGRESS" || encounter.attributes.status === "ACTIVE",
+    );
 
   const queryClient = useQueryClient();
   const { data: ordersData, isLoading } = useLabOrders(patientId);
@@ -193,6 +210,10 @@ export default function OrdersPage() {
     lab_name: "",
     lab_code: "",
     lab_priority: "ROUTINE",
+    imaging_name: "",
+    imaging_modality: "XRAY",
+    imaging_priority: "ROUTINE",
+    imaging_notes: "",
     medication_name: "",
     dosage: "",
     frequency: "Twice daily (BD)",
@@ -204,6 +225,14 @@ export default function OrdersPage() {
     tele_notes: "",
     tele_when: "",
   });
+
+  useEffect(() => {
+    if (!laneFromUrl) return;
+    const normalized = laneFromUrl.toUpperCase();
+    if (GUIDED_LANES.some((lane) => lane.key === normalized)) {
+      setGuidedLane(normalized as GuidedLane);
+    }
+  }, [laneFromUrl]);
   const [catalogQuery, setCatalogQuery] = useState("");
   const [guidanceDraft, setGuidanceDraft] = useState<ClinicalOrderDraftDetail | null>(null);
 
@@ -244,8 +273,7 @@ export default function OrdersPage() {
     },
     { orders: 0, pharmacy: 0, referrals: 0, telemedicine: 0 }
   );
-  const unsupportedLane =
-    guidedLane === "IMAGING" || guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET";
+  const unsupportedLane = guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET";
   const guidedValidationError = validateGuidedForm(guidedLane, guidedForm);
   const guidedSubmitDisabled = guidedSubmitting || unsupportedLane || !!guidedValidationError;
 
@@ -296,6 +324,23 @@ export default function OrdersPage() {
           facilityId: facility.id,
           orderedBy: user?.id ?? "",
           orderedByName: user?.displayName ?? user?.email ?? "",
+          patientCpid: patientCpid || undefined,
+          pctEncounterRef: activeEncounter?.id ?? "",
+        });
+      } else if (guidedLane === "IMAGING") {
+        await createOrder.mutateAsync({
+          patientId,
+          encounterId: activeEncounter?.id ?? "",
+          testName: guidedForm.imaging_name,
+          testCode: `${guidedForm.imaging_modality}-${guidedForm.imaging_name.trim().replace(/\s+/g, "_").toUpperCase()}`,
+          category: "IMAGING",
+          priority: guidedForm.imaging_priority,
+          clinicalNotes: guidedForm.imaging_notes.trim() || null,
+          facilityId: facility.id,
+          orderedBy: user?.id ?? "",
+          orderedByName: user?.displayName ?? user?.email ?? "",
+          patientCpid: patientCpid || undefined,
+          pctEncounterRef: activeEncounter?.id ?? "",
         });
       } else if (guidedLane === "MEDICATION") {
         await apiClient.post("/internal/v1/pharmacy/prescriptions", {
@@ -360,6 +405,8 @@ export default function OrdersPage() {
         facilityId: facility?.id ?? form.facility_id,
         orderedBy: form.ordered_by || user?.id || "",
         orderedByName: form.ordered_by_name || user?.displayName || user?.email || "",
+        patientCpid: patientCpid || undefined,
+        pctEncounterRef: activeEncounter?.id ?? "",
       },
       {
         onSuccess: () => {
@@ -516,7 +563,32 @@ export default function OrdersPage() {
                 <Link href={`/ehr/${patientId}/procedures`} className="rounded-lg border border-indigo-200 bg-white px-2.5 py-1.5 text-indigo-700 hover:bg-indigo-100">
                   Procedure lane
                 </Link>
+                <Link
+                  href={`/madi/orders?patientId=${encodeURIComponent(patientCpid || patientId)}`}
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-rose-800 hover:bg-rose-100 inline-flex items-center gap-1"
+                  data-testid="ehr-order-blood-link"
+                >
+                  <Droplet className="h-3.5 w-3.5" />
+                  Order blood (Madi)
+                </Link>
               </div>
+            </div>
+
+            <div className="rounded-3xl border border-rose-200 bg-rose-50/60 p-4">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-rose-700">
+                Blood products
+              </p>
+              <p className="mt-2 text-sm text-rose-900">
+                Order crossmatched blood for this patient through Madi — sample collection, crossmatch, issue and transfusion are tracked in the blood bank workspace.
+              </p>
+              <Link
+                href={`/madi/orders?patientId=${encodeURIComponent(patientCpid || patientId)}`}
+                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white hover:bg-rose-700"
+                data-testid="ehr-order-blood-card"
+              >
+                <Droplet className="h-4 w-4" />
+                Order blood for patient
+              </Link>
             </div>
 
             <div className="rounded-3xl border border-cyan-200 bg-cyan-50/60 p-4">
@@ -560,6 +632,7 @@ export default function OrdersPage() {
                       Test Name
                       <input
                         type="text"
+                        data-testid="guided-lab-name"
                         value={guidedForm.lab_name}
                         onChange={(e) => updateGuidedField("lab_name", e.target.value)}
                         required
@@ -571,6 +644,7 @@ export default function OrdersPage() {
                       Test Code
                       <input
                         type="text"
+                        data-testid="guided-lab-code"
                         value={guidedForm.lab_code}
                         onChange={(e) => updateGuidedField("lab_code", e.target.value)}
                         required
@@ -721,7 +795,61 @@ export default function OrdersPage() {
                   </div>
                 )}
 
-                {(guidedLane === "IMAGING" || guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET") && (
+                {guidedLane === "IMAGING" && (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                      Study / procedure
+                      <input
+                        type="text"
+                        data-testid="guided-imaging-name"
+                        value={guidedForm.imaging_name}
+                        onChange={(e) => updateGuidedField("imaging_name", e.target.value)}
+                        required
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="e.g. Chest X-ray PA view"
+                      />
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Modality
+                      <select
+                        value={guidedForm.imaging_modality}
+                        onChange={(e) => updateGuidedField("imaging_modality", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="XRAY">X-ray</option>
+                        <option value="CT">CT</option>
+                        <option value="MRI">MRI</option>
+                        <option value="ULTRASOUND">Ultrasound</option>
+                        <option value="MAMMOGRAPHY">Mammography</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-700">
+                      Priority
+                      <select
+                        value={guidedForm.imaging_priority}
+                        onChange={(e) => updateGuidedField("imaging_priority", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="ROUTINE">Routine</option>
+                        <option value="URGENT">Urgent</option>
+                        <option value="STAT">STAT</option>
+                      </select>
+                    </label>
+                    <label className="text-xs font-medium text-gray-700 md:col-span-2">
+                      Clinical indication
+                      <input
+                        type="text"
+                        data-testid="guided-imaging-notes"
+                        value={guidedForm.imaging_notes}
+                        onChange={(e) => updateGuidedField("imaging_notes", e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        placeholder="Brief indication"
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {(guidedLane === "PROCEDURE" || guidedLane === "ORDER_SET") && (
                   <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                     This lane is intentionally read-only until a typed Experience BFF write contract is available.
                   </div>

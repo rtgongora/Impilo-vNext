@@ -14,6 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TshepoAuditServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 import zw.gov.mohcc.impilo.experience.imaging.ImagingGovernanceService;
 import zw.gov.mohcc.impilo.experience.queue.QueueStatsAggregator;
 
@@ -162,9 +163,14 @@ public class QueueController {
                 if (queueUuid != null) {
                     int pri = parseQueuePriority(priority);
                     JsonNode item = pctClient.enqueue(queueUuid, journeyId, pri);
+                    Map<String, Object> meta = new LinkedHashMap<>();
+                    meta.put("request_id", requestId);
+                    meta.put("correlation_id", correlationId);
+                    meta.put("journey_id", journeyId);
+                    meta.put("core_transaction_id", CoreTransactionCompositionService.journeyTransactionId(journeyId));
                     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                             "data", item != null ? item : Map.of(),
-                            "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+                            "meta", meta));
                 }
             }
         } catch (Exception e) {

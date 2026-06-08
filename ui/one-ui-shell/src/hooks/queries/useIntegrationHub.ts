@@ -62,3 +62,18 @@ export function useCreateIntegrationMappingTemplate() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["integration-hub", "mapping-templates"] }),
   });
 }
+
+export function useReplayIntegrationDeadLetter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (deadLetterId: string) =>
+      apiClient.post<{ data: unknown }>(
+        `/internal/v1/integration-hub/deadletters/${encodeURIComponent(deadLetterId)}/replay`,
+        {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["integration-hub", "deadletters"] });
+      void qc.invalidateQueries({ queryKey: ["integration-hub", "routes"] });
+    },
+  });
+}

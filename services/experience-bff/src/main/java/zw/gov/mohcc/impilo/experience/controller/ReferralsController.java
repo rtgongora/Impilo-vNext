@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
 import java.util.*;
 
@@ -225,7 +226,12 @@ public class ReferralsController {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        meta.put("referral_id", id.toString());
+        meta.put("core_transaction_id", CoreTransactionCompositionService.referralTransactionId(id.toString()));
+        response.put("meta", meta);
         return ResponseEntity.ok(response);
     }
 
@@ -250,7 +256,12 @@ public class ReferralsController {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
-        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("request_id", requestId);
+        meta.put("correlation_id", correlationId);
+        meta.put("referral_id", id.toString());
+        meta.put("core_transaction_id", CoreTransactionCompositionService.referralTransactionId(id.toString()));
+        response.put("meta", meta);
         return ResponseEntity.ok(response);
     }
 }
