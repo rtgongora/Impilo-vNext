@@ -51,7 +51,7 @@ export const ndilaMobile = {
     origin: NdilaCoordinate; radiusMeters: number;
     entityTypes?: string[]; limit?: number;
   }) {
-    return unwrap(apiClient.post<{ items: NdilaNearbyResult[] }>(path("spatial/nearby"), req));
+    return unwrap(apiClient.post<{ items: NdilaNearbyResult[] }>("/internal/v1/ndila/spatial/nearby", req));
   },
 
   async tileConfig() {

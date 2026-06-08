@@ -102,6 +102,62 @@ public class NdilaController {
         }
     }
 
+    @PostMapping("/spatial/nearby")
+    public ResponseEntity<Map<String, Object>> spatialNearby(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.spatialNearby(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila spatial nearby failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of(),
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @PostMapping("/spatial/nearest")
+    public ResponseEntity<Map<String, Object>> spatialNearest(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.spatialNearest(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila spatial nearest failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of(),
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @GetMapping("/facilities/geocode-review-queue")
+    public ResponseEntity<Map<String, Object>> geocodeReviewQueue(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.geocodeReviewQueue();
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila geocode review queue failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", List.of(),
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
     @PostMapping("/tracking/nearby")
     public ResponseEntity<Map<String, Object>> nearbyAssets(
             @RequestBody Map<String, Object> body,

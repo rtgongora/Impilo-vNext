@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { FacilityDataQualityBanner } from "@/components/registry/FacilityDataQualityBanner";
 import {
   useFacilityDashboardSummary,
   useFacilityRegistryFacilities,
@@ -68,6 +69,7 @@ export default function FacilityRegistryPage() {
         subtitle="HPA-governed facility registration, inspections, compliance, renewal, and certificate oversight"
       >
         <RegistryPlaneContextBar />
+        <FacilityDataQualityBanner />
         <div className="mb-4">
           <Link
             href="/registry"

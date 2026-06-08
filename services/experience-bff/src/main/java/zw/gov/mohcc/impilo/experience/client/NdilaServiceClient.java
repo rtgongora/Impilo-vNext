@@ -63,6 +63,16 @@ public class NdilaServiceClient {
         return restTemplate.getForEntity(url, JsonNode.class).getBody();
     }
 
+    public JsonNode spatialNearby(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/spatial/nearby";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
+    public JsonNode spatialNearest(Map<String, Object> body) {
+        String url = baseUrl + "/api/v1/ndila/spatial/nearest";
+        return restTemplate.postForEntity(url, body, JsonNode.class).getBody();
+    }
+
     /**
      * Browser-facing tile URLs must be same-origin BFF paths so MapLibre can load
      * raster pyramids without CORS or direct ndila-service exposure.

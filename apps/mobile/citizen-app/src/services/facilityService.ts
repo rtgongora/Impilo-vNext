@@ -16,9 +16,15 @@ interface FacilityResource {
   id: string;
   attributes: {
     name: string;
+    facilityType?: string;
     facility_type?: string;
     district?: string;
     province?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    ownership?: string | null;
+    level?: string | null;
+    hasValidCoordinates?: boolean;
   };
 }
 
@@ -28,7 +34,7 @@ export async function fetchFacilities(search?: string): Promise<FacilitySummary[
   return response.data.data.map((facility) => ({
     id: facility.id,
     name: facility.attributes.name,
-    facilityType: facility.attributes.facility_type,
+    facilityType: facility.attributes.facilityType ?? facility.attributes.facility_type,
     district: facility.attributes.district,
     province: facility.attributes.province,
   }));

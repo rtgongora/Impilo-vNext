@@ -192,7 +192,7 @@ export async function ndilaTileConfig(): Promise<NdilaTileConfig> {
 export async function ndilaNearby(req: {
   origin: NdilaCoordinate; radiusMeters: number; entityTypes?: string[]; limit?: number;
 }): Promise<{ items: NdilaLocation[]; total?: number }> {
-  return apiClient.post("/api/v1/ndila/spatial/nearby", req);
+  return apiClient.post("/internal/v1/ndila/spatial/nearby", req);
 }
 
 // ── Intelligence ───────────────────────────────────────────────────────────
