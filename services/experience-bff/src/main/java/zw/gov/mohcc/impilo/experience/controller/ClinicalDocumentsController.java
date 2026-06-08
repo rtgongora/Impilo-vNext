@@ -160,4 +160,40 @@ public class ClinicalDocumentsController {
 
         return createDocument(tenantId, podId, requestId, correlationId, null, request);
     }
+
+    @PostMapping("/objects/{objectId}/ocr")
+    public ResponseEntity<Map<String, Object>> requestDocumentOcr(
+            @PathVariable UUID objectId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode job = documentServiceClient.requestOcr(objectId);
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(Map.of(
+                    "data", job != null ? job : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Document OCR request failed for {}: {}", objectId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "DOCUMENT_OCR_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @GetMapping("/objects/{objectId}/ocr")
+    public ResponseEntity<Map<String, Object>> getDocumentOcrStatus(
+            @PathVariable UUID objectId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode job = documentServiceClient.getLatestOcr(objectId);
+            return ResponseEntity.ok(Map.of(
+                    "data", job != null ? job : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("Document OCR status failed for {}: {}", objectId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "DOCUMENT_OCR_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
 }

@@ -46,17 +46,16 @@ class MarketplaceControllerTest {
     }
 
     @Test
-    void listOrdersReturnsTypedNotImplementedEnvelope() {
+    void listOrdersReturnsUpstreamEnvelope() {
         MarketplaceController controller = new MarketplaceController(
-                new FailingMsikaFlowClient(),
+                new ListingMsikaFlowClient(),
                 new NoopMsikaServiceClient());
 
         ResponseEntity<Map<String, Object>> response = controller.listOrders(
-                "tenant-1", "req-2", "corr-2", 0, 20, null);
+                "tenant-1", "req-2", "corr-2", 0, 20, "facility-1");
 
-        assertEquals(501, response.getStatusCode().value());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("MARKETPLACE_ROUTE_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
         assertEquals("req-2", ((Map<?, ?>) response.getBody().get("meta")).get("request_id"));
     }
 
@@ -86,6 +85,17 @@ class MarketplaceControllerTest {
         @Override
         public ResponseEntity<String> createOrder(String requestBody) {
             throw new RuntimeException("msika-flow unavailable");
+        }
+    }
+
+    private static final class ListingMsikaFlowClient extends MsikaFlowServiceClient {
+        ListingMsikaFlowClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> listOrders(int page, int size, String facilityId) {
+            return ResponseEntity.ok("{\"items\":[],\"page\":0,\"size\":20,\"total_elements\":0}");
         }
     }
 

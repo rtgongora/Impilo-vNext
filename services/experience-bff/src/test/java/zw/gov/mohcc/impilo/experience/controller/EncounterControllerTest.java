@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 
@@ -20,9 +21,17 @@ class EncounterControllerTest {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private static EncounterController controller(PctServiceClient pct) {
+        return new EncounterController(pct, new StubClinicalClient());
+    }
+
+    private static EncounterController controller() {
+        return controller(new StubPctClient());
+    }
+
     @Test
     void listEncounters_returnsDataAndMeta() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.listEncounters("tenant-1", "req-1", "corr-1", 0, 20, "patient-1");
         assertEquals(200, response.getStatusCode().value());
@@ -32,7 +41,7 @@ class EncounterControllerTest {
 
     @Test
     void listEncounters_emptyPatientId_returnsBadRequest() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.listEncounters("tenant-1", "req-2", "corr-2", 0, 20, null);
         assertEquals(400, response.getStatusCode().value());
@@ -41,7 +50,7 @@ class EncounterControllerTest {
 
     @Test
     void createEncounter_returns201() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         EncounterController.CreateEncounterRequest request = new EncounterController.CreateEncounterRequest(
                 "patient-1",
                 "facility-1",
@@ -70,7 +79,7 @@ class EncounterControllerTest {
 
     @Test
     void closeEncounter_usesPctCompletionAndReturnsOk() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.closeEncounter("1", "tenant-1", "req-4", "corr-4", null, Map.of());
         assertEquals(200, response.getStatusCode().value());
@@ -80,7 +89,7 @@ class EncounterControllerTest {
 
     @Test
     void dischargeEncounter_resolvesJourneyAndStartsDischarge() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         ResponseEntity<Map<String, Object>> response =
                 controller.dischargeEncounter("1", "tenant-1", "req-5", "corr-5", null, Map.of("dischargeType", "CLINICAL"));
         assertEquals(200, response.getStatusCode().value());
@@ -92,7 +101,7 @@ class EncounterControllerTest {
     @Test
     void dischargeEncounter_forwardsInstructionFieldsToPct() {
         StubPctClient pct = new StubPctClient();
-        EncounterController controller = new EncounterController(pct);
+        EncounterController controller = controller(pct);
         Map<String, Object> body = Map.of(
                 "dischargeType", "DISCHARGE",
                 "discharge_diagnosis", "Acute bronchitis",
@@ -114,7 +123,7 @@ class EncounterControllerTest {
 
     @Test
     void updateEncounterPathwayProtocol_returnsOk() {
-        EncounterController controller = new EncounterController(new StubPctClient());
+        EncounterController controller = controller();
         ResponseEntity<Map<String, Object>> response = controller.updateEncounterPathwayProtocol(
                 "1",
                 "req-6",
@@ -195,6 +204,12 @@ class EncounterControllerTest {
                     .put("id", encounterId)
                     .put("pathwayRef", pathwayRef)
                     .put("protocolRef", protocolRef);
+        }
+    }
+
+    private static final class StubClinicalClient extends ClinicalKnowledgePlatformClient {
+        StubClinicalClient() {
+            super(new RestTemplate(), new zw.gov.mohcc.impilo.experience.config.ClinicalPlatformProperties("http://localhost:8270"));
         }
     }
 

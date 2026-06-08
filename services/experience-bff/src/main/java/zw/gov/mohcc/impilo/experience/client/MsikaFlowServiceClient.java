@@ -47,6 +47,27 @@ public class MsikaFlowServiceClient {
         return restTemplate.getForEntity(url, String.class);
     }
 
+    public ResponseEntity<String> listOrders(int page, int size, String facilityId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/orders")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (facilityId != null && !facilityId.isBlank()) {
+            builder.queryParam("facility_id", facilityId);
+        }
+        String url = builder.toUriString();
+        log.info("MSIKA Flow: Listing orders page={} size={} facility={}", page, size, facilityId);
+        return restTemplate.getForEntity(url, String.class);
+    }
+
+    public ResponseEntity<String> listBookings(int page, int size) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/bookings")
+                .queryParam("page", page)
+                .queryParam("size", size)
+                .toUriString();
+        log.info("MSIKA Flow: Listing bookings page={} size={}", page, size);
+        return restTemplate.getForEntity(url, String.class);
+    }
+
     public ResponseEntity<String> cancelOrder(String orderId) {
         return postWithoutBody(baseUrl + "/v1/orders/" + orderId + "/cancel", "Cancelling");
     }

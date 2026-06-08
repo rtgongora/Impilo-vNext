@@ -57,6 +57,48 @@ public class MvumoServiceClient {
         return extractData(response);
     }
 
+    public JsonNode createRemoteSession(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions";
+        log.info("MVUMO: creating remote consent session");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getRemoteSession(String sessionId) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions/" + sessionId;
+        log.debug("MVUMO: get remote session {}", sessionId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode verifyRemoteSession(String sessionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions/" + sessionId + "/verify";
+        log.info("MVUMO: verify remote session {}", sessionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode grantRemoteSession(String sessionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions/" + sessionId + "/grant";
+        log.info("MVUMO: grant remote session {}", sessionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode refuseRemoteSession(String sessionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions/" + sessionId + "/refuse";
+        log.info("MVUMO: refuse remote session {}", sessionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode withdrawRemoteSession(String sessionId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/remote-sessions/" + sessionId + "/withdraw";
+        log.info("MVUMO: withdraw remote session {}", sessionId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

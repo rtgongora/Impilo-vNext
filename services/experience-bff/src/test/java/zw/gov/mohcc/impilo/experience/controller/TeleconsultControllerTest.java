@@ -1,5 +1,6 @@
 package zw.gov.mohcc.impilo.experience.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
@@ -31,6 +33,7 @@ class TeleconsultControllerTest {
     private MvumoServiceClient mvumoClient;
     private CostaServiceClient costaClient;
     private AnalyticsPipelineServiceClient analyticsClient;
+    private RtcGatewayServiceClient rtcClient;
     private NotificationServiceClient notificationClient;
 
     private TelemedicineGovernanceService governanceService;
@@ -49,10 +52,11 @@ class TeleconsultControllerTest {
         FhirGatewayServiceClient fhirGatewayClient = Mockito.mock(FhirGatewayServiceClient.class);
         costaClient = Mockito.mock(CostaServiceClient.class);
         analyticsClient = Mockito.mock(AnalyticsPipelineServiceClient.class);
+        rtcClient = Mockito.mock(RtcGatewayServiceClient.class);
         governanceService = Mockito.mock(TelemedicineGovernanceService.class);
         controller = new TeleconsultController(
                 pctClient, mvumoClient, documentClient, varapiClient, tusoClient,
-                notificationClient, fhirGatewayClient, costaClient, analyticsClient,
+                notificationClient, fhirGatewayClient, costaClient, analyticsClient, rtcClient,
                 governanceService, objectMapper
         );
     }
@@ -196,5 +200,66 @@ class TeleconsultControllerTest {
                 "pat-001".equals(body.get("subjectPatientRef"))
                         && "referral:ref-consent".equals(body.get("workflowRef"))));
         Mockito.verify(pctClient).updateReferralConsent(eq("ref-consent"), any());
+    }
+
+    @Test
+    void rtcOpsHealth_proxiesRtcGatewayHealth() {
+        ObjectNode health = objectMapper.createObjectNode();
+        health.put("provider", "LIVEKIT");
+        health.put("devModeEnabled", true);
+        health.put("livekitEnabled", false);
+        health.put("livekitConfigured", false);
+        health.put("productionReady", false);
+        health.put("serverUrl", "dev://livekit");
+
+        Mockito.doNothing().when(governanceService).assertGovernedRead();
+        Mockito.when(rtcClient.getOpsHealth()).thenReturn(health);
+
+        var response = controller.rtcOpsHealth("req-rtc-health", "corr-rtc-health");
+
+        assertEquals(200, response.getStatusCode().value());
+        JsonNode data = (JsonNode) response.getBody().get("data");
+        assertEquals("LIVEKIT", data.get("provider").asText());
+        assertEquals(false, data.get("productionReady").asBoolean());
+        Mockito.verify(rtcClient).getOpsHealth();
+    }
+
+    @Test
+    void issueMediaToken_provisionsRtcAndReturnsRoomCredentials() {
+        ObjectNode referral = objectMapper.createObjectNode();
+        referral.put("id", "ref-rtc-1");
+        referral.put("patientCpid", "CPID-9");
+        referral.put("consentStatus", "GRANTED");
+
+        ObjectNode provisioned = objectMapper.createObjectNode();
+        provisioned.put("roomUrl", "wss://livekit.preview/room");
+        provisioned.put("channel", "LIVEKIT");
+
+        ObjectNode token = objectMapper.createObjectNode();
+        token.put("accessToken", "rtc-token-abc");
+
+        Mockito.doNothing().when(governanceService).assertGovernedMutate();
+        Mockito.when(governanceService.normalizePurposeOfUse("TREATMENT")).thenReturn("TREATMENT");
+        Mockito.when(pctClient.getReferral("ref-rtc-1")).thenReturn(referral);
+        Mockito.when(rtcClient.getSession("ref-rtc-1")).thenReturn(null);
+        Mockito.when(rtcClient.provisionSession(any())).thenReturn(provisioned);
+        Mockito.when(rtcClient.issueParticipantToken(eq("ref-rtc-1"), any())).thenReturn(token);
+
+        var response = controller.issueMediaToken(
+                "ref-rtc-1",
+                "req-rtc",
+                "corr-rtc",
+                "tenant-a",
+                "TREATMENT",
+                "fac-1",
+                "provider-9",
+                Map.of());
+
+        assertEquals(200, response.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) response.getBody().get("data");
+        assertEquals("wss://livekit.preview/room", data.get("room_url"));
+        assertEquals("rtc-token-abc", data.get("token"));
+        Mockito.verify(rtcClient).provisionSession(any());
+        Mockito.verify(rtcClient).issueParticipantToken(eq("ref-rtc-1"), any());
     }
 }

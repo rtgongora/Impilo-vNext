@@ -8,11 +8,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.ClinicalKnowledgePlatformClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.service.CoreTransactionCompositionService;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.UUID;
 
 /**
  * Encounter management — proxies canonical PCT encounter workflow.
@@ -24,9 +26,11 @@ public class EncounterController {
     private static final Logger log = LoggerFactory.getLogger(EncounterController.class);
 
     private final PctServiceClient pctClient;
+    private final ClinicalKnowledgePlatformClient clinicalClient;
 
-    public EncounterController(PctServiceClient pctClient) {
+    public EncounterController(PctServiceClient pctClient, ClinicalKnowledgePlatformClient clinicalClient) {
         this.pctClient = pctClient;
+        this.clinicalClient = clinicalClient;
     }
 
     public record CreateEncounterRequest(
@@ -192,6 +196,43 @@ public class EncounterController {
         } catch (Exception e) {
             log.warn("PCT completeEncounter failed: {}", e.getMessage());
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/{id}/pathway/sessions")
+    public ResponseEntity<Map<String, Object>> startEncounterPathwaySession(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        Map<String, Object> payload = new LinkedHashMap<>(body != null ? body : Map.of());
+        payload.putIfAbsent("encounter_id", id);
+        try {
+            JsonNode session = clinicalClient.startPathwaySession(payload);
+            return ResponseEntity.ok(Map.of(
+                    "data", session != null ? session : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.warn("CKP start pathway session failed for encounter {}: {}", id, e.getMessage());
+            return upstreamFailure("CKP_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @PostMapping("/{id}/pathway/sessions/{sessionId}/advance")
+    public ResponseEntity<Map<String, Object>> advanceEncounterPathwaySession(
+            @PathVariable String id,
+            @PathVariable UUID sessionId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            JsonNode advanced = clinicalClient.advancePathwaySession(sessionId, body != null ? body : Map.of());
+            return ResponseEntity.ok(Map.of(
+                    "data", advanced != null ? advanced : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId, "encounter_id", id)));
+        } catch (Exception e) {
+            log.warn("CKP advance pathway session failed for encounter {} session {}: {}", id, sessionId, e.getMessage());
+            return upstreamFailure("CKP_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 

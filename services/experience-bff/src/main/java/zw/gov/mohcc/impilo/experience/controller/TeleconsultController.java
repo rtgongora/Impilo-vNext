@@ -22,6 +22,7 @@ import zw.gov.mohcc.impilo.experience.client.FhirGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.MvumoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.NotificationServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.client.RtcGatewayServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.telemedicine.TelemedicineGovernanceService;
@@ -53,6 +54,7 @@ public class TeleconsultController {
     private final FhirGatewayServiceClient fhirGatewayClient;
     private final CostaServiceClient costaClient;
     private final AnalyticsPipelineServiceClient analyticsClient;
+    private final RtcGatewayServiceClient rtcClient;
     private final TelemedicineGovernanceService telemedicineGovernanceService;
     private final ObjectMapper objectMapper;
 
@@ -65,6 +67,7 @@ public class TeleconsultController {
                                  FhirGatewayServiceClient fhirGatewayClient,
                                  CostaServiceClient costaClient,
                                  AnalyticsPipelineServiceClient analyticsClient,
+                                 RtcGatewayServiceClient rtcClient,
                                  TelemedicineGovernanceService telemedicineGovernanceService,
                                  ObjectMapper objectMapper) {
         this.pctClient = pctClient;
@@ -76,6 +79,7 @@ public class TeleconsultController {
         this.fhirGatewayClient = fhirGatewayClient;
         this.costaClient = costaClient;
         this.analyticsClient = analyticsClient;
+        this.rtcClient = rtcClient;
         this.telemedicineGovernanceService = telemedicineGovernanceService;
         this.objectMapper = objectMapper;
     }
@@ -297,6 +301,67 @@ public class TeleconsultController {
             return ok(normalizeReferralPayload(list), requestId, correlationId, HttpStatus.OK);
         } catch (Exception e) {
             return upstreamFailure("PCT_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    /**
+     * Governed RTC media token — provisions rtc-gateway session on first use, then issues scoped participant token.
+     */
+    @PostMapping("/sessions/{id}/media/token")
+    public ResponseEntity<Map<String, Object>> issueMediaToken(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = CompanionHeaders.TENANT_ID, required = false) String tenantId,
+            @RequestHeader(value = CompanionHeaders.PURPOSE_OF_USE, required = false) String purposeOfUse,
+            @RequestHeader(value = CompanionHeaders.FACILITY_ID, required = false) String facilityId,
+            @RequestHeader(value = CompanionHeaders.ACTOR_ID, required = false) String actorId,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            telemedicineGovernanceService.assertGovernedMutate();
+            String normalizedPurpose = telemedicineGovernanceService.normalizePurposeOfUse(purposeOfUse);
+            JsonNode referral = pctClient.getReferral(id);
+            if (referral == null) {
+                return upstreamFailure("PCT_UNAVAILABLE", "No teleconsult session payload returned", requestId, correlationId);
+            }
+            if (consentBlocksMedia(referral)) {
+                return error(HttpStatus.FORBIDDEN, "CONSENT_REQUIRED",
+                        "Teleconsult consent must be granted before governed RTC media", requestId, correlationId);
+            }
+
+            String patientId = extractPatient(referral);
+            String encounterId = val(body, "encounterId", "encounter_id");
+            if (encounterId == null || encounterId.isBlank()) {
+                encounterId = referral.path("encounterId").asText(referral.path("encounter_id").asText(null));
+            }
+            String identity = defaultString(actorId, val(body, "identity", "participantId"));
+            String displayName = defaultString(val(body, "displayName", "display_name"), identity);
+            String role = defaultString(val(body, "role", "participantRole"),
+                    patientId != null && patientId.equals(identity) ? "PATIENT" : "PROVIDER");
+
+            JsonNode rtcSession = provisionRtcSessionIfNeeded(
+                    id, tenantId, normalizedPurpose, facilityId, referral, patientId, encounterId, identity, displayName, role);
+
+            Map<String, Object> tokenBody = Map.of(
+                    "participant", Map.of("identity", identity, "displayName", displayName, "role", role));
+            JsonNode tokenResponse = rtcClient.issueParticipantToken(id, tokenBody);
+
+            Map<String, Object> media = new LinkedHashMap<>();
+            mergeRtcFields(media, rtcSession);
+            mergeRtcFields(media, tokenResponse);
+            media.put("referralId", id);
+            media.put("status", "READY");
+            media.put("channel", media.getOrDefault("channel", "LIVEKIT"));
+
+            telemedicineGovernanceService.audit(
+                    tenantId, correlationId, normalizedPurpose, facilityId,
+                    "TELEMEDICINE_RTC_TOKEN_ISSUED", "POST:teleconsult/media/token", "SUCCESS",
+                    actorId, role, patientId, "TeleconsultSession", id, Map.of("provider", "rtc-gateway"));
+            return ok(media, requestId, correlationId, HttpStatus.OK);
+        } catch (HttpClientErrorException e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
         }
     }
 
@@ -961,6 +1026,22 @@ public class TeleconsultController {
         return null;
     }
 
+    @GetMapping("/ops/rtc-health")
+    public ResponseEntity<Map<String, Object>> rtcOpsHealth(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            telemedicineGovernanceService.assertGovernedRead();
+            JsonNode health = rtcClient.getOpsHealth();
+            if (health == null) {
+                return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", "No RTC ops health payload returned", requestId, correlationId);
+            }
+            return ok(health, requestId, correlationId, HttpStatus.OK);
+        } catch (Exception e) {
+            return upstreamFailure("RTC_GATEWAY_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @GetMapping("/ops/sla")
     public ResponseEntity<Map<String, Object>> telemedicineOpsSla(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
@@ -1134,6 +1215,80 @@ public class TeleconsultController {
 
     private String defaultString(String value, String fallback) {
         return value == null || value.isBlank() ? fallback : value;
+    }
+
+    private boolean consentBlocksMedia(JsonNode referral) {
+        String status = referral.path("consentStatus").asText(referral.path("consent_status").asText(""));
+        if (status == null || status.isBlank()) {
+            return false;
+        }
+        String normalized = status.trim().toUpperCase(Locale.ROOT);
+        return normalized.contains("DENIED") || normalized.contains("REVOKED") || normalized.contains("REFUSED");
+    }
+
+    private JsonNode provisionRtcSessionIfNeeded(String sessionId,
+                                                 String tenantId,
+                                                 String purposeOfUse,
+                                                 String facilityId,
+                                                 JsonNode referral,
+                                                 String patientId,
+                                                 String encounterId,
+                                                 String identity,
+                                                 String displayName,
+                                                 String role) {
+        try {
+            JsonNode existing = rtcClient.getSession(sessionId);
+            if (existing != null && !existing.isNull()) {
+                return existing;
+            }
+        } catch (HttpClientErrorException.NotFound notFound) {
+            // provision below
+        } catch (Exception ex) {
+            log.debug("RTC session lookup skipped for {}: {}", sessionId, ex.getMessage());
+        }
+
+        Map<String, Object> provision = new LinkedHashMap<>();
+        provision.put("tenantId", defaultString(tenantId, "default"));
+        provision.put("sessionId", sessionId);
+        provision.put("referralId", sessionId);
+        provision.put("encounterId", encounterId);
+        provision.put("patientId", defaultString(patientId, "unknown"));
+        provision.put("providerId", identity);
+        provision.put("facilityId", facilityId);
+        provision.put("purposeOfUse", purposeOfUse);
+        provision.put("consentReference", referral.path("consentReference").asText(
+                referral.path("consent_reference").asText(null)));
+        provision.put("sessionType", "TELECONSULT");
+        provision.put("participant", Map.of("identity", identity, "displayName", displayName, "role", role));
+        return rtcClient.provisionSession(provision);
+    }
+
+    private void mergeRtcFields(Map<String, Object> target, JsonNode node) {
+        if (node == null || node.isNull()) {
+            return;
+        }
+        putIfPresent(target, node, "roomUrl", "room_url");
+        putIfPresent(target, node, "accessToken", "token", "access_token");
+        putIfPresent(target, node, "channel");
+        putIfPresent(target, node, "status");
+        putIfPresent(target, node, "roomName", "room_name");
+    }
+
+    private void putIfPresent(Map<String, Object> target, JsonNode node, String... keys) {
+        for (String key : keys) {
+            if (node.hasNonNull(key)) {
+                String value = node.get(key).asText();
+                target.put(key, value);
+                if ("roomUrl".equals(key)) {
+                    target.put("room_url", value);
+                }
+                if ("accessToken".equals(key)) {
+                    target.put("token", value);
+                    target.put("access_token", value);
+                }
+                return;
+            }
+        }
     }
 
     private record ValidationError(HttpStatus status, String code, String message) {

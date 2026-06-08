@@ -282,6 +282,45 @@ public class ProviderMadiController {
         return forward(() -> client.closeCase(caseId, body), requestId, correlationId);
     }
 
+    // ── Central bank ─────────────────────────────────────────────────
+
+    @GetMapping("/central-bank/metrics")
+    public ResponseEntity<Map<String, Object>> centralBankMetrics(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> client.centralBankMetrics(), requestId, correlationId);
+    }
+
+    @GetMapping("/central-bank/emergency-redistributions")
+    public ResponseEntity<Map<String, Object>> listEmergencyRedistributions(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            return ResponseEntity.ok(envelope(client.listEmergencyRedistributions(), requestId, correlationId));
+        } catch (Exception e) {
+            log.warn("provider madi list emergency redistributions failed: {}", e.getMessage());
+            return ResponseEntity.ok(envelope(Collections.emptyList(), requestId, correlationId));
+        }
+    }
+
+    @PostMapping("/central-bank/emergency-redistributions/{redistributionId}/approve")
+    public ResponseEntity<Map<String, Object>> approveEmergencyRedistribution(
+            @PathVariable String redistributionId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.approveEmergencyRedistribution(redistributionId, body), requestId, correlationId);
+    }
+
+    @PostMapping("/central-bank/emergency-redistributions/{redistributionId}/handoff")
+    public ResponseEntity<Map<String, Object>> initiateEmergencyHandoff(
+            @PathVariable String redistributionId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forwardPost(() -> client.initiateEmergencyHandoff(redistributionId, body), requestId, correlationId);
+    }
+
     @FunctionalInterface
     private interface MadiCall {
         JsonNode call() throws Exception;

@@ -75,12 +75,14 @@ public class VitoIssuanceBffController {
     @GetMapping("/queue")
     public ResponseEntity<String> queue(
             @RequestParam(required = false) String state,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String filter = state != null && !state.isBlank() ? state : status;
         String path = "/v1/internal/issuance/queue?page=" + page + "&size=" + size
-                + (state != null ? "&state=" + state : "");
+                + (filter != null && !filter.isBlank() ? "&state=" + filter : "");
         return forward(() -> vitoServiceClient.rawGet(path), requestId, correlationId);
     }
 

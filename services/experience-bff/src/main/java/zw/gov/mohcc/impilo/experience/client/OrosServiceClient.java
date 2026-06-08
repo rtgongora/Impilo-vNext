@@ -109,13 +109,55 @@ public class OrosServiceClient {
      *
      * @param facilityId the facility UUID
      * @param status     optional status filter
-     * @return list of worklist items
+     * @return paged worklist payload ({@code items}, pagination fields) or legacy array
      */
     public JsonNode getWorklist(String facilityId, String status) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/worklist")
-                .queryParam("facilityId", facilityId);
-        if (status != null) builder.queryParam("status", status);
+        return getWorklists(facilityId, null, null, status, null, 0, 50);
+    }
+
+    /**
+     * Get the OROS facility worklist with optional filters.
+     */
+    public JsonNode getWorklists(String facilityId, String workspaceId, String type,
+                                 String status, String priority, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/worklists")
+                .queryParam("facilityId", facilityId)
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (workspaceId != null && !workspaceId.isBlank()) {
+            builder.queryParam("workspaceId", workspaceId);
+        }
+        if (type != null && !type.isBlank()) {
+            builder.queryParam("type", type);
+        }
+        if (status != null && !status.isBlank()) {
+            builder.queryParam("status", status);
+        }
+        if (priority != null && !priority.isBlank()) {
+            builder.queryParam("priority", priority);
+        }
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Accept an order from the facility worklist.
+     */
+    public JsonNode acceptWorklistItem(String orderId) {
+        String url = baseUrl + "/v1/worklists/" + orderId + "/accept";
+        log.info("OROS: Accepting worklist item={}", orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Reject an order from the facility worklist.
+     */
+    public JsonNode rejectWorklistItem(String orderId, String reason) {
+        String url = baseUrl + "/v1/worklists/" + orderId + "/reject";
+        Map<String, Object> body = Map.of("reason", reason != null ? reason : "Rejected from experience UI");
+        log.info("OROS: Rejecting worklist item={}, reason={}", orderId, reason);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 
@@ -193,6 +235,58 @@ public class OrosServiceClient {
         String url = baseUrl + "/v1/orders/" + orderId;
         log.debug("OROS: Getting result for order={}", orderId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get the orderable catalog, optionally filtered by order type.
+     */
+    public JsonNode getCatalog(String orderType, int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/catalog")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (orderType != null && !orderType.isBlank()) {
+            builder.queryParam("orderType", orderType);
+        }
+        log.debug("OROS: Getting catalog orderType={} page={} size={}", orderType, page, size);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Get pending hybrid-mode reconciliation entries.
+     */
+    public JsonNode getReconcilePending(int page, int size) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/reconcile/pending")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        log.debug("OROS: Getting pending reconciliations page={} size={}", page, size);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(builder.toUriString(), JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Match a reconciliation entry to an existing order.
+     */
+    public JsonNode matchReconciliation(String recId, String orderId) {
+        String url = baseUrl + "/v1/reconcile/" + recId + "/match";
+        Map<String, Object> body = Map.of("orderId", orderId);
+        log.info("OROS: Matching reconciliation recId={} to orderId={}", recId, orderId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    /**
+     * Resolve a reconciliation entry with operational notes.
+     */
+    public JsonNode resolveReconciliation(String recId, String notes) {
+        String url = baseUrl + "/v1/reconcile/" + recId + "/resolve";
+        Map<String, Object> body = new LinkedHashMap<>();
+        if (notes != null) {
+            body.put("notes", notes);
+        }
+        log.info("OROS: Resolving reconciliation recId={}", recId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
         return extractData(response);
     }
 

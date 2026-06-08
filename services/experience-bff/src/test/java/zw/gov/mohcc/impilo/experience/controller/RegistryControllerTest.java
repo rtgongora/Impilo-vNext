@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class RegistryControllerTest {
 
@@ -30,6 +31,17 @@ class RegistryControllerTest {
         assertEquals(200, response.getStatusCode().value());
         List<?> data = (List<?>) response.getBody().get("data");
         assertFalse(data.isEmpty());
+    }
+
+    @Test
+    void getReconciliationQueue_mapsVarapiQueue() {
+        RegistryController controller = new RegistryController(new StubVarapiClient(), new TusoServiceClient(new RestTemplate(), endpoints()));
+        ResponseEntity<Map<String, Object>> response =
+                controller.getReconciliationQueue(null, 0, 20, "req-3", "corr-3");
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertNotNull(response.getBody().get("data"));
     }
 
     @Test
@@ -63,6 +75,14 @@ class RegistryControllerTest {
                     .put("profession", "MEDICAL_PRACTITIONER"));
             page.set("items", items);
             return page;
+        }
+
+        @Override
+        public JsonNode getReconciliationQueue(String status, int page, int size) {
+            ObjectNode queue = MAPPER.createObjectNode();
+            queue.set("items", MAPPER.createArrayNode().add(MAPPER.createObjectNode().put("caseId", "RC-1")));
+            queue.put("total_elements", 1);
+            return queue;
         }
     }
 

@@ -207,6 +207,16 @@ public class SecurityConfig {
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/clinical-notes/**")
                             .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/lab-worklists")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/lab-worklists/**")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/lab-catalog")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.GET, "/internal/v1/lab-reconciliation")
+                            .hasAnyRole(CLINICAL_ROLES)
+                    .requestMatchers(HttpMethod.POST, "/internal/v1/lab-reconciliation/**")
+                            .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/lab-orders/**")
                             .hasAnyRole(CLINICAL_ROLES)
                     .requestMatchers(HttpMethod.POST, "/internal/v1/conditions/**")
@@ -361,6 +371,10 @@ public class SecurityConfig {
                             "/internal/v1/registry/localities/**",
                             "/internal/v1/registry/coverage/preview")
                             .hasAnyRole(mergeRoleSets(CLINICAL_ROLES, QUEUE_ROLES))
+                    .requestMatchers(HttpMethod.POST,
+                            "/internal/v1/registry/provider-council/obligations/*/mushex-intent",
+                            "/internal/v1/registry/provider-council/obligations/*/sync-payment")
+                            .hasAnyRole(mergeRoleSets(CLINICAL_ROLES, REGISTRY_OPS_ROLES))
 
                     // ── VITO client registry (staff / admin) ──────────────
                     .requestMatchers("/internal/v1/vito/client-registry/**").authenticated()

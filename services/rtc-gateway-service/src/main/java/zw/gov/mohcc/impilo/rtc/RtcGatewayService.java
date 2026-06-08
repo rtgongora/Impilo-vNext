@@ -87,6 +87,22 @@ public class RtcGatewayService {
         return toResponse(record, token);
     }
 
+    public Map<String, Object> opsHealth() {
+        boolean devModeEnabled = properties.getGateway().isDevModeEnabled();
+        boolean livekitEnabled = properties.getLivekit().isEnabled();
+        boolean livekitConfigured = livekitConfigured();
+        boolean productionReady = !devModeEnabled && livekitEnabled && livekitConfigured;
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("provider", provider());
+        out.put("devModeEnabled", devModeEnabled);
+        out.put("livekitEnabled", livekitEnabled);
+        out.put("livekitConfigured", livekitConfigured);
+        out.put("productionReady", productionReady);
+        out.put("serverUrl", serverUrl());
+        out.put("activeSessions", store.size());
+        return out;
+    }
+
     public RtcSessionResponse end(String sessionId) {
         RtcSessionRecord record = store.get(sessionId)
                 .orElseThrow(() -> new RtcNotFoundException("RTC session not found"));
@@ -180,6 +196,39 @@ public class RtcGatewayService {
 
     private String provider() {
         return properties.getGateway().getProvider() == null ? "LIVEKIT" : properties.getGateway().getProvider();
+    }
+
+    private boolean livekitConfigured() {
+        if (!properties.getLivekit().isEnabled()) {
+            return false;
+        }
+        String url = properties.getLivekit().getUrl();
+        String apiKey = properties.getLivekit().getApiKey();
+        String apiSecret = properties.getLivekit().getApiSecret();
+        return url != null && !url.isBlank()
+                && apiKey != null && !apiKey.isBlank()
+                && apiSecret != null && !apiSecret.isBlank();
+    }
+
+    private String serverUrl() {
+        String url = properties.getLivekit().getClientUrl();
+        if (url == null || url.isBlank()) {
+            url = properties.getLivekit().getUrl();
+        }
+        if (url == null || url.isBlank()) {
+            return devModeEnabled() ? "dev://livekit" : "";
+        }
+        if (url.startsWith("https://")) {
+            return "wss://" + url.substring("https://".length());
+        }
+        if (url.startsWith("http://")) {
+            return "ws://" + url.substring("http://".length());
+        }
+        return url;
+    }
+
+    private boolean devModeEnabled() {
+        return properties.getGateway().isDevModeEnabled();
     }
 
     private Map<String, Boolean> capabilities() {

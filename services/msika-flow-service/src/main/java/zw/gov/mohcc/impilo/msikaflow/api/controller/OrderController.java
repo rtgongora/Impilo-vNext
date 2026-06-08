@@ -3,6 +3,7 @@ package zw.gov.mohcc.impilo.msikaflow.api.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import zw.gov.mohcc.impilo.msikaflow.api.dto.*;
 import zw.gov.mohcc.impilo.msikaflow.core.*;
 import zw.gov.mohcc.impilo.msikaflow.domain.*;
 import zw.gov.mohcc.impilo.msikaflow.persistence.entity.*;
+import zw.gov.mohcc.impilo.msikaflow.persistence.repository.OrderRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,17 +27,43 @@ public class OrderController {
     private final PricingService pricingService;
     private final PaymentService paymentService;
     private final FulfillmentService fulfillmentService;
+    private final OrderRepository orderRepository;
 
     public OrderController(OrderStateMachine stateMachine,
                            CatalogValidationService catalogValidation,
                            PricingService pricingService,
                            PaymentService paymentService,
-                           FulfillmentService fulfillmentService) {
+                           FulfillmentService fulfillmentService,
+                           OrderRepository orderRepository) {
         this.stateMachine = stateMachine;
         this.catalogValidation = catalogValidation;
         this.pricingService = pricingService;
         this.paymentService = paymentService;
         this.fulfillmentService = fulfillmentService;
+        this.orderRepository = orderRepository;
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Object>> listOrders(
+            @RequestParam(required = false) UUID facility_id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest httpReq) {
+        UUID tenantId = TrustHeaderExtractor.tenantId(httpReq);
+        String correlationId = TrustHeaderExtractor.correlationId(httpReq);
+        PageRequest pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+        Page<OrderEntity> orders = facility_id != null
+                ? orderRepository.findByTenantIdAndFacilityIdOrderByCreatedAtDesc(tenantId, facility_id, pageable)
+                : orderRepository.findByTenantIdOrderByCreatedAtDesc(tenantId, pageable);
+        List<OrderView> items = orders.getContent().stream()
+                .map(order -> OrderView.from(order, stateMachine.getOrderLines(order.getOrderId())))
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(new Object() {
+            public final List<OrderView> items = items;
+            public final int page = orders.getNumber();
+            public final int size = orders.getSize();
+            public final long total_elements = orders.getTotalElements();
+        }, correlationId));
     }
 
     @PostMapping

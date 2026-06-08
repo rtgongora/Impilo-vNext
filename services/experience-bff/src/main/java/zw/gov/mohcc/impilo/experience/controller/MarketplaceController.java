@@ -52,10 +52,18 @@ public class MarketplaceController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, name = "facility_id") String facilityId) {
-        return unavailable501(
-                "MARKETPLACE_ROUTE_UNAVAILABLE",
-                "Marketplace order list is not yet exposed on msika-flow-service (no tenant-scoped GET /v1/orders); use order id or vendor-scoped flows.",
-                requestId, correlationId);
+        try {
+            ResponseEntity<String> result = msikaFlowClient.listOrders(page, size, facilityId);
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
+        } catch (Exception e) {
+            log.warn("MSIKA Flow unavailable for order list: {}", e.getMessage());
+            return unavailable502(
+                    "MSIKA_FLOW_UNAVAILABLE",
+                    "Unable to list marketplace orders while msika-flow-service is unavailable",
+                    requestId, correlationId);
+        }
     }
 
     @GetMapping("/catalog")
@@ -112,11 +120,20 @@ public class MarketplaceController {
     public ResponseEntity<Map<String, Object>> listBookings(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
-            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return unavailable501(
-                "MARKETPLACE_ROUTE_UNAVAILABLE",
-                "Marketplace bookings list is not exposed on msika-flow-service (bookings are POST-only today).",
-                requestId, correlationId);
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            ResponseEntity<String> result = msikaFlowClient.listBookings(page, size);
+            return envelope(result, requestId, correlationId);
+        } catch (HttpStatusCodeException e) {
+            return envelope(e, requestId, correlationId);
+        } catch (Exception e) {
+            return unavailable502(
+                    "MSIKA_FLOW_UNAVAILABLE",
+                    "Unable to load marketplace bookings while msika-flow-service is unavailable",
+                    requestId, correlationId);
+        }
     }
 
     @GetMapping("/orders/{id}")

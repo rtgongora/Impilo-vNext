@@ -51,6 +51,15 @@ public class ProviderPublicHealthController {
                 Map.class);
     }
 
+    @PostMapping("/field-tasks")
+    public ResponseEntity<?> createFieldTask(@RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return restTemplate.postForEntity(
+                surveillanceUrl + "/internal/v1/public-health/field-tasks",
+                body,
+                Map.class);
+    }
+
     @PostMapping("/field-tasks/{taskId}/transition")
     public ResponseEntity<?> transitionFieldTask(
             @PathVariable String taskId,

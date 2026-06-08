@@ -53,6 +53,16 @@ public class RtcController {
         return ResponseEntity.ok(envelope(service.issueToken(sessionId, body), requestId, correlationId));
     }
 
+    @GetMapping("/ops/health")
+    public ResponseEntity<Map<String, Object>> opsHealth(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("data", service.opsHealth());
+        out.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(out);
+    }
+
     @PostMapping("/sessions/{sessionId}/end")
     public ResponseEntity<Map<String, Object>> end(
             @PathVariable String sessionId,

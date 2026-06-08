@@ -32,7 +32,7 @@ class VitoIssuanceBffControllerTest {
     @Test
     void queueForwardsPagingParams() {
         VitoIssuanceBffController controller = new VitoIssuanceBffController(new StubVitoClient());
-        ResponseEntity<String> response = controller.queue("SUBMITTED", 1, 10, "req-2", "corr-2");
+        ResponseEntity<String> response = controller.queue("SUBMITTED", null, 1, 10, "req-2", "corr-2");
 
         assertEquals(200, response.getStatusCode().value());
         assertTrue(StubVitoClient.lastGetPath.contains("state=SUBMITTED"));

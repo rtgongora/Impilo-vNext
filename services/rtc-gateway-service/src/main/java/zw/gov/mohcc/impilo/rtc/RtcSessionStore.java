@@ -19,4 +19,8 @@ public class RtcSessionStore {
     public Optional<RtcSessionRecord> get(String id) {
         return Optional.ofNullable(sessions.get(id));
     }
+
+    public int size() {
+        return sessions.size();
+    }
 }

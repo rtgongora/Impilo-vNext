@@ -106,6 +106,9 @@ impilo:
     nhume-base-url: ${NHUME_BASE_URL:${NHUME_SERVICE_BASE_URL:http://localhost:8210}}
     madi-base-url: ${MADI_BASE_URL:${MADI_SERVICE_BASE_URL:http://localhost:8300}}
     live-base-url: ${LIVE_BASE_URL:http://localhost:8380}
+    iot-ingestion-base-url: ${IOT_INGESTION_BASE_URL:http://localhost:8330}
+    rtc-gateway-base-url: ${RTC_GATEWAY_BASE_URL:http://localhost:8195}
+    analytics-pipeline-base-url: ${ANALYTICS_PIPELINE_BASE_URL:http://localhost:8365}
     vito-base-url: ${VITO_BASE_URL:http://localhost:8082}
     tuso-base-url: ${TUSO_BASE_URL:http://localhost:8084}
     varapi-base-url: ${VARAPI_BASE_URL:http://localhost:8083}

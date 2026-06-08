@@ -12,6 +12,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class RtcGatewayServiceTest {
@@ -53,6 +54,26 @@ class RtcGatewayServiceTest {
 
         assertNotNull(token.accessToken());
         assertEquals("session-1", token.id());
+    }
+
+    @Test
+    void opsHealthReportsDevPreviewBoundaryWithoutSecrets() {
+        RtcGatewayProperties props = properties();
+        props.getGateway().setDevModeEnabled(true);
+        RtcSessionStore store = new RtcSessionStore();
+        RtcGatewayService service = new RtcGatewayService(
+                props, new LiveKitTokenService(props), store, new SimpleMeterRegistry());
+        service.provision(request());
+
+        Map<String, Object> health = service.opsHealth();
+
+        assertEquals("LIVEKIT", health.get("provider"));
+        assertEquals(true, health.get("devModeEnabled"));
+        assertEquals(false, health.get("livekitEnabled"));
+        assertEquals(false, health.get("livekitConfigured"));
+        assertFalse((Boolean) health.get("productionReady"));
+        assertNotNull(health.get("serverUrl"));
+        assertEquals(1, health.get("activeSessions"));
     }
 
     @Test

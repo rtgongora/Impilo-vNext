@@ -117,6 +117,22 @@ public class DocumentServiceClient {
         return extractData(response);
     }
 
+    /** Request OCR / scanning pipeline for a stored object. */
+    public JsonNode requestOcr(UUID objectId) {
+        String url = baseUrl + "/v1/internal/objects/" + objectId + "/ocr";
+        log.debug("DocStore: Requesting OCR for object={}", objectId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Latest OCR job status and extracted text for an object. */
+    public JsonNode getLatestOcr(UUID objectId) {
+        String url = baseUrl + "/v1/internal/objects/" + objectId + "/ocr";
+        log.debug("DocStore: Getting latest OCR for object={}", objectId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

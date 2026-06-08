@@ -19,25 +19,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class MobileProviderExtendedControllerTest {
 
     @Test
-    void billingChargesReturnsNotImplementedUntilWired() {
+    void billingChargesProxiesCostaBillForEncounter() {
         MobileProviderExtendedController controller = new MobileProviderExtendedController(
-                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new StubCostaClient(), new StubOrosClient());
+                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new BillingCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getCharges("tenant-1", "enc-1");
-        assertEquals(501, response.getStatusCode().value());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("BILLING_ROUTE_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+        assertEquals("bill-1", ((com.fasterxml.jackson.databind.JsonNode) response.getBody().get("data")).get("id").asText());
     }
 
     @Test
-    void billingChargeCaptureReturnsNotImplementedUntilWired() {
+    void billingChargeCaptureProxiesCostaEstimate() {
         MobileProviderExtendedController controller = new MobileProviderExtendedController(
-                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new StubCostaClient(), new StubOrosClient());
+                new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new BillingCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.captureCharge("tenant-1", Map.of("encounterId", "enc-1"));
-        assertEquals(501, response.getStatusCode().value());
+        assertEquals(201, response.getStatusCode().value());
         assertNotNull(response.getBody());
-        assertEquals("BILLING_ROUTE_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+        assertEquals("estimate-1", ((com.fasterxml.jackson.databind.JsonNode) response.getBody().get("data")).get("id").asText());
     }
 
     @Test
@@ -116,6 +116,28 @@ class MobileProviderExtendedControllerTest {
 
     private static final class StubCostaClient extends CostaServiceClient {
         StubCostaClient() { super(new RestTemplate(), endpoints()); }
+    }
+
+    private static final class BillingCostaClient extends CostaServiceClient {
+        BillingCostaClient() { super(new RestTemplate(), endpoints()); }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode createBillDraft(String encounterId, String billType) {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.createObjectNode().put("id", "bill-1").put("encounterId", encounterId);
+        }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode getBill(String billId) {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.createObjectNode().put("id", billId).put("status", "DRAFT");
+        }
+
+        @Override
+        public com.fasterxml.jackson.databind.JsonNode createEstimate(java.util.Map<String, Object> body) {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            return mapper.createObjectNode().put("id", "estimate-1");
+        }
     }
 
     private static final class StubOrosClient extends OrosServiceClient {

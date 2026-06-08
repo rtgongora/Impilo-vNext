@@ -281,19 +281,38 @@ public class MobileProviderExtendedController {
     // ── Charges / Billing ───────────────────────────────────────────
 
     @GetMapping("/billing/charges")
-    public ResponseEntity<Map<String, Object>> getCharges(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String encounterId) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "error", Map.of(
-                        "code", "BILLING_ROUTE_UNAVAILABLE",
-                        "message", "Mobile provider billing charges are not yet wired to a production billing service")));
+    public ResponseEntity<Map<String, Object>> getCharges(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String encounterId) {
+        try {
+            if (encounterId != null && !encounterId.isBlank()) {
+                JsonNode draft = costaClient.createBillDraft(encounterId, "ENCOUNTER");
+                if (draft != null && draft.has("id")) {
+                    JsonNode bill = costaClient.getBill(draft.get("id").asText());
+                    return ResponseEntity.ok(Map.of("data", bill != null ? bill : draft));
+                }
+                return ResponseEntity.ok(Map.of("data", draft != null ? draft : Map.of()));
+            }
+            JsonNode bills = costaClient.listBills(0, 20, null);
+            return ResponseEntity.ok(Map.of("data", bills != null ? bills : List.of()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "COSTA_UNAVAILABLE", "message", e.getMessage())));
+        }
     }
 
     @PostMapping("/billing/charge")
-    public ResponseEntity<Map<String, Object>> captureCharge(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of(
-                "error", Map.of(
-                        "code", "BILLING_ROUTE_UNAVAILABLE",
-                        "message", "Mobile provider charge capture is not yet wired to a production billing service")));
+    public ResponseEntity<Map<String, Object>> captureCharge(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode estimate = costaClient.createEstimate(body != null ? body : Map.of());
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                    "data", estimate != null ? estimate : Map.of()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "COSTA_UNAVAILABLE", "message", e.getMessage())));
+        }
     }
 
     // ── Reports ─────────────────────────────────────────────────────

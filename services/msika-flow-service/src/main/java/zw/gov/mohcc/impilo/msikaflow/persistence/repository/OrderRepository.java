@@ -21,4 +21,6 @@ public interface OrderRepository extends JpaRepository<OrderEntity, String> {
     Page<OrderEntity> findByVendorIdAndStatusIn(UUID vendorId, List<OrderStatus> statuses, Pageable pageable);
     Page<OrderEntity> findByFacilityIdAndStatus(UUID facilityId, OrderStatus status, Pageable pageable);
     List<OrderEntity> findByStatusAndTenantId(OrderStatus status, UUID tenantId);
+    Page<OrderEntity> findByTenantIdOrderByCreatedAtDesc(UUID tenantId, Pageable pageable);
+    Page<OrderEntity> findByTenantIdAndFacilityIdOrderByCreatedAtDesc(UUID tenantId, UUID facilityId, Pageable pageable);
 }

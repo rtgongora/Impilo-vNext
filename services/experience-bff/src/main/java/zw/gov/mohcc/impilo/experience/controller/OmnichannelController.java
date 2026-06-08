@@ -333,6 +333,51 @@ public class OmnichannelController {
         }
     }
 
+    @PostMapping("/campaigns/{id}/dispatch")
+    public ResponseEntity<Map<String, Object>> dispatchCampaign(
+            @PathVariable long id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        try {
+            JsonNode campaign = campaignsClient.dispatch(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", campaign != null ? campaign : Map.of(),
+                    "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("OMNICHANNEL_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
+    @PostMapping("/campaigns/{id}/close")
+    public ResponseEntity<Map<String, Object>> closeCampaign(
+            @PathVariable long id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        try {
+            JsonNode campaign = campaignsClient.closeCampaign(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", campaign != null ? campaign : Map.of(),
+                    "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("OMNICHANNEL_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
+    @PostMapping("/campaigns/{id}/review")
+    public ResponseEntity<Map<String, Object>> requestCampaignReview(
+            @PathVariable long id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        try {
+            JsonNode campaign = campaignsClient.requestReview(id);
+            return ResponseEntity.ok(Map.of(
+                    "data", campaign != null ? campaign : Map.of(),
+                    "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            return upstreamFailure("OMNICHANNEL_UNAVAILABLE", e.getMessage(), requestId);
+        }
+    }
+
     // ── SMS Journeys ─────────────────────────────────────────────
 
     @GetMapping("/sms-journeys")

@@ -276,6 +276,46 @@ public class RegistryController {
     }
 
     /**
+     * GET /internal/v1/registry/reconciliation/queue — Varapi council import reconciliation queue.
+     */
+    @GetMapping("/reconciliation/queue")
+    public ResponseEntity<Map<String, Object>> getReconciliationQueue(
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode rows = varapiClient.getReconciliationQueue(status, page, size);
+            return ResponseEntity.ok(Map.of(
+                    "data", rows != null ? rows : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of(
+                    "data", JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/reconciliation/{caseId}/decision")
+    public ResponseEntity<Map<String, Object>> decideReconciliationCase(
+            @PathVariable long caseId,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode result = varapiClient.decideReconciliationCase(caseId, body);
+            return ResponseEntity.ok(Map.of(
+                    "data", result != null ? result : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    /**
      * GET /internal/v1/registry/provider-council/obligations — MusheX-linked council fee obligations.
      */
     @GetMapping("/provider-council/obligations")
@@ -352,6 +392,143 @@ public class RegistryController {
         } catch (Exception e) {
             return ResponseEntity.ok(Map.of(
                     "data", JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/obligations/{obligationId}/mushex-intent")
+    public ResponseEntity<Map<String, Object>> createCouncilMusheXIntent(
+            @PathVariable long obligationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.createMusheXIntentForObligation(obligationId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/obligations/{obligationId}/sync-payment")
+    public ResponseEntity<Map<String, Object>> syncCouncilObligationPayment(
+            @PathVariable long obligationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.syncCouncilObligationPayment(obligationId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/applications/{applicationId}/under-admin-review")
+    public ResponseEntity<Map<String, Object>> advanceCouncilApplicationToUnderAdminReview(
+            @PathVariable long applicationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.advanceCouncilApplicationToUnderAdminReview(applicationId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/applications/{applicationId}/awaiting-payment")
+    public ResponseEntity<Map<String, Object>> advanceCouncilApplicationToAwaitingPayment(
+            @PathVariable long applicationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.advanceCouncilApplicationToAwaitingPayment(applicationId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/applications/{applicationId}/fee-paid")
+    public ResponseEntity<Map<String, Object>> advanceCouncilApplicationAfterFeePaid(
+            @PathVariable long applicationId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.advanceCouncilApplicationAfterFeePaid(applicationId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/reviews")
+    public ResponseEntity<Map<String, Object>> recordCouncilReview(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.recordCouncilReview(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/fundo-cpd-candidates/{candidateId}/accept")
+    public ResponseEntity<Map<String, Object>> acceptFundoCpdCandidate(
+            @PathVariable long candidateId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.acceptFundoCpdCandidate(candidateId);
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+    }
+
+    @PostMapping("/provider-council/fundo-cpd-candidates/{candidateId}/reject")
+    public ResponseEntity<Map<String, Object>> rejectFundoCpdCandidate(
+            @PathVariable long candidateId,
+            @RequestBody(required = false) Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode row = varapiClient.rejectFundoCpdCandidate(candidateId, body != null ? body : Map.of());
+            return ResponseEntity.ok(Map.of(
+                    "data", row != null ? row : JsonNodeFactory.instance.objectNode(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "error", Map.of("code", "VARAPI_UNAVAILABLE", "message", e.getMessage()),
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
         }
     }

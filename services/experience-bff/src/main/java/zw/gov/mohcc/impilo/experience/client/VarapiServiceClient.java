@@ -181,6 +181,22 @@ public class VarapiServiceClient {
         return response.getBody();
     }
 
+    /** Create MusheX payment intent for a council fee obligation (Varapi). */
+    public JsonNode createMusheXIntentForObligation(long obligationId) {
+        String url = baseUrl + "/v1/internal/provider-council/obligations/" + obligationId + "/mushex-intent";
+        log.info("VARAPI: create MusheX intent for obligationId={}", obligationId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Sync council obligation payment status from MusheX (Varapi). */
+    public JsonNode syncCouncilObligationPayment(long obligationId) {
+        String url = baseUrl + "/v1/internal/provider-council/obligations/" + obligationId + "/sync-payment";
+        log.info("VARAPI: sync council obligation payment obligationId={}", obligationId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
     /** Council workflow queue (Varapi). */
     public JsonNode getProviderCouncilOpenApplications(long councilId, String workflowStates) {
         StringBuilder sb = new StringBuilder(baseUrl)
@@ -225,5 +241,78 @@ public class VarapiServiceClient {
         ResponseEntity<JsonNode> response =
                 restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
         return extractData(response);
+    }
+
+    /** Council import reconciliation queue (Varapi). */
+    public JsonNode getReconciliationQueue(String status, int page, int size) {
+        StringBuilder sb = new StringBuilder(baseUrl)
+                .append("/v1/internal/reconciliation/queue?page=")
+                .append(page)
+                .append("&size=")
+                .append(size);
+        if (status != null && !status.isBlank()) {
+            sb.append("&status=").append(URLEncoder.encode(status, StandardCharsets.UTF_8));
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(sb.toString(), JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Decide a council import reconciliation case (ACCEPT / REJECT / MERGE / DEFER). */
+    public JsonNode decideReconciliationCase(long caseId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/reconciliation/" + caseId + "/decision";
+        log.info("VARAPI: decideReconciliationCase caseId={}", caseId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new org.springframework.http.HttpEntity<>(body), JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Council intake: SUBMITTED → UNDER_ADMIN_REVIEW. */
+    public JsonNode advanceCouncilApplicationToUnderAdminReview(long applicationId) {
+        String url = baseUrl + "/v1/internal/provider-council/applications/" + applicationId + "/under-admin-review";
+        log.info("VARAPI: advanceCouncilApplicationToUnderAdminReview applicationId={}", applicationId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Council fee gate: eligible → AWAITING_PAYMENT. */
+    public JsonNode advanceCouncilApplicationToAwaitingPayment(long applicationId) {
+        String url = baseUrl + "/v1/internal/provider-council/applications/" + applicationId + "/awaiting-payment";
+        log.info("VARAPI: advanceCouncilApplicationToAwaitingPayment applicationId={}", applicationId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** After MusheX settlement: AWAITING_PAYMENT → READY_FOR_REVIEW. */
+    public JsonNode advanceCouncilApplicationAfterFeePaid(long applicationId) {
+        String url = baseUrl + "/v1/internal/provider-council/applications/" + applicationId + "/fee-paid";
+        log.info("VARAPI: advanceCouncilApplicationAfterFeePaid applicationId={}", applicationId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Append council staff review row and update application review_state. */
+    public JsonNode recordCouncilReview(Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/provider-council/reviews";
+        log.info("VARAPI: recordCouncilReview applicationId={}", body.get("applicationId"));
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body), JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Accept Fundo-linked CPD candidate into governed CPD ledger. */
+    public JsonNode acceptFundoCpdCandidate(long candidateId) {
+        String url = baseUrl + "/v1/internal/provider-council/fundo-cpd-candidates/" + candidateId + "/accept";
+        log.info("VARAPI: acceptFundoCpdCandidate candidateId={}", candidateId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, HttpEntity.EMPTY, JsonNode.class);
+        return response.getBody();
+    }
+
+    /** Reject Fundo-linked CPD candidate. */
+    public JsonNode rejectFundoCpdCandidate(long candidateId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/internal/provider-council/fundo-cpd-candidates/" + candidateId + "/reject";
+        log.info("VARAPI: rejectFundoCpdCandidate candidateId={}", candidateId);
+        ResponseEntity<JsonNode> response =
+                restTemplate.postForEntity(url, new HttpEntity<>(body != null ? body : Map.of()), JsonNode.class);
+        return response.getBody();
     }
 }

@@ -127,7 +127,11 @@ public class ServiceClientConfig {
             /** Impilo Live — live events, webinars, broadcasts (port 8380). */
             String liveBaseUrl,
             /** analytics-pipeline-service — telemedicine lifecycle analytics (port 8365). */
-            String analyticsPipelineBaseUrl
+            String analyticsPipelineBaseUrl,
+            /** iot-ingestion-service — device registry + telemetry (port 8330). */
+            String iotIngestionBaseUrl,
+            /** rtc-gateway-service — LiveKit/WebRTC session transport (port 8195). */
+            String rtcGatewayBaseUrl
     ) {
         public ServiceEndpoints {
             if (pctBaseUrl == null) pctBaseUrl = "http://localhost:8088";
@@ -199,6 +203,8 @@ public class ServiceClientConfig {
             if (madiBaseUrl == null) madiBaseUrl = "http://localhost:8300";
             if (liveBaseUrl == null) liveBaseUrl = "http://localhost:8380";
             if (analyticsPipelineBaseUrl == null) analyticsPipelineBaseUrl = "http://localhost:8365";
+            if (iotIngestionBaseUrl == null) iotIngestionBaseUrl = "http://localhost:8330";
+            if (rtcGatewayBaseUrl == null) rtcGatewayBaseUrl = "http://localhost:8195";
         }
     }
 
@@ -214,7 +220,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null
         );
     }
 
@@ -234,7 +240,7 @@ public class ServiceClientConfig {
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null
         );
     }
 

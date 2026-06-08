@@ -27,6 +27,24 @@ public class VitoDelegatedPickupBffController {
         return forward(() -> vitoServiceClient.rawPost("/v1/portal/delegated-pickup/create", body), requestId, correlationId);
     }
 
+    /** Verify delegate token + OTP without redeeming (facility pickup desk). */
+    @PostMapping(value = "/verify", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> verify(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> vitoServiceClient.rawPost("/v1/print/card/verify-pickup", body), requestId, correlationId);
+    }
+
+    /** Redeem pickup and confirm card handover. */
+    @PostMapping(value = "/redeem", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> redeem(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return forward(() -> vitoServiceClient.rawPost("/v1/print/card/confirm-handover", body), requestId, correlationId);
+    }
+
     @FunctionalInterface
     private interface SupplierEx {
         ResponseEntity<String> get();
