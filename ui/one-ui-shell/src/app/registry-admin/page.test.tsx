@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import RegistryAdminLandingPage from "./page";
 
@@ -42,9 +43,31 @@ vi.mock("@/hooks/useOperationalContextStore", () => {
   return { useOperationalContextStore };
 });
 
+vi.mock("@/hooks/queries/useRegistry", () => ({
+  useProviders: () => ({ data: { data: [] }, isLoading: false, isError: false }),
+}));
+
+vi.mock("@/hooks/queries/useVitoIssuance", () => ({
+  useIssuanceQueue: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
+
+vi.mock("@/hooks/queries/useVitoRegistryAdmin", () => ({
+  usePendingProvisionalIds: () => ({ data: undefined, isLoading: false, isError: false }),
+  usePendingRegistryDedupCases: () => ({ data: undefined, isLoading: false, isError: false }),
+}));
+
+function renderPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={client}>
+      <RegistryAdminLandingPage />
+    </QueryClientProvider>,
+  );
+}
+
 describe("RegistryAdminLandingPage", () => {
   it("frames registry administration as a high-trust plane with subtype scaffolding", () => {
-    render(<RegistryAdminLandingPage />);
+    renderPage();
 
     expect(screen.getByRole("heading", { name: "Registry administration" })).toBeInTheDocument();
     expect(screen.getByText(/high-trust plane/i)).toBeInTheDocument();

@@ -29,6 +29,8 @@ import { useQuery } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
+import { DiscoverFacilitiesMapPanel } from "@/components/maps/DiscoverFacilitiesMapPanel";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE & DATA DEFINITIONS
@@ -651,6 +653,19 @@ function DirectoryPanel() {
           </button>
         ))}
       </div>
+
+      {searchType === "facilities" ? (
+        query.length >= 2 ? (
+          <FacilitiesGeoMapPanel
+            title="Nearby facilities map"
+            subtitle="Governed Tuso registry coordinates for referral geography"
+            search={query}
+            size={40}
+          />
+        ) : (
+          <DiscoverFacilitiesMapPanel />
+        )
+      ) : null}
 
       <div className="relative">
         <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />

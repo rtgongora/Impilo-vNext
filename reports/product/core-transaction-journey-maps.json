@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T23:40:23.440Z",
+  "generatedAt": "2026-06-08T00:16:12.304Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -37,7 +37,7 @@
       "completionState": "IDENTITY_RESOLVED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "issuance queue ops depth",
-      "missingFrontendMobileWork": "card ops / pickup verification thin",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "consent-capture",
         "health-id-issuance"
@@ -45,7 +45,7 @@
       "productOwnerAcceptanceTest": "Citizen completes registration, receives Health ID, sees next-step guidance",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "provider-login",
@@ -83,7 +83,7 @@
       "completionState": "TRUST_CONTEXT_ESTABLISHED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "device block UX admin-only",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "workspace-context-selection",
         "facility-context-selection"
@@ -91,7 +91,7 @@
       "productOwnerAcceptanceTest": "Provider signs in with Provider ID, activates role, lands in workspace",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "ENTRY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "workspace-context-selection",
@@ -595,7 +595,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "RTC media intentionally unavailable",
-      "missingFrontendMobileWork": "real-time media transport blocked",
+      "missingFrontendMobileWork": "RTC media transport preview-limited (lifecycle BFF wired)",
       "relatedJourneys": [
         "consent-capture",
         "referral-create"
@@ -603,7 +603,7 @@
       "productOwnerAcceptanceTest": "Teleconsult created, consented, referral persisted without RTC",
       "coreTransactionType": "TELEMEDICINE",
       "lifecycleStage": "ENCOUNTER_OR_DELIVERY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "lab-order-result",
@@ -972,7 +972,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "long-tail finance routes",
-      "missingFrontendMobileWork": "production live-rail operator depth",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "wallet-payment",
         "coverage-enrollment"
@@ -1113,7 +1113,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "template/campaign admin depth",
-      "missingFrontendMobileWork": "campaign admin thin",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "consent-capture",
         "appointment-scheduling"
@@ -1121,7 +1121,7 @@
       "productOwnerAcceptanceTest": "Notification sent and delivery status visible",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "INSTRUCTIONS_AND_NOTIFICATIONS",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "fundo-learning",
@@ -1265,7 +1265,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "NDR/warehouse depth",
-      "missingFrontendMobileWork": "Ndila map dashboards incomplete",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "public-health-outreach",
         "surveillance-outbreak"
@@ -1273,7 +1273,7 @@
       "productOwnerAcceptanceTest": "Analyst runs report with correct scope and audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "registry-administration",
@@ -1340,7 +1340,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "council import queue thin",
-      "missingFrontendMobileWork": "issuance/card ops not fully surfaced",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "health-id-issuance",
         "provider-registry-onboarding"
@@ -1348,7 +1348,7 @@
       "productOwnerAcceptanceTest": "Registry admin reconciles record with full audit",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "IDENTITY",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "integration-sync-replay",
@@ -1384,7 +1384,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "adapter template admin thin",
-      "missingFrontendMobileWork": "integration status partial",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "device-system-event",
         "offline-clinical-queue"
@@ -1392,7 +1392,7 @@
       "productOwnerAcceptanceTest": "Integration message processed or dead-lettered with replay",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "device-system-event",
@@ -1469,7 +1469,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "device admin UX backend-only",
-      "missingFrontendMobileWork": "no direct citizen UI (by design)",
+      "missingFrontendMobileWork": "ops admin surface only (by design)",
       "relatedJourneys": [
         "health-id-issuance",
         "integration-sync-replay"
@@ -1477,7 +1477,7 @@
       "productOwnerAcceptanceTest": "Device event ingested and auditable",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "RECEIVE_TRIGGER",
-      "completionClassification": "backend-partial"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "health-id-issuance",
@@ -2203,7 +2203,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "verification workflow screens thin",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-registry-onboarding",
         "fundo-learning"
@@ -2211,7 +2211,7 @@
       "productOwnerAcceptanceTest": "Credential verified and reflected in provider standing",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "TRUST_AND_CONSENT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "provider-registry-onboarding",
@@ -2388,7 +2388,7 @@
       "completionState": "FOLLOW_UP_ACTIVE",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "care plan UX depth",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "citizen-monitoring",
         "prescription-dispense"
@@ -2396,7 +2396,7 @@
       "productOwnerAcceptanceTest": "Chronic care plan active with follow-up scheduling",
       "coreTransactionType": "CHRONIC_CARE",
       "lifecycleStage": "FOLLOW_UP_CONTINUITY",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "blood-donation",

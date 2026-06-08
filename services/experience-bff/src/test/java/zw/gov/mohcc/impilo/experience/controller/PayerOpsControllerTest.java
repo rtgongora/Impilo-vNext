@@ -15,6 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PayerOpsControllerTest {
 
     @Test
+    void listAdaptersForwardsMusheXRegistry() {
+        PayerOpsController controller = new PayerOpsController(new StubMushexClient());
+        ResponseEntity<String> response = controller.listAdapters("req-adapters", "corr-adapters");
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals("{\"items\":[{\"id\":\"ADP-SANDBOX\",\"rail\":\"SANDBOX\"}]}", response.getBody());
+    }
+
+    @Test
     void listOpsReviewsForwardsPayloadWithMetadata() {
         PayerOpsController controller = new PayerOpsController(new StubMushexClient());
         MultiValueMap<String, String> query = new LinkedMultiValueMap<>();
@@ -151,6 +159,12 @@ class PayerOpsControllerTest {
         public ResponseEntity<String> issueRemittanceSlip(String intentId) {
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body("{\"id\":\"REM-1\",\"status\":\"ACTIVE\"}");
+        }
+
+        @Override
+        public ResponseEntity<String> listAdapters() {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"items\":[{\"id\":\"ADP-SANDBOX\",\"rail\":\"SANDBOX\"}]}");
         }
     }
 

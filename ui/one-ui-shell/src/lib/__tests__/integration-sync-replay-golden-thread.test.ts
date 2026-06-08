@@ -12,11 +12,11 @@ describe("integration-sync-replay golden thread", () => {
 
   it("hook calls BFF sovereign proxy", () => {
     const hook = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/hooks/queries/useIntegrationHub.ts"), "utf8");
-    expect(hook).toContain("/internal/v1/integration");
+    expect(hook).toContain("/internal/v1/integration-hub");
   });
 
   it("BFF controller exposes journey endpoints", () => {
     const controller = readFileSync(resolve(repoRoot, "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/IntegrationHubController.java"), "utf8");
-    expect(controller).toContain("/internal/v1/integration");
+    expect(controller).toContain("/internal/v1/integration-hub");
   });
 });

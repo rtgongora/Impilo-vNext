@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { TelemedicineEncounterOrchestrationRail } from "@/components/telemedicine/TelemedicineEncounterOrchestrationRail";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
@@ -197,6 +199,16 @@ export default function TelemedicinePage() {
             : "Select a facility to start or join telemedicine sessions"
         }
       >
+        <div className="mb-4">
+          <TelemedicineEncounterOrchestrationRail />
+        </div>
+        <div className="mb-6">
+          <FacilitiesGeoMapPanel
+            title="Outreach facility map"
+            subtitle="Nearest governed facilities for telemedicine outreach context"
+            size={60}
+          />
+        </div>
         {!facility ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-8 text-center">
             <AlertCircle className="mx-auto mb-3 h-10 w-10 text-amber-600" />

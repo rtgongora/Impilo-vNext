@@ -5,6 +5,8 @@ import Link from "next/link";
 import { MapPin, Loader2, CalendarDays } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { OpsMapPanel } from "@/components/operations/OpsMapPanel";
+import { rowToGeoMarker } from "@/lib/ndila/geo-map-markers";
 import { useDrivesNearMe, useMadiDrives } from "@/hooks/queries/useMadi";
 
 export default function DonorDrivesPage() {
@@ -23,6 +25,28 @@ export default function DonorDrivesPage() {
         subtitle="Find voluntary blood donation events in your area"
         icon={<CalendarDays className="h-6 w-6" />}
       >
+        <OpsMapPanel
+          title="Donation drive map"
+          subtitle="MADI drives with geo coordinates on Ndila"
+          markers={[...nearRows, ...tenantDrives]
+            .map((row, index) =>
+              rowToGeoMarker(row as Record<string, unknown>, {
+                id: String((row as Record<string, unknown>).drive_id ?? index),
+                label: String((row as Record<string, unknown>).title ?? "Donation drive"),
+                markerType: "wellness",
+              }),
+            )
+            .filter((marker): marker is NonNullable<typeof marker> => marker !== null)
+            .map((marker) => ({
+              id: marker.id,
+              label: marker.label ?? marker.id,
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }))}
+          emptyHint="Drives without coordinates appear in lists only."
+          height={280}
+        />
+
         <div className="mb-6 flex flex-wrap gap-2 items-end">
           <label className="text-sm text-gray-700 flex-1 min-w-[200px]">
             Ndila site reference (optional)

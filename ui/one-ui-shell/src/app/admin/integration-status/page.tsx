@@ -10,6 +10,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { RecordSummary } from "@/components/common/QueryResultPanel";
+import { IntegrationSyncReplayOrchestrationPanel } from "@/components/platform/IntegrationSyncReplayOrchestrationPanel";
 import { useIntegrationHubDeadLetters, useIntegrationHubRoutes } from "@/hooks/queries/useIntegrationHub";
 
 function summarizeRoutes(payload: unknown): { rows: Array<Record<string, unknown>>; raw: string } {
@@ -38,6 +39,7 @@ export default function IntegrationStatusPage() {
     <AppLayout>
       <PageShell title="Integration Status" subtitle="National integration hub — route registry and recent dead letters">
         <div className="space-y-6">
+          <IntegrationSyncReplayOrchestrationPanel />
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-teal-600" />

@@ -8,6 +8,7 @@ import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { fetchWellnessDiscoverServices, type WellnessDiscoverService } from "@/lib/citizen-wellness-api";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { WellnessPlacesMapPanel } from "@/components/maps/WellnessPlacesMapPanel";
 import { useLogWellnessActivity } from "@/hooks/queries/useCitizenWellness";
 
 /** Routes & Places — surfaces only fields returned by the wellness discover API. */
@@ -63,6 +64,8 @@ export default function RoutesPage() {
         subtitle="Fitness venues and community exercise services from the wellness discover catalogue"
         icon={<MapPin className="h-6 w-6" />}
       >
+        <WellnessPlacesMapPanel />
+
         <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 mb-6 p-6 shadow-inner">
           <div className="flex items-start gap-3">
             <MapPin className="h-8 w-8 shrink-0 text-green-600" aria-hidden />

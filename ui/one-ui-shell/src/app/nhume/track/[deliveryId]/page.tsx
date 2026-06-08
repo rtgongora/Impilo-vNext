@@ -15,6 +15,7 @@ import { MapPin, Phone, MessageCircle, Loader2, Truck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip } from "@/components/nhume/NhumeStatusChip";
+import { DeliveryTrackMapPanel } from "@/components/maps/DeliveryTrackMapPanel";
 import { useNhumeDelivery, useNhumeTimeline, useNhumeTracking } from "@/hooks/useNhume";
 
 export default function NhumeTrackPage() {
@@ -54,6 +55,11 @@ export default function NhumeTrackPage() {
                 </p>
               )}
             </div>
+
+            <DeliveryTrackMapPanel
+              delivery={delivery as Record<string, unknown>}
+              trackingPoints={tracking?.data ?? []}
+            />
 
             <div className="rounded-2xl border border-gray-200 bg-white">
               <div className="border-b border-gray-100 px-5 py-3 flex items-center gap-2">

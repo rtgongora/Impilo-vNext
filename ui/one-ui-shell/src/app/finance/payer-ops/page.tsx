@@ -508,6 +508,22 @@ export default function FinancePayerOpsPage() {
             ) : null}
           </section>
 
+          <section
+            className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm"
+            data-testid="payer-ops-production-rails"
+          >
+            <h2 className="text-sm font-semibold text-emerald-900">Production MusheX rails</h2>
+            <p className="mt-1 text-xs text-emerald-800">
+              Live payment rails (mobile money, card acquirers, bank switches) are configured in MusheX and surfaced here
+              via adapter registry. Preview uses SANDBOX; production operators load adapters, confirm rail enablement, then
+              initiate attempts against the intent&apos;s selected rail.
+            </p>
+            <p className="mt-2 text-xs text-emerald-900">
+              Workflow: load intent → claim remittance → load adapters → reselect rail (SANDBOX in preview, live in
+              production) → initiate attempt → reconcile receipts and settlements.
+            </p>
+          </section>
+
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="text-sm font-semibold text-slate-900">Adapters</h2>
             <p className="mt-1 text-xs text-slate-500">

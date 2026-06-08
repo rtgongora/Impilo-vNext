@@ -4,6 +4,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView, RefreshControl } from "react-native";
 import { Screen, Header, Card, CardBody, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchFacilities, type FacilitySummary } from "../services/facilityService";
 import { appStore, useAppStore } from "../stores/appStore";
 
@@ -66,6 +67,7 @@ export function FacilityDirectoryScreen({ onOpenFacility }: { onOpenFacility?: (
       <Header title="Facilities" />
       <View testID="facility-directory-screen" style={styles.container}>
         {selectedChip}
+        <MobileNearbyMapView autoCapture={false} height={200} />
         <TextField
           label="Search facilities"
           value={search}

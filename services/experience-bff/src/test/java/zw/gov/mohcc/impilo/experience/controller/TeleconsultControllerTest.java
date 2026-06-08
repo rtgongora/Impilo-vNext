@@ -154,6 +154,28 @@ class TeleconsultControllerTest {
     }
 
     @Test
+    void createSession_createsReferralWhenGovernanceAllows() {
+        ObjectNode created = objectMapper.createObjectNode();
+        created.put("id", "ref-new-1");
+        created.put("status", "DRAFT");
+        Mockito.doNothing().when(governanceService).assertGovernedMutate();
+        Mockito.when(governanceService.normalizePurposeOfUse("TREATMENT")).thenReturn("TREATMENT");
+        Mockito.when(pctClient.createReferral(any())).thenReturn(created);
+
+        var response = controller.createSession(
+                "req-create",
+                "corr-create",
+                "tenant-a",
+                "TREATMENT",
+                "fac-1",
+                "provider-1",
+                Map.of("patientId", "pat-99", "clinicalQuestion", "Chest pain review"));
+
+        assertEquals(201, response.getStatusCode().value());
+        Mockito.verify(pctClient).createReferral(any());
+    }
+
+    @Test
     void recordConsent_createsMvumoRequestAndUpdatesReferral() throws Exception {
         ObjectNode mvumo = objectMapper.createObjectNode();
         mvumo.put("id", "consent-77");

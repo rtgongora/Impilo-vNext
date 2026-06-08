@@ -25,6 +25,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
 import { useNhumeDashboard } from "@/hooks/useNhume";
+import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
 
 const COUNTER_LAYOUT = [
   { key: "total_today", label: "Total Today" },
@@ -93,6 +94,12 @@ export default function NhumeDashboardPage() {
                 Open fleet map →
               </Link>
             </div>
+
+            <UnifiedLogisticsMapPanel
+              title="Fleet & delivery map"
+              subtitle="Live Nhume and dispatch assets on Ndila tiles"
+              nhumeDeliveryStatus="ACTIVE"
+            />
 
             {/* Counters */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">

@@ -2,8 +2,10 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -33,6 +35,16 @@ class CredentialVaultControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertEquals("{\"data\":{\"items\":[{\"credentialId\":\"cred-1\"}]}}", response.getBody());
         assertEquals("req-1", response.getHeaders().getFirst(CompanionHeaders.REQUEST_ID));
+    }
+
+    @Test
+    void listCredentials_returns502WhenUpstreamFails() {
+        CredentialVaultController controller = new CredentialVaultController(new FailingCredentialClient());
+
+        ResponseEntity<String> response = controller.listMyCredentials(
+                "MY", "ACTIVE", null, 0, 20, "person-123", "req-err", "corr-err");
+
+        assertEquals(500, response.getStatusCode().value());
     }
 
     @Test
@@ -71,6 +83,17 @@ class CredentialVaultControllerTest {
             return ResponseEntity.ok()
                     .headers(headers)
                     .body("pdf".getBytes());
+        }
+    }
+
+    private static final class FailingCredentialClient extends CredentialServiceClient {
+        FailingCredentialClient() {
+            super(new RestTemplate(), ServiceClientConfig.testServiceEndpoints());
+        }
+
+        @Override
+        public ResponseEntity<String> searchCredentials(MultiValueMap<String, String> queryParams) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "credential-service unavailable");
         }
     }
 }

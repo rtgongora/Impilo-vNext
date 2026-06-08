@@ -1,0 +1,1232 @@
+{
+  "summary": {
+    "source_file": "Master Health Facility 23 July 2024 (1).xlsx",
+    "source_dataset_date": "2024-07-23",
+    "records_total": 2022,
+    "records_open": 1339,
+    "records_with_valid_coordinates": 1873,
+    "records_missing_or_invalid_coordinates": 149,
+    "records_missing_facility_code": 123,
+    "duplicate_facility_codes_count": 39,
+    "provinces": 10,
+    "districts": 74,
+    "levels": [
+      "Primary",
+      "Quaternary",
+      "Secondary",
+      "Special",
+      "Tertiary"
+    ]
+  },
+  "duplicate_facility_codes": {
+    "ZW010134": 2,
+    "ZW0102OE": 2,
+    "ZW010492": 2,
+    "ZW010403": 2,
+    "ZW010437": 2,
+    "ZW010419": 2,
+    "ZW010665": 3,
+    "ZW010637": 2,
+    "ZW010664": 2,
+    "ZW010669": 2,
+    "ZW010668": 2,
+    "ZW010667": 2,
+    "ZW010666": 2,
+    "ZW010734": 2,
+    "ZW010A0R": 2,
+    "ZW010A48": 2,
+    "ZW014401": 2,
+    "ZW0140527": 2,
+    "ZW050101": 2,
+    "ZW050102": 2,
+    "ZW050754": 2,
+    "ZW050798": 2,
+    "ZW080133": 2,
+    "ZW080202": 2,
+    "ZW080208": 3,
+    "ZW080205": 2,
+    "ZW080206": 2,
+    "ZW080343": 2,
+    "ZW080339": 3,
+    "ZW08.03.08": 2,
+    "ZW080683": 2,
+    "ZW080231": 2,
+    "ZW20101": 2,
+    "ZW20486": 2,
+    "ZW20429": 2,
+    "ZW20607": 2,
+    "ZW070702": 2,
+    "ZW070803": 2,
+    "ZW0706B": 2
+  },
+  "missing_facility_codes": [
+    "mhf-cf0108ec7ea4",
+    "mhf-9003b4e7ae45",
+    "mhf-e8da6dfb458c",
+    "mhf-ef32fc911717",
+    "mhf-a151e57deaf0",
+    "mhf-fcb03b814de7",
+    "mhf-4528e0ef19d5",
+    "mhf-00fb68130656",
+    "mhf-dadbd3937d5c",
+    "mhf-fd856908a6f8",
+    "mhf-0a20e2152467",
+    "mhf-b575c751b8ac",
+    "mhf-294bca1c549c",
+    "mhf-c5b284ea2c71",
+    "mhf-50c443d55dac",
+    "mhf-e0d5c5288ca2",
+    "mhf-297b3fe21ce2",
+    "mhf-cd1dd36d7271",
+    "mhf-15b5cf469061",
+    "mhf-2502a429ee59",
+    "mhf-793c6163cfce",
+    "mhf-1cb9066af971",
+    "mhf-3792e3b57f9b",
+    "mhf-f4673423cf63",
+    "mhf-48b53c5e16e0",
+    "mhf-83d091af7318",
+    "mhf-9256e7259ea6",
+    "mhf-de13c68c707f",
+    "mhf-fa309e74464f",
+    "mhf-a786eb0f62dc",
+    "mhf-78aded4e7084",
+    "mhf-5563d165e0a1",
+    "mhf-881c29b16c15",
+    "mhf-9a9d4462f198",
+    "mhf-2579d04306b0",
+    "mhf-dd29f0b380d3",
+    "mhf-a320a979c388",
+    "mhf-90980dcace47",
+    "mhf-4ddf33207d9b",
+    "mhf-a870a9933a7a",
+    "mhf-98ea9be30730",
+    "mhf-1adbcbd517ba",
+    "mhf-996ea22ad0f9",
+    "mhf-809bdda71dd2",
+    "mhf-80f5be4fc416",
+    "mhf-ffe8235bdc93",
+    "mhf-765de93b6ef2",
+    "mhf-10d137313c47",
+    "mhf-891e746840b5",
+    "mhf-3b1db163ed08",
+    "mhf-5668c3e3d125",
+    "mhf-aaae20195fa3",
+    "mhf-43b3cabba361",
+    "mhf-28df3e2aaff4",
+    "mhf-e65b1ee1dd5b",
+    "mhf-c62820ce78c9",
+    "mhf-4dcefe5fa122",
+    "mhf-2bb927ec84b3",
+    "mhf-24d7cfaa7a09",
+    "mhf-0116b29b4116",
+    "mhf-27d2d61574be",
+    "mhf-cb9bdfb76fdf",
+    "mhf-4ba653c716cb",
+    "mhf-096432640a16",
+    "mhf-43825a0a4057",
+    "mhf-47de9cc45909",
+    "mhf-f51152e16bf7",
+    "mhf-254e4254eb16",
+    "mhf-6d1258260aec",
+    "mhf-d546eeee28ae",
+    "mhf-c01a11fa60b2",
+    "mhf-5b75e2018ea5",
+    "mhf-6464f3de9372",
+    "mhf-e9f6062ad52d",
+    "mhf-8d3cb38c535f",
+    "mhf-6722ac7f3d32",
+    "mhf-ceca2d527dee",
+    "mhf-1df522797e2f",
+    "mhf-79071c429303",
+    "mhf-602dca767c35",
+    "mhf-4420254001b5",
+    "mhf-908198e512ce",
+    "mhf-ea22759a28ff",
+    "mhf-0c78b620f4a8",
+    "mhf-2947c9f5745e",
+    "mhf-30f0cae91aa8",
+    "mhf-84e2f2027631",
+    "mhf-6e642913fef0",
+    "mhf-a1c331da3013",
+    "mhf-9f2ee718b8f7",
+    "mhf-e9edcc1cb12a",
+    "mhf-ae05e2675289",
+    "mhf-d6f8d231108e",
+    "mhf-837633761b7f",
+    "mhf-c80467c52166",
+    "mhf-870944483a3e",
+    "mhf-4b74267c97f8",
+    "mhf-c6ba93a5cd87",
+    "mhf-fa24411c99d2",
+    "mhf-5a17e9df6615",
+    "mhf-c2506431221a",
+    "mhf-a747e58e0be5",
+    "mhf-9c4f07d2a170",
+    "mhf-94ee232fa8de",
+    "mhf-e085c7517e57",
+    "mhf-68e102e5eb29",
+    "mhf-93508e64f0c1",
+    "mhf-c2d4aee4ae56",
+    "mhf-e4c6591f3294",
+    "mhf-552236d52721",
+    "mhf-c3dcfb371f70",
+    "mhf-ba64ad56d72c",
+    "mhf-672769f786e7",
+    "mhf-841d6dca9d90",
+    "mhf-51c40477b2f3",
+    "mhf-cda029b1814d",
+    "mhf-486713729099",
+    "mhf-47d01135884d",
+    "mhf-f081f3c6f7f6",
+    "mhf-521e0031b4da",
+    "mhf-b5243c5ab62a",
+    "mhf-f1661f0812f3",
+    "mhf-870f85488d6b"
+  ],
+  "missing_or_invalid_coordinates": [
+    {
+      "facility_uid": "mhf-a83373940d96",
+      "facility_code": "ZW010201",
+      "facility_name": "Bumba Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-cf0108ec7ea4",
+      "facility_code": null,
+      "facility_name": "Mhandarume",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9003b4e7ae45",
+      "facility_code": null,
+      "facility_name": "Runyararo Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1d55d9af7e75",
+      "facility_code": "ZW010382",
+      "facility_name": "New start center",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-6b67e4261249",
+      "facility_code": "ZW010318",
+      "facility_name": "ZPS Chipinge Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-abc50c5bbbfa",
+      "facility_code": "ZW010418",
+      "facility_name": "Nedziwa Mission Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-b77c7f46c926",
+      "facility_code": "ZW010443",
+      "facility_name": "Nzvimbe clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-3e56aa35b90b",
+      "facility_code": "ZW01041001",
+      "facility_name": "ZPS Little Kraal Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-04f5e9b09e63",
+      "facility_code": "ZW01041002",
+      "facility_name": "ZPS Rusape Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9b151218605f",
+      "facility_code": "ZW010493",
+      "facility_name": "ZRP Rusape Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-e8da6dfb458c",
+      "facility_code": null,
+      "facility_name": "Magadzire health post",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-05a5305b8de1",
+      "facility_code": "ZW010633",
+      "facility_name": "Nyamukwarara RDC Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-344a1833b1b2",
+      "facility_code": "ZW010668",
+      "facility_name": "Selbourne/Nyanga Pine Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-137e17707b5c",
+      "facility_code": "ZW010523",
+      "facility_name": "Army Dependent Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8ce734895f15",
+      "facility_code": "ZW010569",
+      "facility_name": "Forbes Boarder Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-0561019ad540",
+      "facility_code": "ZW01050H",
+      "facility_name": "Murambi Private Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ef32fc911717",
+      "facility_code": null,
+      "facility_name": "Murowa Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8905b76a1f4d",
+      "facility_code": "ZW010532",
+      "facility_name": "Mutare Farm Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ba9cc7bfe5d9",
+      "facility_code": "ZW010667",
+      "facility_name": "Mutare ZNFPC clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-0b40281a4bc6",
+      "facility_code": "ZW010568",
+      "facility_name": "New Start Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-a151e57deaf0",
+      "facility_code": null,
+      "facility_name": "Dazi",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-fcb03b814de7",
+      "facility_code": null,
+      "facility_name": "Nyamombe Camp Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-4528e0ef19d5",
+      "facility_code": null,
+      "facility_name": "Nyanguai Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-00fb68130656",
+      "facility_code": null,
+      "facility_name": "Nyangui Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-2dbb3b6cb3e3",
+      "facility_code": "ZW010A0R",
+      "facility_name": "Chitubu Glen Norah Family Med Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-50c443d55dac",
+      "facility_code": null,
+      "facility_name": "Harare City Private Institutions",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-e0d5c5288ca2",
+      "facility_code": null,
+      "facility_name": "Harare Institute of Technology",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-b845304cf29e",
+      "facility_code": "ZW000E0E",
+      "facility_name": "Parirenyatwa Group of Hospitals",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-48b53c5e16e0",
+      "facility_code": null,
+      "facility_name": "Sally Mugabe Central Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-3264782e4af4",
+      "facility_code": "ZW010A86",
+      "facility_name": "ZAPSO",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9256e7259ea6",
+      "facility_code": null,
+      "facility_name": "Chegutu CBDS Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-de13c68c707f",
+      "facility_code": null,
+      "facility_name": "Chibero Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-fa309e74464f",
+      "facility_code": null,
+      "facility_name": "Dudley Hall Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-a786eb0f62dc",
+      "facility_code": null,
+      "facility_name": "Fanham Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-78aded4e7084",
+      "facility_code": null,
+      "facility_name": "Hunyani Pulp Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5563d165e0a1",
+      "facility_code": null,
+      "facility_name": "Jason Ziyapapa Moyo Air Base Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-881c29b16c15",
+      "facility_code": null,
+      "facility_name": "JZ Moyo Airbase Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9a9d4462f198",
+      "facility_code": null,
+      "facility_name": "Kent Estate Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-2579d04306b0",
+      "facility_code": null,
+      "facility_name": "Caribea Bay Private Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-dd29f0b380d3",
+      "facility_code": null,
+      "facility_name": "Makonde CBDS Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-90980dcace47",
+      "facility_code": null,
+      "facility_name": "PSZ Private Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-4ddf33207d9b",
+      "facility_code": null,
+      "facility_name": "Balm of Hope Private Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-a870a9933a7a",
+      "facility_code": null,
+      "facility_name": "Crest Breeders Private Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-98ea9be30730",
+      "facility_code": null,
+      "facility_name": "Inamo Farming Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1adbcbd517ba",
+      "facility_code": null,
+      "facility_name": "Paradise Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-996ea22ad0f9",
+      "facility_code": null,
+      "facility_name": "Rasper RDC Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-809bdda71dd2",
+      "facility_code": null,
+      "facility_name": "Stapleford Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-80f5be4fc416",
+      "facility_code": null,
+      "facility_name": "ZPS Banket Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ffe8235bdc93",
+      "facility_code": null,
+      "facility_name": "Zvimba ZNFPC Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-af4f9f6f1b65",
+      "facility_code": "ZW050194",
+      "facility_name": "Binga ZRP Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-25aaef94b37a",
+      "facility_code": "ZW050102",
+      "facility_name": "Malaliya Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-7336bb599508",
+      "facility_code": "ZW050101",
+      "facility_name": "Sinamunsanga Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-138d4841d856",
+      "facility_code": "ZW050196",
+      "facility_name": "ZPS Binga Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-b3de28a8211a",
+      "facility_code": "ZW050339",
+      "facility_name": "CBDS ZNFPC Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ba4abc4ef9f5",
+      "facility_code": "ZW050334",
+      "facility_name": "Greenwood Surgery",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-3855f49633fb",
+      "facility_code": "ZW050346",
+      "facility_name": "Open Cast Dr Station",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-521c176f14c2",
+      "facility_code": "ZW050308",
+      "facility_name": "ZPS Victoria Falls Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9f55bb3c3fc5",
+      "facility_code": "ZW0504",
+      "facility_name": "ZPS Lupane Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-2fdd6579dcf0",
+      "facility_code": "ZW050538",
+      "facility_name": "Simbo RH Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-0cb235618fa5",
+      "facility_code": "ZW050537",
+      "facility_name": "ZPS Nkayi Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-7df01692cc02",
+      "facility_code": "ZW050632",
+      "facility_name": "ZPS Tsholotsho Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-765de93b6ef2",
+      "facility_code": null,
+      "facility_name": "mn 1 Referral Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8ad4a6e4e9ae",
+      "facility_code": "ZW050754",
+      "facility_name": "Ntabazinduna Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-90da4f16f54f",
+      "facility_code": "ZW050765",
+      "facility_name": "ZNA Imbizo Camp Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1b0905b2d2f0",
+      "facility_code": "ZW050797",
+      "facility_name": "ZNA Induna Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5a47e6d91729",
+      "facility_code": "ZW050711",
+      "facility_name": "ZPS Anju Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5193388534ba",
+      "facility_code": "ZW050785",
+      "facility_name": "ZPS Ntabazinduna Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5eb7ffb64ef0",
+      "facility_code": "ZW080342",
+      "facility_name": "Chikwirire RHC",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1cc6e4910a37",
+      "facility_code": "ZW080226",
+      "facility_name": "Chipiwa Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-cb65edef5acd",
+      "facility_code": "ZW080343",
+      "facility_name": "Matedzi RHC",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-f09e940a8c5d",
+      "facility_code": "ZW08.04.34",
+      "facility_name": "Chiwore Rural Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5ebd7833b040",
+      "facility_code": "ZW080520",
+      "facility_name": "Masvingo Rural District Council Mobile",
+      "latitude": -20271794.0,
+      "longitude": 30.915299
+    },
+    {
+      "facility_uid": "mhf-6acec98efa4a",
+      "facility_code": "ZW080683",
+      "facility_name": "G and N Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-559854a99f1a",
+      "facility_code": "ZW080625",
+      "facility_name": "Mazetese Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-0929e938a744",
+      "facility_code": "ZW080735",
+      "facility_name": "Nhema Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-34ade08ed90d",
+      "facility_code": "ZW080515",
+      "facility_name": "Victoria High School Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-7c978f825de8",
+      "facility_code": "ZW080684",
+      "facility_name": "Zimbabwe Bio Energy pvt clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-274d26feb712",
+      "facility_code": "ZW080115",
+      "facility_name": "ZRP Bikita Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-585351d2fcb9",
+      "facility_code": "ZW20179",
+      "facility_name": "Bindura University",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-265052a0707e",
+      "facility_code": "ZW20188",
+      "facility_name": "Chipindura High Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-c4b7cf9baef3",
+      "facility_code": "ZW20191",
+      "facility_name": "Shashi View Medical Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-b72623e57224",
+      "facility_code": "ZW20103",
+      "facility_name": "ZPS Bindura Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-aa825d3ce05b",
+      "facility_code": "ZW20105",
+      "facility_name": "Bindura ZRP clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-aaae20195fa3",
+      "facility_code": null,
+      "facility_name": "mc Guruve ZPS Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-43b3cabba361",
+      "facility_code": null,
+      "facility_name": "mc Guruve ZRP Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-b5c58c292f6e",
+      "facility_code": "ZW20477",
+      "facility_name": "Mazowe Secondary Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8732f1a0d8f2",
+      "facility_code": "ZW20429",
+      "facility_name": "NEMC",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-94a622901371",
+      "facility_code": "ZW02040B",
+      "facility_name": "Shopo Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-a9da8dd2878d",
+      "facility_code": "ZW20447",
+      "facility_name": "ZPS Mazowe Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5f7a3a4f54c2",
+      "facility_code": "ZW20531",
+      "facility_name": "ZPCS",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-efdbaa8df911",
+      "facility_code": "ZW20530",
+      "facility_name": "Bindura ZRP Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-700a6c78b56f",
+      "facility_code": "ZW20799",
+      "facility_name": "CZA Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-422aba890cc9",
+      "facility_code": "ZW20775",
+      "facility_name": "Madziwa Teachers' College",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-28df3e2aaff4",
+      "facility_code": null,
+      "facility_name": "Gamanya Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-24d7cfaa7a09",
+      "facility_code": null,
+      "facility_name": "Marondera ZNFPC Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-908198e512ce",
+      "facility_code": null,
+      "facility_name": "Mathew Rusike Children's Home Clinic",
+      "latitude": -178704465.0,
+      "longitude": 31.1606206
+    },
+    {
+      "facility_uid": "mhf-b5135571bd1f",
+      "facility_code": "ZW070186",
+      "facility_name": "Central Estates Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-d6f8d231108e",
+      "facility_code": null,
+      "facility_name": "Doroguru clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-44aedd5a25f4",
+      "facility_code": "ZW070147",
+      "facility_name": "Hwata Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-adfbafaaa983",
+      "facility_code": "ZW070149",
+      "facility_name": "Mudzengi Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-c6ba93a5cd87",
+      "facility_code": null,
+      "facility_name": "ZIMASCO Private Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-17db04aaa733",
+      "facility_code": "ZW070240",
+      "facility_name": "Chirisa clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1386f0f7ab49",
+      "facility_code": "ZW070206",
+      "facility_name": "Murunguziva clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8a59fdc9a9a3",
+      "facility_code": "ZW070228",
+      "facility_name": "Nyamatsito clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8fb4ee5a89e2",
+      "facility_code": "ZW070211",
+      "facility_name": "Nyaurungwe clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-94bfefa26f28",
+      "facility_code": "ZW070244",
+      "facility_name": "Zvanaka Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-9c4f07d2a170",
+      "facility_code": null,
+      "facility_name": "Gokwe South CeSHHAR Mobile Sister's Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-92d2bbe705fa",
+      "facility_code": "ZW070324",
+      "facility_name": "Gokwe South Population Services Zimbabwe",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-95e4cc8d0f2d",
+      "facility_code": "ZW070315",
+      "facility_name": "Gokwe South ZRP Camp Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-03d09993bcbb",
+      "facility_code": "ZW070329",
+      "facility_name": "Health and healing medical centre Private",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-2bf6007728f9",
+      "facility_code": "ZW070354",
+      "facility_name": "Medpak Surgery Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-c47055f5b19d",
+      "facility_code": "ZW070383",
+      "facility_name": "ZPS Gokwe Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-70affd41ad02",
+      "facility_code": "ZW070451",
+      "facility_name": "Bata Clinic Private",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-4e61f11e0982",
+      "facility_code": "ZW070461",
+      "facility_name": "Child Welfare Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-063a9de35e79",
+      "facility_code": "ZW07040E",
+      "facility_name": "Claybank Private Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-4d73defcb650",
+      "facility_code": "ZW070481",
+      "facility_name": "Dabuka NRZ Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-6bb4213341f0",
+      "facility_code": "ZW070409",
+      "facility_name": "Five Maintenance Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-17b2990beaba",
+      "facility_code": "ZW070485",
+      "facility_name": "Gweru NRZ Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-94ee232fa8de",
+      "facility_code": null,
+      "facility_name": "Gweru Provincial Camp Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-58aa892044e3",
+      "facility_code": "ZW070416",
+      "facility_name": "Gweru ZRP Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-3d1fb4cb1256",
+      "facility_code": "ZW07040F",
+      "facility_name": "Midlands Private Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-042f796c21c6",
+      "facility_code": "ZW070407",
+      "facility_name": "Midlands State University Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ca2941f53fbb",
+      "facility_code": "ZW070405",
+      "facility_name": "Nkululeko Rural Health Centre",
+      "latitude": -1920103.0,
+      "longitude": 29.6528091431
+    },
+    {
+      "facility_uid": "mhf-4f75b7f22cf7",
+      "facility_code": "ZW070465",
+      "facility_name": "PSI New Start Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-659d1b480cc2",
+      "facility_code": "ZW070429",
+      "facility_name": "Riverdale Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1586f79ca8ef",
+      "facility_code": "ZW070486",
+      "facility_name": "Sino Zimbabwe Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-e085c7517e57",
+      "facility_code": null,
+      "facility_name": "Thornhill Airbase Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-7a5976910201",
+      "facility_code": "ZW070448",
+      "facility_name": "Vungu District Mobile",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1ce7ca39d4b5",
+      "facility_code": "ZW070417",
+      "facility_name": "ZPS Thornhill Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-bf2b403eee63",
+      "facility_code": "ZW070414",
+      "facility_name": "ZPS Whawha Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-1819edba0f66",
+      "facility_code": "ZW070415",
+      "facility_name": "ZPS Whawha Prison Young Offenders Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-68e102e5eb29",
+      "facility_code": null,
+      "facility_name": "1 Air Defence Health Services Platoon",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-18e974935795",
+      "facility_code": "ZW070576",
+      "facility_name": "Community Polyclinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-3c30153731cf",
+      "facility_code": "ZW070551",
+      "facility_name": "Globe and Phoenix Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-8645c1fb22f6",
+      "facility_code": "ZW070577",
+      "facility_name": "Jena Mines Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-c3dcfb371f70",
+      "facility_code": null,
+      "facility_name": "Neighbourhood Surgery",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ba64ad56d72c",
+      "facility_code": null,
+      "facility_name": "PSMAS clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-841d6dca9d90",
+      "facility_code": null,
+      "facility_name": "Shekinah",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-e747d1c7fd60",
+      "facility_code": "ZW070584",
+      "facility_name": "Tiger Reef Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-cda029b1814d",
+      "facility_code": null,
+      "facility_name": "Topomazi Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-47d01135884d",
+      "facility_code": null,
+      "facility_name": "ZPS Kwekwe Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-f081f3c6f7f6",
+      "facility_code": null,
+      "facility_name": "ZRP Kwekwe clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-6e28d4a66def",
+      "facility_code": "ZW070609",
+      "facility_name": "Mataga Health Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-ff094995dcd2",
+      "facility_code": "ZW070680",
+      "facility_name": "ZPS Mberengwa Prison Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-e1852f3fdd9d",
+      "facility_code": "ZW070780",
+      "facility_name": "Unki Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-521e0031b4da",
+      "facility_code": null,
+      "facility_name": "Avante Clinic",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-d33fbb37296e",
+      "facility_code": "ZW070883",
+      "facility_name": "Itai Ngoni Medical Centre",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-5530af3ef8fb",
+      "facility_code": "ZW07080D",
+      "facility_name": "RZM Mrowa Hospital",
+      "latitude": null,
+      "longitude": null
+    },
+    {
+      "facility_uid": "mhf-870f85488d6b",
+      "facility_code": null,
+      "facility_name": "HelpStarts Medical Clinic",
+      "latitude": null,
+      "longitude": null
+    }
+  ]
+}

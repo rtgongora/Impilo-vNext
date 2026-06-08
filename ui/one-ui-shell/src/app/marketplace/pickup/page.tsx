@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Ticket } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCommerceClaimPickup, useCommerceIssuePickup } from "@/hooks/queries/useCommercePickup";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 
 const DEFAULT_CLAIM_JSON = "{\n  \"pickupToken\": \"\",\n  \"claimedBy\": \"\",\n  \"claimantId\": \"\"\n}\n";
 
@@ -27,6 +28,15 @@ export default function MarketplacePickupPage() {
           <Link href="/marketplace" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
             <ArrowLeft className="h-4 w-4" /> Back to marketplace
           </Link>
+        </div>
+
+        <div className="mb-6">
+          <FacilitiesGeoMapPanel
+            title="Pickup location map"
+            subtitle="Pharmacy and fulfilment sites with governed coordinates"
+            facilityType="PHARMACY"
+            size={60}
+          />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

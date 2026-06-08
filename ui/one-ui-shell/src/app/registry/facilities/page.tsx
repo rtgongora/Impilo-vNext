@@ -6,6 +6,7 @@ import { ArrowLeft, Building2, ClipboardList, Loader2, Plus, Search, ShieldCheck
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import {
   useFacilityDashboardSummary,
   useFacilityRegistryFacilities,
@@ -94,6 +95,15 @@ export default function FacilityRegistryPage() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mb-6">
+          <FacilitiesGeoMapPanel
+            title="Tuso facility registry map"
+            subtitle="HPA-governed facilities with Ndila coordinates"
+            search={searchTerm || undefined}
+            size={100}
+          />
         </div>
 
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white p-4">

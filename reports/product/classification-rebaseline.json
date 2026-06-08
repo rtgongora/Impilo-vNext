@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T23:40:23.440Z",
+  "generatedAt": "2026-06-08T00:16:12.304Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -54,7 +54,13 @@
       "id": "citizen-onboarding",
       "journeyName": "Citizen / Client Onboarding",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "provider-login",
+      "journeyName": "Provider Login & Role Activation",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
     },
     {
       "id": "workspace-context-selection",
@@ -90,7 +96,7 @@
       "id": "telemedicine-encounter",
       "journeyName": "Telemedicine Encounter",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
     },
     {
       "id": "imaging-order-result",
@@ -138,13 +144,31 @@
       "id": "notification-comms",
       "journeyName": "Notification & Communications",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "reporting-dashboard",
+      "journeyName": "Data / Report / Dashboard Journey",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
     },
     {
       "id": "registry-administration",
       "journeyName": "Registry Administration",
       "previous": "backend-ready-but-frontend-incomplete",
-      "derived": "backend-partial"
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "integration-sync-replay",
+      "journeyName": "Integration / Sync / Replay",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "device-system-event",
+      "journeyName": "Device / System Event Journey",
+      "previous": "backend-partial",
+      "derived": "transaction-complete"
     },
     {
       "id": "health-id-issuance",
@@ -186,7 +210,7 @@
       "id": "credential-verification",
       "journeyName": "Credential Verification",
       "previous": "backend-partial",
-      "derived": "backend-ready-but-frontend-incomplete"
+      "derived": "transaction-complete"
     },
     {
       "id": "provider-registry-onboarding",
@@ -204,13 +228,13 @@
       "id": "chronic-care",
       "journeyName": "Chronic Care Management",
       "previous": "backend-partial",
-      "derived": "backend-ready-but-frontend-incomplete"
+      "derived": "transaction-complete"
     }
   ],
   "measuredCounts": {
-    "backend-partial": 11,
-    "backend-ready-but-frontend-incomplete": 7,
-    "transaction-complete": 26,
+    "transaction-complete": 36,
+    "backend-partial": 4,
+    "backend-ready-but-frontend-incomplete": 4,
     "mobile-missing": 2
   }
 }

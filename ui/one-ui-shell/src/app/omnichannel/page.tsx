@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bot, Headphones, Loader2, MessageSquare, Phone, PhoneCall, Plus, Radio, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { NotificationCommsOrchestrationRail } from "@/components/platform/NotificationCommsOrchestrationRail";
 import { PageShell } from "@/components/PageShell";
+import { OutreachCatchmentMapPanel } from "@/components/maps/OutreachCatchmentMapPanel";
 import {
   useCompleteOmnichannelCallback,
   useCreateDisclosureRule,
@@ -79,6 +81,9 @@ export default function OmnichannelPage() {
   return (
     <AppLayout>
       <PageShell title="Omnichannel Hub" subtitle="SMS, USSD, IVR, callbacks, disclosure, and governed AI access">
+        <div className="mb-4">
+          <NotificationCommsOrchestrationRail />
+        </div>
         <div className="mb-6 flex gap-1 overflow-x-auto border-b border-gray-200">
           {TABS.map((tab) => {
             const Icon = tab.icon;
@@ -186,6 +191,7 @@ function CampaignsTab() {
 
   return (
     <div className="space-y-4">
+      <OutreachCatchmentMapPanel />
       <form
         className="grid gap-3 rounded-lg border border-gray-200 bg-white p-4 md:grid-cols-2"
         onSubmit={(e) => {

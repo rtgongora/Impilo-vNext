@@ -20,6 +20,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { RegistryAdministrationOrchestrationRail } from "@/components/platform/RegistryAdministrationOrchestrationRail";
 import { PlaneTrustBanner } from "@/components/experience/PlaneTrustBanner";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
@@ -61,6 +62,7 @@ export default function RegistryAdminLandingPage() {
         subtitle="Sovereign registry governance — not facility shift work"
       >
         <div className="space-y-6">
+          <RegistryAdministrationOrchestrationRail />
           <Link
             href="/home"
             className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"

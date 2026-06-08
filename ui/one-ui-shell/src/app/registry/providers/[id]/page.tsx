@@ -21,6 +21,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
+import { ProviderPracticeLocationsMapPanel } from "@/components/maps/ProviderPracticeLocationsMapPanel";
 
 interface ProviderDetail {
   id: string;
@@ -192,6 +193,12 @@ export default function ProviderDetailPage() {
                 <p className="text-sm text-gray-400">No facilities assigned</p>
               )}
             </div>
+
+            {(provider.attributes.facilities?.length ?? 0) > 0 ? (
+              <ProviderPracticeLocationsMapPanel
+                facilityIds={provider.attributes.facilities.map((fac) => fac.id)}
+              />
+            ) : null}
 
             {/* Varapi + Tuso work context */}
             <div className="bg-white rounded-lg border border-gray-200 p-5">

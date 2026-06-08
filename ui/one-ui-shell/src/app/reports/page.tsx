@@ -19,6 +19,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ReportingDashboardOrchestrationPanel } from "@/components/platform/ReportingDashboardOrchestrationPanel";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
@@ -134,6 +135,10 @@ export default function ReportsHubPage() {
     <AppLayout>
       <PageShell title="Reports" subtitle="National reporting dashboard and facility report workspaces">
         <OrganizationPlaneContextBar />
+
+        <div className="mb-6">
+          <ReportingDashboardOrchestrationPanel />
+        </div>
 
         <section className="mb-10 space-y-4">
           <div className="flex items-center gap-2">

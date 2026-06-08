@@ -34,7 +34,8 @@ public class NdilaTshepoGuard {
 
     private static final Set<String> OPS_PURPOSES = Set.of(
             "OPERATIONS_MANAGEMENT", "DISPATCH", "INSPECTION",
-            "PUBLIC_HEALTH_OPERATIONS", "OUTREACH", "DELIVERY");
+            "PUBLIC_HEALTH_OPERATIONS", "OUTREACH", "DELIVERY",
+            "IDENTITY_REGISTRATION", "REGISTRY_INTAKE");
 
     /**
      * Authorize a sensitivity-aware Ndila operation. Returns a {@link Decision}

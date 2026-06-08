@@ -2,6 +2,7 @@ package zw.gov.mohcc.impilo.experience.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -35,6 +36,25 @@ class ReportJobControllerTest {
         assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("REPORTING_UNAVAILABLE", ((Map<?, ?>) response.getBody().get("error")).get("code"));
+    }
+
+    @Test
+    void generateThenGetJob_roundTripWhenReportingSucceeds() {
+        ReportJobController controller = new ReportJobController(new RoundTripReportingClient());
+        ReportJobController.GenerateReportRequest request = new ReportJobController.GenerateReportRequest(
+                "clinical_summary",
+                Map.of("facility_id", "f-1"),
+                "analyst-1");
+
+        ResponseEntity<Map<String, Object>> created = controller.generateReport(
+                "tenant-1", "pod-1", "req-gen", "corr-gen", null, request);
+        assertEquals(201, created.getStatusCode().value());
+
+        ResponseEntity<Map<String, Object>> fetched = controller.getJob(
+                "run-42", "tenant-1", "req-get", "corr-get");
+        assertEquals(200, fetched.getStatusCode().value());
+        Map<?, ?> data = (Map<?, ?>) fetched.getBody().get("data");
+        assertEquals("run-42", data.get("id"));
     }
 
     @Test
@@ -78,6 +98,36 @@ class ReportJobControllerTest {
         @Override
         public JsonNode listTenantReportRuns(int page, int size) {
             throw new RuntimeException("reporting unavailable");
+        }
+    }
+
+    private static final class RoundTripReportingClient extends ReportingServiceClient {
+        private static final ObjectMapper MAPPER = new ObjectMapper();
+
+        private RoundTripReportingClient() {
+            super(new RestTemplate(), endpoints());
+        }
+
+        @Override
+        public JsonNode createReport(Map<String, Object> request) {
+            return MAPPER.createObjectNode()
+                    .put("runId", "run-42")
+                    .put("reportKey", "clinical_summary")
+                    .put("status", "QUEUED")
+                    .put("createdBy", "analyst-1")
+                    .put("createdAt", "2026-06-08T00:00:00Z");
+        }
+
+        @Override
+        public JsonNode listTenantReportRuns(int page, int size) {
+            ArrayNode items = MAPPER.createArrayNode();
+            items.add(MAPPER.createObjectNode()
+                    .put("runId", "run-42")
+                    .put("reportKey", "clinical_summary")
+                    .put("status", "COMPLETED")
+                    .put("createdBy", "analyst-1")
+                    .put("createdAt", "2026-06-08T00:00:00Z"));
+            return MAPPER.createObjectNode().set("items", items);
         }
     }
 

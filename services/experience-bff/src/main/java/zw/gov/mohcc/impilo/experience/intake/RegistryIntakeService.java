@@ -11,10 +11,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.IndawoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.LandelaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NdilaServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
@@ -31,12 +33,14 @@ public class RegistryIntakeService {
     private static final String PREFIX_SESSION = "impilo:registry-intake:session:";
     private static final String PREFIX_IMPORT = "impilo:registry-intake:import:";
     private static final String PREFIX_IMPORT_PAYLOAD = "impilo:registry-intake:import-payload:";
+    private static final String PREFIX_IMPORT_JSON_PAYLOAD = "impilo:registry-intake:import-json-payload:";
     private static final String PREFIX_RECOVERY = "impilo:registry-intake:recovery:";
 
     private final StringRedisTemplate redis;
     private final ObjectMapper mapper;
     private final Duration ttl;
     private final TusoServiceClient tusoClient;
+    private final NdilaServiceClient ndilaClient;
     private final VarapiServiceClient varapiClient;
     private final VitoServiceClient vitoClient;
     private final IndawoServiceClient indawoClient;
@@ -51,6 +55,7 @@ public class RegistryIntakeService {
             ObjectMapper objectMapper,
             @Value("${impilo.registry-intake.redis-ttl-days:30}") int ttlDays,
             TusoServiceClient tusoClient,
+            NdilaServiceClient ndilaClient,
             VarapiServiceClient varapiClient,
             VitoServiceClient vitoClient,
             IndawoServiceClient indawoClient,
@@ -60,6 +65,7 @@ public class RegistryIntakeService {
         this.mapper = objectMapper;
         this.ttl = Duration.ofDays(Math.max(1, ttlDays));
         this.tusoClient = tusoClient;
+        this.ndilaClient = ndilaClient;
         this.varapiClient = varapiClient;
         this.vitoClient = vitoClient;
         this.indawoClient = indawoClient;
@@ -134,10 +140,16 @@ public class RegistryIntakeService {
             String importType,
             String targetRegistry,
             String inlineCsv,
+            String inlineJson,
             String landelaDocumentId,
             String createdBy,
             String notes) {
         authorizationService.assertImportPreview();
+        String normalizedType = importType != null ? importType.toUpperCase(Locale.ROOT) : "FACILITY_CSV";
+        if ("FACILITY_MASTER_PACK".equals(normalizedType)) {
+            return createMasterPackImportJob(targetRegistry, inlineJson, createdBy, notes);
+        }
+
         String resolvedCsv = resolveCsvInput(inlineCsv, landelaDocumentId);
         if (resolvedCsv.length() > 400_000) {
             throw new IllegalArgumentException("CSV payload exceeds maximum size (400KB).");
@@ -176,6 +188,53 @@ public class RegistryIntakeService {
         return job;
     }
 
+    private RegistryIntakeDocuments.ImportJobDocument createMasterPackImportJob(
+            String targetRegistry,
+            String inlineJson,
+            String createdBy,
+            String notes) {
+        if (inlineJson == null || inlineJson.isBlank()) {
+            throw new IllegalArgumentException("FACILITY_MASTER_PACK requires inlineJson payload.");
+        }
+        if (inlineJson.length() > 2_000_000) {
+            throw new IllegalArgumentException("JSON payload exceeds maximum size (2MB).");
+        }
+        try {
+            List<Map<String, Object>> records = mapper.readValue(
+                    inlineJson, new TypeReference<List<Map<String, Object>>>() {});
+            if (records.isEmpty()) {
+                throw new IllegalArgumentException("Master pack JSON must contain at least one facility record.");
+            }
+            String id = UUID.randomUUID().toString();
+            List<Map<String, Object>> preview = new ArrayList<>();
+            for (int i = 0; i < Math.min(25, records.size()); i++) {
+                Map<String, Object> row = records.get(i);
+                Map<String, Object> p = new LinkedHashMap<>();
+                p.put("rowNumber", i + 1);
+                p.put("facility_uid", row.get("facility_uid"));
+                p.put("facility_code", row.get("facility_code"));
+                p.put("facility_name", row.get("facility_name"));
+                p.put("province", row.get("province"));
+                p.put("district", row.get("district"));
+                preview.add(p);
+            }
+            Map<String, Object> summary = new LinkedHashMap<>();
+            summary.put("packId", "master-health-facility-2024-07-23");
+            summary.put("dataRowCount", records.size());
+            summary.put("importPath", "TUSO_MASTER_PACK_THEN_NDILA_SYNC");
+            RegistryIntakeDocuments.ImportJobDocument job =
+                    RegistryIntakeDocuments.ImportJobDocument.newJob(
+                            id, "FACILITY_MASTER_PACK", targetRegistry, createdBy, records.size(), summary, preview, notes,
+                            null, "INLINE_JSON");
+            writeJson(PREFIX_IMPORT + id, job);
+            redis.opsForValue().set(PREFIX_IMPORT_JSON_PAYLOAD + id, inlineJson, ttl);
+            publish("import.job.created", Map.of("jobId", id, "targetRegistry", targetRegistry, "rows", records.size()));
+            return job;
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Invalid master pack JSON: " + e.getMessage());
+        }
+    }
+
     public Optional<RegistryIntakeDocuments.ImportJobDocument> getImportJob(String id) {
         authorizationService.assertAuthenticated();
         return readJson(PREFIX_IMPORT + id, new TypeReference<RegistryIntakeDocuments.ImportJobDocument>() {
@@ -207,6 +266,7 @@ public class RegistryIntakeService {
             RegistryIntakeDocuments.ImportJobDocument cancelled = existing.withStatus("CANCELLED");
             writeJson(PREFIX_IMPORT + id, cancelled);
             redis.delete(PREFIX_IMPORT_PAYLOAD + id);
+            redis.delete(PREFIX_IMPORT_JSON_PAYLOAD + id);
             publish("import.job.cancelled", Map.of("jobId", id, "targetRegistry", existing.targetRegistry()));
             return cancelled;
         });
@@ -219,6 +279,10 @@ public class RegistryIntakeService {
         authorizationService.assertImportExecute();
         RegistryIntakeDocuments.ImportJobDocument job = getImportJob(jobId)
                 .orElseThrow(() -> new IllegalArgumentException("Import job not found: " + jobId));
+        String importType = job.importType() != null ? job.importType().toUpperCase(Locale.ROOT) : "";
+        if ("FACILITY_MASTER_PACK".equals(importType)) {
+            return executeMasterPackImport(jobId, dryRun, job);
+        }
         String tr = job.targetRegistry() != null ? job.targetRegistry().toUpperCase(Locale.ROOT) : "";
         if ("FACILITY".equals(tr) || "TUSO".equals(tr)) {
             return executeFacilityImport(jobId, dryRun, job);
@@ -314,6 +378,66 @@ public class RegistryIntakeService {
             }
         }
         return finalizeImportJob(jobId, job, results);
+    }
+
+    private RegistryIntakeDocuments.ImportJobDocument executeMasterPackImport(
+            String jobId, boolean dryRun, RegistryIntakeDocuments.ImportJobDocument job) {
+        String json = redis.opsForValue().get(PREFIX_IMPORT_JSON_PAYLOAD + jobId);
+        if (json == null || json.isBlank()) {
+            throw new IllegalStateException("Master pack JSON payload missing or expired for job " + jobId);
+        }
+        try {
+            List<Map<String, Object>> records = mapper.readValue(
+                    json, new TypeReference<List<Map<String, Object>>>() {});
+            Map<String, Object> importBody = new LinkedHashMap<>();
+            importBody.put("dryRun", dryRun);
+            importBody.put("syncNdila", !dryRun);
+            importBody.put("reconcileDuplicateCodes", false);
+            importBody.put("records", records);
+            JsonNode tusoResult = tusoClient.importFacilityMasterPack(importBody);
+            List<Map<String, Object>> results = new ArrayList<>();
+            if (tusoResult != null && tusoResult.has("results") && tusoResult.get("results").isArray()) {
+                int row = 1;
+                for (JsonNode item : tusoResult.get("results")) {
+                    results.add(RegistryIntakeDocuments.rowResult(
+                            row++,
+                            item.path("outcome").asText("UNKNOWN"),
+                            item.path("qualityFlag").asText("OK"),
+                            item.path("message").isMissingNode() ? null : item.path("message").asText(),
+                            item.has("facilityId") ? String.valueOf(item.get("facilityId").asLong()) : null,
+                            null));
+                }
+            }
+            if (!dryRun && tusoResult != null) {
+                List<Map<String, Object>> ndilaRecords = new ArrayList<>();
+                if (tusoResult.has("results") && tusoResult.get("results").isArray()) {
+                    for (JsonNode item : tusoResult.get("results")) {
+                        if (!item.has("facilityId")) {
+                            continue;
+                        }
+                        String uid = item.path("facilityUid").isMissingNode() ? null : item.path("facilityUid").asText();
+                        for (Map<String, Object> seed : records) {
+                            if (uid != null && uid.equals(String.valueOf(seed.get("facility_uid")))) {
+                                Map<String, Object> ndilaRow = new LinkedHashMap<>(seed);
+                                ndilaRow.put("tuso_facility_id", String.valueOf(item.get("facilityId").asLong()));
+                                ndilaRecords.add(ndilaRow);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!ndilaRecords.isEmpty()) {
+                    try {
+                        ndilaClient.syncFacilityMasterSeed(Map.of("records", ndilaRecords));
+                    } catch (Exception e) {
+                        log.warn("Ndila master seed sync failed for job {}: {}", jobId, e.getMessage());
+                    }
+                }
+            }
+            return finalizeImportJob(jobId, job, results);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to parse master pack JSON for job " + jobId, e);
+        }
     }
 
     private RegistryIntakeDocuments.ImportJobDocument executeSiteImport(

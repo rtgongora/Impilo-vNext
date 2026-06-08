@@ -143,6 +143,7 @@ public class RegistryIntakeController {
                     importType,
                     str(body, "targetRegistry"),
                     str(body, "csv", "csvText"),
+                    str(body, "inlineJson", "json"),
                     str(body, "landelaDocumentId", "landelaDocumentUUID", "documentId"),
                     createdBy,
                     str(body, "notes"));

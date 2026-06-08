@@ -1,6 +1,6 @@
 # Contract Implementation Matrix
 
-> Generated: 2026-06-07T23:24:50.865Z
+> Generated: 2026-06-08T01:48:27.126Z
 > OpenAPI operations: **4452** | AsyncAPI channels: **84**
 
 ## Summary
@@ -11,9 +11,9 @@
 | partial | 0 |
 | missing | 0 |
 | unowned-contract | 0 |
-| contract-gap (handler exists — extend OpenAPI) | 0 |
+| contract-gap (handler exists — extend OpenAPI) | 2 |
 | contract-parse-errors | 0 |
-| **violations (partial + missing + orphan + invalid contract)** | **0** |
+| **violations (partial + missing + orphan + invalid contract)** | **2** |
 
 ## Remediation doctrine: complete — never delete
 
@@ -31,6 +31,7 @@ Forbidden: deleting controllers, removing routes, or trimming contracts to make 
 
 ## Sample violations (first 40)
 
-_No violations detected._
+- `contract-gap` GET /api/v1/ndila/tiles/{z}/{x}/{y}.png (ndila-service)
+- `contract-gap` GET /api/v1/maps/tiles/{z}/{x}/{y}.png (ndila-service)
 
 _Regenerate: `npm run contract-matrix --prefix scripts/completeness`_

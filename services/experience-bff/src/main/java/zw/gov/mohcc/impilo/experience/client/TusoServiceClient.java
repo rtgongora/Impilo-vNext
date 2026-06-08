@@ -121,6 +121,21 @@ public class TusoServiceClient {
         return extractData(response);
     }
 
+    /** Governed master health facility pack import (dry-run or execute). */
+    public JsonNode importFacilityMasterPack(Map<String, Object> requestBody) {
+        String url = baseUrl + "/v1/internal/facilities/import/master-pack";
+        log.info("TUSO: Importing facility master pack dryRun={}", requestBody.get("dryRun"));
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, requestBody, JsonNode.class);
+        return extractData(response);
+    }
+
+    /** Read pack data quality report from generated artefacts. */
+    public JsonNode getFacilityMasterQualityReport() {
+        String url = baseUrl + "/v1/internal/facilities/import/master-pack/quality-report";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
     /** Facility detail by numeric facility id. */
     public JsonNode getFacility(long facilityId) {
         String url = baseUrl + "/v1/internal/facilities/" + facilityId;

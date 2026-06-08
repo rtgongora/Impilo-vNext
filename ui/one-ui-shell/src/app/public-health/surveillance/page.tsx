@@ -16,6 +16,7 @@ import {
   Shield,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import {
@@ -136,6 +137,12 @@ export default function SurveillanceDashboardPage() {
         </div>
 
         <div className="space-y-8">
+          <FacilitiesGeoMapPanel
+            title="Surveillance geography"
+            subtitle="Facility coordinates as outbreak proximity context — syndrome counts remain in tables below"
+            size={120}
+          />
+
           <section>
             <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
               <Radio className="h-4 w-4 text-slate-500" />

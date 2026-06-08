@@ -18,3 +18,4 @@ export { NdilaNearbyServicesMap } from "./NdilaNearbyServicesMap";
 export { NdilaProviderStatusBadge } from "./NdilaProviderStatusBadge";
 export { NdilaOfflineNotice } from "./NdilaOfflineNotice";
 export { NdilaSpatialInsightCard } from "./NdilaSpatialInsightCard";
+export { NdilaWorkspaceMapPanel } from "./NdilaWorkspaceMapPanel";

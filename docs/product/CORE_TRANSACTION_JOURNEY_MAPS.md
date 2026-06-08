@@ -1,6 +1,6 @@
 # Core Transaction Journey Maps
 
-> Generated: 2026-06-07T23:40:23.440Z
+> Generated: 2026-06-08T00:16:12.304Z
 > Journeys discovered: **46**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
@@ -10,8 +10,8 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 
 | journey | type | initiator | entry | status | classification |
 | --- | --- | --- | --- | --- | --- |
-| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | citizen | /auth/register | partial | backend-partial |
-| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | provider | /auth/login/provider-id | wired | backend-ready-but-frontend-incomplete |
+| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | citizen | /auth/register | partial | transaction-complete |
+| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | provider | /auth/login/provider-id | wired | transaction-complete |
 | Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | provider | /workspace | partial | transaction-complete |
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | provider | /facility | wired | transaction-complete |
 | Patient Search & Selection | FACILITY_WALK_IN | provider | /queue/search | wired | transaction-complete |
@@ -19,7 +19,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Provider Patient Encounter | FACILITY_WALK_IN | provider | /ehr/[patientId]/encounter/[encounterId] | wired | transaction-complete |
 | Outpatient Consultation | FACILITY_WALK_IN | provider | /clinical | partial | transaction-complete |
 | Inpatient Admission Workflow | EMERGENCY | provider | /ehr/[patientId]/inpatient | partial | transaction-complete |
-| Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | backend-partial |
+| Telemedicine Encounter | TELEMEDICINE | provider | /telemedicine | partial | transaction-complete |
 | Lab Order & Result | LABORATORY | provider | /ehr/[patientId]/orders | wired | transaction-complete |
 | Imaging Order & Result | IMAGING | provider | /ehr/[patientId]/imaging | wired | transaction-complete |
 | Prescription & Dispense | PHARMACY | provider | /ehr/[patientId]/medications | wired | transaction-complete |
@@ -29,12 +29,12 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | citizen | /finance | partial | transaction-complete |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | provider | /ehr/[patientId]/documents | partial | transaction-complete |
 | Dispatch / Delivery (NHUME) | MARKETPLACE | courier | /operations/dispatch | partial | backend-partial |
-| Notification & Communications | ADMINISTRATIVE_HEALTH | platform | /communication | wired | backend-partial |
+| Notification & Communications | ADMINISTRATIVE_HEALTH | platform | /communication | wired | transaction-complete |
 | Fundo / Learning Journey | TRAINING_OR_COMPETENCY | provider | /learning | partial | backend-ready-but-frontend-incomplete |
-| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | data-analyst | /reports | partial | backend-partial |
-| Registry Administration | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | backend-partial |
-| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | integration-system | /developer | partial | backend-partial |
-| Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | backend-partial |
+| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | data-analyst | /reports | partial | transaction-complete |
+| Registry Administration | ADMINISTRATIVE_HEALTH | registry-administrator | /registry | partial | transaction-complete |
+| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | integration-system | /developer | partial | transaction-complete |
+| Device / System Event Journey | ADMINISTRATIVE_HEALTH | device | system ingress (no UI) | partial | transaction-complete |
 | Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | registry-administrator | /operations/vito | partial | transaction-complete |
 | Marketplace Order | MARKETPLACE | citizen | /marketplace | partial | backend-partial |
 | Wellness & Lifestyle Journey | WELLNESS | citizen | /wellness | partial | transaction-complete |
@@ -48,10 +48,10 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | platform | /core-transaction | wired | transaction-complete |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | health-information-officer | /public-health | partial | backend-ready-but-frontend-incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | citizen | /ask | partial | backend-ready-but-frontend-incomplete |
-| Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | backend-ready-but-frontend-incomplete |
+| Credential Verification | ADMINISTRATIVE_HEALTH | facility-administrator | /verify | partial | transaction-complete |
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | registry-administrator | /registry/providers | partial | backend-partial |
 | Citizen Remote Monitoring | CHRONIC_CARE | citizen | /monitoring | partial | transaction-complete |
-| Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | backend-ready-but-frontend-incomplete |
+| Chronic Care Management | CHRONIC_CARE | provider | /ehr/[patientId] | partial | transaction-complete |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | citizen | /madi/donor | wired | transaction-complete |
 | Blood Order & Crossmatch | BLOOD_ORDER | provider | /madi/orders | wired | transaction-complete |
 | Transfusion Episode & Bedside Verify | TRANSFUSION | provider | /madi/transfusion | wired | transaction-complete |
@@ -72,7 +72,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **Web routes:** /auth/register, /auth/register/assurance, /auth/register/status, /id-services
 - **Mobile screens:** apps/mobile/citizen-app/src/screens/personal/HealthIdSection.tsx, apps/mobile/citizen-app/src/screens/personal/ProfileSection.tsx
 - **Completion state:** IDENTITY_RESOLVED
-- **Status:** partial — backend-partial
+- **Status:** partial — transaction-complete
 - **PO acceptance test:** Citizen completes registration, receives Health ID, sees next-step guidance
 
 ### Provider Login & Role Activation
@@ -88,7 +88,7 @@ See [CORE_TRANSACTION_ORCHESTRATION_DOCTRINE.md](./CORE_TRANSACTION_ORCHESTRATIO
 - **Web routes:** /auth/login, /auth/login/biometric, /auth/login/email, /auth/login/provider-id, /auth/mfa…
 - **Mobile screens:** apps/mobile/citizen-app/src/screens/LoginScreen.tsx, apps/mobile/provider-app/src/screens/LoginScreen.tsx
 - **Completion state:** TRUST_CONTEXT_ESTABLISHED
-- **Status:** wired — backend-ready-but-frontend-incomplete
+- **Status:** wired — transaction-complete
 - **PO acceptance test:** Provider signs in with Provider ID, activates role, lands in workspace
 
 ### Workspace / Shift Context Selection

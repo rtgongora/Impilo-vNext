@@ -16,7 +16,7 @@
  *     consumer should render the offline notice rather than fail hard.
  */
 
-import { apiClient } from "@/lib/api-client";
+import { apiClient, type ApiResponse } from "@/lib/api-client";
 
 export interface NdilaCoordinate {
   latitude: number;
@@ -133,16 +133,18 @@ export interface NdilaAiContextPacket {
 export async function ndilaGeocode(query: string, opts?: {
   country?: string; province?: string; district?: string; purposeOfUse?: string;
 }): Promise<NdilaGeocodeResponse> {
-  return apiClient.post<NdilaGeocodeResponse>("/api/v1/ndila/geocode", {
+  const envelope = await apiClient.post<ApiResponse<NdilaGeocodeResponse>>("/internal/v1/ndila/geocode", {
     query, ...opts,
   });
+  return envelope.data ?? { success: false, results: [], denialReason: "Ndila geocode empty" };
 }
 
 export async function ndilaReverseGeocode(point: NdilaCoordinate, country?: string)
     : Promise<NdilaGeocodeResponse> {
-  return apiClient.post<NdilaGeocodeResponse>("/api/v1/ndila/reverse-geocode", {
+  const envelope = await apiClient.post<ApiResponse<NdilaGeocodeResponse>>("/internal/v1/ndila/reverse-geocode", {
     latitude: point.latitude, longitude: point.longitude, country,
   });
+  return envelope.data ?? { success: false, results: [], denialReason: "Ndila reverse-geocode empty" };
 }
 
 export async function ndilaValidateLocation(point: NdilaCoordinate,
@@ -176,7 +178,14 @@ export async function ndilaEta(req: Omit<NdilaRouteRequest, "includeGeometry">)
 
 // ── Tiles ──────────────────────────────────────────────────────────────────
 export async function ndilaTileConfig(): Promise<NdilaTileConfig> {
-  return apiClient.get<NdilaTileConfig>("/api/v1/ndila/tiles/config");
+  const envelope = await apiClient.get<ApiResponse<NdilaTileConfig>>("/internal/v1/ndila/tiles/config");
+  return envelope.data ?? {
+    provider: "PREVIEW_SOVEREIGN",
+    tileUrlTemplate: "/internal/v1/ndila/tiles/{z}/{x}/{y}.png",
+    attribution: "Impilo Ndila",
+    maxZoom: 17,
+    supportsOffline: true,
+  };
 }
 
 // ── Spatial search ─────────────────────────────────────────────────────────

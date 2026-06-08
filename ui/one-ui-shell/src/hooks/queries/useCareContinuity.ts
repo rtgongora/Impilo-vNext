@@ -240,3 +240,37 @@ export function useCreateCarePlan() {
     },
   });
 }
+
+export function useAddCarePlanGoal() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    unknown,
+    { planId: string; patientId: string; description: string; category: string; targetDate?: string }
+  >({
+    mutationFn: ({ planId, description, category, targetDate }) =>
+      apiClient.post(`/internal/v1/care-plans/${encodeURIComponent(planId)}/goals`, {
+        description,
+        category,
+        target_date: targetDate ?? null,
+        status: "IN_PROGRESS",
+      }),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
+}
+
+export function usePerformCarePlanIntervention() {
+  const qc = useQueryClient();
+  return useMutation<unknown, unknown, { planId: string; interventionId: string; patientId: string }>({
+    mutationFn: ({ planId, interventionId }) =>
+      apiClient.post(
+        `/internal/v1/care-plans/${encodeURIComponent(planId)}/interventions/${encodeURIComponent(interventionId)}/perform`,
+        {},
+      ),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
+}

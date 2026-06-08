@@ -15,6 +15,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { CarePlanOrchestrationRail } from "@/components/chronic-care/CarePlanOrchestrationRail";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -76,6 +77,12 @@ export default function CarePlansPage() {
           </div>
         ) : (
           <div className="space-y-6">
+            <CarePlanOrchestrationRail
+              patientId={patientId}
+              plans={carePlans}
+              onPlanChanged={() => void refetch()}
+            />
+
             <ClinicalReviewHeader
               badge="Care planning"
               badgeIcon={ClipboardList}

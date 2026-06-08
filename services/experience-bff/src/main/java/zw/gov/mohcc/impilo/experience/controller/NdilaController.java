@@ -3,7 +3,9 @@ package zw.gov.mohcc.impilo.experience.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
@@ -39,6 +41,64 @@ public class NdilaController {
         } catch (Exception e) {
             log.warn("Ndila tile config failed: {}", e.getMessage());
             return unavailable("NDILA_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
+    @GetMapping("/tiles/{z}/{x}/{y}.png")
+    public ResponseEntity<byte[]> tileRaster(
+            @PathVariable int z,
+            @PathVariable int x,
+            @PathVariable int y) {
+        try {
+            byte[] png = client.tilePng(z, x, y);
+            if (png.length == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(png);
+        } catch (Exception e) {
+            log.warn("Ndila tile raster failed z={} x={} y={}: {}", z, x, y, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
+        }
+    }
+
+    @PostMapping("/geocode")
+    public ResponseEntity<Map<String, Object>> geocode(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.geocode(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila geocode failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of("success", false, "denialReason", e.getMessage()),
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
+        }
+    }
+
+    @PostMapping("/reverse-geocode")
+    public ResponseEntity<Map<String, Object>> reverseGeocode(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = client.reverseGeocode(body);
+            return ResponseEntity.ok(Map.of(
+                    "data", data != null ? data : Map.of(),
+                    "meta", meta(requestId, correlationId)));
+        } catch (Exception e) {
+            log.warn("Ndila reverse-geocode failed: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "data", Map.of("success", false, "denialReason", e.getMessage()),
+                    "error", Map.of("code", "NDILA_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", meta(requestId, correlationId)));
         }
     }
 

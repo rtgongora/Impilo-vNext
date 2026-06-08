@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-07T23:24:50.865Z",
+  "generatedAt": "2026-06-08T01:48:27.126Z",
   "counts": {
     "totalOpenApiOperations": 4452,
     "totalAsyncChannels": 84,
@@ -7,8 +7,8 @@
     "partial": 0,
     "missing": 0,
     "unownedContract": 0,
-    "orphanHandlers": 0,
-    "violations": 0,
+    "orphanHandlers": 2,
+    "violations": 2,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -59009,6 +59009,23 @@
       "serviceHandler": "pct-service:kafka-listener"
     }
   ],
-  "orphanHandlers": [],
+  "orphanHandlers": [
+    {
+      "module": "ndila-service",
+      "method": "GET",
+      "path": "/api/v1/ndila/tiles/{z}/{x}/{y}.png",
+      "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
+    {
+      "module": "ndila-service",
+      "method": "GET",
+      "path": "/api/v1/maps/tiles/{z}/{x}/{y}.png",
+      "handler": "services/ndila-service/src/main/java/zw/gov/mohcc/impilo/ndila/api/NdilaTileRasterController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    }
+  ],
   "contractParseErrors": []
 }

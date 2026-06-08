@@ -5,6 +5,7 @@ import React from "react";
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
+import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import {
   fetchFieldTasks,
   fetchOperationsHomeKpis,
@@ -44,6 +45,12 @@ export function PublicHealthFieldTasksScreen() {
           />
         }
       >
+        <MobileNearbyMapView
+          entityTypes={["PUBLIC_HEALTH_SITE", "FACILITY"]}
+          autoCapture={false}
+          height={180}
+        />
+
         <View style={styles.kpiRow}>
           <Kpi label="Open tasks" value={String(kpis.field_tasks_open ?? tasks.filter((t) => t.status !== "COMPLETED").length)} />
           <Kpi label="Outbreaks" value={String(kpis.active_outbreaks ?? "—")} />

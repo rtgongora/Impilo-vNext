@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { Screen, Header, Button, TextField, LoadingSpinner, EmptyState, ErrorState, Badge } from "@impilo/mobile-design-system";
+import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import { fetchDrivesNearMe, registerForDrive, type DonationDriveSummary } from "../../services/madiService";
 
 interface Props {
@@ -44,6 +45,7 @@ export function DonationDrivesScreen({ onBack }: Props) {
     <Screen>
       <Header title="Donation Drives" onBack={onBack} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <MobileNearbyMapView entityTypes={["PUBLIC_HEALTH_SITE", "FACILITY"]} autoCapture={false} height={180} />
         <Text style={styles.hint}>Enter your Ndila site reference (district or facility site) to find drives near you.</Text>
         <TextField
           label="Ndila site reference"

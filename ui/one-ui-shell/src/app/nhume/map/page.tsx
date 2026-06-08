@@ -86,8 +86,8 @@ export default function NhumeMapPage() {
         )}
 
         <p className="mt-4 text-xs text-gray-500">
-          Full WebGL Ndila client can replace the tile preview when <code>NEXT_PUBLIC_NDILA_MAP_TOKEN</code> is set.
-          Lists below remain available for low-connectivity dispatch.
+          Interactive MapLibre canvas with governed Ndila tiles. Configure a non-mock tile provider in ndila-service for
+          sovereign raster layers; lists below remain for low-connectivity dispatch.
         </p>
       </PageShell>
     </AppLayout>

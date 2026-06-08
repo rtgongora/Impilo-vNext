@@ -22,6 +22,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { CitizenOnboardingOrchestrationRail } from "@/components/onboarding/CitizenOnboardingOrchestrationRail";
 import { useAuthStore } from "@/hooks/useAuthStore";
 
 /** Generate a deterministic temporary Health ID from the user's account ID. */
@@ -80,6 +81,10 @@ export default function IdStatusPage() {
               To unlock full health services, visit a registered facility or
               request verification online.
             </p>
+          </div>
+
+          <div className="mt-6 text-left">
+            <CitizenOnboardingOrchestrationRail />
           </div>
 
           <div className="mt-6 space-y-3">

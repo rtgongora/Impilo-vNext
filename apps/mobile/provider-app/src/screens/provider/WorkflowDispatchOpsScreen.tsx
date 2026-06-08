@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TextInput } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Card, CardBody, FeatureMaturityBadge, LoadingSpinner } from "@impilo/mobile-design-system";
+import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import {
   assignDispatchTask,
   completeDispatchTask,
@@ -234,6 +235,12 @@ export function WorkflowDispatchOpsScreen() {
               : `Workflows: ${workflows.length} | Definitions: ${definitions.length} | Instances: ${instances.length} | Dispatch tasks: ${tasks.length}`}
         </Text>
       </View>
+
+      <MobileNearbyMapView
+        entityTypes={["FACILITY", "DELIVERY", "FLEET"]}
+        autoCapture={false}
+        height={180}
+      />
 
       {isLoading && <LoadingSpinner />}
 

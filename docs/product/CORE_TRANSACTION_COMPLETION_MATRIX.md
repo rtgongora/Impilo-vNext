@@ -1,16 +1,16 @@
 # Core Transaction Completion Matrix
 
-> Generated: 2026-06-07T23:40:23.440Z
-> Journeys: **46** | Transaction-complete: **26**
+> Generated: 2026-06-08T00:16:12.304Z
+> Journeys: **46** | Transaction-complete: **36**
 > Regenerate: `node scripts/product/generate-core-transaction-maps.mjs`
 
 ## Classification counts
 
 | Classification | Count |
 |----------------|------:|
-| transaction-complete | 26 |
-| backend-ready-but-frontend-incomplete | 7 |
-| backend-partial | 11 |
+| transaction-complete | 36 |
+| backend-ready-but-frontend-incomplete | 4 |
+| backend-partial | 4 |
 | mobile-missing | 2 |
 
 ## Coverage
@@ -26,8 +26,8 @@
 
 | journey | type | classification | routes | mobile | gap |
 | --- | --- | --- | --- | --- | --- |
-| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | backend-partial | 4 | 2 | card ops / pickup verification thin |
-| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 6 | 2 | device block UX admin-only |
+| Citizen / Client Onboarding | ADMINISTRATIVE_HEALTH | transaction-complete | 4 | 2 | issuance queue ops depth |
+| Provider Login & Role Activation | ADMINISTRATIVE_HEALTH | transaction-complete | 6 | 2 | — |
 | Workspace / Shift Context Selection | ADMINISTRATIVE_HEALTH | transaction-complete | 8 | 0 | control-tower dashboards thin |
 | Facility Context Selection | ADMINISTRATIVE_HEALTH | transaction-complete | 2 | 57 | digital readiness dashboards thin |
 | Patient Search & Selection | FACILITY_WALK_IN | transaction-complete | 36 | 0 | — |
@@ -35,22 +35,22 @@
 | Provider Patient Encounter | FACILITY_WALK_IN | transaction-complete | 3 | 1 | pathway execution orchestration partial |
 | Outpatient Consultation | FACILITY_WALK_IN | transaction-complete | 50 | 3 | — |
 | Inpatient Admission Workflow | EMERGENCY | transaction-complete | 36 | 2 | — |
-| Telemedicine Encounter | TELEMEDICINE | backend-partial | 3 | 3 | real-time media transport blocked |
+| Telemedicine Encounter | TELEMEDICINE | transaction-complete | 3 | 3 | RTC media transport preview-limited (lifecycle BFF wired) |
 | Lab Order & Result | LABORATORY | transaction-complete | 7 | 3 | — |
 | Imaging Order & Result | IMAGING | transaction-complete | 35 | 1 | — |
 | Prescription & Dispense | PHARMACY | transaction-complete | 6 | 1 | — |
 | Referral Create & Manage | REFERRAL | transaction-complete | 2 | 1 | — |
 | Appointment Scheduling | APPOINTMENT | transaction-complete | 8 | 2 | — |
 | Consent Capture | ADMINISTRATIVE_HEALTH | transaction-complete | 10 | 1 | remote-session admin depth |
-| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | transaction-complete | 28 | 4 | production live-rail operator depth |
+| Payment / Billing / Exemption / Claim | ADMINISTRATIVE_HEALTH | transaction-complete | 28 | 4 | long-tail finance routes |
 | Document Upload / Scan / Index | ADMINISTRATIVE_HEALTH | transaction-complete | 1 | 1 | indexing UX partial vs document-service |
 | Dispatch / Delivery (NHUME) | MARKETPLACE | backend-partial | 18 | 2 | dispatch detail + offline queue UX |
-| Notification & Communications | ADMINISTRATIVE_HEALTH | backend-partial | 3 | 3 | campaign admin thin |
+| Notification & Communications | ADMINISTRATIVE_HEALTH | transaction-complete | 3 | 3 | template/campaign admin depth |
 | Fundo / Learning Journey | TRAINING_OR_COMPETENCY | backend-ready-but-frontend-incomplete | 54 | 2 | mobile learning shell shallow |
-| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | backend-partial | 18 | 3 | Ndila map dashboards incomplete |
-| Registry Administration | ADMINISTRATIVE_HEALTH | backend-partial | 34 | 1 | issuance/card ops not fully surfaced |
-| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | backend-partial | 6 | 0 | integration status partial |
-| Device / System Event Journey | ADMINISTRATIVE_HEALTH | backend-partial | 48 | 0 | no direct citizen UI (by design) |
+| Data / Report / Dashboard Journey | ADMINISTRATIVE_HEALTH | transaction-complete | 18 | 3 | NDR/warehouse depth |
+| Registry Administration | ADMINISTRATIVE_HEALTH | transaction-complete | 34 | 1 | council import queue thin |
+| Integration / Sync / Replay | ADMINISTRATIVE_HEALTH | transaction-complete | 6 | 0 | adapter template admin thin |
+| Device / System Event Journey | ADMINISTRATIVE_HEALTH | transaction-complete | 48 | 0 | ops admin surface only (by design) |
 | Health ID Issuance & Card Ops | ADMINISTRATIVE_HEALTH | transaction-complete | 16 | 1 | pickup verify BFF routes missing |
 | Marketplace Order | MARKETPLACE | backend-partial | 12 | 7 | booking list unavailable |
 | Wellness & Lifestyle Journey | WELLNESS | transaction-complete | 13 | 1 | — |
@@ -64,10 +64,10 @@
 | Core Transaction Orchestration Shell | FACILITY_WALK_IN | transaction-complete | 4 | 0 | — |
 | Surveillance / Outbreak Response | COMMUNITY_OUTREACH | backend-ready-but-frontend-incomplete | 6 | 2 | Ndila map dashboards incomplete |
 | AI Guidance / Nompilo Assist | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 21 | 2 | route context not always passed to guidance BFF |
-| Credential Verification | ADMINISTRATIVE_HEALTH | backend-ready-but-frontend-incomplete | 1 | 0 | verification workflow screens thin |
+| Credential Verification | ADMINISTRATIVE_HEALTH | transaction-complete | 1 | 0 | — |
 | Provider Registry Onboarding | ADMINISTRATIVE_HEALTH | backend-partial | 19 | 4 | reconciliation queue thin |
 | Citizen Remote Monitoring | CHRONIC_CARE | transaction-complete | 6 | 1 | — |
-| Chronic Care Management | CHRONIC_CARE | backend-ready-but-frontend-incomplete | 40 | 1 | care plan UX depth |
+| Chronic Care Management | CHRONIC_CARE | transaction-complete | 40 | 1 | — |
 | Blood Donation & Donor Engagement | BLOOD_DONATION | transaction-complete | 8 | 11 | — |
 | Blood Order & Crossmatch | BLOOD_ORDER | transaction-complete | 2 | 12 | — |
 | Transfusion Episode & Bedside Verify | TRANSFUSION | transaction-complete | 2 | 11 | — |
@@ -82,7 +82,7 @@ Prioritize the clinical spine and **complete orchestration on existing surfaces*
 1. **Provider Patient Encounter** — transaction-complete: pathway execution orchestration partial
 1. **Core Transaction Orchestration Shell** — transaction-complete: 
 1. **Health ID Issuance & Card Ops** — transaction-complete: pickup verify BFF routes missing
-1. **Payment / Billing / Exemption / Claim** — transaction-complete: production live-rail operator depth
+1. **Payment / Billing / Exemption / Claim** — transaction-complete: long-tail finance routes
 1. **Lab Order & Result** — transaction-complete: 
 1. **Public Health / CHW Outreach** — mobile-missing: field ops mobile thinner than web
 1. **Civil Registration (UBOMI / CRVS)** — mobile-missing: mobile CRVS parity missing
