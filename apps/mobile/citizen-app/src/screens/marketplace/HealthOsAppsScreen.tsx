@@ -29,6 +29,7 @@ import {
   type LauncherApp,
 } from "../../services/healthOsLauncherService";
 import { FundoLearningScreen } from "./FundoLearningScreen";
+import { UbomiCrvsScreen } from "../crvs/UbomiCrvsScreen";
 
 const GREEN = "#059669";
 
@@ -46,6 +47,7 @@ const STATE_TONE: Record<LauncherApp["state"], { label: string; color: string }>
 
 export function HealthOsAppsScreen() {
   const [showFundoLearning, setShowFundoLearning] = useState(false);
+  const [showUbomiCrvs, setShowUbomiCrvs] = useState(false);
   const [apps, setApps] = useState<LauncherApp[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +103,10 @@ export function HealthOsAppsScreen() {
     );
   }
 
+  if (showUbomiCrvs) {
+    return <UbomiCrvsScreen onBack={() => setShowUbomiCrvs(false)} />;
+  }
+
   return (
     <Screen>
       <Header title="Health OS Apps" subtitle="Approved citizen apps available through the sovereign marketplace" />
@@ -131,6 +137,15 @@ export function HealthOsAppsScreen() {
             <Text style={styles.toastText}>Fundo learning is available in-app for citizen LMS and wellness education.</Text>
             <View style={{ marginTop: 8 }}>
               <Button title="Open Fundo learning" onPress={() => setShowFundoLearning(true)} />
+            </View>
+          </CardBody>
+        </Card>
+
+        <Card style={styles.toast}>
+          <CardBody>
+            <Text style={styles.toastText}>UBOMI civil registration verification and birth notifications for citizens.</Text>
+            <View style={{ marginTop: 8 }}>
+              <Button title="Open UBOMI CRVS" variant="outline" onPress={() => setShowUbomiCrvs(true)} />
             </View>
           </CardBody>
         </Card>

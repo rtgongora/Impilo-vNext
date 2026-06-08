@@ -4,13 +4,43 @@ import { Ionicons } from "@expo/vector-icons";
 import { Button, LoadingSpinner, ErrorState } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchHealthId, createHealthId } from "../../services/healthIdService";
+import {
+  dedupStatusLabel,
+  scoreClientDedup,
+  searchClientRegistry,
+  type ClientRegistrySummary,
+} from "../../services/clientRegistryService";
 import { useAppStore } from "../../stores/appStore";
 
 export function HealthIdSection() {
   const profile = useAppStore((s) => s.profile);
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const [dedupQuery, setDedupQuery] = useState("");
+  const [dedupMatches, setDedupMatches] = useState<ClientRegistrySummary[]>([]);
+  const [dedupScore, setDedupScore] = useState<number | null>(null);
+  const [dedupChecking, setDedupChecking] = useState(false);
   const [form, setForm] = useState({ bloodType: "", allergiesSummary: "", emergencyContactName: "", emergencyContactPhone: "" });
+
+  const dedupBadge = dedupStatusLabel(dedupScore, dedupMatches.length);
+
+  async function runDedupCheck() {
+    const query = dedupQuery.trim() || `${profile?.givenName ?? ""} ${profile?.familyName ?? ""}`.trim();
+    if (query.length < 2) return;
+    setDedupChecking(true);
+    try {
+      const matches = await searchClientRegistry(query);
+      setDedupMatches(matches);
+      if (matches[0]?.healthId && profile?.cpid) {
+        const scored = await scoreClientDedup(profile.cpid, matches[0].healthId);
+        setDedupScore(scored.score);
+      } else {
+        setDedupScore(null);
+      }
+    } finally {
+      setDedupChecking(false);
+    }
+  }
 
   const { data: healthId, isLoading, error } = useQuery({
     queryKey: ["health-id", profile?.cpid],
@@ -89,6 +119,33 @@ export function HealthIdSection() {
       <View style={styles.container}>
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>Create Your Health ID</Text>
+          <View style={styles.dedupPanel}>
+            <Text style={styles.dedupTitle}>Registration dedup check</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Search name or phone before registering"
+              placeholderTextColor="#9CA3AF"
+              value={dedupQuery}
+              onChangeText={setDedupQuery}
+            />
+            <Button title={dedupChecking ? "Checking…" : "Check for duplicates"} onPress={() => void runDedupCheck()} disabled={dedupChecking} />
+            <View
+              style={[
+                styles.dedupBadge,
+                dedupBadge.tone === "duplicate"
+                  ? styles.dedupBadgeDuplicate
+                  : dedupBadge.tone === "review"
+                    ? styles.dedupBadgeReview
+                    : styles.dedupBadgeClear,
+              ]}
+            >
+              <Text style={styles.dedupBadgeText}>{dedupBadge.label}</Text>
+              {dedupScore != null ? <Text style={styles.dedupMeta}>Score: {dedupScore.toFixed(2)}</Text> : null}
+              {dedupMatches.length > 0 ? (
+                <Text style={styles.dedupMeta}>{dedupMatches.length} registry match(es) — review before creating a new record.</Text>
+              ) : null}
+            </View>
+          </View>
           <View style={styles.formFields}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Blood Type</Text>
@@ -309,6 +366,50 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#111827",
+  },
+  dedupPanel: {
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#F5F3FF",
+    borderWidth: 1,
+    borderColor: "#DDD6FE",
+  },
+  dedupTitle: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#5B21B6",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  dedupBadge: {
+    borderRadius: 10,
+    padding: 10,
+    gap: 4,
+  },
+  dedupBadgeClear: {
+    backgroundColor: "#ECFDF5",
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
+  },
+  dedupBadgeReview: {
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+  },
+  dedupBadgeDuplicate: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  dedupBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  dedupMeta: {
+    fontSize: 11,
+    color: "#4B5563",
   },
   formFields: {
     gap: 12,

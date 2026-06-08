@@ -70,6 +70,33 @@ export interface HaemovigilanceReaction {
   reported_at?: string;
 }
 
+export interface CentralBankMetrics {
+  totalUnits?: number;
+  availableUnits?: number;
+  openHaemovigilanceCases?: number;
+}
+
+export interface EmergencyRedistribution {
+  redistribution_id?: string;
+  redistributionId?: string;
+  source_facility_id?: string;
+  sourceFacilityId?: string;
+  target_facility_id?: string;
+  targetFacilityId?: string;
+  blood_group?: string;
+  bloodGroup?: string;
+  component_type?: string;
+  componentType?: string;
+  units_requested?: number;
+  unitsRequested?: number;
+  status?: string;
+  reason?: string;
+  handoff_status?: string;
+  handoffStatus?: string;
+  handoff_error?: string;
+  handoffError?: string;
+}
+
 export interface DriveSyncConflict {
   conflict_id?: string;
   drive_id?: string;
@@ -360,3 +387,67 @@ export async function reportTransfusionReaction(params: {
     return null;
   }
 }
+
+function redistributionId(row: EmergencyRedistribution): string {
+  return row.redistribution_id ?? row.redistributionId ?? "";
+}
+
+/** Central blood bank national inventory metrics. */
+export async function fetchCentralBankMetrics(): Promise<CentralBankMetrics | null> {
+  try {
+    const response = await apiClient.get<ApiEnvelope<CentralBankMetrics>>(`${MADI_BASE}/central-bank/metrics`);
+    return response.data.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** List emergency redistribution requests for central bank ops. */
+export async function fetchEmergencyRedistributions(): Promise<EmergencyRedistribution[]> {
+  try {
+    const response = await apiClient.get<ApiEnvelope<EmergencyRedistribution[]>>(
+      `${MADI_BASE}/central-bank/emergency-redistributions`,
+    );
+    return response.data.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Approve and fulfil an emergency redistribution. */
+export async function approveEmergencyRedistribution(
+  redistributionIdValue: string,
+  params: {
+    approved_by: string;
+    units_allocated?: number;
+    status?: string;
+  } = { approved_by: "mobile-provider" },
+): Promise<EmergencyRedistribution | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<EmergencyRedistribution>>(
+      `${MADI_BASE}/central-bank/emergency-redistributions/${encodeURIComponent(redistributionIdValue)}/approve`,
+      params,
+    );
+    return response.data.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Initiate or retry NHUME handoff for a fulfilled redistribution. */
+export async function initiateEmergencyHandoff(
+  redistributionIdValue: string,
+  params: { initiated_by?: string } = {},
+): Promise<EmergencyRedistribution | null> {
+  try {
+    const response = await apiClient.post<ApiEnvelope<EmergencyRedistribution>>(
+      `${MADI_BASE}/central-bank/emergency-redistributions/${encodeURIComponent(redistributionIdValue)}/handoff`,
+      params,
+    );
+    return response.data.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export { redistributionId as emergencyRedistributionId };

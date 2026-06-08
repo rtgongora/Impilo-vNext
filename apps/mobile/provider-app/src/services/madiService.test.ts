@@ -19,6 +19,10 @@ import {
   reportTransfusionReaction,
   fetchOperationalDrives,
   recordDriveDonation,
+  fetchCentralBankMetrics,
+  fetchEmergencyRedistributions,
+  approveEmergencyRedistribution,
+  initiateEmergencyHandoff,
 } from "./madiService";
 
 const BASE = "/internal/v1/mobile/provider/madi";
@@ -138,5 +142,60 @@ describe("provider madiService", () => {
       volume_ml: 450,
     });
     expect(ok).toBe(true);
+  });
+
+  it("fetchCentralBankMetrics calls central bank metrics endpoint", async () => {
+    mockGet.mockResolvedValue({
+      data: { data: { totalUnits: 120, availableUnits: 80, openHaemovigilanceCases: 3 } },
+    });
+
+    const metrics = await fetchCentralBankMetrics();
+
+    expect(mockGet).toHaveBeenCalledWith(`${BASE}/central-bank/metrics`);
+    expect(metrics?.totalUnits).toBe(120);
+    expect(metrics?.availableUnits).toBe(80);
+  });
+
+  it("fetchEmergencyRedistributions lists redistribution queue", async () => {
+    mockGet.mockResolvedValue({
+      data: { data: [{ redistribution_id: "red-1", status: "REQUESTED" }] },
+    });
+
+    const rows = await fetchEmergencyRedistributions();
+
+    expect(mockGet).toHaveBeenCalledWith(`${BASE}/central-bank/emergency-redistributions`);
+    expect(rows[0]?.redistribution_id).toBe("red-1");
+  });
+
+  it("approveEmergencyRedistribution posts approve payload", async () => {
+    mockPost.mockResolvedValue({
+      data: { data: { redistribution_id: "red-2", status: "FULFILLED" } },
+    });
+
+    const row = await approveEmergencyRedistribution("red-2", {
+      approved_by: "ops-mobile",
+      units_allocated: 2,
+      status: "FULFILLED",
+    });
+
+    expect(mockPost).toHaveBeenCalledWith(`${BASE}/central-bank/emergency-redistributions/red-2/approve`, {
+      approved_by: "ops-mobile",
+      units_allocated: 2,
+      status: "FULFILLED",
+    });
+    expect(row?.status).toBe("FULFILLED");
+  });
+
+  it("initiateEmergencyHandoff posts handoff retry", async () => {
+    mockPost.mockResolvedValue({
+      data: { data: { redistribution_id: "red-3", handoff_status: "HANDOFF_PENDING" } },
+    });
+
+    const row = await initiateEmergencyHandoff("red-3", { initiated_by: "ops-mobile" });
+
+    expect(mockPost).toHaveBeenCalledWith(`${BASE}/central-bank/emergency-redistributions/red-3/handoff`, {
+      initiated_by: "ops-mobile",
+    });
+    expect(row?.handoff_status).toBe("HANDOFF_PENDING");
   });
 });

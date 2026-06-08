@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { normalizeCitizenLearningSnapshot } from "./fundoLearningSummary";
+import { enrolCitizenInCourse } from "./fundoLearningService";
 
 describe("normalizeCitizenLearningSnapshot", () => {
   it("derives metrics from arrays", () => {
@@ -26,5 +27,11 @@ describe("normalizeCitizenLearningSnapshot", () => {
       completed: 2,
       certificates: 1,
     });
+  });
+});
+
+describe("enrolCitizenInCourse", () => {
+  it("is exported for citizen enrolment path", () => {
+    expect(typeof enrolCitizenInCourse).toBe("function");
   });
 });

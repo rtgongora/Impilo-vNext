@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Screen, Header, LoadingSpinner } from "@impilo/mobile-design-system";
 import { MobileNearbyMapView } from "@impilo/mobile-ndila";
 import {
+  createFieldTask,
   fetchFieldTasks,
   fetchOperationsHomeKpis,
   nextFieldTaskStatus,
@@ -21,6 +22,19 @@ export function PublicHealthFieldTasksScreen() {
 
   const transitionM = useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: string }) => transitionFieldTask(taskId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ph-field-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["ph-operations-home-mobile"] });
+    },
+  });
+
+  const createM = useMutation({
+    mutationFn: () =>
+      createFieldTask({
+        activityTitle: `Outreach visit ${new Date().toISOString().slice(0, 10)}`,
+        activityType: "Community screening",
+        status: "PLANNED",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ph-field-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["ph-operations-home-mobile"] });
@@ -56,6 +70,14 @@ export function PublicHealthFieldTasksScreen() {
           <Kpi label="Outbreaks" value={String(kpis.active_outbreaks ?? "—")} />
           <Kpi label="Alerts" value={String(kpis.open_alerts ?? "—")} />
         </View>
+
+        <TouchableOpacity
+          style={styles.createBtn}
+          disabled={createM.isPending}
+          onPress={() => createM.mutate()}
+        >
+          <Text style={styles.createBtnText}>{createM.isPending ? "Creating…" : "Create field task"}</Text>
+        </TouchableOpacity>
 
         {tasksQ.isPending ? (
           <LoadingSpinner />
@@ -130,4 +152,13 @@ const styles = StyleSheet.create({
   advanceBtn: { marginTop: 8 },
   advanceText: { fontSize: 12, color: "#1D4ED8", fontWeight: "600" },
   done: { fontSize: 11, color: "#9CA3AF", marginTop: 8 },
+  createBtn: {
+    alignSelf: "flex-start",
+    backgroundColor: "#047857",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  createBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
 });

@@ -67,3 +67,26 @@ export function nextFieldTaskStatus(current: string): string | null {
 export async function transitionFieldTask(taskId: string, status: string): Promise<void> {
   await apiClient.post(`${BASE}/field-tasks/${encodeURIComponent(taskId)}/transition`, { status });
 }
+
+export interface CreateFieldTaskInput {
+  activityTitle: string;
+  activityType?: string;
+  status?: string;
+  province?: string;
+  district?: string;
+}
+
+export async function createFieldTask(input: CreateFieldTaskInput): Promise<FieldTaskRow> {
+  const r = await apiClient.post<{ data: unknown }>(`${BASE}/field-tasks`, {
+    activity_title: input.activityTitle,
+    activity_type: input.activityType ?? "Community screening",
+    status: input.status ?? "PLANNED",
+    province: input.province ?? "",
+    district: input.district ?? "",
+  });
+  return normalizeTask(asRecord(r.data).data ?? r.data);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}

@@ -57,3 +57,16 @@ export async function fetchCitizenLearningCatalog(): Promise<Array<AnyRecord>> {
     return r.data.data?.items ?? [];
   });
 }
+
+export async function enrolCitizenInCourse(
+  subjectType: string,
+  subjectId: string,
+  courseId: string,
+): Promise<AnyRecord> {
+  const r = await apiClient.post<{ data: AnyRecord }>(`${V11}/enrolments`, {
+    subjectType,
+    subjectId,
+    courseId,
+  });
+  return r.data.data ?? {};
+}

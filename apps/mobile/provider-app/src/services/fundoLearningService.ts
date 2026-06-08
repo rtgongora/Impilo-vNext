@@ -81,3 +81,41 @@ export async function openLesson(lessonId: string, enrolmentId: string): Promise
 export async function markLessonComplete(enrolmentId: string, lessonId: string): Promise<void> {
   await apiClient.post(`${V11}/progress`, { enrolmentId, lessonId, progressPercent: 100 });
 }
+
+export async function fetchPathways(): Promise<Array<AnyRecord>> {
+  const r = await apiClient.get<{ data: { items?: Array<AnyRecord> } }>(
+    `${V11}/pathways?status=PUBLISHED&limit=50`,
+  );
+  return r.data.data?.items ?? [];
+}
+
+export async function fetchCourseAssessments(courseId: string): Promise<Array<AnyRecord>> {
+  try {
+    const r = await apiClient.get<{ data: unknown }>(
+      `${V11}/courses/${encodeURIComponent(courseId)}/assessments`,
+    );
+    const payload = r.data.data;
+    if (Array.isArray(payload)) return payload;
+    if (payload && typeof payload === "object" && Array.isArray((payload as AnyRecord).items)) {
+      return (payload as AnyRecord).items as Array<AnyRecord>;
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchCpdEvidence(subjectType: string, subjectId: string): Promise<AnyRecord> {
+  const r = await apiClient.get<{ data: AnyRecord }>(
+    `${V11}/cpd/evidence?subjectType=${encodeURIComponent(subjectType)}&subjectId=${encodeURIComponent(subjectId)}`,
+  );
+  return r.data.data ?? {};
+}
+
+export function summarizeCpdCredits(payload: AnyRecord): number {
+  const root = payload ?? {};
+  const completions = root.cpdEligibleCompletions ?? root.items;
+  if (Array.isArray(completions)) return completions.length;
+  const count = root.cpdEligibleCount ?? root.totalCredits ?? root.credits;
+  return typeof count === "number" ? count : Number(count) || 0;
+}
