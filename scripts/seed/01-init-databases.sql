@@ -82,6 +82,8 @@ CREATE DATABASE impilo_search;
 CREATE DATABASE impilo_channels;
 CREATE DATABASE impilo_connector_fhir;
 CREATE DATABASE impilo_dispatch;
+CREATE DATABASE impilo_ndila;
+CREATE DATABASE impilo_nhume;
 CREATE DATABASE impilo_rules;
 CREATE DATABASE impilo_workflow;
 CREATE DATABASE impilo_schema_registry;

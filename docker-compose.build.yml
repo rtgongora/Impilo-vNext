@@ -32,7 +32,6 @@ services:
         set -eo pipefail
         echo "=== Installing Maven ==="
         apt-get update -qq
-        rm -rf /var/lib/apt/lists/*
         DEBIAN_FRONTEND=noninteractive apt-get install -y -qq maven bash findutils >/dev/null
         rm -rf /var/lib/apt/lists/*
         echo "=== Building all services (skip tests for build phase) ==="
