@@ -56,7 +56,7 @@
 - [ ] **MADI:** `/madi` — donor pathway, blood bank, transfusion
 - [ ] **MusheX:** `/wallet`, `/finance/mushex-platform` — payment/wallet credit
 - [ ] **Costa:** `/finance/costa/encounter/{id}` — billing trigger
-- [ ] **Fundo:** `/learning/catalog` — enrol, progress
+- [ ] **Fundo:** `/learning/catalog` — enrol, progress, assessment, certificate (`e2e/fundo-learning-flow.spec.ts`)
 - [ ] **Coverage:** `/coverage/enroll`, `/coverage/member`
 - [ ] **Public health:** `/public-health/site-registry` — Ndila map markers
 - [ ] **Enterprise:** `/enterprise` drill-down; `/enterprise/warehousing` inventory KPIs

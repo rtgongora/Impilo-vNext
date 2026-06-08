@@ -36,7 +36,7 @@ The 45/46 figure was **metric-complete**, not **product-shippable**. Most Wave 2
 
 ### C — Metric-only bulk promotion (19)
 
-`chronic-care`, `patient-search-selection`, `facility-context-selection`, `workspace-context-selection`, `provider-login`, `credential-verification`, `provider-registry-onboarding`, `registry-administration`, `integration-sync-replay`, `notification-comms`, `reporting-dashboard`, `marketplace-order`, `dispatch-delivery`, `offline-clinical-queue`, `ai-guidance-nompilo`, `surveillance-outbreak`, `fundo-learning`, `social-community`, `public-health-outreach`, `crvs-ubomi`, `citizen-onboarding`
+`chronic-care`, `patient-search-selection`, `facility-context-selection`, `workspace-context-selection`, `provider-login`, `credential-verification`, `provider-registry-onboarding`, `registry-administration`, `integration-sync-replay`, `notification-comms`, `reporting-dashboard`, `marketplace-order`, `dispatch-delivery`, `offline-clinical-queue`, `ai-guidance-nompilo`, `surveillance-outbreak`, `social-community`, `public-health-outreach`, `crvs-ubomi`, `citizen-onboarding`
 
 Evidence was: `*-golden-thread.test.ts` (static source scan) + thin or missing BFF IT.
 
@@ -49,6 +49,7 @@ Wave 0 baseline (18) plus Wave 1 product-truth fixes (3):
 | `wallet-payment` | `WalletControllerTest.java` + `e2e/wallet-payment-flow.spec.ts` |
 | `coverage-enrollment` | `CoverageControllerTest.java` + `useCoverage.test.ts` + `e2e/coverage-enroll-flow.spec.ts` |
 | `document-upload` | `ClinicalDocumentsControllerTest.uploadAndIndex` + `documents/page.test.tsx` |
+| `fundo-learning` | `FundoNativeLmsIT` + `e2e/fundo-learning-compose.spec.ts` (real stack) + `e2e/fundo-cpd-council-flow.spec.ts` |
 
 Remaining 18 Wave 0 journeys unchanged (encounter, lab, blood, wellness, health-id, citizen-monitoring, etc.).
 

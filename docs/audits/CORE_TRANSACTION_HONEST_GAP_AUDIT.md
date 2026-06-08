@@ -47,7 +47,7 @@ See [`DEVICE_SYSTEM_EVENT_JOURNEY_WAIVER.md`](./DEVICE_SYSTEM_EVENT_JOURNEY_WAIV
 Removed from `COMPLETION_EVIDENCE` after skeptical audit — see [`PRODUCT_TRUTH_SKEPTICAL_AUDIT.md`](./PRODUCT_TRUTH_SKEPTICAL_AUDIT.md):
 
 - **Blockers:** `payment-billing-claim`, `telemedicine-encounter`, `consent-capture`
-- **Metric-only (19):** chronic-care, patient-search, facility/workspace context, provider-login, credential-verification, provider-registry-onboarding, registry-administration, integration-sync, notification-comms, reporting-dashboard, marketplace-order, dispatch-delivery, offline-clinical-queue, ai-guidance-nompilo, surveillance-outbreak, fundo-learning, social-community, public-health-outreach, crvs-ubomi, citizen-onboarding
+- **Metric-only (18):** chronic-care, patient-search, facility/workspace context, provider-login, credential-verification, provider-registry-onboarding, registry-administration, integration-sync, notification-comms, reporting-dashboard, marketplace-order, dispatch-delivery, offline-clinical-queue, ai-guidance-nompilo, surveillance-outbreak, social-community, public-health-outreach, crvs-ubomi, citizen-onboarding
 
 ## Chain template (per incomplete journey)
 
@@ -60,7 +60,7 @@ Each row records the **true gap** on:
 |---------|----------|
 | Provider Login & Role Activation | Device-block admin UX only |
 | Facility Context Selection | Digital readiness dashboards thin |
-| Fundo / Learning Journey | Mobile learning shell shallow |
+| Fundo / Learning Journey | Provincial UAT sign-off + PKI-signed credentials (credential-verification-service) deferred |
 | Social / Community / Timeline | Public-health alerts placeholder in rail |
 | Surveillance / Outbreak Response | Ndila map dashboards incomplete |
 | AI Guidance / Nompilo Assist | Route context not always passed to guidance BFF |

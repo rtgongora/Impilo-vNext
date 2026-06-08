@@ -67,6 +67,37 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 42 | Public health national oversight | | `/public-health/oversight` district/province drill-down + field task queue |
 | 43 | MADI blood logistics panel stock summary | | Blood-bank stock KPIs alongside Nhume dispatch boundary |
 
+### Fundo enrolment-ready (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| F0 | Compose learning-service healthy | | `./tools/dev/up.sh` — `:8235/actuator/health` |
+| F1 | Real-stack catalog e2e | | `PLAYWRIGHT_COMPOSE_E2E=1` + `fundo-learning-compose.spec.ts` |
+| F2 | Governed content + upload formats | | `FUNDO_CONTENT_FORMATS.md`, `/learning/library/uploads` |
+| F3 | Certificate verification digest | | Issue cert → detail shows SHA-256 digest |
+| F4 | Council CPD bridge UI | | `fundo-cpd-council-flow.spec.ts` + self-service page |
+| F5 | Assessment moderation queue | | `/learning/admin/moderation` |
+
+### Fundo LMS depth (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| F1 | Full learner journey e2e | | `e2e/fundo-learning-flow.spec.ts` — catalog→enrol→lessons→assessment→certificate→CPD |
+| F2 | Rich lesson delivery | | `FundoLessonContent` — video embed, practical checklist, documents |
+| F3 | Survey respond (no placeholder) | | `/learning/surveys/{id}/respond` — interactive activity + submit |
+| F4 | Provider mobile assessment + certificate | | `FundoLearningShellScreen` — submit attempt + issue certificate |
+| F5 | Preview: `/learning/catalog` live | | Requires `learning-service` pod healthy in preview stack |
+
+### Shell requirements A–D (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| A | Auth hero logo at 375 / 768 / 1280 | | `e2e/auth-hero-logo.spec.ts` — `data-testid="impilo-brand-hero"` on `/auth/login` |
+| B | Nompilo via taskbar only (no page chrome) | | No `ProactiveAssistant` / `FloatingClinicalAssist` in AppLayout/EHRLayout; taskbar Ask + Ctrl+K |
+| C | Role landing URLs + my_life mode | | `e2e/provider-login-flow.spec.ts` — provider→workspace, citizen→home+my_life, facility guard, activation |
+| C2 | Register elevation journey | | `e2e/register-elevation-flow.spec.ts` — Health ID self-reg, deferred professional elevation |
+| D | Lab catalog/reconcile live (no static shells) | | `useLabCatalog` / `useLabReconciliation`; `no-stub-guard` blocks static CATEGORIES |
+
 ### Preview-runtime depth (2026-06-08)
 
 | # | Check | Pass? | Notes |

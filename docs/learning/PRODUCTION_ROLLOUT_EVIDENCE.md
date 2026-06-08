@@ -22,9 +22,9 @@ Status values: `PENDING`, `IN_PROGRESS`, `SIGNED_OFF`, `BLOCKED`.
 
 | Environment | Tenant | Learner journey | Trainer/supervisor reports | Authoring | Assessment moderation | Certificates/CPD evidence | Sign-off owner | Status |
 |---|---|---|---|---|---|---|---|---|
-| SIT | MOHCC core |  |  |  |  |  |  | PENDING |
-| SIT | Provincial pilot A |  |  |  |  |  |  | PENDING |
-| UAT | MOHCC core |  |  |  |  |  |  | PENDING |
+| SIT | MOHCC core | `e2e/fundo-learning-flow.spec.ts` + `e2e/fundo-learning-compose.spec.ts` | Reports via `/learning/reports/*` | `/learning/library/uploads` + admin bind | `/learning/admin/moderation` | `verificationDigest` + `/learning/cpd` | Platform ops | SIGNED_OFF |
+| SIT | Provincial pilot A | compose smoke Test 5 |  | uploads guide | moderation queue | council bridge e2e | Provincial lead | IN_PROGRESS |
+| UAT | MOHCC core | compose + preview walk | cohort reports | studio authoring | manual review UAT | Varapi accept/reject | MOHCC LMS lead | IN_PROGRESS |
 | UAT | Provincial pilot A |  |  |  |  |  |  | PENDING |
 | Pre-prod | MOHCC core |  |  |  |  |  |  | PENDING |
 
@@ -67,7 +67,7 @@ Status values: `PENDING`, `IN_PROGRESS`, `SIGNED_OFF`, `BLOCKED`.
 
 | Date | Environment | Drill | Owner | Result | Notes |
 |---|---|---|---|---|---|
-|  |  |  |  | PENDING |  |
+| 2026-06-08 | SIT | BFF upstream timeout | Platform ops | PASS | Empty catalogue envelope; no fake rows |
 
 ## 4) Go-Live Decision Gate
 
