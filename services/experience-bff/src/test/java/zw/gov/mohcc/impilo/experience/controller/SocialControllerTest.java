@@ -16,6 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class SocialControllerTest {
 
     @Test
+    void suggestions_returnsEnvelope() {
+        SocialController controller = new SocialController(new StubCommunityClient());
+        ResponseEntity<Map<String, Object>> response =
+                controller.suggestions("req-2", "corr-2");
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
     void feed_returnsEnvelope() {
         SocialController controller = new SocialController(new StubCommunityClient());
         ResponseEntity<Map<String, Object>> response =
@@ -35,6 +43,11 @@ class SocialControllerTest {
             ArrayNode arr = mapper.createArrayNode();
             arr.add(mapper.createObjectNode().put("id", "post-1"));
             return arr;
+        }
+
+        @Override
+        public JsonNode socialSuggestions() {
+            return mapper.createObjectNode().set("communities", mapper.createArrayNode());
         }
     }
 }

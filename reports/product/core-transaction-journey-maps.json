@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-08T00:16:12.304Z",
+  "generatedAt": "2026-06-08T02:14:50.545Z",
   "journeyCount": 46,
   "journeys": [
     {
@@ -1206,7 +1206,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "mobile learning shell shallow",
+      "missingFrontendMobileWork": "mobile learning shell shallow (web catalogue/enrolment complete)",
       "relatedJourneys": [
         "provider-login",
         "credential-verification"
@@ -1214,7 +1214,7 @@
       "productOwnerAcceptanceTest": "Provider enrols, completes module, CPD reflected",
       "coreTransactionType": "TRAINING_OR_COMPETENCY",
       "lifecycleStage": "SERVICE_SELECTION",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "reporting-dashboard",
@@ -1687,7 +1687,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "wired",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "public health alerts placeholder in rail",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "notification-comms",
         "public-health-outreach"
@@ -1695,7 +1695,7 @@
       "productOwnerAcceptanceTest": "Citizen posts to feed with real BFF backing",
       "coreTransactionType": "WELLNESS",
       "lifecycleStage": "ACCESS_SERVICE",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "public-health-outreach",
@@ -2105,7 +2105,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "Ndila map dashboards incomplete",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "public-health-outreach",
         "reporting-dashboard"
@@ -2113,7 +2113,7 @@
       "productOwnerAcceptanceTest": "Outbreak signal investigated with campaign linkage",
       "coreTransactionType": "COMMUNITY_OUTREACH",
       "lifecycleStage": "REPORTING_ANALYTICS_AUDIT",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "ai-guidance-nompilo",
@@ -2166,7 +2166,7 @@
       "completionState": "COMPLETED",
       "currentImplementationStatus": "partial",
       "missingBackendWork": "",
-      "missingFrontendMobileWork": "route context not always passed to guidance BFF",
+      "missingFrontendMobileWork": "",
       "relatedJourneys": [
         "provider-patient-encounter",
         "wellness-journey"
@@ -2174,7 +2174,7 @@
       "productOwnerAcceptanceTest": "Nompilo explains next step with route context",
       "coreTransactionType": "ADMINISTRATIVE_HEALTH",
       "lifecycleStage": "COMPOSE_EXPERIENCE_VIEW",
-      "completionClassification": "backend-ready-but-frontend-incomplete"
+      "completionClassification": "transaction-complete"
     },
     {
       "journeyId": "credential-verification",

@@ -7,7 +7,8 @@ describe("fundo-learning golden thread", () => {
 
   it("UI route wires bounded-context client", () => {
     const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/learning/page.tsx"), "utf8");
-    expect(page).toContain("useFundo");
+    expect(page).toContain("useFundoMyLearning");
+    expect(page).toContain("FundoLearningOrchestrationRail");
   });
 
   it("hook calls BFF sovereign proxy", () => {

@@ -6,12 +6,13 @@ describe("surveillance-outbreak golden thread", () => {
   const repoRoot = resolve(__dirname, "../../../../..");
 
   it("UI route wires bounded-context client", () => {
-    const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/public-health/page.tsx"), "utf8");
-    expect(page).toContain("usePublicHealth");
+    const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/public-health/surveillance/page.tsx"), "utf8");
+    expect(page).toContain("SurveillanceOutbreakOrchestrationPanel");
+    expect(page).toContain("useSignals");
   });
 
   it("hook calls BFF sovereign proxy", () => {
-    const hook = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/hooks/queries/usePublicHealth.ts"), "utf8");
+    const hook = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/hooks/queries/useSurveillance.ts"), "utf8");
     expect(hook).toContain("/internal/v1/public-health");
   });
 

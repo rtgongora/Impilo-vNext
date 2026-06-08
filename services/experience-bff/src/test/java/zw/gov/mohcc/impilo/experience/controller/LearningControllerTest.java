@@ -17,6 +17,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class LearningControllerTest {
 
     @Test
+    void v11Catalog_returnsProxyEnvelope() {
+        LearningController controller = new LearningController(
+                new StubLearningClient(),
+                new StubNotificationClient(),
+                new RestTemplate(),
+                "http://localhost:8265");
+        ResponseEntity<Map<String, Object>> response = controller.v11Catalog("tenant-1", null, null, null, null, null, null, 5);
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
     void myLearning_returnsProxyEnvelope() {
         LearningController controller = new LearningController(
                 new StubLearningClient(),
@@ -38,6 +49,12 @@ class LearningControllerTest {
         @Override
         public JsonNode getV11(String relativePath, Map<String, Object> queryParams) {
             return mapper.createObjectNode().put("status", "OK");
+        }
+
+        @Override
+        public JsonNode getV11Catalog(
+                String status, String category, String level, Boolean cpdEligible, Boolean mandatory, String language, int limit) {
+            return mapper.createObjectNode().put("limit", limit).set("items", mapper.createArrayNode());
         }
 
         private static LearningServiceRuntimeProperties learningProps() {

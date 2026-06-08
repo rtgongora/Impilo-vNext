@@ -19,6 +19,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { SurveillanceOutbreakOrchestrationPanel } from "@/components/public-health/SurveillanceOutbreakOrchestrationPanel";
 import {
   useAlerts,
   useCases,
@@ -130,6 +131,7 @@ export default function SurveillanceDashboardPage() {
         subtitle="Syndrome signals, case registry, counters, and live alerts (Experience BFF → surveillance-service)"
       >
         <OrganizationPlaneContextBar />
+        <SurveillanceOutbreakOrchestrationPanel />
         <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
           <Link href="/public-health?tab=surveillance" className="text-indigo-600 hover:underline">
             ← Public health hub

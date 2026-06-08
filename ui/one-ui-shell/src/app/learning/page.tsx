@@ -6,6 +6,7 @@ import { GraduationCap } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { summarizeFundoMyLearning, useFundoMyLearning } from "@/hooks/queries/useFundoLms";
+import { FundoLearningOrchestrationRail } from "@/components/learning/FundoLearningOrchestrationRail";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 
 export default function LearningHubPage() {
@@ -25,6 +26,7 @@ export default function LearningHubPage() {
         subtitle="Native learning management, certification, in-service training, pre-service training and CPD support."
         icon={<GraduationCap className="h-6 w-6" />}
       >
+        <FundoLearningOrchestrationRail />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { label: "Continue learning", value: fundoKpis.inProgress, href: "/learning?focus=in-progress", focusKey: "in-progress" },

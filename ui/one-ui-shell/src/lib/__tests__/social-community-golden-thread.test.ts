@@ -8,6 +8,7 @@ describe("social-community golden thread", () => {
   it("UI route wires bounded-context client", () => {
     const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/social/page.tsx"), "utf8");
     expect(page).toContain("useSocialFeed");
+    expect(page).toContain("SocialCommunityOrchestrationRail");
   });
 
   it("hook calls BFF sovereign proxy", () => {

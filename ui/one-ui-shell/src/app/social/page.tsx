@@ -29,6 +29,7 @@ import { SocialRightRail } from "@/components/social/SocialRightRail";
 import { TimelineComposer } from "@/components/social/TimelineComposer";
 import { FeedScopeTabs } from "@/components/social/FeedScopeTabs";
 import { FeedList } from "@/components/social/FeedList";
+import { SocialCommunityOrchestrationRail } from "@/components/social/SocialCommunityOrchestrationRail";
 
 const ADMIN_ROLES = new Set(["facility-admin", "public-health-officer", "moderator", "tenant-admin", "district-manager", "provincial-manager", "national-manager"]);
 const ANNOUNCEMENT_ROLES = new Set(["facility-admin", "public-health-officer", "tenant-admin", "district-manager", "provincial-manager", "national-manager"]);
@@ -57,6 +58,7 @@ export default function SocialTimelinePage() {
         left={<SocialLeftRail showModeration={isAdmin} activeScope={scope} />}
         center={
           <div className="space-y-4">
+            <SocialCommunityOrchestrationRail />
             <FeedScopeTabs active={scope} onChange={setScope} />
             <TimelineComposer
               communities={communitiesQ.data ?? []}

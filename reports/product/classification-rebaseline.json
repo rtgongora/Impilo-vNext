@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-08T00:16:12.304Z",
+  "generatedAt": "2026-06-08T02:14:50.545Z",
   "authority": "docs/product/PHASE_4_PRODUCTION_COMPLETION_BAR.md",
   "staleBaseline": {
     "citizen-onboarding": "backend-ready-but-frontend-incomplete",
@@ -147,6 +147,12 @@
       "derived": "transaction-complete"
     },
     {
+      "id": "fundo-learning",
+      "journeyName": "Fundo / Learning Journey",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "reporting-dashboard",
       "journeyName": "Data / Report / Dashboard Journey",
       "previous": "backend-partial",
@@ -189,6 +195,12 @@
       "derived": "transaction-complete"
     },
     {
+      "id": "social-community",
+      "journeyName": "Social / Community / Timeline",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
       "id": "coverage-enrollment",
       "journeyName": "Coverage Enrollment",
       "previous": "backend-ready-but-frontend-incomplete",
@@ -204,6 +216,18 @@
       "id": "emergency-encounter",
       "journeyName": "Emergency / ED Encounter",
       "previous": "trust-security-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "surveillance-outbreak",
+      "journeyName": "Surveillance / Outbreak Response",
+      "previous": "backend-ready-but-frontend-incomplete",
+      "derived": "transaction-complete"
+    },
+    {
+      "id": "ai-guidance-nompilo",
+      "journeyName": "AI Guidance / Nompilo Assist",
+      "previous": "backend-ready-but-frontend-incomplete",
       "derived": "transaction-complete"
     },
     {
@@ -232,9 +256,8 @@
     }
   ],
   "measuredCounts": {
-    "transaction-complete": 36,
+    "transaction-complete": 40,
     "backend-partial": 4,
-    "backend-ready-but-frontend-incomplete": 4,
     "mobile-missing": 2
   }
 }

@@ -7,7 +7,8 @@ describe("ai-guidance-nompilo golden thread", () => {
 
   it("UI route wires bounded-context client", () => {
     const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/ask/page.tsx"), "utf8");
-    expect(page).toContain("useGuidance");
+    expect(page).toContain("useAskGuidance");
+    expect(page).toContain("buildNompiloRouteContext");
   });
 
   it("hook calls BFF sovereign proxy", () => {
