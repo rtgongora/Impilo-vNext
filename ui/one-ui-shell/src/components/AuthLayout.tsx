@@ -26,7 +26,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
-          <div>
+          <div data-testid="auth-desktop-hero-logo">
             <ImpiloBrandLogo variant="hero" tone="white" />
             <p className="text-sm text-impilo-100 mt-2">Health Operating System</p>
           </div>
@@ -76,7 +76,7 @@ export function AuthLayout({ children }: { children: ReactNode }) {
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md">
           {/* Mobile header */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-8" data-testid="auth-mobile-hero-logo">
             <div className="flex justify-center">
               <ImpiloBrandLogo variant="hero" />
             </div>

@@ -41,7 +41,10 @@ export function ImpiloBrandLogo({
     const heroHeight = 48;
     const heroWidth = Math.round(heroHeight * FULL_RATIO);
     return (
-      <span className={`inline-flex items-center ${className ?? ""}`}>
+      <span
+        className={`inline-flex items-center ${className ?? ""}`}
+        data-testid="impilo-brand-hero"
+      >
         <Image
           src={src}
           alt="Impilo"

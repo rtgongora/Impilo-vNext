@@ -41,6 +41,11 @@ const FORBIDDEN_PAGE_PATTERNS = [
     re: /label:\s*"(?:Pending Collection|In Progress|Completed|Urgent)".*value:\s*"0"/s,
     message: "Lab worklist KPI shell with hardcoded zero counts — wire useLabWorklist.",
   },
+  {
+    id: "lab-catalog-static-categories",
+    re: /const\s+CATEGORIES\s*=\s*\[[\s\S]*?(?:Haematology|Chemistry|Microbiology)/,
+    message: "Lab catalog static CATEGORIES array — wire useLabCatalog BFF hook.",
+  },
 ];
 
 function walk(dir, acc = []) {

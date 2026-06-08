@@ -1,40 +1,77 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useCreateInteractiveActivity, useSubmitInteractiveResponse } from "@/hooks/queries/useFundoStudio";
+import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
+import { useFundoInteractiveActivities, useSubmitInteractiveResponse } from "@/hooks/queries/useFundoStudio";
 
 export default function LearningSurveyRespondPage({ params }: { params: { surveyId: string } }) {
   const [text, setText] = useState("");
-  const createActivity = useCreateInteractiveActivity();
+  const [submitted, setSubmitted] = useState(false);
+  const subject = useLearningSubject();
+  const activitiesQ = useFundoInteractiveActivities(undefined, undefined, 100);
   const submitResponse = useSubmitInteractiveResponse(params.surveyId);
+
+  const activity = useMemo(() => {
+    const items = (activitiesQ.data?.data as { items?: Array<Record<string, unknown>> } | undefined)?.items ?? [];
+    return items.find((row) => String(row.id) === params.surveyId) ?? null;
+  }, [activitiesQ.data, params.surveyId]);
+
+  const prompt =
+    String(activity?.title ?? activity?.prompt ?? "") ||
+    "Share your feedback on this learning experience.";
 
   async function onSubmit() {
     await submitResponse.mutateAsync({
-      subjectType: "USER_HEALTH_ID",
-      subjectId: "self",
+      subjectType: subject.subjectType,
+      subjectId: subject.subjectId,
       response: { text, submittedFrom: "survey-respond-page" },
     });
-  }
-
-  async function onCreateAsyncSurveyPlaceholder() {
-    await createActivity.mutateAsync({
-      activityType: "SURVEY",
-      title: "Fallback survey placeholder",
-      config: { linkedSurveyId: params.surveyId },
-    });
+    setSubmitted(true);
   }
 
   return (
     <AppLayout>
-      <PageShell title="Respond to Survey" subtitle="Non-scored survey/feedback response flow.">
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} className="h-32 w-full rounded border border-gray-300 px-3 py-2 text-sm" />
-          <div className="mt-2 flex gap-2">
-            <button onClick={onSubmit} className="rounded bg-teal-600 px-3 py-2 text-sm text-white">Submit response</button>
-            <button onClick={onCreateAsyncSurveyPlaceholder} className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700">Create async survey placeholder</button>
+      <PageShell title="Respond to Survey" subtitle="Non-scored survey and feedback capture via Fundo interactive activities.">
+        <div className="mb-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+          Responses are stored as learning feedback evidence. They do not auto-award CPD credits.
+        </div>
+        <div className="rounded border border-gray-200 bg-white p-4" data-testid="fundo-survey-respond">
+          {activitiesQ.isLoading ? <p className="text-sm text-gray-600">Loading survey…</p> : null}
+          {!activitiesQ.isLoading && !activity ? (
+            <p className="text-sm text-amber-800">Survey activity {params.surveyId} was not found. You can still submit a free-text response.</p>
+          ) : null}
+          <p className="text-sm font-medium text-gray-900">{prompt}</p>
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="mt-3 h-32 w-full rounded border border-gray-300 px-3 py-2 text-sm"
+            placeholder="Your feedback"
+            data-testid="fundo-survey-response"
+          />
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              onClick={onSubmit}
+              disabled={!text.trim() || submitResponse.isPending}
+              className="rounded bg-teal-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+              data-testid="fundo-survey-submit"
+            >
+              Submit response
+            </button>
+            <Link href="/learning" className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-700">
+              Back to Fundo
+            </Link>
           </div>
+          {submitted ? (
+            <p className="mt-3 text-sm text-emerald-700" data-testid="fundo-survey-success">
+              Thank you — your response was recorded.
+            </p>
+          ) : null}
+          {submitResponse.isError ? (
+            <p className="mt-2 text-xs text-rose-600">Submit failed. Retry when learning-service is available.</p>
+          ) : null}
         </div>
       </PageShell>
     </AppLayout>

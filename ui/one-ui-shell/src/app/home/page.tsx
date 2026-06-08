@@ -972,6 +972,9 @@ export default function HomePage() {
     return (
       <AppLayout>
         <PageShell title="Home">
+          <span data-testid="home-operational-mode" className="sr-only">
+            {operationalMode}
+          </span>
           <CitizenHome user={user} greeting={greeting} />
         </PageShell>
       </AppLayout>
@@ -982,6 +985,9 @@ export default function HomePage() {
   return (
     <AppLayout>
       <PageShell title="Home">
+        <span data-testid="home-operational-mode" className="sr-only">
+          {operationalMode}
+        </span>
         <div className="space-y-6">
           {/* Welcome + Context */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">

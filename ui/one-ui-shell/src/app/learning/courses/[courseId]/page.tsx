@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, BookOpenCheck, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -16,6 +16,7 @@ import { useLearningSubject } from "@/components/learning/LearningSubjectPicker"
  */
 export default function LearningCourseDetailPage() {
   const params = useParams<{ courseId: string }>();
+  const router = useRouter();
   const courseId = typeof params?.courseId === "string" ? params.courseId : undefined;
   const { data, isLoading, isError } = useFundoCourseStructure(courseId);
   const createEnrolment = useCreateFundoEnrolment();
@@ -87,15 +88,20 @@ export default function LearningCourseDetailPage() {
               ) : null}
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={() =>
-                    createEnrolment.mutate({
+                  onClick={async () => {
+                    const res = (await createEnrolment.mutateAsync({
                       courseId: structure.id,
                       subjectType: subject.subjectType,
                       subjectId: subject.subjectId,
                       enrolmentType: "SELF",
-                    })
-                  }
+                    })) as { data?: { enrolment?: { id?: string } } };
+                    const enrolmentId = String(res?.data?.enrolment?.id ?? "");
+                    if (enrolmentId) {
+                      router.push(`/learning/enrolments/${enrolmentId}`);
+                    }
+                  }}
                   className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+                  data-testid="fundo-enrol-button"
                 >
                   Enrol / Continue
                 </button>

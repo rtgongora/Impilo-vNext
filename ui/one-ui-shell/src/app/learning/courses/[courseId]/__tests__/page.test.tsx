@@ -53,6 +53,7 @@ const { structureState } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ courseId: "course-1" }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("@/components/AppLayout", () => ({
@@ -82,7 +83,7 @@ vi.mock("@/hooks/queries/useFundoCatalog", () => ({
 }));
 
 vi.mock("@/hooks/queries/useFundoLms", () => ({
-  useCreateFundoEnrolment: () => ({ mutate: vi.fn() }),
+  useCreateFundoEnrolment: () => ({ mutate: vi.fn(), mutateAsync: vi.fn() }),
 }));
 
 vi.mock("@/components/learning/LearningSubjectPicker", () => ({

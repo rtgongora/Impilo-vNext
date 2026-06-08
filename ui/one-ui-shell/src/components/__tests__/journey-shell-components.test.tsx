@@ -51,16 +51,8 @@ vi.mock("@/components/navigation/ExperienceSidebar", () => ({
   ExperienceSidebar: () => null,
 }));
 
-vi.mock("@/components/intelligent/ProactiveAssistant", () => ({
-  ProactiveAssistant: () => null,
-}));
-
 vi.mock("@/components/clinical/ClinicalSupportStrip", () => ({
   ClinicalSupportStrip: () => null,
-}));
-
-vi.mock("@/components/clinical/FloatingClinicalAssist", () => ({
-  FloatingClinicalAssist: () => null,
 }));
 
 vi.mock("@/components/ui/DictationButton", () => ({
@@ -88,7 +80,7 @@ describe("journey shell components", () => {
     expect(image?.className).toContain("lg:h-14");
   });
 
-  it("does not render the full-width Nompilo command strip in AppLayout", () => {
+  it("does not render Nompilo page chrome in AppLayout", () => {
     mockUsePathname.mockReturnValue("/home");
     render(
       <AppLayout>
@@ -96,6 +88,7 @@ describe("journey shell components", () => {
       </AppLayout>,
     );
     expect(screen.queryByText("Nompilo Command Layer")).not.toBeInTheDocument();
+    expect(screen.queryByTitle("Nompilo — contextual help")).not.toBeInTheDocument();
     expect(screen.getByText("content")).toBeInTheDocument();
   });
 

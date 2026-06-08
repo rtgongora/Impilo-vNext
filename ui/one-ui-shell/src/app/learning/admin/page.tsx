@@ -9,6 +9,8 @@ export default function LearningAdminHomePage() {
     ["/learning/admin/courses", "Courses"],
     ["/learning/admin/pathways", "Pathways"],
     ["/learning/admin/assessments", "Assessments"],
+    ["/learning/admin/moderation", "Moderation queue"],
+    ["/learning/library/uploads", "Content uploads"],
   ];
   return (
     <AppLayout>

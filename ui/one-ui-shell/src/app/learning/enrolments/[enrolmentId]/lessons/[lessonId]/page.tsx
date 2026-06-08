@@ -4,46 +4,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FundoLessonContent } from "@/components/learning/FundoLessonContent";
 import { useFundoEnrolment, useFundoEnrolmentProgress, useOpenFundoLesson, useRecordFundoProgress } from "@/hooks/queries/useFundoLms";
 import { useFundoCourseStructure } from "@/hooks/queries/useFundoCatalog";
 type AnyRecord = Record<string, unknown>;
-
-function renderLessonBody(lesson: AnyRecord) {
-  const contentType = String(lesson.contentType ?? "TEXT");
-  const contentFormat = String(lesson.contentFormat ?? "PLAIN_TEXT");
-  const body = String(lesson.contentBody ?? "");
-  const ref = String(lesson.contentRef ?? "");
-  const blocksRaw = String(lesson.contentBlocksJson ?? "");
-  let blocks: Array<Record<string, unknown>> = [];
-  if (blocksRaw) {
-    try {
-      const parsed = JSON.parse(blocksRaw);
-      if (Array.isArray(parsed)) blocks = parsed as Array<Record<string, unknown>>;
-    } catch {
-      blocks = [];
-    }
-  }
-  if (contentFormat === "STRUCTURED_BLOCKS" && blocks.length > 0) {
-    return (
-      <div className="space-y-2">
-        {blocks.map((block, idx) => (
-          <div key={`${String(block.type ?? "block")}-${idx}`}>
-            {String(block.type) === "heading" ? (
-              <h3 className="text-sm font-semibold text-gray-900">{String(block.text ?? "")}</h3>
-            ) : (
-              <p className="text-sm whitespace-pre-wrap text-gray-700">{String(block.text ?? "")}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-  if (contentType === "TEXT") return <p className="text-sm whitespace-pre-wrap text-gray-700">{body || "No text content provided."}</p>;
-  if (contentType === "DOCUMENT") return <p className="text-sm text-gray-700">Document reference: <a className="text-teal-700 hover:underline" href={ref} target="_blank" rel="noreferrer">{ref || "No document link"}</a></p>;
-  if (contentType === "LINK") return <p className="text-sm text-gray-700">External link: <a className="text-teal-700 hover:underline" href={ref} target="_blank" rel="noreferrer">{ref || "No link provided"}</a></p>;
-  if (contentType === "VIDEO") return <p className="text-sm text-gray-700">Video reference: <a className="text-teal-700 hover:underline" href={ref} target="_blank" rel="noreferrer">{ref || "No video URL provided"}</a></p>;
-  return <p className="text-sm text-gray-700">Practical task placeholder: {body || ref || "No details provided."}</p>;
-}
 
 export default function LessonPlayerPage() {
   const params = useParams<{ enrolmentId: string; lessonId: string }>();
@@ -69,17 +33,18 @@ export default function LessonPlayerPage() {
 
   return (
     <AppLayout>
-      <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle="Text/document/video/practical task rendering with completion controls.">
+      <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle="Native Fundo lesson player with text, media, documents, and practical tasks.">
         <div className="rounded border border-gray-200 bg-white p-4">
           <p className="text-sm text-gray-600">Lesson ID: {lessonId}</p>
-          <p className="mt-2 text-xs text-gray-500">Current progress: {currentPercent}%</p>
+          <p className="mt-2 text-xs text-gray-500" data-testid="fundo-lesson-progress">Current progress: {currentPercent}%</p>
           <div className="mt-3 rounded border border-gray-100 bg-gray-50 p-3">
-            {renderLessonBody(currentLesson)}
+            <FundoLessonContent lesson={currentLesson} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => lessonId && enrolmentId && openMutation.mutate({ lessonId, enrolmentId })}
               className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
+              data-testid="fundo-lesson-open"
             >
               Open lesson
             </button>
@@ -90,6 +55,7 @@ export default function LessonPlayerPage() {
                 progressMutation.mutate({ enrolmentId, lessonId, progressPercent: 100 })
               }
               className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
+              data-testid="fundo-lesson-mark-complete"
             >
               Mark complete
             </button>
@@ -104,7 +70,7 @@ export default function LessonPlayerPage() {
                 <span className="text-gray-400">Previous lesson</span>
               )}
             </div>
-            <Link href={`/learning/enrolments/${enrolmentId}`} className="text-gray-600 hover:underline">
+            <Link href={`/learning/enrolments/${enrolmentId}`} className="text-gray-600 hover:underline" data-testid="fundo-lesson-back-enrolment">
               Back to course player
             </Link>
             <div>

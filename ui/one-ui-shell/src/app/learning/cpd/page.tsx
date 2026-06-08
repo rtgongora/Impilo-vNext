@@ -43,7 +43,7 @@ export default function CpdEvidencePage() {
           </div>
         </div>
 
-        <ul className="space-y-2">
+        <ul className="space-y-2" data-testid="fundo-cpd-evidence-list">
           {evidence.map((e, index) => (
             <li
               key={String(e.certificateId ?? e.completionId ?? e.enrolmentId ?? index)}

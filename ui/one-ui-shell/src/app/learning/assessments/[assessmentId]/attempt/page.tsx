@@ -89,7 +89,12 @@ export default function AssessmentAttemptPage() {
             </div>
           ))}
         </div>
-        <button onClick={submit} className="mt-4 rounded bg-teal-700 px-3 py-1.5 text-sm text-white disabled:opacity-50" disabled={submitMutation.isPending}>
+        <button
+          onClick={submit}
+          className="mt-4 rounded bg-teal-700 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          disabled={submitMutation.isPending}
+          data-testid="fundo-assessment-submit"
+        >
           Submit attempt
         </button>
         {submitMutation.isError ? (

@@ -61,6 +61,7 @@ export default function EnrolmentPlayerPage() {
             onClick={() => enrolmentId && canIssueCertificate && certMutation.mutate(enrolmentId)}
             className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canIssueCertificate}
+            data-testid="fundo-issue-certificate"
           >
             Issue certificate
           </button>

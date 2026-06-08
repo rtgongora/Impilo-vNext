@@ -12,7 +12,7 @@
  *   [ClinicalToolbar — pathways, EDLIZ, CDS, tools]
  *   [ClinicalWizardHeader — configurable encounter workflow]
  *   [EncounterMenu] [Main Content Area + ClinicalKnowledgeDock]
- *   [FloatingClinicalAssist — Nompilo / helpdesk]
+ *   Nompilo via ShellChrome taskbar (Ask / Ctrl+K), not floating page chrome.
  */
 
 import { useState, type ReactNode, useMemo, useEffect } from "react";
@@ -27,7 +27,6 @@ import { ClinicalToolbar } from "@/components/clinical/ClinicalToolbar";
 import { ClinicalKnowledgeDock } from "@/components/clinical/ClinicalKnowledgeDock";
 import { ClinicalSupportStrip } from "@/components/clinical/ClinicalSupportStrip";
 import { ClinicalWizardHeader } from "@/components/clinical/ClinicalWizardHeader";
-import { FloatingClinicalAssist } from "@/components/clinical/FloatingClinicalAssist";
 import { ClinicalWorkflowProvider, type ClinicalWorkflowConfig } from "@/components/clinical/ClinicalWorkflowContext";
 import { useEncounters } from "@/hooks/queries/useEncounters";
 import {
@@ -137,7 +136,6 @@ export function EHRLayout({ children }: { children: ReactNode }) {
               <ClinicalKnowledgeDock />
             </main>
           </div>
-          {isEhrShell && <FloatingClinicalAssist />}
         </div>
       </ClinicalGuidanceProvider>
     </ClinicalWorkflowProvider>

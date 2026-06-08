@@ -14,7 +14,7 @@ export default function CertificatesPage() {
   return (
     <AppLayout>
       <PageShell title="Certificates" subtitle="Native certificate metadata (not signed credential issuance in this phase).">
-        <ul className="space-y-2">
+        <ul className="space-y-2" data-testid="fundo-certificate-list">
           {items.map((c) => (
             <li key={String(c.id)} className="rounded border border-gray-200 bg-white p-3 text-sm">
               <p className="font-medium text-gray-900">{String(c.title ?? c.certificateNumber)}</p>
