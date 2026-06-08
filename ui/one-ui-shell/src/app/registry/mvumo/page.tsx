@@ -12,6 +12,12 @@ import {
   useMvumoAdminTemplates,
   useUpdateMvumoTemplate,
 } from "@/hooks/queries/useMvumoAdmin";
+import {
+  useCreateMvumoRemoteSession,
+  useGrantMvumoRemoteSession,
+  useMvumoRemoteSession,
+  useVerifyMvumoRemoteSession,
+} from "@/hooks/queries/useMvumoRemoteSessions";
 
 function templateKeyOf(row: Record<string, unknown>): string {
   const key = row.templateKey ?? row.template_key ?? row.id;
@@ -35,11 +41,17 @@ export default function MvumoRegistryPage() {
     channel: "FACILITY_ASSISTED",
   });
   const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
+  const [remoteSessionId, setRemoteSessionId] = useState("");
+  const [remoteToken, setRemoteToken] = useState("");
 
   const templates = useMvumoAdminTemplates();
   const createTemplate = useCreateMvumoTemplate();
   const updateTemplate = useUpdateMvumoTemplate();
   const createConsentRequest = useCreateMvumoConsentRequest();
+  const createRemoteSession = useCreateMvumoRemoteSession();
+  const remoteSessionQ = useMvumoRemoteSession(remoteSessionId || undefined);
+  const verifyRemoteSession = useVerifyMvumoRemoteSession();
+  const grantRemoteSession = useGrantMvumoRemoteSession();
 
   const templateRows = useMemo(() => {
     const raw = templates.data?.data;
@@ -233,6 +245,73 @@ export default function MvumoRegistryPage() {
                 .
               </p>
             ) : null}
+          </section>
+
+          <section className="rounded-2xl border border-violet-100 bg-white p-5">
+            <h2 className="text-lg font-semibold text-gray-900">Remote-session admin</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Governed MVUMO remote consent sessions — <code>/internal/v1/mvumo/remote-sessions/*</code>
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={createRemoteSession.isPending}
+                onClick={() =>
+                  createRemoteSession.mutate(
+                    {
+                      subjectPatientRef: consentForm.subjectPatientRef || "patient-demo",
+                      workflowRef: "registry-remote-consent",
+                      channel: "REMOTE_LINK",
+                    },
+                    {
+                      onSuccess: (res) => {
+                        const raw = res.data as Record<string, unknown> | undefined;
+                        const id = raw?.id != null ? String(raw.id) : "";
+                        if (id) setRemoteSessionId(id);
+                      },
+                    },
+                  )
+                }
+                className="rounded-lg bg-violet-600 px-3 py-2 text-xs font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+              >
+                Create remote session
+              </button>
+              <input
+                value={remoteSessionId}
+                onChange={(e) => setRemoteSessionId(e.target.value)}
+                placeholder="Session UUID"
+                className="min-w-[240px] rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono"
+              />
+            </div>
+            {remoteSessionId ? (
+              <p className="mt-2 text-xs text-slate-600">
+                Status: {String((remoteSessionQ.data?.data as Record<string, unknown> | undefined)?.status ?? "—")}
+              </p>
+            ) : null}
+            <div className="mt-3 flex flex-wrap items-end gap-2">
+              <input
+                value={remoteToken}
+                onChange={(e) => setRemoteToken(e.target.value)}
+                placeholder="Verification token"
+                className="min-w-[200px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                disabled={!remoteSessionId || verifyRemoteSession.isPending}
+                onClick={() => verifyRemoteSession.mutate({ sessionId: remoteSessionId, token: remoteToken || undefined })}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
+              >
+                Verify
+              </button>
+              <button
+                type="button"
+                disabled={!remoteSessionId || grantRemoteSession.isPending}
+                onClick={() => grantRemoteSession.mutate({ sessionId: remoteSessionId })}
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Grant
+              </button>
+            </div>
           </section>
 
           <Link

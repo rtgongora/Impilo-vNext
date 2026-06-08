@@ -8,12 +8,12 @@
  * admin APIs (`FinanceMushexPlatformController`). All requests pick up v1.2
  * trust headers via {@link apiClient}; no new API client is introduced.</p>
  *
- * <p>Stage 3.3 ({@code G-2}) — this hub surfaces only the existing GET routes.
- * Write/admin operations (create wallet, credit/debit, create remittance,
- * create card profile, create reversal) are deliberately not wired here.</p>
+ * <p>Stage 3.3 ({@code G-2}) — the hub primarily surfaces GET routes. Wave 4 adds
+ * one controlled write mutation (wallet credit / top-up) where the BFF already
+ * proxies {@code POST /wallets/{walletId}/credit}.</p>
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 
 /**
@@ -260,4 +260,48 @@ export function extractRecord(payload: MushexPlatformPayload): Record<string, un
     return obj.data as Record<string, unknown>;
   }
   return obj;
+}
+
+/**
+ * Wave 4 controlled write — custodial wallet credit (top-up).
+ * POST /internal/v1/finance/mushex-platform/wallets/{walletId}/credit
+ */
+export function useMushexPlatformWalletCredit(walletId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation<MushexPlatformPayload, unknown, Record<string, unknown>>({
+    mutationFn: (body) =>
+      apiClient.post<MushexPlatformPayload>(
+        `/internal/v1/finance/mushex-platform/wallets/${encodeURIComponent(walletId ?? "")}/credit`,
+        body,
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["finance", "mushex-platform", "wallets"] });
+      if (walletId) {
+        await qc.invalidateQueries({
+          queryKey: ["finance", "mushex-platform", "wallets", walletId, "transactions"],
+        });
+        await qc.invalidateQueries({
+          queryKey: ["finance", "mushex-platform", "wallet", walletId],
+        });
+      }
+    },
+  });
+}
+
+/**
+ * Wave 4 controlled write — submit remittance transfer.
+ * POST /internal/v1/finance/mushex-platform/remittance-transfers
+ */
+export function useMushexPlatformCreateRemittance() {
+  const qc = useQueryClient();
+  return useMutation<MushexPlatformPayload, unknown, Record<string, unknown>>({
+    mutationFn: (body) =>
+      apiClient.post<MushexPlatformPayload>(
+        "/internal/v1/finance/mushex-platform/remittance-transfers",
+        body,
+      ),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["finance", "mushex-platform", "remittance-transfers"] });
+    },
+  });
 }

@@ -24,7 +24,9 @@ import {
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { TelemedicineCareChainRail } from "@/components/telemedicine/TelemedicineCareChainRail";
 import { TelemedicineEncounterOrchestrationRail } from "@/components/telemedicine/TelemedicineEncounterOrchestrationRail";
+import { TelemedicineRtcHealthPanel } from "@/components/telemedicine/TelemedicineRtcHealthPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
@@ -199,7 +201,9 @@ export default function TelemedicinePage() {
             : "Select a facility to start or join telemedicine sessions"
         }
       >
-        <div className="mb-4">
+        <div className="mb-4 space-y-4">
+          <TelemedicineCareChainRail />
+          <TelemedicineRtcHealthPanel />
           <TelemedicineEncounterOrchestrationRail />
         </div>
         <div className="mb-6">

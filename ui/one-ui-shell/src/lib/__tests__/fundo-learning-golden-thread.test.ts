@@ -20,4 +20,18 @@ describe("fundo-learning golden thread", () => {
     const controller = readFileSync(resolve(repoRoot, "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/LearningController.java"), "utf8");
     expect(controller).toContain("/internal/v1/learning");
   });
+
+  it("provider mobile FundoLearningShellScreen uses learning BFF", () => {
+    const screen = readFileSync(
+      resolve(repoRoot, "apps/mobile/provider-app/src/screens/provider/FundoLearningShellScreen.tsx"),
+      "utf8",
+    );
+    expect(screen).toContain("fundoLearningService");
+    expect(screen).toContain("fetchMyLearning");
+    const service = readFileSync(
+      resolve(repoRoot, "apps/mobile/provider-app/src/services/fundoLearningService.ts"),
+      "utf8",
+    );
+    expect(service).toContain("/internal/v1/learning/v11");
+  });
 });

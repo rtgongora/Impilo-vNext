@@ -22,6 +22,7 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
@@ -37,7 +38,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useCostaIntelCostEvents } from "@/hooks/queries/useCostaIntel";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { useCostaIntelCostEvents, useCostaIntelInvoiceFromEstimate } from "@/hooks/queries/useCostaIntel";
 import {
   useFinanceBillingInvoicesForEncounter,
   useFinanceBillingSubsidiesForEncounter,
@@ -301,6 +303,13 @@ export default function CostaEncounterTimelinePage() {
   const costEventsQ = useCostaIntelCostEvents(encounterId, patientCpid);
   const invoicesQ = useFinanceBillingInvoicesForEncounter(encounterId, Boolean(encounterId));
   const subsidiesQ = useFinanceBillingSubsidiesForEncounter(encounterId, Boolean(encounterId));
+  const issueInvoiceM = useCostaIntelInvoiceFromEstimate();
+  const [invoiceReason, setInvoiceReason] = useState("");
+  const [invoiceConfirmed, setInvoiceConfirmed] = useState(false);
+  const [invoiceErr, setInvoiceErr] = useState<string | null>(null);
+  const [invoiceJson, setInvoiceJson] = useState(() =>
+    JSON.stringify({ cost_estimate_id: "", encounter_id: encounterId }, null, 2),
+  );
 
   const decisionRows = (decisionsQ.data ?? []).map(decisionToRow);
   const costEventRows = (costEventsQ.data ?? [])
@@ -391,8 +400,8 @@ export default function CostaEncounterTimelinePage() {
                   </div>
                 </dl>
                 <p className="mt-3 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-600">
-                  Read-only view. Acting on a decision or charge sheet still happens on the
-                  dedicated finance surfaces linked below.
+                  Timeline is read-only. Issue-invoice-from-estimate is the one actionable billing trigger
+                  exposed here when a cost estimate id is available.
                 </p>
               </div>
             </div>
@@ -523,6 +532,71 @@ export default function CostaEncounterTimelinePage() {
                 )}
               </div>
             </div>
+          </section>
+
+          {/* Actionable billing trigger — issue invoice from cost estimate */}
+          <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900">Billing trigger — issue invoice from estimate</h2>
+            <p className="mt-1 text-xs text-slate-600">
+              POST{" "}
+              <code className="text-[10px]">
+                /internal/v1/finance/costa-intel/invoices/from-cost-estimate
+              </code>
+              . Use when charge sheet rows and a cost estimate id are ready for invoice issuance on this
+              encounter.
+            </p>
+            <textarea
+              aria-label="Invoice-from-estimate JSON"
+              className="mt-3 min-h-[120px] w-full rounded-lg border border-slate-200 p-2 font-mono text-xs"
+              value={invoiceJson}
+              onChange={(e) => setInvoiceJson(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Reason for this write (required)"
+              className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+              value={invoiceReason}
+              onChange={(e) => setInvoiceReason(e.target.value)}
+            />
+            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={invoiceConfirmed}
+                onChange={(e) => setInvoiceConfirmed(e.target.checked)}
+              />
+              I confirm this is an intentional billing write for this encounter.
+            </label>
+            {invoiceErr ? <p className="mt-2 text-xs text-red-700">{invoiceErr}</p> : null}
+            <button
+              type="button"
+              disabled={issueInvoiceM.isPending || !invoiceConfirmed || !invoiceReason.trim()}
+              className="mt-2 rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+              onClick={() => {
+                try {
+                  const parsed = JSON.parse(invoiceJson) as Record<string, unknown>;
+                  if (!parsed.encounter_id && encounterId) parsed.encounter_id = encounterId;
+                  parsed.audit_reason = invoiceReason.trim();
+                  setInvoiceErr(null);
+                  issueInvoiceM.mutate(parsed);
+                } catch {
+                  setInvoiceErr("Invalid JSON payload.");
+                }
+              }}
+            >
+              {issueInvoiceM.isPending ? "Issuing invoice…" : "Issue invoice from estimate"}
+            </button>
+            {issueInvoiceM.data || issueInvoiceM.isError ? (
+              <div className="mt-3">
+                <QueryResultPanel
+                  title="Issue invoice result"
+                  isPending={issueInvoiceM.isPending}
+                  isLoading={issueInvoiceM.isPending}
+                  isError={issueInvoiceM.isError}
+                  error={issueInvoiceM.error}
+                  data={issueInvoiceM.data}
+                />
+              </div>
+            ) : null}
           </section>
 
           {/* Honest gap card — what we don't show yet and why */}

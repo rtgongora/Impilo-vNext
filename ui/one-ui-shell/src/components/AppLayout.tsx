@@ -7,7 +7,7 @@
  * Structure (union of one-ui-shell + ui/experience evolutions):
  *   [Off-canvas zone nav]
  *   [Header Bar (Menu, breadcrumbs, facility/workspace/shift chips, user)]
- *   [NompiloGlobalCommandBar + RoleJourneyNavigation + AccessibilityToolbar]
+ *   [RoleJourneyNavigation + AccessibilityToolbar — compact shell affordances]
  *   [ClinicalSupportStrip - operational comms / help / system support, when authenticated]
  *   [OperationalContextStrip]
  *   [Main Content Area]
@@ -22,7 +22,6 @@ import { ExperienceSidebar } from "./navigation/ExperienceSidebar";
 import { RoleJourneyNavigation } from "./navigation/RoleJourneyNavigation";
 import { ModuleBreadcrumb } from "./navigation/ModuleBreadcrumb";
 import { OperationalContextStrip } from "./experience/OperationalContextStrip";
-import { NompiloGlobalCommandBar } from "./intelligent/NompiloGlobalCommandBar";
 import { ProactiveAssistant } from "./intelligent/ProactiveAssistant";
 import { AccessibilityToolbar } from "./accessibility/AccessibilityToolbar";
 import { ClinicalSupportStrip } from "@/components/clinical/ClinicalSupportStrip";
@@ -112,9 +111,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
             )}
           </div>
         </header>
-        <div className="border-b border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-3 sm:px-6">
-          <div className="space-y-2">
-            <NompiloGlobalCommandBar />
+        <div className="border-b border-[color:var(--border-soft)] bg-[color:var(--surface-soft)] px-4 py-2 sm:px-6">
+          <div className="space-y-1">
             <RoleJourneyNavigation />
             <AccessibilityToolbar />
           </div>

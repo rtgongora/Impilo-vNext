@@ -31,6 +31,7 @@ import { PageShell } from "@/components/PageShell";
 import { apiClient } from "@/lib/api-client";
 import { DiscoverFacilitiesMapPanel } from "@/components/maps/DiscoverFacilitiesMapPanel";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { OfflineClinicalQueueOrchestrationPanel } from "@/components/clinical/OfflineClinicalQueueOrchestrationPanel";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE & DATA DEFINITIONS
@@ -1142,6 +1143,7 @@ function OfflineTab() {
 
   return (
     <div className="space-y-6">
+      <OfflineClinicalQueueOrchestrationPanel />
       <div className="bg-impilo-50 rounded-lg border border-impilo-200 p-4 text-sm text-impilo-700">
         <strong>Offline Sync Engine:</strong> The mobile app syncs data in the background every 30 seconds. Conflicts are presented for user resolution. All operations are queued and replayed when connectivity resumes.
       </div>

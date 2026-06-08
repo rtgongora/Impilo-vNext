@@ -1,5 +1,4 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 /**
  * Provider council self-service — obligations, Fundo CPD candidates, renewal context.
  * Route: /registry/provider-council/self-service
@@ -13,6 +12,8 @@ import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneCo
 import { IntelligenceResultPanel } from "@/components/intelligence/IntelligenceResultPanel";
 import { PageShell } from "@/components/PageShell";
 import { useIntelligenceQuery } from "@/hooks/useIntelligence";
+import { CouncilObligationPaymentPanel } from "@/components/registry/CouncilObligationPaymentPanel";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { useFundoCpdCandidates, useProviderCouncilObligations } from "@/hooks/queries/useProviderCouncil";
 import { useSearchParams } from "next/navigation";
 
@@ -112,13 +113,15 @@ export default function ProviderCouncilSelfServicePage() {
         <div className="grid gap-6 md:grid-cols-2">
           <section className="rounded-lg border border-gray-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-2">Payment obligations</h2>
-            {loadOb ? (
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
-              </div>
-            ) : (
-              <QueryResultPanel title="Payment obligations" data={obligations ?? []} />
-            )}
+            <p className="mb-3 text-xs text-gray-600">
+              Create a MusheX payment intent, sync settlement from MusheX, then complete council fee payment via the
+              governed wallet rail.
+            </p>
+            <CouncilObligationPaymentPanel
+              providerId={providerId}
+              obligations={obligations ?? []}
+              isLoading={loadOb}
+            />
           </section>
           <section className="rounded-lg border border-gray-200 bg-white p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-2">Fundo CPD candidates</h2>

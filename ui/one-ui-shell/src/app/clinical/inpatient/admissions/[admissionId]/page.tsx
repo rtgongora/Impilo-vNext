@@ -25,7 +25,7 @@ export default function InpatientAdmissionDetailPage() {
       title={`Inpatient episode ${admissionId ?? ""}`}
       subtitle="Episode dashboard — clinical activity, orders, and discharge handoff"
       plane="Clinical Plane"
-      maturity="partial"
+      maturity="live"
       contextPatient={String(attrs.patientName ?? attrs.patientCpid ?? "")}
       relatedLinks={[
         { label: "Ward rounds", href: "/clinical/inpatient/rounds" },

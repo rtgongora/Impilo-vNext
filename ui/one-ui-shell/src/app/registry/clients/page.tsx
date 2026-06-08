@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowUpRight, BadgeAlert, Loader2, Plus, Search, ShieldAlert
 import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
+import { ClientIntakeStatusBadges } from "@/components/registry/ClientIntakeStatusBadges";
 import { useClientRegistryClients, useClientRegistryDashboard } from "@/hooks/queries/useClientRegistry";
 
 const STATUS_STYLES: Record<string, string> = {
@@ -180,6 +181,16 @@ export default function ClientRegistryPage() {
                   <tr key={client.healthId} className="border-t border-gray-100 align-top hover:bg-gray-50/60">
                     <td className="px-4 py-4">
                       <div className="font-medium text-gray-900">{client.displayName}</div>
+                      <div className="mt-1.5">
+                        <ClientIntakeStatusBadges
+                          input={{
+                            verificationStatus: client.verificationStatus,
+                            latestRegistrationType: client.latestRegistrationType,
+                            latestRegistrationChannel: client.latestRegistrationChannel,
+                            lifecycleStatus: client.lifecycleStatus,
+                          }}
+                        />
+                      </div>
                       <div className="mt-1 text-xs text-gray-500">
                         {client.latestRegistrationType ? labelize(client.latestRegistrationType) : "Registration pending"}{" "}
                         {client.latestRegistrationChannel ? `via ${labelize(client.latestRegistrationChannel)}` : ""}
@@ -199,8 +210,8 @@ export default function ClientRegistryPage() {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-gray-600">
-                      <div>{labelize(client.verificationStatus)}</div>
-                      <div className="mt-1 text-xs text-gray-500">LOA {client.identityAssuranceLevel}</div>
+                      <div className="text-xs text-gray-500">Assurance LOA {client.identityAssuranceLevel}</div>
+                      <div className="mt-1 text-xs text-gray-500">{labelize(client.verificationStatus)}</div>
                     </td>
                     <td className="px-4 py-4 text-gray-600">
                       <div>{client.openStewardshipActions} stewardship action(s)</div>

@@ -112,11 +112,11 @@ describe("CredentialsPage", () => {
 
     expect(screen.getByRole("heading", { level: 1, name: /Credentials & CPD/i })).toBeInTheDocument();
     expect(screen.getByText(/Digital credential vault/i)).toBeInTheDocument();
-    expect(screen.getByText("Secure Health Summary")).toBeInTheDocument();
+    expect(screen.getAllByText("Secure Health Summary").length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /Download PDF/i })).toHaveAttribute(
       "href",
       "/internal/v1/credentials/cred-1/pdf",
     );
-    expect(screen.getByRole("link", { name: /Verify/i })).toHaveAttribute("href", "https://verify.example/cred-1");
+    expect(screen.getAllByRole("link", { name: /Verify/i })[0]).toHaveAttribute("href", "https://verify.example/cred-1");
   });
 });

@@ -2,71 +2,165 @@
 
 /**
  * Screening Schedule — Health OS §5, §6
- * View due and upcoming health screenings.
  * Route: /wellness/screenings | Zone: wellness | Guard: auth
+ *
+ * Wave 4: surfaces screening reminders from guidance-service via BFF
+ * GET /internal/v1/guidance/reminders (SCREENING type). No fabricated schedule rows.
  */
 
-import { CalendarCheck, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, CalendarCheck, Clock, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
+import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
+import { useReminders, type Reminder } from "@/hooks/queries/useGuidance";
 
-const SCREENING_TYPES = [
-  { title: "Blood Pressure Check", frequency: "Every 12 months", status: "due", description: "Routine blood pressure measurement" },
-  { title: "Cholesterol Panel", frequency: "Every 5 years", status: "upcoming", description: "Lipid panel including total cholesterol, LDL, HDL, triglycerides" },
-  { title: "Blood Glucose", frequency: "Every 3 years", status: "upcoming", description: "Fasting blood glucose or HbA1c for diabetes screening" },
-  { title: "BMI Assessment", frequency: "Every 12 months", status: "due", description: "Body mass index measurement and weight tracking" },
-  { title: "Vision Screening", frequency: "Every 2 years", status: "upcoming", description: "Visual acuity and eye health assessment" },
-  { title: "Dental Check-up", frequency: "Every 6 months", status: "overdue", description: "Routine dental examination and cleaning" },
-];
+function extractReminders(payload: unknown): Reminder[] {
+  if (!payload || typeof payload !== "object") return [];
+  const root = payload as Record<string, unknown>;
+  if (Array.isArray(root.data)) return root.data as Reminder[];
+  if (Array.isArray(root)) return root as Reminder[];
+  return [];
+}
+
+function priorityTone(priority: Reminder["priority"]): string {
+  if (priority === "HIGH") return "border-red-200 bg-red-50 text-red-700";
+  if (priority === "MEDIUM") return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-green-200 bg-green-50 text-green-700";
+}
 
 export default function WellnessScreeningsPage() {
+  const remindersQ = useReminders();
+  const allReminders = extractReminders(remindersQ.data);
+  const screeningReminders = allReminders.filter(
+    (r) => r.type === "SCREENING" && !r.dismissed,
+  );
+
+  const overdueCount = screeningReminders.filter((r) => {
+    if (!r.dueDate) return false;
+    return new Date(r.dueDate).getTime() < Date.now();
+  }).length;
+  const dueSoonCount = screeningReminders.filter((r) => {
+    if (!r.dueDate) return !r.dismissed;
+    const due = new Date(r.dueDate).getTime();
+    const now = Date.now();
+    const week = 7 * 24 * 60 * 60 * 1000;
+    return due >= now && due <= now + week;
+  }).length;
+  const upToDateCount = Math.max(0, screeningReminders.length - overdueCount - dueSoonCount);
+
   return (
     <AppLayout>
       <PageShell
         title="Screening Schedule"
-        subtitle="View due and upcoming health screenings based on your age, gender, and risk factors"
+        subtitle="Due and upcoming preventive screenings from your guidance reminders — not fabricated clinical schedules"
         icon={<CalendarCheck className="h-6 w-6" />}
       >
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <FeatureMaturityBadge
+            status="partial"
+            detail="Screening rows come from GET /internal/v1/guidance/reminders (SCREENING type). Full age/gender/risk-based scheduling still requires simba-service screening programmes on the BFF."
+          />
+          <Link
+            href="/guidance/reminders"
+            className="text-sm font-medium text-impilo-600 underline-offset-2 hover:underline"
+          >
+            All health reminders
+          </Link>
+        </div>
+
         <div className="space-y-6">
-          {/* Status summary */}
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { label: "Overdue", count: 1, Icon: AlertCircle, color: "border-red-200 bg-red-50 text-red-700" },
-              { label: "Due Now", count: 2, Icon: Clock, color: "border-amber-200 bg-amber-50 text-amber-700" },
-              { label: "Up to Date", count: 3, Icon: CheckCircle2, color: "border-green-200 bg-green-50 text-green-700" },
-            ].map(({ label, count, Icon, color }) => (
-              <div key={label} className={`rounded-lg border p-4 text-center ${color}`}>
-                <Icon className="mx-auto h-6 w-6 mb-1" />
-                <p className="text-2xl font-bold">{count}</p>
-                <p className="text-sm font-medium">{label}</p>
-              </div>
-            ))}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+            <p className="font-medium text-slate-900">Integration boundary</p>
+            <p className="mt-1">
+              This page does not invent screening due dates. When guidance-service returns no SCREENING
+              reminders, you see an honest empty state. Citizen wellness activity hooks (
+              <code className="text-xs">/internal/v1/wellness/*</code>) cover goals and lifestyle tracking
+              — not preventive screening calendars yet.
+            </p>
           </div>
 
-          {/* Screening list */}
-          <div className="space-y-3">
-            {SCREENING_TYPES.map(({ title, frequency, status, description }) => (
-              <div key={title} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm transition-all">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900">{title}</h3>
-                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${
-                      status === "overdue" ? "bg-red-50 text-red-700" :
-                      status === "due" ? "bg-amber-50 text-amber-700" :
-                      "bg-green-50 text-green-700"
-                    }`}>
-                      {status === "overdue" ? "Overdue" : status === "due" ? "Due" : "Upcoming"}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600">{description}</p>
-                  <p className="text-xs text-gray-400 mt-1">Recommended: {frequency}</p>
-                </div>
-                <button className="ml-4 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                  Schedule
-                </button>
+          {remindersQ.isLoading ? (
+            <p className="flex items-center gap-2 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading screening reminders…
+            </p>
+          ) : remindersQ.isError ? (
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="font-medium">Could not load screening reminders</p>
+                <p className="mt-1">
+                  The guidance BFF endpoint{" "}
+                  <code className="text-xs">GET /internal/v1/guidance/reminders</code> failed. Try again
+                  later or open{" "}
+                  <Link href="/ask" className="font-semibold underline">
+                    Nompilo guidance
+                  </Link>
+                  .
+                </p>
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: "Overdue", count: overdueCount, Icon: AlertCircle, color: "border-red-200 bg-red-50 text-red-700" },
+                  { label: "Due Soon", count: dueSoonCount, Icon: Clock, color: "border-amber-200 bg-amber-50 text-amber-700" },
+                  { label: "Tracked", count: upToDateCount, Icon: CalendarCheck, color: "border-green-200 bg-green-50 text-green-700" },
+                ].map(({ label, count, Icon, color }) => (
+                  <div key={label} className={`rounded-lg border p-4 text-center ${color}`}>
+                    <Icon className="mx-auto h-6 w-6 mb-1" />
+                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="text-sm font-medium">{label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {screeningReminders.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                  <CalendarCheck className="mx-auto h-10 w-10 text-gray-300" />
+                  <p className="mt-3 text-sm font-medium text-gray-900">No screening reminders returned</p>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Guidance-service did not return active SCREENING-type reminders for your profile.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {screeningReminders.map((reminder) => (
+                    <div
+                      key={reminder.id}
+                      className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-gray-900">{reminder.title}</h3>
+                          <span
+                            className={`rounded border px-2 py-0.5 text-xs font-medium ${priorityTone(reminder.priority)}`}
+                          >
+                            {reminder.priority}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{reminder.description}</p>
+                        {reminder.dueDate ? (
+                          <p className="text-xs text-gray-400 mt-1">
+                            Due: {new Date(reminder.dueDate).toLocaleDateString()}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400 mt-1">No due date on reminder payload</p>
+                        )}
+                      </div>
+                      <Link
+                        href="/guidance/reminders"
+                        className="ml-4 rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        View in reminders
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </PageShell>
     </AppLayout>

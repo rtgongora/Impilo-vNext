@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import { BadgeCheck, ExternalLink, QrCode } from "lucide-react";
+import { usePersonalCredentials } from "@/hooks/queries/usePersonalCredentials";
 
 export function CredentialVerificationWorkflowPanel() {
+  const { data, isLoading } = usePersonalCredentials();
+  const credentials = data?.data ?? [];
+
   return (
     <section
       className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -15,8 +19,8 @@ export function CredentialVerificationWorkflowPanel() {
           <div>
             <p className="font-medium text-slate-900">Public credential verification workflow</p>
             <p className="mt-1">
-              Third parties verify certificates using the sovereign public verifier. Your vault credentials can be checked
-              without exposing PII through the Experience shell.
+              Third parties verify certificates using the sovereign public verifier. Vault credentials below expose
+              verification URLs without leaking PII through the Experience shell.
             </p>
           </div>
           <ol className="list-decimal space-y-1 pl-5 text-xs text-slate-600">
@@ -26,6 +30,29 @@ export function CredentialVerificationWorkflowPanel() {
               <code className="text-[10px]">GET /v1/public/verify/{"{token}"}</code> returns VALID, EXPIRED, or REVOKED.
             </li>
           </ol>
+          {isLoading ? (
+            <p className="text-xs text-slate-500">Loading vault credentials…</p>
+          ) : credentials.length > 0 ? (
+            <ul className="space-y-2 text-xs">
+              {credentials.slice(0, 5).map((cred) => (
+                <li key={cred.credentialId} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-100 px-3 py-2">
+                  <span className="font-medium text-slate-800">{cred.title}</span>
+                  <span className="text-slate-500">{cred.status}</span>
+                  {cred.verificationUrl ? (
+                    <a href={cred.verificationUrl} target="_blank" rel="noopener noreferrer" className="text-impilo-600 hover:underline">
+                      Verify
+                    </a>
+                  ) : (
+                    <Link href="/verify/credential" className="text-impilo-600 hover:underline">
+                      Open verifier
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-slate-500">No personal credentials in vault yet.</p>
+          )}
           <div className="flex flex-wrap gap-2">
             <Link
               href="/verify/credential"

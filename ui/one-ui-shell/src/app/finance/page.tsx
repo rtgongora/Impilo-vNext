@@ -24,6 +24,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
+import { MusheXFinanceJourneysOrchestrationRail } from "@/components/finance/MusheXFinanceJourneysOrchestrationRail";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const FINANCE_SECTIONS = [
@@ -129,6 +130,7 @@ export default function FinancePage() {
       >
         <OrganizationPlaneContextBar />
         <div className="space-y-6">
+          <MusheXFinanceJourneysOrchestrationRail />
           <WorkflowHeader
             badge="Revenue follow-through"
             badgeIcon={Receipt}

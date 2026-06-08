@@ -40,6 +40,10 @@ vi.mock("@/lib/api-client", () => ({
   },
 }));
 
+vi.mock("@/components/telemedicine/TelemedicineRtcHealthPanel", () => ({
+  TelemedicineRtcHealthPanel: () => <div data-testid="telemedicine-rtc-health-panel" />,
+}));
+
 vi.mock("@/hooks/queries/useTelemedicine", () => ({
   useTelemedicineSessions: () => ({
     data: {
@@ -76,6 +80,11 @@ vi.mock("@/hooks/queries/useTelemedicine", () => ({
   }),
   useEndTelemedicineSession: () => ({
     mutate: vi.fn(),
+    isPending: false,
+  }),
+  useTelemedicineMediaToken: () => ({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({ data: { room_url: "wss://livekit.test", token: "tok" } }),
     isPending: false,
   }),
 }));

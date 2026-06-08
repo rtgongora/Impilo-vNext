@@ -11,6 +11,8 @@ vi.mock("@/hooks/queries/useCareContinuity", async (importOriginal) => {
   return {
     ...actual,
     useAddCarePlanGoal: () => ({ mutate: mockAddGoal, isPending: false }),
+    useUpdateCarePlanGoal: () => ({ mutate: vi.fn(), isPending: false }),
+    useAddCarePlanIntervention: () => ({ mutate: vi.fn(), isPending: false }),
     usePerformCarePlanIntervention: () => ({ mutate: mockPerform, isPending: false }),
   };
 });

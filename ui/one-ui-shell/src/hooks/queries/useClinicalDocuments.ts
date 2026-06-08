@@ -66,6 +66,37 @@ interface UploadDocumentFilePayload {
 }
 
 /** Multipart upload → document-store object → PCT clinical document index. */
+export function useRequestDocumentOcr(objectId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/clinical-documents/objects/${encodeURIComponent(String(objectId))}/ocr`,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["clinical-documents"] });
+      if (objectId) {
+        void queryClient.invalidateQueries({ queryKey: ["clinical-documents", "ocr", objectId] });
+      }
+    },
+  });
+}
+
+export function useDocumentOcrStatus(objectId: string | undefined) {
+  return useQuery({
+    queryKey: ["clinical-documents", "ocr", objectId],
+    queryFn: () =>
+      apiClient.get<ApiResponse<unknown>>(
+        `/internal/v1/clinical-documents/objects/${encodeURIComponent(String(objectId))}/ocr`,
+      ),
+    enabled: !!objectId,
+    refetchInterval: (query) => {
+      const status = String((query.state.data as { data?: { status?: string } } | undefined)?.data?.status ?? "").toUpperCase();
+      return status === "PENDING" || status === "RUNNING" ? 3000 : false;
+    },
+  });
+}
+
 export function useUploadDocumentFile() {
   const queryClient = useQueryClient();
 

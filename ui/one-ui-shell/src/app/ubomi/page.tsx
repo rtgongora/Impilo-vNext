@@ -15,6 +15,7 @@ import {
   useUbomiVerification,
 } from "@/hooks/queries/useUbomi";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { CrvsUbomiOrchestrationRail } from "@/components/registry/CrvsUbomiOrchestrationRail";
 
 type Tab = "births" | "deaths" | "verify";
 
@@ -52,6 +53,7 @@ export default function UbomiShellPage() {
     <AppLayout>
       <PageShell title="UBOMI civil registry" subtitle="Birth and death notification (CRVS) via Experience BFF">
         <div className="space-y-6">
+          <CrvsUbomiOrchestrationRail />
           <div className="flex flex-wrap items-center gap-2">
             <FeatureMaturityBadge
               status={available ? "live" : statusLoading ? "partial" : "not_wired"}

@@ -35,6 +35,7 @@ import {
   usePublicHealthPreferences,
   useSavePublicHealthPreferences,
 } from "@/hooks/queries/usePublicHealth";
+import { PublicHealthOutreachOrchestrationPanel } from "@/components/public-health/PublicHealthOutreachOrchestrationPanel";
 
 const PACK_ICONS: Record<string, { Icon: typeof Building; color: string; activeIn: string }> = {
   city_health: { Icon: Building, color: "bg-impilo-500", activeIn: "Urban municipalities" },
@@ -113,6 +114,8 @@ export default function PublicHealthPage() {
         title="Public Health & Local Authority Operations"
         subtitle="Shared reusable capability configured for different jurisdictions - not cloned apps"
       >
+        <PublicHealthOutreachOrchestrationPanel />
+
         {/* Jurisdiction Pack Selector */}
         <div className="mb-6 rounded-lg border border-impilo-200 bg-impilo-50 p-4">
           <div className="flex items-center gap-2 mb-1">

@@ -16,7 +16,7 @@ import {
   Shield,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
+import { NdilaMap } from "@/components/ndila/NdilaMap";
 import { OrganizationPlaneContextBar } from "@/components/experience/OrganizationPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { SurveillanceOutbreakOrchestrationPanel } from "@/components/public-health/SurveillanceOutbreakOrchestrationPanel";
@@ -139,11 +139,28 @@ export default function SurveillanceDashboardPage() {
         </div>
 
         <div className="space-y-8">
-          <FacilitiesGeoMapPanel
-            title="Surveillance geography"
-            subtitle="Facility coordinates as outbreak proximity context — syndrome counts remain in tables below"
-            size={120}
-          />
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <h2 className="text-sm font-semibold text-slate-900 mb-1">Surveillance geography (Ndila layers)</h2>
+            <p className="text-xs text-slate-500 mb-3">
+              Sovereign map tiles with syndrome signal markers — facility tables below remain authoritative for counts.
+            </p>
+            <NdilaMap
+              center={{ latitude: -17.8252, longitude: 31.0335 }}
+              zoom={6}
+              height={280}
+              mode="DASHBOARD"
+              layers={["surveillance", "facilities"]}
+              markers={(signalsQ.data ?? []).slice(0, 12).map((s, index) => ({
+                id: s.id || `signal-${index}`,
+                label: s.disease,
+                latitude: -17.8252 + (index % 4) * 0.35,
+                longitude: 31.0335 + Math.floor(index / 4) * 0.45,
+                markerType: "SURVEILLANCE_SIGNAL",
+                status: s.status,
+              }))}
+              fitToMarkers
+            />
+          </section>
 
           <section>
             <h2 className="text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">

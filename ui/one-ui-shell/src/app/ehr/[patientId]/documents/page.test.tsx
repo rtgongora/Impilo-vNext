@@ -84,6 +84,8 @@ vi.mock("@/hooks/queries/useClinicalDocuments", () => ({
   }),
   useUploadDocument: () => ({ mutate: vi.fn(), isPending: false }),
   useUploadDocumentFile: () => ({ mutate: vi.fn(), isPending: false }),
+  useRequestDocumentOcr: () => ({ mutate: vi.fn(), isPending: false }),
+  useDocumentOcrStatus: () => ({ data: undefined, isLoading: false }),
 }));
 
 describe("DocumentsPage", () => {

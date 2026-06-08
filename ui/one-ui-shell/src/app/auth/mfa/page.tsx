@@ -6,17 +6,22 @@
  */
 
 import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent, type ClipboardEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useAuthStore, type AuthUser } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 const CODE_LENGTH = 6;
 
 export default function MfaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
@@ -111,7 +116,9 @@ export default function MfaPage() {
         },
         token,
       );
-      router.push("/home");
+      useWorkModeStore.getState().deriveFromRoles(user.roles);
+      useConsentStore.getState().hydrate(user.id);
+      router.push(buildPostLoginResolvingPath(returnTo));
     } catch {
       setError("Invalid verification code. Please try again.");
       setDigits(Array(CODE_LENGTH).fill(""));

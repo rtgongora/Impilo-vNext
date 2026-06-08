@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { ClientIntakeStatusBadges } from "@/components/registry/ClientIntakeStatusBadges";
 import { PageShell } from "@/components/PageShell";
 import {
   useAddAuthorizationLink,
@@ -32,6 +33,7 @@ import {
   useSubmitClientRegistration,
   useUpdateStewardshipAction,
 } from "@/hooks/queries/useClientRegistry";
+import { useIssuanceQueue } from "@/hooks/queries/useVitoIssuance";
 
 const tabs = [
   { id: "master", label: "Master profile" },
@@ -109,8 +111,11 @@ export default function ClientDetailPage() {
   });
 
   const profileQuery = useClientProfile(id);
+  const issuanceQueue = useIssuanceQueue(undefined, 0, 50);
   const profile = profileQuery.data?.data;
   const master = profile?.master;
+  const latestRegistration = profile?.registrations[0];
+  const clientIssuance = issuanceQueue.data?.data?.items?.find((request) => request.healthId === id);
 
   const submitRegistration = useSubmitClientRegistration();
   const addEvidence = useAddClientEvidence(id);
@@ -197,9 +202,16 @@ export default function ClientDetailPage() {
                     <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${toneForStatus(master.lifecycleStatus)}`}>
                       {labelize(master.lifecycleStatus)}
                     </span>
-                    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${toneForStatus(master.verificationStatus)}`}>
-                      {labelize(master.verificationStatus)}
-                    </span>
+                    <ClientIntakeStatusBadges
+                      input={{
+                        verificationStatus: master.verificationStatus,
+                        latestRegistrationType: latestRegistration?.registrationType,
+                        latestRegistrationChannel: latestRegistration?.initiatedChannel,
+                        lifecycleStatus: master.lifecycleStatus,
+                        issuanceState: clientIssuance?.state,
+                      }}
+                      testIdPrefix="client-workspace-intake"
+                    />
                   </div>
                   <p className="mt-2 text-sm text-gray-500">
                     {master.impiloId ?? "No Impilo ID yet"} • CRID {master.crid.slice(0, 8)} • Assurance {master.identityAssuranceLevel}

@@ -261,6 +261,44 @@ export function useAddCarePlanGoal() {
   });
 }
 
+export function useUpdateCarePlanGoal() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    unknown,
+    { planId: string; goalId: string; patientId: string; status?: string; progress?: number; notes?: string }
+  >({
+    mutationFn: ({ planId, goalId, status, progress, notes }) =>
+      apiClient.post(`/internal/v1/care-plans/${encodeURIComponent(planId)}/goals/${encodeURIComponent(goalId)}/update`, {
+        status: status ?? "IN_PROGRESS",
+        progress: progress ?? null,
+        notes: notes ?? null,
+      }),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
+}
+
+export function useAddCarePlanIntervention() {
+  const qc = useQueryClient();
+  return useMutation<
+    unknown,
+    unknown,
+    { planId: string; patientId: string; label: string; dueDate?: string }
+  >({
+    mutationFn: ({ planId, label, dueDate }) =>
+      apiClient.post(`/internal/v1/care-plans/${encodeURIComponent(planId)}/interventions`, {
+        label,
+        due_date: dueDate ?? null,
+        status: "PLANNED",
+      }),
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["care-plans", vars.patientId] });
+    },
+  });
+}
+
 export function usePerformCarePlanIntervention() {
   const qc = useQueryClient();
   return useMutation<unknown, unknown, { planId: string; interventionId: string; patientId: string }>({

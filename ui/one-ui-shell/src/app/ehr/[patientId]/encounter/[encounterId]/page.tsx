@@ -33,6 +33,7 @@ import { PageShell } from "@/components/PageShell";
 import { ClinicalAlerts } from "@/components/ClinicalAlerts";
 import { PatientJourneyContextPanel } from "@/components/clinical/PatientJourneyContextPanel";
 import { EncounterOrchestrationRail } from "@/components/encounter/EncounterOrchestrationRail";
+import { EncounterCareChainRail } from "@/components/encounter/EncounterCareChainRail";
 import { EncounterLabOrdersPanel } from "@/components/encounter/EncounterLabOrdersPanel";
 import { EncounterImagingOrdersPanel } from "@/components/encounter/EncounterImagingOrdersPanel";
 import { EncounterDischargePanel } from "@/components/encounter/EncounterDischargePanel";
@@ -419,6 +420,14 @@ export default function EncounterPage() {
 
             {!structuredFormFocus && (
               <EncounterOrchestrationRail encounterId={encounterId} patientId={patientId} />
+            )}
+
+            {!structuredFormFocus && (
+              <EncounterCareChainRail
+                encounterId={encounterId}
+                patientId={patientId}
+                patientCpid={String(patientData?.data?.attributes?.cpid ?? "")}
+              />
             )}
 
             {!structuredFormFocus && isActive && isClinical && (

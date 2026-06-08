@@ -1,0 +1,52 @@
+"use client";
+
+import Link from "next/link";
+import { Package, ArrowRight } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
+import { PageShell } from "@/components/PageShell";
+import { StockManagementPanel } from "@/components/workspace-ops/StockManagementPanel";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+
+export default function WellnessCommoditiesPage() {
+  const facility = useFacilityStore((s) => s.facility);
+
+  return (
+    <AppLayout>
+      <PageShell
+        title="Wellness commodities"
+        subtitle="Inventory-backed wellness commodities (SIMBA plane) — on-hand stock from inventory-service, not simba-service"
+        icon={<Package className="h-6 w-6" />}
+      >
+        <div className="mb-6 rounded-xl border border-teal-200 bg-teal-50/70 p-4 text-sm text-teal-950">
+          <p>
+            Wellness programme commodities are tracked as inventory on-hand positions. Use the embedded stock panel
+            below or open the full{" "}
+            <Link href="/inventory/stock-management" className="font-semibold text-teal-800 underline">
+              stock management workspace
+            </Link>{" "}
+            for ledger posts and procurement signals.
+          </p>
+          <Link
+            href="/inventory/stock-management"
+            className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-teal-800 hover:text-teal-900"
+          >
+            Open full stock management <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {!facility ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+            Select a facility to scope commodity stock.
+            <div className="mt-3">
+              <Link href="/facility" className="font-medium underline">
+                Choose facility
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <StockManagementPanel facilityId={facility.id} />
+        )}
+      </PageShell>
+    </AppLayout>
+  );
+}

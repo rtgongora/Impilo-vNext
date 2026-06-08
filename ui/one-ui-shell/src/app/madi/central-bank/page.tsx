@@ -25,6 +25,9 @@ export default function CentralBankPage() {
   const approveRedistribution = useApproveEmergencyRedistribution();
   const initiateHandoff = useInitiateEmergencyHandoff();
 
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const [sourceFacilityId, setSourceFacilityId] = useState("");
   const [targetFacilityId, setTargetFacilityId] = useState("");
   const [bloodGroup, setBloodGroup] = useState("O");
@@ -34,32 +37,56 @@ export default function CentralBankPage() {
 
   function handleRequest() {
     if (!sourceFacilityId.trim() || !targetFacilityId.trim()) return;
-    requestRedistribution.mutate({
-      source_facility_id: sourceFacilityId.trim(),
-      target_facility_id: targetFacilityId.trim(),
-      blood_group: bloodGroup,
-      component_type: componentType,
-      units_requested: Number(unitsRequested),
-      reason: reason.trim() || undefined,
-      requested_by: user?.displayName ?? user?.id,
-      priority: "EMERGENCY",
-    });
+    setActionMessage(null);
+    setActionError(null);
+    requestRedistribution.mutate(
+      {
+        source_facility_id: sourceFacilityId.trim(),
+        target_facility_id: targetFacilityId.trim(),
+        blood_group: bloodGroup,
+        component_type: componentType,
+        units_requested: Number(unitsRequested),
+        reason: reason.trim() || undefined,
+        requested_by: user?.displayName ?? user?.id,
+        priority: "EMERGENCY",
+      },
+      {
+        onSuccess: () => setActionMessage("Emergency redistribution requested."),
+        onError: () => setActionError("Request failed — verify admin role and facility IDs."),
+      },
+    );
   }
 
   function handleApprove(redistributionId: string, units: number) {
-    approveRedistribution.mutate({
-      redistributionId,
-      approved_by: user?.displayName ?? user?.id ?? "central-ops",
-      units_allocated: units,
-      status: "FULFILLED",
-    });
+    setActionMessage(null);
+    setActionError(null);
+    approveRedistribution.mutate(
+      {
+        redistributionId,
+        approved_by: user?.displayName ?? user?.id ?? "central-ops",
+        units_allocated: units,
+        status: "FULFILLED",
+      },
+      {
+        onSuccess: () => setActionMessage("Redistribution approved and fulfilled."),
+        onError: () => setActionError("Approval failed."),
+      },
+    );
   }
 
   function handleRetryHandoff(redistributionId: string) {
-    initiateHandoff.mutate({
-      redistributionId,
-      initiated_by: user?.displayName ?? user?.id ?? "central-ops",
-    });
+    setActionMessage(null);
+    setActionError(null);
+    initiateHandoff.mutate(
+      {
+        redistributionId,
+        initiated_by: user?.displayName ?? user?.id ?? "central-ops",
+      },
+      {
+        onSuccess: () => setActionMessage("NHUME handoff retry initiated."),
+        onError: () => setActionError("Handoff retry failed."),
+      },
+    );
   }
 
   return (
@@ -91,6 +118,17 @@ export default function CentralBankPage() {
             ))}
           </div>
         )}
+
+        {actionMessage ? (
+          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+            {actionMessage}
+          </div>
+        ) : null}
+        {actionError ? (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            {actionError}
+          </div>
+        ) : null}
 
         <section className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5 mb-6 space-y-4">
           <h2 className="text-sm font-semibold text-rose-900">Emergency redistribution</h2>

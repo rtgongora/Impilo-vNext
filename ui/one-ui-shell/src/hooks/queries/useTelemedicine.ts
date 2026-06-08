@@ -127,6 +127,48 @@ export function useCreateTelemedicineSession() {
   );
 }
 
+export function useTelemedicineMediaToken() {
+  return useMutation<
+    ApiResponse<{
+      room_url?: string;
+      roomUrl?: string;
+      token?: string;
+      accessToken?: string;
+      channel?: string;
+      status?: string;
+    }>,
+    unknown,
+    { sessionId: string; role?: string; displayName?: string }
+  >({
+    mutationFn: ({ sessionId, role, displayName }) =>
+      apiClient.post(
+        `/internal/v1/teleconsult/sessions/${encodeURIComponent(sessionId)}/media/token`,
+        { role, displayName },
+      ),
+  });
+}
+
+export type TelemedicineRtcHealth = {
+  provider: string;
+  devModeEnabled: boolean;
+  livekitEnabled: boolean;
+  livekitConfigured: boolean;
+  productionReady: boolean;
+  serverUrl: string;
+  activeSessions?: number;
+};
+
+type TelemedicineRtcHealthResponse = ApiResponse<TelemedicineRtcHealth>;
+
+export function useTelemedicineRtcHealth() {
+  return useQuery<TelemedicineRtcHealthResponse>({
+    queryKey: ["telemedicine-rtc-health"],
+    queryFn: () =>
+      apiClient.get<TelemedicineRtcHealthResponse>("/internal/v1/teleconsult/ops/rtc-health"),
+    staleTime: 30_000,
+  });
+}
+
 export function useTelemedicineOpsSla(facilityId?: string | null) {
   const path = facilityId
     ? `/internal/v1/teleconsult/ops/sla?facility_id=${encodeURIComponent(String(facilityId))}`

@@ -107,12 +107,16 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/public-health/campaigns", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Campaigns", navLabel: "Campaigns", navZone: "professional" },
   { path: "/public-health/site-registry", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Site Registry", navLabel: "Site Registry", navZone: "professional" },
   { path: "/public-health/site-registry/[siteId]", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "Site Profile", navLabel: "Site Profile", navZone: "professional" },
+  { path: "/public-health/oversight", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "PUBLIC_HEALTH", pageTitle: "National oversight", navLabel: "Oversight", navZone: "professional" },
 
   // â”€â”€ Zone: Omnichannel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/omnichannel", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Omnichannel Hub", navLabel: "Omnichannel", navZone: "professional" },
 
   // â”€â”€ Zone: Coverage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/coverage", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Coverage Operations", navLabel: "Coverage", navZone: "professional" },
+  { path: "/coverage/enroll", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Enroll in Coverage", navLabel: "Enroll", navZone: "life" },
+  { path: "/coverage/member", zone: "home", layout: "app", sidebar: "main", guard: "auth", pageTitle: "My Coverage", navLabel: "My Coverage", navZone: "life" },
+  { path: "/coverage/contracts", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN", pageTitle: "Provider Contracts", navLabel: "Contracts", navZone: "professional" },
 
   // â”€â”€ Zone: Identity Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/id-services", zone: "admin", layout: "app", sidebar: "admin", guard: "role", requiredRole: "ADMIN_OR_HIE", pageTitle: "Identity Services", navLabel: "ID Services", navZone: "professional" },
@@ -259,6 +263,8 @@ export const ROUTES: RouteDefinition[] = [
 
   // â”€â”€ Zone: Registry â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/registry/clients", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Client Registry", navLabel: "Client Registry", navZone: "professional" },
+  { path: "/registry/clients/new", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "New Client Registration", navLabel: "New Client", navZone: "professional" },
+  { path: "/registry/clients/[id]", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Client Identity Workspace", navLabel: "Client", navZone: "professional" },
   { path: "/registry/trust", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Trust & Federation", navLabel: "Trust", navZone: "professional" },
   { path: "/registry/mvumo", zone: "registry", layout: "app", sidebar: "registry", guard: "role", requiredRole: "REGISTRY_ADMIN", pageTitle: "Mvumo â€” Digital Consent", navLabel: "Mvumo", navZone: "professional" },
   { path: "/registry", zone: "registry", layout: "app", sidebar: "registry", guard: "auth", pageTitle: "Registry Hub", navLabel: "Registry", navZone: "professional" },
@@ -310,6 +316,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/finance/tariffs", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Tariff Management", navLabel: "Tariffs", navZone: "work" },
   { path: "/finance/costa", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA hub", navLabel: "COSTA", navZone: "work" },
   { path: "/finance/costa/encounter/[encounterId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "COSTA encounter timeline", navLabel: "Encounter timeline", navZone: "work" },
+  { path: "/finance/service-access", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Service access decisions", navLabel: "Service access", navZone: "work" },
   { path: "/finance/mushex-platform", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "MusheX platform admin", navLabel: "MusheX platform", navZone: "work" },
   { path: "/finance/mushex-platform/wallets/[walletId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Custodial wallet", navLabel: "Custodial wallet", navZone: "work" },
   { path: "/finance/mushex-platform/remittance/[transferId]", zone: "finance", layout: "app", sidebar: "finance", guard: "role", requiredRole: "FINANCE", pageTitle: "Remittance transfer", navLabel: "Remittance transfer", navZone: "work" },
@@ -347,6 +354,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/enterprise/warehousing", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "ADMIN", pageTitle: "Warehousing & distribution", navLabel: "Warehousing", navZone: "work" },
   { path: "/enterprise/fleet", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "ADMIN", pageTitle: "Fleet & logistics", navLabel: "Fleet", navZone: "work" },
   { path: "/enterprise/charge-sheet", zone: "enterprise", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Charge sheet", navLabel: "Charge sheet", navZone: "work" },
+  { path: "/enterprise/oversight", zone: "enterprise", layout: "app", sidebar: "queue", guard: "auth", pageTitle: "National Enterprise Oversight", navLabel: "Oversight", navZone: "work" },
 
   // â”€â”€ Zone: Institutional ERP (COSTA-aligned back office) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/erp", zone: "enterprise", layout: "app", sidebar: "queue", guard: "role", requiredRole: "FINANCE", pageTitle: "Institutional ERP", navLabel: "ERP", navZone: "work" },
@@ -391,6 +399,7 @@ export const ROUTES: RouteDefinition[] = [
 
   // â”€â”€ Zone: Wellness (Health OS Â§2 â€” prevention, self-care, fitness) â”€
   { path: "/wellness", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Hub", navLabel: "Wellness", navZone: "life" },
+  { path: "/wellness/dashboard", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Dashboard", navLabel: "Dashboard", navZone: "life" },
   { path: "/wellness/goals", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Health Goals", navLabel: "Goals", navZone: "life" },
   { path: "/wellness/programs", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Prevention Programs", navLabel: "Programs", navZone: "life" },
   { path: "/wellness/screenings", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Screening Schedule", navLabel: "Screenings", navZone: "life" },
@@ -402,6 +411,7 @@ export const ROUTES: RouteDefinition[] = [
   { path: "/wellness/challenges", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Challenges", navLabel: "Challenges", navZone: "life" },
   { path: "/wellness/routes", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Routes & Places", navLabel: "Routes", navZone: "life" },
   { path: "/wellness/coaching", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Coaching & Habits", navLabel: "Coaching", navZone: "life" },
+  { path: "/wellness/commodities", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Commodities", navLabel: "Commodities", navZone: "life" },
   { path: "/wellness/community", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Wellness Community", navLabel: "Community", navZone: "life" },
   { path: "/social", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Social Timeline", navLabel: "Social", navZone: "life" },
   { path: "/social/drafts", zone: "wellness", layout: "app", sidebar: "main", guard: "auth", pageTitle: "Draft Posts", navLabel: "Drafts", navZone: "life" },
@@ -436,6 +446,8 @@ export const ROUTES: RouteDefinition[] = [
   // â”€â”€ Zone: Laboratory (absorbs oros-web sidecar) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   { path: "/lab", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Laboratory", navLabel: "Lab", navZone: "work" },
   { path: "/lab/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Lab Worklist", navLabel: "Worklist", navZone: "work" },
+  { path: "/imaging/worklist", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Imaging Worklist", navLabel: "Imaging Worklist", navZone: "work" },
+  { path: "/imaging/facility", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Facility Imaging Dashboard", navLabel: "Imaging Ops", navZone: "work" },
   { path: "/lab/results", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Results Review", navLabel: "Results", navZone: "work" },
   { path: "/lab/catalog", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Test Catalog", navLabel: "Catalog", navZone: "work" },
   { path: "/lab/reconciliation", zone: "lab", layout: "app", sidebar: "queue", guard: "facility", pageTitle: "Lab Reconciliation", navLabel: "Reconciliation", navZone: "work" },
@@ -672,7 +684,11 @@ export const ROUTES: RouteDefinition[] = [
 // haemovigilance (services/madi-service). New canonical total is 452.
 // Impilo Live (Jun 2026): 13 routes under /live for live events, discovery,
 // room, replay, CPD and analytics (services/live-service). New total is 467.
-export const EXPECTED_ROUTE_COUNT = 468;
+// Wave 2 identity + coverage child routes (Jun 2026): /registry/clients/new,
+// /registry/clients/[id], /coverage/enroll, /coverage/member, /coverage/contracts,
+// /wellness/dashboard, /imaging/worklist, /imaging/facility, /enterprise/oversight,
+// /finance/service-access, /wellness/commodities, /public-health/oversight.
+export const EXPECTED_ROUTE_COUNT = 480;
 export const ROUTE_COUNT = ROUTES.length;
 
 // Zone summary

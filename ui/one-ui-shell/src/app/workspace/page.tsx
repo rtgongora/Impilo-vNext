@@ -12,6 +12,7 @@ import { PageShell } from "@/components/PageShell";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { useExperienceEntry } from "@/providers/ExperienceEntryProvider";
+import { WorkspaceContextOrchestrationRail } from "@/components/workspace-ops/WorkspaceContextOrchestrationRail";
 
 interface WorkspaceResource {
   id: string;
@@ -69,6 +70,7 @@ export default function WorkspacePage() {
         subtitle={facility ? `Choose your department or service area at ${facility.name}.` : "Choose your department or service area."}
       >
         <div className="space-y-6">
+          <WorkspaceContextOrchestrationRail />
           <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_32%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-sm">
             <div className="border-b border-slate-200 px-6 py-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

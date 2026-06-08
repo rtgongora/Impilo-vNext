@@ -25,6 +25,13 @@ vi.mock("@/components/common/QueryResultPanel", () => ({
   QueryResultPanel: () => <div data-testid="templates-panel" />,
 }));
 
+vi.mock("@/hooks/queries/useMvumoRemoteSessions", () => ({
+  useCreateMvumoRemoteSession: () => ({ mutate: vi.fn(), isPending: false }),
+  useMvumoRemoteSession: () => ({ data: undefined, isLoading: false }),
+  useVerifyMvumoRemoteSession: () => ({ mutate: vi.fn(), isPending: false }),
+  useGrantMvumoRemoteSession: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock("@/hooks/queries/useMvumoAdmin", () => ({
   useMvumoAdminTemplates: () => ({
     data: { data: [{ templateKey: "registry-assisted-consent", title: "Registry consent" }] },

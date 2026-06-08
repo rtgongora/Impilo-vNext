@@ -6,6 +6,7 @@ import { ShieldAlert, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { HaemovigilancePolicyOrchestrationRail } from "@/components/madi/HaemovigilancePolicyOrchestrationRail";
 import { useOpenHaemovigilanceCase, useReportReaction } from "@/hooks/queries/useMadi";
 
 export default function HaemovigilancePage() {
@@ -40,6 +41,7 @@ export default function HaemovigilancePage() {
   return (
     <AppLayout>
       <PageShell title="Haemovigilance" subtitle="Report and investigate transfusion reactions" icon={<ShieldAlert className="h-6 w-6" />}>
+        <HaemovigilancePolicyOrchestrationRail />
         <form onSubmit={handleReport} className="max-w-lg space-y-4 rounded-2xl border border-gray-200 bg-white p-6 mb-6">
           <label className="block text-sm font-medium text-gray-700">
             Transfusion episode ID

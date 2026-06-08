@@ -59,3 +59,40 @@ export function useProvider(id: string) {
     enabled: !!id,
   });
 }
+
+export interface ReconciliationQueueSnapshot {
+  items?: unknown[];
+  total_elements?: number;
+  totalElements?: number;
+  [key: string]: unknown;
+}
+
+export function useProviderReconciliationQueue(status?: string) {
+  return useQuery<ReconciliationQueueSnapshot>({
+    queryKey: ["registry-reconciliation-queue", status],
+    queryFn: async () => {
+      const params = new URLSearchParams({ page: "0", size: "20" });
+      if (status) params.set("status", status);
+      const response = await apiClient.get<{ data: ReconciliationQueueSnapshot }>(
+        `/internal/v1/registry/reconciliation/queue?${params.toString()}`,
+      );
+      const payload = response.data;
+      if (payload && typeof payload === "object" && "data" in (payload as object)) {
+        return ((payload as { data: ReconciliationQueueSnapshot }).data) ?? {};
+      }
+      return (payload as ReconciliationQueueSnapshot) ?? {};
+    },
+  });
+}
+
+export function useDecideReconciliationCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { caseId: number; action: "ACCEPT" | "REJECT" | "MERGE" | "DEFER"; reason?: string }) =>
+      apiClient.post<{ data: unknown }>(`/internal/v1/registry/reconciliation/${input.caseId}/decision`, {
+        action: input.action,
+        reason: input.reason ?? "",
+      }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["registry-reconciliation-queue"] }),
+  });
+}

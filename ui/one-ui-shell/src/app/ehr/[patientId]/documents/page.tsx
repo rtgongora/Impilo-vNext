@@ -19,6 +19,8 @@ import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import {
   useClinicalDocuments,
+  useDocumentOcrStatus,
+  useRequestDocumentOcr,
   useUploadDocumentFile,
   type ClinicalDocumentResource,
 } from "@/hooks/queries/useClinicalDocuments";
@@ -37,6 +39,27 @@ const DOC_TYPE_CONFIG: Record<string, { label: string; icon: typeof FileText; co
   PROCEDURE_NOTE: { label: "Procedure Note", icon: FileText, color: "bg-indigo-100 text-indigo-700" },
   OTHER: { label: "Other", icon: File, color: "bg-gray-100 text-gray-600" },
 };
+
+function DocumentOcrButton({ objectId }: { objectId: string }) {
+  const requestOcr = useRequestDocumentOcr(objectId);
+  const ocrStatus = useDocumentOcrStatus(objectId);
+  const status = String((ocrStatus.data as { data?: { status?: string } } | undefined)?.data?.status ?? "").toUpperCase();
+
+  return (
+    <button
+      type="button"
+      disabled={requestOcr.isPending || status === "RUNNING" || status === "PENDING"}
+      onClick={() => requestOcr.mutate()}
+      className="rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+    >
+      {requestOcr.isPending || status === "RUNNING" || status === "PENDING"
+        ? "Indexing…"
+        : status === "COMPLETED"
+          ? "Re-index OCR"
+          : "Index / OCR"}
+    </button>
+  );
+}
 
 function formatFileSize(bytes: number): string {
   if (!bytes || bytes === 0) return "";
@@ -300,11 +323,12 @@ export default function DocumentsPage() {
                           {attrs.description && (
                             <p className="mb-1 line-clamp-2 text-xs text-gray-500">{attrs.description}</p>
                           )}
-                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
                             <span>By: {attrs.uploadedBy}</span>
                             <span>{new Date(attrs.createdAt).toLocaleDateString()}</span>
                             {attrs.mimeType && <span className="font-mono">{attrs.mimeType}</span>}
                             {attrs.fileSize > 0 && <span>{formatFileSize(attrs.fileSize)}</span>}
+                            <DocumentOcrButton objectId={document.id} />
                           </div>
                         </div>
                       </div>

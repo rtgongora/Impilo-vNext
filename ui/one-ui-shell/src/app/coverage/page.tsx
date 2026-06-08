@@ -33,7 +33,9 @@ import {
   type CoverageCommandKind,
   type CoverageClaim,
 } from "@/hooks/queries/useCoverage";
+import { useProviderContracts } from "@/hooks/queries/useProviderContracts";
 import { apiClient } from "@/lib/api-client";
+import { CoverageGeoMapPanel } from "@/components/coverage/CoverageGeoMapPanel";
 
 type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "contracting" | "preauth" | "claims" | "contributions" | "settlement" | "appeals" | "intelligence";
 
@@ -1323,22 +1325,50 @@ function AppealsTab() {
 
 // ── PROVIDER CONTRACTING TAB ─────────────────────────────────────
 function ContractingTab() {
+  const contractsQ = useProviderContracts();
+  const rows = (contractsQ.data ?? []).map((row) =>
+    row && typeof row === "object" ? (row as Record<string, unknown>) : {},
+  );
+
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-semibold text-gray-900">Provider Contracting & Network Management</h3>
-      <p className="text-sm text-gray-500">
-        No contracting or network API is exposed on the Experience BFF yet. This tab is intentionally empty instead of showing demo providers.
-      </p>
-      <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-        <Briefcase className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-400 text-sm">Contract directory not wired</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-gray-900">Provider Contracting & Network Management</h3>
+        <Link
+          href="/coverage/contracts"
+          className="text-sm font-medium text-impilo-700 hover:text-impilo-800"
+        >
+          Open full contracts admin →
+        </Link>
       </div>
+      {contractsQ.isLoading ? (
+        <p className="text-sm text-gray-500">Loading payer–provider contracts from coverage BFF…</p>
+      ) : rows.length === 0 ? (
+        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+          No active contracts in the current scope. Use contracts admin to create payer–provider agreements.
+        </div>
+      ) : (
+        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
+          {rows.slice(0, 8).map((row, idx) => {
+            const id = String(row.id ?? row.contractId ?? idx);
+            const provider = String(row.providerId ?? row.providerName ?? "Provider");
+            const status = String(row.status ?? "UNKNOWN");
+            return (
+              <li key={id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="font-medium text-gray-900">{provider}</span>
+                <span className="text-xs text-gray-500">{status}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }
 
 // ── PAYER INTELLIGENCE TAB ───────────────────────────────────────
 function IntelligenceTab() {
+  const [intelView, setIntelView] = useState<"analytics" | "geography">("analytics");
   const utilizationQ = useCoverageUtilizationList();
   const utilizationRows = (utilizationQ.data ?? []).map(asRecord);
   const { data: remittances = [], isLoading } = useCoverageRemittances();
@@ -1349,7 +1379,30 @@ function IntelligenceTab() {
 
   return (
     <div className="space-y-6">
-      <h3 className="text-base font-semibold text-gray-900">Payer Intelligence & Analytics</h3>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-gray-900">Payer Intelligence & Analytics</h3>
+        <div className="flex gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setIntelView("analytics")}
+            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "analytics" ? "bg-white text-violet-700 shadow-sm" : "text-gray-600"}`}
+          >
+            Analytics
+          </button>
+          <button
+            type="button"
+            onClick={() => setIntelView("geography")}
+            className={`rounded-md px-3 py-1.5 font-medium ${intelView === "geography" ? "bg-white text-violet-700 shadow-sm" : "text-gray-600"}`}
+          >
+            Geography
+          </button>
+        </div>
+      </div>
+
+      {intelView === "geography" ? <CoverageGeoMapPanel /> : null}
+
+      {intelView === "analytics" ? (
+        <>
       <p className="text-sm text-gray-500">
         Remittance snapshot plus utilization rows from{" "}
         <code className="text-xs">GET /internal/v1/coverage/utilization</code>. Fraud and MLR KPIs still require a
@@ -1425,6 +1478,8 @@ function IntelligenceTab() {
           When reporting APIs exist, this area can host fraud, utilization, benchmarking, and forecasting without placeholder numbers.
         </p>
       </div>
+        </>
+      ) : null}
     </div>
   );
 }

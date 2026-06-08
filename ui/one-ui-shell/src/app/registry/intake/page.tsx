@@ -33,6 +33,7 @@ import {
 } from "@/lib/landela-routes";
 import { FacilitiesGeoMapPanel } from "@/components/maps/FacilitiesGeoMapPanel";
 import { SiteRegistryGeoMapPanel } from "@/components/maps/SiteRegistryGeoMapPanel";
+import { ClientIntakeDedupWizard } from "@/components/registry/ClientIntakeDedupWizard";
 
 const FACILITY_SAMPLE_CSV =
   "name,facilityCode,facilityType,province,district\nSample Import Clinic,ZW-IMP-DEMO-001,CLINIC,Harare,Harare";
@@ -177,6 +178,10 @@ export default function RegistryIntakePage() {
           ) : (
             <SiteRegistryGeoMapPanel />
           )}
+        </div>
+
+        <div className="mb-6">
+          <ClientIntakeDedupWizard />
         </div>
 
         <div className="mb-6 grid gap-4 md:grid-cols-2">

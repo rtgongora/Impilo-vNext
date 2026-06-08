@@ -1,24 +1,66 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { RoleJourneyNavigation } from "@/components/navigation/RoleJourneyNavigation";
-import { NompiloGlobalCommandBar } from "@/components/intelligent/NompiloGlobalCommandBar";
 import { AccessibilityToolbar } from "@/components/accessibility/AccessibilityToolbar";
+import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
+import { AppLayout } from "@/components/AppLayout";
+import { visibleShellCommands } from "@/lib/shell/app-registry";
 
 const mockUsePathname = vi.fn();
-const mockFocusSearchPalette = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
 }));
 
 vi.mock("@/hooks/useAuthStore", () => ({
-  useAuthStore: (selector: (state: { user: { roles: string[] } }) => unknown) =>
-    selector({ user: { roles: ["CLINICIAN"] } }),
+  useAuthStore: (selector?: (state: Record<string, unknown>) => unknown) => {
+    const state = {
+      user: { roles: ["CLINICIAN"], displayName: "Test User", email: "test@example.com" },
+      isAuthenticated: true,
+    };
+    return selector ? selector(state) : state;
+  },
 }));
 
 vi.mock("@/hooks/useShellStore", () => ({
-  useShellStore: (selector: (state: { focusSearchPalette: () => void }) => unknown) =>
-    selector({ focusSearchPalette: mockFocusSearchPalette }),
+  useShellStore: (selector: (state: { toggleNavDrawer: () => void }) => unknown) =>
+    selector({ toggleNavDrawer: vi.fn() }),
+}));
+
+vi.mock("@/providers/ExperienceEntryProvider", () => ({
+  useExperienceEntry: () => ({
+    facility: null,
+    workspace: null,
+    shiftActive: false,
+    availableOperationalModes: ["my_life"],
+    operationalMode: "my_life",
+    setOperationalMode: vi.fn(),
+  }),
+}));
+
+vi.mock("@/components/experience/OperationalContextStrip", () => ({
+  OperationalContextStrip: () => null,
+}));
+
+vi.mock("@/components/navigation/ModuleBreadcrumb", () => ({
+  ModuleBreadcrumb: () => null,
+}));
+
+vi.mock("@/components/navigation/ExperienceSidebar", () => ({
+  ExperienceSidebar: () => null,
+}));
+
+vi.mock("@/components/intelligent/ProactiveAssistant", () => ({
+  ProactiveAssistant: () => null,
+}));
+
+vi.mock("@/components/clinical/ClinicalSupportStrip", () => ({
+  ClinicalSupportStrip: () => null,
+}));
+
+vi.mock("@/components/clinical/FloatingClinicalAssist", () => ({
+  FloatingClinicalAssist: () => null,
 }));
 
 vi.mock("@/components/ui/DictationButton", () => ({
@@ -37,16 +79,32 @@ describe("journey shell components", () => {
     expect(screen.getByRole("link", { name: "Queues" })).toBeInTheDocument();
   });
 
-  it("renders nompilo global command bar and opens palette", () => {
-    mockUsePathname.mockReturnValue("/client-journey");
-    render(<NompiloGlobalCommandBar />);
-    expect(screen.getByText("Nompilo Command Layer")).toBeInTheDocument();
-    fireEvent.focus(
-      screen.getByPlaceholderText(
-        "Ask Nompilo... Search services, providers, records, reports, learning, support",
-      ),
+  it("keeps hero auth logo within mobile Nompilo size budget (≤48px)", () => {
+    const { container } = render(<ImpiloBrandLogo variant="hero" />);
+    const image = container.querySelector("img");
+    expect(image).toBeTruthy();
+    expect(image?.className).toContain("h-10");
+    expect(image?.className).toContain("sm:h-12");
+    expect(image?.className).toContain("lg:h-14");
+  });
+
+  it("does not render the full-width Nompilo command strip in AppLayout", () => {
+    mockUsePathname.mockReturnValue("/home");
+    render(
+      <AppLayout>
+        <div>content</div>
+      </AppLayout>,
     );
-    expect(mockFocusSearchPalette).toHaveBeenCalled();
+    expect(screen.queryByText("Nompilo Command Layer")).not.toBeInTheDocument();
+    expect(screen.getByText("content")).toBeInTheDocument();
+  });
+
+  it("exposes Ask Nompilo via Ctrl+K shell commands", () => {
+    const commands = visibleShellCommands(() => true);
+    const ask = commands.find((command) => command.id === "cmd-ask");
+    expect(ask?.label).toBe("Ask Nompilo");
+    expect(ask?.keywords).toContain("nompilo");
+    expect(ask?.action).toEqual({ type: "navigate", href: "/ask" });
   });
 
   it("renders accessibility toolbar toggles", () => {
@@ -57,4 +115,3 @@ describe("journey shell components", () => {
     expect(screen.getByRole("button", { name: "Read Aloud" })).toBeInTheDocument();
   });
 });
-

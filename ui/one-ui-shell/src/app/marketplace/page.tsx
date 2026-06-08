@@ -11,6 +11,7 @@ import {
   useMarketplacePartners,
 } from "@/hooks/queries/useMarketplace";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { MarketplaceOrderOrchestrationRail } from "@/components/marketplace/MarketplaceOrderOrchestrationRail";
 
 export default function MarketplacePage() {
   const facility = useFacilityStore((state) => state.facility);
@@ -31,6 +32,7 @@ export default function MarketplacePage() {
     <AppLayout>
       <PageShell title="Marketplace" subtitle="Procure services, track orders, and keep facility supply decisions inside the same operational experience layer.">
         <div className="space-y-6">
+          <MarketplaceOrderOrchestrationRail />
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>

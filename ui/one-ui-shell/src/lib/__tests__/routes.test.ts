@@ -355,6 +355,26 @@ describe("Route Registry", () => {
       expect(route?.guard).toBe("auth");
     }
   });
+
+  it("registers Wave 2 identity and coverage child routes", () => {
+    const wave2Routes: Array<[string, GuardType, string | undefined]> = [
+      ["/registry/clients/new", "auth", undefined],
+      ["/registry/clients/[id]", "auth", undefined],
+      ["/coverage/enroll", "auth", undefined],
+      ["/coverage/member", "auth", undefined],
+      ["/coverage/contracts", "role", "ADMIN"],
+      ["/wellness/dashboard", "auth", undefined],
+    ];
+
+    for (const [path, guard, role] of wave2Routes) {
+      const route = ROUTES.find((r) => r.path === path);
+      expect(route, `missing route ${path}`).toBeTruthy();
+      expect(route?.guard).toBe(guard);
+      if (role) {
+        expect(route?.requiredRole).toBe(role);
+      }
+    }
+  });
 });
 
 describe("buildBreadcrumbTrail", () => {

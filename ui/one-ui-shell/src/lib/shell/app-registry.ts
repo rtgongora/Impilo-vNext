@@ -439,8 +439,9 @@ export const SHELL_COMMANDS: ShellCommand[] = [
   },
   {
     id: "cmd-ask",
-    label: "Open Ask",
-    keywords: ["ask", "question", "chat", "assistant"],
+    label: "Ask Nompilo",
+    description: "AI guidance, search, and workflow companion",
+    keywords: ["nompilo", "ask nompilo", "ask", "question", "chat", "assistant", "guidance", "ai"],
     action: { type: "navigate", href: "/ask" },
   },
   {

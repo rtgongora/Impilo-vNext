@@ -41,6 +41,19 @@ vi.mock("@/hooks/queries/useAssets", () => ({
   useAssets: () => ({ data: { data: [] } as unknown, isLoading: false, error: null }),
 }));
 
+vi.mock("@/hooks/queries/useFacilities", () => ({
+  useFacilities: () => ({ data: { data: [{ id: "fac-1", attributes: { province: "Harare", district: "Harare" } }] }, isLoading: false, error: null }),
+}));
+
+vi.mock("@/hooks/queries/useFinancialReports", () => ({
+  useRevenueSummary: () => ({ data: { total_revenue: 12000 }, isLoading: false, error: null }),
+}));
+
+vi.mock("@/hooks/queries/useMushexPlatformAdmin", () => ({
+  extractCount: () => 2,
+  useMushexPlatformRemittanceTransfers: () => ({ data: { items: [{}, {}] }, isLoading: false, error: null }),
+}));
+
 describe("EnterpriseResourceDashboard", () => {
   beforeEach(() => {
     mockUseFacilityStore.mockImplementation((selector) => selector({ facility: { id: "fac-1" } }));
@@ -52,9 +65,9 @@ describe("EnterpriseResourceDashboard", () => {
   it("renders API-backed inventory tiles with numeric counts", () => {
     render(<EnterpriseResourceDashboard />);
     expect(screen.getByText("Stockouts (on-hand)")).toBeInTheDocument();
-    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getAllByText("3").length).toBeGreaterThan(0);
     expect(screen.getByText("Reconciliation queue")).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getAllByText("2").length).toBeGreaterThan(0);
     expect(screen.getByText("Procurement requisitions")).toBeInTheDocument();
     expect(screen.getByText("Purchase orders")).toBeInTheDocument();
   });
@@ -70,9 +83,10 @@ describe("EnterpriseResourceDashboard", () => {
     expect(screen.getByRole("link", { name: "Select facility" })).toHaveAttribute("href", "/facility");
   });
 
-  it("documents that high-level revenue and fleet KPIs are not fabricated", () => {
+  it("renders revenue and cold-chain tiles for finance roles", () => {
     render(<EnterpriseResourceDashboard />);
-    expect(screen.getByText(/What is intentionally not fabricated/i)).toBeInTheDocument();
-    expect(screen.getByText(/reporting-service/i)).toBeInTheDocument();
+    expect(screen.getByText("Revenue (month)")).toBeInTheDocument();
+    expect(screen.getByText("Cold-chain risk (30d)")).toBeInTheDocument();
+    expect(screen.getByText("MusheX remittances")).toBeInTheDocument();
   });
 });

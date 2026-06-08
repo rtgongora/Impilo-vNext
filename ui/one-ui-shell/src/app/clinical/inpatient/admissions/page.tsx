@@ -45,7 +45,7 @@ export default function InpatientAdmissionsPage() {
       title="Inpatient admissions"
       subtitle="Active episodes — search, open, transfer, and discharge via BFF"
       plane="Clinical Plane"
-      maturity="partial"
+      maturity="live"
       tabs={INPATIENT_TABS}
       relatedLinks={[
         { label: "Ward board", href: "/clinical/inpatient/ward-board" },

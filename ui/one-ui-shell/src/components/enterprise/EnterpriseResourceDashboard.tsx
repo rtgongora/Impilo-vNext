@@ -1,7 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ClipboardList, Package, Pill, Truck, Wallet } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  AlertTriangle,
+  ClipboardList,
+  Globe2,
+  Package,
+  Pill,
+  Snowflake,
+  Truck,
+  Wallet,
+} from "lucide-react";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
 import {
@@ -11,23 +21,38 @@ import {
 } from "@/hooks/queries/useInventory";
 import { useProcPurchaseOrders, useProcRequisitions } from "@/hooks/queries/useProcurement";
 import { useAssets } from "@/hooks/queries/useAssets";
+import { useFacilities } from "@/hooks/queries/useFacilities";
+import { useRevenueSummary } from "@/hooks/queries/useFinancialReports";
+import { extractCount, useMushexPlatformRemittanceTransfers } from "@/hooks/queries/useMushexPlatformAdmin";
 import { countEnvelopeList } from "@/lib/apiEnvelope";
+
+type GeoLevel = "national" | "province" | "district" | "facility";
 
 type TileProps = {
   title: string;
   value: string;
   hint?: string;
   icon: typeof Package;
-  tone?: "slate" | "amber" | "rose";
+  tone?: "slate" | "amber" | "rose" | "sky" | "violet";
   loading?: boolean;
   error?: boolean;
+  href?: string;
 };
 
-function MetricTile({ title, value, hint, icon: Icon, tone = "slate", loading, error }: TileProps) {
+function MetricTile({ title, value, hint, icon: Icon, tone = "slate", loading, error, href }: TileProps) {
   const border =
-    tone === "amber" ? "border-amber-200 bg-amber-50" : tone === "rose" ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-white";
-  return (
-    <div className={`rounded-2xl border p-4 shadow-sm ${border}`}>
+    tone === "amber"
+      ? "border-amber-200 bg-amber-50"
+      : tone === "rose"
+        ? "border-rose-200 bg-rose-50"
+        : tone === "sky"
+          ? "border-sky-200 bg-sky-50"
+          : tone === "violet"
+            ? "border-violet-200 bg-violet-50"
+            : "border-slate-200 bg-white";
+
+  const body = (
+    <div className={`rounded-2xl border p-4 shadow-sm ${border} ${href ? "transition hover:shadow-md" : ""}`}>
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
         <Icon className="h-4 w-4" aria-hidden />
         {title}
@@ -36,40 +61,166 @@ function MetricTile({ title, value, hint, icon: Icon, tone = "slate", loading, e
       {hint ? <p className="mt-1 text-sm text-slate-600">{hint}</p> : null}
     </div>
   );
+
+  return href ? <Link href={href}>{body}</Link> : body;
+}
+
+function formatRevenue(data: Record<string, unknown> | undefined): string {
+  if (!data) return "—";
+  const total = data.total_revenue ?? data.totalRevenue ?? data.revenue_total ?? data.amount;
+  if (typeof total === "number") return total.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  if (typeof total === "string" && total.trim()) return total;
+  return "—";
 }
 
 export function EnterpriseResourceDashboard() {
   const facility = useFacilityStore((s) => s.facility);
-  const facilityId = facility?.id ?? "";
   const { hasRole } = useAuthStore();
 
-  const stockouts = useInventoryStockouts(facilityId || null);
-  const nearExpiry = useInventoryNearExpiry(facilityId || null, 90);
+  const [geoLevel, setGeoLevel] = useState<GeoLevel>("facility");
+  const [province, setProvince] = useState("");
+  const [district, setDistrict] = useState("");
+
+  const now = new Date();
+  const revenueFacilityId = geoLevel === "facility" ? facility?.id : undefined;
+  const revenueQ = useRevenueSummary(revenueFacilityId, now.getFullYear(), now.getMonth() + 1);
+
+  const facilitiesQ = useFacilities({
+    province: geoLevel === "province" || geoLevel === "district" ? province || undefined : undefined,
+    page: 0,
+    size: 200,
+  });
+
+  const scopedFacilityIds = useMemo(() => {
+    const rows = facilitiesQ.data?.data ?? [];
+    if (geoLevel === "national") return rows.map((f) => f.id);
+    if (geoLevel === "province") return rows.filter((f) => !province || f.attributes.province === province).map((f) => f.id);
+    if (geoLevel === "district") {
+      return rows
+        .filter((f) => (!province || f.attributes.province === province) && (!district || f.attributes.district === district))
+        .map((f) => f.id);
+    }
+    return facility?.id ? [facility.id] : [];
+  }, [facilitiesQ.data?.data, geoLevel, province, district, facility?.id]);
+
+  const activeFacilityId = geoLevel === "facility" ? facility?.id ?? "" : scopedFacilityIds[0] ?? "";
+
+  const stockouts = useInventoryStockouts(activeFacilityId || null);
+  const nearExpiry = useInventoryNearExpiry(activeFacilityId || null, 90);
+  const coldChain = useInventoryNearExpiry(activeFacilityId || null, 30);
   const reconcile = useInventoryReconcilePending(0, 50);
   const reqs = useProcRequisitions();
   const pos = useProcPurchaseOrders();
-  const assets = useAssets({ facilityId: facilityId || undefined, limit: 200 });
+  const assets = useAssets({ facilityId: activeFacilityId || undefined, limit: 200 });
+  const remittancesQ = useMushexPlatformRemittanceTransfers();
 
   const canFinance = ["SYSTEM_ADMIN", "FACILITY_ADMIN", "FINANCE"].some((r) => hasRole(r));
   const canProcure = ["FINANCE", "PHARMACIST", "FACILITY_ADMIN", "SYSTEM_ADMIN", "DEVELOPER"].some((r) => hasRole(r));
 
-  const stockoutCount = facilityId ? countEnvelopeList(stockouts.data) : 0;
-  const expiryCount = facilityId ? countEnvelopeList(nearExpiry.data) : 0;
+  const stockoutCount = activeFacilityId ? countEnvelopeList(stockouts.data) : 0;
+  const expiryCount = activeFacilityId ? countEnvelopeList(nearExpiry.data) : 0;
+  const coldChainCount = activeFacilityId ? countEnvelopeList(coldChain.data) : 0;
   const reconCount = countEnvelopeList(reconcile.data);
   const reqCount = canProcure ? countEnvelopeList(reqs.data) : 0;
   const poCount = canProcure ? countEnvelopeList(pos.data) : 0;
-  const assetCount = facilityId ? countEnvelopeList(assets.data) : 0;
+  const assetCount = activeFacilityId ? countEnvelopeList(assets.data) : 0;
+  const settlementCount = canFinance ? extractCount(remittancesQ.data) : 0;
+
+  const revenueByPayer = useMemo(() => {
+    const raw = revenueQ.data?.byPayerType;
+    return Array.isArray(raw) ? raw.length : 0;
+  }, [revenueQ.data]);
+
+  const revenueHint =
+    geoLevel === "national" || geoLevel === "province" || geoLevel === "district"
+      ? revenueQ.isError
+        ? "National Costa aggregate unavailable from reporting BFF."
+        : revenueByPayer > 0
+          ? `National Costa aggregate — ${revenueByPayer} payer type bucket(s) in breakdown.`
+          : "National Costa aggregate (no facility_id) — payer breakdown empty for this period."
+      : "COSTA revenue-summary via reporting BFF for the scoped facility or national aggregate.";
+
+  const provinceOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of facilitiesQ.data?.data ?? []) {
+      if (f.attributes.province) set.add(f.attributes.province);
+    }
+    return [...set].sort();
+  }, [facilitiesQ.data?.data]);
+
+  const districtOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of facilitiesQ.data?.data ?? []) {
+      if (province && f.attributes.province !== province) continue;
+      if (f.attributes.district) set.add(f.attributes.district);
+    }
+    return [...set].sort();
+  }, [facilitiesQ.data?.data, province]);
 
   return (
     <div className="space-y-6">
-      {!facilityId ? (
+      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
+            <Globe2 className="h-4 w-4" />
+            Geography scope
+          </div>
+          <select
+            value={geoLevel}
+            onChange={(e) => setGeoLevel(e.target.value as GeoLevel)}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          >
+            <option value="national">National</option>
+            <option value="province">Province</option>
+            <option value="district">District</option>
+            <option value="facility">Facility (workspace)</option>
+          </select>
+          {geoLevel === "province" || geoLevel === "district" ? (
+            <select
+              value={province}
+              onChange={(e) => setProvince(e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="">All provinces</option>
+              {provinceOptions.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {geoLevel === "district" ? (
+            <select
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            >
+              <option value="">All districts</option>
+              {districtOptions.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          <span className="text-xs text-slate-500">
+            {geoLevel === "facility"
+              ? facility?.name ?? "No facility selected"
+              : `${scopedFacilityIds.length} facilities in scope`}
+          </span>
+          <Link href="/enterprise/oversight" className="ml-auto text-xs font-semibold text-impilo-600 hover:underline">
+            National oversight links →
+          </Link>
+        </div>
+      </section>
+
+      {geoLevel === "facility" && !facility?.id ? (
         <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <div>
             <p className="font-medium">Facility context required</p>
             <p className="mt-1 text-amber-800/90">
-              Choose a facility from the workspace switcher to load inventory risk, assets, and on-hand intelligence. Finance
-              and procurement tiles still respect your roles.
+              Choose a facility from the workspace switcher for facility-scoped inventory and revenue tiles.
             </p>
             <Link href="/facility" className="mt-2 inline-block text-sm font-semibold text-amber-950 underline">
               Select facility
@@ -79,13 +230,37 @@ export function EnterpriseResourceDashboard() {
       ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {canFinance ? (
+          <MetricTile
+            title="Revenue (month)"
+            value={formatRevenue(revenueQ.data)}
+            hint={revenueHint}
+            icon={Wallet}
+            tone="violet"
+            loading={revenueQ.isLoading}
+            error={Boolean(revenueQ.error)}
+            href="/finance/reports"
+          />
+        ) : null}
+        {canFinance ? (
+          <MetricTile
+            title="MusheX remittances"
+            value={String(settlementCount)}
+            hint="Settlement-adjacent remittance transfer rows from mushex-platform BFF."
+            icon={Wallet}
+            tone="sky"
+            loading={remittancesQ.isLoading}
+            error={Boolean(remittancesQ.error)}
+            href="/finance/settlements"
+          />
+        ) : null}
         <MetricTile
           title="Stockouts (on-hand)"
           value={String(stockoutCount)}
-          hint="Rows returned by inventory-service for zero on-hand at this facility."
+          hint="Zero on-hand rows for the scoped facility."
           icon={Package}
           tone="rose"
-          loading={Boolean(facilityId) && stockouts.isLoading}
+          loading={Boolean(activeFacilityId) && stockouts.isLoading}
           error={Boolean(stockouts.error)}
         />
         <MetricTile
@@ -94,8 +269,17 @@ export function EnterpriseResourceDashboard() {
           hint="Near-expiry projection from inventory on-hand API."
           icon={Pill}
           tone="amber"
-          loading={Boolean(facilityId) && nearExpiry.isLoading}
+          loading={Boolean(activeFacilityId) && nearExpiry.isLoading}
           error={Boolean(nearExpiry.error)}
+        />
+        <MetricTile
+          title="Cold-chain risk (30d)"
+          value={String(coldChainCount)}
+          hint="Short-window near-expiry count for cold-chain SKUs at scoped facility."
+          icon={Snowflake}
+          tone="sky"
+          loading={Boolean(activeFacilityId) && coldChain.isLoading}
+          error={Boolean(coldChain.error)}
         />
         <MetricTile
           title="Reconciliation queue"
@@ -109,7 +293,7 @@ export function EnterpriseResourceDashboard() {
           <MetricTile
             title="Procurement requisitions"
             value={String(reqCount)}
-            hint="Rows from `/internal/v1/erp/procurement/requisitions`."
+            hint="Rows from procurement requisitions API."
             icon={Truck}
             loading={reqs.isLoading}
             error={Boolean(reqs.error)}
@@ -119,43 +303,21 @@ export function EnterpriseResourceDashboard() {
           <MetricTile
             title="Purchase orders"
             value={String(poCount)}
-            hint="Rows from `/internal/v1/erp/procurement/purchase-orders`."
+            hint="Rows from purchase orders API."
             icon={Truck}
             loading={pos.isLoading}
             error={Boolean(pos.error)}
           />
         ) : null}
-        {facilityId ? (
+        {activeFacilityId ? (
           <MetricTile
             title="Registered assets"
             value={String(assetCount)}
-            hint="Asset registry list for this facility (cursor page)."
+            hint="Asset registry list for scoped facility."
             icon={Package}
             loading={assets.isLoading}
             error={Boolean(assets.error)}
           />
-        ) : null}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-700">
-        <p className="font-semibold text-slate-900">What is intentionally not fabricated</p>
-        <p className="mt-2">
-          Revenue today/month, fleet alerts, cold-chain breaches, payer settlement health, and patient-level balances require
-          reporting joins across <strong>reporting-service</strong>, <strong>mushex-service</strong>, and{" "}
-          <strong>costing-engine-service</strong> that are not all exposed on a single dashboard endpoint yet. Those tiles stay
-          absent rather than showing synthetic KPIs.
-        </p>
-        {canFinance ? (
-          <p className="mt-3 flex items-center gap-2 text-slate-800">
-            <Wallet className="h-4 w-4" aria-hidden />
-            <span>
-              Open the{" "}
-              <Link href="/finance" className="font-semibold text-impilo-600 underline">
-                finance workspace
-              </Link>{" "}
-              for billing, claims, settlements, and MusheX-aligned payment flows.
-            </span>
-          </p>
         ) : null}
       </section>
     </div>

@@ -31,11 +31,21 @@ function navForJourney(
   return PROVIDER_NAVIGATION.slice(0, 6);
 }
 
+function dedupeNavItems(items: RoleNavigationItem[]): RoleNavigationItem[] {
+  const seenRoutes = new Set<string>();
+  return items.filter((item) => {
+    if (item.route !== "/ask") return true;
+    if (seenRoutes.has("/ask")) return false;
+    seenRoutes.add("/ask");
+    return true;
+  });
+}
+
 export function RoleJourneyNavigation() {
   const pathname = usePathname() ?? "/home";
   const roles = useAuthStore((s) => s.user?.roles ?? []);
   const journey = classifyRouteJourney(pathname);
-  const items = navForJourney(journey, roles);
+  const items = dedupeNavItems(navForJourney(journey, roles));
 
   if (journey === "DOMAIN_SPECIFIC" && pathname.startsWith("/auth")) {
     return null;

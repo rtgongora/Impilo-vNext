@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Truck } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { MadiBloodLogisticsPanel } from "@/components/madi/MadiBloodLogisticsPanel";
 import { PageShell } from "@/components/PageShell";
 
 export default function MadiLogisticsPage() {
@@ -13,7 +14,9 @@ export default function MadiLogisticsPage() {
         subtitle="Dispatch blood products with cold-chain custody via Nhume"
         icon={<Truck className="h-6 w-6" />}
       >
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
+        <MadiBloodLogisticsPanel />
+
+        <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
           <p className="text-sm text-gray-700">
             Blood unit dispatch uses Nhume last-mile logistics with chain-of-custody tracking.
             Create a delivery with delivery type <strong>BLOOD_PRODUCT</strong> and link clinical context

@@ -5,9 +5,25 @@ import { resolve } from "node:path";
 describe("provider-login golden thread", () => {
   const repoRoot = resolve(__dirname, "../../../../..");
 
-  it("UI route wires bounded-context client", () => {
+  it("UI route wires bounded-context client and post-login resolver", () => {
     const page = readFileSync(resolve(repoRoot, "ui/one-ui-shell/src/app/auth/login/provider-id/page.tsx"), "utf8");
     expect(page).toContain("provider");
+    expect(page).toContain("buildPostLoginResolvingPath");
+  });
+
+  it("resolving page lands activated provider on provider-workspace", () => {
+    const resolver = readFileSync(
+      resolve(repoRoot, "ui/one-ui-shell/src/lib/resolve-post-login-destination.ts"),
+      "utf8",
+    );
+    expect(resolver).toContain("/provider-workspace");
+    expect(resolver).toContain("my_life");
+
+    const resolving = readFileSync(
+      resolve(repoRoot, "ui/one-ui-shell/src/app/auth/resolving/page.tsx"),
+      "utf8",
+    );
+    expect(resolving).toContain("resolvePostLoginDestination");
   });
 
   it("hook calls BFF sovereign proxy", () => {

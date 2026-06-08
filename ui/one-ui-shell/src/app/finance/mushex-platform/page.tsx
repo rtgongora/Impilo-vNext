@@ -11,19 +11,17 @@
  * sidecar {@code ui/mushex-ops-console} explicitly defers MusheX platform
  * admin to this page.
  *
- * Stage 3.3 scope: READ-ONLY. The page orients finance / platform-admin users
- * across MusheX's Mode A (orchestration gateway) administrative APIs —
- * custodial wallets, remittance transfers, card profiles, reversal records —
- * and links to neighbouring canonical finance surfaces. No write actions
- * (no create-wallet, no credit/debit, no create-remittance, no create-card,
- * no create-reversal) are surfaced here; those remain backend-only until a
- * later stage. No fabricated platform stats.
+ * Stage 3.3 scope was read-only; Wave 4 adds one controlled wallet credit
+ * (top-up) via POST /wallets/{walletId}/credit. Other writes (create wallet,
+ * debit, create remittance, create card, create reversal) remain backend-only
+ * until step-up auth lands. No fabricated platform stats.
  *
  * Doctrine: {@link ../../../../../docs/doctrine/mushex-gateway-neutrality.md}.
  */
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { QueryResultPanel } from "@/components/common/QueryResultPanel";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -42,12 +40,14 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { WorkflowHeader } from "@/components/workflow/WorkflowHeader";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { MusheXProgrammeAttributionPanel } from "@/components/finance/MusheXProgrammeAttributionPanel";
 import {
   extractCount,
   useMushexPlatformAdapterReadiness,
   useMushexPlatformCardProfiles,
   useMushexPlatformRemittanceTransfers,
   useMushexPlatformReversals,
+  useMushexPlatformWalletCredit,
   useMushexPlatformWallets,
   type AdapterReadinessRow,
 } from "@/hooks/queries/useMushexPlatformAdmin";
@@ -169,8 +169,14 @@ export default function FinanceMushexPlatformPage() {
   const [remittanceLookupId, setRemittanceLookupId] = useState("");
   const [cardLookupId, setCardLookupId] = useState("");
   const [reversalLookupId, setReversalLookupId] = useState("");
+  const [creditWalletId, setCreditWalletId] = useState("");
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditReason, setCreditReason] = useState("");
+  const [creditConfirmed, setCreditConfirmed] = useState(false);
+  const [creditErr, setCreditErr] = useState<string | null>(null);
 
   const walletsQ = useMushexPlatformWallets();
+  const walletCreditM = useMushexPlatformWalletCredit(creditWalletId.trim() || null);
   const remittanceQ = useMushexPlatformRemittanceTransfers();
   const cardsQ = useMushexPlatformCardProfiles();
   const reversalsQ = useMushexPlatformReversals();
@@ -220,7 +226,7 @@ export default function FinanceMushexPlatformPage() {
     <AppLayout>
       <PageShell
         title="MusheX Platform Administration"
-        subtitle="Read-only platform view for custodial wallets, remittance transfers, card profiles, reversals, and gateway/platform operations."
+        subtitle="Platform view for custodial wallets, remittance transfers, card profiles, reversals, and gateway readiness — with one controlled wallet credit action."
       >
         <div className="mb-4">
           <Link
@@ -236,8 +242,8 @@ export default function FinanceMushexPlatformPage() {
           <WorkflowHeader
             badge="MusheX enterprise plane (finance domain)"
             badgeIcon={Shield}
-            title="MusheX platform administration is read-only here; write operations stay on the backend."
-            description="This hub surfaces the live shapes of the MusheX platform admin APIs — custodial wallets, remittance transfers, card profiles, and reversal records — so finance administrators can see what is wired without leaving the canonical web shell. Writes (create wallet, credit/debit, create remittance, create card, create reversal) are deliberately not exposed in this stage."
+            title="MusheX platform administration — read-first with one controlled write."
+            description="This hub surfaces custodial wallets, remittance transfers, card profiles, and reversal records from the MusheX platform admin BFF. Wave 4 adds a single governed wallet credit (top-up) action; other writes remain backend-only until step-up auth lands."
             context={[
               { label: "Facility", value: facility?.name ?? "No facility selected" },
               { label: "Mode", value: "Mode A — orchestration gateway" },
@@ -268,6 +274,8 @@ export default function FinanceMushexPlatformPage() {
               },
             ]}
           />
+
+          <MusheXProgrammeAttributionPanel />
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* ── Custodial wallets ─────────────────────────────────── */}
@@ -612,6 +620,100 @@ export default function FinanceMushexPlatformPage() {
                 </ul>
               </div>
             </div>
+          </section>
+
+          {/* ── Controlled write: wallet credit (top-up) ─────────────── */}
+          <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900">Controlled action — wallet credit (top-up)</h2>
+            <p className="mt-1 text-xs text-slate-600">
+              POST{" "}
+              <code className="text-[10px]">
+                /internal/v1/finance/mushex-platform/wallets/&#123;walletId&#125;/credit
+              </code>
+              . Requires explicit confirmation and audit reason. Finance role + MusheX platform gate enforced
+              by TSHEPO on the BFF.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <label className="text-xs text-slate-600">
+                Wallet ID
+                <input
+                  type="text"
+                  value={creditWalletId}
+                  onChange={(e) => setCreditWalletId(e.target.value)}
+                  placeholder="custodial-wallet-id"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                  aria-label="Wallet ID for credit"
+                />
+              </label>
+              <label className="text-xs text-slate-600">
+                Amount
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={creditAmount}
+                  onChange={(e) => setCreditAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  aria-label="Credit amount"
+                />
+              </label>
+            </div>
+            <input
+              type="text"
+              placeholder="Reason for this write (required)"
+              className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs"
+              value={creditReason}
+              onChange={(e) => setCreditReason(e.target.value)}
+              aria-label="Audit reason for wallet credit"
+            />
+            <label className="mt-2 flex items-center gap-2 text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={creditConfirmed}
+                onChange={(e) => setCreditConfirmed(e.target.checked)}
+              />
+              I confirm this is an intentional operational wallet credit.
+            </label>
+            {creditErr ? <p className="mt-2 text-xs text-red-700">{creditErr}</p> : null}
+            <button
+              type="button"
+              disabled={
+                walletCreditM.isPending ||
+                !creditConfirmed ||
+                !creditReason.trim() ||
+                !creditWalletId.trim() ||
+                !creditAmount.trim()
+              }
+              className="mt-3 rounded-lg bg-amber-700 px-3 py-2 text-xs font-medium text-white hover:bg-amber-800 disabled:opacity-50"
+              onClick={() => {
+                const amount = Number(creditAmount);
+                if (!Number.isFinite(amount) || amount <= 0) {
+                  setCreditErr("Amount must be a positive number.");
+                  return;
+                }
+                setCreditErr(null);
+                walletCreditM.mutate({
+                  amount,
+                  currency: "USD",
+                  audit_reason: creditReason.trim(),
+                  reference: `web-topup-${Date.now()}`,
+                });
+              }}
+            >
+              {walletCreditM.isPending ? "Posting credit…" : "Submit wallet credit"}
+            </button>
+            {walletCreditM.data || walletCreditM.isError ? (
+              <div className="mt-3">
+                <QueryResultPanel
+                  title="Wallet credit result"
+                  isPending={walletCreditM.isPending}
+                  isLoading={walletCreditM.isPending}
+                  isError={walletCreditM.isError}
+                  error={walletCreditM.error}
+                  data={walletCreditM.data}
+                />
+              </div>
+            ) : null}
           </section>
 
           {/* ── Related MusheX finance surfaces ─────────────────────── */}

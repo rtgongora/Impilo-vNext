@@ -23,6 +23,10 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/components/common/QueryResultPanel", () => ({
+  QueryResultPanel: () => <div data-testid="query-result-panel" />,
+}));
+
 vi.mock("@/components/workflow/WorkflowHeader", () => ({
   WorkflowHeader: ({
     badge,
@@ -59,12 +63,21 @@ interface QueryShape<T> {
   error?: unknown;
 }
 
+const mockWalletCreditMutate = vi.fn();
+
 vi.mock("@/hooks/queries/useMushexPlatformAdmin", async () => {
   const actual = await vi.importActual<typeof import("@/hooks/queries/useMushexPlatformAdmin")>(
     "@/hooks/queries/useMushexPlatformAdmin",
   );
   return {
     ...actual,
+    useMushexPlatformWalletCredit: () => ({
+      mutate: mockWalletCreditMutate,
+      isPending: false,
+      data: undefined,
+      isError: false,
+      error: null,
+    }),
     useMushexPlatformWallets: (): QueryShape<unknown[]> => ({
       data: [{ id: "w-1" }, { id: "w-2" }, { id: "w-3" }],
       isLoading: false,
@@ -130,7 +143,7 @@ describe("FinanceMushexPlatformPage", () => {
 
     expect(screen.getByText("MusheX Platform Administration")).toBeInTheDocument();
     expect(
-      screen.getByText(/Read-only platform view for custodial wallets/),
+      screen.getByText(/Platform view for custodial wallets, remittance transfers/),
     ).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { name: "Custodial wallets" })).toBeInTheDocument();
@@ -224,15 +237,15 @@ describe("FinanceMushexPlatformPage", () => {
     }
   });
 
-  it("renders no write-action buttons in this stage", () => {
+  it("exposes the controlled wallet credit (top-up) write action", () => {
     render(<FinanceMushexPlatformPage />);
-
-    const buttons = screen.queryAllByRole("button");
-    for (const button of buttons) {
-      const name = (button.textContent || "").toLowerCase();
-      // Defensive: this hub is read-only — no create/credit/debit/issue/reverse buttons.
-      expect(name).not.toMatch(/create|credit|debit|issue|reverse|refund|approve|reject|cancel/);
-    }
+    expect(screen.getByText(/Controlled action — wallet credit/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Submit wallet credit/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/\/internal\/v1\/finance\/mushex-platform\/wallets\/\{walletId\}\/credit/),
+    ).toBeInTheDocument();
   });
 
   // Phase 2 — adapter readiness table (audit gap G-7 closed).
@@ -324,6 +337,13 @@ describe("FinanceMushexPlatformPage — graceful unavailable states", () => {
       >("@/hooks/queries/useMushexPlatformAdmin");
       return {
         ...actual,
+        useMushexPlatformWalletCredit: () => ({
+          mutate: vi.fn(),
+          isPending: false,
+          data: undefined,
+          isError: false,
+          error: null,
+        }),
         useMushexPlatformWallets: () => ({
           data: undefined,
           isLoading: false,

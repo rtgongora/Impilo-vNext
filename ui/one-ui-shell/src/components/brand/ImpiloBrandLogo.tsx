@@ -7,7 +7,7 @@
 import Image from "next/image";
 
 interface ImpiloBrandLogoProps {
-  variant?: "mark" | "full";
+  variant?: "mark" | "full" | "hero";
   tone?: "brand" | "white" | "black";
   size?: number;
   className?: string;
@@ -34,7 +34,27 @@ export function ImpiloBrandLogo({
   size = 32,
   className,
 }: ImpiloBrandLogoProps) {
-  const src = assetMap[variant][tone];
+  const logoVariant = variant === "hero" ? "full" : variant;
+  const src = assetMap[logoVariant][tone];
+
+  if (variant === "hero") {
+    const heroHeight = 48;
+    const heroWidth = Math.round(heroHeight * FULL_RATIO);
+    return (
+      <span className={`inline-flex items-center ${className ?? ""}`}>
+        <Image
+          src={src}
+          alt="Impilo"
+          width={heroWidth}
+          height={heroHeight}
+          className="block h-10 w-auto sm:h-12 lg:h-14 xl:h-16"
+          draggable={false}
+          unoptimized
+        />
+      </span>
+    );
+  }
+
   const width = variant === "mark" ? size : Math.round(size * FULL_RATIO);
 
   return (

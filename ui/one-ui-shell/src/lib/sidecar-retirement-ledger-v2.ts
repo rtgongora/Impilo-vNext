@@ -65,27 +65,27 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     capability: "Ledger, settlements, reconciliation, and refunds",
     oldUiPath: "ui/mushex-finance-console:/ledger,/settlements,/reconciliation,/refunds",
     newExperiencePath: "/finance/ledger, /finance/settlements, /finance/reconciliation, /finance/refunds",
-    status: "absorbed into Experience",
+    status: "retired sidecar path",
     notes:
-      "FinanceLedgerController, SettlementController, ReconciliationController, and RefundOpsController are all consumed in Experience.",
+      "Wave 6 program retirement (RR-01). FinanceLedgerController, SettlementController, ReconciliationController, and RefundOpsController are consumed in Experience; sidecar removed from full-boot build matrix.",
   },
   {
     sidecarApp: "ui/mushex-ops-console",
     capability: "Fraud, adapters, ops reviews, and claims operations",
     oldUiPath: "ui/mushex-ops-console:/adapters,/fraud,/reviews,/claims",
     newExperiencePath: "/finance/payer-ops, /finance/payer-claims, /finance/payer-claims/[claimId]",
-    status: "absorbed into Experience",
+    status: "retired sidecar path",
     notes:
-      "Adapters, fraud, ops reviews, payer-claim queue, and payer-claim detail actions now run in Experience through typed finance routes.",
+      "Wave 6 program retirement (RR-02). Adapters, fraud, ops reviews, payer-claim queue, and payer-claim detail actions run in Experience; sidecar removed from full-boot build matrix.",
   },
   {
     sidecarApp: "ui/mushex-payer-portal",
     capability: "Payments, receipts, and remittance actions",
     oldUiPath: "ui/mushex-payer-portal:/payments,/receipts,/remittance",
     newExperiencePath: "/finance/payments, /finance/payer-ops",
-    status: "absorbed into Experience",
+    status: "retired sidecar path",
     notes:
-      "Experience now handles payment-intent, receipts, remittance, and refund-adjacent flows through typed finance routes.",
+      "Wave 6 program retirement (RR-03). Experience handles payment-intent, receipts, remittance, and refund-adjacent flows; sidecar removed from full-boot build matrix.",
   },
   {
     sidecarApp: "ui/costa-console",
@@ -109,7 +109,8 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     oldUiPath: "ui/ehr:/",
     newExperiencePath: "/ehr/[patientId]",
     status: "retired sidecar path",
-    notes: "The legacy EHR stub is superseded by the full Experience EHR route family.",
+    notes:
+      "Wave 6 program retirement (RR-05). The legacy EHR stub is superseded by the full Experience EHR route family; sidecar removed from full-boot build matrix.",
   },
   {
     sidecarApp: "ui/portal",
@@ -144,7 +145,10 @@ export const SIDECAR_RETIREMENT_LEDGER: SidecarRetirementEntry[] = [
     oldUiPath: "ui/oros-web:/worklist,/orders,/results,/catalog,/reconciliation",
     newExperiencePath: "/lab, /lab/worklist, /lab/results, /lab/catalog, /lab/reconciliation",
     status: "absorbed into Experience",
-    notes: "Lab routes are represented directly in the Experience shell.",
+    notes:
+      "Facility lab worklist parity is real: LabWorklistController + useLabWorklist (list, accept, reject against OROS /v1/worklists). Results review uses RESULT_AVAILABLE worklist plus lab-orders acknowledge. Catalog and LIS reconciliation pages remain maturity-labelled shells until dedicated BFF proxies exist.",
+    blockerContract:
+      "Experience BFF missing /internal/v1/lab-catalog and /internal/v1/lab-reconciliation proxies to OROS /v1/catalog and /v1/reconcile.",
   },
   {
     sidecarApp: "ui/ops-console",

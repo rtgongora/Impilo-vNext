@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import LabPage from "./page";
 
@@ -25,25 +26,68 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/components/FeatureMaturityBadge", () => ({
+  FeatureMaturityBadge: ({ detail }: { detail?: string }) => (
+    <span data-testid="maturity-badge">{detail}</span>
+  ),
+}));
+
+vi.mock("@/hooks/useFacilityStore", () => ({
+  useFacilityStore: (selector: (state: { facility: { id: string; name: string } | null }) => unknown) =>
+    selector({ facility: { id: "fac-lab-1", name: "Central Lab" } }),
+}));
+
+vi.mock("@/hooks/queries/useLabWorklist", () => ({
+  useLabWorklist: () => ({
+    isLoading: false,
+    isError: false,
+    data: {
+      data: {
+        summary: {
+          pending_collection: 3,
+          in_progress: 2,
+          completed: 5,
+          urgent: 1,
+          total: 10,
+        },
+        items: [],
+      },
+    },
+  }),
+}));
+
 describe("LabPage", () => {
-  it("renders laboratory hub with all section tiles", () => {
+  it("renders order hub with type filters and summary", () => {
     render(<LabPage />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "Laboratory" })).toBeInTheDocument();
-    expect(screen.getByText("Lab orders, results, worklists, and test catalog")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Order Hub" })).toBeInTheDocument();
+    expect(screen.getByText(/multi-type order orchestration/i)).toBeInTheDocument();
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByTestId("maturity-badge")).toHaveTextContent("lab-worklists");
   });
 
-  it("links to all four lab sub-pages", () => {
+  it("links to all four lab sub-pages with type query on worklist", async () => {
+    const user = userEvent.setup();
     render(<LabPage />);
 
-    expect(screen.getByText("Lab Worklist")).toBeInTheDocument();
+    expect(screen.getByText("Worklist")).toBeInTheDocument();
     expect(screen.getByText("Results Review")).toBeInTheDocument();
     expect(screen.getByText("Test Catalog")).toBeInTheDocument();
     expect(screen.getByText("Reconciliation")).toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: /Lab Worklist/i })).toHaveAttribute("href", "/lab/worklist");
-    expect(screen.getByRole("link", { name: /Results Review/i })).toHaveAttribute("href", "/lab/results");
-    expect(screen.getByRole("link", { name: /Test Catalog/i })).toHaveAttribute("href", "/lab/catalog");
-    expect(screen.getByRole("link", { name: /Reconciliation/i })).toHaveAttribute("href", "/lab/reconciliation");
+    expect(screen.getByRole("link", { name: /Worklist/i })).toHaveAttribute(
+      "href",
+      "/lab/worklist?type=LAB",
+    );
+    expect(screen.getByRole("link", { name: /Results Review/i })).toHaveAttribute(
+      "href",
+      "/lab/results",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Imaging" }));
+    expect(screen.getByRole("link", { name: /Worklist/i })).toHaveAttribute(
+      "href",
+      "/lab/worklist?type=IMAGING",
+    );
   });
 });

@@ -37,6 +37,10 @@ vi.mock("@/hooks/useFacilityStore", () => ({
     selector({ facility: { id: "facility-1", name: "Harare Central" } }),
 }));
 
+vi.mock("@/hooks/queries/useServiceAccessDecisions", () => ({
+  useServiceAccessDecisionsList: () => ({ data: [], isLoading: false, isError: false }),
+}));
+
 describe("FinancePage", () => {
   it("keeps finance entry anchored to the linked encounter and downstream revenue surfaces", () => {
     render(<FinancePage />);

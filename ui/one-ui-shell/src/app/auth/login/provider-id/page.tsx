@@ -6,15 +6,20 @@
  */
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, BadgeCheck, KeyRound, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 export default function ProviderIdLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const login = useLogin();
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -61,7 +66,9 @@ export default function ProviderIdLoginPage() {
             },
             token,
           );
-          router.push("/home");
+          useWorkModeStore.getState().deriveFromRoles(user.roles);
+          useConsentStore.getState().hydrate(user.id);
+          router.push(buildPostLoginResolvingPath(returnTo));
         },
         onError: () => {
           setError("Invalid Provider ID or PIN. Please try again.");

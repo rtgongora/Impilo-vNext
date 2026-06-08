@@ -25,6 +25,7 @@ import {
   normalizeFilter,
   readOperatorString,
 } from "@/lib/operator-telemetry";
+import { DispatchDeliveryOrchestrationPanel } from "@/components/operations/DispatchDeliveryOrchestrationPanel";
 
 type TaskCommandMode = "CREATE_TASK" | "ASSIGN_TASK" | "COMPLETE_TASK";
 
@@ -256,6 +257,7 @@ export default function DispatchOperationsPage() {
         subtitle="Operational dispatch telemetry plus backend fleet, courier, mission, and delivery control surfaces"
       >
         <div className="space-y-4">
+          <DispatchDeliveryOrchestrationPanel />
           <div className="grid gap-3 md:grid-cols-3">
             {dispatchMetrics.map((metric) => (
               <section key={metric.label} className="impilo-surface-card p-4">

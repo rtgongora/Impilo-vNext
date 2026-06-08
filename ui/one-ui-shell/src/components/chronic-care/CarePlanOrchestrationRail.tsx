@@ -5,7 +5,9 @@ import { ClipboardList, Loader2, Plus, Target } from "lucide-react";
 import type { CarePlanUi } from "@/hooks/queries/useCareContinuity";
 import {
   useAddCarePlanGoal,
+  useAddCarePlanIntervention,
   usePerformCarePlanIntervention,
+  useUpdateCarePlanGoal,
 } from "@/hooks/queries/useCareContinuity";
 
 interface CarePlanOrchestrationRailProps {
@@ -21,8 +23,11 @@ export function CarePlanOrchestrationRail({
 }: CarePlanOrchestrationRailProps) {
   const activePlan = plans.find((p) => p.status === "Active") ?? plans[0];
   const addGoal = useAddCarePlanGoal();
+  const updateGoal = useUpdateCarePlanGoal();
+  const addIntervention = useAddCarePlanIntervention();
   const performIntervention = usePerformCarePlanIntervention();
   const [goalText, setGoalText] = useState("");
+  const [interventionText, setInterventionText] = useState("");
 
   if (!activePlan) {
     return (
@@ -111,6 +116,62 @@ export function CarePlanOrchestrationRail({
         >
           {addGoal.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
           Add goal
+        </button>
+      </form>
+
+      {activePlan.goals[0]?.id ? (
+        <button
+          type="button"
+          disabled={updateGoal.isPending}
+          onClick={() =>
+            updateGoal.mutate(
+              {
+                planId: activePlan.id,
+                goalId: activePlan.goals[0]!.id,
+                patientId,
+                status: "ACHIEVED",
+                progress: 100,
+              },
+              { onSuccess: () => onPlanChanged?.() },
+            )
+          }
+          className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-900 disabled:opacity-50"
+        >
+          Mark primary goal achieved
+        </button>
+      ) : null}
+
+      <form
+        className="mt-3 flex flex-wrap items-end gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!interventionText.trim()) return;
+          addIntervention.mutate(
+            { planId: activePlan.id, patientId, label: interventionText.trim() },
+            {
+              onSuccess: () => {
+                setInterventionText("");
+                onPlanChanged?.();
+              },
+            },
+          );
+        }}
+      >
+        <div className="min-w-[200px] flex-1">
+          <label className="mb-1 block text-xs font-medium text-slate-600">Add intervention</label>
+          <input
+            value={interventionText}
+            onChange={(e) => setInterventionText(e.target.value)}
+            placeholder="e.g. Schedule foot exam"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={addIntervention.isPending || !interventionText.trim()}
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+        >
+          {addIntervention.isPending ? "Adding…" : "Add intervention"}
         </button>
       </form>
     </section>

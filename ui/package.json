@@ -7,7 +7,6 @@
     "shared-ui",
     "one-ui-shell",
     "ops-console",
-    "ehr",
     "portal",
     "ops-docs",
     "self-service",
@@ -23,15 +22,11 @@
     "msika-web",
     "msika-flow-ops",
     "msika-flow-portal",
-    "msika-flow-vendor",
-    "mushex-finance-console",
-    "mushex-ops-console",
-    "mushex-payer-portal"
+    "msika-flow-vendor"
   ],
   "scripts": {
     "dev:shell": "npm -w one-ui-shell run dev",
     "dev:ops": "npm -w ops-console run dev",
-    "dev:ehr": "npm -w ehr run dev",
     "dev:portal": "npm -w portal run dev",
     "dev:docs": "npm -w ops-docs run dev",
     "dev:self": "npm -w self-service run dev",

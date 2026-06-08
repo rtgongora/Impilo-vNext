@@ -8,6 +8,7 @@
  * which creates a triage record and updates queue priority from acuity.
  */
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -20,6 +21,7 @@ import {
   Save,
   Stethoscope,
   UserPlus,
+  Video,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
@@ -415,14 +417,23 @@ export default function TriageQueuePage() {
                                 {triageCat ? "Re-triage" : "Start Triage"}
                               </button>
                               {triageCat ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartHandoff(entry)}
-                                  disabled={callPatient.isPending}
-                                  className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
-                                >
-                                  {COORDINATION_COPY.startEncounterHandoff}
-                                </button>
+                                <>
+                                  <Link
+                                    href={`/telemedicine/new?patientId=${encodeURIComponent(getQueuePatientId(entry) ?? "")}`}
+                                    className="inline-flex items-center gap-1 rounded-xl border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-800 transition-colors hover:bg-violet-100"
+                                  >
+                                    <Video className="h-3.5 w-3.5" />
+                                    Escalate to teleconsult
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartHandoff(entry)}
+                                    disabled={callPatient.isPending}
+                                    className="rounded-xl bg-impilo-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-impilo-600 disabled:opacity-50"
+                                  >
+                                    {COORDINATION_COPY.startEncounterHandoff}
+                                  </button>
+                                </>
                               ) : null}
                             </div>
                           </td>

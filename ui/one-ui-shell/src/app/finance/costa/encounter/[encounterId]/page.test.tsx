@@ -31,6 +31,10 @@ vi.mock("@/components/PageShell", () => ({
   ),
 }));
 
+vi.mock("@/components/common/QueryResultPanel", () => ({
+  QueryResultPanel: () => <div data-testid="query-result-panel" />,
+}));
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ encounterId: "enc-001" }),
   useSearchParams: () => ({
@@ -71,6 +75,8 @@ vi.mock("@/hooks/queries/useServiceAccessDecisions", () => ({
   }),
 }));
 
+const mockIssueInvoiceMutate = vi.fn();
+
 vi.mock("@/hooks/queries/useCostaIntel", () => ({
   useCostaIntelCostEvents: (): QueryShape<unknown[]> => ({
     data: [
@@ -83,6 +89,13 @@ vi.mock("@/hooks/queries/useCostaIntel", () => ({
     ],
     isLoading: false,
     isError: false,
+  }),
+  useCostaIntelInvoiceFromEstimate: () => ({
+    mutate: mockIssueInvoiceMutate,
+    isPending: false,
+    data: undefined,
+    isError: false,
+    error: null,
   }),
 }));
 
@@ -225,13 +238,15 @@ describe("CostaEncounterTimelinePage", () => {
     expect(screen.getByText(/Settlement detail granularity/)).toBeInTheDocument();
   });
 
-  it("renders no write-action buttons on this page", () => {
+  it("exposes the issue-invoice-from-estimate billing trigger", () => {
     render(<CostaEncounterTimelinePage />);
-    const buttons = screen.queryAllByRole("button");
-    for (const button of buttons) {
-      const name = (button.textContent || "").toLowerCase();
-      expect(name).not.toMatch(/create|credit|debit|issue|reverse|refund|approve|block|cancel|submit/);
-    }
+    expect(screen.getByText(/Billing trigger — issue invoice from estimate/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Issue invoice from estimate/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/\/internal\/v1\/finance\/costa-intel\/invoices\/from-cost-estimate/),
+    ).toBeInTheDocument();
   });
 });
 
@@ -247,6 +262,13 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     }));
     vi.doMock("@/hooks/queries/useCostaIntel", () => ({
       useCostaIntelCostEvents: () => ({ data: [], isLoading: false, isError: false }),
+      useCostaIntelInvoiceFromEstimate: () => ({
+        mutate: vi.fn(),
+        isPending: false,
+        data: undefined,
+        isError: false,
+        error: null,
+      }),
     }));
     vi.doMock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
       useFinanceBillingInvoicesForEncounter: () => ({ data: [], isLoading: false, isError: false }),
@@ -283,6 +305,13 @@ describe("CostaEncounterTimelinePage — empty + error states", () => {
     }));
     vi.doMock("@/hooks/queries/useCostaIntel", () => ({
       useCostaIntelCostEvents: () => ({ data: [], isLoading: false, isError: false }),
+      useCostaIntelInvoiceFromEstimate: () => ({
+        mutate: vi.fn(),
+        isPending: false,
+        data: undefined,
+        isError: false,
+        error: null,
+      }),
     }));
     vi.doMock("@/hooks/queries/useFinanceBillingWorkspace", () => ({
       useFinanceBillingInvoicesForEncounter: () => ({ data: [], isLoading: false, isError: false }),

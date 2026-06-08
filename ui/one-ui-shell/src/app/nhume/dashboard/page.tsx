@@ -26,6 +26,7 @@ import { PageShell } from "@/components/PageShell";
 import { NhumeStatusChip, NhumePriorityChip } from "@/components/nhume/NhumeStatusChip";
 import { useNhumeDashboard } from "@/hooks/useNhume";
 import { UnifiedLogisticsMapPanel } from "@/components/operations/UnifiedLogisticsMapPanel";
+import { DispatchDeliveryOrchestrationPanel } from "@/components/operations/DispatchDeliveryOrchestrationPanel";
 
 const COUNTER_LAYOUT = [
   { key: "total_today", label: "Total Today" },
@@ -49,6 +50,8 @@ export default function NhumeDashboardPage() {
         subtitle="Live state of dispatch, fleet and delivery across the tenant"
         icon={<LayoutDashboard className="h-6 w-6" />}
       >
+        <DispatchDeliveryOrchestrationPanel />
+
         <div className="flex items-center justify-between mb-4">
           <div className="text-sm text-gray-500">
             {data?.generated_at && (

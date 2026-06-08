@@ -12,15 +12,19 @@
  * 2. Waits for the response (max 5 seconds)
  * 3. Updates the auth store with discovered linked IDs
  * 4. If professional IDs found, shows a brief notification before navigating
- * 5. Navigates to /home regardless after timeout
+ * 5. Navigates via resolvePostLoginDestination (honors returnTo)
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Loader2, Stethoscope } from "lucide-react";
 import { ImpiloBrandLogo } from "@/components/brand/ImpiloBrandLogo";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useLinkedIds } from "@/hooks/queries/useLinkedIds";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useOperationalContextStore } from "@/hooks/useOperationalContextStore";
+import { resolvePostLoginDestination } from "@/lib/resolve-post-login-destination";
 
 const RESOLUTION_TIMEOUT_MS = 5000;
 const PROFESSIONAL_NOTICE_DELAY_MS = 1500;
@@ -31,6 +35,8 @@ interface ResolverStep {
 }
 
 export default function ResolvingPage() {
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const { user } = useAuthStore();
   const { data, isLoading, isSuccess, isError } = useLinkedIds();
   const [hasNavigated, setHasNavigated] = useState(false);
@@ -43,14 +49,21 @@ export default function ResolvingPage() {
   const navigate = useCallback(() => {
     if (hasNavigated) return;
     setHasNavigated(true);
-    if (linkedAttrs?.providerId && !user?.providerActivated) {
-      window.location.assign("/provider/activate?returnTo=/clinical");
-      return;
-    }
-    window.location.assign("/home");
-  }, [hasNavigated, linkedAttrs?.providerId, user?.providerActivated]);
 
-  // Resolution steps for the UI
+    const destination = resolvePostLoginDestination({
+      user,
+      linkedProviderId: linkedAttrs?.providerId,
+      hasFacility: useFacilityStore.getState().hasFacility,
+      returnTo,
+    });
+
+    if (destination.operationalMode) {
+      useOperationalContextStore.getState().setOperationalMode(destination.operationalMode);
+    }
+
+    window.location.assign(destination.href);
+  }, [hasNavigated, linkedAttrs?.providerId, returnTo, user]);
+
   const steps: ResolverStep[] = [
     {
       label: "Checking your identity",
@@ -66,7 +79,6 @@ export default function ResolvingPage() {
     },
   ];
 
-  // Timeout — navigate to /home after 5 seconds regardless
   useEffect(() => {
     timeoutRef.current = setTimeout(() => {
       navigate();
@@ -77,7 +89,6 @@ export default function ResolvingPage() {
     };
   }, [navigate]);
 
-  // Once linked IDs are resolved, navigate (with a brief professional notice if applicable)
   useEffect(() => {
     if (!isSuccess || hasNavigated) return;
 
@@ -89,11 +100,9 @@ export default function ResolvingPage() {
       return () => clearTimeout(timer);
     }
 
-    // No professional IDs — navigate immediately
     navigate();
   }, [isSuccess, hasProfessionalId, hasNavigated, navigate]);
 
-  // On error, navigate after a brief delay
   useEffect(() => {
     if (!isError || hasNavigated) return;
     const timer = setTimeout(() => {
@@ -105,20 +114,16 @@ export default function ResolvingPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-white px-6">
       <div className="flex flex-col items-center max-w-sm w-full">
-        {/* Logo */}
-        <ImpiloBrandLogo variant="full" size={40} />
+        <ImpiloBrandLogo variant="hero" />
 
-        {/* Heading */}
         <h1 className="mt-8 text-lg font-semibold text-gray-900">
           Preparing your experience...
         </h1>
 
-        {/* Spinner */}
         <div className="mt-6">
           <Loader2 className="h-8 w-8 text-impilo-500 animate-spin" />
         </div>
 
-        {/* Resolution steps */}
         <div className="mt-8 w-full space-y-3">
           {steps.map((step) => (
             <div
@@ -148,7 +153,6 @@ export default function ResolvingPage() {
           ))}
         </div>
 
-        {/* Professional capability detected notice */}
         {showProfessionalNotice && (
           <div className="mt-6 w-full rounded-xl border border-impilo-200 bg-impilo-50 p-4 animate-in fade-in duration-300">
             <div className="flex items-start gap-3">
@@ -168,7 +172,6 @@ export default function ResolvingPage() {
           </div>
         )}
 
-        {/* Greeting */}
         {user && (
           <p className="mt-6 text-xs text-gray-400">
             Welcome back, {user.displayName || user.email}

@@ -36,6 +36,11 @@ const FORBIDDEN_PAGE_PATTERNS = [
     re: /\b(DEV_STUB|STUB_PAGE|MOCK_ONLY|STUB_UI)\b/,
     message: "Explicit stub marker found — full functionality required.",
   },
+  {
+    id: "lab-static-kpi-shell",
+    re: /label:\s*"(?:Pending Collection|In Progress|Completed|Urgent)".*value:\s*"0"/s,
+    message: "Lab worklist KPI shell with hardcoded zero counts — wire useLabWorklist.",
+  },
 ];
 
 function walk(dir, acc = []) {

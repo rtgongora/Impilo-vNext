@@ -7,6 +7,9 @@ import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useCreateClientRegistration } from "@/hooks/queries/useClientRegistry";
+import { ClientIntakeDedupWizard } from "@/components/registry/ClientIntakeDedupWizard";
+import { EmergencyProvisionalIntakePanel } from "@/components/registry/EmergencyProvisionalIntakePanel";
+import { GuardianAssistedIntakePanel } from "@/components/registry/GuardianAssistedIntakePanel";
 
 const inputClass =
   "w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-500";
@@ -84,6 +87,14 @@ export default function NewClientRegistrationPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to client registry
           </Link>
+        </div>
+
+        <div className="mb-6 space-y-4">
+          <ClientIntakeDedupWizard compact />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <GuardianAssistedIntakePanel />
+            <EmergencyProvisionalIntakePanel />
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-gray-200 bg-white p-6">

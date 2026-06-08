@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -18,11 +18,16 @@ import {
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useConsentStore } from "@/hooks/useConsentStore";
+import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 type VerifyState = "idle" | "verifying" | "success" | "error";
 
 export default function BiometricLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const login = useLogin();
   const setAuth = useAuthStore((s) => s.setAuth);
 
@@ -61,7 +66,9 @@ export default function BiometricLoginPage() {
               },
               token,
             );
-            router.push("/home");
+            useWorkModeStore.getState().deriveFromRoles(user.roles);
+            useConsentStore.getState().hydrate(user.id);
+            router.push(buildPostLoginResolvingPath(returnTo));
           },
           onError: () => {
             setVerifyState("error");
@@ -72,7 +79,7 @@ export default function BiometricLoginPage() {
         },
       );
     }, 2000);
-  }, [login, setAuth, router]);
+  }, [login, returnTo, setAuth, router]);
 
   const stateStyles: Record<VerifyState, string> = {
     idle: "border-gray-300 text-gray-400 bg-gray-50",

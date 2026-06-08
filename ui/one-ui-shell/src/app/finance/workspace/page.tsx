@@ -6,23 +6,44 @@ import {
 } from "@/components/finance/FinanceWorkspacePanels";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, Building2, FileSpreadsheet, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Building2, FileSpreadsheet, HandCoins, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { useFinanceBillingCharges, useFinanceBillingInvoice } from "@/hooks/queries/useFinanceBillingWorkspace";
+import {
+  useFinanceBillingCharges,
+  useFinanceBillingInvoice,
+  useFinanceBillingSubsidiesForEncounter,
+} from "@/hooks/queries/useFinanceBillingWorkspace";
 import { useFinanceMushexWallets } from "@/hooks/queries/useFinanceMushexPlatform";
+
+function extractSubsidyRows(payload: unknown): Record<string, unknown>[] {
+  if (payload == null) return [];
+  if (Array.isArray(payload)) return payload as Record<string, unknown>[];
+  if (typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    if (Array.isArray(obj.data)) return obj.data as Record<string, unknown>[];
+  }
+  return [];
+}
 
 export default function FinanceWorkspacePage() {
   const [invoiceId, setInvoiceId] = useState("");
   const [billId, setBillId] = useState("");
+  const [encounterId, setEncounterId] = useState("");
   const [ownerRef, setOwnerRef] = useState("");
   const [invoiceArmed, setInvoiceArmed] = useState(false);
   const [chargesArmed, setChargesArmed] = useState(false);
+  const [subsidiesArmed, setSubsidiesArmed] = useState(false);
   const [walletsArmed, setWalletsArmed] = useState(false);
 
   const invQ = useFinanceBillingInvoice(invoiceId.trim(), invoiceArmed);
   const chQ = useFinanceBillingCharges(billId.trim(), chargesArmed);
+  const subsidiesQ = useFinanceBillingSubsidiesForEncounter(
+    encounterId.trim(),
+    subsidiesArmed && Boolean(encounterId.trim()),
+  );
   const wQ = useFinanceMushexWallets(ownerRef.trim(), walletsArmed);
+  const subsidyRows = extractSubsidyRows(subsidiesQ.data);
 
   return (
     <AppLayout>
@@ -113,6 +134,66 @@ export default function FinanceWorkspacePage() {
                 />
               </div>
             ) : null}
+
+            <div className="mt-6 rounded-lg border border-amber-100 bg-amber-50/50 p-4">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                <HandCoins className="h-4 w-4 text-amber-700" /> Subsidies by encounter
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                GET{" "}
+                <code className="text-[11px]">/internal/v1/finance/billing-workspace/lifecycle/subsidies?encounterId=…</code>
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <input
+                  value={encounterId}
+                  onChange={(e) => setEncounterId(e.target.value)}
+                  className="min-w-[200px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono"
+                  placeholder="Encounter id"
+                  aria-label="Encounter id for subsidies"
+                />
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:bg-slate-50"
+                  onClick={() => setSubsidiesArmed(true)}
+                >
+                  Load subsidies
+                </button>
+              </div>
+              {subsidiesArmed && encounterId.trim() ? (
+                subsidiesQ.isLoading ? (
+                  <p className="mt-2 flex items-center gap-2 text-sm text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Loading subsidies…
+                  </p>
+                ) : subsidiesQ.isError ? (
+                  <p className="mt-2 flex items-center gap-2 text-sm text-red-700">
+                    <AlertCircle className="h-4 w-4" /> Could not load subsidy rows.
+                  </p>
+                ) : subsidyRows.length === 0 ? (
+                  <p className="mt-2 text-xs text-slate-500">No subsidy rows returned for this encounter.</p>
+                ) : (
+                  <div className="mt-2 overflow-x-auto rounded-lg border border-amber-100 bg-white">
+                    <table className="w-full text-xs">
+                      <thead className="bg-amber-50/80 text-slate-600">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium">Bill</th>
+                          <th className="px-3 py-2 text-right font-medium">Subsidy</th>
+                          <th className="px-3 py-2 text-left font-medium">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-amber-50">
+                        {subsidyRows.map((row, idx) => (
+                          <tr key={String(row.bill_id ?? row.id ?? idx)}>
+                            <td className="px-3 py-2 font-mono text-[10px]">{String(row.bill_id ?? "—")}</td>
+                            <td className="px-3 py-2 text-right">{String(row.subsidy_amount ?? row.amount ?? "—")}</td>
+                            <td className="px-3 py-2">{String(row.status ?? "—")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : null}
+            </div>
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

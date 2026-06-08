@@ -13,6 +13,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { RegistryPlaneContextBar } from "@/components/experience/RegistryPlaneContextBar";
 import { PageShell } from "@/components/PageShell";
 import { useProviders } from "@/hooks/queries/useRegistry";
+import { ProviderRegistryOnboardingOrchestrationRail } from "@/components/registry/ProviderRegistryOnboardingOrchestrationRail";
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: "bg-green-100 text-green-700",
@@ -36,6 +37,7 @@ export default function ProvidersPage() {
         subtitle="Registered healthcare providers"
       >
         <RegistryPlaneContextBar />
+        <ProviderRegistryOnboardingOrchestrationRail />
         <div className="mb-4">
           <Link
             href={fromRegistryAdmin ? "/registry-admin" : "/registry"}

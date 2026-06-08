@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Mail,
@@ -34,9 +34,12 @@ import { useLogin } from "@/hooks/queries/useAuth";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useConsentStore, CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
 import { useWorkModeStore } from "@/hooks/useWorkModeStore";
+import { buildPostLoginResolvingPath } from "@/lib/resolve-post-login-destination";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
   const login = useLogin();
   const { isAuthenticated, setAuth } = useAuthStore();
 
@@ -48,9 +51,9 @@ export default function LoginPage() {
   // Redirect already-authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/auth/resolving");
+      router.push(buildPostLoginResolvingPath(returnTo));
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, returnTo, router]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -96,8 +99,7 @@ export default function LoginPage() {
           // already accepted, this prevents the consent gate from firing.
           useConsentStore.getState().hydrate(user.id);
 
-          // Navigate to resolving screen for identity resolution
-          router.push("/auth/resolving");
+          router.push(buildPostLoginResolvingPath(returnTo));
         },
         onError: (err: unknown) => {
           const status = (err as { status?: number })?.status;
@@ -315,7 +317,7 @@ export default function LoginPage() {
                         );
                         useWorkModeStore.getState().deriveFromRoles(u.roles);
                         useConsentStore.getState().hydrate(u.id);
-                        router.push("/auth/resolving");
+                        router.push(buildPostLoginResolvingPath(returnTo));
                       },
                       onError: () => {
                         setError(`Login failed for ${acct.email}. Check Keycloak is running.`);
