@@ -36,6 +36,9 @@ public class LiveEventController {
         entity.setTenantId(tenantId);
         entity.setTitle(req.title());
         entity.setDescription(req.description());
+        entity.setMode(req.mode());
+        entity.setOwningService(req.owningService());
+        entity.setOwningEntityId(req.owningEntityId());
         entity.setEventType(req.eventType());
         entity.setContextType(req.contextType() != null ? req.contextType() : "PROFESSIONAL");
         entity.setAudienceType(req.audienceType() != null ? req.audienceType() : "ROLE_BASED");
@@ -120,6 +123,7 @@ public class LiveEventController {
     private LiveDtos.EventResponse toResponse(LiveEventEntity e) {
         return new LiveDtos.EventResponse(
                 e.getId(), e.getTenantId(), e.getTitle(), e.getDescription(),
+                e.getMode(), e.getOwningService(), e.getOwningEntityId(),
                 e.getEventType(), e.getContextType(), e.getStatus(), e.getFacilityId(),
                 e.getStartTime(), e.getEndTime(), e.isCpdEnabled(), e.getCpdPoints(),
                 e.getAttendanceThresholdMinutes(), e.isChatEnabled(), e.isQnaEnabled(),

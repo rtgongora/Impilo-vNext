@@ -24,23 +24,28 @@ public class LiveRoomService {
     private final LiveEventSessionRepository sessionRepository;
     private final LiveMediaProvider mediaProvider;
     private final ReplayService replayService;
+    private final LiveGovernanceGuard governanceGuard;
 
     public LiveRoomService(LiveEventService eventService,
                            AttendanceService attendanceService,
                            LiveEventSessionRepository sessionRepository,
                            LiveMediaProvider mediaProvider,
-                           ReplayService replayService) {
+                           ReplayService replayService,
+                           LiveGovernanceGuard governanceGuard) {
         this.eventService = eventService;
         this.attendanceService = attendanceService;
         this.sessionRepository = sessionRepository;
         this.mediaProvider = mediaProvider;
         this.replayService = replayService;
+        this.governanceGuard = governanceGuard;
     }
 
     @Transactional
     public LiveEventSessionEntity join(UUID tenantId, UUID eventId,
-                                       String participantId, String participantType, String role) {
+                                       String participantId, String participantType,
+                                       String role, boolean consentGranted) {
         LiveEventEntity event = eventService.get(tenantId, eventId);
+        governanceGuard.validateJoin(event, role, participantType, consentGranted);
         attendanceService.join(tenantId, eventId, participantId, participantType);
         LiveEventSessionEntity session = sessionRepository
                 .findFirstByEventIdAndEndedAtIsNullOrderByCreatedAtDesc(eventId)
@@ -129,9 +134,7 @@ public class LiveRoomService {
     @Transactional
     public LiveEventSessionEntity startRecording(UUID tenantId, UUID eventId) {
         LiveEventEntity event = eventService.get(tenantId, eventId);
-        if (!event.isRecordingAllowed()) {
-            throw new IllegalStateException("Recording not allowed for this event");
-        }
+        governanceGuard.validateRecordingRequest(event);
         LiveEventSessionEntity session = sessionRepository
                 .findFirstByEventIdAndEndedAtIsNullOrderByCreatedAtDesc(eventId)
                 .orElseThrow(() -> new IllegalStateException("No active session"));

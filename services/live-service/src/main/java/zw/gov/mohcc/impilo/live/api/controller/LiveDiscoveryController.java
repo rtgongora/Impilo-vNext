@@ -47,6 +47,7 @@ public class LiveDiscoveryController {
     private LiveDtos.EventResponse toResponse(LiveEventEntity e) {
         return new LiveDtos.EventResponse(
                 e.getId(), e.getTenantId(), e.getTitle(), e.getDescription(),
+                e.getMode(), e.getOwningService(), e.getOwningEntityId(),
                 e.getEventType(), e.getContextType(), e.getStatus(), e.getFacilityId(),
                 e.getStartTime(), e.getEndTime(), e.isCpdEnabled(), e.getCpdPoints(),
                 e.getAttendanceThresholdMinutes(), e.isChatEnabled(), e.isQnaEnabled(),

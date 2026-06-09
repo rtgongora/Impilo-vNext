@@ -32,7 +32,8 @@ public class LiveRoomController {
             @RequestBody LiveDtos.JoinRoomRequest req) {
         LiveEventSessionEntity session = roomService.join(tenantId, eventId,
                 req.participantId(), req.participantType(),
-                req.role() != null ? req.role() : "ATTENDEE");
+                req.role() != null ? req.role() : "ATTENDEE",
+                Boolean.TRUE.equals(req.consentGranted()));
         return ResponseEntity.status(HttpStatus.CREATED).body(sessionMap(session));
     }
 

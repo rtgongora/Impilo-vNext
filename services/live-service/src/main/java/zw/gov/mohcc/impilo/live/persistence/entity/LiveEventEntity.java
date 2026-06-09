@@ -67,6 +67,46 @@ public class LiveEventEntity {
     @Column(name = "linked_madi_drive_id")
     private UUID linkedMadiDriveId;
 
+    // ---- Canonical Impilo Live doctrine fields (V003) ----
+    @Column(name = "mode", length = 32)
+    private String mode;
+
+    @Column(name = "owning_service", length = 32)
+    private String owningService;
+
+    @Column(name = "owning_entity_id")
+    private String owningEntityId;
+
+    @Column(name = "recording_policy", length = 32)
+    private String recordingPolicy = "DISABLED";
+
+    @Column(name = "replay_policy", length = 32)
+    private String replayPolicy = "DISABLED";
+
+    @Column(name = "moderation_policy", length = 32)
+    private String moderationPolicy = "NONE";
+
+    @Column(name = "consent_policy", length = 32)
+    private String consentPolicy = "NOT_REQUIRED";
+
+    @Column(name = "speaker_verification_required", nullable = false)
+    private boolean speakerVerificationRequired;
+
+    @Column(name = "emergency_flag", nullable = false)
+    private boolean emergencyFlag;
+
+    @Column(name = "clinical_context_ref")
+    private String clinicalContextRef;
+
+    @Column(name = "client_id")
+    private String clientId;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @Column(name = "privacy_level", length = 32)
+    private String privacyLevel;
+
     @Column(name = "start_time")
     private OffsetDateTime startTime;
 
@@ -181,6 +221,32 @@ public class LiveEventEntity {
     public void setLinkedFundoCourseId(UUID linkedFundoCourseId) { this.linkedFundoCourseId = linkedFundoCourseId; }
     public UUID getLinkedMadiDriveId() { return linkedMadiDriveId; }
     public void setLinkedMadiDriveId(UUID linkedMadiDriveId) { this.linkedMadiDriveId = linkedMadiDriveId; }
+    public String getMode() { return mode; }
+    public void setMode(String mode) { this.mode = mode; }
+    public String getOwningService() { return owningService; }
+    public void setOwningService(String owningService) { this.owningService = owningService; }
+    public String getOwningEntityId() { return owningEntityId; }
+    public void setOwningEntityId(String owningEntityId) { this.owningEntityId = owningEntityId; }
+    public String getRecordingPolicy() { return recordingPolicy; }
+    public void setRecordingPolicy(String recordingPolicy) { this.recordingPolicy = recordingPolicy; }
+    public String getReplayPolicy() { return replayPolicy; }
+    public void setReplayPolicy(String replayPolicy) { this.replayPolicy = replayPolicy; }
+    public String getModerationPolicy() { return moderationPolicy; }
+    public void setModerationPolicy(String moderationPolicy) { this.moderationPolicy = moderationPolicy; }
+    public String getConsentPolicy() { return consentPolicy; }
+    public void setConsentPolicy(String consentPolicy) { this.consentPolicy = consentPolicy; }
+    public boolean isSpeakerVerificationRequired() { return speakerVerificationRequired; }
+    public void setSpeakerVerificationRequired(boolean speakerVerificationRequired) { this.speakerVerificationRequired = speakerVerificationRequired; }
+    public boolean isEmergencyFlag() { return emergencyFlag; }
+    public void setEmergencyFlag(boolean emergencyFlag) { this.emergencyFlag = emergencyFlag; }
+    public String getClinicalContextRef() { return clinicalContextRef; }
+    public void setClinicalContextRef(String clinicalContextRef) { this.clinicalContextRef = clinicalContextRef; }
+    public String getClientId() { return clientId; }
+    public void setClientId(String clientId) { this.clientId = clientId; }
+    public String getProviderId() { return providerId; }
+    public void setProviderId(String providerId) { this.providerId = providerId; }
+    public String getPrivacyLevel() { return privacyLevel; }
+    public void setPrivacyLevel(String privacyLevel) { this.privacyLevel = privacyLevel; }
     public OffsetDateTime getStartTime() { return startTime; }
     public void setStartTime(OffsetDateTime startTime) { this.startTime = startTime; }
     public OffsetDateTime getEndTime() { return endTime; }

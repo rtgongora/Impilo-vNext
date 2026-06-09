@@ -3,6 +3,8 @@ package zw.gov.mohcc.impilo.live.core;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.live.domain.LiveEventStatus;
+import zw.gov.mohcc.impilo.live.domain.LiveMode;
+import zw.gov.mohcc.impilo.live.domain.OwningService;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventEntity;
 import zw.gov.mohcc.impilo.live.persistence.entity.LiveEventRoleAssignmentEntity;
 import zw.gov.mohcc.impilo.live.persistence.repository.LiveEventRepository;
@@ -22,21 +24,52 @@ public class LiveEventService {
     private final LiveEventStateMachine stateMachine;
     private final LiveEventEmitter emitter;
     private final LiveIntegrationOrchestrator integrationOrchestrator;
+    private final LiveGovernanceGuard governanceGuard;
 
     public LiveEventService(LiveEventRepository eventRepository,
                             LiveEventRoleAssignmentRepository roleRepository,
                             LiveEventStateMachine stateMachine,
                             LiveEventEmitter emitter,
-                            LiveIntegrationOrchestrator integrationOrchestrator) {
+                            LiveIntegrationOrchestrator integrationOrchestrator,
+                            LiveGovernanceGuard governanceGuard) {
         this.eventRepository = eventRepository;
         this.roleRepository = roleRepository;
         this.stateMachine = stateMachine;
         this.emitter = emitter;
         this.integrationOrchestrator = integrationOrchestrator;
+        this.governanceGuard = governanceGuard;
     }
 
+    /**
+     * Generic (non-clinical) creation path. Infers a canonical mode/owner for legacy callers and
+     * enforces governance. Clinical sessions must use {@link #createClinical(LiveEventEntity)} so
+     * they always carry clinical context — no free-floating clinical rooms (doctrine §2, §8).
+     */
     @Transactional
     public LiveEventEntity create(LiveEventEntity event) {
+        inferDoctrineDefaults(event);
+        if (LiveMode.CLINICAL_SESSION.name().equals(event.getMode())) {
+            throw LiveGovernanceException.invalid(
+                    "CLINICAL_VIA_GENERIC_DENIED",
+                    "Clinical sessions must be created via the clinical scheduling endpoint with consent and clinical context.");
+        }
+        return persistNew(event);
+    }
+
+    /** Clinical creation path used by Telemedicine/PCT; runs the full clinical guard. */
+    @Transactional
+    public LiveEventEntity createClinical(LiveEventEntity event) {
+        if (event.getMode() == null) {
+            event.setMode(LiveMode.CLINICAL_SESSION.name());
+        }
+        if (event.getOwningService() == null) {
+            event.setOwningService(OwningService.TELEMEDICINE.name());
+        }
+        return persistNew(event);
+    }
+
+    private LiveEventEntity persistNew(LiveEventEntity event) {
+        governanceGuard.validateForCreate(event);
         if (event.getStatus() == null) {
             event.setStatus(LiveEventStatus.DRAFT.name());
         }
@@ -46,10 +79,57 @@ public class LiveEventService {
         if (event.getLanguage() == null) {
             event.setLanguage("en");
         }
+        if (event.getOrganiserType() == null && event.getOwningService() != null) {
+            event.setOrganiserType(OwningService.fromString(event.getOwningService()).legacyOrganiserType());
+        }
         LiveEventEntity saved = eventRepository.save(event);
         emitEvent(saved, "impilo.live.event.created.v1");
         return saved;
     }
+
+    private void inferDoctrineDefaults(LiveEventEntity event) {
+        if (event.getMode() == null || event.getMode().isBlank()) {
+            event.setMode(LiveMode.inferLegacy(
+                    event.getEventType(), event.getContextType(), event.getOrganiserType()).name());
+        }
+        if (event.getOwningService() == null || event.getOwningService().isBlank()) {
+            OwningService owner = switch (LiveMode.valueOf(event.getMode())) {
+                case CLINICAL_SESSION -> OwningService.TELEMEDICINE;
+                case WEBINAR_CPD -> event.getLinkedFundoCourseId() != null
+                        ? OwningService.FUNDO : OwningService.STANDALONE_IMPILO_LIVE;
+                case PUBLIC_BROADCAST, EMERGENCY_BRIEFING -> OwningService.STANDALONE_IMPILO_LIVE;
+                default -> OwningService.STANDALONE_IMPILO_LIVE;
+            };
+            event.setOwningService(owner.name());
+        }
+    }
+
+    /**
+     * Create a governed event, assign its hosts/speakers/moderators, and schedule it in one
+     * transaction. Used by the typed scheduling endpoints (clinical / Fundo / public broadcast).
+     */
+    @Transactional
+    public LiveEventEntity createAndSchedule(LiveEventEntity event,
+                                             List<RoleAssignment> roles,
+                                             String actor,
+                                             boolean clinical) {
+        LiveEventEntity created = clinical ? createClinical(event) : create(event);
+        if (roles != null) {
+            for (RoleAssignment r : roles) {
+                if (r == null || r.userId() == null || r.userId().isBlank()) {
+                    continue;
+                }
+                assignRole(created.getTenantId(), created.getId(), r.userId(),
+                        r.participantType() != null ? r.participantType() : "PROVIDER",
+                        r.role(), actor != null ? actor : created.getCreatedBy());
+            }
+        }
+        return schedule(created.getTenantId(), created.getId(),
+                actor != null ? actor : created.getCreatedBy());
+    }
+
+    /** A role assignment to apply when scheduling an event. */
+    public record RoleAssignment(String userId, String participantType, String role) {}
 
     @Transactional(readOnly = true)
     public LiveEventEntity get(UUID tenantId, UUID eventId) {
