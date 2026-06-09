@@ -31,6 +31,8 @@ import {
 } from "@/hooks/queries/useEmergency";
 import { BreakGlassRequestPanel } from "@/components/trust/BreakGlassRequestPanel";
 import { useAuthStore } from "@/hooks/useAuthStore";
+import { useEdVisits, useOpenEdVisit } from "@/hooks/queries/useEdVisit";
+import { useFacilityStore } from "@/hooks/useFacilityStore";
 
 const PROTOCOL_OPTIONS = ["CODE_BLUE", "TRAUMA", "RSI", "MATERNITY", "TOXICOLOGY", "OTHER"] as const;
 
@@ -47,8 +49,14 @@ function formatWhen(iso: unknown): string {
 
 export default function EmergencyDepartmentPage() {
   const { user } = useAuthStore();
+  const facility = useFacilityStore((s) => s.facility);
   const performedBy = user?.id ?? "";
   const performedByName = user?.displayName ?? performedBy;
+
+  const { data: edVisits = [], refetch: refetchEd } = useEdVisits(facility?.id);
+  const openEdVisit = useOpenEdVisit();
+  const [newPatientId, setNewPatientId] = useState("");
+  const [newComplaint, setNewComplaint] = useState("");
 
   const { data, isLoading, error, refetch } = useEmergencyActivations();
   const activate = useActivateEmergency();
@@ -127,29 +135,69 @@ export default function EmergencyDepartmentPage() {
     <AppLayout>
       <PageShell
         title="ED / Casualty"
-        subtitle="Emergency protocol activations from the live BFF — triage queue stays on Triage"
+        subtitle="ED trackboard, full patient journey, critical event activations"
       >
         <div className="space-y-6">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-            <div className="flex gap-2">
-              <Ambulance className="mt-0.5 h-5 w-5 shrink-0 text-slate-600" aria-hidden />
-              <div>
-                <p className="font-medium">Bounded clinical shell (Wave 2)</p>
-                <p className="mt-1 text-xs text-slate-600">
-                  This page reads and writes only existing <code className="rounded bg-white px-1">/internal/v1/emergency/*</code>{" "}
-                  endpoints. There is no separate ED charting module yet. Use{" "}
-                  <Link className="font-medium text-impilo-600 underline" href="/queue/triage">
-                    Triage
-                  </Link>{" "}
-                  for acuity and vitals capture, and{" "}
-                  <Link className="font-medium text-impilo-600 underline" href="/queue">
-                    Queue
-                  </Link>{" "}
-                  for waiting-room flow. Action history listing is not exposed by a GET API — logging still posts to the server.
-                </p>
-              </div>
-            </div>
-          </div>
+          <section className="rounded-xl border border-red-100 bg-red-50/40 p-5">
+            <h2 className="flex items-center gap-2 font-semibold text-red-900">
+              <Ambulance className="h-4 w-4" /> ED trackboard
+            </h2>
+            <p className="mt-1 text-xs text-red-800/80">
+              Sovereign ED visits via <code>/internal/v1/ed/*</code> — arrival through triage, trauma, protocols, disposition.
+            </p>
+            <form
+              className="mt-4 flex flex-wrap gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                openEdVisit.mutate({
+                  facilityId: facility?.id,
+                  patientCpid: newPatientId.trim(),
+                  chiefComplaint: newComplaint.trim(),
+                  arrivalMode: "WALK_IN",
+                }, {
+                  onSuccess: (res) => {
+                    const id = String((res as { data?: { visit_id?: string } }).data?.visit_id ?? "");
+                    if (id) window.location.href = `/clinical/emergency/${id}`;
+                  },
+                });
+              }}
+            >
+              <input
+                value={newPatientId}
+                onChange={(e) => setNewPatientId(e.target.value)}
+                placeholder="Patient CPID"
+                className="rounded border px-2 py-1 text-sm"
+                required
+              />
+              <input
+                value={newComplaint}
+                onChange={(e) => setNewComplaint(e.target.value)}
+                placeholder="Chief complaint"
+                className="min-w-[200px] flex-1 rounded border px-2 py-1 text-sm"
+              />
+              <button type="submit" disabled={openEdVisit.isPending} className="rounded-lg bg-red-600 px-3 py-1 text-sm text-white">
+                Register ED arrival
+              </button>
+            </form>
+            <ul className="mt-4 space-y-2 text-sm">
+              {edVisits.length === 0 ? (
+                <li className="text-gray-500">No active ED visits.</li>
+              ) : edVisits.map((v) => (
+                <li key={String(v.visit_id)} className="flex items-center justify-between rounded border bg-white px-3 py-2">
+                  <span>
+                    <strong>{String(v.patient_cpid)}</strong> — {String(v.chief_complaint ?? "—")}
+                    <span className="ml-2 text-xs text-gray-500">{String(v.zone ?? "")} acuity {String(v.current_acuity ?? "—")}</span>
+                  </span>
+                  <Link href={`/clinical/emergency/${String(v.visit_id)}`} className="text-impilo-600 underline text-xs">
+                    Open journey →
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <button type="button" onClick={() => void refetchEd()} className="mt-2 text-xs text-gray-500 underline">
+              Refresh trackboard
+            </button>
+          </section>
 
           <div className="flex flex-wrap gap-3">
             <Link

@@ -1114,6 +1114,55 @@ public class PctServiceClient {
         return extractData(response);
     }
 
+    // ── ED / Casualty operations (PCT V012) ─────────────────────────
+
+    public JsonNode openEdVisit(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/visits";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listEdVisits(UUID facilityId, String status) {
+        UriComponentsBuilder b = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/ed/visits");
+        if (facilityId != null) b.queryParam("facilityId", facilityId);
+        if (status != null) b.queryParam("status", status);
+        return extractData(restTemplate.getForEntity(b.toUriString(), JsonNode.class));
+    }
+
+    public JsonNode getEdVisit(String visitId) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId;
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode edVisitPost(String visitId, String action, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + action;
+        return extractData(restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class));
+    }
+
+    public JsonNode edProtocolSuggestions(String visitId) {
+        String url = baseUrl + "/v1/ed/visits/" + visitId + "/protocol-suggestions";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode edTriageDiscriminators() {
+        String url = baseUrl + "/v1/ed/triage/discriminators";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
+    public JsonNode edTriageScore(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/triage/score";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode openEmergencyCase(Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/emergency-cases";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode markEdPageDelivered(String pageId, Map<String, Object> body) {
+        String url = baseUrl + "/v1/ed/pages/" + pageId + "/delivered";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

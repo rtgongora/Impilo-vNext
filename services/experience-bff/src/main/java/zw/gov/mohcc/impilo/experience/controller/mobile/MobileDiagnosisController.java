@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SearchServiceClient;
+import zw.gov.mohcc.impilo.experience.support.Icd11SearchNormalizer;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -53,15 +54,12 @@ public class MobileDiagnosisController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "q") String query,
             @RequestParam(defaultValue = "20") int limit) {
-        // Proxy to search-service; consumers can set entityType=ICD11.
         try {
             var result = searchClient.search(query, "ICD11", 0, limit);
-            if (result != null) {
-                return ResponseEntity.ok(Map.of(
-                        "data", result,
-                        "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
-                ));
-            }
+            return ResponseEntity.ok(Map.of(
+                    "data", Icd11SearchNormalizer.normalize(result),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)
+            ));
         } catch (Exception ignored) {}
         return ResponseEntity.ok(Map.of(
                 "data", List.of(),

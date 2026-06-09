@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet } from "react-native";
 import { Screen, Header, Button, Badge } from "@impilo/mobile-design-system";
+import { edActivateTrauma, edTraumaSurvey, openEdVisit } from "../../services/edService";
 
 type Phase = "ACTIVATION" | "PRIMARY" | "INTERVENTIONS" | "SECONDARY" | "SUMMARY";
 
@@ -36,6 +37,8 @@ export function TraumaScreen() {
   const [vitals, setVitals] = useState({ hr: "", bp: "", rr: "", spo2: "", gcs: "" });
   const [secondaryNotes, setSecondaryNotes] = useState<Record<string, string>>({});
   const [disposition, setDisposition] = useState("");
+  const [visitId, setVisitId] = useState("");
+  const [traumaId, setTraumaId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setInterval(() => setElapsedSecs((s) => s + 1), 1000);
@@ -83,7 +86,18 @@ export function TraumaScreen() {
                 <TextInput style={st.roleInput} placeholder="Name" value={team[tr.role] ?? ""} onChangeText={(v) => setTeam({ ...team, [tr.role]: v })} />
               </View>
             ))}
-            <Button title="Begin Primary Survey" onPress={() => setPhase("PRIMARY")} />
+            <Button title="Begin Primary Survey" onPress={async () => {
+              let vid = visitId;
+              if (!vid) {
+                const created = await openEdVisit({ patientCpid: "MOBILE-TRAUMA", chiefComplaint: mechanism, arrivalMode: "AMBULANCE" });
+                vid = String(created.data?.visit_id ?? "");
+                setVisitId(vid);
+              }
+              const res = await edActivateTrauma(vid, { traumaLevel: Number(traumaLevel), mechanism, teamAssignments: team });
+              const active = String((res as { data?: { active_trauma_id?: string } }).data?.active_trauma_id ?? "");
+              if (active) setTraumaId(active);
+              setPhase("PRIMARY");
+            }} />
           </View>
         )}
 
@@ -117,7 +131,17 @@ export function TraumaScreen() {
                 })}
               </View>
             ))}
-            <Button title="Proceed to Interventions" onPress={() => setPhase("INTERVENTIONS")} />
+            <Button title="Proceed to Interventions" onPress={async () => {
+              if (visitId) {
+                const checklist: Record<string, boolean> = {};
+                Object.entries(checks).forEach(([k, v]) => { checklist[k] = v; });
+                await edTraumaSurvey(visitId, {
+                  traumaId, surveyType: "PRIMARY", checklist,
+                  vitals: { hr: vitals.hr, bp: vitals.bp, rr: vitals.rr, spo2: vitals.spo2, gcs: vitals.gcs },
+                });
+              }
+              setPhase("INTERVENTIONS");
+            }} />
           </View>
         )}
 

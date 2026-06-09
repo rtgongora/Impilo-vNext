@@ -42,9 +42,9 @@ export interface ICD11SearchResult {
 
 export async function searchICD11(query: string): Promise<ICD11SearchResult[]> {
   const response = await apiClient.get<{ data: ICD11SearchResult[] }>(
-    `/internal/v1/mobile/provider/diagnosis/icd11/search?q=${encodeURIComponent(query)}`
+    `/internal/v1/diagnosis/icd11/search?q=${encodeURIComponent(query)}`
   );
-  return response.data.data;
+  return response.data.data ?? [];
 }
 
 export interface RecordDiagnosisInput {

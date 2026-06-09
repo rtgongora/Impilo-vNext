@@ -20,18 +20,19 @@ import { APGARScreen } from "./APGARScreen";
 import { DischargeClearanceScreen } from "./DischargeClearanceScreen";
 import { CarePlanDetailScreen } from "./CarePlanDetailScreen";
 import { TraumaScreen } from "./TraumaScreen";
+import { EdVisitScreen } from "./EdVisitScreen";
 import { VitalsMonitorScreen } from "./VitalsMonitorScreen";
 import { ShiftHandoffScreen } from "./ShiftHandoffScreen";
 import { CriticalEventScreen } from "./CriticalEventScreen";
 import { WardAlertsScreen } from "./WardAlertsScreen";
 import { TheatreProcedureScreen } from "./TheatreProcedureScreen";
 
-type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "resus" | "trauma" | "ews" | "apgar" | "theatre" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "alerts" | "clearance";
+type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "ed" | "resus" | "trauma" | "ews" | "apgar" | "theatre" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "alerts" | "clearance";
 
 const TABS: { id: InpatientTab; label: string }[] = [
   { id: "care", label: "Care Plans" }, { id: "fluid", label: "Fluid I/O" },
   { id: "vitals", label: "Vitals" }, { id: "emergency", label: "Emergency" },
-  { id: "resus", label: "Resus" }, { id: "trauma", label: "Trauma" },
+  { id: "ed", label: "ED Visit" }, { id: "resus", label: "Resus" }, { id: "trauma", label: "Trauma" },
   { id: "ews", label: "NEWS2" },   { id: "apgar", label: "APGAR" },
   { id: "theatre", label: "Theatre" },
   { id: "admit", label: "Admissions" }, { id: "rounds", label: "Rounds" },
@@ -56,6 +57,7 @@ export function InpatientScreen() {
         {tab === "care" && <CarePlanDetailScreen />}
         {tab === "fluid" && <FluidBalancePanel />}
         {tab === "emergency" && <CriticalEventScreen />}
+        {tab === "ed" && <EdVisitScreen />}
         {tab === "ews" && <NEWS2ScoringScreen />}
         {tab === "admit" && <AdmissionsPanel />}
         {tab === "rounds" && <WardRoundsPanel />}
