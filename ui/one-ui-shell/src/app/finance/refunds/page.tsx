@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_INTENT_COLUMNS, FINANCE_REFUND_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -61,7 +62,15 @@ export default function FinanceRefundsPage() {
             ) : intentQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load intent (check id and roles).</p>
             ) : intentQ.data ? (
-              <QueryResultPanel title="Intent Q" isPending={intentQ.isPending} isLoading={intentQ.isPending} isError={intentQ.isError} error={intentQ.error} data={intentQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={intentQ.data}
+                  columns={FINANCE_INTENT_COLUMNS}
+                  isLoading={intentQ.isPending}
+                  error={intentQ.error as Error | null}
+                  emptyTitle="Intent loaded"
+                />
+              </div>
             ) : (
               <p className="mt-3 text-xs text-slate-500">Enter an id and choose Load intent.</p>
             )}
@@ -119,7 +128,15 @@ export default function FinanceRefundsPage() {
               )}
             </button>
             {refundM.data != null ? (
-              <QueryResultPanel title="Refund M" isPending={refundM.isPending} isLoading={refundM.isPending} isError={refundM.isError} error={refundM.error} data={refundM.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={refundM.data}
+                  columns={FINANCE_REFUND_COLUMNS}
+                  isLoading={refundM.isPending}
+                  error={refundM.error as Error | null}
+                  emptyTitle="Refund submitted"
+                />
+              </div>
             ) : null}
           </div>
 

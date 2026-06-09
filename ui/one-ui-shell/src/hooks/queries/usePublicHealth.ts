@@ -993,6 +993,73 @@ export function usePublicHealthDataQualityIssues() {
   });
 }
 
+export function useTogglePublicHealthAlertRule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { ruleId: string; active: boolean }) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/intelligence/alert-rules/${encodeURIComponent(args.ruleId)}/toggle`,
+        { active: args.active },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public-health-intelligence-alert-rules"] });
+    },
+  });
+}
+
+export function useCreatePublicHealthDataSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post<unknown>("/internal/v1/public-health/intelligence/data-sources", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public-health-intelligence-data-sources"] });
+    },
+  });
+}
+
+export function useHeartbeatPublicHealthDataSource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sourceId: string) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/intelligence/data-sources/${encodeURIComponent(sourceId)}/heartbeat`,
+        {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public-health-intelligence-data-sources"] });
+    },
+  });
+}
+
+export function useResolvePublicHealthDataQualityIssue() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (issueId: string) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/intelligence/data-quality-issues/${encodeURIComponent(issueId)}/resolve`,
+        {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public-health-intelligence-data-quality-issues"] });
+    },
+  });
+}
+
+export function useAcknowledgePublicHealthIntelligenceAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (alertId: string) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/intelligence/alerts/${encodeURIComponent(alertId)}/acknowledge`,
+        {},
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["public-health-intelligence-alerts"] });
+    },
+  });
+}
+
 function invalidatePhLifecycle(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: ["public-health-outbreaks"] });
   queryClient.invalidateQueries({ queryKey: ["public-health-field-tasks"] });

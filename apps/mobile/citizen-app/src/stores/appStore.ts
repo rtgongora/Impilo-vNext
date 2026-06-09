@@ -29,6 +29,8 @@ export interface AppState {
   globalError: { code: string; message: string } | null;
   /** Navigate to a Personal screen section once (e.g. madi-donor from Impilo Live). */
   personalSectionRequest: string | null;
+  /** Post-registration onboarding: assurance tier before main app. */
+  onboardingScreen: "signup" | "assurance" | null;
 
   setActiveTab: (tab: CitizenTab) => void;
   setOnlineStatus: (online: boolean) => void;
@@ -43,6 +45,7 @@ export interface AppState {
   setUnreadMessages: (count: number) => void;
   setGlobalError: (error: { code: string; message: string } | null) => void;
   setPersonalSectionRequest: (section: string | null) => void;
+  setOnboardingScreen: (screen: "signup" | "assurance" | null) => void;
 }
 
 export const appStore = createStore<AppState>((set) => ({
@@ -58,6 +61,7 @@ export const appStore = createStore<AppState>((set) => ({
   unreadMessages: 0,
   globalError: null,
   personalSectionRequest: null,
+  onboardingScreen: null,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setOnlineStatus: (isOnline) => set({ isOnline }),
@@ -75,6 +79,7 @@ export const appStore = createStore<AppState>((set) => ({
   setUnreadMessages: (count) => set({ unreadMessages: count }),
   setGlobalError: (error) => set({ globalError: error }),
   setPersonalSectionRequest: (section) => set({ personalSectionRequest: section }),
+  setOnboardingScreen: (onboardingScreen) => set({ onboardingScreen }),
 }));
 
 export function useAppStore<T = AppState>(selector?: (state: AppState) => T): T {

@@ -37,7 +37,7 @@ export function AppointmentMessagePanel({ appointmentId, patientLabel }: Appoint
       ) : (
         <ul className="mb-2 max-h-40 space-y-1.5 overflow-y-auto">
           {rows.map((row) => {
-            const item = row as Record<string, unknown>;
+            const item = row as unknown as Record<string, unknown>;
             const direction = String(item.direction ?? "unknown");
             const isProvider = direction === "provider_to_citizen";
             return (

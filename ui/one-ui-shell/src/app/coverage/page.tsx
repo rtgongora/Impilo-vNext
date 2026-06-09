@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { COVERAGE_RESULT_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Coverage Operations — Schemes, eligibility, claims, settlement, preauth.
  * Route: /coverage
@@ -106,6 +107,7 @@ function statusClass(status: string) {
 
 const COVERAGE_COMMAND_LABELS: Record<CoverageCommandKind, string> = {
   "eligibility-check": "Eligibility check",
+  "enrollment-eligibility": "Enrollment eligibility",
   "member-enrollment": "Member enrollment",
   "claim-submission": "Claim submission",
   "preauth-request": "Pre-auth request",
@@ -118,6 +120,11 @@ const COVERAGE_COMMAND_DEFAULTS: Record<CoverageCommandKind, Record<string, stri
     serviceCode: "CONSULTATION",
     coverageId: "COVERAGE-ID",
     idempotencyKey: "eligibility-COVERAGE-ID",
+  },
+  "enrollment-eligibility": {
+    clientId: "CPID-EXAMPLE",
+    planId: "PLAN-ID",
+    idempotencyKey: "enroll-eligibility-PLAN-ID",
   },
   "member-enrollment": {
     clientId: "CPID-EXAMPLE",
@@ -152,6 +159,7 @@ const COVERAGE_COMMAND_DEFAULTS: Record<CoverageCommandKind, Record<string, stri
 
 const COVERAGE_COMMAND_REQUIRED: Record<CoverageCommandKind, string[]> = {
   "eligibility-check": ["memberCpid", "coverageId"],
+  "enrollment-eligibility": ["clientId", "planId"],
   "member-enrollment": ["clientId", "planId", "memberNumber"],
   "claim-submission": ["coverageId", "claimType", "facilityId", "totalAmount"],
   "preauth-request": ["coverageId", "requestType", "facilityId", "providerId"],
@@ -163,6 +171,11 @@ const COVERAGE_COMMAND_FIELDS: Record<CoverageCommandKind, Array<{ key: string; 
     { key: "memberCpid", label: "Member CPID" },
     { key: "coverageId", label: "Coverage ID" },
     { key: "serviceCode", label: "Service code" },
+    { key: "idempotencyKey", label: "Idempotency key" },
+  ],
+  "enrollment-eligibility": [
+    { key: "clientId", label: "Client ID / CPID" },
+    { key: "planId", label: "Plan ID" },
     { key: "idempotencyKey", label: "Idempotency key" },
   ],
   "member-enrollment": [
@@ -424,7 +437,7 @@ function CoverageCommandConsole() {
           </div>
           <details className="mt-3 rounded-lg border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
             <summary className="cursor-pointer font-medium text-slate-700">Payload preview</summary>
-            <QueryResultPanel title="Coverage payload" data={currentPayload} />
+            <JsonApiDataTable data={currentPayload} columns={COVERAGE_COMMAND_FIELDS[command].map((f) => ({ key: f.key, header: f.label, fields: [f.key] }))} emptyTitle="Empty payload" />
           </details>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
@@ -438,7 +451,15 @@ function CoverageCommandConsole() {
             {feedback ? <span className="text-xs text-gray-700">{feedback}</span> : null}
           </div>
           {mutation.data ? (
-            <QueryResultPanel title="Mutation" isPending={mutation.isPending} isLoading={mutation.isPending} isError={mutation.isError} error={mutation.error} data={mutation.data} />
+            <div className="mt-3">
+              <JsonApiDataTable
+                data={mutation.data}
+                columns={COVERAGE_RESULT_COLUMNS}
+                isLoading={mutation.isPending}
+                error={mutation.error as Error | null}
+                emptyTitle="Command completed"
+              />
+            </div>
           ) : null}
         </div>
       </div>

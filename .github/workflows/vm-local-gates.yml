@@ -1,0 +1,34 @@
+name: VM Local Gates
+
+# Canonical fallback when GitHub-hosted runners are billing-locked.
+# Runs the same script as local VM development: scripts/pipeline/run-local-quality-gates.sh
+# Install self-hosted runner on the preview VM with label: impilo-vm
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, develop, 'claude/**']
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+
+jobs:
+  vm-quality-gates:
+    name: VM Quality Gates
+    runs-on: [self-hosted, impilo-vm]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run canonical local quality gates
+        env:
+          REPO_PATH: ${{ github.workspace }}
+        run: bash scripts/pipeline/run-local-quality-gates.sh
+
+      - name: Upload pipeline summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vm-pipeline-summary
+          path: reports/pipeline/latest-summary.json
+          if-no-files-found: ignore

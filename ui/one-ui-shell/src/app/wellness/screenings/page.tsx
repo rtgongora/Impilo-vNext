@@ -70,7 +70,7 @@ export default function WellnessScreeningsPage() {
       >
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <FeatureMaturityBadge
-            status={programmes.length > 0 ? "wired" : "partial"}
+            status={programmes.length > 0 ? "connected" : "partial"}
             detail="Reminders from guidance-service; national screening programmes from GET /internal/v1/wellness/screening-programmes (Simba SOR)."
           />
           <Link

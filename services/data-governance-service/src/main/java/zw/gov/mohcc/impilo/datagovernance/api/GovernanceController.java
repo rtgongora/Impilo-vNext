@@ -30,6 +30,7 @@ import zw.gov.mohcc.impilo.datagovernance.domain.GrantEntity;
 import zw.gov.mohcc.impilo.datagovernance.domain.PolicyEntity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -77,6 +78,25 @@ public class GovernanceController {
                 .toList();
 
         return ResponseEntity.ok(datasets);
+    }
+
+    @GetMapping("/internal/v1/governance/decision-audit")
+    public ResponseEntity<?> listDecisionAudit(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int size) {
+        RequestContext ctx = RequestContextHolder.require();
+        var rows = governanceService.listDecisionAudit(UUID.fromString(ctx.tenantId()), page, size)
+                .stream()
+                .map(a -> Map.of(
+                        "decisionId", a.getDecisionId().toString(),
+                        "datasetName", a.getDatasetName(),
+                        "principalId", a.getPrincipalId(),
+                        "decision", a.getDecision(),
+                        "policyVersion", a.getPolicyVersion(),
+                        "correlationId", a.getCorrelationId() == null ? "" : a.getCorrelationId(),
+                        "decidedAt", a.getDecidedAt().toString()))
+                .toList();
+        return ResponseEntity.ok(rows);
     }
 
     // ── POST /internal/v1/governance/grants — Grant access ──

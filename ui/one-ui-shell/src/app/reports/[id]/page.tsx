@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REPORT_JOB_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Report job detail — `GET /internal/v1/reports/{id}` (ReportJob resource).
  * Route: /reports/[id]
@@ -214,7 +215,7 @@ export default function ReportDetailPage() {
                 }
                 if (pv.kind === "object") {
                   return (
-                    <QueryResultPanel title="Job parameters" data={pv.value} />
+                    <JsonApiDataTable data={pv.value} columns={REPORT_JOB_COLUMNS} emptyTitle="No parameters" />
                   );
                 }
                 if (pv.kind === "jsonNonObject") {

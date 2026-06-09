@@ -145,3 +145,9 @@ waves:
       - simba-service
       - wellness-service
       - workforce-governance-service
+  - id: 8
+    name: preview-finance-pilot
+    plane: enterprise
+    description: Minimal MusheX sandbox rail for preview payer-ops (does not imply full enterprise wave)
+    services:
+      - mushex-service

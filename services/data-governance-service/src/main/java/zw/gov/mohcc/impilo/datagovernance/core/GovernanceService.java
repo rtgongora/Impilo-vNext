@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import zw.gov.mohcc.impilo.datagovernance.api.dto.CreateDatasetRequest;
@@ -100,6 +101,15 @@ public class GovernanceService {
     @Transactional(readOnly = true)
     public List<DatasetEntity> listDatasets(UUID tenantId) {
         return datasetRepository.findByTenantId(tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DecisionAuditEntity> listDecisionAudit(UUID tenantId, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        return decisionAuditRepository
+                .findByTenantIdOrderByDecidedAtDesc(tenantId, PageRequest.of(safePage, safeSize))
+                .getContent();
     }
 
     // ── Grant creation ──

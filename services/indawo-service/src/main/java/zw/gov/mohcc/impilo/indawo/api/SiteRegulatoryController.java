@@ -56,6 +56,16 @@ public class SiteRegulatoryController {
         return ResponseEntity.ok(ApiResponse.ok(regulatoryService.getSiteProfile(siteId), ctx.correlationId()));
     }
 
+    @PutMapping("/sites/{siteId}/location")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SITE_OPERATOR','LICENSING_OFFICER','PUBLIC_HEALTH_OFFICER','ENV_HEALTH','REGISTRY_ADMIN','SYSTEM_ADMIN','DEVELOPER')")
+    public ResponseEntity<ApiResponse<SiteRegulatoryDtos.SiteRegulatoryProfileResponse>> updateSiteLocation(
+            @PathVariable UUID siteId,
+            @Valid @RequestBody SiteRegulatoryDtos.UpdateSiteLocationRequest request
+    ) {
+        RequestContext ctx = RequestContextHolder.require();
+        return ResponseEntity.ok(ApiResponse.ok(regulatoryService.updateSiteLocation(siteId, request), ctx.correlationId()));
+    }
+
     @PostMapping("/applications")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SITE_APPLICANT','SITE_OPERATOR','REGISTRY_ADMIN','SYSTEM_ADMIN','DEVELOPER')")
     public ResponseEntity<ApiResponse<SiteRegulatoryDtos.SiteRegulatoryProfileResponse>> createApplication(

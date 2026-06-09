@@ -8,8 +8,8 @@
 import { Globe, Info, Loader2, Plug } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
-import { RecordSummary } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { INTEGRATION_DEAD_LETTER_COLUMNS, INTEGRATION_ROUTE_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import { IntegrationSyncReplayOrchestrationPanel } from "@/components/platform/IntegrationSyncReplayOrchestrationPanel";
 import { useIntegrationHubDeadLetters, useIntegrationHubRoutes } from "@/hooks/queries/useIntegrationHub";
 
@@ -103,25 +103,12 @@ export default function IntegrationStatusPage() {
               </div>
             )}
             {!routesQ.isError && routeRows.length > 0 && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b bg-gray-50 text-left">
-                      <th className="px-3 py-2 font-medium text-gray-600">#</th>
-                      <th className="px-3 py-2 font-medium text-gray-600">Summary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {routeRows.slice(0, 50).map((row, i) => (
-                      <tr key={i} className="border-b border-gray-100">
-                        <td className="px-3 py-2 text-gray-500">{i + 1}</td>
-                        <td className="px-3 py-2 text-gray-800">
-                          <RecordSummary record={row} />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="p-4">
+                <JsonApiDataTable
+                  data={routeRows.slice(0, 50)}
+                  columns={INTEGRATION_ROUTE_COLUMNS}
+                  emptyTitle="No routes"
+                />
               </div>
             )}
             {!routesQ.isError && routeRows.length === 0 && routeRaw && (
@@ -145,13 +132,15 @@ export default function IntegrationStatusPage() {
               <div className="px-4 py-6 text-sm text-amber-800">Dead letter list unavailable (hub down or forbidden).</div>
             )}
             {!deadQ.isError && (
-              <QueryResultPanel
-                title="Dead letters"
-                isPending={deadQ.isPending} isLoading={deadQ.isPending}
-                isError={deadQ.isError}
-                error={deadQ.error}
-                data={deadQ.data}
-              />
+              <div className="p-4">
+                <JsonApiDataTable
+                  data={deadQ.data}
+                  columns={INTEGRATION_DEAD_LETTER_COLUMNS}
+                  isLoading={deadQ.isPending}
+                  error={deadQ.error as Error | null}
+                  emptyTitle="No dead letters on this page"
+                />
+              </div>
             )}
           </div>
         </div>

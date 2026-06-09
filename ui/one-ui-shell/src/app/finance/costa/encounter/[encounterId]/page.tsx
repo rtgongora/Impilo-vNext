@@ -38,7 +38,8 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_MUTATION_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import { useCostaIntelCostEvents, useCostaIntelInvoiceFromEstimate } from "@/hooks/queries/useCostaIntel";
 import {
   useFinanceBillingInvoicesForEncounter,
@@ -587,13 +588,12 @@ export default function CostaEncounterTimelinePage() {
             </button>
             {issueInvoiceM.data || issueInvoiceM.isError ? (
               <div className="mt-3">
-                <QueryResultPanel
-                  title="Issue invoice result"
-                  isPending={issueInvoiceM.isPending}
-                  isLoading={issueInvoiceM.isPending}
-                  isError={issueInvoiceM.isError}
-                  error={issueInvoiceM.error}
+                <JsonApiDataTable
                   data={issueInvoiceM.data}
+                  columns={FINANCE_MUTATION_COLUMNS}
+                  isLoading={issueInvoiceM.isPending}
+                  error={issueInvoiceM.error as Error | null}
+                  emptyTitle="Invoice issued"
                 />
               </div>
             ) : null}

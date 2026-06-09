@@ -89,6 +89,15 @@ class HealthIntelligenceControllerTest {
         DagsServiceClient dags = Mockito.mock(DagsServiceClient.class);
         ObjectProvider<IntelligenceEventPublisher> publisher = Mockito.mock(ObjectProvider.class);
         Mockito.when(publisher.getIfAvailable()).thenReturn(null);
-        return new HealthIntelligenceService(guidance, search, pct, vito, varapi, learning, dags, mapper, publisher);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<zw.gov.mohcc.impilo.experience.client.DataPipelineServiceClient> pipeline =
+                Mockito.mock(ObjectProvider.class);
+        Mockito.when(pipeline.getIfAvailable()).thenReturn(null);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<zw.gov.mohcc.impilo.experience.client.NdrServiceClient> ndr =
+                Mockito.mock(ObjectProvider.class);
+        Mockito.when(ndr.getIfAvailable()).thenReturn(null);
+        return new HealthIntelligenceService(
+                guidance, search, pct, vito, varapi, learning, dags, mapper, publisher, pipeline, ndr);
     }
 }

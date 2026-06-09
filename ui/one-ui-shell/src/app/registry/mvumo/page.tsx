@@ -1,6 +1,7 @@
 "use client";
 
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { GENERIC_RECORD_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CheckCircle2, FileCheck, Loader2, Shield } from "lucide-react";
@@ -177,13 +178,12 @@ export default function MvumoRegistryPage() {
 
             <div className="mt-4 rounded-xl border border-gray-200 p-4">
               <h3 className="text-sm font-semibold text-gray-900">Template inventory</h3>
-              <QueryResultPanel
-                title="Templates"
-                isPending={templates.isPending}
-                isLoading={templates.isPending}
-                isError={templates.isError}
-                error={templates.error}
+              <JsonApiDataTable
                 data={templateRows}
+                columns={GENERIC_RECORD_COLUMNS}
+                isLoading={templates.isPending}
+                error={templates.error as Error | null}
+                emptyTitle="No templates"
               />
             </div>
           </section>

@@ -1,5 +1,5 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -199,7 +199,19 @@ export default function RegistryIntakePage() {
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading…
               </div>
             ) : (
-              <QueryResultPanel title="Bootstrap" isPending={bootstrap.isPending} isLoading={bootstrap.isPending} isError={bootstrap.isError} error={bootstrap.error} data={bootstrap.data?.data ?? {}} />
+              <div className="mt-4">
+                <JsonApiDataTable
+                  data={bootstrap.data?.data ?? {}}
+                  columns={[
+                    { key: "registry", header: "Registry", fields: ["targetRegistry", "registry"] },
+                    { key: "status", header: "Status", fields: ["status", "bootstrapStatus"] },
+                    { key: "version", header: "Version", fields: ["version", "schemaVersion"] },
+                  ]}
+                  isLoading={bootstrap.isPending}
+                  error={bootstrap.error as Error | null}
+                  emptyHint="Bootstrap snapshot not returned."
+                />
+              </div>
             )}
           </div>
 
@@ -413,13 +425,9 @@ export default function RegistryIntakePage() {
               </p>
             )}
             {executeImport.data?.data && (
-              <QueryResultPanel
-                title="Execute import result"
-                isPending={executeImport.isPending} isLoading={executeImport.isPending}
-                isError={executeImport.isError}
-                error={executeImport.error}
-                data={(executeImport.data as { data?: unknown } | undefined)?.data}
-              />
+              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Import job executed. Refresh recent jobs for updated status.
+              </p>
             )}
             <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-3">
               <div className="flex items-center justify-between gap-2">
@@ -510,7 +518,19 @@ export default function RegistryIntakePage() {
               </p>
             )}
             {searchIndawo.data?.data != null && (
-              <QueryResultPanel title="Search Indawo" isPending={searchIndawo.isPending} isLoading={searchIndawo.isPending} isError={searchIndawo.isError} error={searchIndawo.error} data={searchIndawo.data.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={searchIndawo.data.data}
+                  columns={[
+                    { key: "site", header: "Site", fields: ["siteId", "id", "name"] },
+                    { key: "type", header: "Type", fields: ["siteType", "type"] },
+                    { key: "status", header: "Status", fields: ["status"] },
+                    { key: "province", header: "Province", fields: ["province", "admin1"] },
+                  ]}
+                  isLoading={searchIndawo.isPending}
+                  error={searchIndawo.error as Error | null}
+                />
+              </div>
             )}
           </div>
         </div>

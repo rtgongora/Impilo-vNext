@@ -14,6 +14,15 @@
 | **Experience** | `SUPER_ADMIN` visibility parity; `WorkplaceSelectionHub` facility entry | Partial → deeper |
 | **Enterprise** | `/finance/payer-ops` + `/finance/workspace` typed entity panels (intent, attempts, invoices) | Partial → deeper |
 
+## Proper UI Surfacing pass (2026-06-07 batch 3)
+
+| Deliverable | Status |
+|-------------|--------|
+| P0 QRP clearance | Live — marketplace/ops, erp/hr, erp/gl, finance/reconciliation, registry/intake, payer-ops fraud |
+| Shared `JsonApiDataTable` | Live — product tables from BFF payloads |
+| Registration golden path | Partial+ — readiness probe, assurance BFF wire, E2E `citizen-signup-flow.spec.ts` |
+| Honest scorecard | `docs/frontend/UI_SURFACING_MATURITY_SCORECARD.md` |
+
 ## Proper UI Surfacing pass (2026-06-05 batch 2)
 
 | Deliverable | Status |
@@ -36,10 +45,10 @@
 
 ## Remaining (honest partial)
 
-- Finance payer-ops fraud-flags panel still uses `QueryResultPanel`
-- Marketplace `/marketplace/ops` QRP density
-- ERP HR/GL QRP density
-- Mobile parity per capability (Phase F)
+- `/marketplace/orders/[id]` — last P0 thin shell (5 QRP)
+- ~35 P1 mixed routes — see hotspot register
+- Mobile citizen onboarding screens — web journey proven; see `docs/audits/MOBILE_WEB_ONBOARDING_PARITY.md`
+- Full-boot wave-0 only (13/84 microservices) — not full vNext runtime
 - Full 87-service endpoint-level surfacing matrix rows still majority Partial
 
 ## Gates

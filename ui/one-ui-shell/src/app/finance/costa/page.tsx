@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_MUTATION_COLUMNS } from "@/lib/json-api/finance-table-columns";
 /**
  * COSTA — Costing & Tariffs hub.
  * Route: /finance/costa | pageTitle: "COSTA — Costing & Tariffs"
@@ -569,7 +570,15 @@ export default function FinanceCostaPage() {
                   {registerDecisionM.isPending ? "Posting..." : "Submit decision"}
                 </button>
                 {registerDecisionM.data ? (
-                  <QueryResultPanel title="Register Decision M" isPending={registerDecisionM.isPending} isLoading={registerDecisionM.isPending} isError={registerDecisionM.isError} error={registerDecisionM.error} data={registerDecisionM.data} />
+                  <div className="mt-3">
+                    <JsonApiDataTable
+                      data={registerDecisionM.data}
+                      columns={FINANCE_MUTATION_COLUMNS}
+                      isLoading={registerDecisionM.isPending}
+                      error={registerDecisionM.error as Error | null}
+                      emptyTitle="Decision recorded"
+                    />
+                  </div>
                 ) : null}
               </div>
 
@@ -620,7 +629,18 @@ export default function FinanceCostaPage() {
                   {issueInvoiceM.isPending ? "Posting..." : "Issue invoice"}
                 </button>
                 {issueInvoiceM.data ? (
-                  <QueryResultPanel title="Issue Invoice M" isPending={issueInvoiceM.isPending} isLoading={issueInvoiceM.isPending} isError={issueInvoiceM.isError} error={issueInvoiceM.error} data={issueInvoiceM.data} />
+                  <div className="mt-3">
+                    <JsonApiDataTable
+                      data={issueInvoiceM.data}
+                      columns={[
+                        ...FINANCE_MUTATION_COLUMNS,
+                        { key: "invoiceId", header: "Invoice ID", fields: ["invoiceId", "invoiceNumber"] },
+                      ]}
+                      isLoading={issueInvoiceM.isPending}
+                      error={issueInvoiceM.error as Error | null}
+                      emptyTitle="Invoice issued"
+                    />
+                  </div>
                 ) : null}
               </div>
             </div>

@@ -13,7 +13,8 @@ import { IntelligenceResultPanel } from "@/components/intelligence/IntelligenceR
 import { PageShell } from "@/components/PageShell";
 import { useIntelligenceQuery } from "@/hooks/useIntelligence";
 import { CouncilObligationPaymentPanel } from "@/components/registry/CouncilObligationPaymentPanel";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import { useFundoCpdCandidates, useProviderCouncilObligations } from "@/hooks/queries/useProviderCouncil";
 import { useSearchParams } from "next/navigation";
 
@@ -130,7 +131,7 @@ export default function ProviderCouncilSelfServicePage() {
                 <Loader2 className="w-4 h-4 animate-spin" /> Loading…
               </div>
             ) : (
-              <QueryResultPanel title="Fundo CPD candidates" data={fundo ?? []} />
+              <JsonApiDataTable data={fundo ?? []} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No CPD candidates" />
             )}
           </section>
         </div>

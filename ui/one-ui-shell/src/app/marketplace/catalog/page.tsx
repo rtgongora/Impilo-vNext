@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { MARKETPLACE_PRODUCT_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -353,7 +354,7 @@ export default function CatalogPage() {
                 </div>
 
                 {validateCart.data ? (
-                  <QueryResultPanel title="Validate Cart" isPending={validateCart.isPending} isLoading={validateCart.isPending} isError={validateCart.isError} error={validateCart.error} data={validateCart.data} />
+                  <JsonApiDataTable data={validateCart.data} columns={MARKETPLACE_PRODUCT_COLUMNS} isLoading={validateCart.isPending} error={validateCart.error as Error | null} emptyTitle="Cart valid" />
                 ) : null}
               </div>
             </div>

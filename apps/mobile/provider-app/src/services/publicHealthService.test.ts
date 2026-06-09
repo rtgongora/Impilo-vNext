@@ -10,5 +10,9 @@ describe("publicHealthService", () => {
   it("exports createFieldTask for outreach parity", async () => {
     const mod = await import("./publicHealthService");
     expect(typeof mod.createFieldTask).toBe("function");
+    expect(typeof mod.fetchSiteRegistrySites).toBe("function");
+    expect(typeof mod.fetchMapMarkers).toBe("function");
+    expect(typeof mod.fetchInvestigations).toBe("function");
+    expect(typeof mod.submitFieldOperation).toBe("function");
   });
 });

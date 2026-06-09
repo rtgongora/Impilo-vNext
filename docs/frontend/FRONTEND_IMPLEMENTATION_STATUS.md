@@ -18,12 +18,15 @@
 - Social timeline/communities (web + mobile)
 - Core transaction feed (web BFF â€” no fixture injection)
 - Marketplace launcher (web + mobile BFF)
-- Public health reads + fail-close writes (web)
+- Public health ops: site registry geo, surveillance investigations, campaigns enroll, Ndila PH maps (web)
+- Data pipelines: watermarks, warehouse gold, NDR catalog via BFF (web)
 - Teleconsult lifecycle (web; RTC blocked)
+- Telemedicine analytics ingest persisted (analytics-pipeline-service)
 
 ## Partial functionality
 
-- Trust admin, registry identity ops, finance/commerce, learning, Nompilo, workflow/dispatch ops, Ndila intelligence, UBOMI
+- Trust admin, registry identity ops, finance/commerce, learning, Nompilo, workflow/dispatch ops, UBOMI
+- Public health mobile (provider field ops + site registry reads; citizen summary/alerts)
 
 ## Fixture / demo (must be labelled)
 

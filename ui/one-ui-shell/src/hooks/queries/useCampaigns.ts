@@ -96,4 +96,27 @@ export function useCloseCampaign() {
   });
 }
 
+export type EnrollCampaignBody = {
+  participantId: string;
+  participantType?: string;
+};
+
+export function useEnrollCampaign() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { campaignId: string; body: EnrollCampaignBody }) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/campaigns/${encodeURIComponent(args.campaignId)}/enroll`,
+        {
+          participantId: args.body.participantId,
+          participantType: args.body.participantType ?? "PATIENT",
+        },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["campaigns"] });
+      void qc.invalidateQueries({ queryKey: ["public-health-campaigns"] });
+    },
+  });
+}
+
 export type { PublicHealthCampaign };

@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { MusheXRailSafetyPanel } from "@/components/finance/MusheXRailSafetyPanel";
 import { PayerOpsReviewsTable } from "@/components/finance/PayerOpsReviewsTable";
 import {
   PayerOpsAdaptersTable,
@@ -207,6 +208,7 @@ export default function FinancePayerOpsPage() {
         </section>
 
         <div className="max-w-4xl space-y-8">
+          <MusheXRailSafetyPanel />
           <FinancePayerOpsReconciliationNotice />
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -587,7 +589,20 @@ export default function FinancePayerOpsPage() {
             ) : fraudQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Request failed.</p>
             ) : fraudQ.data != null ? (
-              <QueryResultPanel title="Fraud Q" isPending={fraudQ.isPending} isLoading={fraudQ.isPending} isError={fraudQ.isError} error={fraudQ.error} data={fraudQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={fraudQ.data}
+                  columns={[
+                    { key: "flag", header: "Flag", fields: ["flagId", "id"] },
+                    { key: "severity", header: "Severity", fields: ["severity", "riskLevel"] },
+                    { key: "intent", header: "Intent", fields: ["intentId", "paymentIntentId"] },
+                    { key: "reason", header: "Reason", fields: ["reason", "rule", "description"] },
+                    { key: "status", header: "Status", fields: ["status"] },
+                  ]}
+                  isLoading={fraudQ.isPending}
+                  error={fraudQ.error as Error | null}
+                />
+              </div>
             ) : fraudArmed ? null : (
               <p className="mt-3 text-xs text-slate-500">Click fetch to query.</p>
             )}

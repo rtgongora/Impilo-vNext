@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Provider Detail — View provider profile, specialties, and schedule.
  * Route: /registry/providers/[id]
@@ -204,7 +205,7 @@ export default function ProviderDetailPage() {
             <div className="bg-white rounded-lg border border-gray-200 p-5">
               <h3 className="font-medium text-gray-900 mb-3">Work context (Varapi + Tuso)</h3>
               {workContext ? (
-                <QueryResultPanel title="Work context" data={workContext} />
+                <JsonApiDataTable data={workContext} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No work context" />
               ) : (
                 <p className="text-sm text-gray-400">Loading or unavailable…</p>
               )}

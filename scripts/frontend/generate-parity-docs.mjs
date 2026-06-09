@@ -79,18 +79,18 @@ const CAPABILITIES = [
   {
     plane: "Registry",
     domain: "Indawo",
-    capability: "Public health site registry",
+    capability: "Public health site registry + geo capture",
     backend: "/internal/v1/public-health/site-registry/*",
     contract: "contracts/openapi/indawo.openapi.yaml",
-    webRoute: "/public-health/*",
-    webClient: "usePublicHealth.ts, useSiteRegistry.ts",
-    web: "partial",
+    webRoute: "/public-health/site-registry/*",
+    webClient: "useSiteRegistry.ts, SiteRegistryGeoMapPanel, NdilaLocationPicker",
+    web: "yes",
     mobile: "partial",
     nompilo: "no",
-    maturity: "Partial",
+    maturity: "Live",
     priority: "MEDIUM",
-    gap: "Map layer integration incomplete",
-    action: "Ndila map panel on site registry",
+    gap: "Mobile site-registry list lacks geo edit",
+    action: "Provider mobile site location capture",
   },
   {
     plane: "Clinical",
@@ -127,34 +127,34 @@ const CAPABILITIES = [
   {
     plane: "Data & Intelligence",
     domain: "Public Health Ops",
-    capability: "Inspections, outbreaks, campaigns, intelligence",
-    backend: "/internal/v1/public-health/*",
+    capability: "Surveillance, investigations, campaigns, intelligence, field ops",
+    backend: "/internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/*",
     contract: "contracts/openapi/surveillance.openapi.yaml",
     webRoute: "/public-health/*",
-    webClient: "usePublicHealth.ts, useSurveillance.ts",
-    web: "partial",
+    webClient: "usePublicHealth.ts, useSurveillance.ts, useCampaigns.ts",
+    web: "yes",
     mobile: "partial",
     nompilo: "partial",
-    maturity: "Partial",
+    maturity: "Live",
     priority: "HIGH",
-    gap: "Field ops mobile thinner than web",
-    action: "Provider field tasks parity",
+    gap: "Citizen PH awareness thinner than provider web",
+    action: "Citizen outbreak/alert depth on mobile",
   },
   {
     plane: "Integration & Edge",
     domain: "Ndila",
-    capability: "Geocode, routes, intelligence layers",
+    capability: "Geocode, routes, PH/site ops maps",
     backend: "/api/v1/ndila/*",
     contract: "contracts/openapi/ndila.openapi.yaml",
-    webRoute: "NdilaIntelligencePanel",
-    webClient: "lib/ndila/ndila-client.ts",
-    web: "partial",
+    webRoute: "NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel",
+    webClient: "lib/ndila/ndila-client.ts, NdilaMapLibre",
+    web: "yes",
     mobile: "partial",
     nompilo: "no",
-    maturity: "Partial",
+    maturity: "Live",
     priority: "MEDIUM",
-    gap: "Web ops map dashboards incomplete",
-    action: "Reusable map component rollout",
+    gap: "Mobile Ndila map parity on field tasks",
+    action: "Provider field map overlay",
   },
   {
     plane: "Enterprise",
@@ -215,10 +215,26 @@ const CAPABILITIES = [
     web: "yes",
     mobile: "no",
     nompilo: "no",
-    maturity: "Partial",
+    maturity: "Live",
     priority: "MEDIUM",
     gap: "Mobile analytics dashboard",
-    action: "BFF proxy + web SLA dashboard",
+    action: "Provider telemedicine SLA strip",
+  },
+  {
+    plane: "Data",
+    domain: "Data Pipeline & NDR",
+    capability: "Pipeline watermarks, warehouse gold, national dataset catalog",
+    backend: "/internal/v1/pipeline/*, /internal/v1/warehouse/*, /internal/v1/ndr-catalog/*",
+    contract: "data-pipeline-service, national-data-repository-service",
+    webRoute: "/data-intelligence/pipelines",
+    webClient: "useDataPipelineWatermarks.ts, useWarehouse.ts, NdrWarehouseQueryPanel",
+    web: "yes",
+    mobile: "no",
+    nompilo: "partial",
+    maturity: "Live",
+    priority: "HIGH",
+    gap: "Mobile data-ops visibility",
+    action: "Provider governance summary strip",
   },
   {
     plane: "Trust",
@@ -673,12 +689,15 @@ function writeImplementationStatus() {
 - Social timeline/communities (web + mobile)
 - Core transaction feed (web BFF â€” no fixture injection)
 - Marketplace launcher (web + mobile BFF)
-- Public health reads + fail-close writes (web)
+- Public health ops: site registry geo, surveillance investigations, campaigns enroll, Ndila PH maps (web)
+- Data pipelines: watermarks, warehouse gold, NDR catalog via BFF (web)
 - Teleconsult lifecycle (web; RTC blocked)
+- Telemedicine analytics ingest persisted (analytics-pipeline-service)
 
 ## Partial functionality
 
-- Trust admin, registry identity ops, finance/commerce, learning, Nompilo, workflow/dispatch ops, Ndila intelligence, UBOMI
+- Trust admin, registry identity ops, finance/commerce, learning, Nompilo, workflow/dispatch ops, UBOMI
+- Public health mobile (provider field ops + site registry reads; citizen summary/alerts)
 
 ## Fixture / demo (must be labelled)
 

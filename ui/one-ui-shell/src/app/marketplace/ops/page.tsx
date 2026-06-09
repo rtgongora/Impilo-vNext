@@ -1,5 +1,5 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -118,7 +118,19 @@ export default function MarketplaceOpsPage() {
             {reviewsQ.isLoading ? <p className="mt-3 flex items-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading reviews...</p> : null}
             {reviewsQ.isError ? <p className="mt-3 text-sm text-red-700">Could not load reviews.</p> : null}
             {reviewsQ.data != null ? (
-              <QueryResultPanel title="Reviews Q" isPending={reviewsQ.isPending} isLoading={reviewsQ.isPending} isError={reviewsQ.isError} error={reviewsQ.error} data={reviewsQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={reviewsQ.data}
+                  columns={[
+                    { key: "id", header: "Review", fields: ["reviewId", "id"] },
+                    { key: "status", header: "Status", fields: ["status", "reviewStatus"] },
+                    { key: "subject", header: "Subject", fields: ["subjectType", "subjectId", "orderId"] },
+                    { key: "created", header: "Created", fields: ["createdAt", "created_at"] },
+                  ]}
+                  isLoading={reviewsQ.isPending}
+                  error={reviewsQ.error as Error | null}
+                />
+              </div>
             ) : null}
             <div className="mt-4 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
               <label className="text-xs text-slate-600">
@@ -149,7 +161,19 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {stuckQ.data != null ? (
-              <QueryResultPanel title="Stuck Q" isPending={stuckQ.isPending} isLoading={stuckQ.isPending} isError={stuckQ.isError} error={stuckQ.error} data={stuckQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={stuckQ.data}
+                  columns={[
+                    { key: "order", header: "Order", fields: ["orderId", "id"] },
+                    { key: "status", header: "Status", fields: ["status", "orderStatus"] },
+                    { key: "reason", header: "Stuck reason", fields: ["stuckReason", "reason", "blocker"] },
+                    { key: "since", header: "Since", fields: ["stuckSince", "updatedAt"] },
+                  ]}
+                  isLoading={stuckQ.isPending}
+                  error={stuckQ.error as Error | null}
+                />
+              </div>
             ) : null}
           </section>
 
@@ -170,7 +194,19 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {auditQ.data != null ? (
-              <QueryResultPanel title="Audit Q" isPending={auditQ.isPending} isLoading={auditQ.isPending} isError={auditQ.isError} error={auditQ.error} data={auditQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={auditQ.data}
+                  columns={[
+                    { key: "event", header: "Event", fields: ["eventType", "action", "type"] },
+                    { key: "actor", header: "Actor", fields: ["actorId", "actor"] },
+                    { key: "target", header: "Target", fields: ["targetId", "resourceId"] },
+                    { key: "at", header: "At", fields: ["occurredAt", "createdAt"] },
+                  ]}
+                  isLoading={auditQ.isPending}
+                  error={auditQ.error as Error | null}
+                />
+              </div>
             ) : null}
           </section>
 
@@ -193,7 +229,19 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {vendorsQ.data != null ? (
-              <QueryResultPanel title="Vendors Q" isPending={vendorsQ.isPending} isLoading={vendorsQ.isPending} isError={vendorsQ.isError} error={vendorsQ.error} data={vendorsQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={vendorsQ.data}
+                  columns={[
+                    { key: "vendor", header: "Vendor", fields: ["vendorId", "id", "name"] },
+                    { key: "status", header: "Status", fields: ["status", "vendorStatus"] },
+                    { key: "tier", header: "Tier", fields: ["tier", "vendorTier"] },
+                    { key: "score", header: "Score", fields: ["trustScore", "score"] },
+                  ]}
+                  isLoading={vendorsQ.isPending}
+                  error={vendorsQ.error as Error | null}
+                />
+              </div>
             ) : null}
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[0.4fr_1fr_auto_auto] lg:items-end">
@@ -213,7 +261,19 @@ export default function MarketplaceOpsPage() {
               </button>
             </div>
             {vendorQ.data != null ? (
-              <QueryResultPanel title="Vendor Q" isPending={vendorQ.isPending} isLoading={vendorQ.isPending} isError={vendorQ.isError} error={vendorQ.error} data={vendorQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={vendorQ.data}
+                  columns={[
+                    { key: "vendor", header: "Vendor", fields: ["vendorId", "id"] },
+                    { key: "name", header: "Name", fields: ["name", "displayName"] },
+                    { key: "status", header: "Status", fields: ["status"] },
+                    { key: "suspended", header: "Suspended", fields: ["suspendedAt", "suspensionReason"] },
+                  ]}
+                  isLoading={vendorQ.isPending}
+                  error={vendorQ.error as Error | null}
+                />
+              </div>
             ) : null}
           </section>
 
@@ -232,7 +292,16 @@ export default function MarketplaceOpsPage() {
                 Fetch plans
               </button>
               {plansQ.data != null ? (
-                <QueryResultPanel title="Plans Q" isPending={plansQ.isPending} isLoading={plansQ.isPending} isError={plansQ.isError} error={plansQ.error} data={plansQ.data} />
+                <JsonApiDataTable
+                  data={plansQ.data}
+                  columns={[
+                    { key: "plan", header: "Plan", fields: ["planId", "id"] },
+                    { key: "status", header: "Status", fields: ["status"] },
+                    { key: "provider", header: "Provider", fields: ["providerId", "logisticsProvider"] },
+                  ]}
+                  isLoading={plansQ.isPending}
+                  error={plansQ.error as Error | null}
+                />
               ) : <div />}
             </div>
 
@@ -249,10 +318,28 @@ export default function MarketplaceOpsPage() {
               </button>
               <div className="grid gap-2">
                 {exceptionsQ.data != null ? (
-                  <QueryResultPanel title="Exceptions Q" isPending={exceptionsQ.isPending} isLoading={exceptionsQ.isPending} isError={exceptionsQ.isError} error={exceptionsQ.error} data={exceptionsQ.data} />
+                  <JsonApiDataTable
+                    data={exceptionsQ.data}
+                    columns={[
+                      { key: "type", header: "Type", fields: ["exceptionType", "type"] },
+                      { key: "status", header: "Status", fields: ["status"] },
+                      { key: "detail", header: "Detail", fields: ["message", "reason"] },
+                    ]}
+                    isLoading={exceptionsQ.isPending}
+                    error={exceptionsQ.error as Error | null}
+                  />
                 ) : null}
                 {proofsQ.data != null ? (
-                  <QueryResultPanel title="Proofs Q" isPending={proofsQ.isPending} isLoading={proofsQ.isPending} isError={proofsQ.isError} error={proofsQ.error} data={proofsQ.data} />
+                  <JsonApiDataTable
+                    data={proofsQ.data}
+                    columns={[
+                      { key: "proof", header: "Proof", fields: ["proofId", "id"] },
+                      { key: "type", header: "Type", fields: ["proofType", "type"] },
+                      { key: "captured", header: "Captured", fields: ["capturedAt", "createdAt"] },
+                    ]}
+                    isLoading={proofsQ.isPending}
+                    error={proofsQ.error as Error | null}
+                  />
                 ) : null}
               </div>
             </div>
@@ -266,7 +353,16 @@ export default function MarketplaceOpsPage() {
                 Fetch providers
               </button>
               {providersQ.data != null ? (
-                <QueryResultPanel title="Providers Q" isPending={providersQ.isPending} isLoading={providersQ.isPending} isError={providersQ.isError} error={providersQ.error} data={providersQ.data} />
+                <JsonApiDataTable
+                  data={providersQ.data}
+                  columns={[
+                    { key: "provider", header: "Provider", fields: ["providerId", "id", "name"] },
+                    { key: "mode", header: "Mode", fields: ["deliveryMode", "mode"] },
+                    { key: "active", header: "Active", fields: ["active", "status"] },
+                  ]}
+                  isLoading={providersQ.isPending}
+                  error={providersQ.error as Error | null}
+                />
               ) : <div />}
             </div>
 
@@ -280,7 +376,17 @@ export default function MarketplaceOpsPage() {
                 Fetch handoffs (fulfillment)
               </button>
               {handoffsQ.data != null ? (
-                <QueryResultPanel title="Handoffs Q" isPending={handoffsQ.isPending} isLoading={handoffsQ.isPending} isError={handoffsQ.isError} error={handoffsQ.error} data={handoffsQ.data} />
+                <JsonApiDataTable
+                  data={handoffsQ.data}
+                  columns={[
+                    { key: "handoff", header: "Handoff", fields: ["handoffId", "id"] },
+                    { key: "from", header: "From", fields: ["fromParty", "from"] },
+                    { key: "to", header: "To", fields: ["toParty", "to"] },
+                    { key: "status", header: "Status", fields: ["status"] },
+                  ]}
+                  isLoading={handoffsQ.isPending}
+                  error={handoffsQ.error as Error | null}
+                />
               ) : <div />}
             </div>
 
@@ -294,7 +400,17 @@ export default function MarketplaceOpsPage() {
                 Fetch custody (fulfillment)
               </button>
               {custodyQ.data != null ? (
-                <QueryResultPanel title="Custody Q" isPending={custodyQ.isPending} isLoading={custodyQ.isPending} isError={custodyQ.isError} error={custodyQ.error} data={custodyQ.data} />
+                <JsonApiDataTable
+                  data={custodyQ.data}
+                  columns={[
+                    { key: "custody", header: "Custody", fields: ["custodyId", "id"] },
+                    { key: "holder", header: "Holder", fields: ["custodian", "holder"] },
+                    { key: "state", header: "State", fields: ["custodyState", "status"] },
+                    { key: "since", header: "Since", fields: ["since", "updatedAt"] },
+                  ]}
+                  isLoading={custodyQ.isPending}
+                  error={custodyQ.error as Error | null}
+                />
               ) : <div />}
             </div>
           </section>

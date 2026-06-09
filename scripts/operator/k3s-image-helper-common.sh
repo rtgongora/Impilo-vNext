@@ -4,7 +4,7 @@
 [[ -n "${_IMPILO_K3S_HELPER_COMMON_LOADED:-}" ]] && return 0
 _IMPILO_K3S_HELPER_COMMON_LOADED=1
 
-IMPILO_HELPER_VERSION="2"
+IMPILO_HELPER_VERSION="3"
 IMPILO_DEFAULT_REPO="/opt/impilo/repos/Impilo-vNext"
 IMPILO_HELPER_LOG="/var/log/impilo-k3s-image-helper.log"
 IMPILO_IMPORT_LOCK="/tmp/impilo-k3s-import.lock"
@@ -157,6 +157,41 @@ for r in refs:
 PY
 }
 
+impilo_wave_refs() {
+  local tag="$1"
+  local repo="$2"
+  local max_wave="${3:-0}"
+  python3 - "$repo" "$tag" "$max_wave" <<'PY'
+import sys
+import yaml
+
+repo, tag, max_wave = sys.argv[1], sys.argv[2], int(sys.argv[3])
+cls = yaml.safe_load(open(f"{repo}/config/full-boot-service-classification.yml"))
+waves = yaml.safe_load(open(f"{repo}/config/full-boot-waves.yml"))
+enabled = set()
+for wave in waves.get("waves", []):
+    if wave.get("id", 0) > max_wave:
+        break
+    for sid in wave.get("services", []):
+        enabled.add(sid)
+by_id = {e["id"]: e for e in cls["classifications"]}
+refs = []
+for sid in sorted(enabled):
+    e = by_id.get(sid)
+    if not e:
+        continue
+    if e.get("official_image"):
+        off = e["official_image"]
+        refs.append(off if ":" in off else f"{off}:latest")
+    elif e.get("image_strategy", "").startswith("not-required"):
+        continue
+    else:
+        refs.append(f"impilo/{sid}:{tag}")
+for r in refs:
+    print(r)
+PY
+}
+
 impilo_runtime_refs() {
   local tag="$1"
   local repo="$2"
@@ -206,7 +241,18 @@ else:
     ctr_lines = []
 
 doc = yaml.safe_load(open(os.path.join(repo, "config/full-boot-service-classification.yml")))
-req = [e for e in doc["classifications"] if e.get("classification") == "required_full_boot"]
+max_wave = os.environ.get("FULL_BOOT_MAX_WAVE")
+if max_wave is not None and str(max_wave).strip() != "":
+    waves = yaml.safe_load(open(os.path.join(repo, "config/full-boot-waves.yml")))
+    enabled = set()
+    for wave in waves.get("waves", []):
+        if wave.get("id", 0) > int(max_wave):
+            break
+        for sid in wave.get("services", []):
+            enabled.add(sid)
+    req = [e for e in doc["classifications"] if e.get("id") in enabled]
+else:
+    req = [e for e in doc["classifications"] if e.get("classification") == "required_full_boot"]
 
 
 def expected_ref(e):

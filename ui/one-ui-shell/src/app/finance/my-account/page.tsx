@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { LANDELA_METADATA_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Patient financial dashboard — balances, transactions, payment plans, documents.
  * Route: /finance/my-account
@@ -509,7 +510,7 @@ export default function MyHealthcareAccountPage() {
                     </div>
                     {docDetailQ.isLoading && <span>Loading…</span>}
                     {!docDetailQ.isLoading && (
-                      <QueryResultPanel title="Doc Detail Q" isPending={docDetailQ.isPending} isLoading={docDetailQ.isPending} isError={docDetailQ.isError} error={docDetailQ.error} data={docDetailQ.data} />
+                      <JsonApiDataTable data={docDetailQ.data} columns={LANDELA_METADATA_COLUMNS} isLoading={docDetailQ.isPending} error={docDetailQ.error as Error | null} emptyTitle="No document detail" />
                     )}
                   </div>
                 )}

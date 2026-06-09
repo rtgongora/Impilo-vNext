@@ -23,7 +23,11 @@ const GREEN = "#059669";
 const GREEN_DARK = "#047857";
 const GREEN_LIGHT = "#D1FAE5";
 
-export function LoginScreen() {
+interface LoginScreenProps {
+  onSignUp?: () => void;
+}
+
+export function LoginScreen({ onSignUp }: LoginScreenProps) {
   const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [pendingState, setPendingState] = useState<string | null>(null);
@@ -165,6 +169,15 @@ export function LoginScreen() {
           </Text>
         </View>
 
+        {onSignUp ? (
+          <Pressable onPress={onSignUp} testID="signup-link" style={styles.signUpRow}>
+            <Text style={styles.signUpPrompt}>
+              New to Impilo?{" "}
+              <Text style={styles.footerLink}>Create an account</Text>
+            </Text>
+          </Pressable>
+        ) : null}
+
         <View style={styles.divider} />
 
         <Text style={styles.footerText}>
@@ -301,6 +314,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
   },
+  signUpRow: { alignItems: "center" },
+  signUpPrompt: { fontSize: 14, color: "#374151", textAlign: "center" },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: "#E5E7EB",

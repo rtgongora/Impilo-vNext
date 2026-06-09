@@ -145,4 +145,69 @@ export function useCreateCase() {
   });
 }
 
+export interface PublicHealthInvestigation {
+  id: string;
+  title: string;
+  status: string;
+  caseId: string;
+  outbreakId: string;
+  facilityId: string;
+  assignedTo: string;
+}
+
+function normalizeInvestigation(resource: unknown): PublicHealthInvestigation {
+  const r = asRecord(resource);
+  return {
+    id: String(r.id ?? ""),
+    title: String(r.title ?? "Investigation"),
+    status: String(r.status ?? "OPEN"),
+    caseId: String(r.caseId ?? r.case_id ?? ""),
+    outbreakId: String(r.outbreakId ?? r.outbreak_id ?? ""),
+    facilityId: String(r.facilityId ?? r.facility_id ?? ""),
+    assignedTo: String(r.assignedTo ?? r.assigned_to ?? ""),
+  };
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+export function useInvestigations() {
+  return useQuery({
+    queryKey: ["surveillance", "investigations"],
+    queryFn: async () => {
+      const response = await apiClient.get<{ data: unknown }>("/internal/v1/public-health/investigations");
+      const rows = extractPublicHealthList(response.data, ["items"]);
+      return rows.map(normalizeInvestigation);
+    },
+  });
+}
+
+export function useOpenInvestigation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Record<string, unknown>) =>
+      apiClient.post<unknown>("/internal/v1/public-health/investigations", body),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["surveillance", "investigations"] });
+      void qc.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
+export function useUpdateInvestigationStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { investigationId: string; status: string; findings?: string }) =>
+      apiClient.post<unknown>(
+        `/internal/v1/public-health/investigations/${encodeURIComponent(args.investigationId)}/status`,
+        { status: args.status, findings: args.findings },
+      ),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["surveillance", "investigations"] });
+      void qc.invalidateQueries({ queryKey: ["public-health-operations-home"] });
+    },
+  });
+}
+
 export type { PublicHealthAlert, PublicHealthCase, PublicHealthCounter, PublicHealthSignal };

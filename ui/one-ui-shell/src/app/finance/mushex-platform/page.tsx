@@ -21,7 +21,8 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_MUTATION_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -704,13 +705,15 @@ export default function FinanceMushexPlatformPage() {
             </button>
             {walletCreditM.data || walletCreditM.isError ? (
               <div className="mt-3">
-                <QueryResultPanel
-                  title="Wallet credit result"
-                  isPending={walletCreditM.isPending}
-                  isLoading={walletCreditM.isPending}
-                  isError={walletCreditM.isError}
-                  error={walletCreditM.error}
+                <JsonApiDataTable
                   data={walletCreditM.data}
+                  columns={[
+                    ...FINANCE_MUTATION_COLUMNS,
+                    { key: "walletId", header: "Wallet ID", fields: ["walletId", "id"] },
+                  ]}
+                  isLoading={walletCreditM.isPending}
+                  error={walletCreditM.error as Error | null}
+                  emptyTitle="Credit posted"
                 />
               </div>
             ) : null}

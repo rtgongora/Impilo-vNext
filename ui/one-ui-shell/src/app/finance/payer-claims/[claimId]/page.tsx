@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { COVERAGE_RESULT_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -50,7 +51,7 @@ export default function FinancePayerClaimDetailPage() {
             ) : claimQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load payer claim.</p>
             ) : (
-              <QueryResultPanel title="Claim Q" isPending={claimQ.isPending} isLoading={claimQ.isPending} isError={claimQ.isError} error={claimQ.error} data={claimQ.data} />
+              <JsonApiDataTable data={claimQ.data} columns={COVERAGE_RESULT_COLUMNS} isLoading={claimQ.isPending} error={claimQ.error as Error | null} emptyTitle="No claim fields" />
             )}
           </section>
 

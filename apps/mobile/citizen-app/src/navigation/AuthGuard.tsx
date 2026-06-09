@@ -9,6 +9,8 @@ import React, { useEffect } from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { useAuth } from "@impilo/mobile-auth";
 import { LoginScreen } from "../screens/LoginScreen";
+import { SignUpScreen } from "../screens/auth/SignUpScreen";
+import { AssuranceChoiceScreen } from "../screens/auth/AssuranceChoiceScreen";
 import { appStore, useAppStore } from "../stores/appStore";
 import { fetchProfile } from "../services/profileService";
 
@@ -18,7 +20,7 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const auth = useAuth();
-  const { profile } = useAppStore();
+  const { profile, onboardingScreen } = useAppStore();
 
   useEffect(() => {
     if (auth.isAuthenticated && !profile) {
@@ -42,7 +44,22 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   if (!auth.isAuthenticated) {
-    return <LoginScreen />;
+    if (onboardingScreen === "signup") {
+      return (
+        <SignUpScreen
+          onBack={() => appStore.getState().setOnboardingScreen(null)}
+        />
+      );
+    }
+    return (
+      <LoginScreen
+        onSignUp={() => appStore.getState().setOnboardingScreen("signup")}
+      />
+    );
+  }
+
+  if (onboardingScreen === "assurance") {
+    return <AssuranceChoiceScreen />;
   }
 
   if (!profile) {

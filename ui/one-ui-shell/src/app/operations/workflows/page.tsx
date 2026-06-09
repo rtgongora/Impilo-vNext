@@ -231,7 +231,7 @@ export default function WorkflowOperationsPage() {
             <section className="impilo-surface-card p-4">
               <h3 className="text-sm font-semibold text-slate-900">Start workflow instance</h3>
               <p className="mt-1 text-xs text-slate-600">
-                Sends a live command to <code>/internal/v1/workflows/instances</code>. No fixture mode.
+                Sends a live command to <code>/internal/v1/workflows/instances</code>. No demo mode.
               </p>
               <textarea
                 className="mt-3 h-40 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"

@@ -11,8 +11,10 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.DagsServiceClient;
+import zw.gov.mohcc.impilo.experience.client.DataPipelineServiceClient;
 import zw.gov.mohcc.impilo.experience.client.GuidanceServiceClient;
 import zw.gov.mohcc.impilo.experience.client.LearningServiceClient;
+import zw.gov.mohcc.impilo.experience.client.NdrServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SearchServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VarapiServiceClient;
@@ -51,6 +53,8 @@ public class HealthIntelligenceService {
     private final DagsServiceClient dags;
     private final ObjectMapper objectMapper;
     private final ObjectProvider<IntelligenceEventPublisher> eventPublisher;
+    private final ObjectProvider<DataPipelineServiceClient> pipelineClient;
+    private final ObjectProvider<NdrServiceClient> ndrCatalogClient;
 
     public HealthIntelligenceService(
             GuidanceServiceClient guidance,
@@ -61,7 +65,9 @@ public class HealthIntelligenceService {
             LearningServiceClient learning,
             DagsServiceClient dags,
             ObjectMapper objectMapper,
-            ObjectProvider<IntelligenceEventPublisher> eventPublisher) {
+            ObjectProvider<IntelligenceEventPublisher> eventPublisher,
+            ObjectProvider<DataPipelineServiceClient> pipelineClient,
+            ObjectProvider<NdrServiceClient> ndrCatalogClient) {
         this.guidance = guidance;
         this.search = search;
         this.pct = pct;
@@ -71,6 +77,8 @@ public class HealthIntelligenceService {
         this.dags = dags;
         this.objectMapper = objectMapper;
         this.eventPublisher = eventPublisher;
+        this.pipelineClient = pipelineClient;
+        this.ndrCatalogClient = ndrCatalogClient;
     }
 
     public Map<String, Object> executeQuery(
@@ -449,8 +457,47 @@ public class HealthIntelligenceService {
                     .put("summary", "Structured registry review recommended for narrative: " + freeText.substring(0, Math.min(120, freeText.length())))
                     .put("severity", "LOW");
         }
+        attachPipelineAndCatalogSignals(hints);
         result.put("summary", "Heuristic data-quality hints — not automated merges.");
         result.putArray("sourceRefs").addObject().put("system", "health-intelligence-plane").put("role", "heuristic");
+    }
+
+    private void attachPipelineAndCatalogSignals(ArrayNode hints) {
+        DataPipelineServiceClient pipeline = pipelineClient.getIfAvailable();
+        if (pipeline != null) {
+            try {
+                JsonNode watermarks = pipeline.listWatermarks();
+                int count = countJsonCollection(watermarks);
+                hints.addObject()
+                        .put("hintType", "PIPELINE_WATERMARKS")
+                        .put("summary", "Tracked pipeline watermarks: " + count)
+                        .put("severity", count > 0 ? "INFO" : "LOW");
+                resultSourceRef(hints, "data-pipeline-service", "watermarks");
+            } catch (Exception e) {
+                log.debug("Pipeline watermark hint skipped: {}", e.getMessage());
+            }
+        }
+        NdrServiceClient ndr = ndrCatalogClient.getIfAvailable();
+        if (ndr != null) {
+            try {
+                JsonNode datasets = ndr.listDatasets();
+                int count = countJsonCollection(datasets);
+                hints.addObject()
+                        .put("hintType", "NDR_CATALOG")
+                        .put("summary", "National dataset catalog entries: " + count)
+                        .put("severity", count > 0 ? "INFO" : "LOW");
+                resultSourceRef(hints, "national-data-repository-service", "catalog");
+            } catch (Exception e) {
+                log.debug("NDR catalog hint skipped: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void resultSourceRef(ArrayNode hints, String system, String role) {
+        hints.addObject()
+                .put("hintType", "SOURCE_REF")
+                .put("summary", system + " (" + role + ")")
+                .put("severity", "INFO");
     }
 
     private void anomalyScanOperations(ObjectNode result, Map<String, Object> context) {

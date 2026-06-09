@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_MUTATION_COLUMNS, FINANCE_SETTLEMENT_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -103,7 +104,13 @@ export default function FinanceSettlementsPage() {
               </button>
             </div>
             {lastRunResponse ? (
-              <QueryResultPanel title="Last run" data={lastRunResponse} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={lastRunResponse}
+                  columns={FINANCE_MUTATION_COLUMNS}
+                  emptyTitle="Run completed"
+                />
+              </div>
             ) : null}
             {derivedIdFromRun ? (
               <p className="mt-2 text-xs text-emerald-800">Detected settlement id: {derivedIdFromRun}</p>
@@ -139,7 +146,15 @@ export default function FinanceSettlementsPage() {
             ) : settlementQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Could not load that settlement.</p>
             ) : settlementQ.data ? (
-              <QueryResultPanel title="Settlement Q" isPending={settlementQ.isPending} isLoading={settlementQ.isPending} isError={settlementQ.isError} error={settlementQ.error} data={settlementQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={settlementQ.data}
+                  columns={FINANCE_SETTLEMENT_COLUMNS}
+                  isLoading={settlementQ.isPending}
+                  error={settlementQ.error as Error | null}
+                  emptyTitle="Settlement loaded"
+                />
+              </div>
             ) : (
               <p className="mt-3 text-xs text-slate-500">Enter an id and choose Load.</p>
             )}

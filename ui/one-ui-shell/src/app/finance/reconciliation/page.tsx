@@ -1,5 +1,5 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -98,7 +98,9 @@ export default function FinanceReconciliationPage() {
               )}
             </button>
             {importM.data != null ? (
-              <QueryResultPanel title="Import M" isPending={importM.isPending} isLoading={importM.isPending} isError={importM.isError} error={importM.error} data={importM.data} />
+              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Statement import accepted. Fetch unmatched entries to reconcile lines.
+              </p>
             ) : null}
           </div>
 
@@ -150,11 +152,22 @@ export default function FinanceReconciliationPage() {
             ) : unmatchedQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Request failed (403 if your role is not allowed).</p>
             ) : unmatchedSummary ? (
-              <div className="mt-3 space-y-2 text-xs text-slate-600">
+              <div className="mt-3 space-y-2">
                 {typeof unmatchedSummary.totalElements === "number" ? (
-                  <p>Total elements: {String(unmatchedSummary.totalElements)}</p>
+                  <p className="text-xs text-slate-600">Total elements: {String(unmatchedSummary.totalElements)}</p>
                 ) : null}
-                <QueryResultPanel title="Unmatched Q" isPending={unmatchedQ.isPending} isLoading={unmatchedQ.isPending} isError={unmatchedQ.isError} error={unmatchedQ.error} data={unmatchedQ.data} />
+                <JsonApiDataTable
+                  data={unmatchedQ.data}
+                  columns={[
+                    { key: "recon", header: "Entry", fields: ["reconId", "id", "entryId"] },
+                    { key: "amount", header: "Amount", fields: ["amount", "statementAmount"] },
+                    { key: "ref", header: "Reference", fields: ["statementRef", "reference"] },
+                    { key: "status", header: "Status", fields: ["status", "matchStatus"] },
+                  ]}
+                  isLoading={unmatchedQ.isPending}
+                  error={unmatchedQ.error as Error | null}
+                  emptyHint="No unmatched reconciliation rows."
+                />
               </div>
             ) : unmatchedArmed ? (
               <p className="mt-3 text-xs text-slate-500">No data.</p>
@@ -198,7 +211,9 @@ export default function FinanceReconciliationPage() {
               </button>
             </div>
             {matchM.data != null ? (
-              <QueryResultPanel title="Match M" isPending={matchM.isPending} isLoading={matchM.isPending} isError={matchM.isError} error={matchM.error} data={matchM.data} />
+              <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+                Match posted for reconciliation entry {reconId}.
+              </p>
             ) : null}
           </div>
 
@@ -234,7 +249,19 @@ export default function FinanceReconciliationPage() {
             ) : tripleQ.isError ? (
               <p className="mt-3 text-sm text-red-700">Triple-source request failed.</p>
             ) : tripleQ.data && typeof tripleQ.data === "object" ? (
-              <QueryResultPanel title="Triple Q" isPending={tripleQ.isPending} isLoading={tripleQ.isPending} isError={tripleQ.isError} error={tripleQ.error} data={tripleQ.data} />
+              <div className="mt-3">
+                <JsonApiDataTable
+                  data={tripleQ.data}
+                  columns={[
+                    { key: "intent", header: "Intent", fields: ["intentId", "paymentIntentId"] },
+                    { key: "settlement", header: "Settlement", fields: ["settlementId"] },
+                    { key: "invoice", header: "Invoice", fields: ["invoiceId"] },
+                    { key: "status", header: "Status", fields: ["status", "matchStatus"] },
+                  ]}
+                  isLoading={tripleQ.isPending}
+                  error={tripleQ.error as Error | null}
+                />
+              </div>
             ) : tripleArmed ? (
               <p className="mt-3 text-xs text-slate-500">No triple-source rows returned.</p>
             ) : null}

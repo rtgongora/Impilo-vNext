@@ -7,6 +7,8 @@ import { TrustContextBanner } from "@/components/experience/TrustContextBanner";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { NdrWarehouseQueryPanel } from "@/components/data-intelligence/NdrWarehouseQueryPanel";
 import { useDataPipelineMetrics } from "@/hooks/queries/useDataPipelineMetrics";
+import { useDataPipelineSources, useDataPipelineWatermarks } from "@/hooks/queries/useDataPipelineWatermarks";
+import { useWarehouseGoldStats } from "@/hooks/queries/useWarehouse";
 
 const DATA_TABS = [
   { label: "Overview", href: "/data-intelligence" },
@@ -46,6 +48,9 @@ function MetricCard({
 
 export default function DataPipelinesPage() {
   const metrics = useDataPipelineMetrics();
+  const watermarks = useDataPipelineWatermarks();
+  const sources = useDataPipelineSources();
+  const warehouseStats = useWarehouseGoldStats();
 
   return (
     <PlaneWorkspaceShell
@@ -64,7 +69,10 @@ export default function DataPipelinesPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <FeatureMaturityBadge status="partial" detail="Hub + core-tx + NDR queries live when BFF up" />
-        <FeatureMaturityBadge status="not_wired" detail="data-pipeline-service :8215 watermarks not proxied yet" />
+        <FeatureMaturityBadge
+          status={watermarks.isError ? "not_wired" : "live"}
+          detail="data-pipeline-service watermarks via /internal/v1/pipeline/watermarks"
+        />
       </div>
 
       {metrics.isLoading ? (
@@ -115,15 +123,47 @@ export default function DataPipelinesPage() {
         <NdrWarehouseQueryPanel />
       </div>
 
-      {!metrics.isLoading && metrics.isPartial ? (
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <MetricCard
+          label="Pipeline watermarks"
+          value={watermarks.isLoading ? "…" : String(watermarks.data?.length ?? 0)}
+          detail={
+            watermarks.isError
+              ? "data-pipeline-service unreachable via BFF"
+              : "Per-source ingestion high-water marks from data-pipeline-service"
+          }
+          tone={watermarks.isError ? "amber" : "emerald"}
+        />
+        <MetricCard
+          label="Registered sources"
+          value={sources.isLoading ? "…" : String(sources.data?.length ?? 0)}
+          detail="GET /internal/v1/pipeline/sources"
+          tone={sources.isError ? "amber" : "slate"}
+        />
+        <MetricCard
+          label="Warehouse gold datasets"
+          value={
+            warehouseStats.isLoading
+              ? "…"
+              : String(
+                  (warehouseStats.data?.datasetCount as number | undefined) ??
+                    (warehouseStats.data?.datasets as unknown[] | undefined)?.length ??
+                    0,
+                )
+          }
+          detail="GET /internal/v1/warehouse/gold/stats"
+          tone={warehouseStats.isError ? "amber" : "emerald"}
+        />
+      </div>
+
+      {!metrics.isLoading && metrics.isPartial && watermarks.isError ? (
         <div className="mt-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-950">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-medium">Partial pipeline visibility</p>
             <p className="mt-1 text-xs leading-relaxed text-amber-900/90">
-              Wave 20 surfaces integration-hub and core-transaction telemetry. Direct{" "}
-              <code className="text-[11px]">data-pipeline-service</code> watermarks and ingest lag require a future BFF
-              proxy — not silently mocked here.
+              Integration-hub and core-transaction telemetry are live. Start{" "}
+              <code className="text-[11px]">data-pipeline-service</code> for watermark and source lag panels.
             </p>
           </div>
         </div>

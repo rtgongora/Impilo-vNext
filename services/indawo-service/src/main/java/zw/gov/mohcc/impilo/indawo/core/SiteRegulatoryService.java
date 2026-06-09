@@ -102,6 +102,7 @@ public class SiteRegulatoryService {
         return result.map(s -> {
             var licences = licenceRepository.findBySiteIdOrderByExpiryDateDesc(s.getSiteId());
             SiteLicenceEntity latest = licences.isEmpty() ? null : licences.getFirst();
+            SiteGeoExtractor.GeoPoint geo = SiteGeoExtractor.fromGeoJson(s.getGeoJson(), objectMapper);
             return new SiteRegulatoryDtos.SiteRegistrySummaryResponse(
                     s.getSiteId(),
                     s.getSiteCode(),
@@ -113,9 +114,36 @@ public class SiteRegulatoryService {
                     s.getRegulatoryStatus(),
                     s.getLifecycleStatus(),
                     latest != null ? latest.getStatus() : null,
-                    latest != null ? latest.getExpiryDate() : null
+                    latest != null ? latest.getExpiryDate() : null,
+                    geo.latitude(),
+                    geo.longitude(),
+                    geo.geocodeQuality()
             );
         });
+    }
+
+    @Transactional
+    public SiteRegulatoryDtos.SiteRegulatoryProfileResponse updateSiteLocation(
+            UUID siteId,
+            SiteRegulatoryDtos.UpdateSiteLocationRequest request
+    ) {
+        RequestContextHolder.require();
+        SiteEntity site = siteRepository.findById(siteId)
+                .orElseThrow(() -> new IllegalArgumentException("Site not found"));
+        String before = site.getGeoJson();
+        String quality = request.geocodeQuality() != null && !request.geocodeQuality().isBlank()
+                ? request.geocodeQuality()
+                : "MANUAL";
+        try {
+            site.setGeoJson(SiteGeoExtractor.toGeoJson(
+                    request.latitude(), request.longitude(), quality, objectMapper));
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid geo payload", e);
+        }
+        site.setUpdatedAt(OffsetDateTime.now());
+        siteRepository.save(site);
+        audit(siteId, "SITE_LOCATION_UPDATED", "Site", siteId.toString(), before, site.getGeoJson());
+        return getSiteProfile(siteId);
     }
 
     @Transactional(readOnly = true)
@@ -864,6 +892,7 @@ public class SiteRegulatoryService {
     }
 
     private SiteRegulatoryDtos.SiteView toSiteView(SiteEntity s) {
+        SiteGeoExtractor.GeoPoint geo = SiteGeoExtractor.fromGeoJson(s.getGeoJson(), objectMapper);
         return new SiteRegulatoryDtos.SiteView(
                 s.getSiteId(),
                 s.getSiteCode(),
@@ -876,7 +905,10 @@ public class SiteRegulatoryService {
                 s.getWard(),
                 s.getRegulatoryStatus(),
                 s.getLifecycleStatus(),
-                s.isActiveFlag()
+                s.isActiveFlag(),
+                geo.latitude(),
+                geo.longitude(),
+                geo.geocodeQuality()
         );
     }
 

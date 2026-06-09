@@ -27,7 +27,10 @@ public final class SiteRegulatoryDtos {
             String regulatoryStatus,
             String lifecycleStatus,
             String licenceStatus,
-            LocalDate licenceExpiryDate
+            LocalDate licenceExpiryDate,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String geocodeQuality
     ) {}
 
     public record InspectionRegisterRow(
@@ -96,7 +99,16 @@ public final class SiteRegulatoryDtos {
             String ward,
             String regulatoryStatus,
             String lifecycleStatus,
-            boolean activeFlag
+            boolean activeFlag,
+            BigDecimal latitude,
+            BigDecimal longitude,
+            String geocodeQuality
+    ) {}
+
+    public record UpdateSiteLocationRequest(
+            @NotNull BigDecimal latitude,
+            @NotNull BigDecimal longitude,
+            String geocodeQuality
     ) {}
 
     public record ApplicationView(

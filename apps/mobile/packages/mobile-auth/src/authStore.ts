@@ -25,6 +25,12 @@ export interface AuthState {
   initialize: () => Promise<void>;
   login: () => Promise<{ authUrl: string; state: string }>;
   handleCallback: (code: string, state: string, expectedState: string) => Promise<void>;
+  /** Establish session from BFF registration auto-login (password grant token). */
+  establishFromTokenResponse: (response: {
+    access_token: string;
+    refresh_token?: string | null;
+    expires_in: number;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   getValidToken: () => Promise<string>;
   setTenantContext: (tenantId: string, podId: string) => Promise<void>;
@@ -189,6 +195,52 @@ export const authStore = createStore<AuthState>((set, get) => ({
       set({
         isLoading: false,
         error: error instanceof AuthError ? error : new AuthError("CALLBACK_FAILED", String(error)),
+      });
+      throw error;
+    }
+  },
+
+  establishFromTokenResponse: async (response) => {
+    const kc = requireKeycloak();
+    const tm = requireTokenManager();
+    set({ isLoading: true, error: null });
+
+    try {
+      const tokenResponse = {
+        access_token: response.access_token,
+        refresh_token: response.refresh_token ?? "",
+        expires_in: response.expires_in,
+        refresh_expires_in: response.expires_in * 6,
+        token_type: "Bearer",
+        scope: "openid profile email",
+      };
+      const tokens = await tm.setTokens(tokenResponse);
+      const userInfo = await kc.getUserInfo(tokens.accessToken);
+      const storage = getSecureStorage();
+      const tenantId = (await storage.getItem(STORAGE_KEYS.TENANT_ID)) ?? "tenant-moh-zw";
+
+      const resolvedActorType = resolveActorType(userInfo);
+      const session: SessionContext = {
+        tenantId,
+        podId: "national-spine",
+        actorId: resolveActorId(userInfo),
+        actorType: resolvedActorType,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt,
+        purposeOfUse: "TREATMENT",
+      };
+
+      await storage.setItem(STORAGE_KEYS.SESSION_DATA, JSON.stringify({
+        podId: session.podId,
+        purposeOfUse: session.purposeOfUse,
+      }));
+
+      set({ isAuthenticated: true, isLoading: false, user: userInfo, session, error: null });
+    } catch (error) {
+      set({
+        isLoading: false,
+        error: error instanceof AuthError ? error : new AuthError("REGISTER_SESSION_FAILED", String(error)),
       });
       throw error;
     }

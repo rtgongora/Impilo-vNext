@@ -122,7 +122,7 @@ export default function PlatformJourneyPage() {
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}
                 detail={
                   transactions.length === 0
-                    ? "Platform journey shows only live BFF telemetry and never injects fixture transactions."
+                    ? "Platform journey shows only live BFF telemetry and never injects sample transactions."
                     : "Platform journey blockers and transitions are sourced from live BFF composition."
                 }
               />

@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Term Detail — Resolve a ZIBO terminology artifact by canonical URL.
  * Route: /registry/terminology/[id]
@@ -72,7 +73,7 @@ export default function TermDetailPage() {
               </p>
             </div>
             <div className="rounded-lg border border-gray-200 bg-slate-950 p-5">
-              <QueryResultPanel title="Resolved artifact" data={data?.data ?? {}} />
+              <JsonApiDataTable data={data?.data ?? {}} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No artifact fields" />
             </div>
           </div>
         )}

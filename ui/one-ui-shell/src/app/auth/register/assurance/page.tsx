@@ -18,14 +18,15 @@ import { Shield, Clock, CheckCircle2, ChevronRight, Loader2, Calendar, IdCard } 
 import { AuthLayout } from "@/components/AuthLayout";
 import { NompiloHint } from "@/components/intelligent/NompiloHint";
 import { useAuthStore } from "@/hooks/useAuthStore";
-
-type AssuranceTier = "BASIC" | "TEMPORARY" | "FULL";
+import { useRequestAssuranceUpgrade, type AssuranceUpgradeTier } from "@/hooks/queries/useIdentityAssurance";
 
 export default function AssuranceChoicePage() {
   const router = useRouter();
   const { user, setAuth, token, refreshToken, expiresAt } = useAuthStore();
+  const requestUpgrade = useRequestAssuranceUpgrade();
 
-  const [selected, setSelected] = useState<AssuranceTier | null>(null);
+  const [selected, setSelected] = useState<AssuranceUpgradeTier | null>(null);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Temporary Health Access — extra fields
@@ -33,7 +34,7 @@ export default function AssuranceChoicePage() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [idNumber, setIdNumber] = useState("");
 
-  function handleSelect(tier: AssuranceTier) {
+  function handleSelect(tier: AssuranceUpgradeTier) {
     setSelected(tier);
     setShowTemporaryForm(tier === "TEMPORARY");
   }
@@ -43,12 +44,14 @@ export default function AssuranceChoicePage() {
     setSubmitting(true);
 
     try {
+      setUpgradeError(null);
       const assuranceLevel =
         selected === "BASIC" ? "UNVERIFIED" as const
         : selected === "TEMPORARY" ? "TEMPORARY" as const
         : "VERIFIED" as const;
 
-      // Update the auth store with the chosen assurance level
+      await requestUpgrade.mutateAsync(selected);
+
       setAuth(
         { ...user, assuranceLevel },
         token,
@@ -56,8 +59,9 @@ export default function AssuranceChoicePage() {
         expiresAt,
       );
 
-      // All tiers go through consent first
-      router.push("/consent");
+      router.push("/consent?returnTo=/auth/register/status");
+    } catch {
+      setUpgradeError("Could not record your assurance choice. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -65,7 +69,7 @@ export default function AssuranceChoicePage() {
 
   const tiers = [
     {
-      id: "BASIC" as AssuranceTier,
+      id: "BASIC" as AssuranceUpgradeTier,
       icon: Shield,
       title: "Basic Access",
       description:
@@ -78,7 +82,7 @@ export default function AssuranceChoicePage() {
       selectedBorder: "border-impilo-500 ring-2 ring-impilo-200",
     },
     {
-      id: "TEMPORARY" as AssuranceTier,
+      id: "TEMPORARY" as AssuranceUpgradeTier,
       icon: Clock,
       title: "Temporary Health Access",
       description:
@@ -91,7 +95,7 @@ export default function AssuranceChoicePage() {
       selectedBorder: "border-amber-500 ring-2 ring-amber-200",
     },
     {
-      id: "FULL" as AssuranceTier,
+      id: "FULL" as AssuranceUpgradeTier,
       icon: CheckCircle2,
       title: "Full Activation",
       description:
@@ -113,6 +117,12 @@ export default function AssuranceChoicePage() {
       <p className="text-sm text-gray-500 mb-6">
         Choose the level of access that suits you. You can upgrade at any time.
       </p>
+
+      {upgradeError ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {upgradeError}
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {tiers.map((tier) => {

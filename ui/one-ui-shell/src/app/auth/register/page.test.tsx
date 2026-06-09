@@ -34,6 +34,14 @@ vi.mock("@/hooks/queries/usePolicyConsent", () => ({
   }),
 }));
 
+vi.mock("@/hooks/queries/useIdentityAssurance", () => ({
+  useRegistrationReadiness: () => ({
+    data: { data: { attributes: { ready: true } } },
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock("@/lib/api-client", () => ({
   apiClient: {
     post: vi.fn().mockResolvedValue({ data: { attributes: {} } }),

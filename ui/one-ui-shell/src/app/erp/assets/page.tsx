@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { ERP_ASSET_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import { PageShell } from "@/components/PageShell";
 import { useFixedAssetDepreciationSchedule, useFixedAssetDetails } from "@/hooks/queries/useAssets";
 
@@ -39,8 +40,8 @@ export default function ErpFixedAssetsPage() {
         </div>
 
         <div className="space-y-6">
-          <QueryResultPanel title="Fixed asset details" isPending={details.isPending} isLoading={details.isPending} isError={details.isError} error={details.error} data={details.data} />
-          <QueryResultPanel title="Depreciation schedule" isPending={schedule.isPending} isLoading={schedule.isPending} isError={schedule.isError} error={schedule.error} data={schedule.data} />
+          <JsonApiDataTable data={details.data} columns={ERP_ASSET_COLUMNS} isLoading={details.isPending} error={details.error as Error | null} emptyTitle="No asset details" />
+          <JsonApiDataTable data={schedule.data} columns={ERP_ASSET_COLUMNS} isLoading={schedule.isPending} error={schedule.error as Error | null} emptyTitle="No depreciation schedule" />
         </div>
       </PageShell>
     </AppLayout>

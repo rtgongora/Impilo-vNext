@@ -368,6 +368,26 @@ public class AuthSessionController {
 
     // ── Registration ────────────────────────────────────────────────
 
+    /**
+     * Pre-flight check: can the BFF obtain a Keycloak service-account token for signup?
+     */
+    @GetMapping("/auth/register/readiness")
+    public ResponseEntity<Map<String, Object>> registerReadiness(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        String adminToken = getServiceAccountToken();
+        boolean ready = adminToken != null;
+        Map<String, Object> attrs = new LinkedHashMap<>();
+        attrs.put("ready", ready);
+        attrs.put("code", ready ? "READY" : "AUTH_SERVICE_UNAVAILABLE");
+        attrs.put("message", ready
+                ? "Registration service is available."
+                : "Registration service is temporarily unavailable.");
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("type", "registration-readiness", "attributes", attrs),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
     @Value("${KEYCLOAK_BACKEND_CLIENT_ID:impilo-backend}")
     private String backendClientId;
 

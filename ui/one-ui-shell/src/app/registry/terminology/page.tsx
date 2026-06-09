@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Terminology Browser — Resolve ZIBO canonical artifacts.
  * Route: /registry/terminology
@@ -124,7 +125,7 @@ export default function TerminologyBrowserPage() {
               <h2 className="mt-1 font-mono text-sm font-semibold text-gray-900">{submitted.canonicalUrl}</h2>
               {submitted.version ? <p className="text-xs text-gray-500">Version {submitted.version}</p> : null}
             </div>
-            <QueryResultPanel title="Resolved artifact" data={data?.data ?? {}} />
+            <JsonApiDataTable data={data?.data ?? {}} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No artifact fields" />
           </div>
         )}
       </PageShell>

@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Facility regulatory dashboard + deep links (Tuso via BFF facility-registry paths).
  */
@@ -28,7 +29,7 @@ export default function FacilityLifecyclePage() {
         </div>
         {isLoading ? <p className="text-sm text-gray-500">Loading dashboard…</p> : null}
         {dashRes?.data ? (
-          <QueryResultPanel title="Dashboard summary" data={dashRes.data} />
+          <JsonApiDataTable data={dashRes.data} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No dashboard summary" />
         ) : (
           !isLoading && <p className="text-sm text-gray-600">No dashboard payload (Tuso may be offline).</p>
         )}

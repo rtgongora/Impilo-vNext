@@ -291,7 +291,7 @@ export default function DispatchOperationsPage() {
             <section className="impilo-surface-card p-4">
               <h3 className="text-sm font-semibold text-slate-900">Create delivery command</h3>
               <p className="mt-1 text-xs text-slate-600">
-                Sends live command to <code>/internal/v1/dispatch/deliveries</code>. No fixture mode.
+                Sends live command to <code>/internal/v1/dispatch/deliveries</code>. No demo mode.
               </p>
               <textarea
                 className="mt-3 h-32 w-full rounded-md border border-slate-300 bg-white p-2 font-mono text-xs text-slate-800"
@@ -318,7 +318,7 @@ export default function DispatchOperationsPage() {
             <section className="impilo-surface-card p-4">
               <h3 className="text-sm font-semibold text-slate-900">Dispatch task command console</h3>
               <p className="mt-1 text-xs text-slate-600">
-                Uses live task commands: create, assign, and complete. No fixture mode.
+                Uses live task commands: create, assign, and complete. No demo mode.
               </p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
                 <label className="text-xs text-slate-600">

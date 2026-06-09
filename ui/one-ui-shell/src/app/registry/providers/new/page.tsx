@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Create provider — admin form.
  * Route: /registry/providers/new
@@ -189,7 +190,7 @@ export default function NewProviderPage() {
             {anchoredResult != null && Object.keys(anchoredResult).length > 0 && (
               <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-xs font-medium text-emerald-900 mb-2">Varapi response</p>
-                <QueryResultPanel title="Anchored result" data={anchoredResult} />
+                <JsonApiDataTable data={anchoredResult} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="Provider anchored" />
                 <button
                   type="button"
                   className="mt-3 text-xs font-medium text-emerald-800 underline hover:text-emerald-950"

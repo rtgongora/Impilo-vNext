@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { GENERIC_RECORD_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2, Ticket } from "lucide-react";
@@ -70,7 +71,7 @@ export default function MarketplacePickupPage() {
               )}
             </button>
             {issueM.data != null ? (
-              <QueryResultPanel title="Issue M" isPending={issueM.isPending} isLoading={issueM.isPending} isError={issueM.isError} error={issueM.error} data={issueM.data} />
+              <JsonApiDataTable data={issueM.data} columns={GENERIC_RECORD_COLUMNS} isLoading={issueM.isPending} error={issueM.error as Error | null} emptyTitle="Pickup issued" />
             ) : null}
           </section>
 
@@ -104,7 +105,7 @@ export default function MarketplacePickupPage() {
               {claimM.isPending ? "Posting..." : "Claim pickup"}
             </button>
             {claimM.data != null ? (
-              <QueryResultPanel title="Claim M" isPending={claimM.isPending} isLoading={claimM.isPending} isError={claimM.isError} error={claimM.error} data={claimM.data} />
+              <JsonApiDataTable data={claimM.data} columns={GENERIC_RECORD_COLUMNS} isLoading={claimM.isPending} error={claimM.error as Error | null} emptyTitle="Pickup claimed" />
             ) : null}
           </section>
         </div>

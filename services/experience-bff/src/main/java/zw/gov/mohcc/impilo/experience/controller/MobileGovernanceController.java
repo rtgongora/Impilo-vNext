@@ -66,7 +66,7 @@ public class MobileGovernanceController {
 
             int incidentCount = 0;
             JsonNode incidentsProbe = restTemplate.getForEntity(
-                    dataGovernanceUrl + "/internal/v1/governance/audit?page=0&size=1", JsonNode.class).getBody();
+                    dataGovernanceUrl + "/internal/v1/governance/decision-audit?page=0&size=1", JsonNode.class).getBody();
             if (incidentsProbe != null && incidentsProbe.isArray()) {
                 incidentCount = incidentsProbe.size();
             }
@@ -93,7 +93,7 @@ public class MobileGovernanceController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
             JsonNode body = restTemplate.getForEntity(
-                    dataGovernanceUrl + "/internal/v1/governance/audit?page=0&size=20", JsonNode.class).getBody();
+                    dataGovernanceUrl + "/internal/v1/governance/decision-audit?page=0&size=20", JsonNode.class).getBody();
             Object incidents = body != null ? body : List.of();
             return ResponseEntity.ok(Map.of("data", incidents,
                     "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));

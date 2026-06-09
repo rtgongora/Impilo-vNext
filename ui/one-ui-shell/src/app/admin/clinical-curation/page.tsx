@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { EHR_CLINICAL_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowLeft, BookHeart, CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
@@ -189,7 +190,7 @@ export default function ClinicalCurationPage() {
                           <BookHeart className="h-4 w-4" />
                           Proposed payload
                         </div>
-                        <QueryResultPanel title="Proposed payload" data={payload ?? {}} />
+                        <JsonApiDataTable data={payload ?? {}} columns={EHR_CLINICAL_COLUMNS} emptyTitle="No proposed fields" />
                       </div>
                     </li>
                   );

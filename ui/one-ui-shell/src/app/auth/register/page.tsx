@@ -29,6 +29,7 @@ import { useConsentStore } from "@/hooks/useConsentStore";
 import { useAcceptPolicyConsent } from "@/hooks/queries/usePolicyConsent";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { CURRENT_CONSENT_VERSION } from "@/hooks/useConsentStore";
+import { useRegistrationReadiness } from "@/hooks/queries/useIdentityAssurance";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,6 +48,8 @@ export default function RegisterPage() {
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const readiness = useRegistrationReadiness();
+  const registrationReady = readiness.data?.data?.attributes?.ready !== false;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -126,7 +129,7 @@ export default function RegisterPage() {
           termsOfUseAccepted: true,
           channel: "WEB",
         });
-        router.push("/home");
+        router.push("/auth/register/assurance");
       } else if (attrs.status === "REGISTERED") {
         router.push(`/auth/login?registered=true&message=${encodeURIComponent(attrs.message ?? "Account created. Please sign in.")}`);
       } else {
@@ -158,6 +161,12 @@ export default function RegisterPage() {
         <p className="text-sm text-gray-500 mb-6">
           Create your personal Impilo account
         </p>
+
+        {!registrationReady && !readiness.isLoading ? (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            Sign-up is temporarily unavailable. The identity service is not ready — please try again shortly.
+          </div>
+        ) : null}
 
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
@@ -317,7 +326,7 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            disabled={submitting || !acceptedTerms || !acceptedPrivacy}
+            disabled={submitting || !acceptedTerms || !acceptedPrivacy || readiness.isLoading || !registrationReady}
             className="w-full py-3 bg-impilo-500 text-white text-sm font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
           >
             {submitting ? (

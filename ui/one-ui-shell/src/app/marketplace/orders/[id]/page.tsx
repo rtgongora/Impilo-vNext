@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_MUTATION_COLUMNS, FINANCE_TRACKING_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -92,8 +93,15 @@ export default function OrderDetailPage() {
 
             {trackingQ.data ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Tracking</h3>
-                <QueryResultPanel title="Tracking Q" isPending={trackingQ.isPending} isLoading={trackingQ.isPending} isError={trackingQ.isError} error={trackingQ.error} data={trackingQ.data} />
+                <h3 className="text-lg font-semibold text-slate-900">Tracking events</h3>
+                <JsonApiDataTable
+                  data={trackingQ.data}
+                  columns={FINANCE_TRACKING_COLUMNS}
+                  isLoading={trackingQ.isPending}
+                  error={trackingQ.error as Error | null}
+                  emptyTitle="No tracking events"
+                  emptyHint="Tracking may populate after fulfilment starts."
+                />
               </div>
             ) : trackingQ.isError ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -103,14 +111,29 @@ export default function OrderDetailPage() {
 
             {lastActionResponse ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">Last action response</h3>
-                <QueryResultPanel title="Last action" data={lastActionResponse} />
+                <h3 className="text-lg font-semibold text-slate-900">Last action result</h3>
+                <JsonApiDataTable
+                  data={lastActionResponse}
+                  columns={FINANCE_MUTATION_COLUMNS}
+                  emptyTitle="No action result fields"
+                />
               </div>
             ) : null}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900">Raw order payload</h3>
-              <QueryResultPanel title="Commerce order" data={commerceOrder} />
+              <h3 className="text-lg font-semibold text-slate-900">Order summary</h3>
+              <JsonApiDataTable
+                data={commerceOrder}
+                columns={[
+                  { key: "id", header: "Order ID", fields: ["id", "orderId"] },
+                  { key: "status", header: "Status", fields: ["status", "state"] },
+                  { key: "total", header: "Total", fields: ["totalAmount", "amount"] },
+                  { key: "currency", header: "Currency", fields: ["currency"] },
+                  { key: "facility", header: "Facility", fields: ["facilityId", "facility"] },
+                  { key: "updated", header: "Updated", fields: ["updatedAt", "createdAt"] },
+                ]}
+                emptyTitle="No order fields"
+              />
             </div>
           </div>
         ) : shouldShowMarketplace && marketplaceQ.isLoading ? (

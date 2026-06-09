@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { GENERIC_RECORD_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Communication preferences (Mvumo) — EHR view of the versioned preference bundle.
  * Citizen portal / mobile may offer richer self-service; this route proves BFF access to the internal API.
@@ -92,7 +93,7 @@ export default function CommunicationPreferencesPage() {
                 </li>
                 <li className="pt-2">
                   <span className="text-slate-500">Payload (structured JSON):</span>
-                  <QueryResultPanel title="Payload" data={data.payload ?? {}} />
+                  <JsonApiDataTable data={data.payload ?? {}} columns={GENERIC_RECORD_COLUMNS} emptyTitle="No preference fields" />
                 </li>
               </ul>
             )}

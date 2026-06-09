@@ -95,6 +95,13 @@ function specialEnv(serviceId) {
       NDILA_POSTGIS_ENABLED: "false",
     };
   }
+  if (serviceId === "mushex-service") {
+    return {
+      MUSHEX_SANDBOX_ENABLED: "true",
+      MUSHEX_SANDBOX_BYPASS_CREDENTIAL_CHECK: "true",
+      MUSHEX_SANDBOX_APPLY_SIMULATION_OUTCOME: "true",
+    };
+  }
   return null;
 }
 

@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { FINANCE_LEDGER_COLUMNS } from "@/lib/json-api/finance-table-columns";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, Loader2, ReceiptText } from "lucide-react";
@@ -53,7 +54,15 @@ export default function FinanceLedgerPage() {
           ) : ledgerQ.isError ? (
             <p className="mt-3 text-sm text-red-700">Could not load ledger for that intent.</p>
           ) : ledgerQ.data != null ? (
-            <QueryResultPanel title="Ledger Q" isPending={ledgerQ.isPending} isLoading={ledgerQ.isPending} isError={ledgerQ.isError} error={ledgerQ.error} data={ledgerQ.data} />
+            <div className="mt-3">
+              <JsonApiDataTable
+                data={ledgerQ.data}
+                columns={FINANCE_LEDGER_COLUMNS}
+                isLoading={ledgerQ.isPending}
+                error={ledgerQ.error as Error | null}
+                emptyTitle="No ledger entries"
+              />
+            </div>
           ) : (
             <p className="mt-3 text-xs text-slate-500">Enter an intent id to inspect the ledger response.</p>
           )}

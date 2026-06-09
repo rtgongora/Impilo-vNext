@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { WELLNESS_CONNECT_COLUMNS } from "@/lib/json-api/generic-table-columns";
 /**
  * Health Connect–equivalent ingest demo — posts typed changesets to the Experience BFF.
  */
@@ -243,7 +244,7 @@ export default function WellnessHealthConnectPage() {
         {summary && (
           <div className="mb-6">
             <h3 className="text-sm font-semibold text-gray-800 mb-2">Wellness summary</h3>
-            <QueryResultPanel title="Wellness summary" data={summary} />
+            <JsonApiDataTable data={summary} columns={WELLNESS_CONNECT_COLUMNS} emptyTitle="No wellness summary" />
           </div>
         )}
 

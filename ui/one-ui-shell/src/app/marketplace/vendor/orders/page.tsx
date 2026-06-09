@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { MARKETPLACE_ORDER_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -208,7 +209,7 @@ export default function MarketplaceVendorOrdersPage() {
               </div>
             )}
 
-            <QueryResultPanel title="Orders Q" isPending={ordersQ.isPending} isLoading={ordersQ.isPending} isError={ordersQ.isError} error={ordersQ.error} data={ordersQ.data} />
+            <JsonApiDataTable data={ordersQ.data} columns={MARKETPLACE_ORDER_COLUMNS} isLoading={ordersQ.isPending} error={ordersQ.error as Error | null} emptyTitle="No vendor orders" />
           </div>
         )}
 

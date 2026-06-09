@@ -37,20 +37,23 @@ export interface SiteRegistrySummary {
 }
 
 export interface SiteRegistryProfile {
-  site: {
-    siteId: string;
-    siteCode: string;
-    name: string;
-    type: string;
-    siteCategory: string;
-    riskClass: string;
-    province: string;
-    district: string;
-    ward: string;
-    regulatoryStatus: string;
-    lifecycleStatus: string;
-    activeFlag: boolean;
-  };
+    site: {
+      siteId: string;
+      siteCode: string;
+      name: string;
+      type: string;
+      siteCategory: string;
+      riskClass: string;
+      province: string;
+      district: string;
+      ward: string;
+      regulatoryStatus: string;
+      lifecycleStatus: string;
+      activeFlag: boolean;
+      latitude?: number | null;
+      longitude?: number | null;
+      geocodeQuality?: string;
+    };
   applications: UnknownRecord[];
   operators: UnknownRecord[];
   inspections: UnknownRecord[];
@@ -114,6 +117,9 @@ function normalizeProfile(payload: unknown): SiteRegistryProfile {
       regulatoryStatus: asString(site.regulatoryStatus),
       lifecycleStatus: asString(site.lifecycleStatus),
       activeFlag: asBoolean(site.activeFlag),
+      latitude: readNumber(site, "latitude", "lat"),
+      longitude: readNumber(site, "longitude", "lng", "lon"),
+      geocodeQuality: asString(site.geocodeQuality),
     },
     applications: Array.isArray(o.applications) ? (o.applications as UnknownRecord[]) : [],
     operators: Array.isArray(o.operators) ? (o.operators as UnknownRecord[]) : [],
@@ -312,6 +318,22 @@ export function useCreateAssignment() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["site-registry-site"] });
       void qc.invalidateQueries({ queryKey: ["site-registry-sites"] });
+    },
+  });
+}
+
+export function useUpdateSiteLocation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { siteId: string; latitude: number; longitude: number; geocodeQuality?: string }) =>
+      apiClient.put(`/internal/v1/public-health/site-registry/sites/${encodeURIComponent(args.siteId)}/location`, {
+        latitude: args.latitude,
+        longitude: args.longitude,
+        geocodeQuality: args.geocodeQuality ?? "MANUAL",
+      }),
+    onSuccess: (_data, args) => {
+      void qc.invalidateQueries({ queryKey: ["site-registry-sites"] });
+      void qc.invalidateQueries({ queryKey: ["site-registry-site", args.siteId] });
     },
   });
 }

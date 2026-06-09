@@ -13,7 +13,9 @@ import {
   useVerifySiteDocument,
   useCreateAssignment,
   useUpdateComplianceAction,
+  useUpdateSiteLocation,
 } from "@/hooks/queries/useSiteRegistry";
+import { NdilaLocationPicker } from "@/components/ndila/NdilaLocationPicker";
 
 export default function SiteRegistryProfilePage({ params }: { params: { siteId: string } }) {
   const siteId = decodeURIComponent(params.siteId);
@@ -27,8 +29,10 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
   const uploadDoc = useUploadSiteDocument();
   const verifyDoc = useVerifySiteDocument();
   const createAssignment = useCreateAssignment();
+  const updateLocation = useUpdateSiteLocation();
 
   const [scheduledDate, setScheduledDate] = useState(new Date().toISOString().slice(0, 10));
+  const [siteCoords, setSiteCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [inspectionType, setInspectionType] = useState("INITIAL");
   const [templateCode, setTemplateCode] = useState("");
 
@@ -99,6 +103,43 @@ export default function SiteRegistryProfilePage({ params }: { params: { siteId: 
                 {profile.site.ward ? ` · ${profile.site.ward}` : ""}
               </div>
             </div>
+          </div>
+
+          <div className="rounded-lg border bg-white p-4">
+            <div className="text-sm font-medium text-gray-900">Site coordinates</div>
+            <p className="mt-1 text-xs text-gray-500">
+              Capture or update the regulated site location for public-health maps and field routing.
+            </p>
+            <div className="mt-3">
+              <NdilaLocationPicker
+                purposeOfUse="PUBLIC_HEALTH_OPERATIONS"
+                value={
+                  siteCoords ??
+                  (profile.site.latitude != null && profile.site.longitude != null
+                    ? { latitude: profile.site.latitude, longitude: profile.site.longitude }
+                    : null)
+                }
+                onChange={(next) => setSiteCoords(next)}
+                verificationRequired
+              />
+            </div>
+            <button
+              type="button"
+              disabled={updateLocation.isPending || !siteCoords}
+              onClick={() => {
+                if (!siteCoords) return;
+                updateLocation.mutate({
+                  siteId,
+                  latitude: siteCoords.latitude,
+                  longitude: siteCoords.longitude,
+                  geocodeQuality: "MANUAL",
+                });
+              }}
+              className="mt-3 inline-flex items-center gap-2 rounded-md bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+            >
+              {updateLocation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Save location
+            </button>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">

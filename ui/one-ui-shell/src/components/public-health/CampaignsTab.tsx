@@ -115,16 +115,30 @@ export function CampaignsTab() {
     setCampFormError(null);
     try {
       await apiClient.post("/internal/v1/public-health/campaigns", {
-        ...campForm,
-        targetPopulation: Number(campForm.targetPopulation) || 0,
-        estimatedReach: Number(campForm.estimatedReach) || 0,
-        budgetAllocated: Number(campForm.budgetAllocated) || 0,
+        name: campForm.campaignName,
+        description: campForm.description,
+        campaignType: campForm.campaignType,
+        targetGroup: campForm.targetPopulation || "GENERAL",
+        messageTemplate: JSON.stringify({
+          province: campForm.province,
+          district: campForm.district,
+          wardCommunity: campForm.wardCommunity,
+          startDate: campForm.startDate,
+          endDate: campForm.endDate,
+          responsibleOfficer: campForm.responsibleOfficer,
+          estimatedReach: Number(campForm.estimatedReach) || 0,
+          budgetAllocated: Number(campForm.budgetAllocated) || 0,
+        }),
+        channel: "SMS",
+        status: campForm.status || "PLANNING",
       });
-    } catch {
-      // BFF may not have endpoint yet — treat as success for demo
+      setCampSubmitted(true);
+    } catch (err) {
+      setCampFormError(err instanceof Error ? err.message : "Failed to create campaign.");
+      setCampSubmitting(false);
+      return;
     }
     setCampSubmitting(false);
-    setCampSubmitted(true);
     setCampForm(EMPTY_CAMPAIGN);
     setTimeout(() => { setCampSubmitted(false); setShowNewCampaignForm(false); }, 3000);
   }

@@ -44,7 +44,7 @@ export default function ClientJourneyPage() {
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}
                 detail={
                   transactions.length === 0
-                    ? "Person journey renders only live transaction cards and does not inject fixture examples."
+                    ? "Person journey renders only live transaction cards and does not inject sample data."
                     : "Person journey cards are sourced from live core-transaction composition."
                 }
               />

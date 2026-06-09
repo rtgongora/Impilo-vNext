@@ -1,5 +1,6 @@
 "use client";
-import { QueryResultPanel } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { REGISTRY_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import Link from "next/link";
 import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
@@ -243,7 +244,7 @@ function OpenCrPanel() {
         )}
       </form>
       {result != null && (
-        <QueryResultPanel title="Result" data={result} />
+        <JsonApiDataTable data={result} columns={REGISTRY_ENTITY_COLUMNS} emptyTitle="No result fields" />
       )}
     </div>
   );

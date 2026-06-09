@@ -169,6 +169,15 @@ public class PublicHealthController {
         return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/close", requestId, Map.of(), 200);
     }
 
+    @PostMapping("/campaigns/{id}/enroll")
+    public ResponseEntity<Map<String, Object>> enrollCampaignParticipant(
+            @PathVariable String id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return proxyPost(campaignsUrl + "/internal/v1/campaigns/" + id + "/enroll", requestId, body, 201);
+    }
+
     // ── Indawo Sites ─────────────────────────────────────────────
 
     @GetMapping("/sites")
@@ -216,6 +225,16 @@ public class PublicHealthController {
     ) {
         governance.assertGovernedRead();
         return proxy(indawoUrl + "/internal/v1/site-registry/sites/" + siteId, requestId);
+    }
+
+    @PutMapping("/site-registry/sites/{siteId}/location")
+    public ResponseEntity<Map<String, Object>> updateRegistrySiteLocation(
+            @PathVariable String siteId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestBody Map<String, Object> body
+    ) {
+        governance.assertGovernedMutate();
+        return proxyPut(indawoUrl + "/internal/v1/site-registry/sites/" + siteId + "/location", requestId, body, 200);
     }
 
     @PostMapping("/site-registry/applications")
@@ -1019,6 +1038,28 @@ public class PublicHealthController {
             return ResponseEntity.status(expectedStatus).body(Map.of("data", data, "meta", Map.of("request_id", requestId)));
         } catch (Exception e) {
             log.warn("Public health proxy POST failed for {}: {}", url, e.getMessage());
+            return ResponseEntity.status(502).body(Map.of(
+                    "error", Map.of("code", "PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE", "message", e.getMessage()),
+                    "meta", Map.of("request_id", requestId)));
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> proxyPut(String url, String requestId, Map<String, Object> body, int expectedStatus) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            JsonNode result = restTemplate.exchange(
+                    url,
+                    org.springframework.http.HttpMethod.PUT,
+                    new HttpEntity<>(body, headers),
+                    JsonNode.class).getBody();
+            if (result == null) {
+                throw new IllegalStateException("Upstream returned empty response body");
+            }
+            Object data = result.has("data") ? result.get("data") : result;
+            return ResponseEntity.status(expectedStatus).body(Map.of("data", data, "meta", Map.of("request_id", requestId)));
+        } catch (Exception e) {
+            log.warn("Public health proxy PUT failed for {}: {}", url, e.getMessage());
             return ResponseEntity.status(502).body(Map.of(
                     "error", Map.of("code", "PUBLIC_HEALTH_UPSTREAM_UNAVAILABLE", "message", e.getMessage()),
                     "meta", Map.of("request_id", requestId)));

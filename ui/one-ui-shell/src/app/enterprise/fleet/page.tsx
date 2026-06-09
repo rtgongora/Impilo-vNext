@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { RecordSummary } from "@/components/common/QueryResultPanel";
+import { JsonApiDataTable } from "@/components/common/JsonApiDataTable";
+import { DISPATCH_ENTITY_COLUMNS } from "@/lib/json-api/generic-table-columns";
 import { EnterpriseWorkspaceShell } from "@/components/enterprise/EnterpriseWorkspaceShell";
 import {
   useDispatchConsole,
@@ -55,15 +56,11 @@ export default function EnterpriseFleetPage() {
         <section className="rounded-xl border border-slate-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-slate-900">Recent tracking events</h3>
           <div className="mt-2 space-y-2">
-            {recentTracking.length === 0 ? (
-              <p className="text-sm text-slate-500">No tracking events yet.</p>
-            ) : (
-              recentTracking.map((row, idx) => (
-                <div key={idx} className="rounded-md border border-slate-100 bg-slate-50 p-2 text-xs text-slate-700">
-                  <RecordSummary record={row} />
-                </div>
-              ))
-            )}
+            <JsonApiDataTable
+              data={recentTracking}
+              columns={DISPATCH_ENTITY_COLUMNS}
+              emptyTitle="No tracking events yet"
+            />
           </div>
         </section>
       </div>
@@ -76,15 +73,7 @@ function ListCard({ title, rows }: { title: string; rows: Array<Record<string, u
     <div className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       <div className="mt-2 space-y-2">
-        {rows.length === 0 ? (
-          <p className="text-sm text-slate-500">No records.</p>
-        ) : (
-          rows.slice(0, 10).map((row, idx) => (
-            <div key={idx} className="rounded-md border border-slate-100 bg-slate-50 p-2 text-xs text-slate-700">
-              <RecordSummary record={row} />
-            </div>
-          ))
-        )}
+        <JsonApiDataTable data={rows.slice(0, 10)} columns={DISPATCH_ENTITY_COLUMNS} emptyTitle="No records" />
       </div>
     </div>
   );

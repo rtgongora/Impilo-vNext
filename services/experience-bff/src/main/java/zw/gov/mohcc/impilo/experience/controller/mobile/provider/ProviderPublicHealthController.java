@@ -7,8 +7,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 import zw.gov.mohcc.impilo.experience.publichealth.PublicHealthGovernanceService;
@@ -24,6 +26,7 @@ public class ProviderPublicHealthController {
 
     private final RestTemplate restTemplate;
     private final String surveillanceUrl;
+    private final String indawoUrl;
     private final PublicHealthGovernanceService governance;
 
     public ProviderPublicHealthController(
@@ -32,6 +35,7 @@ public class ProviderPublicHealthController {
             PublicHealthGovernanceService governance) {
         this.restTemplate = serviceRestTemplate;
         this.surveillanceUrl = endpoints.surveillanceBaseUrl();
+        this.indawoUrl = endpoints.indawoBaseUrl();
         this.governance = governance;
     }
 
@@ -68,6 +72,62 @@ public class ProviderPublicHealthController {
         return restTemplate.postForEntity(
                 surveillanceUrl + "/internal/v1/public-health/field-tasks/" + taskId + "/transition",
                 body,
+                Map.class);
+    }
+
+    @PostMapping("/field-operations")
+    public ResponseEntity<?> submitFieldOperation(@RequestBody Map<String, Object> body) {
+        governance.assertGovernedMutate();
+        return restTemplate.postForEntity(
+                surveillanceUrl + "/internal/v1/public-health/field-operations",
+                body,
+                Map.class);
+    }
+
+    @GetMapping("/map-markers")
+    public ResponseEntity<?> mapMarkers(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return restTemplate.getForEntity(
+                surveillanceUrl + "/internal/v1/public-health/map-markers",
+                Map.class);
+    }
+
+    @GetMapping("/site-registry/sites")
+    public ResponseEntity<?> listRegistrySites(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, name = "regulatory_status") String regulatoryStatus,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String district,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromHttpUrl(indawoUrl + "/internal/v1/site-registry/sites")
+                .queryParam("page", page)
+                .queryParam("size", size);
+        if (search != null && !search.isBlank()) builder.queryParam("search", search);
+        if (regulatoryStatus != null && !regulatoryStatus.isBlank()) builder.queryParam("regulatory_status", regulatoryStatus);
+        if (province != null && !province.isBlank()) builder.queryParam("province", province);
+        if (district != null && !district.isBlank()) builder.queryParam("district", district);
+        return restTemplate.getForEntity(builder.toUriString(), Map.class);
+    }
+
+    @GetMapping("/site-registry/sites/{siteId}")
+    public ResponseEntity<?> getRegistrySiteProfile(
+            @PathVariable String siteId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return restTemplate.getForEntity(
+                indawoUrl + "/internal/v1/site-registry/sites/" + siteId,
+                Map.class);
+    }
+
+    @GetMapping("/investigations")
+    public ResponseEntity<?> listInvestigations(@RequestHeader(CompanionHeaders.REQUEST_ID) String requestId) {
+        governance.assertGovernedRead();
+        return restTemplate.getForEntity(
+                surveillanceUrl + "/internal/v1/public-health/investigations",
                 Map.class);
     }
 }

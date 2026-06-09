@@ -9,9 +9,15 @@ import {
   useCreatePublicHealthSignal,
   usePublicHealthCases,
   usePublicHealthCounters,
+  usePublicHealthOutbreaks,
   usePublicHealthSignals,
   usePublicHealthWeeklyIdsr,
 } from "@/hooks/queries/usePublicHealth";
+import {
+  useInvestigations,
+  useOpenInvestigation,
+  useUpdateInvestigationStatus,
+} from "@/hooks/queries/useSurveillance";
 
 interface NewSignalEventForm {
   disease: string;
@@ -66,6 +72,79 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+const RESPONSE_ACTIONS = [
+  "Deploy field investigation team",
+  "Initiate contact tracing",
+  "Collect laboratory specimens",
+  "Issue public health alert",
+  "Activate EOC",
+  "Request WHO support",
+  "Begin case management protocol",
+] as const;
+
+interface SignalResponseWorkflowForm {
+  verificationStatus: string;
+  verifiedBy: string;
+  verificationDate: string;
+  riskLevel: string;
+  spreadPotential: string;
+  populationAtRisk: string;
+  responseActions: Record<string, boolean>;
+  assignToTeam: string;
+  escalationLevel: string;
+  notes: string;
+  linkedOutbreakId: string;
+}
+
+const EMPTY_SIGNAL_WORKFLOW: SignalResponseWorkflowForm = {
+  verificationStatus: "",
+  verifiedBy: "",
+  verificationDate: new Date().toISOString().slice(0, 10),
+  riskLevel: "",
+  spreadPotential: "",
+  populationAtRisk: "",
+  responseActions: Object.fromEntries(RESPONSE_ACTIONS.map((a) => [a, false])),
+  assignToTeam: "",
+  escalationLevel: "",
+  notes: "",
+  linkedOutbreakId: "",
+};
+
+function buildInvestigationTitle(
+  disease: string,
+  facility: string,
+  workflow: SignalResponseWorkflowForm,
+  draft: boolean,
+): string {
+  const prefix = draft ? "[Draft] " : "";
+  const risk = workflow.riskLevel ? ` — ${workflow.riskLevel} risk` : "";
+  return `${prefix}Signal response: ${disease} @ ${facility}${risk}`;
+}
+
+function extractInvestigationId(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object") return null;
+  const root = payload as Record<string, unknown>;
+  const data = root.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : root;
+  const id = data.id ?? data.investigationId ?? data.investigation_id;
+  return id != null ? String(id) : null;
+}
+
+function buildInvestigationFindings(workflow: SignalResponseWorkflowForm): string {
+  const selectedActions = RESPONSE_ACTIONS.filter((a) => workflow.responseActions[a]);
+  return JSON.stringify({
+    verificationStatus: workflow.verificationStatus,
+    verifiedBy: workflow.verifiedBy,
+    verificationDate: workflow.verificationDate,
+    riskLevel: workflow.riskLevel,
+    spreadPotential: workflow.spreadPotential,
+    populationAtRisk: workflow.populationAtRisk,
+    responseActions: selectedActions,
+    assignToTeam: workflow.assignToTeam,
+    escalationLevel: workflow.escalationLevel,
+    notes: workflow.notes,
+  });
+}
+
 export function SurveillanceTab() {
   const { data: apiSignals = [], isLoading: sigLoading, isError: sigError } = usePublicHealthSignals();
   const { data: apiCases = [], isLoading: caseLoading, isError: caseError } = usePublicHealthCases();
@@ -73,6 +152,10 @@ export function SurveillanceTab() {
   const { data: weeklyRows = [], isLoading: weeklyLoading, isError: weeklyError } = usePublicHealthWeeklyIdsr();
   const createSignal = useCreatePublicHealthSignal();
   const ingestEvent = useIngestPublicHealthEvent();
+  const { data: outbreaks = [] } = usePublicHealthOutbreaks();
+  const { data: investigations = [] } = useInvestigations();
+  const openInvestigation = useOpenInvestigation();
+  const updateInvestigationStatus = useUpdateInvestigationStatus();
 
   const [filter, setFilter] = useState("all");
   const [showNewEvent, setShowNewEvent] = useState(false);
@@ -86,6 +169,71 @@ export function SurveillanceTab() {
   const [caseForm, setCaseForm] = useState<NewCaseReportForm>(EMPTY_CASE_REPORT);
   const [caseFormError, setCaseFormError] = useState<string | null>(null);
   const [caseFormSuccess, setCaseFormSuccess] = useState<string | null>(null);
+  const [signalWorkflow, setSignalWorkflow] = useState<SignalResponseWorkflowForm>(EMPTY_SIGNAL_WORKFLOW);
+  const [signalWorkflowError, setSignalWorkflowError] = useState<string | null>(null);
+  const [signalWorkflowSuccess, setSignalWorkflowSuccess] = useState<string | null>(null);
+  const [showOutbreakLink, setShowOutbreakLink] = useState(false);
+
+  function resetSignalWorkflow() {
+    setSignalWorkflow(EMPTY_SIGNAL_WORKFLOW);
+    setSignalWorkflowError(null);
+    setSignalWorkflowSuccess(null);
+    setShowOutbreakLink(false);
+  }
+
+  function updateSignalWorkflow<K extends keyof SignalResponseWorkflowForm>(
+    field: K,
+    value: SignalResponseWorkflowForm[K],
+  ) {
+    setSignalWorkflow((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function toggleResponseAction(action: string, checked: boolean) {
+    setSignalWorkflow((prev) => ({
+      ...prev,
+      responseActions: { ...prev.responseActions, [action]: checked },
+    }));
+  }
+
+  async function submitSignalInvestigation(sig: { id: string; disease: string; facility: string }, initiate: boolean) {
+    if (!signalWorkflow.verificationStatus) {
+      setSignalWorkflowError("Select a verification status before saving the investigation.");
+      return;
+    }
+    if (initiate && !signalWorkflow.riskLevel) {
+      setSignalWorkflowError("Select a risk level before initiating a field response.");
+      return;
+    }
+    setSignalWorkflowError(null);
+    setSignalWorkflowSuccess(null);
+    try {
+      const body: Record<string, unknown> = {
+        title: buildInvestigationTitle(sig.disease, sig.facility, signalWorkflow, !initiate),
+        assignedTo: signalWorkflow.assignToTeam || signalWorkflow.verifiedBy || undefined,
+      };
+      if (signalWorkflow.linkedOutbreakId) {
+        const outbreakNum = Number(signalWorkflow.linkedOutbreakId);
+        if (Number.isFinite(outbreakNum)) body.outbreakId = outbreakNum;
+      }
+      const created = await openInvestigation.mutateAsync(body);
+      const createdId = extractInvestigationId(created);
+      if (initiate && createdId) {
+        await updateInvestigationStatus.mutateAsync({
+          investigationId: createdId,
+          status: "IN_PROGRESS",
+          findings: buildInvestigationFindings(signalWorkflow),
+        });
+      }
+      setSignalWorkflowSuccess(
+        initiate
+          ? `Investigation opened and response initiated for signal ${sig.id}.`
+          : `Investigation draft saved for signal ${sig.id}.`,
+      );
+      if (initiate) resetSignalWorkflow();
+    } catch (err) {
+      setSignalWorkflowError(err instanceof Error ? err.message : "Failed to open investigation.");
+    }
+  }
 
   const filteredSignals = apiSignals.filter((s) => {
     if (filter === "all") return true;
@@ -433,7 +581,17 @@ export function SurveillanceTab() {
                       </td>
                       <td className="px-3 py-2 text-gray-500">{sig.detectedAt || "—"}</td>
                       <td className="px-3 py-2">
-                        <button type="button" onClick={() => setSelectedSignal(selectedSignal === sig.id ? null : sig.id)}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedSignal === sig.id) {
+                              setSelectedSignal(null);
+                              resetSignalWorkflow();
+                            } else {
+                              setSelectedSignal(sig.id);
+                              resetSignalWorkflow();
+                            }
+                          }}
                           className="inline-flex items-center gap-1 px-2 py-1 border border-gray-300 rounded text-[10px] font-medium hover:bg-gray-50">
                           {selectedSignal === sig.id ? "Close" : (
                             <>
@@ -455,7 +613,18 @@ export function SurveillanceTab() {
               if (!sig) return null;
               return (
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
-                  <h4 className="text-sm font-semibold">Signal Response Workflow — {sig.disease} ({sig.facility})</h4>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h4 className="text-sm font-semibold">Signal Response Workflow — {sig.disease} ({sig.facility})</h4>
+                    <span className="text-[10px] text-gray-500">
+                      {investigations.length} open investigation{investigations.length === 1 ? "" : "s"} via BFF
+                    </span>
+                  </div>
+                  {signalWorkflowError ? (
+                    <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">{signalWorkflowError}</p>
+                  ) : null}
+                  {signalWorkflowSuccess ? (
+                    <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">{signalWorkflowSuccess}</p>
+                  ) : null}
 
                   {/* Step 1: Verification */}
                   <div className="p-3 border border-gray-200 rounded-lg bg-white space-y-2">
@@ -466,7 +635,11 @@ export function SurveillanceTab() {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-xs font-medium text-gray-600">Verification Status</label>
-                        <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                        <select
+                          value={signalWorkflow.verificationStatus}
+                          onChange={(e) => updateSignalWorkflow("verificationStatus", e.target.value)}
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        >
                           <option value="">Select</option>
                           <option value="confirmed">Confirmed - True Signal</option>
                           <option value="false_alarm">False Alarm - Data Error</option>
@@ -476,11 +649,21 @@ export function SurveillanceTab() {
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600">Verified By</label>
-                        <input placeholder="Officer name" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                        <input
+                          value={signalWorkflow.verifiedBy}
+                          onChange={(e) => updateSignalWorkflow("verifiedBy", e.target.value)}
+                          placeholder="Officer name"
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        />
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600">Verification Date</label>
-                        <input type="date" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                        <input
+                          type="date"
+                          value={signalWorkflow.verificationDate}
+                          onChange={(e) => updateSignalWorkflow("verificationDate", e.target.value)}
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        />
                       </div>
                     </div>
                   </div>
@@ -494,7 +677,11 @@ export function SurveillanceTab() {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="text-xs font-medium text-gray-600">Risk Level</label>
-                        <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                        <select
+                          value={signalWorkflow.riskLevel}
+                          onChange={(e) => updateSignalWorkflow("riskLevel", e.target.value)}
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        >
                           <option value="">Assess risk</option>
                           <option value="low">Low - Monitor Only</option>
                           <option value="moderate">Moderate - Enhanced Surveillance</option>
@@ -504,7 +691,11 @@ export function SurveillanceTab() {
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600">Spread Potential</label>
-                        <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                        <select
+                          value={signalWorkflow.spreadPotential}
+                          onChange={(e) => updateSignalWorkflow("spreadPotential", e.target.value)}
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        >
                           <option value="">Select</option>
                           <option value="contained">Contained</option>
                           <option value="local">Local Spread Likely</option>
@@ -513,7 +704,12 @@ export function SurveillanceTab() {
                       </div>
                       <div>
                         <label className="text-xs font-medium text-gray-600">Population at Risk</label>
-                        <input placeholder="Estimated number" className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1" />
+                        <input
+                          value={signalWorkflow.populationAtRisk}
+                          onChange={(e) => updateSignalWorkflow("populationAtRisk", e.target.value)}
+                          placeholder="Estimated number"
+                          className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                        />
                       </div>
                     </div>
                   </div>
@@ -528,9 +724,14 @@ export function SurveillanceTab() {
                       <div>
                         <label className="text-xs font-medium text-gray-600">Response Actions (select all applicable)</label>
                         <div className="space-y-1 mt-1">
-                          {["Deploy field investigation team", "Initiate contact tracing", "Collect laboratory specimens", "Issue public health alert", "Activate EOC", "Request WHO support", "Begin case management protocol"].map((action, i) => (
-                            <label key={i} className="flex items-center gap-2 text-xs">
-                              <input type="checkbox" className="rounded" />
+                          {RESPONSE_ACTIONS.map((action) => (
+                            <label key={action} className="flex items-center gap-2 text-xs">
+                              <input
+                                type="checkbox"
+                                className="rounded"
+                                checked={Boolean(signalWorkflow.responseActions[action])}
+                                onChange={(e) => toggleResponseAction(action, e.target.checked)}
+                              />
                               {action}
                             </label>
                           ))}
@@ -539,15 +740,20 @@ export function SurveillanceTab() {
                       <div className="space-y-3">
                         <div>
                           <label className="text-xs font-medium text-gray-600">Assign To Team</label>
-                          <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
-                            <option value="">Select team</option>
-                            <option value="">Assign when workforce / field-ops API is connected</option>
-                            <option value="new">Create New Team (backlog)</option>
-                          </select>
+                          <input
+                            value={signalWorkflow.assignToTeam}
+                            onChange={(e) => updateSignalWorkflow("assignToTeam", e.target.value)}
+                            placeholder="Team or officer ref"
+                            className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          />
                         </div>
                         <div>
                           <label className="text-xs font-medium text-gray-600">Escalation Level</label>
-                          <select className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1">
+                          <select
+                            value={signalWorkflow.escalationLevel}
+                            onChange={(e) => updateSignalWorkflow("escalationLevel", e.target.value)}
+                            className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                          >
                             <option value="">Select</option>
                             <option value="district">District Level</option>
                             <option value="provincial">Provincial Level</option>
@@ -557,17 +763,71 @@ export function SurveillanceTab() {
                         </div>
                         <div>
                           <label className="text-xs font-medium text-gray-600">Notes</label>
-                          <textarea placeholder="Additional instructions..." className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]" />
+                          <textarea
+                            value={signalWorkflow.notes}
+                            onChange={(e) => updateSignalWorkflow("notes", e.target.value)}
+                            placeholder="Additional instructions..."
+                            className="w-full text-xs border border-gray-300 rounded-lg mt-1 p-2 min-h-[60px]"
+                          />
                         </div>
+                        {showOutbreakLink ? (
+                          <div>
+                            <label className="text-xs font-medium text-gray-600">Linked outbreak</label>
+                            <select
+                              value={signalWorkflow.linkedOutbreakId}
+                              onChange={(e) => updateSignalWorkflow("linkedOutbreakId", e.target.value)}
+                              className="w-full h-8 px-2 text-xs border border-gray-300 rounded-lg mt-1"
+                            >
+                              <option value="">Select outbreak</option>
+                              {outbreaks.map((o) => (
+                                <option key={o.id} value={o.id}>
+                                  {o.name} ({o.lifecycleStatus})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
-                    <button className="px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600">Save & Initiate Response</button>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Save as Draft</button>
-                    <button className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Link to Outbreak</button>
-                    <button onClick={() => setSelectedSignal(null)} className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg">Cancel</button>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={openInvestigation.isPending || updateInvestigationStatus.isPending}
+                      onClick={() => void submitSignalInvestigation(sig, true)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-impilo-500 text-white text-xs font-medium rounded-lg hover:bg-impilo-600 disabled:opacity-50"
+                    >
+                      {(openInvestigation.isPending || updateInvestigationStatus.isPending) ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : null}
+                      Save & Initiate Response
+                    </button>
+                    <button
+                      type="button"
+                      disabled={openInvestigation.isPending}
+                      onClick={() => void submitSignalInvestigation(sig, false)}
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg disabled:opacity-50"
+                    >
+                      Save as Draft
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowOutbreakLink((v) => !v)}
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                    >
+                      {showOutbreakLink ? "Hide outbreak link" : "Link to Outbreak"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedSignal(null);
+                        resetSignalWorkflow();
+                      }}
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               );

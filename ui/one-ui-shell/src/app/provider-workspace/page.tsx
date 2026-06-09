@@ -270,7 +270,7 @@ export default function ProviderWorkspacePage() {
                 status={transactions.length > 0 ? "live" : isError ? "partial" : "connected"}
                 detail={
                   transactions.length === 0
-                    ? "Provider workspace renders only live core-transaction records and does not inject fixture fallback."
+                    ? "Provider workspace renders only live core-transaction records and does not inject sample fallback."
                     : "Provider workspace examples are loaded from /internal/v1/core-transactions."
                 }
               />
