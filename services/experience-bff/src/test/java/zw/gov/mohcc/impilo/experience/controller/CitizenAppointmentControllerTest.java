@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.mobile.citizen.CitizenAppointmentController;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 
 import java.util.Map;
@@ -143,6 +144,10 @@ class CitizenAppointmentControllerTest {
     private static CitizenAppointmentController newController(
             BookingServiceClient bookingClient,
             PctServiceClient pctClient) {
-        return new CitizenAppointmentController(bookingClient, new AppointmentCheckInService(bookingClient, pctClient));
+        AppointmentCommsWorkflowService comms = mock(AppointmentCommsWorkflowService.class);
+        return new CitizenAppointmentController(
+                bookingClient,
+                new AppointmentCheckInService(bookingClient, pctClient, comms),
+                comms);
     }
 }

@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import zw.gov.mohcc.impilo.experience.client.CostaServiceClient;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.OrosServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PharmacyServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
@@ -20,7 +22,7 @@ class MobileProviderExtendedControllerTest {
 
     @Test
     void billingChargesProxiesCostaBillForEncounter() {
-        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+        MobileProviderExtendedController controller = newController(
                 new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new BillingCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getCharges("tenant-1", "enc-1");
@@ -31,7 +33,7 @@ class MobileProviderExtendedControllerTest {
 
     @Test
     void billingChargeCaptureProxiesCostaEstimate() {
-        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+        MobileProviderExtendedController controller = newController(
                 new StubPctClient(), new StubVitoClient(), new StubPharmacyClient(), new BillingCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.captureCharge("tenant-1", Map.of("encounterId", "enc-1"));
@@ -42,7 +44,7 @@ class MobileProviderExtendedControllerTest {
 
     @Test
     void pharmacyPendingReturnsWorklistFromUpstream() {
-        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+        MobileProviderExtendedController controller = newController(
                 new StubPctClient(), new StubVitoClient(), new WorklistPharmacyClient(), new StubCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.getPendingDispensing("tenant-1", "facility-1");
@@ -53,7 +55,7 @@ class MobileProviderExtendedControllerTest {
 
     @Test
     void pharmacyVerifyFiveRightsUsesPrescriptionPayload() {
-        MobileProviderExtendedController controller = new MobileProviderExtendedController(
+        MobileProviderExtendedController controller = newController(
                 new StubPctClient(), new StubVitoClient(), new PrescriptionPharmacyClient(), new StubCostaClient(), new StubOrosClient());
 
         ResponseEntity<Map<String, Object>> response = controller.verifyFiveRights(
@@ -65,6 +67,17 @@ class MobileProviderExtendedControllerTest {
 
     private static ServiceClientConfig.ServiceEndpoints endpoints() {
         return ServiceClientConfig.testServiceEndpoints();
+    }
+
+    private static MobileProviderExtendedController newController(
+            PctServiceClient pctClient,
+            VitoServiceClient vitoClient,
+            PharmacyServiceClient pharmacyClient,
+            CostaServiceClient costaClient,
+            OrosServiceClient orosClient) {
+        return new MobileProviderExtendedController(
+                pctClient, vitoClient, pharmacyClient, costaClient, orosClient,
+                new StubPacsClient(), new StubInpatientClient());
     }
 
     private static final class StubPctClient extends PctServiceClient {
@@ -142,5 +155,13 @@ class MobileProviderExtendedControllerTest {
 
     private static final class StubOrosClient extends OrosServiceClient {
         StubOrosClient() { super(new RestTemplate(), endpoints()); }
+    }
+
+    private static final class StubPacsClient extends PacsServiceClient {
+        StubPacsClient() { super(new RestTemplate(), endpoints(), new ObjectMapper()); }
+    }
+
+    private static final class StubInpatientClient extends InpatientServiceClient {
+        StubInpatientClient() { super(new RestTemplate(), endpoints(), new ObjectMapper()); }
     }
 }

@@ -46,10 +46,12 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
             @RequestParam(required = false) String recipientId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = client.listNotifications(recipientId);
+            String resolvedRecipient = firstNonBlank(recipientId, actorId);
+            JsonNode data = client.listNotifications(resolvedRecipient);
             JsonNode content = (data != null && data.has("content")) ? data.get("content") : data;
             return ResponseEntity.ok(Map.of(
                     "data", content != null ? content : new Object[0],
@@ -63,9 +65,10 @@ public class NotificationController {
     @GetMapping("/inbox")
     public ResponseEntity<Map<String, Object>> listInbox(
             @RequestParam(required = false) String recipientId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
-        return list(recipientId, requestId, correlationId);
+        return list(recipientId, actorId, requestId, correlationId);
     }
 
     @PatchMapping("/{id}/read")
@@ -132,10 +135,12 @@ public class NotificationController {
 
     @GetMapping("/inbox/unread-count")
     public ResponseEntity<Map<String, Object>> unreadCount(
+            @RequestParam(required = false) String recipientId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
         try {
-            JsonNode data = client.unreadCount();
+            JsonNode data = client.unreadCount(firstNonBlank(recipientId, actorId));
             Object count = 0;
             if (data != null && data.has("count")) {
                 count = data.get("count").asLong();
@@ -205,5 +210,14 @@ public class NotificationController {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", Map.of("code", code, "message", message != null ? message : "Notification upstream unavailable"),
                 "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 }

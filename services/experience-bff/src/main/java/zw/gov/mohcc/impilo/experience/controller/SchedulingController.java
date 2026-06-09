@@ -13,6 +13,7 @@ import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -33,6 +34,7 @@ public class SchedulingController {
     private final TusoServiceClient tusoClient;
     private final SchedulingServiceClient schedulingServiceClient;
     private final AppointmentCheckInService appointmentCheckInService;
+    private final AppointmentCommsWorkflowService appointmentComms;
 
     @Value("${impilo.scheduling.use-remote-slots:true}")
     private boolean useRemoteSlots;
@@ -40,11 +42,13 @@ public class SchedulingController {
     public SchedulingController(BookingServiceClient bookingServiceClient,
                                 TusoServiceClient tusoClient,
                                 SchedulingServiceClient schedulingServiceClient,
-                                AppointmentCheckInService appointmentCheckInService) {
+                                AppointmentCheckInService appointmentCheckInService,
+                                AppointmentCommsWorkflowService appointmentComms) {
         this.bookingServiceClient = bookingServiceClient;
         this.tusoClient = tusoClient;
         this.schedulingServiceClient = schedulingServiceClient;
         this.appointmentCheckInService = appointmentCheckInService;
+        this.appointmentComms = appointmentComms;
     }
 
     public record CreateAppointmentRequest(
@@ -104,6 +108,9 @@ public class SchedulingController {
         appointmentData.put("tenant_id", tenantId);
 
         JsonNode result = bookingServiceClient.createAppointment(appointmentData);
+        if (result != null) {
+            appointmentComms.onAppointmentCreated(result);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", enrichAppointmentWithBookingId(result));
@@ -119,6 +126,9 @@ public class SchedulingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         JsonNode result = bookingServiceClient.confirmAppointment(id.toString());
+        if (result != null) {
+            appointmentComms.onAppointmentConfirmed(result);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         Object data = result != null ? enrichAppointmentWithBookingId(result)
@@ -155,6 +165,9 @@ public class SchedulingController {
         String reason = body != null && body.containsKey("reason") ? (String) body.get("reason") : "Cancelled";
 
         JsonNode cancelled = bookingServiceClient.cancelAppointment(id.toString(), reason);
+        if (cancelled != null) {
+            appointmentComms.onAppointmentCancelled(cancelled, reason, AppointmentCommsWorkflowService.INITIATOR_STAFF);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         Object data = cancelled != null ? enrichAppointmentWithBookingId(cancelled)
@@ -162,6 +175,71 @@ public class SchedulingController {
         response.put("data", data);
         response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/reschedule")
+    public ResponseEntity<Map<String, Object>> rescheduleAppointment(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+
+        JsonNode rescheduled = bookingServiceClient.rescheduleAppointment(id.toString(), body);
+        if (rescheduled != null) {
+            appointmentComms.onAppointmentRescheduled(rescheduled);
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("data", rescheduled != null ? enrichAppointmentWithBookingId(rescheduled)
+                : Map.of("id", id.toString(), "status", "RESCHEDULED"));
+        response.put("meta", Map.of("request_id", requestId, "correlation_id", correlationId));
+        return ResponseEntity.ok(response);
+    }
+
+    public record AppointmentMessageBody(String message, String direction) {}
+
+    /**
+     * Two-way appointment messaging — direction {@code citizen_to_provider} or {@code provider_to_citizen}.
+     */
+    @GetMapping("/{id}/messages")
+    public ResponseEntity<Map<String, Object>> listAppointmentMessages(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        return ResponseEntity.ok(Map.of(
+                "data", appointmentComms.listMessages(id.toString()),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+    }
+
+    @PostMapping("/{id}/messages")
+    public ResponseEntity<Map<String, Object>> sendAppointmentMessage(
+            @PathVariable UUID id,
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestHeader(value = "X-Actor-ID", required = false) String actorId,
+            @RequestBody AppointmentMessageBody body) {
+
+        if (body.message() == null || body.message().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", Map.of("code", "VALIDATION", "message", "message is required"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        JsonNode appointment = bookingServiceClient.getAppointment(id.toString());
+        if (appointment == null || appointment.isNull()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "error", Map.of("code", "APPOINTMENT_NOT_FOUND", "message", "Appointment not found"),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        }
+        String direction = body.direction() != null ? body.direction().trim().toLowerCase(Locale.ROOT) : "provider_to_citizen";
+        if ("provider_to_citizen".equals(direction)) {
+            appointmentComms.sendProviderToCitizenMessage(appointment, body.message(), actorId);
+        } else {
+            appointmentComms.sendCitizenToProviderMessage(appointment, body.message(), actorId);
+        }
+        return ResponseEntity.ok(Map.of(
+                "data", Map.of("appointment_id", id.toString(), "direction", direction, "sent", true),
+                "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
     }
 
     @GetMapping("/resources")

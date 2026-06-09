@@ -20,7 +20,9 @@ import zw.gov.mohcc.impilo.notification.repository.NotificationRepository;
 import zw.gov.mohcc.impilo.notification.repository.OutboxEventRepository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -33,24 +35,41 @@ public class NotifyService {
     private final OutboxEventRepository outboxEventRepository;
     private final ObjectMapper objectMapper;
     private final MvumoPreferenceClient mvumoPreferenceClient;
+    private final NotificationRecipientResolver recipientResolver;
 
     public NotifyService(
             NotificationRepository notificationRepository,
             OutboxEventRepository outboxEventRepository,
             ObjectMapper objectMapper,
-            MvumoPreferenceClient mvumoPreferenceClient) {
+            MvumoPreferenceClient mvumoPreferenceClient,
+            NotificationRecipientResolver recipientResolver) {
         this.notificationRepository = notificationRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.objectMapper = objectMapper;
         this.mvumoPreferenceClient = mvumoPreferenceClient;
+        this.recipientResolver = recipientResolver;
     }
 
     @Transactional
     public NotifyResponse enqueue(NotifyRequest request, RequestContext ctx) {
+        List<String> inboxRecipients = resolveInboxRecipients(request);
+        if (inboxRecipients.isEmpty()) {
+            inboxRecipients = List.of(request.recipient());
+        }
+
+        NotifyResponse last = null;
+        for (String inboxRecipient : inboxRecipients) {
+            last = enqueueOne(request, ctx, inboxRecipient);
+        }
+        return last != null ? last : enqueueOne(request, ctx, request.recipient());
+    }
+
+    private NotifyResponse enqueueOne(NotifyRequest request, RequestContext ctx, String inboxRecipient) {
         NotificationEntity entity = new NotificationEntity();
         entity.setTemplateKey(request.templateKey());
         entity.setChannel(request.channel());
         entity.setToAddr(request.recipient());
+        entity.setInboxRecipient(inboxRecipient);
         entity.setVarsJson(serializeVariables(request.variables()));
         entity.setTenantId(ctx.tenantId());
         entity.setPodId(ctx.podId());
@@ -68,8 +87,9 @@ public class NotifyService {
 
         entity = notificationRepository.save(entity);
         log.info(
-                "Enqueued notification id={} channel={} to={} tenant={} status={}",
-                entity.getId(), entity.getChannel(), entity.getToAddr(), ctx.tenantId(), entity.getStatus());
+                "Enqueued notification id={} channel={} to={} inbox={} tenant={} status={}",
+                entity.getId(), entity.getChannel(), entity.getToAddr(), entity.getInboxRecipient(),
+                ctx.tenantId(), entity.getStatus());
 
         OutboxEventEntity outbox = new OutboxEventEntity();
         outbox.setTenantId(ctx.tenantId());
@@ -87,6 +107,7 @@ public class NotifyService {
         payload.put("notificationId", entity.getId());
         payload.put("channel", entity.getChannel());
         payload.put("to", entity.getToAddr());
+        payload.put("inboxRecipient", entity.getInboxRecipient());
         payload.put("templateKey", entity.getTemplateKey());
         payload.put("status", entity.getStatus().name());
         if (entity.getPatientRef() != null) {
@@ -102,9 +123,25 @@ public class NotifyService {
         return new NotifyResponse(entity.getId(), entity.getStatus().name(), entity.getChannel(), entity.getToAddr(), detail);
     }
 
+    private List<String> resolveInboxRecipients(NotifyRequest request) {
+        if (request.inboxRecipient() != null && !request.inboxRecipient().isBlank()) {
+            return List.of(request.inboxRecipient().trim());
+        }
+        return recipientResolver.resolveInboxRecipients(request.recipient());
+    }
+
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> listNotifications(String tenantId, Pageable pageable) {
-        return notificationRepository.findByTenantId(tenantId, pageable)
+    public Page<NotificationResponse> listNotifications(String tenantId, String recipientId, Pageable pageable) {
+        if (recipientId == null || recipientId.isBlank()) {
+            return notificationRepository.findByTenantId(tenantId, pageable)
+                    .map(this::toResponse);
+        }
+        List<String> aliases = inboxAliases(recipientId);
+        if (aliases.size() == 1) {
+            return notificationRepository.findByTenantIdAndInboxRecipient(tenantId, aliases.get(0), pageable)
+                    .map(this::toResponse);
+        }
+        return notificationRepository.findByTenantIdAndInboxRecipientIn(tenantId, aliases, pageable)
                 .map(this::toResponse);
     }
 
@@ -124,9 +161,12 @@ public class NotifyService {
     }
 
     @Transactional
-    public int markAllAsRead(String tenantId) {
+    public int markAllAsRead(String tenantId, String recipientId) {
         int updated = 0;
-        Page<NotificationEntity> page = notificationRepository.findByTenantId(tenantId, Pageable.unpaged());
+        Page<NotificationEntity> page = recipientId == null || recipientId.isBlank()
+                ? notificationRepository.findByTenantId(tenantId, Pageable.unpaged())
+                : notificationRepository.findByTenantIdAndInboxRecipientIn(
+                        tenantId, inboxAliases(recipientId), Pageable.unpaged());
         for (NotificationEntity entity : page.getContent()) {
             if (entity.getReadAt() == null) {
                 entity.setReadAt(OffsetDateTime.now());
@@ -140,8 +180,23 @@ public class NotifyService {
     }
 
     @Transactional(readOnly = true)
-    public long unreadCount(String tenantId) {
-        return notificationRepository.countByTenantIdAndReadAtIsNull(tenantId);
+    public long unreadCount(String tenantId, String recipientId) {
+        if (recipientId == null || recipientId.isBlank()) {
+            return notificationRepository.countByTenantIdAndReadAtIsNull(tenantId);
+        }
+        List<String> aliases = inboxAliases(recipientId);
+        if (aliases.size() == 1) {
+            return notificationRepository.countByTenantIdAndInboxRecipientAndReadAtIsNull(tenantId, aliases.get(0));
+        }
+        return notificationRepository.countByTenantIdAndInboxRecipientInAndReadAtIsNull(tenantId, aliases);
+    }
+
+    private List<String> inboxAliases(String recipientId) {
+        List<String> resolved = new ArrayList<>(recipientResolver.resolveInboxRecipients(recipientId));
+        if (!resolved.contains(recipientId)) {
+            resolved.add(recipientId);
+        }
+        return resolved;
     }
 
     @Transactional(readOnly = true)

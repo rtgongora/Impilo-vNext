@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,9 +22,12 @@ import java.util.UUID;
 public class BookingController {
 
     private final BookingServiceClient bookingServiceClient;
+    private final AppointmentCommsWorkflowService appointmentComms;
 
-    public BookingController(BookingServiceClient bookingServiceClient) {
+    public BookingController(BookingServiceClient bookingServiceClient,
+                             AppointmentCommsWorkflowService appointmentComms) {
         this.bookingServiceClient = bookingServiceClient;
+        this.appointmentComms = appointmentComms;
     }
 
     public record CreateBookingBody(
@@ -89,6 +93,9 @@ public class BookingController {
 
         Map<String, Object> payload = mapCreateBody(body, actorId);
         JsonNode created = bookingServiceClient.createBooking(payload);
+        if (created != null) {
+            appointmentComms.onBookingCreated(created);
+        }
         return ok(created, requestId, correlationId, HttpStatus.CREATED);
     }
 
@@ -120,6 +127,9 @@ public class BookingController {
 
         String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : null;
         JsonNode cancelled = bookingServiceClient.cancelBooking(id.toString(), reason);
+        if (cancelled != null) {
+            appointmentComms.onBookingCancelled(cancelled, reason, AppointmentCommsWorkflowService.INITIATOR_STAFF);
+        }
         return ok(cancelled, requestId, correlationId, HttpStatus.OK);
     }
 
@@ -143,6 +153,9 @@ public class BookingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         JsonNode approved = bookingServiceClient.approveBooking(id.toString());
+        if (approved != null) {
+            appointmentComms.onBookingApproved(approved);
+        }
         return ok(approved, requestId, correlationId, HttpStatus.OK);
     }
 
@@ -156,6 +169,9 @@ public class BookingController {
 
         String reason = body != null && body.get("reason") != null ? body.get("reason").toString() : null;
         JsonNode rejected = bookingServiceClient.rejectBooking(id.toString(), reason);
+        if (rejected != null) {
+            appointmentComms.onBookingRejected(rejected, reason);
+        }
         return ok(rejected, requestId, correlationId, HttpStatus.OK);
     }
 
@@ -190,6 +206,9 @@ public class BookingController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
 
         JsonNode appointment = bookingServiceClient.convertBookingToAppointment(id.toString());
+        if (appointment != null) {
+            appointmentComms.onAppointmentCreated(appointment);
+        }
         return ok(appointment, requestId, correlationId, HttpStatus.CREATED);
     }
 

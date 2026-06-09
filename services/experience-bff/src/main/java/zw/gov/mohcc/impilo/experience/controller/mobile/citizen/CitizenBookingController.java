@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,9 +26,12 @@ import java.util.UUID;
 public class CitizenBookingController {
 
     private final BookingServiceClient bookingServiceClient;
+    private final AppointmentCommsWorkflowService appointmentComms;
 
-    public CitizenBookingController(BookingServiceClient bookingServiceClient) {
+    public CitizenBookingController(BookingServiceClient bookingServiceClient,
+                                    AppointmentCommsWorkflowService appointmentComms) {
         this.bookingServiceClient = bookingServiceClient;
+        this.appointmentComms = appointmentComms;
     }
 
     public record CreateBookingBody(
@@ -56,6 +60,9 @@ public class CitizenBookingController {
         bookingData.put("reasonForBooking", body.reason());
 
         JsonNode result = bookingServiceClient.createCitizenBooking(actorId, bookingData);
+        if (result != null) {
+            appointmentComms.onBookingCreated(result);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", result);
@@ -104,6 +111,9 @@ public class CitizenBookingController {
 
         String reason = body != null && body.containsKey("reason") ? body.get("reason").toString() : "Cancelled";
         JsonNode cancelled = bookingServiceClient.cancelBooking(id.toString(), reason);
+        if (cancelled != null) {
+            appointmentComms.onBookingCancelled(cancelled, reason, AppointmentCommsWorkflowService.INITIATOR_CITIZEN);
+        }
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("data", cancelled != null ? cancelled : Map.of("id", id.toString(), "bookingStatus", "CANCELLED"));

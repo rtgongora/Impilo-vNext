@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,10 +24,14 @@ public class AppointmentCheckInService {
 
     private final BookingServiceClient bookingServiceClient;
     private final PctServiceClient pctClient;
+    private final AppointmentCommsWorkflowService appointmentComms;
 
-    public AppointmentCheckInService(BookingServiceClient bookingServiceClient, PctServiceClient pctClient) {
+    public AppointmentCheckInService(BookingServiceClient bookingServiceClient,
+                                     PctServiceClient pctClient,
+                                     AppointmentCommsWorkflowService appointmentComms) {
         this.bookingServiceClient = bookingServiceClient;
         this.pctClient = pctClient;
+        this.appointmentComms = appointmentComms;
     }
 
     public ResponseEntity<Map<String, Object>> checkIn(
@@ -115,6 +120,8 @@ public class AppointmentCheckInService {
             if (queueUuid != null) {
                 meta.put("queue_id", queueUuid.toString());
             }
+
+            appointmentComms.onAppointmentCheckedIn(checkedIn);
 
             Map<String, Object> response = new LinkedHashMap<>();
             response.put("data", Map.of(

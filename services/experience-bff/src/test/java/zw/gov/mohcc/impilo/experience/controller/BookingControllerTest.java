@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +28,7 @@ class BookingControllerTest {
         created.put("bookingStatus", "REQUESTED");
         when(bookingClient.createBooking(any())).thenReturn(created);
 
-        BookingController controller = new BookingController(bookingClient);
+        BookingController controller = new BookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
 
         var response = controller.createBooking(
                 "tenant-1",
@@ -67,7 +68,7 @@ class BookingControllerTest {
         approved.put("bookingStatus", "APPROVED");
         when(bookingClient.approveBooking(bookingId.toString())).thenReturn(approved);
 
-        BookingController controller = new BookingController(bookingClient);
+        BookingController controller = new BookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
 
         var response = controller.approveBooking(
                 bookingId,
@@ -90,7 +91,7 @@ class BookingControllerTest {
         appointment.put("bookingId", bookingId.toString());
         when(bookingClient.convertBookingToAppointment(bookingId.toString())).thenReturn(appointment);
 
-        BookingController controller = new BookingController(bookingClient);
+        BookingController controller = new BookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
 
         var response = controller.convertToAppointment(
                 bookingId,
@@ -115,7 +116,7 @@ class BookingControllerTest {
                 isNull(), eq("f1000000-0000-0000-0000-000000000001"), isNull(), eq("REQUESTED"), eq(0), eq(20)))
                 .thenReturn(rows);
 
-        BookingController controller = new BookingController(bookingClient);
+        BookingController controller = new BookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
 
         var response = controller.listBookings(
                 "tenant-1",

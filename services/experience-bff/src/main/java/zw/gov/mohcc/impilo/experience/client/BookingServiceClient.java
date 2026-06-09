@@ -201,6 +201,16 @@ public class BookingServiceClient {
         return extractData(restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class));
     }
 
+    public JsonNode listOutboxEvents(long afterId, int limit) {
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/v1/internal/outbox/events")
+                .queryParam("afterId", afterId)
+                .queryParam("limit", limit)
+                .toUriString();
+        log.debug("Booking: list outbox events afterId={}", afterId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
     // ── Citizen ───────────────────────────────────────────────────────
 
     public JsonNode listCitizenAppointments(String cpid, String status, int page, int size) {

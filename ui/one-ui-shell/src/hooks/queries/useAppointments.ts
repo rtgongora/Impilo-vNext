@@ -168,6 +168,42 @@ export function useCheckInAppointment(options?: {
   });
 }
 
+export interface AppointmentMessage {
+  id: string;
+  appointmentId: string;
+  direction: string;
+  message: string;
+  sentAt?: string;
+  senderActorId?: string;
+}
+
+export function useAppointmentMessages(appointmentId?: string) {
+  return useQuery({
+    queryKey: ["appointment-messages", appointmentId],
+    queryFn: async () => {
+      const response = await apiClient.get<ApiResponse<AppointmentMessage[]>>(
+        `/internal/v1/appointments/${encodeURIComponent(appointmentId!)}/messages`,
+      );
+      return response.data ?? [];
+    },
+    enabled: !!appointmentId,
+  });
+}
+
+export function useSendAppointmentMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { appointmentId: string; message: string; direction?: string }) =>
+      apiClient.post<ApiResponse<unknown>>(
+        `/internal/v1/appointments/${encodeURIComponent(payload.appointmentId)}/messages`,
+        { message: payload.message, direction: payload.direction ?? "provider_to_citizen" },
+      ),
+    onSuccess: (_response, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["appointment-messages", vars.appointmentId] });
+    },
+  });
+}
+
 export function useRescheduleAppointment() {
   const queryClient = useQueryClient();
 

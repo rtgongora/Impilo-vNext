@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import zw.gov.mohcc.impilo.notification.domain.NotificationEntity;
 import zw.gov.mohcc.impilo.notification.domain.NotificationStatus;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +21,16 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
     Page<NotificationEntity> findByTenantId(String tenantId, Pageable pageable);
 
+    Page<NotificationEntity> findByTenantIdAndInboxRecipient(String tenantId, String inboxRecipient, Pageable pageable);
+
+    Page<NotificationEntity> findByTenantIdAndInboxRecipientIn(
+            String tenantId, Collection<String> inboxRecipients, Pageable pageable);
+
     Optional<NotificationEntity> findByIdAndTenantId(String id, String tenantId);
 
     long countByTenantIdAndReadAtIsNull(String tenantId);
+
+    long countByTenantIdAndInboxRecipientAndReadAtIsNull(String tenantId, String inboxRecipient);
+
+    long countByTenantIdAndInboxRecipientInAndReadAtIsNull(String tenantId, Collection<String> inboxRecipients);
 }

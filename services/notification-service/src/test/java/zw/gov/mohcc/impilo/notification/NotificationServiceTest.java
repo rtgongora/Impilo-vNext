@@ -393,6 +393,45 @@ class NotificationServiceTest {
         assertThat(MAPPER.readTree(afterAll.getResponse().getContentAsString()).get("count").asInt()).isZero();
     }
 
+    @Test
+    @DisplayName("GET /internal/v1/notifications filters inbox by recipientId")
+    void listNotificationsFiltersByRecipient() throws Exception {
+        mockMvc.perform(post("/internal/v1/notify")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "notify-cpid-a-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {"channel":"IN_APP","to":"cpid-a","inboxRecipient":"cpid-a"}
+                            """))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/internal/v1/notify")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString())
+                        .header("Idempotency-Key", "notify-cpid-b-" + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {"channel":"IN_APP","to":"cpid-b","inboxRecipient":"cpid-b"}
+                            """))
+                .andExpect(status().isCreated());
+
+        MvcResult result = mockMvc.perform(get("/internal/v1/notifications?recipientId=cpid-a")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .header("X-Pod-ID", POD_ID)
+                        .header("X-Request-ID", UUID.randomUUID().toString())
+                        .header("X-Correlation-ID", UUID.randomUUID().toString()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode root = MAPPER.readTree(result.getResponse().getContentAsString());
+        assertThat(root.get("totalElements").asInt()).isEqualTo(1);
+        assertThat(root.get("content").get(0).get("to").asText()).isEqualTo("cpid-a");
+    }
+
     // ─── Helpers ───
 
     private void createTemplate(String key, String channel, String subject, String body) throws Exception {

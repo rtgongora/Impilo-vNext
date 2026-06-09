@@ -16,7 +16,8 @@ public record NotifyRequest(
         @NotBlank @Size(max = 256) @JsonProperty("to") String recipient,
         Map<String, String> variables,
         @Size(max = 300) @JsonProperty("patientRef") String patientRef,
-        @Size(max = 64) String messageKind) {
+        @Size(max = 64) String messageKind,
+        @Size(max = 256) @JsonProperty("inboxRecipient") String inboxRecipient) {
     public NotifyRequest {
         if (variables == null) {
             variables = Map.of();

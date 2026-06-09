@@ -68,8 +68,16 @@ public class NotificationServiceClient {
     }
 
     public JsonNode unreadCount() {
-        String url = baseUrl + "/internal/v1/notifications/inbox/unread-count";
-        log.debug("Notification: unreadCount");
+        return unreadCount(null);
+    }
+
+    public JsonNode unreadCount(String recipientId) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/notifications/inbox/unread-count");
+        if (recipientId != null && !recipientId.isBlank()) {
+            builder.queryParam("recipientId", recipientId);
+        }
+        String url = builder.toUriString();
+        log.debug("Notification: unreadCount recipientId={}", recipientId);
         return extractData(restTemplate.getForEntity(url, JsonNode.class));
     }
 

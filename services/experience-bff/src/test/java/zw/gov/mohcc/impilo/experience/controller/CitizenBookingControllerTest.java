@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.controller.mobile.citizen.CitizenBookingController;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 
 import java.util.Map;
 import java.util.UUID;
@@ -28,7 +29,7 @@ class CitizenBookingControllerTest {
         when(bookingClient.listBookings(eq("actor-citizen-1"), isNull(), isNull(), isNull(), eq(0), eq(20)))
                 .thenReturn(items);
 
-        CitizenBookingController controller = new CitizenBookingController(bookingClient);
+        CitizenBookingController controller = new CitizenBookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
         var response = controller.list("tenant", "req-1", "corr-1", "actor-citizen-1", null, 0, 20);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -42,7 +43,7 @@ class CitizenBookingControllerTest {
         ObjectNode created = mapper.createObjectNode().put("id", "bk-new").put("bookingStatus", "REQUESTED");
         when(bookingClient.createCitizenBooking(eq("actor-citizen-1"), any())).thenReturn(created);
 
-        CitizenBookingController controller = new CitizenBookingController(bookingClient);
+        CitizenBookingController controller = new CitizenBookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
         var body = new CitizenBookingController.CreateBookingBody("fac-1", "GENERAL", "2026-06-10", "Check-up");
         var response = controller.create("tenant", "pod", "req-1", "corr-1", "actor-citizen-1", body);
 
@@ -57,7 +58,7 @@ class CitizenBookingControllerTest {
         ObjectNode cancelled = mapper.createObjectNode().put("id", "bk-1").put("bookingStatus", "CANCELLED");
         when(bookingClient.cancelBooking(anyString(), anyString())).thenReturn(cancelled);
 
-        CitizenBookingController controller = new CitizenBookingController(bookingClient);
+        CitizenBookingController controller = new CitizenBookingController(bookingClient, mock(AppointmentCommsWorkflowService.class));
         UUID id = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
         var response = controller.cancel(id, "req-1", "corr-1", Map.of("reason", "Changed plans"));
 

@@ -80,3 +80,23 @@ export async function checkInAppointment(id: string): Promise<AppointmentCheckIn
   );
   return response.data;
 }
+
+export interface AppointmentMessage {
+  id: string;
+  appointmentId: string;
+  direction: string;
+  message: string;
+  sentAt?: string;
+  senderActorId?: string;
+}
+
+export async function fetchAppointmentMessages(id: string): Promise<AppointmentMessage[]> {
+  const response = await apiClient.get<{ data: AppointmentMessage[] }>(
+    `${V1}/${encodeURIComponent(id)}/messages`,
+  );
+  return response.data.data ?? [];
+}
+
+export async function sendAppointmentMessage(id: string, message: string): Promise<void> {
+  await apiClient.post(`${V1}/${encodeURIComponent(id)}/messages`, { message });
+}

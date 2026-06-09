@@ -70,6 +70,13 @@ impilo:
   auth:
     fallback-enabled: ${AUTH_FALLBACK_ENABLED:false}
   scheduling:
+    display-timezone: ${IMPILO_SCHEDULING_DISPLAY_TIMEZONE:Africa/Harare}
+    reminders:
+      enabled: true
+      cron: "0 15 * * * *"
+    outbox-comms:
+      enabled: true
+      poll-interval-ms: 30000
     # Merge scheduling-service slot grid with Tuso bookings for /appointments/availability
     use-remote-slots: ${SCHEDULING_USE_REMOTE_SLOTS:true}
   wallet:

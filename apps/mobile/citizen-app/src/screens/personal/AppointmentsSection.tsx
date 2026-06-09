@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Button,
@@ -11,6 +11,9 @@ import {
   fetchAppointments,
   cancelAppointment,
   checkInAppointment,
+  fetchAppointmentMessages,
+  sendAppointmentMessage,
+  type AppointmentMessage,
 } from "../../services/appointmentService";
 import type { Appointment } from "../../types";
 
@@ -28,6 +31,9 @@ export function AppointmentsSection() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [messagesById, setMessagesById] = useState<Record<string, AppointmentMessage[]>>({});
+  const [draftById, setDraftById] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -54,6 +60,33 @@ export function AppointmentsSection() {
       setError(err instanceof Error ? err : new Error(String(err)));
     }
   }, [load]);
+
+  const toggleMessages = useCallback(async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(id);
+    try {
+      const messages = await fetchAppointmentMessages(id);
+      setMessagesById((prev) => ({ ...prev, [id]: messages }));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [expandedId]);
+
+  const handleSendMessage = useCallback(async (id: string) => {
+    const draft = draftById[id]?.trim();
+    if (!draft) return;
+    try {
+      await sendAppointmentMessage(id, draft);
+      setDraftById((prev) => ({ ...prev, [id]: "" }));
+      const messages = await fetchAppointmentMessages(id);
+      setMessagesById((prev) => ({ ...prev, [id]: messages }));
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+    }
+  }, [draftById]);
 
   const handleCheckIn = useCallback(async (id: string) => {
     try {
@@ -135,6 +168,13 @@ export function AppointmentsSection() {
                   {appt.status === "SCHEDULED" || appt.status === "CONFIRMED" ? (
                     <View style={styles.actionRow}>
                       <Button
+                        title="Messages"
+                        variant="outline"
+                        size="sm"
+                        onPress={() => toggleMessages(appt.id)}
+                        testID={`messages-appointment-${appt.id}`}
+                      />
+                      <Button
                         title="Check in"
                         variant="default"
                         size="sm"
@@ -148,6 +188,29 @@ export function AppointmentsSection() {
                         onPress={() => handleCancel(appt.id)}
                         testID={`cancel-appointment-${appt.id}`}
                       />
+                    </View>
+                  ) : null}
+                  {expandedId === appt.id ? (
+                    <View style={styles.messagePanel}>
+                      {(messagesById[appt.id] ?? []).map((msg) => (
+                        <Text key={msg.id} style={styles.messageLine}>
+                          {msg.direction === "provider_to_citizen" ? "Provider" : "You"}: {msg.message}
+                        </Text>
+                      ))}
+                      <View style={styles.messageComposer}>
+                        <TextInput
+                          style={styles.messageInput}
+                          value={draftById[appt.id] ?? ""}
+                          onChangeText={(text) => setDraftById((prev) => ({ ...prev, [appt.id]: text }))}
+                          placeholder="Message your care team…"
+                        />
+                        <Button
+                          title="Send"
+                          variant="default"
+                          size="sm"
+                          onPress={() => handleSendMessage(appt.id)}
+                        />
+                      </View>
                     </View>
                   ) : null}
                 </View>
@@ -279,5 +342,32 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 8,
     marginTop: 8,
+  },
+  messagePanel: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#F9FAFB",
+    gap: 6,
+  },
+  messageLine: {
+    fontSize: 12,
+    color: "#374151",
+  },
+  messageComposer: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  messageInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    backgroundColor: "#FFFFFF",
   },
 });

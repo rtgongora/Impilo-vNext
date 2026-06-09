@@ -46,6 +46,7 @@ import { usePatients, type PatientResource } from "@/hooks/queries/usePatients";
 import { apiClient, type ApiResponse } from "@/lib/api-client";
 import { usePrivacyDisplayStore } from "@/hooks/usePrivacyDisplayStore";
 import { maskName, maskDob, displayCpid } from "@/lib/pii-mask";
+import { AppointmentMessagePanel } from "@/components/scheduling/AppointmentMessagePanel";
 
 interface AppointmentResource {
   id: string;
@@ -685,6 +686,12 @@ export default function SchedulingPage() {
                         </div>
                         {a.reason && (
                           <p className="text-xs text-gray-500 mt-1">{a.reason}</p>
+                        )}
+                        {isActionable && (
+                          <AppointmentMessagePanel
+                            appointmentId={appt.id}
+                            patientLabel={a.patient_id ? `CPID ${displayCpid(a.patient_id)}` : undefined}
+                          />
                         )}
                       </div>
                     </div>

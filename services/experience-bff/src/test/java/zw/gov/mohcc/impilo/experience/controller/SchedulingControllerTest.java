@@ -7,6 +7,7 @@ import zw.gov.mohcc.impilo.experience.client.BookingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.SchedulingServiceClient;
 import zw.gov.mohcc.impilo.experience.client.TusoServiceClient;
+import zw.gov.mohcc.impilo.experience.scheduling.AppointmentCommsWorkflowService;
 import zw.gov.mohcc.impilo.experience.service.AppointmentCheckInService;
 
 import java.util.Map;
@@ -165,10 +166,12 @@ class SchedulingControllerTest {
     }
 
     private static SchedulingController newController(BookingServiceClient bookingClient, PctServiceClient pctClient) {
+        AppointmentCommsWorkflowService comms = mock(AppointmentCommsWorkflowService.class);
         return new SchedulingController(
                 bookingClient,
                 mock(TusoServiceClient.class),
                 mock(SchedulingServiceClient.class),
-                new AppointmentCheckInService(bookingClient, pctClient));
+                new AppointmentCheckInService(bookingClient, pctClient, comms),
+                comms);
     }
 }

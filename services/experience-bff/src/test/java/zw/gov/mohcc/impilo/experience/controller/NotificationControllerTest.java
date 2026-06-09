@@ -23,7 +23,7 @@ class NotificationControllerTest {
     void listReturnsBadGatewayWhenNotificationsUnavailable() {
         NotificationController controller = new NotificationController(new FailingNotificationClient());
 
-        var response = controller.list(null, "req-1", "corr-1");
+        var response = controller.list(null, null, "req-1", "corr-1");
 
         assertEquals(502, response.getStatusCode().value());
         assertNotNull(response.getBody());

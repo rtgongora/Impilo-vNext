@@ -47,16 +47,20 @@ public class NotifyController {
     }
 
     @GetMapping("/notifications")
-    public ResponseEntity<Page<NotificationResponse>> listNotifications(Pageable pageable) {
+    public ResponseEntity<Page<NotificationResponse>> listNotifications(
+            @RequestParam(name = "recipientId", required = false) String recipientId,
+            Pageable pageable) {
         RequestContext ctx = RequestContextHolder.require();
 
-        Page<NotificationResponse> page = notifyService.listNotifications(ctx.tenantId(), pageable);
+        Page<NotificationResponse> page = notifyService.listNotifications(ctx.tenantId(), recipientId, pageable);
         return ResponseEntity.ok(page);
     }
 
     @GetMapping("/notifications/inbox")
-    public ResponseEntity<Page<NotificationResponse>> listInbox(Pageable pageable) {
-        return listNotifications(pageable);
+    public ResponseEntity<Page<NotificationResponse>> listInbox(
+            @RequestParam(name = "recipientId", required = false) String recipientId,
+            Pageable pageable) {
+        return listNotifications(recipientId, pageable);
     }
 
     @PatchMapping("/notifications/{id}/read")
@@ -73,21 +77,24 @@ public class NotifyController {
     }
 
     @PostMapping("/notifications/inbox/read-all")
-    public ResponseEntity<Map<String, Object>> markInboxReadAll() {
+    public ResponseEntity<Map<String, Object>> markInboxReadAll(
+            @RequestParam(name = "recipientId", required = false) String recipientId) {
         RequestContext ctx = RequestContextHolder.require();
-        int updated = notifyService.markAllAsRead(ctx.tenantId());
+        int updated = notifyService.markAllAsRead(ctx.tenantId(), recipientId);
         return ResponseEntity.ok(Map.of("updated", updated));
     }
 
     @PostMapping("/notifications/read-all")
-    public ResponseEntity<Map<String, Object>> markReadAll() {
-        return markInboxReadAll();
+    public ResponseEntity<Map<String, Object>> markReadAll(
+            @RequestParam(name = "recipientId", required = false) String recipientId) {
+        return markInboxReadAll(recipientId);
     }
 
     @GetMapping("/notifications/inbox/unread-count")
-    public ResponseEntity<Map<String, Object>> unreadCount() {
+    public ResponseEntity<Map<String, Object>> unreadCount(
+            @RequestParam(name = "recipientId", required = false) String recipientId) {
         RequestContext ctx = RequestContextHolder.require();
-        return ResponseEntity.ok(Map.of("count", notifyService.unreadCount(ctx.tenantId())));
+        return ResponseEntity.ok(Map.of("count", notifyService.unreadCount(ctx.tenantId(), recipientId)));
     }
 
     @GetMapping("/notifications/preferences")

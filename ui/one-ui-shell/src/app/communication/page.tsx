@@ -65,6 +65,15 @@ export default function CommunicationPage() {
   return (
     <AppLayout>
       <PageShell title="Communication Hub" icon={<MessageSquare className="h-5 w-5" />}>
+        <div className="mb-4 flex justify-end">
+          <Link
+            href="/scheduling"
+            className="inline-flex items-center gap-1 rounded-lg border border-impilo-200 bg-impilo-50 px-3 py-1.5 text-xs font-medium text-impilo-700 hover:bg-impilo-100"
+          >
+            <Clock className="h-3.5 w-3.5" />
+            Appointment threads
+          </Link>
+        </div>
         <p className="mb-4 text-sm text-gray-500">
           Messaging, paging, and callback coordination for clinical and operational teams.
         </p>

@@ -28,6 +28,9 @@ public class NotificationEntity {
     @Column(name = "to_addr", length = 256, nullable = false)
     private String toAddr;
 
+    @Column(name = "inbox_recipient", length = 256)
+    private String inboxRecipient;
+
     @Column(name = "patient_ref", length = 300)
     private String patientRef;
 
@@ -82,6 +85,9 @@ public class NotificationEntity {
 
     public String getToAddr() { return toAddr; }
     public void setToAddr(String toAddr) { this.toAddr = toAddr; }
+
+    public String getInboxRecipient() { return inboxRecipient; }
+    public void setInboxRecipient(String inboxRecipient) { this.inboxRecipient = inboxRecipient; }
 
     public String getPatientRef() { return patientRef; }
     public void setPatientRef(String patientRef) { this.patientRef = patientRef; }
