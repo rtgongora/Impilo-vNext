@@ -11,6 +11,8 @@ public interface CourseRepository extends JpaRepository<CourseEntity, UUID> {
 
     Optional<CourseEntity> findByTenantIdAndCode(UUID tenantId, String code);
 
+    List<CourseEntity> findByTenantId(UUID tenantId, Pageable pageable);
+
     List<CourseEntity> findByTenantIdAndStatus(UUID tenantId, String status, Pageable pageable);
 
     List<CourseEntity> findByTenantIdAndStatusAndCategory(

@@ -13,7 +13,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/impilo_learning
     username: ${POSTGRES_USER:impilo}
-    password: ${POSTGRES_PASSWORD:impilo}
+    password: ${POSTGRES_PASSWORD:changeme}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

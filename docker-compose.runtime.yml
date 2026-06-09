@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-impilo}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./scripts/seed/01-init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql
@@ -41,11 +41,25 @@ services:
       timeout: 3s
       retries: 10
 
+  postgres-db-ensure:
+    image: postgres:16-alpine
+    restart: "no"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGHOST: postgres
+    volumes:
+      - ./scripts/seed/ensure-databases.sh:/ensure-databases.sh:ro
+    entrypoint: ["/bin/sh", "/ensure-databases.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   # ── Redis 7 ────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6390:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -304,7 +318,7 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8083:8083"
+      - "8093:8083"
     depends_on:
       postgres:
         condition: service_healthy
@@ -338,7 +352,7 @@ services:
       SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration
     mem_limit: 768m
     ports:
-      - "8084:8084"
+      - "8094:8084"
     depends_on:
       postgres:
         condition: service_healthy
@@ -574,6 +588,38 @@ services:
       retries: 20
       start_period: 40s
 
+  # ── Learning Service — Impilo Fundo backend (port 8235) ─────────────
+  fundo:
+    build:
+      context: ./services/learning-service
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-impilo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/impilo_learning
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-impilo}
+      SERVER_PORT: 8235
+      LEARNING_SECURITY_OAUTH2_ENABLED: "false"
+      LEARNING_OUTBOX_PUBLISHER_ENABLED: ${LEARNING_OUTBOX_PUBLISHER_ENABLED:-false}
+    mem_limit: 1024m
+    ports:
+      - "8235:8235"
+    depends_on:
+      postgres-db-ensure:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8235/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+
   # ===========================================================================
   # EXPERIENCE LAYER
   # ===========================================================================
@@ -622,6 +668,7 @@ services:
       ORTHANC_DICOMWEB_URL: http://orthanc:8042/dicom-web
       GUIDANCE_BASE_URL: http://guidance:8260
       CLINICAL_KNOWLEDGE_PLATFORM_BASE_URL: http://clinical-knowledge-platform:8270
+      LEARNING_SERVICE_BASE_URL: http://fundo:8235
     mem_limit: 768m
     ports:
       - "8160:8160"
@@ -629,6 +676,8 @@ services:
       postgres:
         condition: service_healthy
       kafka:
+        condition: service_healthy
+      fundo:
         condition: service_healthy
       clinical-knowledge-platform:
         condition: service_healthy
