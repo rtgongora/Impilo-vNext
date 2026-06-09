@@ -79,11 +79,14 @@ cmd_up() {
     log_info "Waiting for infrastructure readiness..."
     docker compose -f "$RUNTIME_COMPOSE" up -d --wait postgres redis kafka
 
+    log_info "Reconciling databases for the current Postgres volume..."
+    docker compose -f "$RUNTIME_COMPOSE" up --force-recreate --no-deps postgres-db-ensure
+
     log_info "Starting edge (OPA + Envoy)..."
     docker compose -f "$RUNTIME_COMPOSE" up -d opa envoy
 
     log_info "Starting backend services..."
-    docker compose -f "$RUNTIME_COMPOSE" up -d tshepo vito varapi tuso zibo pct oros experience-bff
+    docker compose -f "$RUNTIME_COMPOSE" up -d tshepo vito varapi tuso zibo pct oros learning-service experience-bff
 
     log_info "Starting UI..."
     docker compose -f "$RUNTIME_COMPOSE" up -d one-ui-shell
