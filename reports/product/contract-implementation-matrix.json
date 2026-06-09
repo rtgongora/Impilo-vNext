@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-09T03:43:15.394Z",
+  "generatedAt": "2026-06-09T05:47:03.885Z",
   "counts": {
     "totalOpenApiOperations": 4452,
     "totalAsyncChannels": 84,
@@ -7,8 +7,8 @@
     "partial": 0,
     "missing": 0,
     "unownedContract": 0,
-    "orphanHandlers": 2,
-    "violations": 2,
+    "orphanHandlers": 3,
+    "violations": 3,
     "contractParseErrors": 0
   },
   "openApiOperations": [
@@ -6652,7 +6652,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SchedulingController.java",
       "stubPattern": null
     },
     {
@@ -7978,7 +7978,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommsApprovalController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AppointmentCommsController.java",
       "stubPattern": null
     },
     {
@@ -11436,7 +11436,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommsApprovalController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AppointmentCommsController.java",
       "stubPattern": null
     },
     {
@@ -16896,7 +16896,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommsApprovalController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AppointmentCommsController.java",
       "stubPattern": null
     },
     {
@@ -17117,7 +17117,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommsApprovalController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/AppointmentCommsController.java",
       "stubPattern": null
     },
     {
@@ -20081,7 +20081,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DataPipelineController.java",
       "stubPattern": null
     },
     {
@@ -22278,7 +22278,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/TeleconsultController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SchedulingController.java",
       "stubPattern": null
     },
     {
@@ -22603,7 +22603,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VarapiBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
       "stubPattern": null
     },
     {
@@ -22733,7 +22733,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VarapiBiometricBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/PublicHealthController.java",
       "stubPattern": null
     },
     {
@@ -24046,7 +24046,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileMessagingController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/SchedulingController.java",
       "stubPattern": null
     },
     {
@@ -59010,6 +59010,14 @@
     }
   ],
   "orphanHandlers": [
+    {
+      "module": "data-governance-service",
+      "method": "GET",
+      "path": "/internal/v1/governance/decision-audit",
+      "handler": "services/data-governance-service/src/main/java/zw/gov/mohcc/impilo/datagovernance/api/GovernanceController.java",
+      "implStatus": "contract-gap",
+      "remediation": "add OpenAPI operation — complete contract; do not delete handler"
+    },
     {
       "module": "ndila-service",
       "method": "GET",

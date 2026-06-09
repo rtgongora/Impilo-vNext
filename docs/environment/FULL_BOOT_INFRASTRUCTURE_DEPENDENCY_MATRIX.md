@@ -1,6 +1,6 @@
 # Full Boot Infrastructure Dependency Matrix
 
-Generated: 2026-06-09T03:43:17.452941+00:00
+Generated: 2026-06-09T05:47:05.984210+00:00
 
 Target namespace: **impilo-full-preview**
 

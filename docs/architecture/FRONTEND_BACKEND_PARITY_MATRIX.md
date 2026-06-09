@@ -1,6 +1,6 @@
 # Frontend ↔ backend parity matrix
 
-> Generated: 2026-06-07. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-09. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 | capability | endpoint | webRoute | webClient | realData | mockRisk | parity | priority | remediation | gate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -8,15 +8,16 @@
 | VITO: Client search, register, profile, Health ID | /internal/v1/identity/*, /internal/v1/registry/* | /id-services, /registry/* | useIdentity.ts, useClientRegistry.ts | partial | no | partial | HIGH | Registry hub depth + mobile health-id parity | advisory |
 | VARAPI: Provider registry, licenses, privileges, CPD | /internal/v1/registry/* | /registry/providers/* | useRegistry.ts, useLicenses.ts, useCpd.ts | partial | no | partial | HIGH | Verification workflow screens | advisory |
 | TUSO: Facility/workspace registry, bookings | /internal/v1/facilities, /internal/v1/registry/* | /facility/*, /registry/facilities/* | useFacilities.ts, useTusoRegistry.ts | partial | no | partial | HIGH | Facility operating model detail pages | advisory |
-| Indawo: Public health site registry | /internal/v1/public-health/site-registry/* | /public-health/* | usePublicHealth.ts, useSiteRegistry.ts | partial | no | partial | MEDIUM | Ndila map panel on site registry | advisory |
+| Indawo: Public health site registry + geo capture | /internal/v1/public-health/site-registry/* | /public-health/site-registry/* | useSiteRegistry.ts, SiteRegistryGeoMapPanel, NdilaLocationPicker | yes | no | complete | MEDIUM | Provider mobile site location capture | existing |
 | BUTANO: SHR summary, timeline, allergies, conditions | /internal/v1/summary/*, /internal/v1/timeline | /ehr/[patientId]/* | useSummary.ts, useTimeline.ts | yes | no | complete | MEDIUM | Wire citizen personal sections to BFF | existing |
 | Core Transaction: Transaction composition, journey steppers | /internal/v1/core-transactions/* | /core-transaction | useCoreTransactionExperience.ts | partial | no | partial | HIGH | Deepen command/handoff wiring | advisory |
-| Public Health Ops: Inspections, outbreaks, campaigns, intelligence | /internal/v1/public-health/* | /public-health/* | usePublicHealth.ts, useSurveillance.ts | partial | no | partial | HIGH | Provider field tasks parity | advisory |
-| Ndila: Geocode, routes, intelligence layers | /api/v1/ndila/* | NdilaIntelligencePanel | lib/ndila/ndila-client.ts | partial | no | partial | MEDIUM | Reusable map component rollout | advisory |
+| Public Health Ops: Surveillance, investigations, campaigns, intelligence, field ops | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | /public-health/* | usePublicHealth.ts, useSurveillance.ts, useCampaigns.ts | yes | no | complete | HIGH | Citizen outbreak/alert depth on mobile | existing |
+| Ndila: Geocode, routes, PH/site ops maps | /api/v1/ndila/* | NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel | lib/ndila/ndila-client.ts, NdilaMapLibre | yes | no | complete | MEDIUM | Provider field map overlay | existing |
 | Nhume: Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | /nhume/*, /operations/dispatch | lib/nhume.ts, useDispatchOps.ts | partial | no | partial | HIGH | Unified operator UX + maturity labels | advisory |
 | Comms Hub: Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | /communication, /omnichannel | useOmnichannel.ts, useCommunication.ts | partial | no | partial | MEDIUM | Comms dashboard actionable tasks | advisory |
 | Telemedicine: Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | /telemedicine/* | useTelemedicine.ts | partial | no | partial | HIGH | Label Blocked for RTC; live scheduling/records | advisory |
-| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | /telemedicine/analytics | useTelemedicineAnalytics.ts | partial | no | partial | MEDIUM | BFF proxy + web SLA dashboard | advisory |
+| Telemedicine analytics: Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | /telemedicine/analytics | useTelemedicineAnalytics.ts | yes | no | complete | MEDIUM | Provider telemedicine SLA strip | existing |
+| Data Pipeline & NDR: Pipeline watermarks, warehouse gold, national dataset catalog | /internal/v1/pipeline/*, /internal/v1/warehouse/*, /internal/v1/ndr-catalog/* | /data-intelligence/pipelines | useDataPipelineWatermarks.ts, useWarehouse.ts, NdrWarehouseQueryPanel | yes | no | complete | HIGH | Provider governance summary strip | existing |
 | Break-glass (provider request): Emergency access override request from clinical/emergency shells | POST /internal/v1/trust/break-glass | /clinical/emergency, /ehr/[patientId]/emergency | useTrustBreakGlass.ts, BreakGlassRequestPanel.tsx | partial | no | partial | HIGH | Provider break-glass panel on ED + EHR emergency views | advisory |
 | Msika / Msika Flow: Catalog, orders, marketplace | /internal/v1/marketplace/*, /internal/v1/commerce/* | /marketplace/* | useMarketplace.ts, useCommerceFlow.ts | partial | no | partial | MEDIUM | Honest blocked states on list routes | advisory |
 | MusheX / COSTA: Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | /finance/*, /wallet | useMusheWallet.ts, useFinanceBillingWorkspace.ts | partial | no | partial | HIGH | Finance journey mobile parity | advisory |

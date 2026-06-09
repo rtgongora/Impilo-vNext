@@ -1,6 +1,6 @@
 # Backend capability inventory
 
-> Generated: 2026-06-07. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
+> Generated: 2026-06-09. Regenerate: `node scripts/architecture/generate-parity-inventories.mjs`
 
 Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../frontend/BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md)
 
@@ -10,15 +10,16 @@ Canonical matrix: [BACKEND_CAPABILITY_TO_FRONTEND_SURFACING_MATRIX.md](../fronte
 | VITO | Registry | /internal/v1/identity/*, /internal/v1/registry/* | Client search, register, profile, Health ID | /internal/v1/identity/*, /internal/v1/registry/* | yes | /id-services, /registry/* | yes | partially surfaced |
 | VARAPI | Registry | /internal/v1/registry/* | Provider registry, licenses, privileges, CPD | /internal/v1/registry/* | yes | /registry/providers/* | yes | partially surfaced |
 | TUSO | Registry | /internal/v1/facilities, /internal/v1/registry/* | Facility/workspace registry, bookings | /internal/v1/facilities, /internal/v1/registry/* | yes | /facility/*, /registry/facilities/* | yes | partially surfaced |
-| Indawo | Registry | /internal/v1/public-health/site-registry/* | Public health site registry | /internal/v1/public-health/site-registry/* | yes | /public-health/* | yes | partially surfaced |
+| Indawo | Registry | /internal/v1/public-health/site-registry/* | Public health site registry + geo capture | /internal/v1/public-health/site-registry/* | yes | /public-health/site-registry/* | yes | fully surfaced |
 | BUTANO | Clinical | /internal/v1/summary/*, /internal/v1/timeline | SHR summary, timeline, allergies, conditions | /internal/v1/summary/*, /internal/v1/timeline | yes | /ehr/[patientId]/* | yes | fully surfaced |
 | Core Transaction | Clinical | /internal/v1/core-transactions/* | Transaction composition, journey steppers | /internal/v1/core-transactions/* | yes | /core-transaction | yes | partially surfaced |
-| Public Health Ops | Data & Intelligence | /internal/v1/public-health/* | Inspections, outbreaks, campaigns, intelligence | /internal/v1/public-health/* | yes | /public-health/* | yes | partially surfaced |
-| Ndila | Integration & Edge | /api/v1/ndila/* | Geocode, routes, intelligence layers | /api/v1/ndila/* | yes | NdilaIntelligencePanel | yes | partially surfaced |
+| Public Health Ops | Data & Intelligence | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | Surveillance, investigations, campaigns, intelligence, field ops | /internal/v1/public-health/*, /internal/v1/mobile/provider/public-health/* | yes | /public-health/* | yes | fully surfaced |
+| Ndila | Integration & Edge | /api/v1/ndila/* | Geocode, routes, PH/site ops maps | /api/v1/ndila/* | yes | NdilaPublicHealthRiskMap, SiteRegistryGeoMapPanel | yes | fully surfaced |
 | Nhume | Enterprise | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | Dispatch, delivery, fleet tracking | /api/v1/nhume/*, /internal/v1/mobile/*/nhume/* | yes | /nhume/*, /operations/dispatch | yes | partially surfaced |
 | Comms Hub | Experience | /internal/v1/omnichannel/*, /internal/v1/communication/* | Omnichannel, messaging, notifications | /internal/v1/omnichannel/*, /internal/v1/communication/* | yes | /communication, /omnichannel | yes | partially surfaced |
 | Telemedicine | Clinical | /internal/v1/teleconsult/* | Teleconsult sessions, scheduling | /internal/v1/teleconsult/* | yes | /telemedicine/* | yes | partially surfaced |
 | Telemedicine analytics | Data | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | Telemedicine lifecycle SLA aggregates + event ingest | /internal/v1/telemedicine/sla, /internal/v1/telemedicine/events | yes | /telemedicine/analytics | yes | fully surfaced |
+| Data Pipeline & NDR | Data | /internal/v1/pipeline/*, /internal/v1/warehouse/*, /internal/v1/ndr-catalog/* | Pipeline watermarks, warehouse gold, national dataset catalog | /internal/v1/pipeline/*, /internal/v1/warehouse/*, /internal/v1/ndr-catalog/* | yes | /data-intelligence/pipelines | yes | fully surfaced |
 | Break-glass (provider request) | Trust | POST /internal/v1/trust/break-glass | Emergency access override request from clinical/emergency shells | POST /internal/v1/trust/break-glass | yes | /clinical/emergency, /ehr/[patientId]/emergency | yes | fully surfaced |
 | Msika / Msika Flow | Enterprise | /internal/v1/marketplace/*, /internal/v1/commerce/* | Catalog, orders, marketplace | /internal/v1/marketplace/*, /internal/v1/commerce/* | yes | /marketplace/* | yes | partially surfaced |
 | MusheX / COSTA | Enterprise | /internal/v1/finance/*, /internal/v1/wallet/* | Payments, claims, billing, tariffs | /internal/v1/finance/*, /internal/v1/wallet/* | yes | /finance/*, /wallet | yes | partially surfaced |
