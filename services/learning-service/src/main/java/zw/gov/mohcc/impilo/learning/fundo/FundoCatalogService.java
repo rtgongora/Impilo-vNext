@@ -35,7 +35,9 @@ public class FundoCatalogService {
         PageRequest page = PageRequest.of(0, cap);
 
         List<CourseEntity> rows;
-        if (filter.category() != null) {
+        if ("ALL".equalsIgnoreCase(status)) {
+            rows = courseRepository.findByTenantId(tenantId, page);
+        } else if (filter.category() != null) {
             rows = courseRepository.findByTenantIdAndStatusAndCategory(tenantId, status, filter.category(), page);
         } else if (filter.level() != null) {
             rows = courseRepository.findByTenantIdAndStatusAndLevel(tenantId, status, filter.level(), page);

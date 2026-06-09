@@ -156,6 +156,13 @@ public class LearningController {
         return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode())));
     }
 
+    @GetMapping("/v11/metadata/languages")
+    public ResponseEntity<Map<String, Object>> languageMetadata(
+            @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId) {
+        JsonNode n = learningClient.getV11("metadata/languages", Map.of());
+        return ResponseEntity.ok(Map.of("data", n != null ? n : emptyItems()));
+    }
+
     @GetMapping("/v11/pathways/{pathwayId}")
     public ResponseEntity<Map<String, Object>> pathway(
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
@@ -410,7 +417,10 @@ public class LearningController {
             @RequestHeader(CompanionHeaders.TENANT_ID) String tenantId,
             @RequestBody Map<String, Object> body) {
         JsonNode n = learningClient.postV11("catalog", body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        if (n == null) {
+            return upstreamUnavailable("LEARNING_COURSE_CREATE_FAILED", "Learning service did not create the course");
+        }
+        return ResponseEntity.ok(Map.of("data", n));
     }
 
     @PutMapping("/v11/catalog/{courseId}")
@@ -419,7 +429,10 @@ public class LearningController {
             @PathVariable String courseId,
             @RequestBody Map<String, Object> body) {
         JsonNode n = learningClient.putV11("catalog/" + courseId, body);
-        return ResponseEntity.ok(Map.of("data", n != null ? n : JsonNodeFactory.instance.objectNode()));
+        if (n == null) {
+            return upstreamUnavailable("LEARNING_COURSE_UPDATE_FAILED", "Learning service did not update the course");
+        }
+        return ResponseEntity.ok(Map.of("data", n));
     }
 
     @PostMapping("/v11/courses/{courseId}/modules")
@@ -539,5 +552,15 @@ public class LearningController {
             }
         }
         return out;
+    }
+
+    private static JsonNode emptyItems() {
+        return JsonNodeFactory.instance.objectNode().set("items", JsonNodeFactory.instance.arrayNode());
+    }
+
+    private static ResponseEntity<Map<String, Object>> upstreamUnavailable(String code, String message) {
+        return ResponseEntity.status(502).body(Map.of("error", Map.of(
+                "code", code,
+                "message", message)));
     }
 }
