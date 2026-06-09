@@ -10,7 +10,7 @@ import { LearningOverlayForm } from "@/components/learning/LearningOverlayForm";
 import { useCreateFundoCourse } from "@/hooks/queries/useFundoLms";
 
 export default function AdminCoursesPage() {
-  const { data, refetch } = useFundoCatalog({ limit: 100 });
+  const { data, refetch } = useFundoCatalog({ status: "ALL", limit: 100 });
   const createCourse = useCreateFundoCourse();
   const [formOpen, setFormOpen] = useState(false);
   const [createdCourseId, setCreatedCourseId] = useState("");
