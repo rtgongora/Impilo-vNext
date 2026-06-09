@@ -11,12 +11,13 @@ export default function AttemptResultPage() {
   const { data } = useFundoAttempt(attemptId);
   const attempt = ((data?.data as Record<string, unknown>)?.attempt ?? {}) as Record<string, unknown>;
   const pendingManualReview = String(attempt.passed ?? "").length === 0 || attempt.passed === null;
+  const attemptLabel = attempt.attemptNo ? `Attempt ${String(attempt.attemptNo)}` : "Assessment attempt";
 
   return (
     <AppLayout>
       <PageShell title="Attempt result" subtitle="Score and pass/fail outcome for submitted native assessment attempt.">
         <div className="rounded border border-gray-200 bg-white p-4 text-sm">
-          <p>Attempt: {String(attempt.id ?? attemptId)}</p>
+          <p>{attemptLabel}</p>
           <p>Score: {String(attempt.score ?? "PENDING")}</p>
           <p>Passed: {String(attempt.passed ?? "PENDING_MANUAL")}</p>
           <p>Submitted: {String(attempt.submittedAt ?? "-")}</p>

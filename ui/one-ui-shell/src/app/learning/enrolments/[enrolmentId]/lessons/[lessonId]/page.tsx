@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AppLayout } from "@/components/AppLayout";
@@ -49,11 +50,13 @@ export default function LessonPlayerPage() {
   const params = useParams<{ enrolmentId: string; lessonId: string }>();
   const enrolmentId = params?.enrolmentId;
   const lessonId = params?.lessonId;
-  const { data: enrolData } = useFundoEnrolment(enrolmentId);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const { data: enrolData, refetch: refetchEnrolment } = useFundoEnrolment(enrolmentId);
   const enrolment = ((enrolData?.data as AnyRecord)?.enrolment ?? {}) as AnyRecord;
   const courseId = String(enrolment.courseId ?? "");
   const { data: structureData } = useFundoCourseStructure(courseId || undefined);
-  const { data: progressData } = useFundoEnrolmentProgress(enrolmentId);
+  const { data: progressData, refetch: refetchProgress } = useFundoEnrolmentProgress(enrolmentId);
   const openMutation = useOpenFundoLesson();
   const progressMutation = useRecordFundoProgress();
   const structure = ((structureData?.data as AnyRecord)?.structure ?? {}) as AnyRecord;
@@ -66,57 +69,109 @@ export default function LessonPlayerPage() {
   const progressItems = (((progressData?.data as AnyRecord)?.items as AnyRecord[]) ?? []).filter(Boolean);
   const currentProgress = progressItems.find((p) => String(p.lessonId ?? "") === String(lessonId));
   const currentPercent = Number(currentProgress?.progressPercent ?? 0);
+  const courseTitle = String(structure.title ?? enrolment.courseTitle ?? "Course");
+  const mutationError = openMutation.error ?? progressMutation.error;
+
+  function readableError(err: unknown) {
+    if (err && typeof err === "object" && "message" in err) return String((err as { message?: unknown }).message);
+    return "The learning service did not accept the update. Please try again.";
+  }
+
+  function openLesson() {
+    if (!lessonId || !enrolmentId) return;
+    setMessage("");
+    setError("");
+    openMutation.mutate(
+      { lessonId, enrolmentId },
+      {
+        onSuccess: () => {
+          setMessage("Lesson opened and progress refreshed.");
+          void refetchProgress();
+          void refetchEnrolment();
+        },
+        onError: (err) => setError(readableError(err)),
+      },
+    );
+  }
+
+  function markComplete() {
+    if (!lessonId || !enrolmentId) return;
+    setMessage("");
+    setError("");
+    progressMutation.mutate(
+      { enrolmentId, lessonId, progressPercent: 100 },
+      {
+        onSuccess: () => {
+          setMessage("Lesson marked complete.");
+          void refetchProgress();
+          void refetchEnrolment();
+        },
+        onError: (err) => setError(readableError(err)),
+      },
+    );
+  }
 
   return (
     <AppLayout>
-      <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle="Text/document/video/practical task rendering with completion controls.">
-        <div className="rounded border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-600">Lesson ID: {lessonId}</p>
-          <p className="mt-2 text-xs text-gray-500">Current progress: {currentPercent}%</p>
-          <div className="mt-3 rounded border border-gray-100 bg-gray-50 p-3">
-            {renderLessonBody(currentLesson)}
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              onClick={() => lessonId && enrolmentId && openMutation.mutate({ lessonId, enrolmentId })}
-              className="rounded bg-teal-700 px-3 py-1.5 text-sm text-white"
-            >
-              Open lesson
-            </button>
-            <button
-              onClick={() =>
-                enrolmentId &&
-                lessonId &&
-                progressMutation.mutate({ enrolmentId, lessonId, progressPercent: 100 })
-              }
-              className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700"
-            >
-              Mark complete
-            </button>
-          </div>
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <div>
-              {previousLesson ? (
-                <Link href={`/learning/enrolments/${enrolmentId}/lessons/${previousLesson.id}`} className="text-teal-700 hover:underline">
-                  Previous lesson
-                </Link>
-              ) : (
-                <span className="text-gray-400">Previous lesson</span>
-              )}
+      <PageShell title={String(currentLesson.title ?? "Lesson player")} subtitle={courseTitle}>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <article className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+              {renderLessonBody(currentLesson)}
             </div>
-            <Link href={`/learning/enrolments/${enrolmentId}`} className="text-gray-600 hover:underline">
-              Back to course player
-            </Link>
-            <div>
-              {nextLesson ? (
-                <Link href={`/learning/enrolments/${enrolmentId}/lessons/${nextLesson.id}`} className="text-teal-700 hover:underline">
-                  Next lesson
+          </article>
+
+          <aside className="space-y-3">
+            <section className="rounded-lg border border-gray-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-normal text-gray-500">Progress</p>
+              <p className="mt-2 text-2xl font-semibold text-gray-900">{currentPercent}%</p>
+              <div className="mt-3 h-2 rounded bg-gray-200">
+                <div className="h-2 rounded bg-teal-600" style={{ width: `${Math.max(0, Math.min(100, currentPercent))}%` }} />
+              </div>
+              <div className="mt-4 grid gap-2">
+                <button
+                  type="button"
+                  onClick={openLesson}
+                  disabled={!lessonId || !enrolmentId || openMutation.isPending}
+                  className="rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {openMutation.isPending ? "Opening..." : "Open lesson"}
+                </button>
+                <button
+                  type="button"
+                  onClick={markComplete}
+                  disabled={!lessonId || !enrolmentId || progressMutation.isPending || currentPercent >= 100}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {progressMutation.isPending ? "Saving..." : currentPercent >= 100 ? "Completed" : "Mark complete"}
+                </button>
+              </div>
+              {message ? <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">{message}</p> : null}
+              {error || mutationError ? <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error || readableError(mutationError)}</p> : null}
+            </section>
+
+            <section className="rounded-lg border border-gray-200 bg-white p-4 text-sm">
+              <div className="grid gap-2">
+                {previousLesson ? (
+                  <Link href={`/learning/enrolments/${enrolmentId}/lessons/${previousLesson.id}`} className="rounded-lg border border-gray-200 px-3 py-2 text-gray-700 hover:bg-gray-50">
+                    Previous lesson
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-gray-100 px-3 py-2 text-gray-400">Previous lesson</span>
+                )}
+                {nextLesson ? (
+                  <Link href={`/learning/enrolments/${enrolmentId}/lessons/${nextLesson.id}`} className="rounded-lg border border-teal-200 px-3 py-2 text-teal-700 hover:bg-teal-50">
+                    Next lesson
+                  </Link>
+                ) : (
+                  <span className="rounded-lg border border-gray-100 px-3 py-2 text-gray-400">Next lesson</span>
+                )}
+                <Link href={`/learning/enrolments/${enrolmentId}`} className="rounded-lg border border-gray-200 px-3 py-2 text-gray-700 hover:bg-gray-50">
+                  Back to course player
                 </Link>
-              ) : (
-                <span className="text-gray-400">Next lesson</span>
-              )}
-            </div>
-          </div>
+              </div>
+            </section>
+          </aside>
         </div>
       </PageShell>
     </AppLayout>

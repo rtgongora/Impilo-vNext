@@ -30,7 +30,7 @@ public class FundoCatalogService {
             UUID tenantId,
             CatalogueFilter filter,
             int limit) {
-        int cap = Math.min(Math.max(limit, 1), 100);
+        int cap = Math.min(Math.max(limit, 1), 500);
         String status = filter.status() != null ? filter.status() : "PUBLISHED";
         PageRequest page = PageRequest.of(0, cap);
 

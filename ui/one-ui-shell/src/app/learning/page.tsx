@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
-  Award,
   BadgeCheck,
   BookOpen,
   ChevronDown,
@@ -17,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { LearningDataTable, type LearningTableColumn, type LearningTableFilter } from "@/components/learning/LearningDataTable";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoCatalog, type FundoCourseSummary } from "@/hooks/queries/useFundoCatalog";
 import { useFundoMyLearning, useFundoPathways, useFundoReportsOverview } from "@/hooks/queries/useFundoLms";
@@ -33,6 +33,15 @@ interface WorkArea {
   Icon: LucideIcon;
   count: number;
   loading?: boolean;
+}
+
+interface ActionRow {
+  id: string;
+  title: string;
+  detail: string;
+  value: string | number;
+  href: string;
+  Icon: LucideIcon;
 }
 
 function listOf(value: unknown): FundoRow[] {
@@ -52,6 +61,10 @@ function courseTitle(row: FundoRow) {
   return text(row.courseTitle ?? row.title ?? row.courseCode ?? row.code, "Learning item");
 }
 
+function rowText(row: FundoRow, key: string, fallback = "-") {
+  return text(row[key], fallback);
+}
+
 function dateLabel(value: unknown) {
   const raw = text(value, "");
   if (!raw) return null;
@@ -59,8 +72,8 @@ function dateLabel(value: unknown) {
   return Number.isNaN(date.getTime()) ? raw : date.toLocaleDateString();
 }
 
-function focusHref(key: FocusKey) {
-  return `/learning?focus=${key}`;
+function cardHref(key: FocusKey) {
+  return `/learning?area=${key}`;
 }
 
 function shellLinkClass(primary = false) {
@@ -69,105 +82,183 @@ function shellLinkClass(primary = false) {
     : "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50";
 }
 
-function LearningList({ items, emptyText }: { items: FundoRow[]; emptyText: string }) {
-  if (items.length === 0) {
-    return <p className="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">{emptyText}</p>;
-  }
+function LearningList({ items, emptyText, searchable = true }: { items: FundoRow[]; emptyText: string; searchable?: boolean }) {
+  const columns: Array<LearningTableColumn<FundoRow>> = [
+    {
+      key: "title",
+      label: "Learning item",
+      render: (row) => <span className="font-medium text-gray-900">{courseTitle(row)}</span>,
+      searchText: courseTitle,
+    },
+    { key: "status", label: "Status", render: (row) => rowText(row, "status", "ACTIVE").replace(/_/g, " ") },
+    { key: "dueAt", label: "Due", render: (row) => dateLabel(row.dueAt) ?? "-" },
+    {
+      key: "cpd",
+      label: "CPD",
+      render: (row) => (row.cpdEligible ? `Yes ${String(row.cpdPoints ?? "")}` : "-"),
+      searchText: (row) => (row.cpdEligible ? "cpd eligible" : "not cpd"),
+    },
+  ];
 
   return (
-    <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
-      {items.map((item, index) => {
-        const id = text(item.id, "");
-        const status = text(item.status, "ACTIVE").replace(/_/g, " ");
-        const dueAt = dateLabel(item.dueAt);
-        return (
-          <li key={id || `${courseTitle(item)}-${index}`} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="font-medium text-gray-900">{courseTitle(item)}</p>
-              <div className="mt-1 flex flex-wrap gap-2 text-xs text-gray-500">
-                <span>{status}</span>
-                {dueAt ? <span>Due {dueAt}</span> : null}
-                {item.cpdEligible ? <span>CPD {String(item.cpdPoints ?? "")}</span> : null}
-              </div>
-            </div>
-            {id ? (
-              <Link href={`/learning/enrolments/${id}`} className="inline-flex items-center gap-1 text-sm font-medium text-impilo-700 hover:underline">
-                Open <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : null}
-          </li>
-        );
-      })}
-    </ul>
+    <LearningDataTable
+      rows={items}
+      columns={columns}
+      emptyText={emptyText}
+      searchPlaceholder={searchable ? "Search learning items" : undefined}
+      getRowKey={(row, index) => text(row.id, "") || `${courseTitle(row)}-${index}`}
+      getRowHref={(row) => {
+        const id = text(row.id, "");
+        return id ? `/learning/enrolments/${id}` : undefined;
+      }}
+      dense
+    />
   );
 }
 
-function CatalogueGrid({ items }: { items: Array<FundoRow | FundoCourseSummary> }) {
-  if (items.length === 0) {
-    return <p className="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">No published catalogue items are available yet.</p>;
-  }
+function CatalogueGrid({ items, searchable = true }: { items: Array<FundoRow | FundoCourseSummary>; searchable?: boolean }) {
+  const rows = items.map((item) => item as FundoRow);
+  const columns: Array<LearningTableColumn<FundoRow>> = [
+    {
+      key: "title",
+      label: "Course",
+      render: (row) => <span className="font-medium text-gray-900">{rowText(row, "title", "Course")}</span>,
+      searchText: (row) => `${rowText(row, "title", "")} ${rowText(row, "description", "")}`,
+    },
+    { key: "code", label: "Code", render: (row) => <span className="font-mono text-xs">{rowText(row, "code", "FUNDO")}</span> },
+    { key: "category", label: "Category", render: (row) => rowText(row, "category") },
+    { key: "level", label: "Level", render: (row) => rowText(row, "level") },
+    { key: "status", label: "Status", render: (row) => rowText(row, "status", "PUBLISHED") },
+    { key: "language", label: "Language", render: (row) => rowText(row, "language", "en") },
+    { key: "duration", label: "Duration", render: (row) => minutesLabel(row.estimatedDurationMinutes) ?? "-" },
+    { key: "cpd", label: "CPD", render: (row) => (row.cpdEligible ? `Yes ${String(row.cpdPoints ?? "")}` : "-") },
+  ];
+  const filters: Array<LearningTableFilter<FundoRow>> = [
+    {
+      key: "status",
+      label: "Status",
+      valueFor: (row) => rowText(row, "status", "PUBLISHED"),
+      options: ["DRAFT", "PUBLISHED", "ARCHIVED"].map((value) => ({ label: value, value })),
+    },
+    {
+      key: "category",
+      label: "Category",
+      valueFor: (row) => rowText(row, "category", ""),
+      options: Array.from(new Set(rows.map((row) => rowText(row, "category", "")).filter(Boolean))).map((value) => ({ label: value, value })),
+    },
+    {
+      key: "level",
+      label: "Level",
+      valueFor: (row) => rowText(row, "level", ""),
+      options: Array.from(new Set(rows.map((row) => rowText(row, "level", "")).filter(Boolean))).map((value) => ({ label: value, value })),
+    },
+  ];
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {items.map((course) => {
-        const id = String(course.id ?? "");
+    <LearningDataTable
+      rows={rows}
+      columns={columns}
+      filters={searchable ? filters : []}
+      emptyText="No catalogue items match this view."
+      searchPlaceholder={searchable ? "Search courses, codes or descriptions" : undefined}
+      getRowKey={(row, index) => rowText(row, "id", "") || `${rowText(row, "title", "course")}-${index}`}
+      getRowHref={(row) => {
+        const id = rowText(row, "id", "");
+        return id ? `/learning/courses/${id}` : undefined;
+      }}
+      actionLabel="Open"
+      dense
+    />
+  );
+}
+
+function PathwayList({ items, searchable = true }: { items: FundoRow[]; searchable?: boolean }) {
+  const columns: Array<LearningTableColumn<FundoRow>> = [
+    {
+      key: "title",
+      label: "Pathway",
+      render: (row) => <span className="font-medium text-gray-900">{text(row.title ?? row.code, "Pathway")}</span>,
+      searchText: (row) => `${text(row.title, "")} ${text(row.code, "")} ${text(row.description, "")}`,
+    },
+    { key: "code", label: "Code", render: (row) => rowText(row, "code") },
+    { key: "status", label: "Status", render: (row) => rowText(row, "status", "PUBLISHED") },
+    { key: "targetRoles", label: "Roles", render: (row) => rowText(row, "targetRoles") },
+  ];
+
+  return (
+    <LearningDataTable
+      rows={items}
+      columns={columns}
+      filters={
+        searchable
+          ? [
+              {
+                key: "status",
+                label: "Status",
+                valueFor: (row) => rowText(row, "status", "PUBLISHED"),
+                options: ["DRAFT", "PUBLISHED", "ARCHIVED"].map((value) => ({ label: value, value })),
+              },
+            ]
+          : []
+      }
+      emptyText="No pathways are assigned or published yet."
+      searchPlaceholder={searchable ? "Search pathways" : undefined}
+      getRowKey={(row, index) => rowText(row, "id", "") || `pathway-${index}`}
+      getRowHref={(row) => {
+        const id = rowText(row, "id", "");
+        return id ? `/learning/pathways/${id}` : undefined;
+      }}
+      dense
+    />
+  );
+}
+
+function ActionButtonGrid({ rows, emptyText }: { rows: ActionRow[]; emptyText: string }) {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {rows.map((row) => {
+        const Icon = row.Icon;
         return (
           <Link
-            key={id || String(course.title)}
-            href={id ? `/learning/courses/${id}` : "/learning/catalog"}
-            className="rounded-lg border border-gray-200 bg-white p-4 transition hover:border-impilo-200 hover:bg-impilo-50/30"
+            key={row.id}
+            href={row.href}
+            className="group rounded-lg border border-gray-200 bg-white p-4 transition hover:border-impilo-200 hover:bg-impilo-50/30 hover:shadow-sm"
           >
-            <Library className="h-5 w-5 text-impilo-600" />
-            <p className="mt-3 font-medium text-gray-900">{text(course.title, "Course")}</p>
-            <p className="mt-1 font-mono text-xs text-gray-500">{text(course.code, "FUNDO")}</p>
-            <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-500">
-              {course.category ? <span>{String(course.category)}</span> : null}
-              {minutesLabel(course.estimatedDurationMinutes) ? <span>{minutesLabel(course.estimatedDurationMinutes)}</span> : null}
-              {course.cpdEligible ? <span>CPD</span> : null}
+            <div className="flex items-start justify-between gap-3">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-impilo-50 text-impilo-700">
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
+                {row.value}
+              </span>
             </div>
+            <p className="mt-3 text-sm font-semibold text-gray-900">{row.title}</p>
+            <p className="mt-2 min-h-10 text-sm leading-5 text-gray-600">{row.detail}</p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-impilo-700 group-hover:underline">
+              Open <ArrowRight className="h-4 w-4" />
+            </span>
           </Link>
         );
       })}
+      {rows.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-200 bg-white p-5 text-sm text-gray-500">
+          {emptyText}
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function PathwayList({ items }: { items: FundoRow[] }) {
-  if (items.length === 0) {
-    return <p className="rounded-lg border border-dashed border-gray-200 p-4 text-sm text-gray-500">No pathways are assigned or published yet.</p>;
-  }
-
-  return (
-    <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white">
-      {items.map((pathway, index) => {
-        const id = text(pathway.id, "");
-        return (
-          <li key={id || index} className="px-4 py-3">
-            <div className="flex items-start gap-3">
-              <Layers className="mt-0.5 h-4 w-4 text-impilo-600" />
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-gray-900">{text(pathway.title ?? pathway.code, "Pathway")}</p>
-                <p className="mt-1 text-xs text-gray-500">{text(pathway.status, "PUBLISHED")}</p>
-              </div>
-              {id ? (
-                <Link href={`/learning/pathways/${id}`} className="text-sm font-medium text-impilo-700 hover:underline">
-                  Open
-                </Link>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function CollapsedGroup({ area, children, open = false }: { area: WorkArea; children: React.ReactNode; open?: boolean }) {
+function LearningAreaCard({ area }: { area: WorkArea }) {
   const Icon = area.Icon;
   return (
-    <details open={open} className="group rounded-lg border border-gray-200 bg-white">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4">
-        <span className="flex min-w-0 items-center gap-3">
+    <Link
+      href={cardHref(area.key)}
+      aria-label={`Open ${area.title}`}
+      className="group flex min-h-[112px] flex-col justify-between rounded-lg border border-gray-200 bg-white px-5 py-4 transition hover:border-impilo-200 hover:bg-impilo-50/30 hover:shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-impilo-50 text-impilo-700">
             <Icon className="h-4 w-4" />
           </span>
@@ -175,32 +266,96 @@ function CollapsedGroup({ area, children, open = false }: { area: WorkArea; chil
             <span className="block text-sm font-semibold text-gray-900">{area.title}</span>
             <span className="mt-1 block truncate text-xs text-gray-500">{area.summary}</span>
           </span>
-        </span>
+        </div>
         <span className="flex items-center gap-3">
           <span className="rounded-full border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-700">
             {area.loading ? "..." : area.count}
           </span>
-          <ChevronDown className="h-4 w-4 text-gray-500 transition group-open:rotate-180" />
+          <ChevronDown className="h-4 w-4 text-gray-500 transition group-hover:translate-y-0.5" />
         </span>
-      </summary>
-      <div className="border-t border-gray-100 p-5">
-        <div className="mb-4 flex justify-end">
-          <Link href={focusHref(area.key)} className="text-sm font-medium text-impilo-700 hover:underline">
-            Open focused view
-          </Link>
-        </div>
-        {children}
       </div>
-    </details>
+      <p className="mt-4 text-xs font-medium text-impilo-700">Expand card</p>
+    </Link>
+  );
+}
+
+function ExpandedCardDialog({
+  activeArea,
+  areas,
+  loading,
+  children,
+}: {
+  activeArea: WorkArea;
+  areas: WorkArea[];
+  loading?: boolean;
+  children: React.ReactNode;
+}) {
+  const Icon = activeArea.Icon;
+  return (
+    <div className="fixed inset-0 z-50 bg-gray-950/45 px-2 py-2 backdrop-blur-sm sm:px-3 sm:py-3">
+      <section className="mx-auto flex h-full w-full max-w-[min(98vw,1680px)] flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-2xl">
+        <div className="border-b border-gray-200 bg-white">
+          <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-impilo-50 text-impilo-700">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-normal text-impilo-700">Expanded card</p>
+                <h2 className="text-lg font-bold text-gray-900">{activeArea.title}</h2>
+                <p className="mt-1 text-sm text-gray-600">{activeArea.summary}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href={activeArea.href} className={shellLinkClass(true)}>
+                Open focused view <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/learning" className={shellLinkClass()}>
+                <X className="h-4 w-4" /> Close
+              </Link>
+            </div>
+          </div>
+          <div className="flex gap-2 overflow-x-auto border-t border-gray-100 bg-gray-50 px-4 py-2">
+            {areas.map((area) => {
+              const AreaIcon = area.Icon;
+              const active = area.key === activeArea.key;
+              return (
+                <Link
+                  key={area.key}
+                  href={cardHref(area.key)}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    active
+                      ? "inline-flex -translate-y-1 items-center gap-2 rounded-lg border border-impilo-600 bg-impilo-600 px-3 py-2 text-sm font-medium text-white shadow-sm transition"
+                      : "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:-translate-y-0.5 hover:bg-gray-50"
+                  }
+                >
+                  <AreaIcon className="h-4 w-4" />
+                  <span>{area.title}</span>
+                  <span className={active ? "text-impilo-100" : "text-gray-400"}>{area.loading ? "..." : area.count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto bg-gray-50 p-3 sm:p-4">
+          {loading ? <p className="mb-3 text-sm text-gray-500">Loading {activeArea.title.toLowerCase()}...</p> : null}
+          {children}
+        </div>
+      </section>
+    </div>
   );
 }
 
 export default function LearningHubPage() {
   const params = useSearchParams();
-  const focus = params.get("focus") as FocusKey | null;
+  const selectedArea = (params.get("area") ?? params.get("focus")) as FocusKey | null;
   const subject = useLearningSubject();
   const { data, isLoading, isError } = useFundoMyLearning(subject);
-  const { data: catalogData, isLoading: catalogLoading } = useFundoCatalog({ status: "PUBLISHED", limit: 9 });
+  const { data: catalogData, isLoading: catalogLoading } = useFundoCatalog({
+    status: "PUBLISHED",
+    limit: selectedArea === "catalogue" ? 100 : 9,
+  });
   const { data: pathwaysData, isLoading: pathwaysLoading } = useFundoPathways();
   const { data: reportsData, isLoading: reportsLoading } = useFundoReportsOverview();
 
@@ -214,11 +369,97 @@ export default function LearningHubPage() {
   const assignedPathways = listOf(payload.assignedPathways);
   const certificates = listOf(payload.certificates);
   const cpdEligibleCompletions = listOf(payload.cpdEligibleCompletions);
-  const catalogue = catalogData?.data?.items ?? [];
+  const catalogueItems = catalogData?.data?.items ?? [];
   const pathways = listOf((pathwaysData?.data as FundoRow | undefined)?.items);
   const nextItems = [...overdue, ...inProgress, ...enrolled].slice(0, 8);
-  const recommendedItems = (recommended.length > 0 ? recommended : catalogue).slice(0, 9);
-  const pathwayItems = (assignedPathways.length > 0 ? assignedPathways : pathways).slice(0, 8);
+  const recommendedItems = recommended.length > 0 ? recommended : catalogueItems;
+  const pathwayItems = assignedPathways.length > 0 ? assignedPathways : pathways;
+  const evidenceRows: ActionRow[] = [
+    {
+      id: "transcript",
+      title: "Transcript",
+      detail: "Completions, progress and learning record evidence.",
+      value: isLoading ? "..." : completed.length,
+      href: "/learning/record",
+      Icon: FileText,
+    },
+    {
+      id: "certificates",
+      title: "Certificates",
+      detail: "Issued certificates and certificate detail views.",
+      value: isLoading ? "..." : certificates.length,
+      href: "/learning/certificates",
+      Icon: BadgeCheck,
+    },
+    {
+      id: "cpd",
+      title: "CPD evidence",
+      detail: "CPD-eligible completions for council workflows.",
+      value: isLoading ? "..." : cpdEligibleCompletions.length,
+      href: "/learning/cpd",
+      Icon: BadgeCheck,
+    },
+  ];
+  const reportRows: ActionRow[] = [
+    {
+      id: "cohorts",
+      title: "Cohort completions",
+      detail: "Pathway and course cohort completion tables.",
+      value: String(reportOverview.totalEnrolments ?? 0),
+      href: "/learning/reports/cohorts",
+      Icon: Library,
+    },
+    {
+      id: "courses",
+      title: "Course completions",
+      detail: "Course-level completion and status reporting.",
+      value: String(reportOverview.completed ?? 0),
+      href: "/learning/reports/courses",
+      Icon: BookOpen,
+    },
+    {
+      id: "overdue",
+      title: "Overdue learning",
+      detail: "Overdue enrolments by course, subject type and status.",
+      value: String(reportOverview.overdue ?? 0),
+      href: "/learning/reports/overdue",
+      Icon: Clock,
+    },
+    {
+      id: "assessments",
+      title: "Assessment performance",
+      detail: "Assessment performance and pending manual reviews.",
+      value: String(reportOverview.assessmentAttempts ?? 0),
+      href: "/learning/reports/assessments",
+      Icon: FileText,
+    },
+  ];
+  const authoringRows: ActionRow[] = [
+    {
+      id: "courses",
+      title: "Courses",
+      detail: "Create, edit and publish course structures.",
+      value: "Setup",
+      href: "/learning/admin/courses",
+      Icon: BookOpen,
+    },
+    {
+      id: "pathways",
+      title: "Pathways",
+      detail: "Group courses into role-aware learning routes.",
+      value: "Setup",
+      href: "/learning/admin/pathways",
+      Icon: Layers,
+    },
+    {
+      id: "assessments",
+      title: "Assessments",
+      detail: "Manage quizzes, attempts and review queues.",
+      value: "Setup",
+      href: "/learning/admin/assessments",
+      Icon: FileText,
+    },
+  ];
 
   const areas: WorkArea[] = [
     {
@@ -276,7 +517,7 @@ export default function LearningHubPage() {
     },
   ];
 
-  const activeArea = areas.find((area) => area.key === focus);
+  const activeArea = areas.find((area) => area.key === selectedArea);
 
   const focusBody = (() => {
     switch (activeArea?.key) {
@@ -287,69 +528,11 @@ export default function LearningHubPage() {
       case "pathways":
         return <PathwayList items={pathwayItems} />;
       case "evidence":
-        return (
-          <div className="grid gap-3 md:grid-cols-3">
-            {[
-              { label: "Transcript", value: completed.length, href: "/learning/record", Icon: FileText },
-              { label: "Certificates", value: certificates.length, href: "/learning/certificates", Icon: Award },
-              { label: "CPD evidence", value: cpdEligibleCompletions.length, href: "/learning/cpd", Icon: BadgeCheck },
-            ].map((item) => {
-              const Icon = item.Icon;
-              return (
-                <Link key={item.href} href={item.href} className="rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-200 hover:bg-impilo-50/30">
-                  <Icon className="h-5 w-5 text-impilo-600" />
-                  <p className="mt-3 text-sm font-semibold text-gray-900">{item.label}</p>
-                  <p className="mt-2 text-2xl font-semibold text-gray-900">{isLoading ? "..." : item.value}</p>
-                </Link>
-              );
-            })}
-          </div>
-        );
+        return <ActionButtonGrid rows={evidenceRows} emptyText="No evidence views are available." />;
       case "reports":
-        return (
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                ["Published courses", reportOverview.publishedCourses],
-                ["Total enrolments", reportOverview.totalEnrolments],
-                ["In progress", reportOverview.inProgress],
-                ["Completed", reportOverview.completed],
-              ].map(([label, value]) => (
-                <div key={String(label)} className="rounded-lg border border-gray-200 bg-white p-4">
-                  <p className="text-xs text-gray-500">{String(label)}</p>
-                  <p className="mt-2 text-xl font-semibold text-gray-900">{String(value ?? 0)}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                ["/learning/reports/cohorts", "Cohort completions"],
-                ["/learning/reports/courses", "Course completions"],
-                ["/learning/reports/overdue", "Overdue learning"],
-                ["/learning/reports/assessments", "Assessment performance"],
-              ].map(([href, label]) => (
-                <Link key={href} href={href} className={shellLinkClass()}>
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        );
+        return <ActionButtonGrid rows={reportRows} emptyText="No report views are available." />;
       case "authoring":
-        return (
-          <div className="grid gap-3 md:grid-cols-3">
-            {[
-              ["/learning/admin/courses", "Courses", "Create, edit and publish course structures."],
-              ["/learning/admin/pathways", "Pathways", "Group courses into role-aware learning routes."],
-              ["/learning/admin/assessments", "Assessments", "Manage quizzes, attempts and review queues."],
-            ].map(([href, label, copy]) => (
-              <Link key={href} href={href} className="rounded-lg border border-gray-200 bg-white p-4 hover:border-impilo-200 hover:bg-impilo-50/30">
-                <p className="text-sm font-semibold text-gray-900">{label}</p>
-                <p className="mt-2 text-sm leading-6 text-gray-600">{copy}</p>
-              </Link>
-            ))}
-          </div>
-        );
+        return <ActionButtonGrid rows={authoringRows} emptyText="No authoring views are available." />;
       default:
         return null;
     }
@@ -372,14 +555,14 @@ export default function LearningHubPage() {
               <p className="mt-1 max-w-4xl text-sm leading-5 text-gray-600">
                 {activeArea
                   ? activeArea.summary
-                  : "Open one learning area at a time. Shell tools are collapsed above; the footer expands on hover or focus."}
+                  : "Expand a learning card to work in a wide table without leaving this page."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
                 {activeArea ? (
                   <>
                     <Link href={activeArea.href} className={shellLinkClass(true)}>
-                      Open full page <ArrowRight className="h-4 w-4" />
+                      Open focused view <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link href="/learning" className={shellLinkClass()}>
                       <X className="h-4 w-4" /> Back to Impilo Fundo
@@ -387,10 +570,10 @@ export default function LearningHubPage() {
                   </>
                 ) : (
                   <>
-                    <Link href={focusHref("learning")} className={shellLinkClass(true)}>
+                    <Link href={cardHref("learning")} className={shellLinkClass(true)}>
                       Continue learning <ArrowRight className="h-4 w-4" />
                     </Link>
-                    <Link href={focusHref("catalogue")} className={shellLinkClass()}>
+                    <Link href={cardHref("catalogue")} className={shellLinkClass()}>
                       Browse catalogue
                     </Link>
                   </>
@@ -405,87 +588,17 @@ export default function LearningHubPage() {
             </div>
           ) : null}
 
+          <div className="grid gap-4 md:grid-cols-2">
+            {areas.map((area) => (
+              <LearningAreaCard key={area.key} area={area} />
+            ))}
+          </div>
+
           {activeArea ? (
-            <section className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{activeArea.title}</p>
-                  <p className="mt-1 text-xs text-gray-500">Focused view from the Fundo v1.1 service surface.</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {areas
-                    .map((area) => (
-                      <Link
-                        key={area.key}
-                        href={focusHref(area.key)}
-                        aria-current={area.key === activeArea.key ? "page" : undefined}
-                        className={
-                          area.key === activeArea.key
-                            ? "rounded-lg border border-impilo-600 bg-impilo-600 px-3 py-2 text-sm font-medium text-white"
-                            : "rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        }
-                      >
-                        {area.title}
-                      </Link>
-                    ))}
-                </div>
-              </div>
-              {activeArea.loading ? <p className="mb-3 text-sm text-gray-500">Loading {activeArea.title.toLowerCase()}...</p> : null}
+            <ExpandedCardDialog activeArea={activeArea} areas={areas} loading={activeArea.loading}>
               {focusBody}
-            </section>
-          ) : (
-            <div className="grid gap-4 xl:grid-cols-2">
-              <CollapsedGroup area={areas[0]} open>
-                {isLoading ? <p className="text-sm text-gray-500">Loading learner journey...</p> : <LearningList items={nextItems.slice(0, 4)} emptyText="No active enrolments yet." />}
-              </CollapsedGroup>
-              <CollapsedGroup area={areas[1]}>
-                {catalogLoading ? <p className="text-sm text-gray-500">Loading catalogue...</p> : <CatalogueGrid items={recommendedItems.slice(0, 4)} />}
-              </CollapsedGroup>
-              <CollapsedGroup area={areas[2]}>
-                {pathwaysLoading ? <p className="text-sm text-gray-500">Loading pathways...</p> : <PathwayList items={pathwayItems.slice(0, 4)} />}
-              </CollapsedGroup>
-              <CollapsedGroup area={areas[3]}>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    ["/learning/record", "Transcript"],
-                    ["/learning/certificates", "Certificates"],
-                    ["/learning/cpd", "CPD evidence"],
-                  ].map(([href, label]) => (
-                    <Link key={href} href={href} className={shellLinkClass()}>
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </CollapsedGroup>
-              <CollapsedGroup area={areas[4]}>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    ["/learning/reports/cohorts", "Cohorts"],
-                    ["/learning/reports/courses", "Courses"],
-                    ["/learning/reports/overdue", "Overdue"],
-                    ["/learning/reports/assessments", "Assessments"],
-                  ].map(([href, label]) => (
-                    <Link key={href} href={href} className={shellLinkClass()}>
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </CollapsedGroup>
-              <CollapsedGroup area={areas[5]}>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    ["/learning/admin/courses", "Courses"],
-                    ["/learning/admin/pathways", "Pathways"],
-                    ["/learning/admin/assessments", "Assessments"],
-                  ].map(([href, label]) => (
-                    <Link key={href} href={href} className={shellLinkClass()}>
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-              </CollapsedGroup>
-            </div>
-          )}
+            </ExpandedCardDialog>
+          ) : null}
 
         </div>
     </AppLayout>

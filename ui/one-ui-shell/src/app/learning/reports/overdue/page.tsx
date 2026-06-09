@@ -32,7 +32,7 @@ export default function OverdueLearningReportPage() {
             <tbody>
               {items.map((item) => (
                 <tr key={String(item.id)} className="border-t border-gray-100">
-                  <td className="px-3 py-2">{String(item.courseTitle ?? item.courseCode ?? item.courseId ?? "-")}</td>
+                  <td className="px-3 py-2">{String(item.courseTitle ?? item.courseCode ?? "Course")}</td>
                   <td className="px-3 py-2">{String(item.subjectType ?? "-")} / {String(item.subjectId ?? "-")}</td>
                   <td className="px-3 py-2">{String(item.dueAt ?? "-")}</td>
                   <td className="px-3 py-2">{String(item.status ?? "-")}</td>

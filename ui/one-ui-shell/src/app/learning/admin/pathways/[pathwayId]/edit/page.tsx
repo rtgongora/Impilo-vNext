@@ -6,6 +6,10 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAddFundoPathwayItem, useFundoPathway, useUpdateFundoPathway } from "@/hooks/queries/useFundoLms";
 
+function pathwayItemTitle(item: Record<string, unknown>) {
+  return String(item.courseTitle ?? item.courseCode ?? "Course");
+}
+
 export default function EditPathwayPage() {
   const params = useParams<{ pathwayId: string }>();
   const pathwayId = params?.pathwayId;
@@ -76,7 +80,7 @@ export default function EditPathwayPage() {
           <ul className="mt-3 space-y-1 text-xs text-gray-600">
             {items.map((item) => (
               <li key={String(item.id)}>
-                {String(item.sequence)}. {String(item.courseId)} {Boolean(item.required) ? "(required)" : "(optional)"}
+                {String(item.sequence)}. {pathwayItemTitle(item)} {Boolean(item.required) ? "(required)" : "(optional)"}
               </li>
             ))}
           </ul>

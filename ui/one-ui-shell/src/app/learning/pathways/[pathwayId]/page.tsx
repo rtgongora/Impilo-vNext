@@ -12,6 +12,7 @@ export default function PathwayDetailPage() {
   const { data } = useFundoPathway(pathwayId);
   const pathway = ((data?.data as Record<string, unknown>)?.pathway ?? {}) as Record<string, unknown>;
   const items = (pathway.items as Array<Record<string, unknown>> | undefined) ?? [];
+  const itemTitle = (item: Record<string, unknown>) => String(item.courseTitle ?? item.courseCode ?? "Course");
 
   return (
     <AppLayout>
@@ -20,7 +21,7 @@ export default function PathwayDetailPage() {
           {items.map((it) => (
             <li key={String(it.id)} className="rounded border border-gray-200 bg-white p-3 text-sm">
               <p className="font-medium text-gray-900">
-                {String(it.sequence ?? "-")}. {String(it.courseTitle ?? it.courseId)}
+                {String(it.sequence ?? "-")}. {itemTitle(it)}
               </p>
               {it.courseId ? (
                 <Link className="text-teal-700 hover:underline" href={`/learning/courses/${String(it.courseId)}`}>

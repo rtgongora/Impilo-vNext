@@ -35,7 +35,7 @@ export default function AssessmentPerformanceReportPage() {
             <tbody>
               {items.map((item) => (
                 <tr key={String(item.assessmentId)} className="border-t border-gray-100">
-                  <td className="px-3 py-2">{String(item.assessmentTitle ?? item.assessmentId)}</td>
+                  <td className="px-3 py-2">{String(item.assessmentTitle ?? "Assessment")}</td>
                   <td className="px-3 py-2">{String(item.attempts ?? 0)}</td>
                   <td className="px-3 py-2">{String(item.averageScore ?? 0)}</td>
                   <td className="px-3 py-2">{String(item.passRatePercent ?? 0)}</td>

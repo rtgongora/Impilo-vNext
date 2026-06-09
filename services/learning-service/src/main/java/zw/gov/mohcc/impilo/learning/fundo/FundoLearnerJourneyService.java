@@ -58,7 +58,11 @@ public class FundoLearnerJourneyService {
         List<Map<String, Object>> inProgress = new ArrayList<>();
         List<Map<String, Object>> completed = new ArrayList<>();
         List<Map<String, Object>> overdue = new ArrayList<>();
-        Set<UUID> enrolledCourseIds = enrolments.stream().map(EnrolmentEntity::getCourseId).collect(Collectors.toSet());
+        List<Map<String, Object>> cancelled = new ArrayList<>();
+        Set<UUID> unavailableCourseIds = enrolments.stream()
+                .filter(e -> !"CANCELLED".equals(e.getStatus()))
+                .map(EnrolmentEntity::getCourseId)
+                .collect(Collectors.toSet());
         Set<UUID> pathwayIds = enrolments.stream()
                 .map(EnrolmentEntity::getPathwayId)
                 .filter(p -> p != null)
@@ -77,6 +81,7 @@ public class FundoLearnerJourneyService {
             if ("ENROLLED".equals(e.getStatus())) enrolled.add(row);
             if ("IN_PROGRESS".equals(e.getStatus())) inProgress.add(row);
             if ("COMPLETED".equals(e.getStatus())) completed.add(row);
+            if ("CANCELLED".equals(e.getStatus())) cancelled.add(row);
             if (e.getDueAt() != null
                     && e.getDueAt().isBefore(OffsetDateTime.now())
                     && !"COMPLETED".equals(e.getStatus())
@@ -88,7 +93,7 @@ public class FundoLearnerJourneyService {
         List<Map<String, Object>> recommended = courseRepository
                 .findByTenantIdAndStatus(tenantId, "PUBLISHED", PageRequest.of(0, 30))
                 .stream()
-                .filter(c -> !enrolledCourseIds.contains(c.getId()))
+                .filter(c -> !unavailableCourseIds.contains(c.getId()))
                 .limit(12)
                 .map(FundoCatalogService::toView)
                 .toList();
@@ -117,6 +122,7 @@ public class FundoLearnerJourneyService {
         out.put("inProgress", inProgress);
         out.put("completed", completed);
         out.put("overdue", overdue);
+        out.put("cancelled", cancelled);
         out.put("recommended", recommended);
         out.put("assignedPathways", assignedPathways);
         out.put("certificates", certificates);

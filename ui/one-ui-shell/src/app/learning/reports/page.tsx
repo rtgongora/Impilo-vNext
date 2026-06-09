@@ -1,42 +1,73 @@
 "use client";
 
-import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
+import { LearningDataTable, type LearningTableColumn } from "@/components/learning/LearningDataTable";
 import { PageShell } from "@/components/PageShell";
 import { useFundoReportsOverview } from "@/hooks/queries/useFundoLms";
+
+interface ReportRow {
+  id: string;
+  title: string;
+  detail: string;
+  value: string;
+  href: string;
+}
 
 export default function LearningReportsHomePage() {
   const { data } = useFundoReportsOverview();
   const overview = (data?.data ?? {}) as Record<string, unknown>;
+  const rows: ReportRow[] = [
+    {
+      id: "cohorts",
+      title: "Cohort completions",
+      detail: "Pathway and course cohort completion tables.",
+      value: String(overview.totalEnrolments ?? 0),
+      href: "/learning/reports/cohorts",
+    },
+    {
+      id: "courses",
+      title: "Course completions",
+      detail: "Course-level completion and status reporting.",
+      value: String(overview.completed ?? 0),
+      href: "/learning/reports/courses",
+    },
+    {
+      id: "overdue",
+      title: "Overdue learning",
+      detail: "Overdue enrolments by course, subject type and status.",
+      value: String(overview.overdue ?? 0),
+      href: "/learning/reports/overdue",
+    },
+    {
+      id: "assessments",
+      title: "Assessment performance",
+      detail: "Assessment performance and pending manual reviews.",
+      value: String(overview.assessmentAttempts ?? 0),
+      href: "/learning/reports/assessments",
+    },
+  ];
+  const columns: Array<LearningTableColumn<ReportRow>> = [
+    {
+      key: "title",
+      label: "Report",
+      render: (row) => <span className="font-medium text-gray-900">{row.title}</span>,
+      searchText: (row) => `${row.title} ${row.detail}`,
+    },
+    { key: "detail", label: "Detail", render: (row) => row.detail },
+    { key: "value", label: "Count", render: (row) => row.value },
+  ];
 
   return (
     <AppLayout>
       <PageShell title="Learning reports" subtitle="Trainer and supervisor reporting workspace.">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Published courses", overview.publishedCourses],
-            ["Total enrolments", overview.totalEnrolments],
-            ["In progress", overview.inProgress],
-            ["Completed", overview.completed],
-          ].map(([label, value]) => (
-            <div key={String(label)} className="rounded border border-gray-200 bg-white p-3">
-              <p className="text-xs text-gray-500">{String(label)}</p>
-              <p className="text-xl font-semibold text-gray-900">{String(value ?? 0)}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          {[
-            ["/learning/reports/cohorts", "Cohort completions"],
-            ["/learning/reports/courses", "Course completions"],
-            ["/learning/reports/overdue", "Overdue learning"],
-            ["/learning/reports/assessments", "Assessment performance"],
-          ].map(([href, label]) => (
-            <Link key={String(href)} href={String(href)} className="rounded border border-gray-300 px-3 py-1.5 text-gray-700">
-              {String(label)}
-            </Link>
-          ))}
-        </div>
+        <LearningDataTable
+          rows={rows}
+          columns={columns}
+          emptyText="No report views are available."
+          getRowKey={(row) => row.id}
+          getRowHref={(row) => row.href}
+          actionLabel="Open report"
+        />
       </PageShell>
     </AppLayout>
   );

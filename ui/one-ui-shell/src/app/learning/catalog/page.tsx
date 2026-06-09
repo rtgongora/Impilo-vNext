@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpenCheck, GraduationCap, Clock, BadgeCheck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, GraduationCap } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import { LearningDataTable, type LearningTableColumn, type LearningTableFilter } from "@/components/learning/LearningDataTable";
 import { PageShell } from "@/components/PageShell";
+import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import {
   useFundoCatalog,
   type FundoCourseSummary,
 } from "@/hooks/queries/useFundoCatalog";
+import { useFundoLearningRecord } from "@/hooks/queries/useFundoLms";
+
+function minutesLabel(value: unknown) {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) && n > 0 ? `${n} min` : "-";
+}
 
 /**
  * Phase 6B — live Impilo Fundo catalogue browse page.
@@ -20,29 +27,58 @@ import {
  * unavailable (empty state, no hard error surfaced to the user).
  */
 export default function LearningCataloguePage() {
-  const [search, setSearch] = useState<string>("");
-  const [status, setStatus] = useState<string>("PUBLISHED");
-  const [category, setCategory] = useState<string>("");
-  const [level, setLevel] = useState<string>("");
-  const [language, setLanguage] = useState<string>("");
-  const [cpdOnly, setCpdOnly] = useState<boolean>(false);
-  const [mandatoryOnly, setMandatoryOnly] = useState<boolean>(false);
-
+  const subject = useLearningSubject();
   const { data, isLoading, isError } = useFundoCatalog({
-    status: status || undefined,
-    category: category || undefined,
-    level: level || undefined,
-    language: language || undefined,
-    cpdEligible: cpdOnly || undefined,
-    mandatory: mandatoryOnly || undefined,
-    limit: 50,
+    status: "ALL",
+    limit: 500,
   });
+  const { data: recordData } = useFundoLearningRecord(subject);
 
-  const items: FundoCourseSummary[] = (data?.data?.items ?? []).filter((c) => {
-    if (!search) return true;
-    const target = `${c.code} ${c.title} ${c.description ?? ""}`.toLowerCase();
-    return target.includes(search.toLowerCase());
-  });
+  const items: FundoCourseSummary[] = data?.data?.items ?? [];
+  const record = ((recordData?.data as Record<string, unknown> | undefined)?.record as Record<string, unknown> | undefined) ?? {};
+  const cancelledEnrolments = (((record.enrolments as Array<Record<string, unknown>>) ?? [])).filter((item) => String(item.status) === "CANCELLED");
+  const columns: Array<LearningTableColumn<FundoCourseSummary>> = [
+    {
+      key: "title",
+      label: "Course",
+      render: (course) => <span className="font-medium text-gray-900">{course.title}</span>,
+      searchText: (course) => `${course.title} ${course.code} ${course.description ?? ""}`,
+    },
+    { key: "code", label: "Code", render: (course) => <span className="font-mono text-xs">{course.code}</span> },
+    { key: "category", label: "Category", render: (course) => course.category ?? "-" },
+    { key: "level", label: "Level", render: (course) => course.level ?? "-" },
+    { key: "status", label: "Status", render: (course) => course.status },
+    { key: "language", label: "Language", render: (course) => course.language ?? "en" },
+    { key: "duration", label: "Duration", render: (course) => minutesLabel(course.estimatedDurationMinutes) },
+    { key: "mandatory", label: "Mandatory", render: (course) => (course.mandatory ? "Yes" : "-") },
+    { key: "cpd", label: "CPD", render: (course) => (course.cpdEligible ? `Yes ${course.cpdPoints ?? ""}` : "-") },
+  ];
+  const filters: Array<LearningTableFilter<FundoCourseSummary>> = [
+    {
+      key: "status",
+      label: "Status",
+      valueFor: (course) => course.status,
+      options: ["DRAFT", "PUBLISHED", "ARCHIVED"].map((value) => ({ label: value, value })),
+    },
+    {
+      key: "category",
+      label: "Category",
+      valueFor: (course) => course.category ?? "",
+      options: Array.from(new Set(items.map((course) => course.category).filter(Boolean))).map((value) => ({ label: value!, value: value! })),
+    },
+    {
+      key: "level",
+      label: "Level",
+      valueFor: (course) => course.level ?? "",
+      options: Array.from(new Set(items.map((course) => course.level).filter(Boolean))).map((value) => ({ label: value!, value: value! })),
+    },
+    {
+      key: "language",
+      label: "Language",
+      valueFor: (course) => course.language ?? "en",
+      options: Array.from(new Set(items.map((course) => course.language ?? "en"))).map((value) => ({ label: value, value })),
+    },
+  ];
 
   return (
     <AppLayout>
@@ -60,84 +96,6 @@ export default function LearningCataloguePage() {
           </Link>
         </div>
 
-        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 bg-white p-4">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium text-gray-800">Search</span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search title/code"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Search catalogue"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium text-gray-800">Status</span>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Filter by status"
-            >
-              <option value="PUBLISHED">PUBLISHED</option>
-              <option value="DRAFT">DRAFT</option>
-              <option value="ARCHIVED">ARCHIVED</option>
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium text-gray-800">Category</span>
-            <input
-              type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="e.g. EHR_BASICS"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Filter by category"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium text-gray-800">Level</span>
-            <input
-              type="text"
-              value={level}
-              onChange={(e) => setLevel(e.target.value)}
-              placeholder="e.g. INTRODUCTORY"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Filter by level"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <span className="font-medium text-gray-800">Language</span>
-            <input
-              type="text"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              placeholder="e.g. en"
-              className="rounded border border-gray-300 px-2 py-1 text-sm"
-              aria-label="Filter by language"
-            />
-          </label>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={cpdOnly}
-              onChange={(e) => setCpdOnly(e.target.checked)}
-              aria-label="Filter to CPD-eligible courses only"
-            />
-            <span>CPD-eligible only</span>
-          </label>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={mandatoryOnly}
-              onChange={(e) => setMandatoryOnly(e.target.checked)}
-              aria-label="Filter to mandatory courses only"
-            />
-            <span>Mandatory only</span>
-          </label>
-        </div>
-
         {isLoading ? (
           <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
             Loading catalogue…
@@ -150,61 +108,40 @@ export default function LearningCataloguePage() {
           </div>
         ) : null}
 
-        {!isLoading && !isError && items.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-            No catalogue items match your filters yet.
+        {!isLoading && !isError ? (
+          <div className="space-y-4">
+            {cancelledEnrolments.length > 0 ? (
+              <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-semibold text-amber-950">Recover cancelled enrolments</p>
+                <p className="mt-1 text-sm text-amber-900">These courses were cancelled previously. Open a course to enrol again.</p>
+                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {cancelledEnrolments.map((enrolment) => {
+                    const courseId = String(enrolment.courseId ?? "");
+                    return (
+                      <Link
+                        key={String(enrolment.id ?? courseId)}
+                        href={courseId ? `/learning/courses/${courseId}` : "/learning/my-learning"}
+                        className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm hover:bg-amber-50"
+                      >
+                        <span className="block font-medium text-gray-900">{String(enrolment.courseTitle ?? enrolment.courseCode ?? "Cancelled course")}</span>
+                        <span className="mt-1 block text-xs text-gray-500">Cancelled enrolment • Re-enrol available</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            ) : null}
+            <LearningDataTable
+              rows={items}
+              columns={columns}
+              filters={filters}
+              emptyText="No catalogue items match your filters yet."
+              searchPlaceholder="Search title, code or description"
+              getRowKey={(course) => course.id}
+              getRowHref={(course) => `/learning/courses/${course.id}`}
+              actionLabel="Open"
+            />
           </div>
-        ) : null}
-
-        {!isLoading && !isError && items.length > 0 ? (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {items.map((c) => (
-              <li
-                key={c.id}
-                className="rounded-lg border border-gray-200 bg-white p-4 transition hover:border-teal-300 hover:shadow-sm"
-              >
-                <Link href={`/learning/courses/${c.id}`} className="block">
-                  <div className="flex items-start gap-2">
-                    <BookOpenCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-teal-700" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{c.title}</p>
-                      <p className="font-mono text-xs text-gray-500">{c.code}</p>
-                      {c.description ? (
-                        <p className="mt-1 line-clamp-2 text-xs text-gray-600">{c.description}</p>
-                      ) : null}
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                        {c.category ? (
-                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">
-                            {c.category}
-                          </span>
-                        ) : null}
-                        {c.level ? (
-                          <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">
-                            {c.level}
-                          </span>
-                        ) : null}
-                        {c.cpdEligible ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-800">
-                            <BadgeCheck className="h-3 w-3" /> CPD
-                          </span>
-                        ) : null}
-                        {c.mandatory ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-blue-800">
-                            <CheckCircle2 className="h-3 w-3" /> Mandatory
-                          </span>
-                        ) : null}
-                        {c.estimatedDurationMinutes ? (
-                          <span className="inline-flex items-center gap-1 text-gray-500">
-                            <Clock className="h-3 w-3" /> {c.estimatedDurationMinutes} min
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
         ) : null}
       </PageShell>
     </AppLayout>

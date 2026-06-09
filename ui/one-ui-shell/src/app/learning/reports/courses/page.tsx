@@ -33,7 +33,7 @@ export default function CourseCompletionReportPage() {
             <tbody>
               {items.map((item) => (
                 <tr key={String(item.courseId)} className="border-t border-gray-100">
-                  <td className="px-3 py-2">{String(item.courseTitle ?? item.courseCode ?? item.courseId)}</td>
+                  <td className="px-3 py-2">{String(item.courseTitle ?? item.courseCode ?? "Course")}</td>
                   <td className="px-3 py-2">{String(item.totalEnrolments ?? 0)}</td>
                   <td className="px-3 py-2">{String(item.activeEnrolments ?? 0)}</td>
                   <td className="px-3 py-2">{String(item.completed ?? 0)}</td>

@@ -62,131 +62,126 @@ export default function LearningCourseDetailPage() {
 
         {!isLoading && !isError && structure ? (
           <>
-            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                {structure.category ? (
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.category}</span>
-                ) : null}
-                {structure.level ? (
-                  <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.level}</span>
-                ) : null}
-                {structure.cpdEligible ? (
-                  <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-800">
-                    <BadgeCheck className="h-3 w-3" /> CPD
-                  </span>
-                ) : null}
-                {structure.mandatory ? (
-                  <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-blue-800">
-                    <CheckCircle2 className="h-3 w-3" /> Mandatory
-                  </span>
-                ) : null}
-                {structure.estimatedDurationMinutes ? (
-                  <span className="inline-flex items-center gap-1 text-gray-500">
-                    <Clock className="h-3 w-3" /> {structure.estimatedDurationMinutes} min total
-                  </span>
-                ) : null}
-              </div>
-              {structure.description ? (
-                <p className="mt-3 text-sm text-gray-700">{structure.description}</p>
-              ) : null}
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() =>
-                    createEnrolment.mutate(
-                      {
-                        courseId: structure.id,
-                        subjectType: subject.subjectType,
-                        subjectId: subject.subjectId,
-                        enrolmentType: "SELF",
-                      },
-                      {
-                        onSuccess: (res) => {
-                          const envelope = (res as Record<string, unknown>).data as Record<string, unknown> | undefined;
-                          const enrolment = envelope?.enrolment as Record<string, unknown> | undefined;
-                          const id = String(enrolment?.id ?? "");
-                          if (id) setEnrolmentId(id);
-                        },
-                      },
-                    )
-                  }
-                  className="rounded bg-impilo-600 px-3 py-1.5 text-sm text-white hover:bg-impilo-700 disabled:opacity-50"
-                  disabled={createEnrolment.isPending}
-                >
-                  Enrol / Continue
-                </button>
-                <Link href="/learning/my-learning" className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
-                  View my learning
-                </Link>
-                {enrolmentId ? (
-                  <Link href={`/learning/enrolments/${enrolmentId}`} className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700">
-                    Open enrolment
-                  </Link>
-                ) : null}
-              </div>
-            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.75fr)]">
+              <div className="space-y-5">
+                <div className="rounded-lg border border-gray-200 bg-white p-5">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {structure.category ? <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.category}</span> : null}
+                    {structure.level ? <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-700">{structure.level}</span> : null}
+                    {structure.cpdEligible ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-800">
+                        <BadgeCheck className="h-3 w-3" /> CPD
+                      </span>
+                    ) : null}
+                    {structure.mandatory ? (
+                      <span className="inline-flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-blue-800">
+                        <CheckCircle2 className="h-3 w-3" /> Mandatory
+                      </span>
+                    ) : null}
+                    {structure.estimatedDurationMinutes ? (
+                      <span className="inline-flex items-center gap-1 text-gray-500">
+                        <Clock className="h-3 w-3" /> {structure.estimatedDurationMinutes} min total
+                      </span>
+                    ) : null}
+                  </div>
+                  {structure.description ? <p className="mt-3 max-w-4xl text-sm leading-6 text-gray-700">{structure.description}</p> : null}
+                </div>
 
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-              Modules ({structure.modules.length})
-            </h2>
-            {structure.modules.length === 0 ? (
-              <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">
-                This course has no published modules yet.
+                <section>
+                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Modules ({structure.modules.length})</h2>
+                  {structure.modules.length === 0 ? (
+                    <div className="rounded-lg border border-gray-200 bg-white p-6 text-sm text-gray-600">This course has no published modules yet.</div>
+                  ) : (
+                    <ol className="grid gap-3 lg:grid-cols-2">
+                      {structure.modules.map((m) => (
+                        <li key={m.id} className="rounded-lg border border-gray-200 bg-white p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-gray-900">{m.sequence}. {m.title}</p>
+                              {m.description ? <p className="mt-1 text-xs text-gray-600">{m.description}</p> : null}
+                            </div>
+                            <span className="rounded-full border border-gray-200 px-2 py-0.5 text-xs text-gray-500">{m.lessons.length} lessons</span>
+                          </div>
+                          {m.lessons.length > 0 ? (
+                            <ul className="mt-3 space-y-2">
+                              {m.lessons.map((l) => (
+                                <li key={l.id} className="flex items-start gap-2 rounded-md bg-gray-50 px-2 py-1.5 text-sm text-gray-700">
+                                  <BookOpenCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-700" />
+                                  <span className="min-w-0">
+                                    <span className="font-medium">{l.title}</span>
+                                    <span className="ml-2 font-mono text-xs uppercase text-gray-500">{l.contentType}</span>
+                                    {l.estimatedDurationMinutes ? <span className="ml-2 text-xs text-gray-500">{l.estimatedDurationMinutes} min</span> : null}
+                                    {!l.required ? <span className="ml-2 rounded bg-white px-1 text-[10px] uppercase text-gray-600">Optional</span> : null}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-2 text-xs italic text-gray-500">No lessons yet.</p>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </section>
               </div>
-            ) : (
-              <ol className="space-y-3">
-                {structure.modules.map((m) => (
-                  <li key={m.id} className="rounded-lg border border-gray-200 bg-white p-4">
-                    <p className="font-semibold text-gray-900">
-                      {m.sequence}. {m.title}
-                    </p>
-                    {m.description ? <p className="mt-1 text-xs text-gray-600">{m.description}</p> : null}
-                    {m.lessons.length > 0 ? (
-                      <ul className="mt-3 space-y-1.5 pl-3">
-                        {m.lessons.map((l) => (
-                          <li key={l.id} className="flex items-start gap-2 text-sm text-gray-700">
-                            <BookOpenCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-teal-700" />
-                            <span>
-                              <span className="font-medium">{l.title}</span>
-                              <span className="ml-2 font-mono text-xs uppercase text-gray-500">
-                                {l.contentType}
-                              </span>
-                              {l.estimatedDurationMinutes ? (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  {l.estimatedDurationMinutes} min
-                                </span>
-                              ) : null}
-                              {!l.required ? (
-                                <span className="ml-2 rounded bg-gray-100 px-1 text-[10px] uppercase text-gray-600">
-                                  Optional
-                                </span>
-                              ) : null}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="mt-2 text-xs italic text-gray-500">No lessons yet.</p>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            )}
-            <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
-              <p className="text-sm font-semibold text-gray-900">Assessments</p>
-              {assessments.length === 0 ? (
-                <p className="mt-2 text-sm text-gray-500">No assessments are linked to this course yet.</p>
-              ) : (
-                <ul className="mt-2 space-y-1 text-sm">
-                  {assessments.map((assessment) => (
-                    <li key={String(assessment.id)} className="flex items-center justify-between gap-3 border-t border-gray-100 py-2 first:border-t-0">
-                      <span>{String(assessment.title ?? "Assessment")}</span>
-                      <Link href={`/learning/assessments/${String(assessment.id)}`} className="text-impilo-700 hover:underline">
-                        Open
+
+              <aside className="space-y-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-gray-900">Course actions</p>
+                  <p className="mt-1 text-xs text-gray-500">Start the course or jump back to your learner dashboard.</p>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <button
+                      onClick={() =>
+                        createEnrolment.mutate(
+                          {
+                            courseId: structure.id,
+                            subjectType: subject.subjectType,
+                            subjectId: subject.subjectId,
+                            enrolmentType: "SELF",
+                          },
+                          {
+                            onSuccess: (res) => {
+                              const envelope = (res as Record<string, unknown>).data as Record<string, unknown> | undefined;
+                              const enrolment = envelope?.enrolment as Record<string, unknown> | undefined;
+                              const id = String(enrolment?.id ?? "");
+                              if (id) setEnrolmentId(id);
+                            },
+                          },
+                        )
+                      }
+                      className="rounded-lg bg-impilo-600 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-700 disabled:opacity-50"
+                      disabled={createEnrolment.isPending}
+                    >
+                      Enrol / Continue
+                    </button>
+                    {enrolmentId ? (
+                      <Link href={`/learning/enrolments/${enrolmentId}`} className="rounded-lg border border-teal-700 px-3 py-2 text-center text-sm font-medium text-teal-700 hover:bg-teal-50">
+                        Open enrolment
                       </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                    ) : null}
+                    <Link href="/learning/my-learning" className="rounded-lg border border-gray-300 px-3 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      View my learning
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-gray-900">Assessments</p>
+                  {assessments.length === 0 ? (
+                    <p className="mt-2 text-sm text-gray-500">No assessments are linked to this course yet.</p>
+                  ) : (
+                    <ul className="mt-2 space-y-2 text-sm">
+                      {assessments.map((assessment) => (
+                        <li key={String(assessment.id)} className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 px-3 py-2">
+                          <span>{String(assessment.title ?? "Assessment")}</span>
+                          <Link href={`/learning/assessments/${String(assessment.id)}`} className="text-impilo-700 hover:underline">Open</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </aside>
             </div>
           </>
         ) : null}

@@ -6,6 +6,10 @@ import { PageShell } from "@/components/PageShell";
 import { useLearningSubject } from "@/components/learning/LearningSubjectPicker";
 import { useFundoCpdEvidence } from "@/hooks/queries/useFundoLms";
 
+function courseLabel(item: Record<string, unknown>) {
+  return String(item.courseTitle ?? item.title ?? item.courseCode ?? "Course");
+}
+
 export default function CpdEvidencePage() {
   const subject = useLearningSubject();
   const { data } = useFundoCpdEvidence(subject);
@@ -18,8 +22,8 @@ export default function CpdEvidencePage() {
         <ul className="space-y-2">
           {evidence.map((e) => (
             <li key={String(e.certificateId ?? e.enrolmentId)} className="rounded border border-gray-200 bg-white p-3 text-sm">
-              <p className="font-medium text-gray-900">Course: {String(e.courseId)}</p>
-              <p>Certificate: {String(e.certificateId ?? "-")}</p>
+              <p className="font-medium text-gray-900">Course: {courseLabel(e)}</p>
+              <p>Certificate: {String(e.certificateNumber ?? e.serialNumber ?? (e.certificateId ? "Available" : "-"))}</p>
               <p>CPD points: {String(e.cpdPoints ?? "-")}</p>
               {e.certificateId ? (
                 <Link href={`/learning/certificates/${String(e.certificateId)}`} className="text-impilo-700 hover:underline">
