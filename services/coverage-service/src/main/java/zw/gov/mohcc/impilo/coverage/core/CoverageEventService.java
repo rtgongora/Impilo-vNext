@@ -52,6 +52,13 @@ public class CoverageEventService {
     }
 
     @Transactional
+    public void emitMemberEnrolled(UUID memberCoverageId, UUID correlationId, UUID tenantId, String podId,
+                                   UUID planId, Map<String, Object> payload) {
+        emit("MEMBER_COVERAGE", memberCoverageId.toString(), TOPICS.eventType("member", "enrolled"),
+                correlationId, tenantId, podId, planId.toString(), "MEMBER_COVERAGE", payload);
+    }
+
+    @Transactional
     public void emitPreauthRequested(UUID preauthId, UUID correlationId, UUID tenantId, String podId,
                                      UUID coverageId, Map<String, Object> payload) {
         emit("PREAUTH", preauthId.toString(), TOPICS.eventType("preauth", "requested"),

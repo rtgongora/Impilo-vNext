@@ -104,6 +104,7 @@ export default function WellnessActivityPage() {
                   Steps
                 </label>
                 <input
+                  data-testid="wellness-activity-steps"
                   type="number"
                   min={0}
                   placeholder={String(todayRow?.steps ?? 0)}
@@ -148,6 +149,7 @@ export default function WellnessActivityPage() {
                 />
                 <button
                   type="button"
+                  data-testid="wellness-activity-save"
                   onClick={save}
                   disabled={logActivity.isPending}
                   className="mt-2 w-full rounded-lg bg-impilo-500 text-white py-2.5 text-sm font-medium hover:bg-impilo-600 disabled:opacity-60 flex items-center justify-center gap-2"

@@ -10,6 +10,7 @@ import { fetchWellnessDiscoverServices, type WellnessDiscoverService } from "@/l
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { WellnessPlacesMapPanel } from "@/components/maps/WellnessPlacesMapPanel";
 import { useLogWellnessActivity } from "@/hooks/queries/useCitizenWellness";
+import { useWellnessRoutes } from "@/hooks/queries/useSimba";
 
 /** Routes & Places — surfaces only fields returned by the wellness discover API. */
 export default function RoutesPage() {
@@ -21,8 +22,18 @@ export default function RoutesPage() {
     queryKey: ["wellness-discover-services", "fitness"],
     queryFn: () => fetchWellnessDiscoverServices("fitness"),
   });
+  const simbaRoutesQ = useWellnessRoutes();
 
   const services = discoverQ.data ?? [];
+  const simbaRoutes = useMemo(() => {
+    const payload = simbaRoutesQ.data;
+    if (!payload) return [] as Array<Record<string, unknown>>;
+    if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
+    if (Array.isArray((payload as { data?: unknown }).data)) {
+      return (payload as { data: Array<Record<string, unknown>> }).data;
+    }
+    return [] as Array<Record<string, unknown>>;
+  }, [simbaRoutesQ.data]);
 
   const categories = useMemo(() => {
     const unique = new Set<string>();
@@ -66,6 +77,31 @@ export default function RoutesPage() {
       >
         <WellnessPlacesMapPanel />
 
+        {simbaRoutes.length > 0 && (
+          <div className="rounded-xl border border-impilo-200 bg-impilo-50 mb-6 p-5">
+            <h2 className="font-semibold text-impilo-900 mb-3">Governed wellness routes (Simba)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {simbaRoutes.map((route, idx) => (
+                <div key={String(route.routeId ?? route.route_id ?? idx)} className="rounded-lg border border-impilo-100 bg-white p-4 text-sm">
+                  <p className="font-medium text-gray-900">{String(route.title ?? route.routeCode ?? "Route")}</p>
+                  <p className="text-gray-600 mt-1">
+                    {route.distanceKm != null || route.distance_km != null
+                      ? `${String(route.distanceKm ?? route.distance_km)} km`
+                      : "Distance n/a"}
+                    {route.elevationM != null || route.elevation_m != null
+                      ? ` · ${String(route.elevationM ?? route.elevation_m)} m elevation`
+                      : ""}
+                    {route.difficulty ? ` · ${String(route.difficulty)}` : ""}
+                  </p>
+                  {route.facilityName || route.facility_name ? (
+                    <p className="text-xs text-gray-500 mt-1">{String(route.facilityName ?? route.facility_name)}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 mb-6 p-6 shadow-inner">
           <div className="flex items-start gap-3">
             <MapPin className="h-8 w-8 shrink-0 text-green-600" aria-hidden />
@@ -76,8 +112,8 @@ export default function RoutesPage() {
                   : `${services.length} discoverable service${services.length === 1 ? "" : "s"}`}
               </p>
               <p className="text-xs text-green-800/80 mt-1">
-                Route distance, elevation, and difficulty are not yet exposed by the wellness API — this
-                page lists only live discover fields (name, facility, category, description, rating, price).
+                Simba routes above expose distance, elevation, and difficulty. Discover catalogue below lists
+                only live service fields (name, facility, category, description, rating, price).
               </p>
             </div>
           </div>

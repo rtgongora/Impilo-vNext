@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | Implemented for Slices 6A–6E |
+| Status | Implemented for Slices 6A–6E; subsidies first-class (V009); compose enrollment pilot-ready (2026-06-08) |
 | Predecessors | [`phase-4-mushex-platform-detail.md`](../design/phase-4-mushex-platform-detail.md), [`phase-5-costa-encounter-timeline.md`](../design/phase-5-costa-encounter-timeline.md) |
 | Doctrine | [`docs/doctrine/mushex-gateway-neutrality.md`](../doctrine/mushex-gateway-neutrality.md) |
 | Audit register | [`costa-mushex-experience-layer-wiring-audit.md`](costa-mushex-experience-layer-wiring-audit.md) |
@@ -13,8 +13,8 @@ Phase 6 covers **four distinct surface families** (claims, medical aid / coverag
 
 - **Claims** — already has two production surfaces: `/finance/claims` + `/finance/claims/[id]` (general claim view) and `/finance/payer-claims` + `/finance/payer-claims/[claimId]` (payer-side queue). Both surfaces are non-trivial; redesigning them in a single batch is high-risk.
 - **Medical aid / coverage** — already has a substantial 11-tab UI at `/coverage` with hooks for plans, claims, remittances, eligibility, and a number of write actions. The backend exposes four further list endpoints that the UI does not yet consume (see § 3).
-- **Remittances** — already has hook coverage (`useCoverageRemittances`) and is consumed by three sections of `/coverage`. There is no separate `/finance/remittances` hub yet.
-- **Subsidies** — **no dedicated backend** in the experience-bff / coverage / costing-engine layer at the time of this audit. Subsidy concepts appear only as a partial concept inside `BillSplitResult` and `EstimateService` in the costing-engine. A "subsidy" UI surface would either need a backend addition or would have to re-use the cost-event / exemption pathway, which is a product decision rather than a technical one.
+- **Remittances** — `useCoverageRemittances` on `/coverage` settlement tab **and** dedicated finance hub at `/finance/remittances` (same BFF feed).
+- **Subsidies** — first-class `cv_subsidy_programs` in coverage-service (`GET /internal/v1/coverage/subsidies`) with Subsidies tab on `/coverage`. Costing-engine bill-split exemptions remain a separate pathway for encounter-level copay waivers.
 
 Mapping each family separately keeps each follow-on slice small and auditable.
 

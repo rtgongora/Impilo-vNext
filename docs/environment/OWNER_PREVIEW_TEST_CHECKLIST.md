@@ -67,6 +67,30 @@ Expert-user validation for the **Dev Preview Sandbox** (not formal staging).
 | 42 | Public health national oversight | | `/public-health/oversight` district/province drill-down + field task queue |
 | 43 | MADI blood logistics panel stock summary | | Blood-bank stock KPIs alongside Nhume dispatch boundary |
 
+### Coverage enrolment-ready (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| C0 | Compose coverage-service healthy | | `./tools/dev/up.sh` — `:8140/actuator/health` |
+| C1 | Real-stack enrollment e2e | | `PLAYWRIGHT_COMPOSE_E2E=1` + `coverage-enroll-compose.spec.ts` |
+| C2 | Mocked full journey e2e | | `coverage-enroll-flow.spec.ts` — plan→eligibility→enroll→member |
+| C3 | Subsidies tab live | | `/coverage` → Subsidies — `SUB-MOHCC-PRIMARY` |
+| C4 | Finance remittance hub | | `/finance/remittances` — same BFF feed as settlement tab |
+| C5 | Smoke Test 6 | | `compose/experience/smoke-test.sh` — governed `COV-MOHCC-CORE` |
+
+### Simba / Wellness enrolment-ready (2026-06-08)
+
+| # | Check | Pass? | Notes |
+|---|-------|-------|-------|
+| W0 | Compose simba-service healthy | | `./tools/dev/up.sh` — `:8125/actuator/health` |
+| W1 | BFF Simba-only proxy | | All wellness + citizen paths → `simba-service:8125` |
+| W2 | Mocked full journey e2e | | `wellness-journey-flow.spec.ts` — goals→activity→diet→club→challenge |
+| W3 | Compose journey e2e | | `PLAYWRIGHT_COMPOSE_E2E=1` + `wellness-journey-compose.spec.ts` |
+| W4 | Screening programmes UI | | `/wellness/screenings` — Simba `SCR-HIV-ANNUAL` row |
+| W5 | Routes distance/elevation | | `/wellness/routes` — Avondale loop from Simba |
+| W6 | Smoke Test 7 | | `compose/experience/smoke-test.sh` — `Harare Morning Walkers` |
+| W7 | Simba integration tests | | `SimbaWellnessJourneyIT` in `simba-service` |
+
 ### Fundo enrolment-ready (2026-06-08)
 
 | # | Check | Pass? | Notes |

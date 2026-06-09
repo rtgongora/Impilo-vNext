@@ -7,7 +7,7 @@ import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
 import { useLogWellnessActivity } from "@/hooks/queries/useCitizenWellness";
 import { useAskGuidance } from "@/hooks/queries/useGuidance";
-import { useCreateGoal, useWellnessGoals } from "@/hooks/queries/useSimba";
+import { useCoachingNudges, useCreateGoal, useWellnessGoals } from "@/hooks/queries/useSimba";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -16,6 +16,7 @@ export default function CoachingPage() {
   const user = useAuthStore((s) => s.user);
   const cpid = user?.id;
   const goalsQ = useWellnessGoals(cpid);
+  const nudgesQ = useCoachingNudges(cpid);
   const createGoal = useCreateGoal();
   const logActivity = useLogWellnessActivity(cpid);
   const askGuidance = useAskGuidance();
@@ -84,6 +85,15 @@ export default function CoachingPage() {
   }
 
   const quote = askGuidance.data?.data?.response;
+  const nudges = useMemo(() => {
+    const payload = nudgesQ.data;
+    if (!payload) return [] as Array<Record<string, unknown>>;
+    if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
+    if (Array.isArray((payload as { data?: unknown }).data)) {
+      return (payload as { data: Array<Record<string, unknown>> }).data;
+    }
+    return [] as Array<Record<string, unknown>>;
+  }, [nudgesQ.data]);
 
   return (
     <AppLayout>
@@ -117,6 +127,19 @@ export default function CoachingPage() {
             </button>
           </div>
         </div>
+
+        {nudges.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 mb-6 p-5">
+            <h3 className="font-semibold text-amber-900 mb-2">Coaching nudges (Simba SOR)</h3>
+            <ul className="space-y-2">
+              {nudges.map((n, idx) => (
+                <li key={String(n.nudgeId ?? n.nudge_id ?? idx)} className="text-sm text-amber-900">
+                  {String(n.message ?? "")}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm mb-6">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">

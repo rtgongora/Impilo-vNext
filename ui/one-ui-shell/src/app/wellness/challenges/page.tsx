@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Trophy, Target, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { useAuthStore } from "@/hooks/useAuthStore";
-import { useWellnessChallenges, useJoinWellnessChallenge } from "@/hooks/queries/useCitizenWellness";
+import { useJoinChallenge, useWellnessChallenges } from "@/hooks/queries/useSimba";
 
 const GRADIENTS = [
   "from-blue-500 to-cyan-500",
@@ -22,22 +22,59 @@ function gradientForId(id: string): string {
   return GRADIENTS[h] ?? GRADIENTS[0];
 }
 
-/** Challenges — enrolled via Experience BFF (same as citizen mobile). */
+type ChallengeRow = {
+  id: string;
+  title: string;
+  description?: string;
+  targetValue?: number;
+  targetUnit?: string;
+  challengeType?: string;
+  participantCount?: number;
+  startDate?: string;
+  endDate?: string;
+};
+
+/** Challenges — canonical Simba SOR via BFF proxy. */
 export default function ChallengesPage() {
   const patientId = useAuthStore((s) => s.user?.id);
-  const { data: challenges = [], isLoading, isError, error } = useWellnessChallenges();
-  const join = useJoinWellnessChallenge(patientId);
+  const challengesQ = useWellnessChallenges();
+  const join = useJoinChallenge();
   const [joinedLocal, setJoinedLocal] = useState<Set<string>>(new Set());
   const [joiningId, setJoiningId] = useState<string | null>(null);
+
+  const challenges = useMemo(() => {
+    const payload = challengesQ.data;
+    const rows = Array.isArray(payload)
+      ? (payload as Array<Record<string, unknown>>)
+      : Array.isArray((payload as { data?: unknown })?.data)
+        ? ((payload as { data: Array<Record<string, unknown>> }).data)
+        : [];
+    return rows.map((row) => ({
+      id: String(row.challengeId ?? row.challenge_id ?? row.id ?? ""),
+      title: String(row.title ?? "Challenge"),
+      description: row.description ? String(row.description) : undefined,
+      targetValue: row.targetValue != null ? Number(row.targetValue) : row.target_value != null ? Number(row.target_value) : undefined,
+      targetUnit: String(row.unit ?? row.targetUnit ?? ""),
+      challengeType: String(row.challengeType ?? row.challenge_type ?? ""),
+      participantCount: Number(row.participantCount ?? row.participant_count ?? 0),
+      startDate: String(row.startDate ?? row.start_date ?? ""),
+      endDate: String(row.endDate ?? row.end_date ?? ""),
+    })) satisfies ChallengeRow[];
+  }, [challengesQ.data]);
 
   const onJoin = (challengeId: string) => {
     if (!patientId) return;
     setJoiningId(challengeId);
+    setJoinedLocal((prev) => new Set(prev).add(challengeId));
     join.mutate(
-      { challengeId },
+      { id: challengeId, body: { person_cpid: patientId } },
       {
-        onSuccess: () => {
-          setJoinedLocal((prev) => new Set(prev).add(challengeId));
+        onError: () => {
+          setJoinedLocal((prev) => {
+            const next = new Set(prev);
+            next.delete(challengeId);
+            return next;
+          });
         },
         onSettled: () => setJoiningId(null),
       },
@@ -48,7 +85,7 @@ export default function ChallengesPage() {
     <AppLayout>
       <PageShell
         title="Challenges"
-        subtitle="Join wellness challenges from your national programme — synced with mobile"
+        subtitle="Join wellness challenges from Simba — national programme catalogue"
         icon={<Trophy className="h-6 w-6" />}
       >
         {!patientId && (
@@ -57,23 +94,23 @@ export default function ChallengesPage() {
           </p>
         )}
 
-        {isLoading && (
+        {challengesQ.isLoading && (
           <div className="flex items-center gap-2 text-gray-600 py-8">
             <Loader2 className="h-5 w-5 animate-spin" /> Loading challenges…
           </div>
         )}
 
-        {isError && (
+        {challengesQ.isError && (
           <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-            {error instanceof Error ? error.message : "Could not load challenges."}
+            {challengesQ.error instanceof Error ? challengesQ.error.message : "Could not load challenges."}
           </p>
         )}
 
-        {!isLoading && !isError && challenges.length === 0 && (
+        {!challengesQ.isLoading && !challengesQ.isError && challenges.length === 0 && (
           <p className="text-sm text-gray-600 py-6">No active challenges in the directory yet. Check back soon.</p>
         )}
 
-        {!isLoading && !isError && challenges.length > 0 && (
+        {!challengesQ.isLoading && !challengesQ.isError && challenges.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {challenges.map((c) => {
               const g = gradientForId(c.id);
@@ -97,6 +134,7 @@ export default function ChallengesPage() {
                       ) : (
                         <button
                           type="button"
+                          data-testid="wellness-challenge-join"
                           disabled={!patientId || joiningId !== null}
                           onClick={() => onJoin(c.id)}
                           className="inline-flex items-center gap-2 rounded-lg bg-impilo-500 text-white px-4 py-2 text-sm font-medium hover:bg-impilo-600 disabled:opacity-50"
@@ -113,10 +151,10 @@ export default function ChallengesPage() {
           </div>
         )}
 
-        {!isLoading && !isError && challenges.length > 0 && (
+        {!challengesQ.isLoading && !challengesQ.isError && challenges.length > 0 && (
           <p className="text-xs text-gray-400 mt-6 flex items-center gap-1">
             <Target className="h-3.5 w-3.5" />
-            Progress tracking for challenges may be extended in a later slice; enrollment is live.
+            Progress tracking for challenges may be extended in a later slice; enrollment is live on Simba.
           </p>
         )}
       </PageShell>

@@ -66,7 +66,11 @@ impilo:
     mushex-base-url: ${MUSHEX_BASE_URL:http://localhost:8102}
 
 coverage:
+  security:
+    oauth2-enabled: ${COVERAGE_SECURITY_OAUTH2_ENABLED:true}
   outbox:
     poll-interval-ms: ${COVERAGE_OUTBOX_POLL_INTERVAL_MS:2000}
+    publisher:
+      enabled: ${COVERAGE_OUTBOX_PUBLISHER_ENABLED:true}
   v11:
     emit-mode: ${COVERAGE_EMIT_MODE:}

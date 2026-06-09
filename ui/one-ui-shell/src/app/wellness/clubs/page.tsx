@@ -18,6 +18,7 @@ export default function ClubsPage() {
   const leaveClub = useLeaveClub();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+  const [joinedLocal, setJoinedLocal] = useState<Set<string>>(new Set());
 
   const clubs = useMemo(() => {
     const payload = clubsQ.data;
@@ -27,23 +28,37 @@ export default function ClubsPage() {
         ? ((payload as { data: Array<Record<string, unknown>> }).data)
         : [];
     return rows.map((row, idx) => ({
-      id: String(row.id ?? idx),
+      id: String(row.clubId ?? row.club_id ?? row.id ?? idx),
       name: String(row.name ?? row.title ?? "Club"),
       type: String(row.clubType ?? row.club_type ?? "General"),
       members: Number(row.memberCount ?? row.member_count ?? 0),
       location: String(row.location ?? "Facility community"),
       nextEvent: String(row.nextEvent ?? "TBD"),
-      joined: Boolean(row.joined ?? false),
+      joined: Boolean(row.joined ?? false) || joinedLocal.has(String(row.clubId ?? row.club_id ?? row.id ?? idx)),
       color: idx % 3 === 0 ? "bg-amber-500" : idx % 3 === 1 ? "bg-emerald-500" : "bg-impilo-500",
     })) satisfies Club[];
-  }, [clubsQ.data]);
+  }, [clubsQ.data, joinedLocal]);
 
   const toggle = async (club: Club) => {
     if (!cpid) return;
     if (club.joined) {
-      await leaveClub.mutateAsync({ id: club.id });
+      await leaveClub.mutateAsync({ id: club.id, person_cpid: cpid });
+      setJoinedLocal((prev) => {
+        const next = new Set(prev);
+        next.delete(club.id);
+        return next;
+      });
     } else {
-      await joinClub.mutateAsync({ id: club.id, body: { person_cpid: cpid, role: "MEMBER" } });
+      setJoinedLocal((prev) => new Set(prev).add(club.id));
+      try {
+        await joinClub.mutateAsync({ id: club.id, body: { person_cpid: cpid, role: "MEMBER" } });
+      } catch {
+        setJoinedLocal((prev) => {
+          const next = new Set(prev);
+          next.delete(club.id);
+          return next;
+        });
+      }
     }
   };
   const myClubs = clubs.filter((c) => c.joined);
@@ -102,7 +117,11 @@ export default function ClubsPage() {
                   <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 text-gray-400" />Next: {c.nextEvent}</div>
                   <div className="flex items-center gap-2"><Users2 className="h-3.5 w-3.5 text-gray-400" />{c.members} members</div>
                 </div>
-                <button onClick={() => void toggle(c)} className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-impilo-500 text-white hover:bg-impilo-600"}`}>
+                <button
+                  data-testid={c.joined ? undefined : "wellness-club-join"}
+                  onClick={() => void toggle(c)}
+                  className={`w-full rounded-lg py-2 text-sm font-medium transition-colors flex items-center justify-center gap-1 ${c.joined ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-impilo-500 text-white hover:bg-impilo-600"}`}
+                >
                   {c.joined ? "Leave Club" : "Join Club"}<ChevronRight className="h-4 w-4" />
                 </button>
               </div>

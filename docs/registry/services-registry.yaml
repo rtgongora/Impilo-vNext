@@ -494,7 +494,7 @@ services:
     default_http_port: 8140
     product_names:
       - Coverage
-    owner_team: TBD
+    owner_team: enterprise-finance
     system_of_record_for:
       - Coverage canonical records
     consumes_from:
@@ -505,12 +505,12 @@ services:
     forbidden_responsibilities:
       - must-not-store-clinical-records-as-source-of-truth
       - must-not-own-identity-assurance-policy
-    production_status: baseline-assessed
-    implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
-    api_contract_status: partial
-    authz_audit_status: partial
-    observability_status: partial
+    production_status: pilot-ready-enrolled-coverage
+    implementation_status: implemented
+    frontend_wiring_status: wired
+    api_contract_status: wired
+    authz_audit_status: wired
+    observability_status: wired
   - id: credential-verification-service
     maven_module: credential-verification-service
     primary_plane: enterprise
@@ -2265,7 +2265,9 @@ services:
     default_http_port: null
     product_names:
       - Simba
-    owner_team: TBD
+    owner_team: enterprise-wellness
+    default_http_port: 8125
+    deployment_note: Single wellness product runtime; wellness-service module is deprecated (not deployed)
     system_of_record_for:
       - wellness journeys
       - lifestyle plans
@@ -2295,12 +2297,12 @@ services:
       - must-not-own-consent-policy-authority
       - must-not-own-payment-ledgers
       - must-not-own-public-health-surveillance-source-of-truth
-    production_status: baseline-assessed
-    implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
-    api_contract_status: partial
-    authz_audit_status: partial
-    observability_status: partial
+    production_status: pilot-ready-enrolled-wellness
+    implementation_status: implemented
+    frontend_wiring_status: wired
+    api_contract_status: wired
+    authz_audit_status: wired
+    observability_status: wired
   - id: support-service
     maven_module: support-service
     primary_plane: integration
@@ -2694,16 +2696,14 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
+    default_http_port: 8161
     product_names:
       - Wellness
-    owner_team: TBD
+    owner_team: enterprise-wellness
     system_of_record_for: []
     consumes_from:
       - simba-service
-    exposes_to:
-      - experience-bff
-      - integration-hub
+    exposes_to: []
     forbidden_responsibilities:
       - must-not-own-public-health-surveillance-source-of-truth
       - must-not-own-clinical-encounter-lifecycle
@@ -2711,12 +2711,13 @@ services:
       - must-not-own-patient-identity-source-of-truth
       - must-not-own-provider-identity-source-of-truth
       - must-not-own-facility-registry
-    production_status: baseline-assessed
-    implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
-    api_contract_status: partial
-    authz_audit_status: partial
-    observability_status: partial
+      - must-not-be-deployed-as-parallel-wellness-runtime
+    production_status: deprecated-module-retired-runtime
+    implementation_status: migrated-to-simba
+    frontend_wiring_status: not-applicable
+    api_contract_status: superseded-by-simba
+    authz_audit_status: not-applicable
+    observability_status: not-applicable
   - id: workflow-service
     maven_module: workflow-service
     primary_plane: integration

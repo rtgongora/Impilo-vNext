@@ -6,7 +6,7 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 
 1. **Replicates the Lovable prototype's UX/IA/routing** — 96 route pages across 15 zones, 4 layout variants, 3-zone sidebar navigation, hierarchical auth guards
 2. **Replaces Supabase with the Impilo stack** — experience-bff (Spring Boot) with PostgreSQL, Flyway migrations, outbox pattern, v1.1 header enforcement
-3. **Runs via Docker Compose** — Postgres (5433), Redis, Kafka, wellness-service, BFF, UI with healthchecks and smoke tests (mirrors root infra wiring for cache/event bus)
+3. **Runs via Docker Compose** — Postgres (5433), Redis, Kafka, simba-service (Simba wellness), BFF, UI with healthchecks and smoke tests (mirrors root infra wiring for cache/event bus)
 
 **Sovereign downstreams (full stack):** For chart **patient summary** with **Mvumo** `consentSummary`, run **mvumo-service** (`:8195`) and **pct-service** (`:8088`), and set **`MVUMO_BASE_URL`** (and `PCT_BASE_URL`) on **experience-bff** when not using defaults. See [`docs/architecture/patient-care-consent-surface.md`](../../docs/architecture/patient-care-consent-surface.md).
 
@@ -43,7 +43,7 @@ Stage-1 delivers a **runnable, end-to-end Experience Platform** that:
 
 ### Quick Start (Docker Compose)
 
-The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092), wellness-service, learning-service (Fundo :8235), inpatient-service (:8121), experience-bff, one-ui-shell** — the same Redis/Kafka **roles** as the repo root [`docker-compose.yml`](../../docker-compose.yml), wired so Java services use `redis` / `kafka` on the Docker network (not `localhost` inside the container). Do not run root `redis` + `kafka` on the same host ports at the same time.
+The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092), simba-service (:8125), learning-service (Fundo :8235), inpatient-service (:8121), experience-bff, one-ui-shell** — the same Redis/Kafka **roles** as the repo root [`docker-compose.yml`](../../docker-compose.yml), wired so Java services use `redis` / `kafka` on the Docker network (not `localhost` inside the container). Do not run root `redis` + `kafka` on the same host ports at the same time.
 
 ```bash
 # Start everything (Maven JARs + compose)
@@ -57,7 +57,7 @@ The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092)
 ./tools/dev/up.sh --infra
 ```
 
-**Windows (PowerShell):** Docker images for **wellness-service**, **inpatient-service**, and **experience-bff** expect **pre-built JARs** under `services/*/target/`. Use:
+**Windows (PowerShell):** Docker images for **simba-service**, **inpatient-service**, and **experience-bff** expect **pre-built JARs** under `services/*/target/`. Use:
 
 ```powershell
 .\tools\dev\up.ps1              # Maven package, then compose up
@@ -67,7 +67,7 @@ The Experience compose file starts **Postgres (5433), Redis (6379), Kafka (9092)
 
 **Linux/macOS:** `./tools/dev/up.sh` runs the same Maven slice then compose; use `--skip-maven` if you already built.
 
-Or build once from `services/`: `mvn -B -pl wellness-service,inpatient-service,experience-bff -am -DskipTests package`, then `docker compose -f compose/experience/docker-compose.yml up -d`.
+Or build once from `services/`: `mvn -B -pl simba-service,inpatient-service,experience-bff -am -DskipTests package`, then `docker compose -f compose/experience/docker-compose.yml up -d`.
 
 **Wave 20 UI in Docker:** Build context is the **repo root** (`context: ../..`, `dockerfile: ui/one-ui-shell/Dockerfile`). If `docker compose build one-ui-shell` fails on `next build`, use local dev: `npx next dev -p 3001` (see `BUILD_RUN_STATUS.md` slice 6–7).
 

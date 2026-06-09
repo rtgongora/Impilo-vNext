@@ -105,6 +105,7 @@ export default function WellnessGoalsPage() {
               {GOAL_TEMPLATES.map(({ title, description, color }) => (
                 <div
                   key={title}
+                  data-testid={title.startsWith("Steps") ? "wellness-goal-template-steps" : undefined}
                   onClick={async () => {
                     setSelectedTemplate({ title, description, color });
                     await createFromTemplate(title);

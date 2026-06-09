@@ -14,6 +14,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { PageShell } from "@/components/PageShell";
 import { FeatureMaturityBadge } from "@/components/FeatureMaturityBadge";
 import { useReminders, type Reminder } from "@/hooks/queries/useGuidance";
+import { useScreeningProgrammes } from "@/hooks/queries/useSimba";
 
 function extractReminders(payload: unknown): Reminder[] {
   if (!payload || typeof payload !== "object") return [];
@@ -29,8 +30,19 @@ function priorityTone(priority: Reminder["priority"]): string {
   return "border-green-200 bg-green-50 text-green-700";
 }
 
+function extractProgrammes(payload: unknown): Array<Record<string, unknown>> {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload as Array<Record<string, unknown>>;
+  if (typeof payload === "object" && Array.isArray((payload as { data?: unknown }).data)) {
+    return (payload as { data: Array<Record<string, unknown>> }).data;
+  }
+  return [];
+}
+
 export default function WellnessScreeningsPage() {
   const remindersQ = useReminders();
+  const programmesQ = useScreeningProgrammes();
+  const programmes = extractProgrammes(programmesQ.data);
   const allReminders = extractReminders(remindersQ.data);
   const screeningReminders = allReminders.filter(
     (r) => r.type === "SCREENING" && !r.dismissed,
@@ -58,8 +70,8 @@ export default function WellnessScreeningsPage() {
       >
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <FeatureMaturityBadge
-            status="partial"
-            detail="Screening rows come from GET /internal/v1/guidance/reminders (SCREENING type). Full age/gender/risk-based scheduling still requires simba-service screening programmes on the BFF."
+            status={programmes.length > 0 ? "wired" : "partial"}
+            detail="Reminders from guidance-service; national screening programmes from GET /internal/v1/wellness/screening-programmes (Simba SOR)."
           />
           <Link
             href="/guidance/reminders"
@@ -70,13 +82,30 @@ export default function WellnessScreeningsPage() {
         </div>
 
         <div className="space-y-6">
+          {programmes.length > 0 && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+              <h3 className="text-sm font-semibold text-emerald-900 mb-2">National screening programmes (Simba)</h3>
+              <ul className="space-y-2">
+                {programmes.map((p, idx) => (
+                  <li key={String(p.programmeId ?? p.programme_id ?? idx)} className="text-sm text-emerald-900">
+                    <span className="font-medium">{String(p.title ?? p.programmeCode ?? "Programme")}</span>
+                    {p.frequencyMonths != null || p.frequency_months != null ? (
+                      <span className="text-emerald-700">
+                        {" "}
+                        — every {String(p.frequencyMonths ?? p.frequency_months)} months
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
             <p className="font-medium text-slate-900">Integration boundary</p>
             <p className="mt-1">
-              This page does not invent screening due dates. When guidance-service returns no SCREENING
-              reminders, you see an honest empty state. Citizen wellness activity hooks (
-              <code className="text-xs">/internal/v1/wellness/*</code>) cover goals and lifestyle tracking
-              — not preventive screening calendars yet.
+              Personal due dates come from guidance reminders only — not fabricated. Programme catalogue is
+              governed by Simba; individual scheduling still depends on guidance + clinical context.
             </p>
           </div>
 

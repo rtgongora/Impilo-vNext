@@ -64,6 +64,16 @@ public class CoverageServiceClient {
         return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
     }
 
+    public JsonNode checkEnrollmentEligibility(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/coverage/eligibility/enrollment";
+        return extractData(restTemplate.postForEntity(url, body, JsonNode.class));
+    }
+
+    public JsonNode listSubsidies() {
+        String url = baseUrl + "/internal/v1/coverage/subsidies";
+        return extractData(restTemplate.getForEntity(url, JsonNode.class));
+    }
+
     public JsonNode listEligibilityForMember(String memberCpid) {
         String url = UriComponentsBuilder.fromHttpUrl(baseUrl + "/internal/v1/coverage/eligibility")
                 .queryParam("member_cpid", memberCpid)

@@ -23,13 +23,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * Forwards <strong>wellness-domain</strong> traffic to {@code wellness-service}.
- *
- * <p>Only a subset of {@code /internal/v1/mobile/citizen/**} is owned by wellness-service
- * (see {@code CitizenMyLifeController} there). The rest of citizen mobile APIs are implemented
- * directly in experience-bff and must not be swallowed by this proxy.</p>
- *
- * <p>Health Connect ingest remains under {@code /internal/v1/wellness/**}.</p>
+ * Forwards all wellness and citizen My Life traffic to {@code simba-service} (product: Simba).
  */
 @RestController
 public class WellnessServiceProxyController {
@@ -46,16 +40,15 @@ public class WellnessServiceProxyController {
             "host");
 
     private final RestTemplate restTemplate;
-    private final String wellnessBaseUrl;
+    private final String simbaBaseUrl;
     private final Counter legacyCitizenWalletRouteCounter;
 
     public WellnessServiceProxyController(
             RestTemplate restTemplate,
             MeterRegistry meterRegistry,
-            @Value("${impilo.services.wellness-base-url:http://localhost:8161}") String wellnessBaseUrl) {
+            @Value("${impilo.services.simba-base-url:http://localhost:8125}") String simbaBaseUrl) {
         this.restTemplate = restTemplate;
-        String b = wellnessBaseUrl.trim();
-        this.wellnessBaseUrl = b.endsWith("/") ? b.substring(0, b.length() - 1) : b;
+        this.simbaBaseUrl = trimTrailingSlash(simbaBaseUrl);
         this.legacyCitizenWalletRouteCounter = Counter.builder("impilo.legacy.route.requests")
                 .description("Inbound requests still using legacy wallet proxy routes")
                 .tag("route_family", "mobile_citizen_wallet")
@@ -73,6 +66,7 @@ public class WellnessServiceProxyController {
                     "/internal/v1/mobile/citizen/clubs/**",
                     "/internal/v1/mobile/citizen/providers/**",
                     "/internal/v1/mobile/citizen/crowdfunding/**",
+                    "/internal/v1/mobile/citizen/monitoring/**",
                     "/internal/v1/mobile/citizen/services/discover"
             },
             method = {
@@ -95,7 +89,7 @@ public class WellnessServiceProxyController {
             legacyCitizenWalletRouteCounter.increment();
         }
         String q = request.getQueryString();
-        URI target = URI.create(wellnessBaseUrl + uri + (q != null && !q.isBlank() ? "?" + q : ""));
+        URI target = URI.create(simbaBaseUrl + uri + (q != null && !q.isBlank() ? "?" + q : ""));
 
         HttpHeaders out = new HttpHeaders();
         Enumeration<String> names = request.getHeaderNames();
@@ -135,6 +129,11 @@ public class WellnessServiceProxyController {
                     .headers(respHeaders)
                     .body(ex.getResponseBodyAsByteArray());
         }
+    }
+
+    private static String trimTrailingSlash(String base) {
+        String b = base.trim();
+        return b.endsWith("/") ? b.substring(0, b.length() - 1) : b;
     }
 
     private static void stripHopByHop(HttpHeaders h) {

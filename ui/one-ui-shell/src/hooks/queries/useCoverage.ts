@@ -302,6 +302,16 @@ export function useCoverageAppealsList() {
   });
 }
 
+export function useCoverageSubsidiesList() {
+  return useQuery({
+    queryKey: ["coverage-subsidies-list"],
+    queryFn: async () => {
+      const res = await apiClient.get<unknown>("/internal/v1/coverage/subsidies");
+      return coverageListRows(res);
+    },
+  });
+}
+
 export function useCheckCoverageEligibility() {
   return useMutation({
     mutationFn: async (body: Record<string, string>) => {
@@ -342,6 +352,7 @@ export function useCreateCoveragePreauth() {
 
 export type CoverageCommandKind =
   | "eligibility-check"
+  | "enrollment-eligibility"
   | "member-enrollment"
   | "claim-submission"
   | "preauth-request"
@@ -349,6 +360,7 @@ export type CoverageCommandKind =
 
 const COVERAGE_COMMAND_PATHS: Record<CoverageCommandKind, string> = {
   "eligibility-check": "/internal/v1/coverage/eligibility/check",
+  "enrollment-eligibility": "/internal/v1/coverage/eligibility/enrollment",
   "member-enrollment": "/internal/v1/coverage/members",
   "claim-submission": "/internal/v1/coverage/claims",
   "preauth-request": "/internal/v1/coverage/preauth",

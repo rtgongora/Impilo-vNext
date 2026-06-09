@@ -36,10 +36,10 @@ echo "========================================"
 echo "  Impilo vNext — Experience Platform"
 echo "========================================"
 
-# ── Maven: wellness-service + experience-bff JARs for Docker images ──
+# ── Maven: simba-service + experience-bff JARs for Docker images ──
 if [ -z "$SKIP_MAVEN" ]; then
   echo ""
-  MAVEN_MODULES="wellness-service,inpatient-service,pct-service,integration-hub,learning-service,experience-bff"
+  MAVEN_MODULES="simba-service,inpatient-service,pct-service,integration-hub,learning-service,coverage-service,experience-bff"
   if [ "$SOVEREIGN_FLAG" = "true" ]; then
         MAVEN_MODULES="${MAVEN_MODULES},pharmacy-service,mushex-service,dispatch-service,costing-engine-service,surveillance-service,ndila-service,nhume-service"
   fi

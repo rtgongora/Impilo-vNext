@@ -12,16 +12,16 @@ import { test, expect } from "@playwright/test";
  */
 const UI_ORIGIN = process.env.PLAYWRIGHT_EXPERIENCE_URL || "http://localhost:3000";
 const BFF_ORIGIN = process.env.PLAYWRIGHT_BFF_URL || "http://localhost:8160";
-const WELLNESS_ORIGIN = process.env.PLAYWRIGHT_WELLNESS_URL || "http://localhost:8161";
+const SIMBA_ORIGIN = process.env.PLAYWRIGHT_SIMBA_URL || "http://localhost:8125";
 
 async function stackReachable(): Promise<boolean> {
   try {
-    const [ui, bff, wellness] = await Promise.all([
+    const [ui, bff, simba] = await Promise.all([
       fetch(UI_ORIGIN, { redirect: "manual" }).then((r) => r.ok || r.status === 304 || r.status === 307 || r.status === 302),
       fetch(`${BFF_ORIGIN}/actuator/health`).then((r) => r.ok),
-      fetch(`${WELLNESS_ORIGIN}/actuator/health`).then((r) => r.ok),
+      fetch(`${SIMBA_ORIGIN}/actuator/health`).then((r) => r.ok),
     ]);
-    return Boolean(ui && bff && wellness);
+    return Boolean(ui && bff && simba);
   } catch {
     return false;
   }
@@ -31,7 +31,7 @@ test.describe("Citizen life (compose stack, no mocks)", () => {
   test.beforeAll(async () => {
     test.skip(
       !(await stackReachable()),
-      `Start compose first: docker compose -f compose/experience/docker-compose.yml up — need UI ${UI_ORIGIN}, BFF ${BFF_ORIGIN}, wellness ${WELLNESS_ORIGIN}. For Playwright use: PLAYWRIGHT_COMPOSE_E2E=1 npm run e2e -- citizen-life-compose.spec.ts --project=chromium`,
+      `Start compose first: docker compose -f compose/experience/docker-compose.yml up — need UI ${UI_ORIGIN}, BFF ${BFF_ORIGIN}, Simba ${SIMBA_ORIGIN}. For Playwright use: PLAYWRIGHT_COMPOSE_E2E=1 npm run e2e -- citizen-life-compose.spec.ts --project=chromium`,
     );
   });
 

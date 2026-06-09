@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import zw.gov.mohcc.impilo.coverage.api.dto.CheckEligibilityRequest;
 import zw.gov.mohcc.impilo.coverage.api.dto.EligibilityCheckResponse;
+import zw.gov.mohcc.impilo.coverage.api.dto.EnrollmentEligibilityRequest;
+import zw.gov.mohcc.impilo.coverage.api.dto.EnrollmentEligibilityResponse;
 import zw.gov.mohcc.impilo.coverage.core.CoverageEventService;
+import zw.gov.mohcc.impilo.coverage.core.EnrollmentEligibilityService;
 import zw.gov.mohcc.impilo.coverage.domain.EligibilityCheckEntity;
 import zw.gov.mohcc.impilo.coverage.domain.MemberCoverageEntity;
 import zw.gov.mohcc.impilo.coverage.repository.EligibilityCheckRepository;
@@ -38,13 +41,24 @@ public class EligibilityController {
     private final EligibilityCheckRepository eligibilityRepository;
     private final MemberCoverageRepository memberCoverageRepository;
     private final CoverageEventService eventService;
+    private final EnrollmentEligibilityService enrollmentEligibilityService;
 
     public EligibilityController(EligibilityCheckRepository eligibilityRepository,
                                  MemberCoverageRepository memberCoverageRepository,
-                                 CoverageEventService eventService) {
+                                 CoverageEventService eventService,
+                                 EnrollmentEligibilityService enrollmentEligibilityService) {
         this.eligibilityRepository = eligibilityRepository;
         this.memberCoverageRepository = memberCoverageRepository;
         this.eventService = eventService;
+        this.enrollmentEligibilityService = enrollmentEligibilityService;
+    }
+
+    @PostMapping("/enrollment")
+    public ResponseEntity<EnrollmentEligibilityResponse> checkEnrollmentEligibility(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @Valid @RequestBody EnrollmentEligibilityRequest request) {
+        UUID tid = UUID.fromString(tenantId);
+        return ResponseEntity.ok(enrollmentEligibilityService.evaluate(tid, request.clientId(), request.planId()));
     }
 
     @GetMapping

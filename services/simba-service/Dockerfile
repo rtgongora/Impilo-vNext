@@ -4,6 +4,6 @@ WORKDIR /app
 COPY target/simba-service-*.jar app.jar
 RUN chown -R impilo:impilo /app
 USER impilo
-EXPOSE 8080
+EXPOSE 8125
 ENTRYPOINT ["java", "-XX:+UseZGC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
 

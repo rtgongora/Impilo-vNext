@@ -14,7 +14,7 @@ import zw.gov.mohcc.impilo.experience.config.ServiceClientConfig;
 import java.util.Map;
 
 /**
- * HTTP client for the wellness sovereign service (port 8161).
+ * HTTP client for the Simba wellness product runtime (port 8125).
  * Consumer-grade wellness: programs, enrollments, challenges, goals.
  */
 @Component

@@ -95,11 +95,19 @@ export default function DietPage() {
                 <Plus className="h-4 w-4 text-emerald-700" />
               </div>
               <div className="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex flex-wrap gap-2 items-end">
-                <input placeholder="Meal / item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm flex-1 min-w-[140px]" />
+                <input data-testid="wellness-diet-name" placeholder="Meal / item" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm flex-1 min-w-[140px]" />
                 {(["calories", "protein", "carbs", "fat", "water"] as const).map((f) => (
-                  <input key={f} placeholder={f === "water" ? "water ml" : f} type="number" value={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.value })} className="rounded-lg border px-3 py-1.5 text-sm w-24" />
+                  <input
+                    key={f}
+                    data-testid={f === "calories" ? "wellness-diet-calories" : undefined}
+                    placeholder={f === "water" ? "water ml" : f}
+                    type="number"
+                    value={form[f]}
+                    onChange={(e) => setForm({ ...form, [f]: e.target.value })}
+                    className="rounded-lg border px-3 py-1.5 text-sm w-24"
+                  />
                 ))}
-                <button onClick={() => void addEntry()} className="rounded-lg bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700">Save</button>
+                <button data-testid="wellness-diet-add" onClick={() => void addEntry()} className="rounded-lg bg-emerald-600 text-white px-4 py-1.5 text-sm font-medium hover:bg-emerald-700">Save</button>
               </div>
               <div className="divide-y divide-gray-50">
                 {dietQ.isLoading && <p className="px-4 py-3 text-sm text-gray-400">Loading entries...</p>}

@@ -20,7 +20,7 @@ import java.util.Locale;
 /**
  * Explicit contract handlers for citizen monitoring devices.
  *
- * <p>Forwards to {@code wellness-service} while preserving trust headers for matrix discovery.</p>
+ * <p>Forwards to {@code simba-service} (Simba wellness) while preserving trust headers.</p>
  */
 @RestController
 public class CitizenMonitoringDevicesController {
@@ -34,7 +34,7 @@ public class CitizenMonitoringDevicesController {
 
     public CitizenMonitoringDevicesController(
             RestTemplate serviceRestTemplate,
-            @Value("${impilo.services.wellness-base-url:http://localhost:8161}") String wellnessBaseUrl) {
+            @Value("${impilo.services.simba-base-url:http://localhost:8125}") String wellnessBaseUrl) {
         this.restTemplate = serviceRestTemplate;
         String b = wellnessBaseUrl.trim();
         this.wellnessBaseUrl = b.endsWith("/") ? b.substring(0, b.length() - 1) : b;

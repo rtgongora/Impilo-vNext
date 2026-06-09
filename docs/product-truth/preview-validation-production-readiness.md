@@ -52,12 +52,12 @@
 
 ### Domain services (10–18)
 
-- [ ] **Wellness:** `/wellness` — goals, screenings (BFF reminders)
+- [x] **Wellness:** `/wellness` — goals, screenings (Simba programmes + BFF reminders); compose smoke Test 7 + journey e2e
 - [ ] **MADI:** `/madi` — donor pathway, blood bank, transfusion
 - [ ] **MusheX:** `/wallet`, `/finance/mushex-platform` — payment/wallet credit
 - [ ] **Costa:** `/finance/costa/encounter/{id}` — billing trigger
 - [ ] **Fundo:** `/learning/catalog` — enrol, progress, assessment, certificate (`e2e/fundo-learning-flow.spec.ts`)
-- [ ] **Coverage:** `/coverage/enroll`, `/coverage/member`
+- [x] **Coverage:** `/coverage/enroll`, `/coverage/member` — compose e2e + `MemberEnrollmentIT` + smoke Test 6
 - [ ] **Public health:** `/public-health/site-registry` — Ndila map markers
 - [ ] **Enterprise:** `/enterprise` drill-down; `/enterprise/warehousing` inventory KPIs
 - [ ] **Live events:** `/live/discover` — register, join, replays

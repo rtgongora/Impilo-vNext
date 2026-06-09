@@ -12,10 +12,10 @@
     </parent>
 
     <artifactId>simba-service</artifactId>
-    <name>SIMBA — Wellness Tracker Service</name>
+    <name>Simba — Wellness Product Service</name>
     <description>
-        Wellness orchestration: fitness, diet, sleep, mood, clubs, communities,
-        challenges, goals, device-linked tracking, and marketplace-adjacent lifestyle data.
+        Simba wellness product runtime: goals, diet, sleep, mood, clubs, challenges,
+        Health Connect v1, citizen My Life, monitoring devices, and personal health data.
     </description>
 
     <dependencies>
@@ -86,6 +86,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

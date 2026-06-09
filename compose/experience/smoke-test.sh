@@ -141,6 +141,36 @@ else
   fail "Fundo catalog check failed (HTTP $FUNDO_CODE). Is learning-service healthy on :8235?"
 fi
 
+# ── Test 6: Coverage plans via BFF (coverage-service) ────────────
+info "Test 6: Coverage plans via BFF"
+COV_CODE=$(curl -sf -o /tmp/smoke-coverage.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/coverage/plans" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$COV_CODE" = "200" ] && grep -q "COV-MOHCC-CORE\|MOHCC National Core Scheme" /tmp/smoke-coverage.json 2>/dev/null; then
+  pass "Coverage plans returned governed seed schemes"
+else
+  fail "Coverage plans check failed (HTTP $COV_CODE). Is coverage-service healthy on :8140?"
+fi
+
+# ── Test 7: Simba wellness clubs via BFF (simba-service) ─────────
+info "Test 7: Simba wellness clubs via BFF"
+SIMBA_CODE=$(curl -sf -o /tmp/smoke-simba.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/wellness/clubs" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$SIMBA_CODE" = "200" ] && grep -q "Harare Morning Walkers\|Walking" /tmp/smoke-simba.json 2>/dev/null; then
+  pass "Simba clubs returned governed seed catalogue"
+else
+  fail "Simba clubs check failed (HTTP $SIMBA_CODE). Is simba-service healthy on :8125?"
+fi
+
 echo ""
 echo "========================================="
 echo -e "  ${GREEN}All smoke tests passed!${NC}"

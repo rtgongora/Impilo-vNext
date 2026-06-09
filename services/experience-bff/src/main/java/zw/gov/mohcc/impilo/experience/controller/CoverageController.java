@@ -113,6 +113,34 @@ public class CoverageController {
         }
     }
 
+    @PostMapping("/eligibility/enrollment")
+    public ResponseEntity<Map<String, Object>> checkEnrollmentEligibility(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
+            @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = coverageClient.checkEnrollmentEligibility(body);
+            return ResponseEntity.ok(Map.of("data", data != null ? data : Map.of(),
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            log.error("Enrollment eligibility check failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", Map.of("code", "CHECK_FAILED", "message", e.getMessage())));
+        }
+    }
+
+    @GetMapping("/subsidies")
+    public ResponseEntity<Map<String, Object>> listSubsidies(
+            @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,
+            @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId) {
+        try {
+            JsonNode data = coverageClient.listSubsidies();
+            return ResponseEntity.ok(Map.of("data", data != null ? data : new Object[0],
+                    "meta", Map.of("request_id", requestId, "correlation_id", correlationId)));
+        } catch (Exception e) {
+            return upstreamFailure("COVERAGE_UNAVAILABLE", e.getMessage(), requestId, correlationId);
+        }
+    }
+
     @PostMapping("/claims")
     public ResponseEntity<Map<String, Object>> submitClaim(
             @RequestHeader(CompanionHeaders.REQUEST_ID) String requestId,

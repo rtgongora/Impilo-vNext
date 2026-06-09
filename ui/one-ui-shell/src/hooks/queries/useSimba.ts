@@ -94,6 +94,28 @@ export function useWellnessChallenges() {
   });
 }
 
+export function useScreeningProgrammes() {
+  return useQuery<WellnessListResponse>({
+    queryKey: ["wellness-screening-programmes"],
+    queryFn: () => apiClient.get<WellnessListResponse>("/internal/v1/wellness/screening-programmes"),
+  });
+}
+
+export function useWellnessRoutes() {
+  return useQuery<WellnessListResponse>({
+    queryKey: ["wellness-routes"],
+    queryFn: () => apiClient.get<WellnessListResponse>("/internal/v1/wellness/routes"),
+  });
+}
+
+export function useCoachingNudges(cpid?: string | null) {
+  return useQuery<WellnessListResponse>({
+    queryKey: ["wellness-coaching-nudges", cpid ?? null],
+    queryFn: () =>
+      apiClient.get<WellnessListResponse>(withPersonCpidQuery("/internal/v1/wellness/coaching/nudges", cpid)),
+  });
+}
+
 export function useRecordActivity() {
   const queryClient = useQueryClient();
   return useMutation<WellnessListResponse, unknown, Record<string, unknown>>({
@@ -180,9 +202,11 @@ export function useJoinClub() {
 
 export function useLeaveClub() {
   const queryClient = useQueryClient();
-  return useMutation<WellnessClubResponse, unknown, { id: string | number }>({
-    mutationFn: ({ id }) =>
-      apiClient.delete<WellnessClubResponse>(`/internal/v1/wellness/clubs/${id}/leave`),
+  return useMutation<WellnessClubResponse, unknown, { id: string | number; person_cpid: string }>({
+    mutationFn: ({ id, person_cpid }) =>
+      apiClient.delete<WellnessClubResponse>(
+        `/internal/v1/wellness/clubs/${id}/leave?person_cpid=${encodeURIComponent(person_cpid)}`,
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["wellness-clubs"] });
     },

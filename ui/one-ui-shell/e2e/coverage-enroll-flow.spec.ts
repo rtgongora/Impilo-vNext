@@ -1,21 +1,52 @@
 import { test, expect } from "./fixtures";
+import { COVERAGE_E2E, installCoverageMocks } from "./coverage-mocks";
 
 test.describe("Coverage enrollment journey", () => {
+  test.beforeEach(async ({ page }) => {
+    await installCoverageMocks(page);
+  });
+
   test("enroll page loads with three-step workflow", async ({ page }) => {
     await page.goto("/coverage/enroll");
 
-    await expect(page.getByText("Enroll in coverage")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Enroll in coverage" })).toBeVisible();
     await expect(page.getByText("1. Choose a plan")).toBeVisible();
     await expect(page.getByText("2. Eligibility check")).toBeVisible();
     await expect(page.getByText("3. Confirm enrollment")).toBeVisible();
   });
 
-  test("enroll page exposes eligibility and member enrollment actions", async ({ page }) => {
-    await page.goto("/coverage/enroll");
+  test("full journey: plan load → eligibility → enroll → member dashboard", async ({ page }) => {
+    const planUrls: string[] = [];
+    const eligibilityUrls: string[] = [];
+    const enrollUrls: string[] = [];
 
-    await expect(page.getByRole("button", { name: /run eligibility/i })).toBeVisible();
-    await expect(page.getByPlaceholder("Member number")).toBeVisible();
-    await expect(page.getByRole("button", { name: /enroll member/i })).toBeDisabled();
+    page.on("request", (req) => {
+      const u = req.url();
+      if (u.includes("/internal/v1/coverage/plans")) planUrls.push(u);
+      if (u.includes("/internal/v1/coverage/eligibility/enrollment")) eligibilityUrls.push(u);
+      if (u.includes("/internal/v1/coverage/members") && req.method() === "POST") enrollUrls.push(u);
+    });
+
+    await page.goto("/coverage/enroll");
+    await expect(page.getByTestId("coverage-enroll-plan-select")).toBeVisible();
+
+    await page.getByTestId("coverage-enroll-plan-select").selectOption(COVERAGE_E2E.planId);
+    await expect.poll(() => planUrls.length, { timeout: 15_000 }).toBeGreaterThan(0);
+
+    await page.getByTestId("coverage-run-eligibility").click();
+    await expect(page.getByTestId("coverage-eligibility-result")).toContainText(/ELIGIBLE/i);
+    await expect.poll(() => eligibilityUrls.length).toBeGreaterThan(0);
+
+    await page.getByTestId("coverage-member-number").fill(COVERAGE_E2E.memberNumber);
+    await page.getByTestId("coverage-enroll-submit").click();
+    await expect(page.getByTestId("coverage-enroll-success")).toBeVisible({ timeout: 15_000 });
+    await expect.poll(() => enrollUrls.length).toBeGreaterThan(0);
+
+    await page.goto("/coverage/member");
+    await expect(page.getByTestId("coverage-member-plans-table")).toContainText(COVERAGE_E2E.planName, {
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("coverage-member-plans-table")).toContainText("ACTIVE");
   });
 
   test("coverage hub links back from enroll", async ({ page }) => {

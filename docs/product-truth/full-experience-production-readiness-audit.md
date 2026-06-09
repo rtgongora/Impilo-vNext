@@ -35,14 +35,14 @@ Impilo vNext has substantial backend and BFF coverage. This program closes **sur
 | 2 | Provider ID (VARAPI) | `/registry/providers/*`, `/provider/activate` | `useProviders`, `useProviderLifecycle` | 2 | Onboarding rail apply/verify actions |
 | 3 | Provider login | `/auth/*`, `/provider-workspace` | `resolvePostLoginDestination`, `useLinkedIds` | 1 | Work landing, not citizen-first |
 | 4 | PCT / telehealth / inpatient | `/queue/*`, `/telemedicine/*`, `/clinical/inpatient/*` | `useQueue`, `useTelemedicine`, `useInpatient` | 3 | RTC token path; inpatient maturity labelled |
-| 5 | Simba / Wellness | `/wellness/*` | `useSimba`, `useCitizenWellness` | 4 | Screenings → BFF reminders; dashboard registered |
+| 5 | Simba (Wellness) | `/wellness/*` | `useSimba`, `useCitizenWellness` | 5 | Single Simba runtime; compose + journey e2e; Health Connect + citizen My Life on Simba |
 | 6 | PACS | `/ehr/[patientId]/imaging/*` | `useImagingStudies` | 3 | Viewer boundary honest (no fake DICOM) |
 | 7 | MADI | `/madi/*` (30 routes) | `useMadi` | 5 | Logistics → `MadiBloodLogisticsPanel` + dispatch KPIs |
 | 8 | OROS / lab | `/lab/*` | `useLabWorklist`, `useLabOrders` | 3 | BFF `LabWorklistController`; worklist accept/reject |
 | 9 | MusheX | `/finance/*`, `/wallet/*` | `useMusheWallet`, `useMushexPlatformAdmin` | 4 | Wallet credit mutation on platform hub |
 | 10 | Costa | `/finance/costa/*`, `/finance/billing` | `useCostaIntel`, `useFinanceBillingWorkspace` | 4 | Invoice-from-estimate on encounter page |
 | 11 | Fundo | `/learning/*` | `useFundoLms`, `useFundoCatalog` | 5 | Provider mobile depth in evidence |
-| 12 | Coverage | `/coverage/*` | `useCoverage`, `useMemberCoverage` | 2/4 | Sub-routes in `routes.ts` |
+| 12 | Coverage | `/coverage/*` | `useCoverage`, `useMemberCoverage` | 5/5 | Compose stack, enrollment journey e2e, subsidies tab, finance cross-links |
 | 13 | Indawo / PH | `/public-health/*` | `usePublicHealth`, `useSiteRegistry` | 5 | `NdilaMap` on site registry |
 | 14 | Enterprise | `/enterprise/*` | `useInventory*`, `useDispatchOps`, `useCostaIntel` | 4 | Warehousing + charge-sheet wired |
 

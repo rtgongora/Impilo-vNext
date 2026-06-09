@@ -25,11 +25,17 @@ export default function CoverageEnrollPage() {
 
   const plans = plansQ.data ?? [];
 
+  const eligibilityPassed =
+    eligibilityResult &&
+    (eligibilityResult.eligible === true ||
+      eligibilityResult.resultCode === "ELIGIBLE" ||
+      eligibilityResult.result_code === "ELIGIBLE");
+
   const runEligibility = () => {
     if (!clientId || !selectedPlanId) return;
     eligibility.mutate(
       {
-        command: "eligibility-check",
+        command: "enrollment-eligibility",
         payload: {
           clientId,
           planId: selectedPlanId,
@@ -38,7 +44,9 @@ export default function CoverageEnrollPage() {
       {
         onSuccess: (data) => {
           const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
-          setEligibilityResult(raw);
+          const inner =
+            raw.data && typeof raw.data === "object" ? (raw.data as Record<string, unknown>) : raw;
+          setEligibilityResult(inner);
         },
       },
     );
@@ -57,7 +65,9 @@ export default function CoverageEnrollPage() {
       {
         onSuccess: (data) => {
           const raw = data && typeof data === "object" ? (data as Record<string, unknown>) : {};
-          setEnrolled(raw);
+          const inner =
+            raw.data && typeof raw.data === "object" ? (raw.data as Record<string, unknown>) : raw;
+          setEnrolled(inner);
         },
       },
     );
@@ -89,9 +99,14 @@ export default function CoverageEnrollPage() {
               </div>
             ) : (
               <select
+                data-testid="coverage-enroll-plan-select"
                 className="mt-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
                 value={selectedPlanId}
-                onChange={(e) => setSelectedPlanId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedPlanId(e.target.value);
+                  setEligibilityResult(null);
+                  setEnrolled(null);
+                }}
               >
                 <option value="">Select plan</option>
                 {plans.map((plan) => (
@@ -108,6 +123,7 @@ export default function CoverageEnrollPage() {
             <p className="mt-1 text-sm text-gray-600">Verify coverage eligibility before enrolling.</p>
             <button
               type="button"
+              data-testid="coverage-run-eligibility"
               onClick={runEligibility}
               disabled={!selectedPlanId || eligibility.isPending}
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-impilo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
@@ -116,9 +132,25 @@ export default function CoverageEnrollPage() {
               Run eligibility
             </button>
             {eligibilityResult && (
-              <pre className="mt-3 max-h-40 overflow-auto rounded-lg bg-gray-50 p-3 text-xs text-gray-700">
-                {JSON.stringify(eligibilityResult, null, 2)}
-              </pre>
+              <div
+                data-testid="coverage-eligibility-result"
+                className={`mt-3 rounded-lg border p-3 text-sm ${
+                  eligibilityPassed
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : "border-amber-200 bg-amber-50 text-amber-900"
+                }`}
+              >
+                <p className="font-medium">
+                  {(eligibilityResult.resultCode as string) ||
+                    (eligibilityResult.result_code as string) ||
+                    (eligibilityPassed ? "ELIGIBLE" : "INELIGIBLE")}
+                </p>
+                <p className="mt-1 text-xs">
+                  {(eligibilityResult.resultMessage as string) ||
+                    (eligibilityResult.result_message as string) ||
+                    "Enrollment eligibility evaluated via coverage-service."}
+                </p>
+              </div>
             )}
           </section>
 
@@ -128,6 +160,7 @@ export default function CoverageEnrollPage() {
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
               <input
                 type="text"
+                data-testid="coverage-member-number"
                 placeholder="Member number"
                 value={memberNumber}
                 onChange={(e) => setMemberNumber(e.target.value)}
@@ -135,8 +168,9 @@ export default function CoverageEnrollPage() {
               />
               <button
                 type="button"
+                data-testid="coverage-enroll-submit"
                 onClick={submitEnrollment}
-                disabled={!selectedPlanId || !memberNumber.trim() || enroll.isPending}
+                disabled={!selectedPlanId || !memberNumber.trim() || !eligibilityPassed || enroll.isPending}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
               >
                 {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -144,8 +178,17 @@ export default function CoverageEnrollPage() {
               </button>
             </div>
             {enrolled && (
-              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <div
+                data-testid="coverage-enroll-success"
+                className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+              >
                 Enrollment submitted. Member record created via coverage-service.
+                <Link
+                  href="/coverage/member"
+                  className="mt-2 inline-block text-sm font-medium text-emerald-900 underline"
+                >
+                  View member dashboard
+                </Link>
               </div>
             )}
           </section>

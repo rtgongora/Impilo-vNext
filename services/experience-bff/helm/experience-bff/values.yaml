@@ -38,8 +38,8 @@ env:
   MUSHEX_BASE_URL: http://mushex-service.impilo-finance.svc.cluster.local:8087
   ORTHANC_BASE_URL: http://orthanc.impilo-clinical.svc.cluster.local:8042
   ORTHANC_DICOMWEB_URL: http://orthanc.impilo-clinical.svc.cluster.local:8042/dicom-web
-  # Canonical wellness target (Simba). Wellness alias runtime is compatibility-only until 2026-12-31 sunset.
-  WELLNESS_BASE_URL: http://simba-service:8125
+  # Simba — single wellness product runtime.
+  SIMBA_BASE_URL: http://simba-service:8125
   IMPILO_TELEMEDICINE_REQUIRE_TSHEPO_AUTHORIZE: "true"
   IMPILO_TELEMEDICINE_TSHEPO_PDP_FALLBACK_ALLOW: "false"
   IMPILO_TELEMEDICINE_AUDIT_INGEST_ENABLED: "true"

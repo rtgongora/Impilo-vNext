@@ -242,7 +242,7 @@ export default function MemberCoveragePage() {
             {plans.length === 0 ? (
               <p className="text-sm text-gray-500">No active coverage plans found for your profile.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" data-testid="coverage-member-plans-table">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-gray-600">

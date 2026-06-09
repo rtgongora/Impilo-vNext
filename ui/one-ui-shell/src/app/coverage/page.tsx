@@ -11,7 +11,7 @@ import { useState, type FormEvent } from "react";
 import {
   Shield, UserCheck, FileText, DollarSign, Briefcase,
   Loader2, CheckCircle2, AlertCircle, Plus,
-  Users, CreditCard, Scale, ShieldCheck, UserCircle2, Network,
+  Users, CreditCard, Scale, ShieldCheck, UserCircle2, Network, PiggyBank,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
@@ -24,6 +24,7 @@ import {
   useCoveragePreauthsList,
   useCoverageRemittances,
   useCoverageUtilizationList,
+  useCoverageSubsidiesList,
   useCreateCoverageClaim,
   useDecideCoverageAppeal,
   useEnrollCoverageMember,
@@ -37,7 +38,7 @@ import { useProviderContracts } from "@/hooks/queries/useProviderContracts";
 import { apiClient } from "@/lib/api-client";
 import { CoverageGeoMapPanel } from "@/components/coverage/CoverageGeoMapPanel";
 
-type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "contracting" | "preauth" | "claims" | "contributions" | "settlement" | "appeals" | "intelligence";
+type ActiveTab = "dashboard" | "schemes" | "membership" | "eligibility" | "contracting" | "preauth" | "claims" | "contributions" | "subsidies" | "settlement" | "appeals" | "intelligence";
 
 const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "dashboard", label: "Dashboard", icon: Shield },
@@ -48,6 +49,7 @@ const TABS: { key: ActiveTab; label: string; icon: typeof Shield }[] = [
   { key: "preauth", label: "Pre-Auth", icon: ShieldCheck },
   { key: "claims", label: "Claims", icon: FileText },
   { key: "contributions", label: "Contributions", icon: CreditCard },
+  { key: "subsidies", label: "Subsidies", icon: PiggyBank },
   { key: "settlement", label: "Settlement", icon: DollarSign },
   { key: "appeals", label: "Appeals", icon: Scale },
   { key: "intelligence", label: "Intelligence", icon: Shield },
@@ -312,6 +314,7 @@ export default function CoveragePage() {
         {activeTab === "preauth" && <PreauthTab />}
         {activeTab === "claims" && <ClaimsTab />}
         {activeTab === "contributions" && <ContributionsTab />}
+        {activeTab === "subsidies" && <SubsidiesTab />}
         {activeTab === "settlement" && <SettlementTab />}
         {activeTab === "appeals" && <AppealsTab />}
         {activeTab === "intelligence" && <IntelligenceTab />}
@@ -623,6 +626,17 @@ function ClaimsTab() {
           <Plus className="w-4 h-4" /> Submit Claim
         </button>
       </div>
+      <p className="text-sm text-gray-600">
+        Scheme-scoped claims use coverage-service. MusheX adjudication and payer queues live on{" "}
+        <Link href="/finance/claims" className="font-medium text-impilo-700 hover:text-impilo-900">
+          /finance/claims
+        </Link>{" "}
+        and{" "}
+        <Link href="/finance/payer-claims" className="font-medium text-impilo-700 hover:text-impilo-900">
+          /finance/payer-claims
+        </Link>
+        .
+      </p>
 
       <div className="bg-slate-50 rounded-lg border border-slate-200 p-4 flex flex-col gap-2 sm:flex-row sm:items-end">
         <div className="flex-1">
@@ -763,7 +777,11 @@ function SettlementTab() {
     <div className="space-y-4">
       <h3 className="text-base font-semibold text-gray-900">Settlement & Remittance</h3>
       <p className="text-sm text-gray-500">
-        Rows from <code className="text-xs">GET /internal/v1/coverage/remittances</code>. Downstream payers may use longer state machines than the fields returned here.
+        Rows from <code className="text-xs">GET /internal/v1/coverage/remittances</code>. Finance operators can also use the dedicated{" "}
+        <Link href="/finance/remittances" className="font-medium text-impilo-700 hover:text-impilo-900">
+          /finance/remittances
+        </Link>{" "}
+        hub for separation-of-duties reporting.
       </p>
 
       {isLoading ? (
@@ -1081,6 +1099,71 @@ function ContributionsTab() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── SUBSIDIES TAB ────────────────────────────────────────────────
+function SubsidiesTab() {
+  const subsidiesQ = useCoverageSubsidiesList();
+  const subsidyRows = (subsidiesQ.data ?? []).map(asRecord);
+
+  return (
+    <div className="space-y-4" data-testid="coverage-subsidies-tab">
+      <h3 className="text-base font-semibold text-gray-900">Subsidy programmes</h3>
+      <p className="text-sm text-gray-500">
+        Governed programmes from <code className="text-xs">GET /internal/v1/coverage/subsidies</code> — government, donor, and facility assistance rails.
+      </p>
+      {subsidiesQ.isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        </div>
+      ) : subsidiesQ.isError ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Could not load subsidy programmes.
+        </div>
+      ) : subsidyRows.length === 0 ? (
+        <div className="bg-white rounded-lg border border-gray-200 p-5 text-sm text-gray-500">
+          No active subsidy programmes for this tenant.
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-left">
+                <th className="px-3 py-2 font-medium text-gray-600">Programme</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Type</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Annual cap</th>
+                <th className="px-3 py-2 font-medium text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {subsidyRows.map((row, idx) => (
+                <tr key={`${readUnknownString(row, "id", "programCode", "program_code") || "sub"}-${idx}`}>
+                  <td className="px-3 py-2 text-gray-700">
+                    {readUnknownString(row, "programName", "program_name") || "—"}
+                    <span className="ml-2 font-mono text-[10px] text-gray-400">
+                      {readUnknownString(row, "programCode", "program_code")}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-gray-700">{readUnknownString(row, "subsidyType", "subsidy_type") || "—"}</td>
+                  <td className="px-3 py-2 text-gray-700">
+                    {formatCoverageCurrency(
+                      readUnknownNumber(row, "annualCap", "annual_cap"),
+                      readUnknownString(row, "currency") || "USD",
+                    )}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-800">
+                      {readUnknownString(row, "status") || "ACTIVE"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -1472,10 +1555,10 @@ function IntelligenceTab() {
           </table>
         </div>
       ) : null}
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <h4 className="text-sm font-semibold text-gray-900 mb-2">Future analytics domains</h4>
+      <div className="bg-white rounded-lg border border-gray-200 p-5" data-testid="coverage-intelligence-advanced-note">
+        <h4 className="text-sm font-semibold text-gray-900 mb-2">Advanced analytics (deferred)</h4>
         <p className="text-xs text-gray-600">
-          When reporting APIs exist, this area can host fraud, utilization, benchmarking, and forecasting without placeholder numbers.
+          Remittance and utilization KPIs above are live from coverage-service. Fraud scoring, MLR benchmarking, and forecasting remain on the reporting-service roadmap.
         </p>
       </div>
         </>

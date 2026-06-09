@@ -18,7 +18,7 @@ describe("coverage enrollment golden thread", () => {
     expect(page).toContain("useEnrollCoverageMember");
     expect(page).toContain("useRunCoverageCommand");
     expect(hooks).toContain("/internal/v1/coverage/members");
-    expect(hooks).toContain("/internal/v1/coverage/eligibility/check");
+    expect(hooks).toContain("/internal/v1/coverage/eligibility/enrollment");
   });
 
   it("BFF coverage controller exposes enrollment endpoints", () => {
