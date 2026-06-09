@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-08T16:30:59.078Z",
+  "generatedAt": "2026-06-09T03:43:15.394Z",
   "counts": {
     "totalOpenApiOperations": 4452,
     "totalAsyncChannels": 84,
@@ -13503,7 +13503,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/FinanceBillingWorkspaceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CoverageController.java",
       "stubPattern": null
     },
     {
@@ -15310,7 +15310,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CommunicationController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CareEmergencyInpatientController.java",
       "stubPattern": null
     },
     {
@@ -20952,7 +20952,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/QueueController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/CareEmergencyInpatientController.java",
       "stubPattern": null
     },
     {
@@ -22005,7 +22005,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/StructuredHistoryController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ProcedureWorkflowController.java",
       "stubPattern": null
     },
     {
@@ -22954,7 +22954,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/VitoDedupBffController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EdWorkflowController.java",
       "stubPattern": null
     },
     {
@@ -23786,7 +23786,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/GuidanceController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/DiagnosisSearchController.java",
       "stubPattern": null
     },
     {
@@ -23903,7 +23903,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileHouseholdController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EdWorkflowController.java",
       "stubPattern": null
     },
     {
@@ -23916,7 +23916,7 @@
         "experience-bff"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/mobile/MobileHouseholdController.java",
+      "serviceHandler": "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/EdWorkflowController.java",
       "stubPattern": null
     },
     {
@@ -42480,7 +42480,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/JourneyController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/EdVisitController.java",
       "stubPattern": null
     },
     {
@@ -43000,7 +43000,7 @@
         "pct-service"
       ],
       "implStatus": "implemented",
-      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/TelehealthController.java",
+      "serviceHandler": "services/pct-service/src/main/java/zw/gov/mohcc/impilo/pct/api/controller/EdVisitController.java",
       "stubPattern": null
     },
     {
