@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import { Calendar, ClipboardList, FileText, Filter, Loader2, Scissors } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { Calendar, ClipboardList, FileText, Filter, Loader2, Plus, Scissors } from "lucide-react";
 import { ClinicalReviewHeader } from "@/components/ehr/ClinicalReviewHeader";
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
@@ -10,6 +11,7 @@ import { useEncounters } from "@/hooks/queries/useEncounters";
 import type { PatientProcedure } from "@/hooks/queries/useStructuredHistory";
 import { usePatientProcedures } from "@/hooks/queries/useStructuredHistory";
 import { useFacilityStore } from "@/hooks/useFacilityStore";
+import { useCreateProcedureEpisode } from "@/hooks/queries/useProcedureEpisode";
 
 const STATUS_STYLES: Record<string, string> = {
   Completed: "bg-green-100 text-green-700",
@@ -23,8 +25,10 @@ const PROCEDURE_TYPES = ["All", "General Surgery", "Endoscopy", "Orthopaedic", "
 export default function ProceduresPage() {
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
+  const router = useRouter();
   const facility = useFacilityStore((state) => state.facility);
   const { data: encountersData } = useEncounters(patientId);
+  const createEpisode = useCreateProcedureEpisode(patientId);
 
   const { data, isLoading, isError, refetch } = usePatientProcedures(patientId);
   const procedures: PatientProcedure[] = data?.data ?? [];
@@ -117,20 +121,39 @@ export default function ProceduresPage() {
               </p>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-2">
                 <Scissors className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold text-gray-900">Procedure History</h2>
                 <span className="text-sm text-gray-500">({filtered.length})</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowFilters((prev) => !prev)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={createEpisode.isPending}
+                  onClick={() => createEpisode.mutate({
+                    procedureName: "Scheduled procedure",
+                    encounterId: activeEncounter?.id,
+                    scheduledAt: new Date().toISOString(),
+                  }, {
+                    onSuccess: (data) => {
+                      if (data?.id) router.push(`/ehr/${patientId}/procedures/${data.id}`);
+                    },
+                  })}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-impilo-500 px-3 py-2 text-sm font-medium text-white hover:bg-impilo-600"
+                >
+                  <Plus className="h-4 w-4" />
+                  New procedure case
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                >
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </button>
+              </div>
             </div>
 
             {showFilters && (
@@ -181,7 +204,9 @@ export default function ProceduresPage() {
                             {procedure.date}
                           </td>
                           <td className="px-4 py-3">
-                            <div className="font-medium text-gray-900">{procedure.name}</div>
+                            <Link href={`/ehr/${patientId}/procedures/${procedure.id}`} className="font-medium text-impilo-600 hover:underline">
+                              {procedure.name}
+                            </Link>
                             <div className="text-xs text-gray-500">{procedure.notes}</div>
                           </td>
                           <td className="px-4 py-3 text-gray-700">{procedure.type}</td>

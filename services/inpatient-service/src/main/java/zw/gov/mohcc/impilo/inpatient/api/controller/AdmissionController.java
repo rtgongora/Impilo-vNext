@@ -37,8 +37,11 @@ public class AdmissionController {
     @GetMapping
     public ResponseEntity<List<AdmissionEntity>> listAdmissions(
             @RequestParam(required = false) UUID facilityId,
-            @RequestParam(required = false) String status) {
-        List<AdmissionEntity> admissions = admissionService.listAdmissions(facilityId, status);
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, name = "subjectCpid") String subjectCpid,
+            @RequestParam(required = false, name = "patientId") String patientId) {
+        String cpid = subjectCpid != null ? subjectCpid : patientId;
+        List<AdmissionEntity> admissions = admissionService.listAdmissions(facilityId, status, cpid);
         return ResponseEntity.ok(admissions);
     }
 

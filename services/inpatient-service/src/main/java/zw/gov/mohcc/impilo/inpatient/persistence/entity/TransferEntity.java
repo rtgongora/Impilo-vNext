@@ -34,6 +34,21 @@ public class TransferEntity {
     @Column(name = "transferred_at")
     private OffsetDateTime transferredAt;
 
+    @Column(name = "status", nullable = false)
+    private String status = "COMPLETED";
+
+    @Column(name = "reason")
+    private String reason;
+
+    @Column(name = "clinical_notes")
+    private String clinicalNotes;
+
+    @Column(name = "requested_by")
+    private String requestedBy;
+
+    @Column(name = "accepted_by")
+    private String acceptedBy;
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
@@ -72,4 +87,19 @@ public class TransferEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
+    public String getClinicalNotes() { return clinicalNotes; }
+    public void setClinicalNotes(String clinicalNotes) { this.clinicalNotes = clinicalNotes; }
+
+    public String getRequestedBy() { return requestedBy; }
+    public void setRequestedBy(String requestedBy) { this.requestedBy = requestedBy; }
+
+    public String getAcceptedBy() { return acceptedBy; }
+    public void setAcceptedBy(String acceptedBy) { this.acceptedBy = acceptedBy; }
 }

@@ -46,6 +46,18 @@ public class AdmissionEntity {
     @Column(name = "discharged_at")
     private OffsetDateTime dischargedAt;
 
+    @Column(name = "admitting_diagnosis")
+    private String admittingDiagnosis;
+
+    @Column(name = "admission_type")
+    private String admissionType = "EMERGENCY";
+
+    @Column(name = "diet_orders")
+    private String dietOrders = "REGULAR";
+
+    @Column(name = "activity_level")
+    private String activityLevel = "BED_REST";
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
@@ -99,4 +111,16 @@ public class AdmissionEntity {
 
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getAdmittingDiagnosis() { return admittingDiagnosis; }
+    public void setAdmittingDiagnosis(String admittingDiagnosis) { this.admittingDiagnosis = admittingDiagnosis; }
+
+    public String getAdmissionType() { return admissionType; }
+    public void setAdmissionType(String admissionType) { this.admissionType = admissionType; }
+
+    public String getDietOrders() { return dietOrders; }
+    public void setDietOrders(String dietOrders) { this.dietOrders = dietOrders; }
+
+    public String getActivityLevel() { return activityLevel; }
+    public void setActivityLevel(String activityLevel) { this.activityLevel = activityLevel; }
 }

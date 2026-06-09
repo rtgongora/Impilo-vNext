@@ -26,6 +26,7 @@ public class BookingIntegrationService {
     private final NhumeClient nhumeClient;
     private final LearningClient learningClient;
     private final CommunityClient communityClient;
+    private final InpatientClient inpatientClient;
     private final BookingLinkRepository linkRepository;
 
     public BookingIntegrationService(VarapiClient varapiClient,
@@ -37,6 +38,7 @@ public class BookingIntegrationService {
                                      NhumeClient nhumeClient,
                                      LearningClient learningClient,
                                      CommunityClient communityClient,
+                                     InpatientClient inpatientClient,
                                      BookingLinkRepository linkRepository) {
         this.varapiClient = varapiClient;
         this.tusoClient = tusoClient;
@@ -47,6 +49,7 @@ public class BookingIntegrationService {
         this.nhumeClient = nhumeClient;
         this.learningClient = learningClient;
         this.communityClient = communityClient;
+        this.inpatientClient = inpatientClient;
         this.linkRepository = linkRepository;
     }
 
@@ -136,6 +139,43 @@ public class BookingIntegrationService {
 
     public Map<String, Object> resolveFacility(TrustContext ctx, Long facilityId) {
         return tusoClient.getFacility(ctx, facilityId);
+    }
+
+    public java.util.Optional<String> ensureProcedureEpisode(TrustContext ctx, BookingEntity booking) {
+        if (booking.getBookingType() != BookingType.THEATRE && booking.getBookingType() != BookingType.PROCEDURE) {
+            return java.util.Optional.empty();
+        }
+        var existing = linkRepository.findByBookingIdAndLinkType(booking.getId(), LinkType.PROCEDURE_EPISODE);
+        if (!existing.isEmpty()) {
+            return java.util.Optional.of(existing.get(0).getLinkId());
+        }
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("patientId", booking.getClientId());
+        payload.put("bookingId", booking.getId().toString());
+        String procedureName = booking.getServiceName();
+        if (procedureName == null || procedureName.isBlank()) {
+            procedureName = booking.getReason() != null ? booking.getReason() : "Theatre procedure";
+        }
+        payload.put("procedureName", procedureName);
+        if (booking.getServiceId() != null) {
+            payload.put("procedureCode", booking.getServiceId());
+        }
+        if (booking.getProviderId() != null) {
+            payload.put("surgeonId", booking.getProviderId());
+        }
+        if (booking.getResourceId() != null) {
+            payload.put("theatreId", booking.getResourceId().toString());
+        }
+        if (booking.getPreferredStartAt() != null) {
+            payload.put("scheduledAt", booking.getPreferredStartAt().toString());
+        }
+        Map<String, Object> response = inpatientClient.createProcedureEpisode(ctx, payload);
+        Object episodeId = response.get("id");
+        if (episodeId == null) {
+            return java.util.Optional.empty();
+        }
+        persistLink(ctx, booking.getId(), LinkType.PROCEDURE_EPISODE, episodeId.toString());
+        return java.util.Optional.of(episodeId.toString());
     }
 
     public String formatPreferredDate(BookingEntity booking) {

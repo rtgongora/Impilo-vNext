@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.sql.Date;
@@ -38,10 +39,13 @@ public class StructuredHistoryController {
 
     private final ObjectMapper objectMapper;
     private final PctServiceClient pctClient;
+    private final InpatientServiceClient inpatientClient;
 
-    public StructuredHistoryController(ObjectMapper objectMapper, PctServiceClient pctClient) {
+    public StructuredHistoryController(ObjectMapper objectMapper, PctServiceClient pctClient,
+                                       InpatientServiceClient inpatientClient) {
         this.objectMapper = objectMapper;
         this.pctClient = pctClient;
+        this.inpatientClient = inpatientClient;
     }
 
     private static UUID parsePatientId(String patientId) {
@@ -189,6 +193,17 @@ public class StructuredHistoryController {
             @RequestHeader(CompanionHeaders.CORRELATION_ID) String correlationId,
             @RequestParam(name = "patient_id") String patientIdParam) {
         parsePatientId(patientIdParam);
+        try {
+            JsonNode inpatientData = inpatientClient.listProcedureHistory(patientIdParam);
+            if (inpatientData != null && inpatientData.isArray() && !inpatientData.isEmpty()) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", inpatientData);
+                body.put("meta", meta(requestId, correlationId));
+                return ResponseEntity.ok(body);
+            }
+        } catch (Exception e) {
+            log.warn("Inpatient listProcedureHistory failed: {}", e.getMessage());
+        }
         try {
             JsonNode pctData = pctClient.getProcedures(patientIdParam);
             if (!pctPayloadMissingOrEmpty(pctData)) {

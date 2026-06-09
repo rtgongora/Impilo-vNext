@@ -14,11 +14,13 @@
 | Inpatient admission create | `inpatient-service` | BFF `/internal/v1/admissions` -> inpatient `/internal/v1/admissions` | implemented | none |
 | Bed/ward allocation | `inpatient-service` + `tuso-service` context | admission create/transfer payload (`wardId`, `bedId`) | implemented (bounded) | bed occupancy/constraint engine depth partial |
 | Admission handover/check-in | `inpatient-service` + PCT linkage | admission create + PCT journey/admission refs | partial | unified handover artifact contract pending |
-| Inpatient chart opening | `pct-service`/document/forms | encounter + notes/forms routes | partial | dedicated inpatient chart aggregate missing |
-| Daily ward rounds | `pct-service` route family today | BFF `/internal/v1/ward-rounds*` -> PCT; not yet wired to inpatient service | partial | inpatient-service ward-round API not yet canonical in BFF |
-| Nursing care plans | forms + guidance + PCT coordination | care-plan and forms routes | partial | no dedicated nursing-plan aggregate service contract |
-| Charting/observations | PCT + forms/document | `/internal/v1/observations`, clinical-notes routes | implemented (bounded) | cross-service normalization depth pending |
-| Medication administration support | pharmacy + inpatient context | prescriptions/dispense + inpatient references | partial | MAR-specific workflow contract not yet explicit |
+| Inpatient chart opening | `inpatient-service` | BFF `/internal/v1/ward-charts/*` + EHR charts routes | implemented (bounded) | cross-chart aggregation depth pending |
+| Daily ward rounds | `inpatient-service` | BFF `/internal/v1/ward-rounds*` -> inpatient sovereign API | implemented | none |
+| Nursing care plans | `inpatient-service` | BFF `/internal/v1/care-plans*` -> `inpatient.care_plan` | implemented (bounded) | goal/intervention perform audit depth pending |
+| Charting/observations | `inpatient-service` | `/internal/v1/observations`, `/ward-charts/{type}/entries` | implemented (bounded) | FHIR Observation normalization optional |
+| Medication administration support | `inpatient-service` MAR | BFF `/internal/v1/mar*`, mobile `/clinical/mar` | implemented (bounded) | pharmacy prescription linkage depth pending |
+| Shift handover/takeover | `inpatient-service` | BFF `/internal/v1/inpatient/handover*` | implemented (bounded) | TUSO shift linkage optional |
+| Citizen ward alert | `inpatient-service` + notification | `/internal/v1/mobile/citizen/inpatient/ward-alert` | implemented (bounded) | ward staff inbox surfacing in provider app pending |
 | Orders/results during admission | OROS | orders/results surfaces and OROS APIs | implemented (bounded) | longitudinal admission-level result bundle view partial |
 | Inpatient transfer | `inpatient-service` | `POST /internal/v1/admissions/{ref}/transfer` | implemented | transfer accept workflow in BFF is intentionally `501` |
 | Discharge planning | PCT + inpatient + document/forms | discharge workflow + notes/forms | partial | full discharge-plan artifact model pending |

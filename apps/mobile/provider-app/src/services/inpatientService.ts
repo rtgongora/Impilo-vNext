@@ -46,3 +46,21 @@ export const fetchObservations = async (patientId: string) => (await apiClient.g
 export const requestTransfer = async (body: Record<string, unknown>) => (await apiClient.post<{ data: { id: string } }>(`${V1}/transfers`, body)).data.data;
 export const acceptTransfer = async (id: string, body: Record<string, string>) => apiClient.post(`${V1}/transfers/${id}/accept`, body);
 export const listTransfers = async (patientId?: string) => (await apiClient.get<{ data: unknown[] }>(`${V1}/transfers${patientId ? `?patientId=${patientId}` : ""}`)).data.data;
+
+// Handover / takeover
+export const submitHandover = async (body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string; status: string } }>(`${V1}/inpatient/handover`, body)).data.data;
+export const acceptTakeover = async (handoverId: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string; status: string } }>(`${V1}/inpatient/handover/${handoverId}/takeover`, body)).data.data;
+
+// Ward charts
+export const fetchWardChartEntries = async (chartType: string, patientId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${V1}/ward-charts/${chartType}/entries?patientId=${patientId}`)).data.data;
+export const recordWardChartEntry = async (chartType: string, body: Record<string, unknown>) =>
+  (await apiClient.post<{ data: { id: string } }>(`${V1}/ward-charts/${chartType}/entries`, body)).data.data;
+
+// Ward alerts (provider)
+export const listWardAlerts = async (wardId: string) =>
+  (await apiClient.get<{ data: unknown[] }>(`${V1}/ward-alerts?wardId=${wardId}`)).data.data;
+export const acknowledgeWardAlert = async (alertId: string, body: Record<string, string>) =>
+  apiClient.post(`${V1}/ward-alerts/${alertId}/acknowledge`, body);

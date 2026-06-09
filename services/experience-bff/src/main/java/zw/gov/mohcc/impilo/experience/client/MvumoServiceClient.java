@@ -99,6 +99,48 @@ public class MvumoServiceClient {
         return extractData(response);
     }
 
+    public JsonNode getConsentRequest(String consentRequestId) {
+        String url = baseUrl + "/internal/v1/mvumo/consent-requests/" + consentRequestId;
+        log.debug("MVUMO: get consent request {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getConsentProof(String consentRequestId) {
+        String url = baseUrl + "/internal/v1/mvumo/consents/" + consentRequestId + "/proof";
+        log.debug("MVUMO: get consent proof {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode provideConsentExplanation(String consentRequestId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/consent-requests/" + consentRequestId + "/explanation";
+        log.info("MVUMO: provide explanation for consent {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode verifyConsentIdentity(String consentRequestId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/consent-requests/" + consentRequestId + "/verify-identity";
+        log.info("MVUMO: verify identity for consent {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode grantConsentRequest(String consentRequestId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/consent-requests/" + consentRequestId + "/grant";
+        log.info("MVUMO: grant consent {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode refuseConsentRequest(String consentRequestId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mvumo/consent-requests/" + consentRequestId + "/refuse";
+        log.info("MVUMO: refuse consent {}", consentRequestId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body != null ? body : Map.of(), JsonNode.class);
+        return extractData(response);
+    }
+
     private JsonNode extractData(ResponseEntity<JsonNode> response) {
         if (response.getBody() != null && response.getBody().has("data")) {
             return response.getBody().get("data");

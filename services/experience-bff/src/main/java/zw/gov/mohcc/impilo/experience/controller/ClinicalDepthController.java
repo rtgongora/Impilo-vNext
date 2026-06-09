@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 
 import java.util.*;
@@ -21,9 +23,22 @@ public class ClinicalDepthController {
     private static final Logger log = LoggerFactory.getLogger(ClinicalDepthController.class);
 
     private final PctServiceClient pctClient;
+    private final InpatientServiceClient inpatientClient;
 
-    public ClinicalDepthController(PctServiceClient pctClient) {
+    public ClinicalDepthController(PctServiceClient pctClient, InpatientServiceClient inpatientClient) {
         this.pctClient = pctClient;
+        this.inpatientClient = inpatientClient;
+    }
+
+    private static JsonNode requirePayload(JsonNode node, String operation) {
+        if (node == null || node.isNull()) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, operation + ": upstream returned no payload");
+        }
+        return node;
+    }
+
+    private static ResponseStatusException upstreamFailure(String operation, Exception cause) {
+        return new ResponseStatusException(HttpStatus.BAD_GATEWAY, operation + " failed", cause);
     }
 
     // ── Discharge Clearances ────────────────────────────────────────
@@ -33,22 +48,13 @@ public class ClinicalDepthController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode pctData = pctClient.initDischargeClearances(body);
-            if (pctData != null) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", pctData));
-            }
+            JsonNode created = requirePayload(inpatientClient.initDischargeClearances(body), "Inpatient initDischargeClearances");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("PCT initDischargeClearances failed, falling back to local: {}", e.getMessage());
+            throw upstreamFailure("Inpatient initDischargeClearances", e);
         }
-        String encounterId = body.get("encounterId").toString();
-        String patientId = body.get("patientId").toString();
-        String[] types = {"CLINICAL", "NURSING", "PHARMACY", "LABORATORY", "IMAGING", "FINANCIAL", "ADMINISTRATIVE", "RECORDS", "CRVS"};
-        List<Map<String, Object>> created = new ArrayList<>();
-        for (String type : types) {
-            UUID id = UUID.randomUUID();
-            created.add(Map.of("id", id.toString(), "type", type, "status", "PENDING"));
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
     }
 
     @GetMapping("/discharge-clearances")
@@ -56,30 +62,47 @@ public class ClinicalDepthController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String encounterId) {
         try {
-            JsonNode pctData = pctClient.getDischargeClearances(encounterId);
-            if (pctData != null) {
-                return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode payload = requirePayload(inpatientClient.getDischargeClearances(encounterId), "Inpatient getDischargeClearances");
+            if (payload.has("data") && payload.has("progress")) {
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("data", payload.get("data"));
+                body.put("progress", payload.get("progress"));
+                return ResponseEntity.ok(body);
             }
+            return ResponseEntity.ok(Map.of("data", payload, "progress", Map.of("total", 0, "cleared", 0, "percent", 0)));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("PCT getDischargeClearances failed: {}", e.getMessage());
+            throw upstreamFailure("Inpatient getDischargeClearances", e);
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     @PostMapping("/discharge-clearances/{id}/clear")
     public ResponseEntity<Map<String, Object>> clearItem(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.clearDischargeClearance(id.toString(), body); } catch (Exception e) { log.warn("PCT clearDischargeClearance failed (non-blocking): {}", e.getMessage()); }
-        return ResponseEntity.ok(Map.of("status", "CLEARED"));
+        try {
+            JsonNode cleared = requirePayload(inpatientClient.clearDischargeClearance(id.toString(), body), "Inpatient clearDischargeClearance");
+            return ResponseEntity.ok(Map.of("data", cleared, "status", "CLEARED"));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient clearDischargeClearance", e);
+        }
     }
 
     @PostMapping("/discharge-clearances/{id}/waive")
     public ResponseEntity<Map<String, Object>> waiveItem(
             @PathVariable UUID id,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.waiveDischargeClearance(id.toString(), body); } catch (Exception e) { log.warn("PCT waiveDischargeClearance failed (non-blocking): {}", e.getMessage()); }
-        return ResponseEntity.ok(Map.of("status", "WAIVED"));
+        try {
+            JsonNode waived = requirePayload(inpatientClient.waiveDischargeClearance(id.toString(), body), "Inpatient waiveDischargeClearance");
+            return ResponseEntity.ok(Map.of("data", waived, "status", "WAIVED"));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient waiveDischargeClearance", e);
+        }
     }
 
     // ── Resuscitation Phases ────────────────────────────────────────
@@ -88,9 +111,16 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> startPhase(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.startResuscitationPhase(activationId.toString(), body); } catch (Exception e) { log.warn("PCT startResuscitationPhase failed (non-blocking): {}", e.getMessage()); }
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+        try {
+            JsonNode created = requirePayload(
+                    inpatientClient.startResuscitationPhase(activationId.toString(), body),
+                    "Inpatient startResuscitationPhase");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient startResuscitationPhase", e);
+        }
     }
 
     @PostMapping("/emergency/{activationId}/phases/{phaseId}/end")
@@ -98,21 +128,32 @@ public class ClinicalDepthController {
             @PathVariable UUID activationId,
             @PathVariable UUID phaseId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.endResuscitationPhase(activationId.toString(), phaseId.toString(), body); } catch (Exception e) { log.warn("PCT endResuscitationPhase failed (non-blocking): {}", e.getMessage()); }
-        return ResponseEntity.ok(Map.of("ended", true));
+        try {
+            JsonNode ended = requirePayload(
+                    inpatientClient.endResuscitationPhase(activationId.toString(), phaseId.toString(), body),
+                    "Inpatient endResuscitationPhase");
+            return ResponseEntity.ok(ended != null && ended.isObject()
+                    ? Map.of("data", ended, "ended", true)
+                    : Map.of("ended", true));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient endResuscitationPhase", e);
+        }
     }
 
     @GetMapping("/emergency/{activationId}/phases")
     public ResponseEntity<Map<String, Object>> getPhases(@PathVariable UUID activationId) {
         try {
-            JsonNode pctData = pctClient.getResuscitationPhases(activationId.toString());
-            if (pctData != null) {
-                return ResponseEntity.ok(Map.of("data", pctData));
-            }
+            JsonNode data = requirePayload(
+                    inpatientClient.listResuscitationPhases(activationId.toString()),
+                    "Inpatient listResuscitationPhases");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
-            log.warn("PCT getResuscitationPhases failed: {}", e.getMessage());
+            throw upstreamFailure("Inpatient listResuscitationPhases", e);
         }
-        return ResponseEntity.ok(Map.of("data", List.of()));
     }
 
     // ── CPR Cycles ──────────────────────────────────────────────────
@@ -121,22 +162,17 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordCPRCycle(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.recordCPRCycle(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordCPRCycle failed (non-blocking): {}", e.getMessage()); }
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+        Map<String, Object> action = new LinkedHashMap<>(body);
+        action.put("actionType", "CPR_CYCLE");
+        action.putIfAbsent("description", "CPR cycle " + body.getOrDefault("cycleNumber", body.get("cycle_number")));
+        JsonNode created = inpatientClient.logEmergencyAction(activationId.toString(), action);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
     }
 
     @GetMapping("/emergency/{activationId}/cpr-cycles")
     public ResponseEntity<Map<String, Object>> getCPRCycles(@PathVariable UUID activationId) {
-        try {
-            JsonNode pctData = pctClient.getCPRCycles(activationId.toString());
-            if (pctData != null) {
-                return ResponseEntity.ok(Map.of("data", pctData));
-            }
-        } catch (Exception e) {
-            log.warn("PCT getCPRCycles failed: {}", e.getMessage());
-        }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        JsonNode data = inpatientClient.listEmergencyActions(activationId.toString(), "CPR_CYCLE");
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
     }
 
     // ── Resuscitation Medications ───────────────────────────────────
@@ -145,22 +181,18 @@ public class ClinicalDepthController {
     public ResponseEntity<Map<String, Object>> recordResusMed(
             @PathVariable UUID activationId,
             @RequestBody Map<String, Object> body) {
-        try { pctClient.recordResuscitationMedication(activationId.toString(), body); } catch (Exception e) { log.warn("PCT recordResuscitationMedication failed (non-blocking): {}", e.getMessage()); }
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id)));
+        Map<String, Object> action = new LinkedHashMap<>(body);
+        action.put("actionType", "RESUS_MEDICATION");
+        String drug = body.getOrDefault("name", body.getOrDefault("medication", "Resuscitation medication")).toString();
+        action.putIfAbsent("description", drug + " " + body.getOrDefault("dose", ""));
+        JsonNode created = inpatientClient.logEmergencyAction(activationId.toString(), action);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
     }
 
     @GetMapping("/emergency/{activationId}/medications")
     public ResponseEntity<Map<String, Object>> getResusMeds(@PathVariable UUID activationId) {
-        try {
-            JsonNode pctData = pctClient.getResuscitationMedications(activationId.toString());
-            if (pctData != null) {
-                return ResponseEntity.ok(Map.of("data", pctData));
-            }
-        } catch (Exception e) {
-            log.warn("PCT getResuscitationMedications failed: {}", e.getMessage());
-        }
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        JsonNode data = inpatientClient.listEmergencyActions(activationId.toString(), "RESUS_MEDICATION");
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
     }
 
     // ── Care Plan Goal/Intervention CRUD ────────────────────────────

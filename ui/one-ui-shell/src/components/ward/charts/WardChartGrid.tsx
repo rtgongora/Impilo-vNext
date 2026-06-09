@@ -9,9 +9,10 @@
  * - A summary footer row (totals / latest score depending on chart type)
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, Plus } from "lucide-react";
 import type { ChartColumn, WardChartType } from "@/data/wardChartTypes";
+import { useRecordWardChartEntry, useWardChartEntries } from "@/hooks/queries/useWardCharts";
 
 /* ---------- sample data per chart (realistic ward values) ---------- */
 
@@ -101,19 +102,42 @@ function emptyRow(chart: WardChartType): EntryRow {
 
 interface WardChartGridProps {
   chart: WardChartType;
+  patientId?: string;
+  persistToApi?: boolean;
 }
 
-export function WardChartGrid({ chart }: WardChartGridProps) {
-  const [rows, setRows] = useState<EntryRow[]>(SAMPLE_DATA[chart.id] ?? []);
+export function WardChartGrid({ chart, patientId, persistToApi = false }: WardChartGridProps) {
+  const { data: apiEntries = [] } = useWardChartEntries(patientId ?? "", chart.id);
+  const recordMutation = useRecordWardChartEntry(patientId ?? "", chart.id);
+  const [rows, setRows] = useState<EntryRow[]>(persistToApi ? [] : (SAMPLE_DATA[chart.id] ?? []));
   const [newEntry, setNewEntry] = useState<EntryRow>(() => emptyRow(chart));
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (!persistToApi) return;
+    const mapped = (apiEntries as Array<Record<string, unknown>>).map((e) => {
+      const params = (e.parameters ?? {}) as EntryRow;
+      return params;
+    });
+    setRows(mapped);
+  }, [apiEntries, persistToApi]);
 
   function handleFieldChange(code: string, value: string | number | boolean) {
     setNewEntry((prev) => ({ ...prev, [code]: value }));
   }
 
   function addEntry() {
-    setRows((prev) => [...prev, { ...newEntry }]);
+    const entry = { ...newEntry };
+    if (persistToApi && patientId) {
+      recordMutation.mutate(entry, {
+        onSuccess: () => {
+          setNewEntry(emptyRow(chart));
+          setShowForm(false);
+        },
+      });
+      return;
+    }
+    setRows((prev) => [...prev, entry]);
     setNewEntry(emptyRow(chart));
     setShowForm(false);
   }

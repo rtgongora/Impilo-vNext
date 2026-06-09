@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import zw.gov.mohcc.impilo.companion.context.CompanionHeaders;
+import zw.gov.mohcc.impilo.experience.client.InpatientServiceClient;
+import zw.gov.mohcc.impilo.experience.client.PacsServiceClient;
 import zw.gov.mohcc.impilo.experience.client.PctServiceClient;
 import zw.gov.mohcc.impilo.experience.client.VitoServiceClient;
 import zw.gov.mohcc.impilo.experience.pharmacy.PharmacyFiveRightsVerifier;
@@ -31,17 +33,23 @@ public class MobileProviderExtendedController {
     private final PharmacyServiceClient pharmacyClient;
     private final CostaServiceClient costaClient;
     private final OrosServiceClient orosClient;
+    private final PacsServiceClient pacsServiceClient;
+    private final InpatientServiceClient inpatientClient;
 
     public MobileProviderExtendedController(PctServiceClient pctClient,
                                             VitoServiceClient vitoClient,
                                             PharmacyServiceClient pharmacyClient,
                                             CostaServiceClient costaClient,
-                                            OrosServiceClient orosClient) {
+                                            OrosServiceClient orosClient,
+                                            PacsServiceClient pacsServiceClient,
+                                            InpatientServiceClient inpatientClient) {
         this.pctClient = pctClient;
         this.vitoClient = vitoClient;
         this.pharmacyClient = pharmacyClient;
         this.costaClient = costaClient;
         this.orosClient = orosClient;
+        this.pacsServiceClient = pacsServiceClient;
+        this.inpatientClient = inpatientClient;
     }
 
     // ── Queue Management ────────────────────────────────────────────
@@ -111,9 +119,24 @@ public class MobileProviderExtendedController {
     // ── PACS / Imaging ──────────────────────────────────────────────
 
     @GetMapping("/imaging/studies")
-    public ResponseEntity<Map<String, Object>> getStudies(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam(required = false) String patientId) {
-        // Proxy to PACS BFF — just return the study list endpoint
-        return ResponseEntity.ok(Map.of("data", List.of(), "note", "Use /internal/v1/pacs/studies for full PACS access"));
+    public ResponseEntity<Map<String, Object>> getStudies(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(required = false) String patientId,
+            @RequestParam(required = false, name = "patient_cpid") String patientCpid) {
+        String cpid = patientCpid != null && !patientCpid.isBlank() ? patientCpid : patientId;
+        if (cpid == null || cpid.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "code", "PATIENT_CPID_REQUIRED",
+                    "message", "patient_cpid or patientId is required"));
+        }
+        try {
+            JsonNode studies = pacsServiceClient.listStudies(cpid);
+            return ResponseEntity.ok(Map.of("data", studies != null ? studies : List.of()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                    "code", "PACS_UNAVAILABLE",
+                    "message", "Imaging studies are unavailable because pacs-adapter could not be reached"));
+        }
     }
 
     // ── Patient Registration ────────────────────────────────────────
@@ -369,30 +392,55 @@ public class MobileProviderExtendedController {
 
     @GetMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> getCarePlans(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        JsonNode data = inpatientClient.listCarePlans(patientId);
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
     }
 
     @PostMapping("/clinical/care-plans")
     public ResponseEntity<Map<String, Object>> createCarePlan(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "ACTIVE",
-                "title", body.getOrDefault("title", ""), "goals", body.getOrDefault("goals", List.of()),
-                "interventions", body.getOrDefault("interventions", List.of()))));
+        JsonNode created = inpatientClient.createCarePlan(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
     }
 
     // ── MAR (Medication Administration Record) ──────────────────────
 
     @GetMapping("/clinical/mar")
     public ResponseEntity<Map<String, Object>> getMAR(@RequestHeader("X-Tenant-ID") String tenantId, @RequestParam String patientId) {
-        // Previously: jdbc.queryForList on prescriptions table
-        return ResponseEntity.ok(Map.of("data", List.of()));
+        try {
+            JsonNode prescriptions = pharmacyClient.getPatientPrescriptions(patientId, "ACTIVE", 0, 100);
+            List<Map<String, Object>> rxRows = pharmacyPrescriptionsForMar(prescriptions);
+            if (!rxRows.isEmpty()) {
+                inpatientClient.syncMarSchedule(Map.of("patientId", patientId, "prescriptions", rxRows));
+            }
+        } catch (Exception ignored) {
+            // MAR list still returns inpatient rows when pharmacy is unavailable in preview.
+        }
+        JsonNode data = inpatientClient.listMar(patientId);
+        return ResponseEntity.ok(Map.of("data", data != null ? data : List.of()));
+    }
+
+    private static List<Map<String, Object>> pharmacyPrescriptionsForMar(JsonNode prescriptions) {
+        if (prescriptions == null || !prescriptions.isArray()) {
+            return List.of();
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (JsonNode rx : prescriptions) {
+            JsonNode attrs = rx.has("attributes") ? rx.get("attributes") : rx;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("prescription_id", rx.has("id") ? rx.get("id").asText() : null);
+            if (attrs.has("medication_name")) row.put("medication_name", attrs.get("medication_name").asText());
+            if (attrs.has("dosage")) row.put("dosage", attrs.get("dosage").asText());
+            if (attrs.has("route")) row.put("route", attrs.get("route").asText());
+            if (attrs.has("frequency")) row.put("frequency", attrs.get("frequency").asText());
+            rows.add(row);
+        }
+        return rows;
     }
 
     @PostMapping("/clinical/mar/administer")
     public ResponseEntity<Map<String, Object>> administerMedication(@RequestHeader("X-Tenant-ID") String tenantId, @RequestBody Map<String, Object> body) {
-        UUID id = UUID.randomUUID();
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", Map.of("id", id, "status", "ADMINISTERED",
-                "prescriptionId", body.get("prescriptionId"), "administeredAt", OffsetDateTime.now(), "administeredBy", body.getOrDefault("administeredBy", ""))));
+        JsonNode created = inpatientClient.administerMedication(body);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created != null ? created : Map.of()));
     }
 
     // ── CDS (Clinical Decision Support) ─────────────────────────────

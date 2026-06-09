@@ -267,7 +267,7 @@ public class AppointmentService {
             case TRAINING -> AppointmentType.TRAINING.name();
             case OUTREACH -> AppointmentType.OUTREACH.name();
             case FOLLOW_UP -> AppointmentType.FOLLOW_UP.name();
-            case PROCEDURE -> AppointmentType.PROCEDURE.name();
+            case PROCEDURE, THEATRE -> AppointmentType.PROCEDURE.name();
             default -> AppointmentType.GENERAL.name();
         };
     }

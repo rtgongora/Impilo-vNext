@@ -26,6 +26,14 @@ public class CreateAdmissionRequest {
 
     private UUID bedId;
 
+    private String admittingDiagnosis;
+
+    private String admissionType;
+
+    private String dietOrders;
+
+    private String activityLevel;
+
     public UUID getTenantId() { return tenantId; }
     public void setTenantId(UUID tenantId) { this.tenantId = tenantId; }
 
@@ -43,4 +51,16 @@ public class CreateAdmissionRequest {
 
     public UUID getBedId() { return bedId; }
     public void setBedId(UUID bedId) { this.bedId = bedId; }
+
+    public String getAdmittingDiagnosis() { return admittingDiagnosis; }
+    public void setAdmittingDiagnosis(String admittingDiagnosis) { this.admittingDiagnosis = admittingDiagnosis; }
+
+    public String getAdmissionType() { return admissionType; }
+    public void setAdmissionType(String admissionType) { this.admissionType = admissionType; }
+
+    public String getDietOrders() { return dietOrders; }
+    public void setDietOrders(String dietOrders) { this.dietOrders = dietOrders; }
+
+    public String getActivityLevel() { return activityLevel; }
+    public void setActivityLevel(String activityLevel) { this.activityLevel = activityLevel; }
 }

@@ -14,6 +14,26 @@ describe("consent capture golden thread", () => {
     expect(page).not.toContain("coming soon");
   });
 
+  it("procedure episode consent lifecycle proxies mvumo through BFF", () => {
+    const controller = readFileSync(
+      resolve(
+        repoRoot,
+        "services/experience-bff/src/main/java/zw/gov/mohcc/impilo/experience/controller/ProcedureWorkflowController.java",
+      ),
+      "utf8",
+    );
+    const capture = readFileSync(
+      resolve(repoRoot, "ui/one-ui-shell/src/components/clinical/ProcedureConsentCapture.tsx"),
+      "utf8",
+    );
+    expect(controller).toContain("/consent/explanation");
+    expect(controller).toContain("/consent/verify-identity");
+    expect(controller).toContain("/consent/grant");
+    expect(controller).toContain("/consent/remote-session");
+    expect(capture).toContain("Grant consent (MVUMO → Tshepo)");
+    expect(capture).not.toContain("consentVerified: true");
+  });
+
   it("teleconsult consent step proxies mvumo through BFF", () => {
     const controller = readFileSync(
       resolve(

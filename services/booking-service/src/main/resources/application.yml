@@ -44,6 +44,7 @@ booking:
     nhume-base-url: ${NHUME_BASE_URL:http://localhost:8210}
     learning-base-url: ${LEARNING_SERVICE_BASE_URL:http://localhost:8235}
     community-base-url: ${COMMUNITY_BASE_URL:http://localhost:8122}
+    inpatient-base-url: ${INPATIENT_BASE_URL:http://localhost:8121}
   outbox:
     poll-interval-ms: 2000
 

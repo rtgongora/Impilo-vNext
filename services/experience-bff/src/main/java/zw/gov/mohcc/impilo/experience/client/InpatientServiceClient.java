@@ -95,13 +95,30 @@ public class InpatientServiceClient {
         return extractData(response);
     }
 
-    /**
-     * Lists ward rounds for an admission. The sovereign inpatient service does not yet expose this
-     * on {@code AdmissionController}; the path follows the admissions resource namespace for future use.
-     */
     public JsonNode listWardRounds(String admissionId) {
         String url = baseUrl + "/internal/v1/admissions/" + admissionId + "/ward-rounds";
         log.info("INPATIENT: listWardRounds operation [admissionId={}]", admissionId);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode startWardRound(Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/ward-rounds";
+        log.info("INPATIENT: startWardRound operation");
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode addWardRoundEntry(String roundId, Map<String, Object> request) {
+        String url = baseUrl + "/internal/v1/ward-rounds/" + roundId + "/entries";
+        log.info("INPATIENT: addWardRoundEntry operation [roundId={}]", roundId);
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, request, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listWardRoundsByWard(String wardId) {
+        String url = baseUrl + "/internal/v1/ward-rounds?wardId=" + wardId;
+        log.info("INPATIENT: listWardRoundsByWard operation [wardId={}]", wardId);
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
         return extractData(response);
     }
@@ -143,6 +160,393 @@ public class InpatientServiceClient {
         log.info("INPATIENT: dischargeBed operation [bedId={}]", bedId);
         ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, null, JsonNode.class);
         return extractData(response);
+    }
+
+    // ── Clinical depth (sovereign inpatient-service) ────────────────
+
+    public JsonNode listCarePlans(String patientId) {
+        String url = baseUrl + "/internal/v1/care-plans?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode createCarePlan(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/care-plans";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode addCarePlanGoal(String planId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/care-plans/" + planId + "/goals";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode updateCarePlanGoal(String planId, String goalId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/care-plans/" + planId + "/goals/" + goalId + "/update";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode addCarePlanIntervention(String planId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/care-plans/" + planId + "/interventions";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode performCarePlanIntervention(String planId, String interventionId) {
+        String url = baseUrl + "/internal/v1/care-plans/" + planId + "/interventions/" + interventionId + "/perform";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, Map.of(), JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getFluidBalance(String patientId, String date) {
+        StringBuilder url = new StringBuilder(baseUrl + "/internal/v1/fluid-balance?patientId=" + patientId);
+        if (date != null) url.append("&date=").append(date);
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordFluidBalance(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/fluid-balance";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordObservation(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/observations";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getObservations(String patientId) {
+        String url = baseUrl + "/internal/v1/observations?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getWardChartEntries(String chartType, String patientId) {
+        String url = baseUrl + "/internal/v1/ward-charts/" + chartType + "/entries?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordWardChartEntry(String chartType, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/ward-charts/" + chartType + "/entries";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getWardChartActivity(String patientId) {
+        String url = baseUrl + "/internal/v1/ward-charts/activity?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listMar(String patientId) {
+        String url = baseUrl + "/internal/v1/mar?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode syncMarSchedule(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mar/sync";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode administerMedication(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/mar/administer";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode recordEws(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/ews";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getEws(String patientId) {
+        String url = baseUrl + "/internal/v1/ews?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listEmergencyActivations() {
+        String url = baseUrl + "/internal/v1/emergency/activations";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode activateEmergency(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/activate";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode endEmergency(String activationId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/end";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode logEmergencyAction(String activationId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/action";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listEmergencyActions(String activationId, String actionType) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/actions";
+        if (actionType != null && !actionType.isBlank()) {
+            url += "?actionType=" + actionType;
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordResuscitation(String activationId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/resuscitation";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getResuscitation(String activationId) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/resuscitation";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordApgar(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/apgar";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode getApgar(String patientId) {
+        String url = baseUrl + "/internal/v1/apgar?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode submitHandover(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/handover";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode acceptTakeover(String handoverId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/handover/" + handoverId + "/takeover";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode createWardAlert(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/ward-alerts";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listWardAlerts(String wardId, String status) {
+        String url = baseUrl + "/internal/v1/ward-alerts?wardId=" + wardId + "&status=" + status;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode acknowledgeWardAlert(String alertId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/ward-alerts/" + alertId + "/acknowledge";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode requestTransfer(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/transfers";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode acceptTransfer(String transferId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/transfers/" + transferId + "/accept";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listTransfers(String patientId) {
+        StringBuilder url = new StringBuilder(baseUrl + "/internal/v1/transfers");
+        if (patientId != null && !patientId.isBlank()) {
+            url.append("?patientId=").append(patientId);
+        }
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url.toString(), JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode initDischargeClearances(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/discharge-clearances/init";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getDischargeClearances(String encounterId) {
+        String url = baseUrl + "/internal/v1/discharge-clearances?encounterId=" + encounterId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode clearDischargeClearance(String clearanceId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/discharge-clearances/" + clearanceId + "/clear";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode waiveDischargeClearance(String clearanceId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/discharge-clearances/" + clearanceId + "/waive";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode startResuscitationPhase(String activationId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/phases";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode endResuscitationPhase(String activationId, String phaseId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/phases/" + phaseId + "/end";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return extractData(response);
+    }
+
+    public JsonNode listResuscitationPhases(String activationId) {
+        String url = baseUrl + "/internal/v1/emergency/" + activationId + "/phases";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode createProcedureEpisode(Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listProcedureEpisodes(String patientId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes?patientId=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listProcedureHistory(String patientId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/history?patient_id=" + patientId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getProcedureEpisode(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId;
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode submitProcedurePreop(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/preop";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode completeProcedureChecklist(String episodeId, String phase, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/checklist/" + phase;
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode startProcedureEpisode(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/start";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordProcedureIntraop(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/intraop/events";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode enterProcedurePacu(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/pacu";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode completeProcedurePostop(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/postop";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode completeProcedureEpisode(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/complete";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode bindProcedureConsentEvidence(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/consent-evidence";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getProcedureConsentStatus(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/consent";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode linkProcedureDocument(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/documents";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listProcedureDocuments(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/documents";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordProcedureConsumable(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/consumables";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listProcedureConsumables(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/consumables";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode getAnaesthesiaScoreSuggestions(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/anaesthesia/score-suggestions";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode listAnaesthesiaScores(String episodeId) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/anaesthesia/scores";
+        ResponseEntity<JsonNode> response = restTemplate.getForEntity(url, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordAnaesthesiaScore(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/anaesthesia/scores";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
+    }
+
+    public JsonNode recordIntraopVitals(String episodeId, Map<String, Object> body) {
+        String url = baseUrl + "/internal/v1/procedures/episodes/" + episodeId + "/intraop/vitals";
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(url, body, JsonNode.class);
+        return response.getBody();
     }
 
     private JsonNode extractData(ResponseEntity<JsonNode> response) {

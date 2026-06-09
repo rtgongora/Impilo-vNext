@@ -48,7 +48,13 @@ public class AdmissionService {
     /**
      * Lists admissions, optionally filtered by facility and/or status.
      */
-    public List<AdmissionEntity> listAdmissions(UUID facilityId, String status) {
+    public List<AdmissionEntity> listAdmissions(UUID facilityId, String status, String subjectCpid) {
+        if (subjectCpid != null && !subjectCpid.isBlank()) {
+            if (status != null) {
+                return admissionRepository.findBySubjectCpidAndStatus(subjectCpid, status);
+            }
+            return admissionRepository.findBySubjectCpid(subjectCpid);
+        }
         if (facilityId != null && status != null) {
             return admissionRepository.findByFacilityIdAndStatus(facilityId, status);
         } else if (facilityId != null) {
@@ -88,6 +94,10 @@ public class AdmissionService {
         admission.setFacilityId(request.getFacilityId());
         admission.setWardId(request.getWardId());
         admission.setBedId(request.getBedId());
+        admission.setAdmittingDiagnosis(request.getAdmittingDiagnosis());
+        admission.setAdmissionType(request.getAdmissionType() != null ? request.getAdmissionType() : "EMERGENCY");
+        admission.setDietOrders(request.getDietOrders() != null ? request.getDietOrders() : "REGULAR");
+        admission.setActivityLevel(request.getActivityLevel() != null ? request.getActivityLevel() : "BED_REST");
         admission.setStatus("ADMITTED");
         admission.setAdmittedAt(OffsetDateTime.now());
         admission.setCreatedAt(OffsetDateTime.now());

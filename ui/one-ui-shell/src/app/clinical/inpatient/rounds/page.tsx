@@ -23,7 +23,9 @@ export default function InpatientRoundsPage() {
     const data = (root as { data?: unknown }).data;
     const list = Array.isArray(data) ? data : [];
     const first = list[0] as Record<string, unknown> | undefined;
-    return first ? String(first.id ?? first.admissionId ?? "") : undefined;
+    return first
+      ? String(first.admissionRef ?? first.admissionId ?? first.id ?? "")
+      : undefined;
   })();
 
   const roundsQuery = useWardRounds(firstAdmissionId);

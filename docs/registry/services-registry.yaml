@@ -1026,9 +1026,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: baseline-assessed
+    production_status: pilot-ready-enrolled-inpatient
     implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
+    frontend_wiring_status: wired
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -1836,9 +1836,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: baseline-assessed
+    production_status: pilot-ready-enrolled-pacs
     implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
+    frontend_wiring_status: wired
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -1865,9 +1865,9 @@ services:
     forbidden_responsibilities:
       - must-not-act-as-identity-source-of-record
       - must-not-own-enterprise-ledgering
-    production_status: baseline-assessed
+    production_status: pilot-ready-enrolled-pct
     implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
+    frontend_wiring_status: wired
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial
@@ -2054,7 +2054,7 @@ services:
     sovereign: false
     sovereign_group: null
     primary_protocol: rest
-    default_http_port: null
+    default_http_port: 8196
     product_names:
       - Rtc Gateway
     owner_team: TBD
@@ -2068,9 +2068,9 @@ services:
     forbidden_responsibilities:
       - must-not-become-system-of-record-for-clinical-or-finance
       - must-not-embed-actor-facing-business-workflows
-    production_status: baseline-assessed
+    production_status: pilot-ready-enrolled-telemedicine
     implementation_status: implemented-or-partial
-    frontend_wiring_status: unknown-or-partial
+    frontend_wiring_status: wired
     api_contract_status: partial
     authz_audit_status: partial
     observability_status: partial

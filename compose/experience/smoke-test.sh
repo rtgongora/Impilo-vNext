@@ -171,6 +171,92 @@ else
   fail "Simba clubs check failed (HTTP $SIMBA_CODE). Is simba-service healthy on :8125?"
 fi
 
+# ── Test 8: PCT queue via BFF (pct-service) ─────────────────────
+info "Test 8: PCT queue entries via BFF"
+PCT_CODE=$(curl -sf -o /tmp/smoke-pct.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/queue/entries?facility_id=f1000000-0000-0000-0000-000000000001" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$PCT_CODE" = "200" ] && grep -q "Harare Central OPD\|CPID-ZW-00001" /tmp/smoke-pct.json 2>/dev/null; then
+  pass "PCT queue returned governed seed entries"
+else
+  fail "PCT queue check failed (HTTP $PCT_CODE). Is pct-service healthy on :8088?"
+fi
+
+# ── Test 9: Inpatient admissions + ward rounds via BFF ───────────
+info "Test 9: Inpatient admissions via BFF"
+INP_CODE=$(curl -sf -o /tmp/smoke-inpatient.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/inpatient/admissions" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$INP_CODE" = "200" ] && grep -q "CPID-ZW-00001\|f2000000-0000-0000-0000-000000000001" /tmp/smoke-inpatient.json 2>/dev/null; then
+  pass "Inpatient admissions returned governed seed row"
+else
+  fail "Inpatient admissions check failed (HTTP $INP_CODE). Is inpatient-service healthy on :8121?"
+fi
+
+ROUNDS_CODE=$(curl -sf -o /tmp/smoke-rounds.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/inpatient/admissions/f2000000-0000-0000-0000-000000000001/ward-rounds" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$ROUNDS_CODE" = "200" ] && grep -q "Dr. Tendai Mapfumo\|MORNING" /tmp/smoke-rounds.json 2>/dev/null; then
+  pass "Inpatient ward rounds returned governed seed documentation"
+else
+  fail "Inpatient ward rounds check failed (HTTP $ROUNDS_CODE)"
+fi
+
+# ── Test 10: Telemedicine sessions via BFF ───────────────────────
+info "Test 10: Telemedicine sessions via BFF"
+TEL_CODE=$(curl -sf -o /tmp/smoke-telemed.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/teleconsult/sessions?patientId=CPID-ZW-00001" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$TEL_CODE" = "200" ] && grep -q "CPID-ZW-00001\|VIDEO\|SCHEDULED" /tmp/smoke-telemed.json 2>/dev/null; then
+  pass "Telemedicine sessions returned governed seed session"
+else
+  fail "Telemedicine sessions check failed (HTTP $TEL_CODE). Is pct-service + rtc-gateway healthy?"
+fi
+
+RTC_CODE=$(curl -sf -o /tmp/smoke-rtc.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/teleconsult/ops/rtc-health" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$RTC_CODE" = "200" ]; then
+  pass "RTC health probe reachable via BFF"
+else
+  fail "RTC health check failed (HTTP $RTC_CODE). Is rtc-gateway healthy on :8196?"
+fi
+
+# ── Test 11: Governed imaging studies via BFF (pacs-adapter) ─────
+info "Test 11: Imaging studies via BFF"
+IMG_CODE=$(curl -sf -o /tmp/smoke-imaging.json -w "%{http_code}" \
+  "$BFF_URL/internal/v1/imaging/studies?patient_cpid=CPID-ZW-00001" \
+  -H "X-Tenant-ID: 00000000-0000-4000-8000-000000000001" \
+  -H "X-Pod-ID: $POD_ID" \
+  -H "X-Request-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" \
+  -H "X-Correlation-ID: $(uuidgen 2>/dev/null || cat /proc/sys/kernel/random/uuid)" 2>/dev/null || echo "000")
+
+if [ "$IMG_CODE" = "200" ] && grep -q "Chest X-ray\|CPID-ZW-00001\|1.2.840.IMPILO" /tmp/smoke-imaging.json 2>/dev/null; then
+  pass "Imaging studies returned governed seed study"
+else
+  fail "Imaging studies check failed (HTTP $IMG_CODE). Is pacs-adapter-service healthy on :8113?"
+fi
+
 echo ""
 echo "========================================="
 echo -e "  ${GREEN}All smoke tests passed!${NC}"

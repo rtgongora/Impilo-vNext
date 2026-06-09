@@ -93,6 +93,11 @@ public class DocumentServiceClient {
      * Upload binary content to document-store (MinIO-backed object registry).
      */
     public JsonNode uploadObject(byte[] bytes, String originalFilename, String mimeType) {
+        return uploadObject(bytes, originalFilename, mimeType, null);
+    }
+
+    public JsonNode uploadObject(byte[] bytes, String originalFilename, String mimeType,
+                                 java.util.Map<String, String> metadata) {
         String url = baseUrl + "/v1/internal/objects";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -109,6 +114,9 @@ public class DocumentServiceClient {
         body.add("mimeType", mimeType);
         if (originalFilename != null && !originalFilename.isBlank()) {
             body.add("originalFilename", originalFilename);
+        }
+        if (metadata != null && !metadata.isEmpty()) {
+            body.add("metadata", metadata);
         }
 
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(body, headers);

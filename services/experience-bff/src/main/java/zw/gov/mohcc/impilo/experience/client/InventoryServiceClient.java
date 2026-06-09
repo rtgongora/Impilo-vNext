@@ -157,6 +157,10 @@ public class InventoryServiceClient {
         return exchangeJson(HttpMethod.POST, baseUrl + "/v1/requisitions/" + id + "/fulfill", body);
     }
 
+    public JsonNode postClinicalConsumption(JsonNode body) {
+        return exchangeJson(HttpMethod.POST, baseUrl + "/v1/internal/consumption/clinical", body);
+    }
+
     // ── Handover (used by mobile dispatch surfaces) ─────────────────
 
     public JsonNode listHandovers(int page, int size) {

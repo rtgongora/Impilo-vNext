@@ -15,6 +15,7 @@ import { Activity, ClipboardList, Clock, Droplets, FileText, Pill, RotateCw, Ute
 import { EHRLayout } from "@/components/EHRLayout";
 import { PageShell } from "@/components/PageShell";
 import { WARD_CHARTS } from "@/data/wardChartTypes";
+import { useWardChartActivity } from "@/hooks/queries/useWardCharts";
 
 const CHART_ICONS: Record<string, React.ReactNode> = {
   "fluid-balance": <Droplets className="h-5 w-5" />,
@@ -25,18 +26,18 @@ const CHART_ICONS: Record<string, React.ReactNode> = {
   "obs-chart": <ClipboardList className="h-5 w-5" />,
 };
 
-/** Simulated recent-activity status per chart — in production this comes from the API. */
-const RECENT_ACTIVITY: Record<string, string> = {
-  "obs-chart": "Last entry 35 min ago",
-  "fluid-balance": "Last entry 1 h ago",
-  "drug-chart": "Last entry 2 h ago",
-};
+function formatActivity(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 60) return `Last entry ${mins} min ago`;
+  return `Last entry ${Math.round(mins / 60)} h ago`;
+}
 
 export default function WardChartsPage() {
   const { patientId } = useParams<{ patientId: string }>();
   const [filter, setFilter] = useState("");
+  const { data: activity = {} } = useWardChartActivity(patientId);
 
-  const activeCharts = WARD_CHARTS.filter((c) => RECENT_ACTIVITY[c.id]);
+  const activeCharts = WARD_CHARTS.filter((c) => activity[c.id]);
   const filtered = WARD_CHARTS.filter((c) =>
     c.name.toLowerCase().includes(filter.toLowerCase()),
   );
@@ -56,7 +57,7 @@ export default function WardChartsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-slate-900">{chart.shortName}</div>
                     <div className="flex items-center gap-1 text-xs text-emerald-700">
-                      <Clock className="h-3 w-3" /> {RECENT_ACTIVITY[chart.id]}
+                      <Clock className="h-3 w-3" /> {formatActivity(String(activity[chart.id]))}
                     </div>
                   </div>
                 </Link>

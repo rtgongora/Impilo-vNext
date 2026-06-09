@@ -6,6 +6,7 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert } from "reac
 import { Button, LoadingSpinner } from "@impilo/mobile-design-system";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchEmergencyContacts, addEmergencyContact, deleteEmergencyContact, triggerSOS } from "../../services/sosService";
+import { callWardStaff } from "../../services/wardAlertService";
 import { useAppStore } from "../../stores/appStore";
 
 export function EmergencySOSSection() {
@@ -34,6 +35,12 @@ export function EmergencySOSSection() {
     onSuccess: (data) => Alert.alert("SOS Activated", data.message),
   });
 
+  const wardAlertMutation = useMutation({
+    mutationFn: () => callWardStaff({ patientId, alertType: "CALL_NURSE", message: "Patient requested ward assistance" }),
+    onSuccess: (data) => Alert.alert("Ward notified", data.message),
+    onError: () => Alert.alert("Could not reach ward", "Try the SOS button if this is an emergency."),
+  });
+
   if (isLoading) return <LoadingSpinner />;
 
   return (
@@ -44,6 +51,11 @@ export function EmergencySOSSection() {
       }}>
         <Text style={styles.sosText}>SOS</Text>
         <Text style={styles.sosSubtext}>Tap to activate emergency alert</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.wardButton} onPress={() => wardAlertMutation.mutate()} disabled={!patientId || wardAlertMutation.isPending}>
+        <Text style={styles.wardButtonText}>Call ward nurse</Text>
+        <Text style={styles.wardSubtext}>Alert bedside staff while you are admitted</Text>
       </TouchableOpacity>
 
       <View style={styles.contactsHeader}>
@@ -82,6 +94,9 @@ const styles = StyleSheet.create({
   sosButton: { backgroundColor: "#DC2626", borderRadius: 24, padding: 32, alignItems: "center", gap: 4 },
   sosText: { color: "#FFFFFF", fontSize: 48, fontWeight: "900" },
   sosSubtext: { color: "#FCA5A5", fontSize: 13 },
+  wardButton: { backgroundColor: "#2563EB", borderRadius: 16, padding: 20, alignItems: "center", gap: 4 },
+  wardButtonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+  wardSubtext: { color: "#BFDBFE", fontSize: 12 },
   contactsHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { fontSize: 16, fontWeight: "700", color: "#111827" },
   addLink: { color: "#2563EB", fontSize: 14, fontWeight: "600" },

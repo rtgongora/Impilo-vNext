@@ -23,17 +23,21 @@ import { TraumaScreen } from "./TraumaScreen";
 import { VitalsMonitorScreen } from "./VitalsMonitorScreen";
 import { ShiftHandoffScreen } from "./ShiftHandoffScreen";
 import { CriticalEventScreen } from "./CriticalEventScreen";
+import { WardAlertsScreen } from "./WardAlertsScreen";
+import { TheatreProcedureScreen } from "./TheatreProcedureScreen";
 
-type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "resus" | "trauma" | "ews" | "apgar" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "clearance";
+type InpatientTab = "care" | "fluid" | "vitals" | "emergency" | "resus" | "trauma" | "ews" | "apgar" | "theatre" | "admit" | "rounds" | "obs" | "transfer" | "handoff" | "alerts" | "clearance";
 
 const TABS: { id: InpatientTab; label: string }[] = [
   { id: "care", label: "Care Plans" }, { id: "fluid", label: "Fluid I/O" },
   { id: "vitals", label: "Vitals" }, { id: "emergency", label: "Emergency" },
   { id: "resus", label: "Resus" }, { id: "trauma", label: "Trauma" },
-  { id: "ews", label: "NEWS2" }, { id: "apgar", label: "APGAR" },
+  { id: "ews", label: "NEWS2" },   { id: "apgar", label: "APGAR" },
+  { id: "theatre", label: "Theatre" },
   { id: "admit", label: "Admissions" }, { id: "rounds", label: "Rounds" },
   { id: "obs", label: "Observations" }, { id: "transfer", label: "Transfers" },
-  { id: "handoff", label: "Handoff" }, { id: "clearance", label: "Discharge" },
+  { id: "handoff", label: "Handoff" }, { id: "alerts", label: "Alerts" },
+  { id: "clearance", label: "Discharge" },
 ];
 
 export function InpatientScreen() {
@@ -60,8 +64,10 @@ export function InpatientScreen() {
         {tab === "resus" && <ResuscitationScreen />}
         {tab === "trauma" && <TraumaScreen />}
         {tab === "apgar" && <APGARScreen />}
+        {tab === "theatre" && <TheatreProcedureScreen />}
         {tab === "vitals" && <VitalsMonitorScreen />}
         {tab === "handoff" && <ShiftHandoffScreen />}
+        {tab === "alerts" && <WardAlertsScreen />}
         {tab === "clearance" && <DischargeClearanceScreen />}
       </ScrollView>
     </Screen>

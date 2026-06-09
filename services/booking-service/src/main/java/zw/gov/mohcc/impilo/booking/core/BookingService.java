@@ -176,6 +176,7 @@ public class BookingService {
         booking.setLinkedAppointmentId(appointment.id());
         stateMachine.transition(ctx, booking, BookingStatus.CONFIRMED, "CONFIRM_FROM_APPROVE");
         booking = bookingRepository.save(booking);
+        integrationService.ensureProcedureEpisode(ctx, booking);
         publishEvent(booking, "booking.confirmed", Map.of("appointmentId", appointment.id().toString()));
         return BookingResponse.from(booking);
     }
@@ -248,8 +249,10 @@ public class BookingService {
         BookingEntity booking = requireBooking(id, ctx.tenantId());
         mvumoService.assertConsentGrantedForConfirmation(booking);
         stateMachine.transition(ctx, booking, BookingStatus.CONFIRMED, "CONFIRM");
+        booking = bookingRepository.save(booking);
+        integrationService.ensureProcedureEpisode(ctx, booking);
         publishEvent(booking, "booking.confirmed", Map.of());
-        return BookingResponse.from(bookingRepository.save(booking));
+        return BookingResponse.from(booking);
     }
 
     private BookingEntity requireBooking(UUID id, UUID tenantId) {

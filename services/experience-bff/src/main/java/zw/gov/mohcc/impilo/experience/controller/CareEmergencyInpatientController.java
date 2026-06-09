@@ -54,12 +54,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String patientId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.listCarePlans(patientId), "PCT listCarePlans");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.listCarePlans(patientId), "Inpatient listCarePlans");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT listCarePlans", e);
+            throw upstreamFailure("Inpatient listCarePlans", e);
         }
     }
 
@@ -68,12 +68,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.createCarePlan(body), "PCT createCarePlan");
+            JsonNode created = requirePayload(inpatientClient.createCarePlan(body), "Inpatient createCarePlan");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT createCarePlan", e);
+            throw upstreamFailure("Inpatient createCarePlan", e);
         }
     }
 
@@ -85,12 +85,15 @@ public class CareEmergencyInpatientController {
             @RequestParam String patientId,
             @RequestParam(required = false) String date) {
         try {
-            JsonNode pctData = requirePayload(pctClient.getFluidBalance(patientId, date), "PCT getFluidBalance");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode payload = requirePayload(inpatientClient.getFluidBalance(patientId, date), "Inpatient getFluidBalance");
+            if (payload.has("data") && payload.has("summary")) {
+                return ResponseEntity.ok(Map.of("data", payload.get("data"), "summary", payload.get("summary")));
+            }
+            return ResponseEntity.ok(Map.of("data", payload));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT getFluidBalance", e);
+            throw upstreamFailure("Inpatient getFluidBalance", e);
         }
     }
 
@@ -99,12 +102,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.recordFluidBalance(body), "PCT recordFluidBalance");
+            JsonNode created = requirePayload(inpatientClient.recordFluidBalance(body), "Inpatient recordFluidBalance");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT recordFluidBalance", e);
+            throw upstreamFailure("Inpatient recordFluidBalance", e);
         }
     }
 
@@ -113,12 +116,12 @@ public class CareEmergencyInpatientController {
     @GetMapping("/emergency/activations")
     public ResponseEntity<Map<String, Object>> listActivations(@RequestHeader("X-Tenant-ID") String tenantId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.listEmergencyActivations(), "PCT listEmergencyActivations");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.listEmergencyActivations(), "Inpatient listEmergencyActivations");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT listEmergencyActivations", e);
+            throw upstreamFailure("Inpatient listEmergencyActivations", e);
         }
     }
 
@@ -127,36 +130,36 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.activateEmergency(body), "PCT activateEmergency");
+            JsonNode created = requirePayload(inpatientClient.activateEmergency(body), "Inpatient activateEmergency");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT activateEmergency", e);
+            throw upstreamFailure("Inpatient activateEmergency", e);
         }
     }
 
     @PostMapping("/emergency/{id}/action")
     public ResponseEntity<Map<String, Object>> logAction(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         try {
-            JsonNode r = requirePayload(pctClient.logEmergencyAction(id.toString(), body), "PCT logEmergencyAction");
-            return ResponseEntity.ok(Map.of("data", r));
+            JsonNode r = requirePayload(inpatientClient.logEmergencyAction(id.toString(), body), "Inpatient logEmergencyAction");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", r));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT logEmergencyAction", e);
+            throw upstreamFailure("Inpatient logEmergencyAction", e);
         }
     }
 
     @PostMapping("/emergency/{id}/end")
     public ResponseEntity<Map<String, Object>> endEmergency(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
         try {
-            JsonNode r = requirePayload(pctClient.endEmergency(id.toString(), body), "PCT endEmergency");
+            JsonNode r = requirePayload(inpatientClient.endEmergency(id.toString(), body), "Inpatient endEmergency");
             return ResponseEntity.ok(Map.of("data", r));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT endEmergency", e);
+            throw upstreamFailure("Inpatient endEmergency", e);
         }
     }
 
@@ -168,13 +171,13 @@ public class CareEmergencyInpatientController {
             @RequestBody Map<String, Object> body) {
         try {
             JsonNode created = requirePayload(
-                    pctClient.recordResuscitation(activationId.toString(), body),
-                    "PCT recordResuscitation");
+                    inpatientClient.recordResuscitation(activationId.toString(), body),
+                    "Inpatient recordResuscitation");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT recordResuscitation", e);
+            throw upstreamFailure("Inpatient recordResuscitation", e);
         }
     }
 
@@ -185,12 +188,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.recordApgar(body), "PCT recordApgar");
+            JsonNode created = requirePayload(inpatientClient.recordApgar(body), "Inpatient recordApgar");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT recordApgar", e);
+            throw upstreamFailure("Inpatient recordApgar", e);
         }
     }
 
@@ -199,12 +202,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String patientId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.getApgar(patientId), "PCT getApgar");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.getApgar(patientId), "Inpatient getApgar");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT getApgar", e);
+            throw upstreamFailure("Inpatient getApgar", e);
         }
     }
 
@@ -215,12 +218,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.recordEWS(body), "PCT recordEWS");
+            JsonNode created = requirePayload(inpatientClient.recordEws(body), "Inpatient recordEWS");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT recordEWS", e);
+            throw upstreamFailure("Inpatient recordEWS", e);
         }
     }
 
@@ -229,12 +232,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String patientId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.getEWS(patientId), "PCT getEWS");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.getEws(patientId), "Inpatient getEWS");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT getEWS", e);
+            throw upstreamFailure("Inpatient getEWS", e);
         }
     }
 
@@ -245,7 +248,9 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(inpatientClient.createAdmission(body), "Inpatient createAdmission");
+            JsonNode created = requirePayload(
+                    inpatientClient.createAdmission(InpatientAdmissionNormalizer.normalize(tenantId, body)),
+                    "Inpatient createAdmission");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
@@ -274,16 +279,26 @@ public class CareEmergencyInpatientController {
     public ResponseEntity<Map<String, Object>> startWardRound(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Ward round start is not wired to inpatient-service in this BFF version.");
+        try {
+            JsonNode data = requirePayload(inpatientClient.startWardRound(body), "Inpatient startWardRound");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient startWardRound", e);
+        }
     }
 
     @PostMapping("/ward-rounds/{id}/entries")
     public ResponseEntity<Map<String, Object>> addRoundEntry(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Ward round entries are not wired to inpatient-service in this BFF version.");
+        try {
+            JsonNode data = requirePayload(inpatientClient.addWardRoundEntry(id.toString(), body), "Inpatient addWardRoundEntry");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient addWardRoundEntry", e);
+        }
     }
 
     @GetMapping("/ward-rounds")
@@ -291,12 +306,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String wardId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.listWardRounds(wardId), "PCT listWardRounds");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.listWardRoundsByWard(wardId), "Inpatient listWardRounds");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT listWardRounds", e);
+            throw upstreamFailure("Inpatient listWardRounds", e);
         }
     }
 
@@ -307,12 +322,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(pctClient.recordObservation(body), "PCT recordObservation");
+            JsonNode created = requirePayload(inpatientClient.recordObservation(body), "Inpatient recordObservation");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT recordObservation", e);
+            throw upstreamFailure("Inpatient recordObservation", e);
         }
     }
 
@@ -321,12 +336,12 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String patientId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.getObservations(patientId), "PCT getObservations");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.getObservations(patientId), "Inpatient getObservations");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT getObservations", e);
+            throw upstreamFailure("Inpatient getObservations", e);
         }
     }
 
@@ -337,20 +352,25 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody Map<String, Object> body) {
         try {
-            JsonNode created = requirePayload(inpatientClient.transferPatient(null, body), "Inpatient transferPatient");
+            JsonNode created = requirePayload(inpatientClient.requestTransfer(body), "Inpatient requestTransfer");
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("Inpatient transferPatient", e);
+            throw upstreamFailure("Inpatient requestTransfer", e);
         }
     }
 
     @PostMapping("/transfers/{id}/accept")
     public ResponseEntity<Map<String, Object>> acceptTransfer(@PathVariable UUID id, @RequestBody Map<String, Object> body) {
-        throw new ResponseStatusException(
-                HttpStatus.NOT_IMPLEMENTED,
-                "Transfer accept is not wired to inpatient-service in this BFF version.");
+        try {
+            JsonNode data = requirePayload(inpatientClient.acceptTransfer(id.toString(), body), "Inpatient acceptTransfer");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient acceptTransfer", e);
+        }
     }
 
     @GetMapping("/transfers")
@@ -358,12 +378,93 @@ public class CareEmergencyInpatientController {
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(required = false) String patientId) {
         try {
-            JsonNode pctData = requirePayload(pctClient.listTransfers(patientId), "PCT listTransfers");
-            return ResponseEntity.ok(Map.of("data", pctData));
+            JsonNode data = requirePayload(inpatientClient.listTransfers(patientId), "Inpatient listTransfers");
+            return ResponseEntity.ok(Map.of("data", data));
         } catch (ResponseStatusException e) {
             throw e;
         } catch (Exception e) {
-            throw upstreamFailure("PCT listTransfers", e);
+            throw upstreamFailure("Inpatient listTransfers", e);
+        }
+    }
+
+    // ── Ward charts (web EHR) ───────────────────────────────────────
+
+    @GetMapping("/ward-charts/activity")
+    public ResponseEntity<Map<String, Object>> wardChartActivity(@RequestParam String patientId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.getWardChartActivity(patientId), "Inpatient wardChartActivity");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient wardChartActivity", e);
+        }
+    }
+
+    @GetMapping("/ward-charts/{chartType}/entries")
+    public ResponseEntity<Map<String, Object>> wardChartEntries(@PathVariable String chartType,
+                                                                @RequestParam String patientId) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.getWardChartEntries(chartType, patientId), "Inpatient wardChartEntries");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient wardChartEntries", e);
+        }
+    }
+
+    @PostMapping("/ward-charts/{chartType}/entries")
+    public ResponseEntity<Map<String, Object>> recordWardChartEntry(@PathVariable String chartType,
+                                                                    @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = requirePayload(inpatientClient.recordWardChartEntry(chartType, body), "Inpatient recordWardChartEntry");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient recordWardChartEntry", e);
+        }
+    }
+
+    // ── Clinical handover / takeover ────────────────────────────────
+
+    @PostMapping("/inpatient/handover")
+    public ResponseEntity<Map<String, Object>> submitInpatientHandover(@RequestBody Map<String, Object> body) {
+        try {
+            JsonNode created = requirePayload(inpatientClient.submitHandover(body), "Inpatient submitHandover");
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("data", created));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient submitHandover", e);
+        }
+    }
+
+    @PostMapping("/inpatient/handover/{id}/takeover")
+    public ResponseEntity<Map<String, Object>> acceptInpatientTakeover(@PathVariable UUID id,
+                                                                       @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.acceptTakeover(id.toString(), body), "Inpatient acceptTakeover");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient acceptTakeover", e);
+        }
+    }
+
+    // ── Ward alerts (provider acknowledge) ──────────────────────────
+
+    @GetMapping("/ward-alerts")
+    public ResponseEntity<Map<String, Object>> listWardAlerts(@RequestParam String wardId,
+                                                              @RequestParam(required = false, defaultValue = "ACTIVE") String status) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.listWardAlerts(wardId, status), "Inpatient listWardAlerts");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient listWardAlerts", e);
+        }
+    }
+
+    @PostMapping("/ward-alerts/{id}/acknowledge")
+    public ResponseEntity<Map<String, Object>> acknowledgeWardAlert(@PathVariable UUID id,
+                                                                    @RequestBody Map<String, Object> body) {
+        try {
+            JsonNode data = requirePayload(inpatientClient.acknowledgeWardAlert(id.toString(), body), "Inpatient acknowledgeWardAlert");
+            return ResponseEntity.ok(Map.of("data", data));
+        } catch (Exception e) {
+            throw upstreamFailure("Inpatient acknowledgeWardAlert", e);
         }
     }
 }

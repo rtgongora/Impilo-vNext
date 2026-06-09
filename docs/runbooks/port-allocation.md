@@ -128,8 +128,10 @@ Service metadata (plane, sovereign, product names): [`docs/registry/services-reg
 
 ## Operations & channels
 
-| Port | Service / module |
-|------|------------------|
+| Port | Service / module | Notes |
+|------|------------------|--------|
+| **8196** | `rtc-gateway-service` | Compose default; avoids collision with mvumo |
+| **8197** | `mvumo-service` | Consent / MVUMO (was 8195) |
 | 8110 | `integration-hub` |
 | **8200** | `notification-service` |
 | **8201** | `identity-assurance-service` |

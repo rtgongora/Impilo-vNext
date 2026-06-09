@@ -90,6 +90,7 @@ public class QueueEngine {
         item.setId(UUID.randomUUID());
         item.setQueueId(queueId);
         item.setJourneyId(journeyId);
+        item.setPatientCpid(journey.getPatientCpid());
         item.setTenantId(ctx.tenantId());
         item.setFacilityId(journey.getFacilityId());
         item.setTokenNumber(tokenNumber);

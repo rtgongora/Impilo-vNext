@@ -21,4 +21,8 @@ public interface AdmissionRepository extends JpaRepository<AdmissionEntity, Long
 
     List<AdmissionEntity> findBySubjectCpidAndFacilityIdAndStatus(
             String subjectCpid, UUID facilityId, String status);
+
+    List<AdmissionEntity> findBySubjectCpid(String subjectCpid);
+
+    List<AdmissionEntity> findBySubjectCpidAndStatus(String subjectCpid, String status);
 }

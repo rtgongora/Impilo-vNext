@@ -5,9 +5,10 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Alert, Share } from "react-native";
 import { Screen, Header, Button, Badge, LoadingSpinner } from "@impilo/mobile-design-system";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@impilo/mobile-api-client";
 import { useAppStore } from "../../stores/appStore";
+import { submitHandover } from "../../services/inpatientService";
 
 const ACUITY_LEVELS = [
   { level: "CRITICAL", color: "#DC2626", label: "Critical" },
@@ -44,11 +45,26 @@ export function ShiftHandoffScreen() {
     },
   });
 
+  const handoverMutation = useMutation({
+    mutationFn: () => submitHandover({
+      facilityId,
+      situation: sbarNotes.situation,
+      background: sbarNotes.background,
+      assessment: sbarNotes.assessment,
+      recommendation: sbarNotes.recommendation,
+      generalNotes,
+      admissionRefs: Array.from(selectedPatients),
+      outgoingStaff: "current-provider",
+    }),
+    onSuccess: (data) => Alert.alert("Handoff submitted", `Handover ${data.id} pending takeover`),
+    onError: () => Alert.alert("Handoff failed", "Could not persist handover artifact"),
+  });
+
   const patients: PatientHandoff[] = (admissions as Array<Record<string, unknown>>).map((a) => ({
-    id: String(a.id),
-    name: String(a.admitting_diagnosis ?? "Patient"),
-    bed: "Bed " + (a.bed_id ? String(a.bed_id).slice(0, 4) : "—"),
-    ward: String(a.ward_id ? String(a.ward_id).slice(0, 4) : "—"),
+    id: String(a.admission_ref ?? a.admissionRef ?? a.id),
+    name: String(a.subject_cpid ?? a.subjectCpid ?? a.patient_id ?? "Patient"),
+    bed: "Bed " + (a.bed_id ?? a.bedId ? String(a.bed_id ?? a.bedId).slice(0, 4) : "—"),
+    ward: String(a.ward_id ?? a.wardId ? String(a.ward_id ?? a.wardId).slice(0, 4) : "—"),
     acuity: String(a.activity_level === "BED_REST" ? "HIGH" : "MODERATE"),
     diagnosis: String(a.admitting_diagnosis ?? ""),
     keyMeds: [],
@@ -91,7 +107,8 @@ export function ShiftHandoffScreen() {
   };
 
   const handleComplete = () => {
-    Alert.alert("Handoff Complete", `${selectedPatients.size} patients handed off with SBAR notes`);
+    if (selectedPatients.size === 0) return;
+    handoverMutation.mutate();
   };
 
   if (isLoading) return <Screen><Header title="Shift Handoff" /><LoadingSpinner /></Screen>;
@@ -178,9 +195,8 @@ export function ShiftHandoffScreen() {
 
         {/* Actions */}
         <View style={st.actions}>
-          <Button title="Save Draft" variant="outline" onPress={() => Alert.alert("Saved", "Draft saved")} />
           <Button title="Share" variant="outline" onPress={handleShare} />
-          <Button title="Complete Handoff" onPress={handleComplete} disabled={selectedPatients.size === 0} />
+          <Button title="Complete Handoff" onPress={handleComplete} disabled={selectedPatients.size === 0 || handoverMutation.isPending} />
         </View>
       </ScrollView>
     </Screen>
